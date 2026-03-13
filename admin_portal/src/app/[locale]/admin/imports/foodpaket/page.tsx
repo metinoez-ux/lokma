@@ -20,59 +20,59 @@ const CATEGORY_MAPPING: Record<string, string> = {
     'kaymak': 'Milchprodukte',
 
     // Meat Products
-    'sucuk': 'Et Ürünleri',
-    'wurst': 'Et Ürünleri',
-    'wurstchen': 'Et Ürünleri',
-    'aufschnitt': 'Et Ürünleri',
-    'fleisch': 'Et Ürünleri',
-    'salami': 'Et Ürünleri',
-    'pastirma': 'Et Ürünleri',
-    'sosis': 'Et Ürünleri',
+    'sucuk': 'Fleischprodukte',
+    'wurst': 'Fleischprodukte',
+    'wurstchen': 'Fleischprodukte',
+    'aufschnitt': 'Fleischprodukte',
+    'fleisch': 'Fleischprodukte',
+    'salami': 'Fleischprodukte',
+    'pastirma': 'Fleischprodukte',
+    'sosis': 'Fleischprodukte',
 
     // Deli & Spreads
-    'aufstrich': 'Şarküteri',
-    'schmelz': 'Şarküteri',
+    'aufstrich': 'Feinkost',
+    'schmelz': 'Feinkost',
 
     // Pantry & Staples
-    'reis': 'Temel Gıda',
-    'bulgur': 'Temel Gıda',
-    'linsen': 'Temel Gıda',
-    'bohnen': 'Temel Gıda',
-    'kichererbsen': 'Temel Gıda',
-    'nudeln': 'Temel Gıda',
-    'hulsenfruchte': 'Temel Gıda',
-    'konserven': 'Temel Gıda',
+    'reis': 'Grundnahrungsmittel',
+    'bulgur': 'Grundnahrungsmittel',
+    'linsen': 'Grundnahrungsmittel',
+    'bohnen': 'Grundnahrungsmittel',
+    'kichererbsen': 'Grundnahrungsmittel',
+    'nudeln': 'Grundnahrungsmittel',
+    'hulsenfruchte': 'Grundnahrungsmittel',
+    'konserven': 'Grundnahrungsmittel',
 
     // Bakery & Dough
-    'teig': 'Unlu Mamüller',
-    'blatterteig': 'Unlu Mamüller',
-    'börek': 'Unlu Mamüller',
-    'borek': 'Unlu Mamüller',
-    'backmischungen': 'Unlu Mamüller',
+    'teig': 'Backwaren',
+    'blatterteig': 'Backwaren',
+    'börek': 'Backwaren',
+    'borek': 'Backwaren',
+    'backmischungen': 'Backwaren',
 
     // Olives & Pickles
-    'olive': 'Zeytin & Turşu',
-    'oliven': 'Zeytin & Turşu',
+    'olive': 'Oliven & Eingelegtes',
+    'oliven': 'Oliven & Eingelegtes',
 
     // Beverages
-    'getranke': 'İçecekler',
-    'softdrinks': 'İçecekler',
-    'safte': 'İçecekler',
-    'wasser': 'İçecekler',
+    'getranke': 'Getränke',
+    'softdrinks': 'Getränke',
+    'safte': 'Getränke',
+    'wasser': 'Getränke',
 
     // Snacks
-    'snacks': 'Atıştırmalık',
-    'chips': 'Atıştırmalık',
-    'sussigkeiten': 'Atıştırmalık',
-    'schokolade': 'Atıştırmalık',
-    'kekse': 'Atıştırmalık',
+    'snacks': 'Snacks',
+    'chips': 'Snacks',
+    'sussigkeiten': 'Snacks',
+    'schokolade': 'Snacks',
+    'kekse': 'Snacks',
 
     // Spices
-    'gewurz': 'Baharat',
+    'gewurz': 'Gewürze',
 
     // Vegan
-    'vegan': 'Vejeteryan & Vegan',
-    'vegetarisch': 'Vejeteryan & Vegan',
+    'vegan': 'Vegetarisch & Vegan',
+    'vegetarisch': 'Vegetarisch & Vegan',
 };
 
 // Generate SKU
@@ -94,7 +94,7 @@ function mapCategory(slug: string, name: string): string {
             return value;
         }
     }
-    return 'Diğer';
+    return 'Sonstiges';
 }
 
 // Parse weight
@@ -116,7 +116,7 @@ function getDefaultUnit(name: string): string {
         if (['g', 'kg'].includes(weight.unit)) return 'kg';
         if (['ml', 'l'].includes(weight.unit)) return 'Liter';
     }
-    return 'Adet';
+    return 'Stück';
 }
 
 interface FoodpaketProduct {
@@ -255,14 +255,14 @@ export default function FoodpaketImportPage() {
 
             setResult({
                 success: true,
-                message: `✅ Import tamamlandı! ${imported} ürün eklendi, ${skipped} ürün atlandı (zaten mevcut).`
+                message: `✅ ${t('import_abgeschlossen', { imported, skipped })}`
             });
 
         } catch (error) {
             console.error(t('import_error'), error);
             setResult({
                 success: false,
-                message: `❌ Hata: ${error instanceof Error ? error.message : t('bilinmeyen_hata')}`
+                message: `❌ ${t('fehler')}: ${error instanceof Error ? error.message : t('bilinmeyen_hata')}`
             });
         }
 
@@ -289,7 +289,7 @@ export default function FoodpaketImportPage() {
                     <p className="text-gray-400 mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
                     <p className="text-gray-500 text-xs mt-2">Admin: {admin?.email || t('yok')}</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg">
-                        Dashboard'a Git
+                        {t('zum_dashboard')}
                     </Link>
                 </div>
             </div>
@@ -320,7 +320,7 @@ export default function FoodpaketImportPage() {
                             onClick={calculateStats}
                             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
                         >
-                            Hesapla
+                            {t('berechnen')}
                         </button>
                     </div>
                     {Object.keys(categoryStats).length > 0 && (

@@ -70,6 +70,7 @@ function NewKermesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const orgId = searchParams.get('orgId');
+    const t = useTranslations('AdminKermesNew');
 
     const [loading, setLoading] = useState(false);
     const [orgLoading, setOrgLoading] = useState(!!orgId);
@@ -452,7 +453,7 @@ function NewKermesContent() {
                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                                 placeholder="Adres girilince otomatik algılanır..."
                             />
-                            <p className="text-xs text-gray-500 mt-1">Adres seçtiğinizde ülke otomatik algılanır</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('adres_ulke_otomatik')}</p>
                         </div>
 
                         {/* Ana Adres - Google Places */}

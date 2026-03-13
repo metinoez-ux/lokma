@@ -25,13 +25,6 @@ interface Business {
     type: 'butcher' | 'restaurant' | 'kermes';
 }
 
-const ROLE_LABELS: Record<string, string> = {
-    super_admin: '👑 Süper Admin',
-    butcher_admin: '🥩 Kasap Admin',
-    restaurant_admin: '🍽️ Restoran Admin',
-    kermes_admin: '🎪 Kermes Admin',
-};
-
 const ROLE_COLORS: Record<string, string> = {
     super_admin: 'bg-purple-100 text-purple-800',
     butcher_admin: 'bg-red-100 text-red-800',
@@ -42,6 +35,13 @@ const ROLE_COLORS: Record<string, string> = {
 export default function AdminManagementPage() {
     
   const t = useTranslations('AdminAdmins');
+
+    const ROLE_LABELS: Record<string, string> = {
+        super_admin: `👑 ${t('super_admin')}`,
+        butcher_admin: `🥩 ${t('metzger_admin')}`,
+        restaurant_admin: `🍽️ ${t('restoran_admin')}`,
+        kermes_admin: `🎪 ${t('kermes_admin')}`,
+    };
 const [admins, setAdmins] = useState<Admin[]>([]);
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [loading, setLoading] = useState(true);
@@ -88,7 +88,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
             butchersSnap.docs.forEach(doc => {
                 allBusinesses.push({
                     id: doc.id,
-                    name: doc.data().companyName || 'Kasap',
+                    name: doc.data().companyName || t('metzger'),
                     type: 'butcher',
                 });
             });
@@ -255,7 +255,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                 </div>
                 <div className="bg-red-900/30 rounded-lg p-4 border-l-4 border-red-500">
                     <div className="text-2xl font-bold text-red-400">{stats.butcher}</div>
-                    <div className="text-sm text-red-300">🥩 Kasap</div>
+                    <div className="text-sm text-red-300">🥩 {t('metzger')}</div>
                 </div>
                 <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
                     <div className="text-2xl font-bold text-amber-400">{stats.restaurant}</div>
@@ -297,10 +297,10 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                     <thead className="bg-gray-700">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Admin</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Rol</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Rolle</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">{t('atandigi_yer')}</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">{t('durum')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Aksiyon</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Aktion</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
@@ -371,7 +371,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                             <div className="space-y-4">
                                 {/* Name */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Ad Soyad</label>
+                                    <label className="block text-sm text-gray-400 mb-1">{t('ad_soyad')}</label>
                                     <input
                                         type="text"
                                         value={formData.name}
@@ -383,7 +383,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
 
                                 {/* Email */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">E-posta</label>
+                                    <label className="block text-sm text-gray-400 mb-1">{t('eposta')}</label>
                                     <input
                                         type="email"
                                         value={formData.email}
@@ -395,22 +395,22 @@ const [admins, setAdmins] = useState<Admin[]>([]);
 
                                 {/* Role */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Rol</label>
+                                    <label className="block text-sm text-gray-400 mb-1">{t('rol')}</label>
                                     <select
                                         value={formData.role}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value as Admin['role'], assignedTo: '' })}
                                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
                                     >
-                                        <option value="butcher_admin">🥩 Kasap Admin</option>
+                                        <option value="butcher_admin">🥩 {t('metzger_admin')}</option>
                                         <option value="restaurant_admin">{t('restoran_admin')}</option>
-                                        <option value="kermes_admin">🎪 Kermes Admin</option>
+                                        <option value="kermes_admin">🎪 {t('kermes_admin')}</option>
                                     </select>
                                 </div>
 
                                 {/* Assigned Business */}
                                 {(formData.role === 'butcher_admin' || formData.role === 'restaurant_admin') && (
                                     <div>
-                                        <label className="block text-sm text-gray-400 mb-1">Atanacak Yer</label>
+                                        <label className="block text-sm text-gray-400 mb-1">{t('atanan_isletme')}</label>
                                         <select
                                             value={formData.assignedTo}
                                             onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
@@ -428,7 +428,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
 
                                 {/* Permissions */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Yetkiler</label>
+                                    <label className="block text-sm text-gray-400 mb-2">{t('yetkiler')}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {['orders', 'products', 'customers', 'reports'].map(perm => (
                                             <label key={perm} className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-lg cursor-pointer">
@@ -444,7 +444,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                                     }}
                                                     className="rounded"
                                                 />
-                                                <span className="text-sm capitalize">{perm === 'orders' ? t('siparisler') : perm === 'products' ? t('urunler') : perm === 'customers' ? t('musteriler') : 'Raporlar'}</span>
+                                                <span className="text-sm capitalize">{perm === 'orders' ? t('siparisler') : perm === 'products' ? t('urunler') : perm === 'customers' ? t('musteriler') : t('raporlar')}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -456,7 +456,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                     onClick={() => { setShowAddModal(false); setEditingAdmin(null); }}
                                     className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
                                 >
-                                    İptal
+                                    {t('iptal')}
                                 </button>
                                 <button
                                     onClick={handleSave}
@@ -481,7 +481,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                 itemName={confirmDeleteAdmin?.name}
                 variant="danger"
                 confirmText={t('evet_sil')}
-                loadingText="Siliniyor..."
+                loadingText={t('siliniyor')}
             />
         </div>
     );

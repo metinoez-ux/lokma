@@ -110,7 +110,7 @@ export default function ProfilePage() {
                 await setDoc(userDocRef, {
                     email: firebaseUser.email || null,
                     phoneNumber: firebaseUser.phoneNumber || null,
-                    displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'MIRA Kullanıcı',
+                    displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'MIRA Benutzer',
                     createdAt: firebaseUser.metadata.creationTime || new Date().toISOString(),
                     createdVia: 'profile_sync',
                     isAdmin: false,
@@ -187,8 +187,8 @@ export default function ProfilePage() {
                 const profileData = [
                     ['E-posta', data.profile.email],
                     ['Ad', data.profile.displayName],
-                    ['Oluşturulma', data.profile.createdAt],
-                    ['Export Tarihi', data.exportedAt],
+                    ['Erstellt am', data.profile.createdAt],
+                    ['Export-Datum', data.exportedAt],
                 ];
                 const profileSheet = XLSX.utils.aoa_to_sheet(profileData);
                 XLSX.utils.book_append_sheet(wb, profileSheet, 'Profil');
@@ -206,18 +206,18 @@ export default function ProfilePage() {
                 const pdf = new jsPDF();
 
                 pdf.setFontSize(20);
-                pdf.text('MIRA - Kişisel Verilerim', 20, 20);
+                pdf.text('MIRA - Meine Daten', 20, 20);
 
                 pdf.setFontSize(12);
-                pdf.text(`Export Tarihi: ${data.exportedAt}`, 20, 35);
+                pdf.text(`Export-Datum: ${data.exportedAt}`, 20, 35);
 
                 pdf.setFontSize(14);
-                pdf.text('Profil Bilgileri', 20, 50);
+                pdf.text('Profilinformationen', 20, 50);
 
                 pdf.setFontSize(11);
                 pdf.text(`E-posta: ${data.profile.email || '-'}`, 25, 60);
-                pdf.text(`Ad: ${data.profile.displayName || '-'}`, 25, 68);
-                pdf.text(`Hesap Oluşturma: ${data.profile.createdAt || '-'}`, 25, 76);
+                pdf.text(`Name: ${data.profile.displayName || '-'}`, 25, 68);
+                pdf.text(`Konto erstellt: ${data.profile.createdAt || '-'}`, 25, 76);
 
                 let yPos = 95;
 
@@ -228,7 +228,7 @@ export default function ProfilePage() {
                             yPos = 20;
                         }
                         pdf.setFontSize(14);
-                        pdf.text(`${name.charAt(0).toUpperCase() + name.slice(1)} (${items.length} kayıt)`, 20, yPos);
+                        pdf.text(`${name.charAt(0).toUpperCase() + name.slice(1)} (${items.length} Einträge)`, 20, yPos);
                         yPos += 10;
                     }
                 }
@@ -239,7 +239,7 @@ export default function ProfilePage() {
             setShowExportModal(false);
         } catch (error) {
             console.error('Export error:', error);
-            alert('Veriler dışa aktarılırken bir hata oluştu.');
+            alert('Fehler beim Exportieren der Daten.');
         }
         setExporting(false);
     };
@@ -323,11 +323,11 @@ export default function ProfilePage() {
             console.error('Delete error:', error);
             if (error instanceof Error) {
                 if (error.message.includes('requires-recent-login')) {
-                    setDeleteError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor. Lütfen çıkış yapıp tekrar giriş yapın ve ardından hesabınızı silin.');
+                    setDeleteError('Aus Sicherheitsgründen müssen Sie sich erneut anmelden. Bitte melden Sie sich ab und wieder an und löschen Sie dann Ihr Konto.');
                 } else if (error.message.includes('wrong-password')) {
-                    setDeleteError('Şifre hatalı.');
+                    setDeleteError('Falsches Passwort.');
                 } else {
-                    setDeleteError('Hesap silinirken bir hata oluştu.');
+                    setDeleteError('Fehler beim Löschen des Kontos.');
                 }
             }
             setDeleting(false);
@@ -359,20 +359,20 @@ export default function ProfilePage() {
                         <span className="font-bold text-gray-900">MIRA</span>
                     </Link>
                     <button onClick={handleLogout} className="text-gray-600 hover:text-gray-900 text-sm">
-                        Çıkış Yap
+                        Abmelden
                     </button>
                 </div>
             </header>
 
             <main className="max-w-3xl mx-auto px-4 py-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">Hesabım</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-8">Mein Konto</h1>
 
                 {/* Profile Card */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900">Profil Bilgileri</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Profilinformationen</h2>
                         <Link href="/profile/edit" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            ✏️ Düzenle
+                            ✏️ Bearbeiten
                         </Link>
                     </div>
                     <div className="space-y-3">
@@ -382,12 +382,12 @@ export default function ProfilePage() {
                         </div>
                         {user?.displayName && (
                             <div className="flex justify-between">
-                                <span className="text-gray-500">Ad</span>
+                                <span className="text-gray-500">Name</span>
                                 <span className="font-medium text-gray-900">{user.displayName}</span>
                             </div>
                         )}
                         <div className="flex justify-between">
-                            <span className="text-gray-500">Giriş Yöntemi</span>
+                            <span className="text-gray-500">Anmeldemethode</span>
                             <span className="font-medium text-gray-900">
                                 {user?.provider === 'apple.com' ? '🍎 Apple' :
                                     user?.provider === 'google.com' ? '🔵 Google' : '📧 E-posta'}
@@ -395,8 +395,8 @@ export default function ProfilePage() {
                         </div>
                         {user?.createdAt && (
                             <div className="flex justify-between">
-                                <span className="text-gray-500">Hesap Oluşturma</span>
-                                <span className="font-medium text-gray-900">{new Date(user.createdAt).toLocaleDateString('tr-TR')}</span>
+                                <span className="text-gray-500">Konto erstellt</span>
+                                <span className="font-medium text-gray-900">{new Date(user.createdAt).toLocaleDateString('de-DE')}</span>
                             </div>
                         )}
                     </div>
@@ -406,39 +406,39 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <Link href="/support" className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition text-center">
                         <span className="text-2xl">❓</span>
-                        <p className="font-medium text-gray-900 mt-2">Yardım</p>
+                        <p className="font-medium text-gray-900 mt-2">Hilfe</p>
                     </Link>
                     <Link href="/feedback" className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition text-center">
                         <span className="text-2xl">💡</span>
-                        <p className="font-medium text-gray-900 mt-2">Öneri / Şikayet</p>
+                        <p className="font-medium text-gray-900 mt-2">Vorschlag / Beschwerde</p>
                     </Link>
                 </div>
 
                 {/* Data Export Card */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Verilerimi İndir</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">Meine Daten herunterladen</h2>
                     <p className="text-gray-500 text-sm mb-4">
-                        MIRA&apos;da kayıtlı tüm verilerinizi indirin.
+                        Laden Sie alle Ihre bei MIRA gespeicherten Daten herunter.
                     </p>
                     <button
                         onClick={() => setShowExportModal(true)}
                         className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition"
                     >
-                        📥 Verilerimi İndir
+                        📥 Meine Daten herunterladen
                     </button>
                 </div>
 
                 {/* Delete Account Card */}
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-red-100">
-                    <h2 className="text-lg font-semibold text-red-600 mb-2">Hesabımı Sil</h2>
+                    <h2 className="text-lg font-semibold text-red-600 mb-2">Mein Konto löschen</h2>
                     <p className="text-gray-500 text-sm mb-4">
-                        Hesabınızı kalıcı olarak silin. Bu işlem geri alınamaz.
+                        Löschen Sie Ihr Konto dauerhaft. Dieser Vorgang kann nicht rückgängig gemacht werden.
                     </p>
                     <button
                         onClick={() => setShowDeleteModal(true)}
                         className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition"
                     >
-                        🗑️ Hesabımı Sil
+                        🗑️ Mein Konto löschen
                     </button>
                 </div>
             </main>
@@ -447,7 +447,7 @@ export default function ProfilePage() {
             {showExportModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">Format Seçin</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-4">Format wählen</h3>
                         <div className="space-y-3">
                             <button
                                 onClick={() => handleExport('json')}
@@ -458,7 +458,7 @@ export default function ProfilePage() {
                                     <span className="text-2xl">📄</span>
                                     <div className="text-left">
                                         <p className="font-medium">JSON</p>
-                                        <p className="text-xs text-gray-500">Teknik format</p>
+                                        <p className="text-xs text-gray-500">Technisches Format</p>
                                     </div>
                                 </div>
                             </button>
@@ -471,7 +471,7 @@ export default function ProfilePage() {
                                     <span className="text-2xl">📊</span>
                                     <div className="text-left">
                                         <p className="font-medium">Excel</p>
-                                        <p className="text-xs text-gray-500">Tablo formatı (.xlsx)</p>
+                                        <p className="text-xs text-gray-500">Tabellenformat (.xlsx)</p>
                                     </div>
                                 </div>
                             </button>
@@ -484,7 +484,7 @@ export default function ProfilePage() {
                                     <span className="text-2xl">📕</span>
                                     <div className="text-left">
                                         <p className="font-medium">PDF</p>
-                                        <p className="text-xs text-gray-500">Belge formatı</p>
+                                        <p className="text-xs text-gray-500">Dokumentformat</p>
                                     </div>
                                 </div>
                             </button>
@@ -493,7 +493,7 @@ export default function ProfilePage() {
                             onClick={() => setShowExportModal(false)}
                             className="w-full mt-4 py-2 text-gray-600 hover:text-gray-900"
                         >
-                            İptal
+                            Abbrechen
                         </button>
                     </div>
                 </div>
@@ -503,9 +503,9 @@ export default function ProfilePage() {
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md">
-                        <h3 className="text-xl font-bold text-red-600 mb-4">⚠️ Hesabı Sil</h3>
+                        <h3 className="text-xl font-bold text-red-600 mb-4">⚠️ Konto löschen</h3>
                         <p className="text-gray-600 mb-4">
-                            Bu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.
+                            Dieser Vorgang kann nicht rückgängig gemacht werden. Alle Ihre Daten werden dauerhaft gelöscht.
                         </p>
 
                         {deleteError && (
@@ -517,14 +517,14 @@ export default function ProfilePage() {
                         {user?.provider === 'password' && (
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Şifrenizi Girin
+                                    Passwort eingeben
                                 </label>
                                 <input
                                     type="password"
                                     value={deletePassword}
                                     onChange={(e) => setDeletePassword(e.target.value)}
                                     className="w-full px-4 py-2 border rounded-lg"
-                                    placeholder="Mevcut şifreniz"
+                                    placeholder="Ihr aktuelles Passwort"
                                 />
                             </div>
                         )}
@@ -539,14 +539,14 @@ export default function ProfilePage() {
                                 className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
                                 disabled={deleting}
                             >
-                                İptal
+                                Abbrechen
                             </button>
                             <button
                                 onClick={handleDeleteAccount}
                                 disabled={deleting || (user?.provider === 'password' && !deletePassword)}
                                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                             >
-                                {deleting ? 'Siliniyor...' : 'Evet, Sil'}
+                                {deleting ? 'Wird gelöscht...' : 'Ja, löschen'}
                             </button>
                         </div>
                     </div>

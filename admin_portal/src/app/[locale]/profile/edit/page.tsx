@@ -133,7 +133,7 @@ export default function ProfileEditPage() {
             router.push('/profile');
         } catch (error) {
             console.error('❌ Save error:', error);
-            alert('Kaydedilirken hata oluştu: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
+            alert('Fehler beim Speichern: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'));
         }
         setSaving(false);
     };
@@ -162,15 +162,15 @@ export default function ProfileEditPage() {
             <header className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
                     <Link href="/profile" className="text-gray-600 hover:text-gray-900">
-                        ← İptal
+                        ← Abbrechen
                     </Link>
-                    <h1 className="font-bold text-gray-900">Profili Düzenle</h1>
+                    <h1 className="font-bold text-gray-900">Profil bearbeiten</h1>
                     <button
                         onClick={handleSave}
                         disabled={saving}
                         className="text-blue-600 font-medium hover:text-blue-800 disabled:opacity-50"
                     >
-                        {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                        {saving ? 'Wird gespeichert...' : 'Speichern'}
                     </button>
                 </div>
             </header>
@@ -178,11 +178,11 @@ export default function ProfileEditPage() {
             <main className="max-w-2xl mx-auto px-4 py-6">
                 {/* Personal Info */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Kişisel Bilgiler</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Persönliche Daten</h2>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ad *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
                             <input
                                 type="text"
                                 value={profile.firstName}
@@ -192,7 +192,7 @@ export default function ProfileEditPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Soyad *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
                             <input
                                 type="text"
                                 value={profile.lastName}
@@ -214,9 +214,9 @@ export default function ProfileEditPage() {
                             placeholder="ornek@email.com"
                         />
                         {auth.currentUser?.email ? (
-                            <p className="text-xs text-gray-400 mt-1">E-posta Firebase&apos;de kayıtlı, değiştirilemez</p>
+                            <p className="text-xs text-gray-400 mt-1">E-Mail ist bei Firebase registriert und kann nicht geändert werden</p>
                         ) : (
-                            <p className="text-xs text-blue-500 mt-1">💡 E-posta ekleyerek web portalına giriş yapabilirsiniz</p>
+                            <p className="text-xs text-blue-500 mt-1">💡 Durch Hinzufügen einer E-Mail können Sie sich am Webportal anmelden</p>
                         )}
                     </div>
 
@@ -248,7 +248,7 @@ export default function ProfileEditPage() {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Doğum Tarihi</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
                             <input
                                 type="date"
                                 value={profile.dateOfBirth}
@@ -261,11 +261,11 @@ export default function ProfileEditPage() {
 
                 {/* Address */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Adres Bilgileri</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Adressdaten</h2>
 
                     <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Sokak / Cadde</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
                             <input
                                 type="text"
                                 value={profile.address?.street}
@@ -275,7 +275,7 @@ export default function ProfileEditPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Kapı No</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Hausnr.</label>
                             <input
                                 type="text"
                                 value={profile.address?.houseNumber}
@@ -287,13 +287,13 @@ export default function ProfileEditPage() {
                     </div>
 
                     <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Daire No (Opsiyonel)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Wohnungsnr. (Optional)</label>
                         <input
                             type="text"
                             value={profile.address?.apartmentNumber}
                             onChange={(e) => updateAddress('apartmentNumber', e.target.value)}
                             className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                            placeholder="3. Kat, Daire 5"
+                            placeholder="3. OG, Whg. 5"
                         />
                     </div>
 
@@ -309,7 +309,7 @@ export default function ProfileEditPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Şehir</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
                             <input
                                 type="text"
                                 value={profile.address?.city}
@@ -328,7 +328,7 @@ export default function ProfileEditPage() {
                                 onChange={(e) => updateAddress('state', e.target.value)}
                                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="">Seçin...</option>
+                                <option value="">Auswählen...</option>
                                 <option value="Baden-Württemberg">Baden-Württemberg</option>
                                 <option value="Bayern">Bayern</option>
                                 <option value="Berlin">Berlin</option>
@@ -348,7 +348,7 @@ export default function ProfileEditPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ülke</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Land</label>
                             <select
                                 value={profile.address?.country}
                                 onChange={(e) => updateAddress('country', e.target.value)}
@@ -367,10 +367,10 @@ export default function ProfileEditPage() {
 
                 {/* Preferences */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Tercihler</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Einstellungen</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Dil</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Sprache</label>
                         <select
                             value={profile.language}
                             onChange={(e) => setProfile({ ...profile, language: e.target.value as 'de' | 'tr' | 'en' })}
@@ -389,7 +389,7 @@ export default function ProfileEditPage() {
                     disabled={saving}
                     className="w-full mt-6 bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                 >
-                    {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                    {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
                 </button>
             </main>
         </div>

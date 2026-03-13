@@ -15,10 +15,10 @@ import {
     Timestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LOKMA AI GÖRSEL ÜRETİCİ — Imagen 4 powered image generation
+   LOKMA AI BILDGENERATOR — Imagen 4 powered image generation
    Generates professional food / business images via Google Imagen 4 API.
    Images are saved to Firebase Storage and cataloged in Firestore so
    ALL admins (Super + Business) can browse and reuse them.
@@ -32,58 +32,8 @@ interface Category {
     basePrompt: string;
 }
 
-const categories: Category[] = [
-    {
-        id: 'kasap',
-        name: 'Kasap',
-        icon: '🥩',
-        basePrompt: 'Professional food photography, Turkish butcher shop, fresh quality meat, warm atmospheric lighting, high-end culinary presentation, 8k resolution',
-    },
-    {
-        id: 'market',
-        name: 'Market',
-        icon: '🛒',
-        basePrompt: 'Modern supermarket, fresh organic products, vibrant colors, clean professional shelves, commercial photography, 8k resolution',
-    },
-    {
-        id: 'pizzaci',
-        name: 'Pizzacı',
-        icon: '🍕',
-        basePrompt: 'Gourmet Italian pizza, wood fired oven, melted cheese, fresh ingredients, rustic restaurant setting, food advertisement photography, 8k resolution',
-    },
-    {
-        id: 'donerci',
-        name: 'Dönerci',
-        icon: '🥙',
-        basePrompt: 'Traditional Turkish doner kebab, juicy sliced meat, authentic restaurant interior, warm golden lighting, professional food photography, 8k resolution',
-    },
-    {
-        id: 'restoran',
-        name: 'Restoran',
-        icon: '🍽️',
-        basePrompt: 'Upscale modern restaurant, elegant plating, soft ambient lighting, luxury dining experience, Michelin-style food photography, 8k resolution',
-    },
-    {
-        id: 'hamburger',
-        name: 'Hamburger',
-        icon: '🍔',
-        basePrompt: 'Gourmet craft burger, melting cheese, crispy bacon, dark moody background, high contrast food advertisement photography, 8k resolution',
-    },
-    {
-        id: 'tatli',
-        name: 'Tatlı',
-        icon: '🍰',
-        basePrompt: 'Elegant Turkish dessert, baklava kunefe, golden syrup, beautiful plating, pastry shop display, warm bakery lighting, 8k resolution',
-    },
-    {
-        id: 'icecek',
-        name: 'İçecek',
-        icon: '🥤',
-        basePrompt: 'Refreshing beverage, professional drink photography, ice droplets, colorful garnish, studio lighting, commercial advertising, 8k resolution',
-    },
-];
+/* categories and outputFormats are now defined inside the component for i18n */
 
-// ── Output format (aspect ratio) definitions ────────────────────────────
 interface OutputFormat {
     id: string;
     name: string;
@@ -91,14 +41,6 @@ interface OutputFormat {
     aspectRatio: string;
     icon: string;
 }
-
-const outputFormats: OutputFormat[] = [
-    { id: '1:1', name: 'Kare', label: '1:1', aspectRatio: '1:1', icon: '⬜' },
-    { id: '3:4', name: 'Portre', label: '3:4', aspectRatio: '3:4', icon: '📱' },
-    { id: '4:3', name: 'Klasik', label: '4:3', aspectRatio: '4:3', icon: '🖼️' },
-    { id: '16:9', name: 'Geniş Ekran', label: '16:9', aspectRatio: '16:9', icon: '🖥️' },
-    { id: '9:16', name: 'Hikaye', label: '9:16', aspectRatio: '9:16', icon: '📲' },
-];
 
 // ── Firestore collection path ───────────────────────────────────────────
 const GALLERY_COLLECTION = 'generated_images';
@@ -120,8 +62,28 @@ interface GalleryImage {
 export default function ImageGeneratorPage() {
 
     const t = useTranslations('AdminImagegenerator');
+    const locale = useLocale();
     const { admin } = useAdmin();
     const isSuperAdmin = admin?.adminType === 'super';
+
+    const categories: Category[] = [
+        { id: 'kasap', name: t('metzger'), icon: '🥩', basePrompt: 'Professional food photography, Turkish butcher shop, fresh quality meat, warm atmospheric lighting, high-end culinary presentation, 8k resolution' },
+        { id: 'market', name: t('market'), icon: '🛒', basePrompt: 'Modern supermarket, fresh organic products, vibrant colors, clean professional shelves, commercial photography, 8k resolution' },
+        { id: 'pizzaci', name: t('pizzeria'), icon: '🍕', basePrompt: 'Gourmet Italian pizza, wood fired oven, melted cheese, fresh ingredients, rustic restaurant setting, food advertisement photography, 8k resolution' },
+        { id: 'donerci', name: t('doner'), icon: '🥙', basePrompt: 'Traditional Turkish doner kebab, juicy sliced meat, authentic restaurant interior, warm golden lighting, professional food photography, 8k resolution' },
+        { id: 'restoran', name: t('restoran'), icon: '🍽️', basePrompt: 'Upscale modern restaurant, elegant plating, soft ambient lighting, luxury dining experience, Michelin-style food photography, 8k resolution' },
+        { id: 'hamburger', name: t('hamburger'), icon: '🍔', basePrompt: 'Gourmet craft burger, melting cheese, crispy bacon, dark moody background, high contrast food advertisement photography, 8k resolution' },
+        { id: 'tatli', name: t('dessert'), icon: '🍰', basePrompt: 'Elegant Turkish dessert, baklava kunefe, golden syrup, beautiful plating, pastry shop display, warm bakery lighting, 8k resolution' },
+        { id: 'icecek', name: t('getraenke'), icon: '🥤', basePrompt: 'Refreshing beverage, professional drink photography, ice droplets, colorful garnish, studio lighting, commercial advertising, 8k resolution' },
+    ];
+
+    const outputFormats: OutputFormat[] = [
+        { id: '1:1', name: t('quadrat'), label: '1:1', aspectRatio: '1:1', icon: '⬜' },
+        { id: '3:4', name: t('portraet'), label: '3:4', aspectRatio: '3:4', icon: '📱' },
+        { id: '4:3', name: t('klassisch'), label: '4:3', aspectRatio: '4:3', icon: '🖼️' },
+        { id: '16:9', name: t('breitbild'), label: '16:9', aspectRatio: '16:9', icon: '🖥️' },
+        { id: '9:16', name: t('story'), label: '9:16', aspectRatio: '9:16', icon: '📲' },
+    ];
 
     // ── State ────────────────────────────────────────────────────────────
     const [activeCategory, setActiveCategory] = useState<string>('kasap');
@@ -206,7 +168,7 @@ export default function ImageGeneratorPage() {
             // Use secure server-side proxy (API key stored encrypted in Firestore vault)
             const { auth: firebaseAuth } = await import('@/lib/firebase');
             const token = await firebaseAuth.currentUser?.getIdToken();
-            if (!token) throw new Error('Nicht authentifiziert');
+            if (!token) throw new Error(t('nicht_authentifiziert'));
 
             const formatInfo = outputFormats.find((f) => f.id === activeFormat);
 
@@ -270,7 +232,7 @@ export default function ImageGeneratorPage() {
                 createdByName: admin.displayName || admin.email || 'Admin',
             });
 
-            showToast(`✨ "${keyword}" görseli üretildi ve kaydedildi!`);
+            showToast(`✨ ${t('bild_erstellt', { keyword })}`);
             setKeyword('');
         } catch (error: any) {
             console.error('Generation error:', error);
@@ -332,13 +294,13 @@ export default function ImageGeneratorPage() {
             for (const file of Array.from(files)) {
                 // Validate file type
                 if (!file.type.startsWith('image/')) {
-                    showToast(`"${file.name}" ist kein Bild`, 'error');
+                    showToast(`${t('kein_bild', { name: file.name })}`, 'error');
                     continue;
                 }
 
                 // Max 10MB per file
                 if (file.size > 10 * 1024 * 1024) {
-                    showToast(`"${file.name}" ist zu groß (max. 10 MB)`, 'error');
+                    showToast(`${t('zu_gross', { name: file.name })}`, 'error');
                     continue;
                 }
 
@@ -358,7 +320,7 @@ export default function ImageGeneratorPage() {
                 // Save metadata to Firestore (same structure as AI-generated)
                 await addDoc(collection(db, GALLERY_COLLECTION), {
                     category: activeCategory,
-                    prompt: 'Manuell hochgeladen',
+                    prompt: t('manuell_hochgeladen'),
                     keyword: file.name.replace(/\.[^.]+$/, ''),
                     imageUrl: downloadUrl,
                     storagePath,
@@ -373,11 +335,11 @@ export default function ImageGeneratorPage() {
             }
 
             if (uploadedCount > 0) {
-                showToast(`📸 ${uploadedCount} Bild${uploadedCount > 1 ? 'er' : ''} hochgeladen!`);
+                showToast(`📸 ${t('bilder_hochgeladen', { count: uploadedCount })}`);
             }
         } catch (error: any) {
             console.error('Upload error:', error);
-            showToast(error.message || 'Upload fehlgeschlagen', 'error');
+            showToast(error.message || t('upload_fehlgeschlagen'), 'error');
         } finally {
             setIsUploading(false);
             // Reset input so same file can be re-selected
@@ -489,7 +451,7 @@ export default function ImageGeneratorPage() {
                                     {/* Negative Prompt */}
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
-                                            <span className="text-red-400">🚫</span> Negatif Promptlar
+                                            <span className="text-red-400">🚫</span> {t('negative_prompts')}
                                             <span className="text-[10px] text-gray-600 font-normal">{t('uretilmemesi_gerekenler')}</span>
                                         </label>
                                         <textarea
@@ -565,13 +527,13 @@ export default function ImageGeneratorPage() {
                                 </p>
                                 {backgroundPrompt.trim() && (
                                     <p className="text-xs text-gray-500">
-                                        <span className="text-emerald-400 font-bold">+ Arka Plan:</span>{' '}
+                                        <span className="text-emerald-400 font-bold">+ {t('hintergrund')}:</span>{' '}
                                         {backgroundPrompt.trim().substring(0, 100)}{backgroundPrompt.trim().length > 100 ? '...' : ''}
                                     </p>
                                 )}
                                 {negativePrompt.trim() && (
                                     <p className="text-xs text-gray-500">
-                                        <span className="text-red-400 font-bold">🚫 Negatif:</span>{' '}
+                                        <span className="text-red-400 font-bold">🚫 {t('negativ')}:</span>{' '}
                                         {negativePrompt.trim().substring(0, 100)}{negativePrompt.trim().length > 100 ? '...' : ''}
                                     </p>
                                 )}
@@ -613,10 +575,10 @@ export default function ImageGeneratorPage() {
                                         {isUploading ? (
                                             <>
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                Hochladen...
+                                                {t('hochladen')}...
                                             </>
                                         ) : (
-                                            <>📤 Bild hochladen</>
+                                            <>📤 {t('bild_hochladen')}</>
                                         )}
                                     </button>
                                 </>
@@ -632,7 +594,7 @@ export default function ImageGeneratorPage() {
                                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
-                                Hepsi ({gallery.length})
+                                {t('alle')} ({gallery.length})
                             </button>
                             {categories.map((cat) => {
                                 const count = gallery.filter((i) => i.category === cat.id).length;
@@ -702,7 +664,7 @@ export default function ImageGeneratorPage() {
                                                 : 'bg-white/10 backdrop-blur-xl text-white hover:bg-white/20'
                                                 }`}
                                         >
-                                            {copiedId === image.id ? t('kopyalandi') : '📋 URL Kopyala'}
+                                            {copiedId === image.id ? t('kopyalandi') : `📋 ${t('url_kopieren')}`}
                                         </button>
 
                                         {/* Delete (Super Admin only) */}
@@ -744,7 +706,7 @@ export default function ImageGeneratorPage() {
                                     <div className="flex items-center justify-between mt-1.5">
                                         <p className="text-xs text-gray-500">
                                             {image.createdAt?.toDate
-                                                ? image.createdAt.toDate().toLocaleDateString('tr-TR', {
+                                                ? image.createdAt.toDate().toLocaleDateString(locale, {
                                                     day: 'numeric',
                                                     month: 'short',
                                                     year: 'numeric',
@@ -798,7 +760,7 @@ export default function ImageGeneratorPage() {
                                 <p className="text-xs text-gray-500 mt-1">
                                     {categories.find((c) => c.id === previewImage.category)?.icon}{' '}
                                     {categories.find((c) => c.id === previewImage.category)?.name} •{' '}
-                                    {previewImage.createdAt?.toDate?.().toLocaleDateString('tr-TR')} •{' '}
+                                    {previewImage.createdAt?.toDate?.().toLocaleDateString(locale)} •{' '}
                                     {previewImage.createdByName}
                                 </p>
                             </div>
@@ -810,7 +772,7 @@ export default function ImageGeneratorPage() {
                                         : 'bg-violet-600 text-white hover:bg-violet-500'
                                         }`}
                                 >
-                                    {copiedId === previewImage.id ? t('kopyalandi') : '📋 URL Kopyala'}
+                                    {copiedId === previewImage.id ? t('kopyalandi') : `📋 ${t('url_kopieren')}`}
                                 </button>
                                 <button
                                     onClick={() => setPreviewImage(null)}

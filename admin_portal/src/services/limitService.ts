@@ -1,7 +1,7 @@
 /**
  * Limit Enforcement Service
  * 
- * Sipariş, Push bildirim ve Masa rezervasyon limitlerini kontrol et
+ * Bestellungen, Push-Benachrichtigungen und Tischreservierungslimits prüfen
  */
 
 import { db } from '@/lib/firebase';
@@ -14,22 +14,22 @@ export type LimitType = 'orders' | 'push' | 'table_reservation';
 export interface LimitCheckResult {
     allowed: boolean;
     currentUsage: number;
-    limit: number | null;        // null = sınırsız
+    limit: number | null;        // null = unlimited
     remaining: number | null;
     overageAction: 'block' | 'overage_fee' | 'none';
-    overageFee: number;          // Limit aşım ücreti
+    overageFee: number;          // Overage fee
     message?: string;
 }
 
 /**
- * İşletmenin belirli bir limit tipindeki kullanımını kontrol et
+ * Check a business's usage for a specific limit type
  */
 export const checkLimit = async (
     businessId: string,
     limitType: LimitType
 ): Promise<LimitCheckResult> => {
     try {
-        // İşletme ve plan bilgisini al
+        // Get business and plan info
         const businessDoc = await getDoc(doc(db, 'businesses', businessId));
         if (!businessDoc.exists()) {
             return {
@@ -39,14 +39,14 @@ export const checkLimit = async (
                 remaining: 0,
                 overageAction: 'block',
                 overageFee: 0,
-                message: 'İşletme bulunamadı'
+                message: 'Unternehmen nicht gefunden'
             };
         }
 
         const businessData = businessDoc.data();
         const planId = businessData.subscriptionPlan || businessData.plan || 'free';
 
-        // Plan bilgisini al
+        // Get plan info
         const plans = await subscriptionService.getAllPlans();
         const plan = plans.find(p => p.id === planId || p.code === planId);
 
@@ -61,7 +61,7 @@ export const checkLimit = async (
             };
         }
 
-        // Mevcut ayın kullanımını al
+        // Get current month's usage
         const currentMonth = new Date().toISOString().slice(0, 7);
         const usage = businessData.usage || {};
 
@@ -81,7 +81,7 @@ export const checkLimit = async (
             case 'push':
                 currentUsage = usage.push?.[currentMonth] || 0;
                 limit = plan.campaignLimit;
-                overageAction = 'block'; // Push için sadece engelleme
+                overageAction = 'block'; // Push: block only
                 overageFee = 0;
                 break;
 
@@ -93,7 +93,7 @@ export const checkLimit = async (
                 break;
         }
 
-        // Limit kontrolü
+        // Limit check
         const remaining = limit === null ? null : Math.max(0, limit - currentUsage);
         const isOverLimit = limit !== null && currentUsage >= limit;
 
@@ -103,9 +103,9 @@ export const checkLimit = async (
         if (isOverLimit) {
             if (overageAction === 'block') {
                 allowed = false;
-                message = `${limitType === 'orders' ? 'Sipariş' : limitType === 'push' ? 'Push bildirim' : 'Masa rezervasyon'} limitine ulaşıldı. Planınızı yükseltin.`;
+                message = `${limitType === 'orders' ? 'Bestell' : limitType === 'push' ? 'Push-Benachrichtigungs' : 'Tischreservierungs'}limit erreicht. Bitte upgraden Sie Ihren Plan.`;
             } else if (overageAction === 'overage_fee') {
-                message = `Limit aşıldı. Her işlem için ${overageFee}€ ek ücret uygulanacak.`;
+                message = `Limit überschritten. Für jede weitere Transaktion wird eine Gebühr von ${overageFee}€ erhoben.`;
             }
         }
 
@@ -132,7 +132,7 @@ export const checkLimit = async (
 };
 
 /**
- * Kullanım sayacını artır
+ * Increment usage counter
  */
 export const incrementUsage = async (
     businessId: string,
@@ -152,7 +152,7 @@ export const incrementUsage = async (
 };
 
 /**
- * Tüm kullanım istatistiklerini al
+ * Get all usage statistics
  */
 export const getUsageStats = async (businessId: string): Promise<{
     orders: { used: number; limit: number | null; remaining: number | null };

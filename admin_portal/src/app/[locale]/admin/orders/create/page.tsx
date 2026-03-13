@@ -53,14 +53,14 @@ const { admin } = useAdmin();
                 newItems.push({
                     name: match[3],
                     quantity: parseFloat(match[1].replace(',', '.')),
-                    unit: match[2] || 'adt'
+                    unit: match[2] || 'Stk'
                 });
             } else {
                 // Fallback: whole line is name, 1 unit
                 newItems.push({
                     name: trimmed,
                     quantity: 1,
-                    unit: 'adt'
+                    unit: 'Stk'
                 });
             }
         });
@@ -91,10 +91,10 @@ const { admin } = useAdmin();
 
             // 2. Actions
             if (method === 'whatsapp') {
-                const message = `Merhaba ${selectedSupplier.name},\n\nSipariş Listem:\n` +
+                const message = `Hallo ${selectedSupplier.name},\n\nMeine Bestellliste:\n` +
                     items.map(i => `- ${i.quantity} ${i.unit} ${i.name}`).join('\n') +
-                    (orderNote ? `\n\nNot: ${orderNote}` : '') +
-                    (deliveryDate ? `\nTeslimat: ${deliveryDate}` : '');
+                    (orderNote ? `\n\nAnmerkung: ${orderNote}` : '') +
+                    (deliveryDate ? `\nLieferung: ${deliveryDate}` : '');
 
                 const url = `https://wa.me/${selectedSupplier.phone}?text=${encodeURIComponent(message)}`;
                 window.open(url, '_blank');
@@ -118,7 +118,7 @@ const { admin } = useAdmin();
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">← İptal</Link>
+                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">← Abbrechen</Link>
                         <h1 className="text-3xl font-bold">{t('yeni_siparis_olustur')}</h1>
                         <p className="text-gray-400">{t('adim')} {step}/3: {step === 1 ? t('tedarikci_secimi') : step === 2 ? t('urunleri_gir') : t('onizleme_gonder')}</p>
                     </div>
@@ -163,7 +163,7 @@ const { admin } = useAdmin();
                                     value={rawText}
                                     onChange={e => setRawText(e.target.value)}
                                     className="flex-1 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white h-24"
-                                    placeholder={`10 koli Ayran\n50 kg Dana Kıyma\n20 adt Ekmek`}
+                                    placeholder={`10 Karton Ayran\n50 kg Rinderhack\n20 Stk Brot`}
                                 />
                                 <button
                                     onClick={() => parseTextToItems(rawText)}
@@ -224,7 +224,7 @@ const { admin } = useAdmin();
 
                             {/* Manual Add Button */}
                             <button
-                                onClick={() => setItems([...items, { name: '', quantity: 1, unit: 'adt' }])}
+                                onClick={() => setItems([...items, { name: '', quantity: 1, unit: 'Stk' }])}
                                 className="mt-4 text-sm text-blue-400 hover:text-blue-300 font-bold"
                             >
                                 {t('satir_ekle')}
@@ -232,13 +232,13 @@ const { admin } = useAdmin();
                         </div>
 
                         <div className="flex justify-between">
-                            <button onClick={() => setStep(1)} className="text-gray-400 hover:text-white">← Geri</button>
+                            <button onClick={() => setStep(1)} className="text-gray-400 hover:text-white">← Zurück</button>
                             <button
                                 onClick={() => setStep(3)}
                                 disabled={items.length === 0}
                                 className="bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed px-8 py-3 rounded-xl font-bold shadow-lg shadow-green-900/20"
                             >
-                                Devam Et →
+                                Weiter →
                             </button>
                         </div>
                     </div>
@@ -271,8 +271,8 @@ const { admin } = useAdmin();
                             <table className="w-full mb-8">
                                 <thead>
                                     <tr className="border-b border-black text-left text-sm uppercase">
-                                        <th className="pb-2 w-24">Miktar</th>
-                                        <th className="pb-2 w-20">Birim</th>
+                                        <th className="pb-2 w-24">Menge</th>
+                                        <th className="pb-2 w-20">Einheit</th>
                                         <th className="pb-2">{t('urun_adi')}</th>
                                     </tr>
                                 </thead>
@@ -345,5 +345,5 @@ const { admin } = useAdmin();
 
 // Simple helper
 function formatLocalDate(date: Date) {
-    return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
 }

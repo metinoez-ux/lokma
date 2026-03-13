@@ -10,9 +10,9 @@ interface Deal {
     description: string;
     discountType: 'percent' | 'fixed' | 'freeDelivery' | 'buyXGetY' | 'cashback' | 'bundleDeal' | 'flashSale' | 'productDiscount' | 'cartBooster';
     discountValue: number;
-    buyX?: number;       // BOGO: X adet al
-    getY?: number;       // BOGO: Y adet bedava
-    minOrderAmount?: number;  // Sepet büyütücü / min sipariş
+    buyX?: number;       // BOGO: buy X
+    getY?: number;       // BOGO: get Y free
+    minOrderAmount?: number;  // Cart booster / min order
     targetProductId?: string; // Ürün bazlı indirim
     businessIds: string[];
     targetAudience: 'all' | 'new' | 'returning' | 'vip';
@@ -156,23 +156,23 @@ export default function DealsTab({ businessId, isSuperAdmin, businesses, deals, 
         <div>
             <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h2 className="text-white font-bold text-lg">🔥 Fırsatlar</h2>
-                    <p className="text-gray-400 text-sm mt-0.5">Global veya işletmeye özel fırsatlar oluşturun</p>
+                    <h2 className="text-white font-bold text-lg">🔥 Angebote</h2>
+                    <p className="text-gray-400 text-sm mt-0.5">Erstellen Sie globale oder geschäftsspezifische Angebote</p>
                 </div>
                 <button
                     onClick={openAdd}
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium transition"
                 >
-                    + Fırsat Ekle
+                    + Angebot erstellen
                 </button>
             </div>
 
             {deals.length === 0 ? (
                 <div className="bg-gray-800 rounded-xl p-12 text-center">
                     <span className="text-5xl">🔥</span>
-                    <h3 className="text-lg font-medium text-white mt-4">Henüz fırsat yok</h3>
-                    <p className="text-gray-400 mt-2">Müşterilerinizi cezbeden fırsatlar oluşturun!</p>
-                    <p className="text-gray-500 text-sm mt-3">Sağ üstteki <span className="text-amber-400 font-medium">+ Fırsat Ekle</span> butonunu kullanın</p>
+                    <h3 className="text-lg font-medium text-white mt-4">Noch keine Angebote</h3>
+                    <p className="text-gray-400 mt-2">Erstellen Sie attraktive Angebote für Ihre Kunden!</p>
+                    <p className="text-gray-500 text-sm mt-3">Nutzen Sie den <span className="text-amber-400 font-medium">+ Angebot erstellen</span> Button oben rechts</p>
                 </div>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
@@ -181,10 +181,10 @@ export default function DealsTab({ businessId, isSuperAdmin, businesses, deals, 
                             <div className={`px-4 py-3 flex items-center justify-between ${deal.isActive ? 'bg-amber-900/20' : 'bg-gray-800'}`}>
                                 <div>
                                     <h3 className="text-white font-semibold">{deal.title}</h3>
-                                    <span className="text-xs text-gray-400">{deal.discountType === 'percent' ? `%${deal.discountValue}` : deal.discountType === 'fixed' ? `€${deal.discountValue}` : deal.discountType === 'freeDelivery' ? 'Ücretsiz Teslimat' : deal.discountType === 'buyXGetY' ? `${deal.buyX || 1} Al ${deal.getY || 1} Bedava` : deal.discountType === 'cashback' ? `€${deal.discountValue} Cashback` : deal.discountType === 'flashSale' ? `⚡ %${deal.discountValue}` : deal.discountType === 'cartBooster' ? `€${deal.minOrderAmount}+ → €${deal.discountValue} hediye` : `${deal.discountType}`} · {deal.targetAudience === 'all' ? 'Herkese' : deal.targetAudience === 'new' ? 'Yeni müşteriler' : deal.targetAudience === 'vip' ? 'VIP müşteriler' : 'Geri dönenler'}</span>
+                                    <span className="text-xs text-gray-400">{deal.discountType === 'percent' ? `%${deal.discountValue}` : deal.discountType === 'fixed' ? `€${deal.discountValue}` : deal.discountType === 'freeDelivery' ? 'Gratis Lieferung' : deal.discountType === 'buyXGetY' ? `${deal.buyX || 1} kaufen ${deal.getY || 1} gratis` : deal.discountType === 'cashback' ? `€${deal.discountValue} Cashback` : deal.discountType === 'flashSale' ? `⚡ %${deal.discountValue}` : deal.discountType === 'cartBooster' ? `€${deal.minOrderAmount}+ → €${deal.discountValue} Geschenk` : `${deal.discountType}`} · {deal.targetAudience === 'all' ? 'Alle' : deal.targetAudience === 'new' ? 'Neukunden' : deal.targetAudience === 'vip' ? 'VIP-Kunden' : 'Wiederkehrende'}</span>
                                 </div>
                                 <span className={`text-xs px-2 py-1 rounded-full ${deal.isActive ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
-                                    {deal.isActive ? '✅ Aktif' : '⏸️ Pasif'}
+                                    {deal.isActive ? '✅ Aktiv' : '⏸️ Inaktiv'}
                                 </span>
                             </div>
                             <div className="px-4 py-3">
@@ -205,60 +205,60 @@ export default function DealsTab({ businessId, isSuperAdmin, businesses, deals, 
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg my-8">
-                        <h2 className="text-xl font-bold text-white mb-4">{editing ? 'Fırsat Düzenle' : 'Yeni Fırsat'}</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">{editing ? 'Angebot bearbeiten' : 'Neues Angebot'}</h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-gray-400 text-sm mb-1 block">Başlık *</label>
+                                <label className="text-gray-400 text-sm mb-1 block">Titel *</label>
                                 <input type="text" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                                    placeholder="Örn: Hafta Sonu %20 İndirim"
+                                    placeholder="z.B. 20% Wochenend-Rabatt"
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500" />
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-1 block">Açıklama</label>
+                                <label className="text-gray-400 text-sm mb-1 block">Beschreibung</label>
                                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                                     rows={2} className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500 resize-none" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İndirim Türü</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Rabatttyp</label>
                                     <select value={form.discountType} onChange={e => setForm({ ...form, discountType: e.target.value as any })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                                        <option value="percent">🔥 Yüzde İndirim (%)</option>
-                                        <option value="fixed">🎉 Sabit İndirim (€)</option>
-                                        <option value="freeDelivery">🚚 Ücretsiz Teslimat</option>
-                                        <option value="buyXGetY">🎁 BOGO (X Al Y Bedava)</option>
-                                        <option value="cashback">💸 Cashback (Bakiye İade)</option>
+                                        <option value="percent">🔥 Prozent-Rabatt (%)</option>
+                                        <option value="fixed">🎉 Fester Rabatt (€)</option>
+                                        <option value="freeDelivery">🚚 Gratis Lieferung</option>
+                                        <option value="buyXGetY">🎁 BOGO (X kaufen Y gratis)</option>
+                                        <option value="cashback">💸 Cashback (Guthabenserstattung)</option>
                                         <option value="bundleDeal">📦 Bundle / Combo</option>
                                         <option value="flashSale">⚡ Flash Sale</option>
-                                        <option value="productDiscount">🏷️ Ürün Bazlı İndirim</option>
-                                        <option value="cartBooster">🛒 Sepet Büyütücü</option>
+                                        <option value="productDiscount">🏷️ Produktrabatt</option>
+                                        <option value="cartBooster">🛒 Warenkorb-Booster</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Değer</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Wert</label>
                                     <input type="number" value={form.discountValue} onChange={e => setForm({ ...form, discountValue: Number(e.target.value) })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-1 block">Hedef Kitle</label>
+                                <label className="text-gray-400 text-sm mb-1 block">Zielgruppe</label>
                                 <select value={form.targetAudience} onChange={e => setForm({ ...form, targetAudience: e.target.value as any })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                                    <option value="all">Herkese</option>
-                                    <option value="new">Yeni Müşteriler</option>
-                                    <option value="returning">Geri Dönenler</option>
-                                    <option value="vip">VIP Müşteriler</option>
+                                    <option value="all">Alle</option>
+                                    <option value="new">Neukunden</option>
+                                    <option value="returning">Wiederkehrende</option>
+                                    <option value="vip">VIP-Kunden</option>
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Başlangıç</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Startdatum</label>
                                     <input type="date" value={form.validFrom} onChange={e => setForm({ ...form, validFrom: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Bitiş</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Enddatum</label>
                                     <input type="date" value={form.validUntil} onChange={e => setForm({ ...form, validUntil: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" />
                                 </div>
@@ -268,14 +268,14 @@ export default function DealsTab({ businessId, isSuperAdmin, businesses, deals, 
                                     <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="sr-only peer" />
                                     <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-amber-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
                                 </label>
-                                <span className="text-gray-300 text-sm">Aktif</span>
+                                <span className="text-gray-300 text-sm">Aktiv</span>
                             </div>
                         </div>
 
                         <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">İptal</button>
+                            <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">Abbrechen</button>
                             <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-500 transition disabled:opacity-50">
-                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                {saving ? 'Wird gespeichert...' : 'Speichern'}
                             </button>
                         </div>
                     </div>
@@ -287,11 +287,11 @@ export default function DealsTab({ businessId, isSuperAdmin, businesses, deals, 
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 max-w-sm w-full text-center">
                         <span className="text-4xl">🗑️</span>
-                        <h3 className="text-white font-bold mt-3">Fırsatı Sil</h3>
-                        <p className="text-gray-400 text-sm mt-2">"{confirmDelete.title}" fırsatını kalıcı olarak silmek istediğinizden emin misiniz?</p>
+                        <h3 className="text-white font-bold mt-3">Angebot löschen</h3>
+                        <p className="text-gray-400 text-sm mt-2">Sind Sie sicher, dass Sie das Angebot "{confirmDelete.title}" endgültig löschen möchten?</p>
                         <div className="flex gap-3 mt-5">
-                            <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">İptal</button>
-                            <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition">Sil</button>
+                            <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">Abbrechen</button>
+                            <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition">Löschen</button>
                         </div>
                     </div>
                 </div>

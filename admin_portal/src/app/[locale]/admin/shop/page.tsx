@@ -106,12 +106,12 @@ export default function ShopDashboard() {
     };
 
     const statusLabels: Record<string, string> = {
-        pending: 'Bekliyor',
+        pending: t('bekleyen'),
         confirmed: t('onaylandi'),
         preparing: t('hazirlaniyor'),
-        shipped: 'Kargoda',
-        delivered: 'Teslim Edildi',
-        cancelled: 'İptal'
+        shipped: t('gonderildi'),
+        delivered: t('teslim_edildi'),
+        cancelled: t('iptal_edildi')
     };
 
     return (
@@ -121,11 +121,11 @@ export default function ShopDashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Link href="/admin/dashboard" className="text-gray-400 hover:text-white">
-                            ← Dashboard
+                            ← {t('dashboard')}
                         </Link>
                         <div>
                             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                                🛍️ E-Ticaret / Online Shop
+                                🛍️ E-Commerce / Online Shop
                             </h1>
                             <p className="text-gray-400 text-sm mt-1">
                                 {t('monte_bueno_diger_markalar')}
@@ -177,7 +177,7 @@ export default function ShopDashboard() {
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">💰</div>
                         <div className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.totalRevenue, 'EUR')}</div>
-                        <div className="text-gray-400 text-sm">Ciro</div>
+                        <div className="text-gray-400 text-sm">{t('ciro')}</div>
                     </div>
                 </div>
             </div>
@@ -200,7 +200,7 @@ export default function ShopDashboard() {
                         </Link>
                         <Link href="/admin/shop/orders?status=shipped" className="bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-600/30 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">🚚</div>
-                            <div className="text-cyan-300 text-sm font-medium">Kargodakiler</div>
+                            <div className="text-cyan-300 text-sm font-medium">{t('gonderildi')}</div>
                         </Link>
                         <Link href="/admin/shop/products" className="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">📊</div>
@@ -252,7 +252,7 @@ export default function ShopDashboard() {
             {/* Brand Cards */}
             <div className="max-w-7xl mx-auto mt-8">
                 <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    🏷️ Markalar
+                    🏷️ {t('markalar')}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gradient-to-br from-yellow-900/50 to-amber-900/50 border border-yellow-700/50 rounded-xl p-6 text-center">

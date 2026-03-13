@@ -2250,7 +2250,7 @@ function GlobalProductsPageContent() {
                                                 <span className="text-2xl">⭐</span>
                                                 <div>
                                                     <h4 className="text-white font-bold">Öne Çıkan Ürünler</h4>
-                                                    <p className="text-gray-400 text-xs">Müşterilere öne çıkan olarak gösterilecek ürünler</p>
+                                                    <p className="text-gray-400 text-xs">{t('one_cikan_aciklama')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -2294,7 +2294,7 @@ function GlobalProductsPageContent() {
                                         ) : businessProducts.length === 0 ? (
                                             <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
                                                 <p className="text-3xl mb-2">📦</p>
-                                                <p className="text-gray-400 mb-2">Henüz ürün atanmamış</p>
+                                                <p className="text-gray-400 mb-2">{t('henuz_urun_atanmamis')}</p>
                                                 <p className="text-sm text-gray-500">Önce işletmeye ürün atayın, sonra öne çıkan olarak seçin.</p>
                                             </div>
                                         ) : (
@@ -4018,7 +4018,7 @@ function GlobalProductsPageContent() {
                                                                             }}
                                                                             className="w-4 h-4 rounded accent-blue-500"
                                                                         />
-                                                                        <span className="text-xs text-gray-400">Farklı fiyat uygula</span>
+                                                                        <span className="text-xs text-gray-400">{t('farkli_fiyat')}</span>
                                                                     </label>
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 mb-3">Kurye ve Gel-Al siparişlerinde gösterilen fiyat</p>
@@ -4069,7 +4069,7 @@ function GlobalProductsPageContent() {
                                                                             }}
                                                                             className="w-4 h-4 rounded accent-emerald-500"
                                                                         />
-                                                                        <span className="text-xs text-gray-400">Farklı fiyat uygula</span>
+                                                                        <span className="text-xs text-gray-400">{t('farkli_fiyat')}</span>
                                                                     </label>
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 mb-3">Mağaza içi raf/ESL etiketlerinde gösterilecek fiyat</p>

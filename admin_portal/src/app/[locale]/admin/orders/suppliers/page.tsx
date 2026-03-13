@@ -6,7 +6,7 @@ import { Supplier, SupplierCategory } from '@/types';
 import { getSuppliers, addSupplier, updateSupplier, deleteSupplier } from '@/services/supplierService';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { de } from 'date-fns/locale';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
 
@@ -34,10 +34,10 @@ const { admin, loading: adminLoading } = useAdmin();
     });
 
     const categoryLabels: Record<SupplierCategory, string> = {
-        meat: '🥩 Et',
-        vegetable: '🥦 Sebze',
-        packaging: '📦 Ambalaj',
-        spices: '🧂 Baharat',
+        meat: '🥩 Fleisch',
+        vegetable: '🥦 Gemüse',
+        packaging: '📦 Verpackung',
+        spices: '🧂 Gewürze',
         other: t('diger')
     };
 
@@ -271,7 +271,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">Email (Opsiyonel)</label>
+                                    <label className="block text-gray-400 text-xs mb-1">E-Mail (Optional)</label>
                                     <input
                                         type="email"
                                         value={formData.email}
@@ -282,7 +282,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
 
                             <div>
-                                <label className="block text-gray-400 text-xs mb-1">Adres / Notlar</label>
+                                <label className="block text-gray-400 text-xs mb-1">Adresse / Notizen</label>
                                 <textarea
                                     rows={3}
                                     value={formData.notes}
@@ -293,13 +293,13 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
                         </div>
                         <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-300 hover:text-white">İptal</button>
+                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-300 hover:text-white">Abbrechen</button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving || !formData.name}
                                 className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-bold"
                             >
-                                {saving ? 'Kaydediliyor...' : t('kaydet')}
+                                {saving ? 'Wird gespeichert...' : t('kaydet')}
                             </button>
                         </div>
                     </div>
@@ -316,7 +316,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 itemName={confirmDeleteSupplier?.name}
                 variant="danger"
                 confirmText={t('evet_sil')}
-                loadingText="Siliniyor..."
+                loadingText="Wird gelöscht..."
             />
         </div>
     );

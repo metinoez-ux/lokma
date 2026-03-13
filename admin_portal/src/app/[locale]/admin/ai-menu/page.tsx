@@ -90,6 +90,7 @@ function AIMenuPageContent() {
     const { admin, loading: adminLoading } = useAdmin();
     const searchParams = useSearchParams();
     const urlBusinessId = searchParams.get('businessId');
+    const t = useTranslations('AdminAimenu');
 
     // ── State ────────────────────────────────────────────────────
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -650,13 +651,13 @@ function AIMenuPageContent() {
                                 {files.length > 0 ? (
                                     <div className="space-y-1">
                                         <span className="text-2xl">➕</span>
-                                        <p className="text-gray-400 text-sm">Daha fazla dosya eklemek için tıklayın veya sürükleyin</p>
+                                        <p className="text-gray-400 text-sm">{t('daha_fazla_dosya')}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
                                         <span className="text-5xl">📤</span>
-                                        <p className="text-gray-300 font-medium">Menü dosyalarını sürükleyip bırakın</p>
-                                        <p className="text-gray-500 text-sm">Birden fazla dosya seçebilirsiniz</p>
+                                        <p className="text-gray-300 font-medium">{t('menu_dosya_surukleme')}</p>
+                                        <p className="text-gray-500 text-sm">{t('birden_fazla')}</p>
                                         <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
                                             {['PDF', 'JPG', 'PNG', 'CSV', 'Excel'].map(fmt => (
                                                 <span key={fmt} className="px-3 py-1 bg-gray-700 rounded-full text-gray-400 text-xs">{fmt}</span>
@@ -714,7 +715,7 @@ function AIMenuPageContent() {
                         <div className="text-center space-y-2">
                             <h2 className="text-2xl font-bold text-white">Menü Analiz Ediliyor...</h2>
                             <p className="text-gray-400">{AI_MODELS.find(m => m.id === selectedModel)?.name || 'AI'} menünüzü okuyor ve yapılandırıyor</p>
-                            <p className="text-gray-500 text-sm">Bu işlem birkaç saniye sürebilir</p>
+                            <p className="text-gray-500 text-sm">{t('islem_surebilir')}</p>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span> Dosya okunuyor</span>

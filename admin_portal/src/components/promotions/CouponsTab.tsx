@@ -140,25 +140,25 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
         <div>
             <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h2 className="text-white font-bold text-lg">🎫 Kuponlar</h2>
-                    <p className="text-gray-400 text-sm mt-0.5">{coupons.length} kupon · {coupons.filter(c => c.isActive).length} aktif</p>
+                    <h2 className="text-white font-bold text-lg">🎫 Gutscheine</h2>
+                    <p className="text-gray-400 text-sm mt-0.5">{coupons.length} Gutscheine · {coupons.filter(c => c.isActive).length} aktiv</p>
                 </div>
                 <button onClick={openAdd} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition">
-                    + Kupon Oluştur
+                    + Gutschein erstellen
                 </button>
             </div>
 
             {/* Search */}
             <div className="mb-4">
-                <input type="text" placeholder="Kupon kodu ara..." value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                <input type="text" placeholder="Gutscheincode suchen..." value={searchQ} onChange={e => setSearchQ(e.target.value)}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:outline-none" />
             </div>
 
             {filtered.length === 0 ? (
                 <div className="bg-gray-800 rounded-xl p-12 text-center">
                     <span className="text-5xl">🎫</span>
-                    <h3 className="text-lg font-medium text-white mt-4">{searchQ ? 'Eşleşen kupon yok' : 'Henüz kupon yok'}</h3>
-                    {!searchQ && <button onClick={openAdd} className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition">+ İlk Kuponu Oluştur</button>}
+                    <h3 className="text-lg font-medium text-white mt-4">{searchQ ? 'Kein passender Gutschein' : 'Noch keine Gutscheine'}</h3>
+                    {!searchQ && <button onClick={openAdd} className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition">+ Ersten Gutschein erstellen</button>}
                 </div>
             ) : (
                 <div className="grid gap-3">
@@ -172,16 +172,16 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                                     <div className="min-w-0">
                                         <div className="flex flex-wrap gap-1.5">
                                             <span className="text-xs bg-green-900/40 text-green-300 px-2 py-0.5 rounded-full">
-                                                {coupon.discountType === 'percent' ? `%${coupon.discountValue}` : coupon.discountType === 'fixed' ? `€${coupon.discountValue}` : 'Ücretsiz Teslimat'}
+                                                {coupon.discountType === 'percent' ? `%${coupon.discountValue}` : coupon.discountType === 'fixed' ? `€${coupon.discountValue}` : 'Gratis Lieferung'}
                                             </span>
                                             <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full">
-                                                {coupon.usageCount}/{coupon.usageLimit} kullanım
+                                                {coupon.usageCount}/{coupon.usageLimit} Nutzungen
                                             </span>
                                             {coupon.minOrderAmount > 0 && (
                                                 <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full">Min €{coupon.minOrderAmount}</span>
                                             )}
                                             {coupon.newCustomersOnly && (
-                                                <span className="text-xs bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full">Yeni M.</span>
+                                                <span className="text-xs bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full">Neuk.</span>
                                             )}
                                         </div>
                                         {coupon.validUntil && <p className="text-xs text-gray-500 mt-1">📅 {coupon.validFrom} → {coupon.validUntil}</p>}
@@ -189,7 +189,7 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <span className={`text-xs px-2 py-1 rounded-full ${coupon.isActive ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
-                                        {coupon.isActive ? 'Aktif' : 'Pasif'}
+                                        {coupon.isActive ? 'Aktiv' : 'Inaktiv'}
                                     </span>
                                     <button onClick={() => toggleActive(coupon)} className={`p-1.5 rounded-lg text-sm transition text-white ${coupon.isActive ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 hover:bg-gray-500'}`}>{coupon.isActive ? '✅' : '⏸️'}</button>
                                     <button onClick={() => openEdit(coupon)} className="p-1.5 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-white text-sm">✏️</button>
@@ -206,35 +206,35 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg my-8">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-white">{editing ? 'Kupon Düzenle' : 'Yeni Kupon'}</h2>
+                            <h2 className="text-xl font-bold text-white">{editing ? 'Gutschein bearbeiten' : 'Neuer Gutschein'}</h2>
                             <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
                         </div>
 
                         <div className="space-y-4">
                             <div className="flex gap-3">
                                 <div className="flex-1">
-                                    <label className="text-gray-400 text-sm mb-1 block">Kupon Kodu *</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Gutscheincode *</label>
                                     <input type="text" value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white font-mono tracking-widest focus:ring-2 focus:ring-green-500" />
                                 </div>
                                 <button onClick={() => setForm({ ...form, code: generateCode() })}
                                     className="self-end px-3 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition text-sm">
-                                    🎲 Üret
+                                    🎲 Generieren
                                 </button>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İndirim Türü</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Rabatttyp</label>
                                     <select value={form.discountType} onChange={e => setForm({ ...form, discountType: e.target.value as any })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                                        <option value="percent">Yüzde (%)</option>
-                                        <option value="fixed">Sabit (€)</option>
-                                        <option value="freeDelivery">Ücretsiz Teslimat</option>
+                                        <option value="percent">Prozent (%)</option>
+                                        <option value="fixed">Fest (€)</option>
+                                        <option value="freeDelivery">Gratis Lieferung</option>
                                     </select>
                                 </div>
                                 {form.discountType !== 'freeDelivery' && (
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">Değer</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">Wert</label>
                                         <input type="number" value={form.discountValue} onChange={e => setForm({ ...form, discountValue: Number(e.target.value) })}
                                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500" />
                                     </div>
@@ -242,33 +242,33 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Min. Sipariş (€)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Min. Bestellung (€)</label>
                                     <input type="number" value={form.minOrderAmount} onChange={e => setForm({ ...form, minOrderAmount: Number(e.target.value) })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Toplam Kullanım Limiti</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Nutzungslimit gesamt</label>
                                     <input type="number" value={form.usageLimit} onChange={e => setForm({ ...form, usageLimit: Number(e.target.value) })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-1 block">Kupon Türü</label>
+                                <label className="text-gray-400 text-sm mb-1 block">Gutscheintyp</label>
                                 <select value={form.couponType} onChange={e => setForm({ ...form, couponType: e.target.value as any })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
-                                    <option value="multi_use">Çok Kullanımlı</option>
-                                    <option value="one_per_user">Kişi Başı 1 Kullanım</option>
-                                    <option value="single_use">Tek Kullanımlık</option>
+                                    <option value="multi_use">Mehrfachnutzung</option>
+                                    <option value="one_per_user">1x pro Person</option>
+                                    <option value="single_use">Einmalig</option>
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Başlangıç</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Startdatum</label>
                                     <input type="date" value={form.validFrom} onChange={e => setForm({ ...form, validFrom: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Bitiş</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Enddatum</label>
                                     <input type="date" value={form.validUntil} onChange={e => setForm({ ...form, validUntil: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white" />
                                 </div>
@@ -276,19 +276,19 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                             <div className="flex items-center gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="w-4 h-4 accent-green-500" />
-                                    <span className="text-gray-300 text-sm">Aktif</span>
+                                    <span className="text-gray-300 text-sm">Aktiv</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" checked={!!form.newCustomersOnly} onChange={e => setForm({ ...form, newCustomersOnly: e.target.checked })} className="w-4 h-4 accent-purple-500" />
-                                    <span className="text-gray-300 text-sm">Sadece Yeni Müşteriler</span>
+                                    <span className="text-gray-300 text-sm">Nur Neukunden</span>
                                 </label>
                             </div>
                         </div>
 
                         <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">İptal</button>
+                            <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">Abbrechen</button>
                             <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition disabled:opacity-50">
-                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                {saving ? 'Wird gespeichert...' : 'Speichern'}
                             </button>
                         </div>
                     </div>
@@ -299,11 +299,11 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 max-w-sm w-full text-center">
                         <span className="text-4xl">🗑️</span>
-                        <h3 className="text-white font-bold mt-3">Kuponu Sil</h3>
-                        <p className="text-gray-400 text-sm mt-2">"{confirmDelete.code}" kuponunu kalıcı olarak silmek istediğinizden emin misiniz?</p>
+                        <h3 className="text-white font-bold mt-3">Gutschein löschen</h3>
+                        <p className="text-gray-400 text-sm mt-2">Sind Sie sicher, dass Sie den Gutschein "{confirmDelete.code}" endgültig löschen möchten?</p>
                         <div className="flex gap-3 mt-5">
-                            <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">İptal</button>
-                            <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500">Sil</button>
+                            <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Abbrechen</button>
+                            <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500">Löschen</button>
                         </div>
                     </div>
                 </div>

@@ -44,7 +44,7 @@ function RegisterContent() {
     useEffect(() => {
         const loadInvitation = async () => {
             if (!token) {
-                setError('Geçersiz davetiye linki.');
+                setError('Ungültiger Einladungslink.');
                 setLoading(false);
                 return;
             }
@@ -57,7 +57,7 @@ function RegisterContent() {
                 const snapshot = await getDocs(invitationsQuery);
 
                 if (snapshot.empty) {
-                    setError('Davetiye bulunamadı veya geçersiz.');
+                    setError('Einladung nicht gefunden oder ungültig.');
                     setLoading(false);
                     return;
                 }
@@ -67,13 +67,13 @@ function RegisterContent() {
                 const expiresAt = invData.expiresAt?.toDate();
 
                 if (new Date() > expiresAt) {
-                    setError('Bu davetiyenin süresi dolmuş. Lütfen yeni bir davetiye isteyin.');
+                    setError('Diese Einladung ist abgelaufen. Bitte fordern Sie eine neue Einladung an.');
                     setLoading(false);
                     return;
                 }
 
                 if (invData.status !== 'pending') {
-                    setError('Bu davetiye zaten kullanılmış.');
+                    setError('Diese Einladung wurde bereits verwendet.');
                     setLoading(false);
                     return;
                 }
@@ -88,7 +88,7 @@ function RegisterContent() {
                 });
             } catch (err) {
                 console.error('Load invitation error:', err);
-                setError('Davetiye yüklenirken hata oluştu.');
+                setError('Fehler beim Laden der Einladung.');
             }
             setLoading(false);
         };
@@ -100,17 +100,17 @@ function RegisterContent() {
         e.preventDefault();
 
         if (password !== confirmPassword) {
-            setError('Şifreler eşleşmiyor.');
+            setError('Passwörter stimmen nicht überein.');
             return;
         }
 
         if (password.length < 6) {
-            setError('Şifre en az 6 karakter olmalıdır.');
+            setError('Passwort muss mindestens 6 Zeichen lang sein.');
             return;
         }
 
         if (!firstName || !lastName || !phone) {
-            setError('Lütfen tüm zorunlu alanları doldurun.');
+            setError('Bitte füllen Sie alle Pflichtfelder aus.');
             return;
         }
 
@@ -168,9 +168,9 @@ function RegisterContent() {
             console.error('Registration error:', err);
             if (err instanceof Error) {
                 if (err.message.includes('email-already-in-use')) {
-                    setError('Bu e-posta adresi zaten kayıtlı.');
+                    setError('Diese E-Mail-Adresse ist bereits registriert.');
                 } else {
-                    setError('Kayıt sırasında bir hata oluştu.');
+                    setError('Fehler bei der Registrierung.');
                 }
             }
         }
@@ -190,16 +190,16 @@ function RegisterContent() {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                     <div className="text-6xl mb-4">✅</div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Kayıt Tamamlandı!</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Registrierung abgeschlossen!</h1>
                     <p className="text-gray-600 mb-6">
-                        Bilgileriniz alındı. Hesabınız yönetici onayından sonra aktif olacaktır.
-                        Onay verildiğinde e-posta ile bilgilendirileceksiniz.
+                        Ihre Daten wurden empfangen. Ihr Konto wird nach Genehmigung durch den Administrator aktiviert.
+                        Sie werden per E-Mail benachrichtigt, sobald die Genehmigung erteilt wurde.
                     </p>
                     <Link
                         href="/"
                         className="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700"
                     >
-                        Ana Sayfaya Dön
+                        Zur Startseite
                     </Link>
                 </div>
             </div>
@@ -211,13 +211,13 @@ function RegisterContent() {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
                 <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                     <div className="text-6xl mb-4">❌</div>
-                    <h1 className="text-2xl font-bold text-red-600 mb-2">Hata</h1>
+                    <h1 className="text-2xl font-bold text-red-600 mb-2">Fehler</h1>
                     <p className="text-gray-600 mb-6">{error}</p>
                     <Link
                         href="/"
                         className="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700"
                     >
-                        Ana Sayfaya Dön
+                        Zur Startseite
                     </Link>
                 </div>
             </div>
@@ -233,12 +233,12 @@ function RegisterContent() {
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl mb-4">
                             <span className="text-white text-2xl font-bold">M</span>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Super Admin Kaydı</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Super Admin Registrierung</h1>
                         <p className="text-gray-500 mt-2">
-                            <span className="font-medium text-blue-600">{invitation?.email}</span> için hesap oluşturun
+                            Konto erstellen für <span className="font-medium text-blue-600">{invitation?.email}</span>
                         </p>
                         <p className="text-gray-400 text-sm mt-1">
-                            Davet eden: {invitation?.invitedByEmail}
+                            Eingeladen von: {invitation?.invitedByEmail}
                         </p>
                     </div>
 
@@ -252,24 +252,24 @@ function RegisterContent() {
                         {/* Password */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Şifre *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    placeholder="En az 6 karakter"
+                                    placeholder="Mindestens 6 Zeichen"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Şifre Tekrar *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Passwort wiederholen *</label>
                                 <input
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Şifreyi tekrarlayın"
+                                    placeholder="Passwort wiederholen"
                                     required
                                 />
                             </div>
@@ -277,10 +277,10 @@ function RegisterContent() {
 
                         {/* Personal Info */}
                         <div className="border-t pt-6">
-                            <h3 className="font-semibold text-gray-900 mb-4">Kişisel Bilgiler</h3>
+                            <h3 className="font-semibold text-gray-900 mb-4">Persönliche Daten</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ad *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
                                     <input
                                         type="text"
                                         value={firstName}
@@ -290,7 +290,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Soyad *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
                                     <input
                                         type="text"
                                         value={lastName}
@@ -313,7 +313,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Doğum Tarihi</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
                                     <input
                                         type="date"
                                         value={dateOfBirth}
@@ -326,10 +326,10 @@ function RegisterContent() {
 
                         {/* Address */}
                         <div className="border-t pt-6">
-                            <h3 className="font-semibold text-gray-900 mb-4">Adres Bilgileri</h3>
+                            <h3 className="font-semibold text-gray-900 mb-4">Adressdaten</h3>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Sokak</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
                                     <input
                                         type="text"
                                         value={street}
@@ -338,7 +338,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kapı No</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Hausnr.</label>
                                     <input
                                         type="text"
                                         value={houseNumber}
@@ -349,7 +349,7 @@ function RegisterContent() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mt-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Posta Kodu</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
                                     <input
                                         type="text"
                                         value={postalCode}
@@ -358,7 +358,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Şehir</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
                                     <input
                                         type="text"
                                         value={city}
@@ -369,13 +369,13 @@ function RegisterContent() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mt-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Eyalet</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Bundesland</label>
                                     <select
                                         value={state}
                                         onChange={(e) => setState(e.target.value)}
                                         className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
-                                        <option value="">Seçin...</option>
+                                        <option value="">Auswählen...</option>
                                         <option value="Nordrhein-Westfalen">Nordrhein-Westfalen</option>
                                         <option value="Bayern">Bayern</option>
                                         <option value="Baden-Württemberg">Baden-Württemberg</option>
@@ -395,7 +395,7 @@ function RegisterContent() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ülke</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Land</label>
                                     <select
                                         value={country}
                                         onChange={(e) => setCountry(e.target.value)}
@@ -415,7 +415,7 @@ function RegisterContent() {
                             disabled={submitting}
                             className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                         >
-                            {submitting ? 'Kaydediliyor...' : 'Kaydı Tamamla'}
+                            {submitting ? 'Wird gespeichert...' : 'Registrierung abschließen'}
                         </button>
                     </form>
                 </div>

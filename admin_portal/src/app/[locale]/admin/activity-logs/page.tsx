@@ -200,7 +200,7 @@ export default function CustomerServicePage() {
                                                             </div>
                                                         </div>
                                                         <span className={`px-3 py-1 rounded-full text-xs font-medium border shrink-0 ${business.isActive ? 'bg-green-900/50 text-green-300 border-green-500/30' : 'bg-red-900/50 text-red-300 border-red-500/30'}`}>
-                                                            {business.isActive ? 'AKTİF' : 'PASİF'}
+                                                            {business.isActive ? t('aktif_buyuk') : t('inaktif_buyuk')}
                                                         </span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm mt-4 bg-gray-900/50 p-4 rounded-lg border-l-2 border-l-amber-500/50">
@@ -255,19 +255,19 @@ export default function CustomerServicePage() {
                                                     <div className="flex items-center gap-2 mt-1">
                                                         {(user.adminType === 'restoran_admin' || user.adminType === 'market_admin') ? (
                                                             <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-widest font-semibold flex items-center gap-1">
-                                                                <span className="text-[10px]">🏢</span> B2B İşletme
+                                                                <span className="text-[10px]">🏢</span> {t('b2b_unternehmen')}
                                                             </span>
                                                         ) : user.adminType === 'restoran_staff' ? (
                                                             <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-widest font-semibold flex items-center gap-1">
-                                                                <span className="text-[10px]">🧑‍🍳</span> Personel
+                                                                <span className="text-[10px]">🧑‍🍳</span> {t('personel')}
                                                             </span>
                                                         ) : user.isVirtualKermesUser ? (
                                                             <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 uppercase tracking-widest font-semibold flex items-center gap-1">
-                                                                <span className="text-[10px]">🏕️</span> Topluluk User
+                                                                <span className="text-[10px]">🏕️</span> Community User
                                                             </span>
                                                         ) : (
                                                             <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-700 text-gray-300 uppercase tracking-wider">
-                                                                <span className="text-[10px]">👤</span> B2C Müşteri
+                                                                <span className="text-[10px]">👤</span> {t('b2c_kunde')}
                                                             </span>
                                                         )}
                                                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-gray-400 font-mono tracking-wider ml-1">
@@ -530,7 +530,7 @@ export default function CustomerServicePage() {
                                     </h3>
                                     {selectedOrder.courierName && (
                                         <div className="mb-4">
-                                            <p className="text-xs text-gray-500 mb-1">Kurye Adı</p>
+                                            <p className="text-xs text-gray-500 mb-1">{t('kurier_name')}</p>
                                             <p className="text-white">{selectedOrder.courierName}</p>
                                         </div>
                                     )}
@@ -583,7 +583,7 @@ export default function CustomerServicePage() {
                                             disabled={isCancelling || !cancelReason.trim()}
                                             className="bg-red-900/50 hover:bg-red-600 text-red-200 hover:text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap border border-red-500/30 hover:border-red-500"
                                         >
-                                            {isCancelling ? 'İşleniyor...' : t('cancelModal.confirm')}
+                                            {isCancelling ? t('wird_verarbeitet') : t('cancelModal.confirm')}
                                         </button>
                                     </div>
                                 </div>
@@ -592,7 +592,7 @@ export default function CustomerServicePage() {
                                 onClick={() => { setSelectedOrder(null); setCancelReason(''); }}
                                 className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors ml-auto"
                             >
-                                Kapat
+                                {t('schliessen')}
                             </button>
                         </div>
                     </div>

@@ -13,8 +13,8 @@ interface PromotionTemplate {
     icon: string;
     defaultValue: number;
     defaultDurationDays: number;
-    minPlanTier: string; // eski alan (backward compat)
-    availablePlans: string[]; // YENİ: hangi planlarda görünür
+    minPlanTier: string; // legacy field (backward compat)
+    availablePlans: string[]; // NEW: which plans can see this
     allowedPopupFormats: string[];
     isActive: boolean;
     sortOrder: number;
@@ -28,34 +28,34 @@ interface Props {
 }
 
 const PROMOTION_TYPES = [
-    // — Klasik İndirim Modelleri —
-    { value: 'percentOff', label: 'Yüzde İndirim (%)', icon: '🔥' },
-    { value: 'fixedOff', label: 'Sabit İndirim (€)', icon: '🎉' },
-    { value: 'freeDelivery', label: 'Ücretsiz Teslimat', icon: '🚚' },
-    { value: 'buyXGetY', label: '1 Al 1 Bedava (BOGO)', icon: '🎁' },
-    { value: 'minOrderDiscount', label: 'Min. Siparişe İndirim', icon: '💰' },
-    // — Zamanlı & Etkinlik —
+    // — Klassische Rabattmodelle —
+    { value: 'percentOff', label: 'Prozent-Rabatt (%)', icon: '🔥' },
+    { value: 'fixedOff', label: 'Fester Rabatt (€)', icon: '🎉' },
+    { value: 'freeDelivery', label: 'Gratis Lieferung', icon: '🚚' },
+    { value: 'buyXGetY', label: '1 kaufen 1 gratis (BOGO)', icon: '🎁' },
+    { value: 'minOrderDiscount', label: 'Min. Bestellrabatt', icon: '💰' },
+    // — Zeitbasiert & Events —
     { value: 'happyHour', label: 'Happy Hour', icon: '⏰' },
-    { value: 'flashSale', label: 'Flash Sale (Anlık Fırsat)', icon: '⚡' },
-    // — Sadakat & Ödül —
-    { value: 'loyaltyCard', label: 'Puan Kartı (Stempelkarte)', icon: '🎖️' },
-    { value: 'cashback', label: 'Cashback (Bakiye İade)', icon: '💸' },
-    { value: 'spinWheel', label: 'Çark Çevir (Gamification)', icon: '🎰' },
-    // — Ürün & Sepet Bazlı —
-    { value: 'bundleDeal', label: 'Bundle / Combo Paket', icon: '📦' },
-    { value: 'productDiscount', label: 'Ürün Bazlı İndirim', icon: '🏷️' },
-    { value: 'cartBooster', label: 'Sepet Büyütücü (X€ üstü → Y bedava)', icon: '🛒' },
-    // — Hedefli & Otomatik —
-    { value: 'segmentCampaign', label: 'Segmentli Kampanya (VIP/Yeni/Geri)', icon: '🎯' },
-    { value: 'firstOrderSurprise', label: 'İlk Sipariş Sürprizi', icon: '💳' },
-    { value: 'pushPromo', label: 'Push-Only Promosyon', icon: '📲' },
+    { value: 'flashSale', label: 'Flash Sale (Blitzangebot)', icon: '⚡' },
+    // — Treue & Belohnung —
+    { value: 'loyaltyCard', label: 'Stempelkarte (Treuekarte)', icon: '🎖️' },
+    { value: 'cashback', label: 'Cashback (Guthabenerstattung)', icon: '💸' },
+    { value: 'spinWheel', label: 'Glücksrad (Gamification)', icon: '🎰' },
+    // — Produkt- & Warenkorbbasiert —
+    { value: 'bundleDeal', label: 'Bundle / Combo-Paket', icon: '📦' },
+    { value: 'productDiscount', label: 'Produktrabatt', icon: '🏷️' },
+    { value: 'cartBooster', label: 'Warenkorb-Booster (X€+ → Y gratis)', icon: '🛒' },
+    // — Zielgerichtet & Automatisch —
+    { value: 'segmentCampaign', label: 'Segment-Kampagne (VIP/Neu/Wiederkehrend)', icon: '🎯' },
+    { value: 'firstOrderSurprise', label: 'Erstbestell-Überraschung', icon: '💳' },
+    { value: 'pushPromo', label: 'Push-Only Promotion', icon: '📲' },
 ];
 
 const POPUP_FORMATS = [
-    { value: 'bottomSheet', label: 'Alt Sayfa' },
-    { value: 'centerModal', label: 'Ortada Popup' },
-    { value: 'topBanner', label: 'Üst Banner' },
-    { value: 'snackbar', label: 'Bildirim Çubuğu' },
+    { value: 'bottomSheet', label: 'Bottom Sheet' },
+    { value: 'centerModal', label: 'Zentriertes Popup' },
+    { value: 'topBanner', label: 'Oberes Banner' },
+    { value: 'snackbar', label: 'Benachrichtigungsleiste' },
 ];
 
 const PLAN_TIERS = [
@@ -107,7 +107,7 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
     const openAdd = () => { setEditing(null); setForm({ ...defaultTemplate, sortOrder: templates.length }); setShowModal(true); };
     const openEdit = (t: PromotionTemplate) => {
         setEditing(t);
-        // availablePlans yoksa minPlanTier'dan türet (backward compat)
+        // If availablePlans missing, derive from minPlanTier (backward compat)
         const plans = t.availablePlans || PLAN_TIERS.filter(p => (PLAN_TIERS.findIndex(pt => pt.value === p.value)) >= (PLAN_TIERS.findIndex(pt => pt.value === (t.minPlanTier || 'free')))).map(p => p.value);
         setForm({ name: t.name, nameTranslations: t.nameTranslations || { tr: '', en: '', de: '' }, description: t.description, type: t.type, icon: t.icon, defaultValue: t.defaultValue, defaultDurationDays: t.defaultDurationDays, minPlanTier: t.minPlanTier || 'free', availablePlans: plans, allowedPopupFormats: t.allowedPopupFormats || [], isActive: t.isActive, sortOrder: t.sortOrder });
         setShowModal(true);
@@ -164,20 +164,20 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h2 className="text-white font-bold text-lg">📋 Kampanya Şablonları</h2>
-                    <p className="text-gray-400 text-sm mt-0.5">İşletmeler bu şablonları bir tıkla kampanyaya dönüştürebilir</p>
+                    <h2 className="text-white font-bold text-lg">📋 Kampagnen-Vorlagen</h2>
+                    <p className="text-gray-400 text-sm mt-0.5">Unternehmen können diese Vorlagen mit einem Klick aktivieren</p>
                 </div>
                 <button onClick={openAdd} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium transition">
-                    + Şablon Ekle
+                    + Vorlage hinzufügen
                 </button>
             </div>
 
             {templates.length === 0 ? (
                 <div className="bg-gray-800 rounded-xl p-12 text-center">
                     <span className="text-5xl">📋</span>
-                    <h3 className="text-lg font-medium text-white mt-4">Henüz şablon yok</h3>
-                    <p className="text-gray-400 mt-2">Şablonlar işletmelerin hızlıca kampanya oluşturmasını sağlar</p>
-                    <button onClick={openAdd} className="mt-4 px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition">+ İlk Şablonu Ekle</button>
+                    <h3 className="text-lg font-medium text-white mt-4">Noch keine Vorlagen</h3>
+                    <p className="text-gray-400 mt-2">Vorlagen ermöglichen Unternehmen schnelle Kampagnenerstellung</p>
+                    <button onClick={openAdd} className="mt-4 px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition">+ Erste Vorlage erstellen</button>
                 </div>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
@@ -202,7 +202,7 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
                                 </div>
                                 <div className="flex flex-wrap gap-1.5 mt-3 text-xs">
                                     <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded">{typeInfo?.icon} {typeInfo?.label}</span>
-                                    <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded">⏱ {tpl.defaultDurationDays} gün</span>
+                                    <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded">⏱ {tpl.defaultDurationDays} Tage</span>
                                     {(tpl.availablePlans || [tpl.minPlanTier]).map(plan => {
                                         const planColors: Record<string, string> = { free: 'bg-gray-600 text-gray-200', basic: 'bg-blue-900/50 text-blue-300', pro: 'bg-amber-900/50 text-amber-300', ultra: 'bg-purple-900/50 text-purple-300' };
                                         return <span key={plan} className={`px-2 py-0.5 rounded ${planColors[plan] || 'bg-gray-700 text-gray-300'}`}>{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>;
@@ -219,7 +219,7 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg my-8">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-white">{editing ? 'Şablon Düzenle' : 'Yeni Şablon'}</h2>
+                            <h2 className="text-xl font-bold text-white">{editing ? 'Vorlage bearbeiten' : 'Neue Vorlage'}</h2>
                             <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
                         </div>
 
@@ -227,82 +227,82 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
                             {/* Icon + Names */}
                             <div className="flex gap-3">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İkon</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Icon</label>
                                     <input type="text" value={form.icon} onChange={e => setForm({ ...form, icon: e.target.value })}
                                         className="w-16 px-3 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white text-2xl text-center" />
                                 </div>
                                 <div className="flex-1">
-                                    <label className="text-gray-400 text-sm mb-1 block">Şablon Adı (TR) *</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Vorlagenname (TR) *</label>
                                     <input type="text" value={form.nameTranslations?.tr || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, tr: e.target.value } })}
-                                        placeholder="Örn: Ücretsiz Teslimat Günü"
+                                        placeholder="z.B. Gratis-Lieferungstag"
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İngilizce (EN)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Englisch (EN)</label>
                                     <input type="text" value={form.nameTranslations?.en || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, en: e.target.value } })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Almanca (DE)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Deutsch (DE)</label>
                                     <input type="text" value={form.nameTranslations?.de || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, de: e.target.value } })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Fransızca (FR)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Französisch (FR)</label>
                                     <input type="text" value={form.nameTranslations?.fr || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, fr: e.target.value } })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İspanyolca (ES)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Spanisch (ES)</label>
                                     <input type="text" value={form.nameTranslations?.es || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, es: e.target.value } })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İtalyanca (IT)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Italienisch (IT)</label>
                                     <input type="text" value={form.nameTranslations?.it || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, it: e.target.value } })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Felemenkçe (NL)</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Niederländisch (NL)</label>
                                     <input type="text" value={form.nameTranslations?.nl || ''}
                                         onChange={e => setForm({ ...form, nameTranslations: { ...form.nameTranslations, nl: e.target.value } })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-1 block">Açıklama</label>
+                                <label className="text-gray-400 text-sm mb-1 block">Beschreibung</label>
                                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                                     rows={2} className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white resize-none focus:ring-2 focus:ring-violet-500" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">İndirim Türü</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Rabatttyp</label>
                                     <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white">
                                         {PROMOTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.icon} {t.label}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Varsayılan Değer</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">Standardwert</label>
                                     <input type="number" value={form.defaultValue} onChange={e => setForm({ ...form, defaultValue: Number(e.target.value) })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-1 block">Süre (Gün)</label>
+                                <label className="text-gray-400 text-sm mb-1 block">Dauer (Tage)</label>
                                 <input type="number" value={form.defaultDurationDays} onChange={e => setForm({ ...form, defaultDurationDays: Number(e.target.value) })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500" />
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-2 block">Hangi Planlarda Görünsün?</label>
+                                <label className="text-gray-400 text-sm mb-2 block">In welchen Plänen sichtbar?</label>
                                 <div className="flex flex-wrap gap-2">
                                     {PLAN_TIERS.map(p => {
                                         const isSelected = (form.availablePlans || []).includes(p.value);
@@ -319,10 +319,10 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
                                         );
                                     })}
                                 </div>
-                                <p className="text-gray-500 text-xs mt-1.5">Seçili planları olan işletmeler bu şablonu görebilir</p>
+                                <p className="text-gray-500 text-xs mt-1.5">Unternehmen mit den ausgewählten Plänen können diese Vorlage sehen</p>
                             </div>
                             <div>
-                                <label className="text-gray-400 text-sm mb-2 block">Popup Formatları</label>
+                                <label className="text-gray-400 text-sm mb-2 block">Popup-Formate</label>
                                 <div className="flex flex-wrap gap-2">
                                     {POPUP_FORMATS.map(f => (
                                         <button key={f.value} onClick={() => toggleFormat(f.value)}
@@ -334,14 +334,14 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
                             </div>
                             <div className="flex items-center gap-2">
                                 <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} id="tpl-active" className="w-4 h-4 accent-violet-500" />
-                                <label htmlFor="tpl-active" className="text-gray-300 text-sm cursor-pointer">Aktif (işletmelere görünür)</label>
+                                <label htmlFor="tpl-active" className="text-gray-300 text-sm cursor-pointer">Aktiv (für Unternehmen sichtbar)</label>
                             </div>
                         </div>
 
                         <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">İptal</button>
+                            <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">Abbrechen</button>
                             <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition disabled:opacity-50">
-                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                {saving ? 'Wird gespeichert...' : 'Speichern'}
                             </button>
                         </div>
                     </div>
@@ -352,11 +352,11 @@ export default function TemplatesTab({ templates, setTemplates, loaded, setLoade
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 max-w-sm w-full text-center">
                         <span className="text-4xl">🗑️</span>
-                        <h3 className="text-white font-bold mt-3">Şablonu Sil</h3>
-                        <p className="text-gray-400 text-sm mt-2">"{confirmDelete.nameTranslations?.tr || confirmDelete.name}" şablonunu silmek istediğinizden emin misiniz?</p>
+                        <h3 className="text-white font-bold mt-3">Vorlage löschen</h3>
+                        <p className="text-gray-400 text-sm mt-2">Sind Sie sicher, dass Sie die Vorlage "{confirmDelete.nameTranslations?.tr || confirmDelete.name}" endgültig löschen möchten?</p>
                         <div className="flex gap-3 mt-5">
-                            <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">İptal</button>
-                            <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500">Sil</button>
+                            <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Abbrechen</button>
+                            <button onClick={() => handleDelete(confirmDelete)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500">Löschen</button>
                         </div>
                     </div>
                 </div>

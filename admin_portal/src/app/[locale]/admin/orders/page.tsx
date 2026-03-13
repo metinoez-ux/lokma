@@ -13,23 +13,23 @@ import { printOrder, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/service
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
 const orderStatuses = {
-    pending: { label: 'Beklemede', color: 'yellow', icon: '⏳' },
-    accepted: { label: 'Onaylandı', color: 'blue', icon: '✅' },
-    preparing: { label: 'Hazırlanıyor', color: 'amber', icon: '👨‍🍳' },
-    ready: { label: 'Hazır', color: 'green', icon: '📦' },
-    served: { label: 'Servis Edildi', color: 'teal', icon: '🍽️' },
-    onTheWay: { label: 'Yolda', color: 'indigo', icon: '🛵' },
-    delivered: { label: 'Teslim Edildi', color: 'emerald', icon: '🎉' },
-    completed: { label: 'Tamamlandı', color: 'emerald', icon: '✔️' },
-    cancelled: { label: 'İptal', color: 'red', icon: '❌' },
+    pending: { label: 'Ausstehend', color: 'yellow', icon: '⏳' },
+    accepted: { label: 'Bestätigt', color: 'blue', icon: '✅' },
+    preparing: { label: 'In Zubereitung', color: 'amber', icon: '👨‍🍳' },
+    ready: { label: 'Bereit', color: 'green', icon: '📦' },
+    served: { label: 'Serviert', color: 'teal', icon: '🍽️' },
+    onTheWay: { label: 'Unterwegs', color: 'indigo', icon: '🛵' },
+    delivered: { label: 'Geliefert', color: 'emerald', icon: '🎉' },
+    completed: { label: 'Abgeschlossen', color: 'emerald', icon: '✔️' },
+    cancelled: { label: 'Storniert', color: 'red', icon: '❌' },
 } as const;
 
 type OrderStatus = keyof typeof orderStatuses;
 
 const orderTypes = {
-    pickup: { label: 'Gel Al', icon: '🏃', color: 'green' },
-    delivery: { label: 'Kurye', icon: '🛵', color: 'blue' },
-    dine_in: { label: 'Yerinde', icon: '🍽️', color: 'amber' },
+    pickup: { label: 'Abholung', icon: '🏃', color: 'green' },
+    delivery: { label: 'Lieferung', icon: '🛵', color: 'blue' },
+    dine_in: { label: 'Vor Ort', icon: '🍽️', color: 'amber' },
 } as const;
 
 type OrderType = keyof typeof orderTypes;
@@ -195,7 +195,7 @@ export default function OrdersPage() {
 
         // For dine-in ready orders, mark as delivered (= completed)
         if (status === 'ready' && order.type === 'dine_in') {
-            return { label: '🍽️ Servis Edildi', action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
+            return { label: '🍽️ Serviert', action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
         }
 
         return null; // No action for ready (non-dine-in), onTheWay, delivered, cancelled
@@ -327,9 +327,9 @@ export default function OrdersPage() {
                 timestamp: serverTimestamp(),
                 adminEmail: admin?.email || 'unknown',
             });
-            showToast(`${type === 'delivery' ? '🛵 Kurye' : '🛍️ Gel-Al'} durduruldu${minutes ? ` (${minutes} dk)` : ''}`, 'success');
+            showToast(`${type === 'delivery' ? '🛵 Lieferung' : '🛍️ Abholung'} pausiert${minutes ? ` (${minutes} Min.)` : ''}`, 'success');
         } catch (e) {
-            showToast('Hata oluştu', 'error');
+            showToast('Fehler aufgetreten', 'error');
         }
         setShowDeliveryTimerMenu(false);
         setShowPickupTimerMenu(false);
@@ -350,18 +350,18 @@ export default function OrdersPage() {
                 timestamp: serverTimestamp(),
                 adminEmail: admin?.email || 'unknown',
             });
-            showToast(`${type === 'delivery' ? '🛵 Kurye' : '🛍️ Gel-Al'} tekrar aktif`, 'success');
+            showToast(`${type === 'delivery' ? '🛵 Lieferung' : '🛍️ Abholung'} wieder aktiv`, 'success');
         } catch (e) {
-            showToast('Hata oluştu', 'error');
+            showToast('Fehler aufgetreten', 'error');
         }
     };
 
     const PAUSE_DURATIONS = [
-        { label: '15 dk', minutes: 15 },
-        { label: '30 dk', minutes: 30 },
-        { label: '1 saat', minutes: 60 },
-        { label: '2 saat', minutes: 120 },
-        { label: 'Süresiz', minutes: null },
+        { label: '15 Min.', minutes: 15 },
+        { label: '30 Min.', minutes: 30 },
+        { label: '1 Std.', minutes: 60 },
+        { label: '2 Std.', minutes: 120 },
+        { label: 'Unbegrenzt', minutes: null },
     ] as const;
 
     // Load printer settings
@@ -374,7 +374,7 @@ export default function OrdersPage() {
     // Handle print order
     const handlePrintOrder = async (order: Order) => {
         if (!printerSettings.enabled || !printerSettings.printerIp) {
-            showToast('Yazıcı yapılandırılmamış. Ayarlar → IoT bölümünden ayarlayın.', 'error');
+            showToast('Drucker nicht konfiguriert. Einstellungen → IoT-Bereich.', 'error');
             return;
         }
         setPrintingOrderId(order.id);
@@ -399,12 +399,12 @@ export default function OrdersPage() {
             }, order.businessName || businesses[order.businessId] || 'LOKMA');
 
             if (result.success) {
-                showToast('🖨️ Bon yazdırıldı!', 'success');
+                showToast('🖨️ Bon gedruckt!', 'success');
             } else {
-                showToast(`🖨️ Yazdırma hatası: ${result.message}`, 'error');
+                showToast(`🖨️ Druckfehler: ${result.message}`, 'error');
             }
         } catch (err: any) {
-            showToast(`🖨️ Hata: ${err.message}`, 'error');
+            showToast(`🖨️ Fehler: ${err.message}`, 'error');
         } finally {
             setPrintingOrderId(null);
         }
@@ -655,7 +655,7 @@ export default function OrdersPage() {
                             if (refundData.refunded) {
                                 refundAmount = refundData.refundAmount;
                                 refundSucceeded = true;
-                                showToast(`${formatCurrency(refundAmount, order?.currency)} kısmi iade işlendi`, 'success');
+                                showToast(`${formatCurrency(refundAmount, order?.currency)} Teilrückerstattung verarbeitet`, 'success');
                             }
                         } catch (refundError) {
                             console.error('Error processing partial refund:', refundError);
@@ -761,7 +761,7 @@ export default function OrdersPage() {
     const formatDate = (timestamp: Timestamp | undefined) => {
         if (!timestamp) return '-';
         const date = timestamp.toDate();
-        return date.toLocaleString('tr-TR', {
+        return date.toLocaleString('de-DE', {
             day: '2-digit',
             month: '2-digit',
             hour: '2-digit',
@@ -948,7 +948,7 @@ export default function OrdersPage() {
                                     {/* Timer Selection Dropdown */}
                                     {showDeliveryTimerMenu && (
                                         <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
-                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">Kurye süre seçin</p>
+                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">{t('kurye_sure_secin')}</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {PAUSE_DURATIONS.map(d => (
                                                     <button
@@ -1136,7 +1136,7 @@ export default function OrdersPage() {
                                     <>
                                         <div className="flex items-center gap-2 pt-3 pb-1">
                                             <div className="flex-1 h-px bg-purple-500/30"></div>
-                                            <span className="text-purple-400 text-xs font-medium whitespace-nowrap">🕐 Ön Siparişler ({preOrders.length})</span>
+                                            <span className="text-purple-400 text-xs font-medium whitespace-nowrap">🕐 Vorbestellungen ({preOrders.length})</span>
                                             <div className="flex-1 h-px bg-purple-500/30"></div>
                                         </div>
                                         {preOrders.slice(0, 10).map(order => (
@@ -1268,10 +1268,10 @@ export default function OrdersPage() {
                                 return (
                                     <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
                                         <span className={isFuture ? 'text-purple-300 font-medium' : 'text-gray-400'}>
-                                            {isFuture ? '🕐 Planlanan Alım' : 'Alım Zamanı'}
+                                            {isFuture ? '🕐 Geplante Abholung' : 'Abholzeit'}
                                         </span>
                                         <span className={isFuture ? 'text-purple-200 font-bold' : 'text-white'}>
-                                            {d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                            {d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
                                 );
@@ -1554,7 +1554,7 @@ export default function OrdersPage() {
                                         disabled={printingOrderId === selectedOrder.id}
                                         className="w-full px-4 py-3 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
-                                        {printingOrderId === selectedOrder.id ? '⏳ Yazdırılıyor...' : '🖨️ Bon Yazdır'}
+                                        {printingOrderId === selectedOrder.id ? '⏳ Druckt...' : '🖨️ Bon drucken'}
                                     </button>
                                 </div>
                             )}
@@ -1790,10 +1790,10 @@ function OrderCard({
         tomorrow.setDate(tomorrow.getDate() + 1);
         const isTomorrow = d.toDateString() === tomorrow.toDateString();
 
-        const time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-        if (isToday) return `Bugün ${time}`;
-        if (isTomorrow) return `Yarın ${time}`;
-        return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
+        const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        if (isToday) return `Heute ${time}`;
+        if (isTomorrow) return `Morgen ${time}`;
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
     };
 
     return (
@@ -1830,7 +1830,7 @@ function OrderCard({
                 <div className="mb-1 space-y-0.5">
                     <div className="flex items-center gap-2 flex-wrap">
                         <span className="px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 text-xs font-medium">
-                            🍽️ Masa {order.tableNumber ? `#${order.tableNumber}` : ''}
+                            🍽️ Tisch {order.tableNumber ? `#${order.tableNumber}` : ''}
                         </span>
                         {order.isGroupOrder && (
                             <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
@@ -1860,7 +1860,7 @@ function OrderCard({
                         </span>
                     )}
                     <span className="text-gray-500 text-xs">
-                        {order.createdAt?.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                        {order.createdAt?.toDate().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                 </div>
             </div>

@@ -964,7 +964,15 @@
       "type": "Type",
       "address": "Address",
       "date": "Date"
-    }
+    },
+    "aktif_buyuk": "ACTIEF",
+    "inaktif_buyuk": "INACTIEF",
+    "b2b_unternehmen": "B2B Bedrijf",
+    "personel": "Personeel",
+    "b2c_kunde": "B2C Klant",
+    "kurier_name": "Koerier naam",
+    "wird_verarbeitet": "Verwerken...",
+    "schliessen": "Sluiten"
   },
   "AdminDashboard": {
     "yonlendiriliyor": "Yönlendiriliyor..."
@@ -1192,7 +1200,10 @@
     "_kapat": "▲ Kapat",
     "_grup_ekle": "➕ Grup Ekle",
     "grubu_sil": "Grubu Sil",
-    "kaydet": "Kaydet"
+    "kaydet": "Kaydet",
+    "one_cikan_aciklama": "Producten die als uitgelicht worden getoond aan klanten",
+    "henuz_urun_atanmamis": "Nog geen producten toegewezen",
+    "farkli_fiyat": "Andere prijs toepassen"
   },
   "AdminReports": {
     "title": "Reports — Legal Concerns",
@@ -1968,7 +1979,8 @@
     "location": "Location",
     "organization": "Organization",
     "country": "Country",
-    "city": "City"
+    "city": "City",
+    "adres_ulke_otomatik": "Het land wordt automatisch gedetecteerd wanneer u een adres selecteert"
   },
   "AdminImagegenerator": {
     "title": "Image Generator",
@@ -1991,7 +2003,29 @@
     "gallery": "Gallery",
     "generating": "Generating...",
     "prompt": "Description",
-    "notAuthenticated": "Not authenticated"
+    "notAuthenticated": "Not authenticated",
+    "metzger": "Slagerij",
+    "restoran": "Restaurant",
+    "hamburger": "Burger",
+    "getraenke": "Drank",
+    "quadrat": "Vierkant",
+    "portraet": "Portret",
+    "klassisch": "Klassiek",
+    "breitbild": "Breedbeeld",
+    "nicht_authentifiziert": "Niet geverifieerd",
+    "bild_erstellt": "Afbeelding \"{keyword}\" is aangemaakt en opgeslagen!",
+    "kein_bild": "\"{name}\" is geen afbeelding",
+    "zu_gross": "\"{name}\" is te groot (max. 10 MB)",
+    "manuell_hochgeladen": "Handmatig geüpload",
+    "bilder_hochgeladen": "{count} afbeeldingen succesvol geüpload!",
+    "upload_fehlgeschlagen": "Upload mislukt",
+    "negative_prompts": "Negatieve prompts",
+    "hintergrund": "Achtergrond",
+    "negativ": "Negatief",
+    "hochladen": "Uploaden...",
+    "bild_hochladen": "Afbeelding uploaden",
+    "alle": "Alle",
+    "url_kopieren": "URL kopiëren"
   },
   "AdminAimenu": {
     "title": "AI Menu Generator",
@@ -2005,7 +2039,11 @@
     "description": "Description",
     "name": "Name",
     "generating": "AI generating menu...",
-    "noResults": "No results"
+    "noResults": "No results",
+    "daha_fazla_dosya": "Klik of sleep om meer bestanden toe te voegen",
+    "menu_dosya_surukleme": "Sleep menubestanden hierheen",
+    "birden_fazla": "U kunt meerdere bestanden selecteren",
+    "islem_surebilir": "Dit proces kan enkele seconden duren"
   },
   "AdminPlans": {
     "title": "Subscription Plans",
@@ -2035,5 +2073,91 @@
     "gold": "Gold",
     "purple": "Purple",
     "pink": "Pink"
+  },
+  "AdminAccount": {
+    "click_collect": "🛒 Afhalen",
+    "otomatik_tahsil": "Automatisch geïnd",
+    "yenile": "Vernieuwen",
+    "bakiye_temiz": "✅ Saldo vereffend",
+    "mevcut_plan": "Huidig plan",
+    "bu_ay": "Deze maand",
+    "siparisler": "Bestellingen",
+    "provizyon": "Commissie",
+    "tahsil_edilen": "Geïnd",
+    "kdv": "BTW",
+    "kart": "Kaart",
+    "nakit": "Contant",
+    "teslimat": "Levering",
+    "oran": "Tarief",
+    "net_kdv": "Netto + BTW",
+    "ciro": "Omzet",
+    "iletisim_son": "neem contact op"
+  },
+  "AdminAdmins": {
+    "super_admin": "Super Admin",
+    "metzger_admin": "Slager Admin",
+    "kermes_admin": "Kermes Admin",
+    "metzger": "Slager",
+    "ad_soyad": "Volledige naam",
+    "eposta": "E-mail",
+    "rol": "Rol",
+    "atanan_isletme": "Toegewezen bedrijf",
+    "yetkiler": "Rechten",
+    "raporlar": "Rapporten",
+    "iptal": "Annuleren",
+    "siliniyor": "Verwijderen..."
+  },
+  "AdminShop": {
+    "bekleyen": "In afwachting",
+    "gonderildi": "Verzonden",
+    "teslim_edildi": "Bezorgd",
+    "iptal_edildi": "Geannuleerd",
+    "dashboard": "Dashboard",
+    "ciro": "Omzet",
+    "markalar": "Merken"
+  },
+  "AdminShopOrders": {
+    "bekleyen": "In afwachting",
+    "onaylandi": "Bevestigd",
+    "hazirlaniyor": "Wordt voorbereid",
+    "gonderildi": "Verzonden",
+    "teslim_edildi": "Bezorgd",
+    "iptal_edildi": "Geannuleerd",
+    "diger": "Overig",
+    "e_commerce": "E-Commerce",
+    "teslimat_adresi": "Afleveradres",
+    "daha_fazla": "meer...",
+    "takip_et": "Volgen",
+    "gonder": "Verzenden",
+    "iptal_et": "Annuleren",
+    "iptal": "Annuleren"
+  },
+  "AdminImportsFoodpaket": {
+    "import_abgeschlossen": "Import voltooid! {imported} producten toegevoegd, {skipped} producten overgeslagen (al bestaand).",
+    "fehler": "Fout",
+    "zum_dashboard": "Naar dashboard",
+    "berechnen": "Berekenen"
+  },
+  "AdminFuneralMembers": {
+    "unbekannt": "Onbekend",
+    "fehler_aufgetreten": "Er is een fout opgetreden",
+    "vor_und_nachname": "Voor- en achternaam",
+    "saldo": "Saldo",
+    "plan": "Plan",
+    "status_aktiv": "Actief",
+    "status_pending": "Bevestiging in afwachting",
+    "status_debtor": "In de schulden",
+    "status_passive": "Inactief",
+    "status_deceased": "Overleden",
+    "familie": "Familie",
+    "einzel": "Individueel",
+    "details": "Details",
+    "vorname": "Voornaam",
+    "nachname": "Achternaam"
+  },
+  "AdminPortal": {
+    "Orders": {
+      "kurye_sure_secin": "Koerier tijd selecteren"
+    }
   }
 }

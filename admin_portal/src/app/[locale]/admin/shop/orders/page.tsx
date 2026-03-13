@@ -44,27 +44,31 @@ interface ShopOrder {
     notes?: string;
 }
 
-const STATUS_OPTIONS = [
-    { value: 'pending', label: '⏳ Bekliyor', color: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30' },
-    { value: 'confirmed', label: '✅ Onaylandı', color: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
-    { value: 'preparing', label: '📦 Hazırlanıyor', color: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
-    { value: 'shipped', label: '🚚 Kargoda', color: 'bg-cyan-600/20 text-cyan-400 border-cyan-600/30' },
-    { value: 'delivered', label: '🎉 Teslim Edildi', color: 'bg-green-600/20 text-green-400 border-green-600/30' },
-    { value: 'cancelled', label: '❌ İptal', color: 'bg-red-600/20 text-red-400 border-red-600/30' },
-];
+/* STATUS_OPTIONS and CARRIER_OPTIONS moved inside component for i18n */
 
-const CARRIER_OPTIONS = [
-    { value: 'DHL', label: '🟡 DHL' },
-    { value: 'UPS', label: '🟤 UPS' },
-    { value: 'DPD', label: '🔴 DPD' },
-    { value: 'Hermes', label: '🔵 Hermes' },
-    { value: 'GLS', label: '🟢 GLS' },
-    { value: 'Other', label: '📦 Diğer' },
-];
+/* CARRIER_OPTIONS moved inside component for i18n */
 
 export default function ShopOrdersPage() {
 
     const t = useTranslations('AdminShopOrders');
+
+    const STATUS_OPTIONS = [
+        { value: 'pending', label: `⏳ ${t('bekleyen')}`, color: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30' },
+        { value: 'confirmed', label: `✅ ${t('onaylandi')}`, color: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
+        { value: 'preparing', label: `📦 ${t('hazirlaniyor')}`, color: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
+        { value: 'shipped', label: `🚚 ${t('gonderildi')}`, color: 'bg-cyan-600/20 text-cyan-400 border-cyan-600/30' },
+        { value: 'delivered', label: `🎉 ${t('teslim_edildi')}`, color: 'bg-green-600/20 text-green-400 border-green-600/30' },
+        { value: 'cancelled', label: `❌ ${t('iptal_edildi')}`, color: 'bg-red-600/20 text-red-400 border-red-600/30' },
+    ];
+
+    const CARRIER_OPTIONS = [
+        { value: 'DHL', label: '🟡 DHL' },
+        { value: 'UPS', label: '🟤 UPS' },
+        { value: 'DPD', label: '🔴 DPD' },
+        { value: 'Hermes', label: '🔵 Hermes' },
+        { value: 'GLS', label: '🟢 GLS' },
+        { value: 'Other', label: `📦 ${t('diger')}` },
+    ];
     const { admin, loading: adminLoading } = useAdmin();
 
     const [loading, setLoading] = useState(true);
@@ -199,7 +203,7 @@ export default function ShopOrdersPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/shop" className="text-gray-400 hover:text-white">← E-Ticaret</Link>
+                        <Link href="/admin/shop" className="text-gray-400 hover:text-white">← {t('e_commerce')}</Link>
                         <div>
                             <h1 className="text-2xl font-bold text-white flex items-center gap-2">{t('siparis_yonetimi')}</h1>
                             <p className="text-gray-400 text-sm mt-1">{filteredOrders.length} {t('siparis')}</p>
@@ -218,7 +222,7 @@ export default function ShopOrdersPage() {
                         )}
                         {shippedCount > 0 && (
                             <span className="bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg text-sm">
-                                🚚 {shippedCount} Kargoda
+                                🚚 {shippedCount} {t('gonderildi')}
                             </span>
                         )}
                     </div>
@@ -284,7 +288,7 @@ export default function ShopOrdersPage() {
 
                                     {/* Address */}
                                     <div>
-                                        <h4 className="text-gray-400 text-sm mb-2">📍 Teslimat Adresi</h4>
+                                        <h4 className="text-gray-400 text-sm mb-2">📍 {t('teslimat_adresi')}</h4>
                                         <div className="text-white text-sm">
                                             {order.shippingAddress?.street}<br />
                                             {order.shippingAddress?.postalCode} {order.shippingAddress?.city}<br />
@@ -303,7 +307,7 @@ export default function ShopOrdersPage() {
                                                 </div>
                                             ))}
                                             {(order.items?.length || 0) > 3 && (
-                                                <div className="text-gray-500">+{order.items.length - 3} daha...</div>
+                                                <div className="text-gray-500">+{order.items.length - 3} {t('daha_fazla')}</div>
                                             )}
                                         </div>
                                     </div>
@@ -326,7 +330,7 @@ export default function ShopOrdersPage() {
                                                 rel="noopener noreferrer"
                                                 className="text-cyan-400 hover:text-cyan-300 text-sm"
                                             >
-                                                Takip Et →
+                                                {t('takip_et')} →
                                             </a>
                                         </div>
                                     </div>
@@ -355,7 +359,7 @@ export default function ShopOrdersPage() {
                                             onClick={() => openShippingModal(order)}
                                             className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 text-sm font-medium"
                                         >
-                                            🚚 Kargoya Ver
+                                             🚚 {t('gonder')}
                                         </button>
                                     )}
                                     {order.status === 'shipped' && (
@@ -363,7 +367,7 @@ export default function ShopOrdersPage() {
                                             onClick={() => updateOrderStatus(order.id, 'delivered')}
                                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 text-sm font-medium"
                                         >
-                                            🎉 Teslim Edildi
+                                             🎉 {t('teslim_edildi')}
                                         </button>
                                     )}
                                     {order.status !== 'cancelled' && order.status !== 'delivered' && (
@@ -371,7 +375,7 @@ export default function ShopOrdersPage() {
                                             onClick={() => updateOrderStatus(order.id, 'cancelled')}
                                             className="px-4 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 text-sm font-medium"
                                         >
-                                            ❌ İptal
+                                             ❌ {t('iptal_et')}
                                         </button>
                                     )}
                                 </div>
@@ -386,7 +390,7 @@ export default function ShopOrdersPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl max-w-md w-full border border-gray-700">
                         <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">🚚 Kargoya Ver</h2>
+                            <h2 className="text-xl font-bold text-white">🚚 {t('gonder')}</h2>
                             <button onClick={() => setShowShippingModal(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
                         </div>
 
@@ -422,14 +426,14 @@ export default function ShopOrdersPage() {
 
                         <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
                             <button onClick={() => setShowShippingModal(false)} className="px-6 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">
-                                İptal
+                                {t('iptal')}
                             </button>
                             <button
                                 onClick={handleShipOrder}
                                 disabled={saving || !trackingNumber}
                                 className="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {saving ? t('gonderiliyor') : '🚚 Kargoya Ver'}
+                                {saving ? t('gonderiliyor') : `🚚 ${t('gonder')}`}
                             </button>
                         </div>
                     </div>

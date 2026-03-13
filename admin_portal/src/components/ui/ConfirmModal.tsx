@@ -27,7 +27,7 @@ export default function ConfirmModal({
     itemName,
     variant = 'danger',
     confirmText,
-    cancelText = 'İptal',
+    cancelText = 'Abbrechen',
     loadingText,
 }: ConfirmModalProps) {
 

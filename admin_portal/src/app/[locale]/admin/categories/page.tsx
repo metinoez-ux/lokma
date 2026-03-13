@@ -68,7 +68,7 @@ function CategoriesPageContent() {
                 const snapshot = await getDocs(collection(db, 'businesses'));
                 const biz = snapshot.docs.map(doc => ({
                     id: doc.id,
-                    name: doc.data().name || doc.data().businessName || 'İsimsiz',
+                    name: doc.data().name || doc.data().businessName || 'Unbenannt',
                     city: doc.data().city,
                     plz: doc.data().plz,
                 })) as Business[];
@@ -206,12 +206,12 @@ function CategoriesPageContent() {
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">Erişim Yok</h2>
+                    <h2 className="text-xl font-bold text-white mt-4">Kein Zugriff</h2>
                     <p className="text-gray-400 mt-2">
-                        Kategori yönetimi için bir işletmeye bağlı olmanız gerekiyor.
+                        Sie müssen mit einem Unternehmen verbunden sein, um Kategorien zu verwalten.
                     </p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
-                        Dashboard&apos;a Git
+                        Zum Dashboard
                     </Link>
                 </div>
             </div>
@@ -242,15 +242,15 @@ function CategoriesPageContent() {
                         <div className="flex items-center gap-3">
                             <span className="text-3xl">🗂️</span>
                             <div>
-                                <h1 className="text-xl font-bold">Kategori Yönetimi</h1>
-                                <p className="text-violet-200 text-sm">{categories.length} kategori</p>
+                                <h1 className="text-xl font-bold">Kategorieverwaltung</h1>
+                                <p className="text-violet-200 text-sm">{categories.length} Kategorien</p>
                             </div>
                         </div>
                         <button
                             onClick={openAdd}
                             className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition"
                         >
-                            + Yeni Kategori
+                            + Neue Kategorie
                         </button>
                     </div>
                 </div>
@@ -260,13 +260,13 @@ function CategoriesPageContent() {
                 {categories.length === 0 ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <span className="text-5xl">🗂️</span>
-                        <h3 className="text-lg font-medium text-white mt-4">Henüz kategori eklenmemiş</h3>
-                        <p className="text-gray-400 mt-2">Ürünlerinizi düzenlemek için kategori ekleyin.</p>
+                        <h3 className="text-lg font-medium text-white mt-4">Noch keine Kategorien vorhanden</h3>
+                        <p className="text-gray-400 mt-2">Fügen Sie Kategorien hinzu, um Ihre Produkte zu organisieren.</p>
                         <button
                             onClick={openAdd}
                             className="mt-4 px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition"
                         >
-                            + İlk Kategoriyi Ekle
+                            + Erste Kategorie hinzufügen
                         </button>
                     </div>
                 ) : (
@@ -284,7 +284,7 @@ function CategoriesPageContent() {
                                             onClick={() => moveCategory(index, 'up')}
                                             disabled={index === 0}
                                             className="text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-                                            title="Yukarı Taşı"
+                                            title="Nach oben"
                                         >
                                             ▲
                                         </button>
@@ -293,7 +293,7 @@ function CategoriesPageContent() {
                                             onClick={() => moveCategory(index, 'down')}
                                             disabled={index === categories.length - 1}
                                             className="text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-                                            title="Aşağı Taşı"
+                                            title="Nach unten"
                                         >
                                             ▼
                                         </button>
@@ -306,7 +306,7 @@ function CategoriesPageContent() {
                                     <div className="flex-1">
                                         <h3 className="text-white font-bold text-lg">{category.name}</h3>
                                         <p className="text-gray-500 text-sm">
-                                            {category.productCount || 0} ürün • {category.isActive ? '✅ Aktif' : '🔴 Pasif'}
+                                            {category.productCount || 0} Produkte • {category.isActive ? '✅ Aktiv' : '🔴 Inaktiv'}
                                         </p>
                                     </div>
 
@@ -315,14 +315,14 @@ function CategoriesPageContent() {
                                         <button
                                             onClick={() => openEdit(category)}
                                             className="p-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg transition text-white"
-                                            title="Düzenle"
+                                            title="Bearbeiten"
                                         >
                                             ✏️
                                         </button>
                                         <button
                                             onClick={() => setConfirmDelete(category)}
                                             className="p-2 bg-red-600 hover:bg-red-500 rounded-lg transition text-white"
-                                            title="Sil"
+                                            title="Löschen"
                                         >
                                             🗑️
                                         </button>
@@ -339,12 +339,12 @@ function CategoriesPageContent() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
                         <h2 className="text-xl font-bold text-white mb-4">
-                            {editingCategory ? 'Kategori Düzenle' : 'Yeni Kategori'}
+                            {editingCategory ? 'Kategorie bearbeiten' : 'Neue Kategorie'}
                         </h2>
 
                         {/* Icon Selection */}
                         <div className="mb-4">
-                            <label className="text-gray-400 text-sm mb-2 block">İkon</label>
+                            <label className="text-gray-400 text-sm mb-2 block">Symbol</label>
                             <div className="flex flex-wrap gap-2">
                                 {DEFAULT_ICONS.map(icon => (
                                     <button
@@ -363,12 +363,12 @@ function CategoriesPageContent() {
 
                         {/* Name Input */}
                         <div className="mb-4">
-                            <label className="text-gray-400 text-sm mb-2 block">Kategori Adı</label>
+                            <label className="text-gray-400 text-sm mb-2 block">Kategoriename</label>
                             <input
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Örn: Dana Eti, Kuzu Eti..."
+                                placeholder="z.B. Rindfleisch, Lammfleisch..."
                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500"
                             />
                         </div>
@@ -382,7 +382,7 @@ function CategoriesPageContent() {
                                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                     className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500 focus:ring-violet-500"
                                 />
-                                <span className="text-gray-300">Aktif (uygulamada görünsün)</span>
+                                <span className="text-gray-300">Aktiv (in der App sichtbar)</span>
                             </label>
                         </div>
 
@@ -392,14 +392,14 @@ function CategoriesPageContent() {
                                 onClick={() => setShowModal(false)}
                                 className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
                             >
-                                İptal
+                                Abbrechen
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving || !formData.name.trim()}
                                 className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition disabled:opacity-50"
                             >
-                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                {saving ? 'Wird gespeichert...' : 'Speichern'}
                             </button>
                         </div>
                     </div>
@@ -411,12 +411,12 @@ function CategoriesPageContent() {
                 isOpen={!!confirmDelete}
                 onClose={() => setConfirmDelete(null)}
                 onConfirm={handleDeleteConfirm}
-                title="Kategoriyi Sil"
-                message="Bu kategoriyi kalıcı olarak silmek istediğinizden emin misiniz?"
+                title="Kategorie löschen"
+                message="Sind Sie sicher, dass Sie diese Kategorie endgültig löschen möchten?"
                 itemName={confirmDelete?.name}
                 variant="danger"
-                confirmText="Evet, Sil"
-                loadingText="Siliniyor..."
+                confirmText="Ja, löschen"
+                loadingText="Wird gelöscht..."
             />
         </div>
     );

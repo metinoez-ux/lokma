@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, query, orderBy, getDocs, where, doc, getDoc, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { formatCurrency } from '@/utils/currency';
 
 // Types
@@ -42,12 +42,6 @@ interface BusinessUsage {
     };
 }
 
-const courierLabels: Record<string, string> = {
-    click_collect: '🛒 Gel-Al',
-    own_courier: '🏪 Kendi Kurye',
-    lokma_courier: '🚗 LOKMA Kurye',
-};
-
 const statusColors: Record<string, string> = {
     auto_collected: 'bg-green-600',
     pending: 'bg-yellow-600',
@@ -55,16 +49,23 @@ const statusColors: Record<string, string> = {
     paid: 'bg-emerald-600',
 };
 
-const statusLabels: Record<string, string> = {
-    auto_collected: 'Otomatik Tahsil',
-    pending: 'Bekliyor',
-    invoiced: 'Faturalandı',
-    paid: 'Ödendi',
-};
-
 export default function HesabimPage() {
 
     const t = useTranslations('AdminAccount');
+    const locale = useLocale();
+
+    const courierLabels: Record<string, string> = {
+        click_collect: t('click_collect'),
+        own_courier: t('kendi_kurye'),
+        lokma_courier: t('lokma_kurye'),
+    };
+
+    const statusLabels: Record<string, string> = {
+        auto_collected: t('otomatik_tahsil'),
+        pending: t('bekleyen'),
+        invoiced: t('faturalandi'),
+        paid: t('odendi'),
+    };
     const { admin, loading: adminLoading } = useAdmin();
     const [records, setRecords] = useState<CommissionRecord[]>([]);
     const [businessData, setBusinessData] = useState<BusinessUsage | null>(null);
@@ -211,7 +212,7 @@ export default function HesabimPage() {
                         onClick={() => { loadRecords(); loadBusinessData(); }}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm transition"
                     >
-                        🔄 Yenile
+                        🔄 {t('yenile')}
                     </button>
                 </div>
 
@@ -231,7 +232,7 @@ export default function HesabimPage() {
                         <p className="text-gray-400 text-xs">
                             {(businessData?.accountBalance || 0) > 0
                                 ? t('odenmesi_gereken_nakit_provizyon_bakiyen')
-                                : '✅ Bakiyeniz temiz'}
+                                : t('bakiye_temiz')}
                         </p>
                     </div>
 
@@ -240,7 +241,7 @@ export default function HesabimPage() {
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">📋</span>
                             <div>
-                                <p className="text-gray-400 text-xs uppercase tracking-wider">Mevcut Plan</p>
+                                <p className="text-gray-400 text-xs uppercase tracking-wider">{t('mevcut_plan')}</p>
                                 <p className="text-2xl font-bold text-indigo-400 capitalize">
                                     {businessData?.subscriptionPlan || 'Free'}
                                 </p>
@@ -256,7 +257,7 @@ export default function HesabimPage() {
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">📊</span>
                             <div>
-                                <p className="text-gray-400 text-xs uppercase tracking-wider">Bu Ay</p>
+                                <p className="text-gray-400 text-xs uppercase tracking-wider">{t('bu_ay')}</p>
                                 <p className="text-2xl font-bold text-cyan-400">
                                     {monthlyOrders} {t('siparis')}
                                 </p>
@@ -291,7 +292,7 @@ export default function HesabimPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
-                            <p className="text-gray-400 text-xs">Sipariş</p>
+                            <p className="text-gray-400 text-xs">{t('siparisler')}</p>
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</p>
@@ -299,11 +300,11 @@ export default function HesabimPage() {
                         </div>
                         <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-amber-400">{formatCurrency(stats.totalCommission, businessData?.currency)}</p>
-                            <p className="text-gray-400 text-xs">Provizyon</p>
+                            <p className="text-gray-400 text-xs">{t('provizyon')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.collectedAmount, businessData?.currency)}</p>
-                            <p className="text-gray-400 text-xs">Tahsil Edilen</p>
+                            <p className="text-gray-400 text-xs">{t('tahsil_edilen')}</p>
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-yellow-400">{formatCurrency(stats.pendingAmount, businessData?.currency)}</p>
@@ -311,7 +312,7 @@ export default function HesabimPage() {
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-gray-300">{formatCurrency(stats.vatTotal, businessData?.currency)}</p>
-                            <p className="text-gray-400 text-xs">KDV</p>
+                            <p className="text-gray-400 text-xs">{t('kdv')}</p>
                         </div>
                     </div>
 
@@ -319,12 +320,12 @@ export default function HesabimPage() {
                     <div className="mt-4 flex gap-4">
                         <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-600/20 rounded-lg px-4 py-2">
                             <span>💳</span>
-                            <span className="text-blue-400 text-sm font-medium">{stats.cardOrders} kart</span>
+                            <span className="text-blue-400 text-sm font-medium">{stats.cardOrders} {t('kart')}</span>
                             <span className="text-gray-500 text-sm">— {formatCurrency(stats.cardCommission, businessData?.currency)}</span>
                         </div>
                         <div className="flex items-center gap-2 bg-purple-600/10 border border-purple-600/20 rounded-lg px-4 py-2">
                             <span>💵</span>
-                            <span className="text-purple-400 text-sm font-medium">{stats.cashOrders} nakit</span>
+                            <span className="text-purple-400 text-sm font-medium">{stats.cashOrders} {t('nakit')}</span>
                             <span className="text-gray-500 text-sm">— {formatCurrency(stats.cashCommission, businessData?.currency)}</span>
                         </div>
                     </div>
@@ -347,12 +348,12 @@ export default function HesabimPage() {
                             <table className="w-full">
                                 <thead className="bg-gray-700">
                                     <tr>
-                                        <th className="px-3 py-3 text-left text-gray-300 text-xs">Sipariş</th>
-                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">Teslimat</th>
+                                        <th className="px-3 py-3 text-left text-gray-300 text-xs">{t('siparis')}</th>
+                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('teslimat')}</th>
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('tutar')}</th>
-                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">Oran</th>
-                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">Provizyon</th>
-                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">Net + KDV</th>
+                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('oran')}</th>
+                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('provizyon')}</th>
+                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('net_kdv')}</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('odeme')}</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('durum')}</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('tarih')}</th>
@@ -386,7 +387,7 @@ export default function HesabimPage() {
                                                 </td>
                                                 <td className="px-3 py-2 text-center">
                                                     <span className={`px-2 py-0.5 rounded text-xs ${r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
-                                                        {r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
+                                                        {r.paymentMethod === 'card' || r.paymentMethod === 'stripe' ? `💳 ${t('kart')}` : `💵 ${t('nakit')}`}
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-2 text-center">
@@ -395,7 +396,7 @@ export default function HesabimPage() {
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-2 text-center text-gray-400 text-xs">
-                                                    {r.createdAt.toLocaleDateString('de-DE')}
+                                                    {r.createdAt.toLocaleDateString(locale)}
                                                 </td>
                                             </tr>
                                         ))
@@ -409,8 +410,8 @@ export default function HesabimPage() {
                                         {t('toplam')} {filteredRecords.length} {t('siparis')}
                                     </span>
                                     <div className="flex gap-6">
-                                        <span className="text-white text-sm">Ciro: <strong>{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</strong></span>
-                                        <span className="text-amber-400 text-sm">Provizyon: <strong>{formatCurrency(stats.totalCommission, businessData?.currency)}</strong></span>
+                                        <span className="text-white text-sm">{t('ciro')}: <strong>{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</strong></span>
+                                        <span className="text-amber-400 text-sm">{t('provizyon')}: <strong>{formatCurrency(stats.totalCommission, businessData?.currency)}</strong></span>
                                     </div>
                                 </div>
                             )}
@@ -421,7 +422,7 @@ export default function HesabimPage() {
                 {/* Info Note */}
                 <div className="mt-6 bg-gray-800/50 border border-gray-700 rounded-xl p-4">
                     <p className="text-gray-400 text-xs leading-relaxed">
-                        {t('kart_ile_yapilan_odemelerde_provizyon_ot')} <span className="text-blue-400">info@lokma.shop</span> adresine yazabilirsiniz.
+                        {t('kart_ile_yapilan_odemelerde_provizyon_ot')} <span className="text-blue-400">info@lokma.shop</span> {t('iletisim_son')}.
                     </p>
                 </div>
             </div>

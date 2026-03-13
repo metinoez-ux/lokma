@@ -54,7 +54,7 @@ export default function FuneralMembersPage() {
                 lastName: formData.get('lastName') as string,
                 tcNoOrPassport: formData.get('tcNo') as string,
                 dateOfBirth: new Date(formData.get('birthDate') as string).toISOString(), // string preservation
-                placeOfBirth: 'Bilinmiyor', // default for now
+                placeOfBirth: t('unbekannt'),
                 gender: 'male', // default for now
                 nationality: 'TC',
                 phone: '',
@@ -87,7 +87,7 @@ export default function FuneralMembersPage() {
             loadMembers();
         } catch (error) {
             console.error('Error creating member:', error);
-            alert('Hata oluştu: ' + error);
+            alert(t('fehler_aufgetreten') + ': ' + error);
         } finally {
             setLoading(false);
         }
@@ -155,11 +155,11 @@ export default function FuneralMembersPage() {
                         <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs font-semibold tracking-wider">
                             <tr>
                                 <th className="px-6 py-4">{t('uye_no')}</th>
-                                <th className="px-6 py-4">Ad Soyad</th>
+                                <th className="px-6 py-4">{t('vor_und_nachname')}</th>
                                 <th className="px-6 py-4">{t('es_cocuk')}</th>
                                 <th className="px-6 py-4">{t('durum')}</th>
-                                <th className="px-6 py-4">Bakiye</th>
-                                <th className="px-6 py-4">Plan</th>
+                                <th className="px-6 py-4">{t('saldo')}</th>
+                                <th className="px-6 py-4">{t('plan')}</th>
                                 <th className="px-6 py-4 text-right">{t('i_slem')}</th>
                             </tr>
                         </thead>
@@ -179,7 +179,13 @@ export default function FuneralMembersPage() {
                                         {m.dependents?.length || 0} {t('kisi')}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <StatusBadge status={m.status} />
+                                        <StatusBadge status={m.status} labels={{
+                                            active: t('status_aktiv'),
+                                            pending: t('status_pending'),
+                                            debtor: t('status_debtor'),
+                                            passive: t('status_passive'),
+                                            deceased: t('status_deceased'),
+                                        }} />
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={m.balance < 0 ? 'text-red-400' : 'text-green-400'}>
@@ -188,12 +194,12 @@ export default function FuneralMembersPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className="bg-gray-700 px-2 py-1 rounded text-xs text-gray-300 border border-gray-600">
-                                            {m.subscription.plan === 'family' ? 'Aile' : 'Tek'}
+                                            {m.subscription.plan === 'family' ? t('familie') : t('einzel')}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <button className="text-blue-400 hover:text-white transition text-sm font-medium">
-                                            Detay &gt;
+                                            {t('details')} &gt;
                                         </button>
                                     </td>
                                 </tr>
@@ -211,8 +217,8 @@ export default function FuneralMembersPage() {
 
                         {/* Placeholder Form */}
                         <div className="space-y-4">
-                            <input type="text" placeholder="Ad" className="w-full bg-gray-700 p-3 rounded" />
-                            <input type="text" placeholder="Soyad" className="w-full bg-gray-700 p-3 rounded" />
+                            <input type="text" placeholder={t('vorname')} className="w-full bg-gray-700 p-3 rounded" />
+                            <input type="text" placeholder={t('nachname')} className="w-full bg-gray-700 p-3 rounded" />
                             <button className="w-full bg-green-600 py-3 rounded text-white font-bold hover:bg-green-500">
                                 {t('kaydet')}
                             </button>
@@ -230,21 +236,13 @@ export default function FuneralMembersPage() {
     );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, labels }: { status: string; labels: Record<string, string> }) {
     const colors: Record<string, string> = {
         active: 'bg-green-900/50 text-green-400 border-green-700',
         pending: 'bg-yellow-900/50 text-yellow-400 border-yellow-700',
         debtor: 'bg-red-900/50 text-red-400 border-red-700',
         passive: 'bg-gray-700 text-gray-400 border-gray-600',
         deceased: 'bg-purple-900/50 text-purple-400 border-purple-700',
-    };
-
-    const labels: Record<string, string> = {
-        active: 'Aktif',
-        pending: 'Onay Bekliyor',
-        debtor: 'Borçlu',
-        passive: 'Pasif',
-        deceased: 'Vefat',
     };
 
     return (

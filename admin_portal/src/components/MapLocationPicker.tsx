@@ -24,7 +24,7 @@ export function MapLocationPicker({
     isOpen,
     onClose,
     onLocationSelect,
-    initialLat = 51.0,  // Almanya merkezi
+    initialLat = 51.0,  // Mitte Deutschlands
     initialLng = 9.0
 }: MapLocationPickerProps) {
     const mapRef = useRef<HTMLDivElement>(null);
@@ -38,7 +38,7 @@ export function MapLocationPicker({
     const [error, setError] = useState<string | null>(null);
     const [isGoogleReady, setIsGoogleReady] = useState(false);
 
-    // Google Maps hazır mı kontrol et
+    // Prüfen ob Google Maps bereit ist
     useEffect(() => {
         const checkGoogleMaps = () => {
             if ((window as any).google?.maps?.Map) {
@@ -59,7 +59,7 @@ export function MapLocationPicker({
         const timeout = setTimeout(() => {
             clearInterval(interval);
             if (!isGoogleReady) {
-                setError('Google Maps yüklenemedi');
+                setError('Google Maps konnte nicht geladen werden');
                 setIsLoading(false);
             }
         }, 10000);
@@ -70,7 +70,7 @@ export function MapLocationPicker({
         };
     }, []);
 
-    // Haritayı başlat
+    // Karte initialisieren
     const initMap = useCallback(() => {
         if (!mapRef.current || !isGoogleReady) return;
 
@@ -97,7 +97,7 @@ export function MapLocationPicker({
             mapInstanceRef.current = map;
             geocoderRef.current = new google.maps.Geocoder();
 
-            // Haritaya tıklama eventi
+            // Klick-Event auf der Karte
             map.addListener('click', (e: google.maps.MapMouseEvent) => {
                 if (e.latLng) {
                     placeMarker(e.latLng.lat(), e.latLng.lng());
@@ -108,15 +108,15 @@ export function MapLocationPicker({
             setError(null);
         } catch (err) {
             console.error('Map init error:', err);
-            setError('Harita başlatılamadı');
+            setError('Karte konnte nicht initialisiert werden');
             setIsLoading(false);
         }
     }, [initialLat, initialLng, isGoogleReady]);
 
-    // Modal açıldığında ve Google hazırsa haritayı başlat
+    // Karte initialisieren wenn Modal geöffnet und Google bereit ist
     useEffect(() => {
         if (isOpen && isGoogleReady && mapRef.current && !mapInstanceRef.current) {
-            // Kısa bir gecikme ekle DOM'un hazır olması için
+            // Kurze Verzögerung damit das DOM bereit ist
             const timer = setTimeout(() => {
                 initMap();
             }, 100);
@@ -124,7 +124,7 @@ export function MapLocationPicker({
         }
     }, [isOpen, isGoogleReady, initMap]);
 
-    // Modal kapandığında temizle
+    // Aufräumen wenn Modal geschlossen wird
     useEffect(() => {
         if (!isOpen) {
             if (markerRef.current) {
@@ -138,11 +138,11 @@ export function MapLocationPicker({
         }
     }, [isOpen]);
 
-    // Marker yerleştir ve adres al
+    // Marker setzen und Adresse abrufen
     const placeMarker = useCallback((lat: number, lng: number) => {
         if (!mapInstanceRef.current || !geocoderRef.current) return;
 
-        // Mevcut marker'ı kaldır
+        // Vorherigen Marker entfernen
         if (markerRef.current) {
             markerRef.current.setMap(null);
         }
@@ -163,7 +163,7 @@ export function MapLocationPicker({
             }
         });
 
-        // Marker sürüklendiğinde
+        // Wenn Marker gezogen wird
         markerRef.current.addListener('dragend', () => {
             const pos = markerRef.current?.getPosition();
             if (pos) {
@@ -175,7 +175,7 @@ export function MapLocationPicker({
         reverseGeocode(lat, lng);
     }, []);
 
-    // Reverse geocoding - koordinatlardan adres
+    // Reverse Geocoding - Adresse aus Koordinaten
     const reverseGeocode = useCallback((lat: number, lng: number) => {
         if (!geocoderRef.current) return;
 
@@ -211,10 +211,10 @@ export function MapLocationPicker({
         });
     }, []);
 
-    // GPS'den konum al
+    // Standort per GPS abrufen
     const getGPSLocation = useCallback(() => {
         if (!navigator.geolocation) {
-            setError('GPS bu tarayıcıda desteklenmiyor');
+            setError('GPS wird in diesem Browser nicht unterstützt');
             return;
         }
 
@@ -225,13 +225,13 @@ export function MapLocationPicker({
             (position) => {
                 const { latitude, longitude } = position.coords;
 
-                // Haritayı bu konuma taşı
+                // Karte zu diesem Standort verschieben
                 if (mapInstanceRef.current) {
                     mapInstanceRef.current.setCenter({ lat: latitude, lng: longitude });
                     mapInstanceRef.current.setZoom(16);
                 }
 
-                // Marker yerleştir
+                // Marker setzen
                 placeMarker(latitude, longitude);
                 setGpsLoading(false);
             },
@@ -239,23 +239,23 @@ export function MapLocationPicker({
                 setGpsLoading(false);
                 switch (err.code) {
                     case err.PERMISSION_DENIED:
-                        setError('Konum izni reddedildi. Tarayıcı ayarlarından izin verin.');
+                        setError('Standortberechtigung verweigert. Bitte in den Browsereinstellungen erlauben.');
                         break;
                     case err.POSITION_UNAVAILABLE:
-                        setError('Konum bilgisi alınamadı. GPS açık mı?');
+                        setError('Standortinformationen nicht verfügbar. Ist GPS aktiviert?');
                         break;
                     case err.TIMEOUT:
-                        setError('Konum alma zaman aşımı');
+                        setError('Zeitüberschreitung bei Standortabfrage');
                         break;
                     default:
-                        setError('Konum alınamadı');
+                        setError('Standort konnte nicht abgerufen werden');
                 }
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
     }, [placeMarker]);
 
-    // Konumu onayla
+    // Standort bestätigen
     const confirmLocation = () => {
         if (selectedLocation) {
             onLocationSelect(selectedLocation);
@@ -271,8 +271,8 @@ export function MapLocationPicker({
                 {/* Header */}
                 <div className="p-4 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
                     <div>
-                        <h2 className="text-white font-bold text-lg">📍 Park Konumu Seç</h2>
-                        <p className="text-gray-400 text-sm">Haritaya tıklayın veya GPS kullanın</p>
+                        <h2 className="text-white font-bold text-lg">📍 Standort wählen</h2>
+                        <p className="text-gray-400 text-sm">Klicken Sie auf die Karte oder nutzen Sie GPS</p>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl w-10 h-10 flex items-center justify-center">×</button>
                 </div>
@@ -287,7 +287,7 @@ export function MapLocationPicker({
                         {gpsLoading ? (
                             <>
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                Konum alınıyor...
+                                Standort wird abgerufen...
                             </>
                         ) : (
                             <>
@@ -295,13 +295,13 @@ export function MapLocationPicker({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                🛰️ GPS ile Konumumu Al
+                                🛰️ Meinen Standort per GPS abrufen
                             </>
                         )}
                     </button>
-                    <div className="hidden sm:flex text-gray-500 items-center px-2">veya</div>
+                    <div className="hidden sm:flex text-gray-500 items-center px-2">oder</div>
                     <div className="flex-1 text-center text-gray-400 flex items-center justify-center text-sm bg-gray-700/50 rounded-xl py-3 sm:bg-transparent sm:py-0">
-                        👆 Haritaya tıklayarak konum seçin
+                        👆 Standort durch Klick auf die Karte wählen
                     </div>
                 </div>
 
@@ -318,7 +318,7 @@ export function MapLocationPicker({
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-800 z-10">
                             <div className="text-center">
                                 <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                                <p className="text-gray-400">Harita yükleniyor...</p>
+                                <p className="text-gray-400">Karte wird geladen...</p>
                             </div>
                         </div>
                     )}
@@ -353,14 +353,14 @@ export function MapLocationPicker({
                         onClick={onClose}
                         className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition"
                     >
-                        İptal
+                        Abbrechen
                     </button>
                     <button
                         onClick={confirmLocation}
                         disabled={!selectedLocation}
                         className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        ✓ Konumu Ekle
+                        ✓ Standort übernehmen
                     </button>
                 </div>
             </div>
