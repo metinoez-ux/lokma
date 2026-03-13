@@ -874,7 +874,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           unreadCount > 0
                               ? Icons.notifications_rounded
                               : Icons.notifications_outlined,
-                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                          color: lokmaPink,
                           size: 20,
                         ),
                       ),
