@@ -677,7 +677,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 businessId: cart.butcherId!,
                 tableNumber: tableNum,
                 waiterId: userId,
-                waiterName: 'Müşteri ($userDisplayName)',
+                waiterName: '${'customer'.tr()} ($userDisplayName)',
               );
             tableSessionId = session.id;
           } catch (e) {
@@ -2217,7 +2217,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           Expanded(
                             flex: 3,
                             child: Text(
-                              'ÜRÜN',
+                              'ARTIKEL',
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
@@ -2229,7 +2229,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           SizedBox(
                             width: 40,
                             child: Text(
-                              'AD.',
+                              'ANZ.',
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
@@ -2242,7 +2242,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           SizedBox(
                             width: 60,
                             child: Text(
-                              'FİYAT',
+                              'PREIS',
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
@@ -2336,7 +2336,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       
                       // Thank you message
                       Text(
-                        'TEŞEKKÜR EDERİZ!',
+                        'VIELEN DANK!',
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 14,
@@ -2459,9 +2459,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Format date with month name
   String _formatDateFull(DateTime date) {
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-    return '${date.day} ${months[date.month - 1]}';
+    const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 
+                    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    return '${date.day}. ${months[date.month - 1]}';
   }
   
   Color _getStatusColor(OrderStatus status) {
@@ -2600,7 +2600,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     child: Text(
                       _butcherData!['companyName'] ?? 'Kasap',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                       ),
@@ -2644,7 +2644,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00C853).withValues(alpha: 0.3),
+                        color: const Color(0xFF00C853).withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -2659,7 +2659,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${_promoPreviewResult!.appliedPromotions.length} kampanya uygulandı',
+                              '${_promoPreviewResult!.appliedPromotions.length} Aktionen angewendet',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -2670,11 +2670,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             Text(
                               [
                                 if (_promoPreviewResult!.discount > 0)
-                                  '-${_promoPreviewResult!.discount.toStringAsFixed(2)}€ indirim',
+                                  '-${_promoPreviewResult!.discount.toStringAsFixed(2)}€ Rabatt',
                                 if (_promoPreviewResult!.freeDelivery)
-                                  'Ücretsiz teslimat',
+                                  'Kostenlose Lieferung',
                                 if (_promoPreviewResult!.cashbackAmount > 0)
-                                  '+${_promoPreviewResult!.cashbackAmount.toStringAsFixed(2)}€ cashback',
+                                  '+${_promoPreviewResult!.cashbackAmount.toStringAsFixed(2)}€ Cashback',
                               ].join(' · '),
                               style: const TextStyle(
                                 color: Colors.white70,
@@ -2759,10 +2759,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFFFFD54F).withValues(alpha: 0.15) : const Color(0xFFFFF3CD),
+                          color: isDark ? const Color(0xFFFFD54F).withOpacity(0.15) : const Color(0xFFFFF3CD),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isDark ? const Color(0xFFFFD54F).withValues(alpha: 0.3) : const Color(0xFFFFE082),
+                            color: isDark ? const Color(0xFFFFD54F).withOpacity(0.3) : const Color(0xFFFFE082),
                           ),
                         ),
                         child: Row(
@@ -2839,7 +2839,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ),
             SizedBox(width: 10),
             Text(
-              'Gel Al',
+              'cart.pickup'.tr(),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
@@ -2974,7 +2974,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             color: isDark ? const Color(0xFF1A2332) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF4FC3F7).withValues(alpha: 0.4),
+              color: const Color(0xFF4FC3F7).withOpacity(0.4),
             ),
           ),
           child: Column(
@@ -2986,8 +2986,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF4FC3F7).withValues(alpha: 0.2),
-                      const Color(0xFF0288D1).withValues(alpha: 0.1),
+                      const Color(0xFF4FC3F7).withOpacity(0.2),
+                      const Color(0xFF0288D1).withOpacity(0.1),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -2996,7 +2996,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
               const SizedBox(height: 16),
               Text(
-                'Soğuk Zincir Garantisi',
+                'marketplace.cold_chain_delivery'.tr(),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 18,
@@ -3005,7 +3005,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
               const SizedBox(height: 12),
               Text(
-                'Et ürünlerimiz max. hızda size ulaşabilecek şekilde soğuk zinciri kırılmadan özel korumalı boxlarda ulaştırılır.\n\nTeslimat süresince ürünleriniz soğuk kalır ve tazeliğini korur.',
+                'Unsere Fleischprodukte werden in speziellen Schutzboxen geliefert, ohne die Kühlkette zu unterbrechen.\n\nWährend der Lieferung bleiben Ihre Produkte gekühlt und frisch.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isDark ? Colors.grey[300] : Colors.grey[700],
@@ -3073,7 +3073,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Soğuk Zincir Garantisi',
+                    'marketplace.cold_chain_delivery'.tr(),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 13,
@@ -3125,7 +3125,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             const Text('❄️', style: TextStyle(fontSize: 13)),
             const SizedBox(width: 6),
             Text(
-              'Soğuk Zincir',
+              'Kühlkette',
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontSize: 12,
@@ -3182,7 +3182,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
-                  const TextSpan(text: ' daha ekle, min. sipariş '),
+                  const TextSpan(text: ' hinzufügen, Mindestbest. '),
                   TextSpan(
                     text: '${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                     style: const TextStyle(fontWeight: FontWeight.w500),
@@ -4616,7 +4616,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Teslimat Ücreti',
+                'cart.delivery_fee'.tr(),
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               Text(
@@ -4736,7 +4736,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Icon(Icons.qr_code_scanner, size: 36, color: accent),
               const SizedBox(height: 12),
               Text(
-                'Masanızdaki QR Kodu Okutun',
+                'QR-Code am Tisch scannen',
                 style: TextStyle(
                   fontSize: 20, 
                   fontWeight: FontWeight.w500,
@@ -4848,7 +4848,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             Icon(Icons.restaurant, color: _accentColor, size: 24),
             const SizedBox(width: 8),
             Text(
-              'Masa Numarası',
+              'cart.table_number'.tr(),
               style: TextStyle(color: isDark ? Colors.white : Colors.black87),
             ),
           ],
@@ -4908,7 +4908,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Future<void> _handleQrTableScanned(String tableNum) async {
     final cart = ref.read(cartProvider);
     final businessId = cart.butcherId ?? '';
-    final businessName = _butcherData?['name'] ?? 'İşletme';
+    final businessName = _butcherData?['name'] ?? 'Geschäft';
     
     if (businessId.isEmpty) {
       // No business — just set table number directly
@@ -5033,8 +5033,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   _joinAndNavigateGroup(activeSession.id, tableNum, businessId, businessName, pin);
                 },
                 icon: const Icon(Icons.group_add),
-                label: const Text(
-                  'Gruba Katıl',
+                label: Text(
+                  'cart.join_group'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 style: FilledButton.styleFrom(
@@ -5298,7 +5298,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                 ),
                 Text(
-                  'QR kod ile doğrulandı ✓',
+                  'Per QR-Code bestätigt ✓',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.green[700],
@@ -5320,7 +5320,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Değiştir',
+                'Ändern',
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -5426,8 +5426,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 }
               },
               icon: const Icon(Icons.arrow_back_rounded, size: 20),
-              label: const Text(
-                'Menüye Dön',
+              label: Text(
+                'Zurück zum Menü',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               style: FilledButton.styleFrom(

@@ -36,9 +36,9 @@ interface NotifyPayload {
 
 // ─── Color Profiles ──────────────────────────────────────────────────────────
 const COLOR_PROFILES = {
-    new_order: { r: 0, g: 255, b: 0, hex: "#00FF00", name: "Yeşil (Yeni Sipariş)" },
-    order_ready: { r: 0, g: 102, b: 255, hex: "#0066FF", name: "Mavi (Hazır)" },
-    order_cancelled: { r: 255, g: 0, b: 0, hex: "#FF0000", name: "Kırmızı (İptal)" },
+    new_order: { r: 0, g: 255, b: 0, hex: "#00FF00", name: "Grün (Neue Bestellung)" },
+    order_ready: { r: 0, g: 102, b: 255, hex: "#0066FF", name: "Blau (Fertig)" },
+    order_cancelled: { r: 255, g: 0, b: 0, hex: "#FF0000", name: "Rot (Storniert)" },
 } as const;
 
 type NotifyEvent = keyof typeof COLOR_PROFILES;
@@ -332,9 +332,9 @@ iotApp.post("/alexa/setup", async (req, res) => {
     const success = await initBusinessAlexa(businessId, cookie);
     if (success) {
         const devices = getBusinessDevices(businessId);
-        res.json({ success: true, message: `Alexa bağlantısı başarılı! ${devices.length} cihaz bulundu.`, devices });
+        res.json({ success: true, message: `Alexa erfolgreich verbunden! ${devices.length} Geräte gefunden.`, devices });
     } else {
-        res.status(500).json({ success: false, message: "Alexa bağlantısı başarısız." });
+        res.status(500).json({ success: false, message: "Alexa-Verbindung fehlgeschlagen." });
     }
 });
 
@@ -351,7 +351,7 @@ iotApp.delete("/alexa/disconnect/:businessId", async (req, res) => {
     const bid = req.params.businessId;
     alexaInstances.delete(bid);
     await getDb().collection("iot_alexa_cookies").doc(bid).delete().catch(() => { });
-    res.json({ success: true, message: `Alexa bağlantısı kaldırıldı: ${bid}` });
+    res.json({ success: true, message: `Alexa-Verbindung getrennt: ${bid}` });
 });
 
 // ─── Root info ───────────────────────────────────────────────────────────────

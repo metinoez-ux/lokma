@@ -30,12 +30,12 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
 
   // Helper to extract today's hours
   String _getTodayHours(dynamic hoursData) {
-    if (hoursData == null) return 'Saatler Yok';
+    if (hoursData == null) return 'Keine Zeiten';
     if (hoursData is String) return hoursData; 
     
     // Handle Array (New Google Import)
     if (hoursData is List) {
-       if (hoursData.isEmpty) return 'Saatler Yok';
+       if (hoursData.isEmpty) return 'Keine Zeiten';
        
        final now = DateTime.now();
        final engDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -65,7 +65,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
              return item; // Fallback if no colon space
           }
        }
-       return 'Saatler Yok';
+       return 'Keine Zeiten';
     }
 
     if (hoursData is Map) {
@@ -90,7 +90,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
       
       if (val is String) return val;
     }
-    return 'Saatler Yok';
+    return 'Keine Zeiten';
   }
 
   // Calculate dynamic Open/Closed status
@@ -104,7 +104,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
     final lower = formatted.toLowerCase();
     
     // Strict Closed Checks
-    if (lower.contains('kapalı') || lower.contains('closed') || formatted == 'Saatler Yok') return false;
+    if (lower.contains('kapalı') || lower.contains('closed') || lower.contains('geschlossen') || formatted == 'Keine Zeiten') return false;
     if (formatted.trim() == '-' || formatted.trim() == '') return false;
     
     if (lower.contains('24 saat') || lower.contains('open 24')) return true;
@@ -158,18 +158,18 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   // Dummy Banners
   final List<Map<String, dynamic>> _banners = [
     {
-      'title': 'Dana Kuşbaşı',
-      'subtitle': 'Yumuşak, Sinirsiz But Etinden',
+      'title': 'Rindergoulasch',
+      'subtitle': 'Zart, aus bester Keule',
       'image': 'assets/images/kasap_card.png',
     },
     {
-      'title': 'Taze Kıyma',
-      'subtitle': 'Günlük Çekilmiş, %100 Dana',
+      'title': 'Frisches Hackfleisch',
+      'subtitle': 'Täglich frisch, 100% Rind',
       'image': 'assets/images/kasap_card.png',
     },
     {
       'title': 'Kuzu Pirzola',
-      'subtitle': 'Premium Kalite, Helal Sertifikalı',
+      'subtitle': 'Premium Qualität, Halal-zertifiziert',
       'image': 'assets/images/kasap_card.png',
     },
   ];
@@ -476,7 +476,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                           Image.asset('assets/images/courier_icon.png', color: Colors.white, width: 18, height: 18),
                                         const SizedBox(width: 6),
                                         Text(
-                                          _isPickup ? 'GEL AL' : 'KURYE',
+                                          _isPickup ? 'ABHOLUNG' : 'KURIER',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
@@ -503,7 +503,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                         children: [
                                           Icon(Icons.store_mall_directory, color: Colors.white, size: 16),
                                           const SizedBox(width: 6),
-                                          const Text('GEL AL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                                          const Text('ABHOLUNG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
                                         ],
                                       ),
                                     ),
@@ -519,7 +519,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                         children: [
                                           Image.asset('assets/images/courier_icon.png', color: Colors.white, width: 16, height: 16),
                                           const SizedBox(width: 6),
-                                          const Text('KURYE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                                          const Text('KURIER', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
                                         ],
                                       ),
                                     ),
@@ -615,7 +615,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                 Icon(Icons.near_me, color: accent, size: 18),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Mesafe:',
+                                  'Entfernung:',
                                   style: TextStyle(color: Colors.grey[400], fontSize: 14),
                                 ),
                                 const SizedBox(width: 8),
@@ -778,13 +778,13 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                  bool hasFavorites = filtered.any((b) => b['isFavorite']);
                  
                  if (hasFavorites) {
-                   displayList.add({'type': 'header', 'text': 'Favori Kasaplarım'});
+                   displayList.add({'type': 'header', 'text': 'Meine Favoriten'});
                    displayList.addAll(filtered.where((b) => b['isFavorite']));
                    
                    var others = filtered.where((b) => !b['isFavorite']).toList();
                    if (others.isNotEmpty) {
                      displayList.add({'type': 'divider'});
-                     displayList.add({'type': 'header_small', 'text': 'Tüm Kasaplar', 'count': filtered.length});
+                     displayList.add({'type': 'header_small', 'text': 'Alle Metzgereien', 'count': filtered.length});
                      displayList.addAll(others);
                    }
                  } else {
@@ -823,7 +823,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                    // Add Header for Far items
                    displayList.add({
                      'type': 'header_far', 
-                     'text': '${_maxDistance.toInt()} km ve üzeri sonuçlar',
+                     'text': 'Ergebnisse über ${_maxDistance.toInt()} km',
                      'count': ''
                    });
                    displayList.addAll(far);
@@ -871,7 +871,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                children: [
                                  Text(item['text'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
-                                 Text('${item['count']} sonuç', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                                 Text('${item['count']} Ergebnisse', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
                                ],
                              ),
                            );

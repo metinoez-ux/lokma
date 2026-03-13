@@ -854,8 +854,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     List reviews = List.from(_placeDetails?['reviews'] ?? []);
     
     // Sort options
-    final sortOptions = ['En Alakalı', 'En Yeni', 'En Yüksek Puan', 'En Düşük Puan'];
-    String selectedSort = 'En Alakalı';
+    final sortOptions = ['Relevanteste', 'Neueste', 'Beste Bewertung', 'Niedrigste Bewertung'];
+    String selectedSort = 'Relevanteste';
 
     showModalBottomSheet(
       context: context,
@@ -865,14 +865,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         builder: (context, setStateModal) {
           // Sorting Logic
           List sortedReviews = List.from(reviews);
-          if (selectedSort == 'En Yeni') {
+          if (selectedSort == 'Neueste') {
             sortedReviews.sort((a, b) => (b['time'] ?? 0).compareTo(a['time'] ?? 0));
-          } else if (selectedSort == 'En Yüksek Puan') {
+          } else if (selectedSort == 'Beste Bewertung') {
             sortedReviews.sort((a, b) => (b['rating'] ?? 0).compareTo(a['rating'] ?? 0));
-          } else if (selectedSort == 'En Düşük Puan') {
+          } else if (selectedSort == 'Niedrigste Bewertung') {
             sortedReviews.sort((a, b) => (a['rating'] ?? 0).compareTo(b['rating'] ?? 0));
           }
-          // 'En Alakalı' uses default API order
+          // 'Relevanteste' uses default API order
 
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
@@ -1161,7 +1161,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600))),
                     SizedBox(height: 16),
                     Text(
-                      'Avrupa\'nın En Güvenilir Helal Et Markası',
+                      'Europas vertrauenswürdigste Halal-Fleischmarke',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
                     ),
@@ -1176,7 +1176,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   children: [
                      // Intro Text
                      Text(
-                       '1987 yılında Köln\'de küçük bir kasap dükkanı olarak başlayan yolculuğumuz, bugün Avrupa\'nın en modern helal et entegre tesislerinden birine dönüştü.',
+                       'Unsere Reise begann 1987 als kleine Metzgerei in Köln und hat sich heute zu einer der modernsten integrierten Halal-Fleischproduktionsstätten Europas entwickelt.',
                        style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
                      ),
                      SizedBox(height: 24),
@@ -1185,15 +1185,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      Row(
                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                        children: [
-                         _buildBrandIconElement(Icons.verified, 'Helal Kesim', Colors.green),
-                         _buildBrandIconElement(Icons.bolt, 'Şoksuz', Colors.amber),
+                         _buildBrandIconElement(Icons.verified, 'Halal-Schlachtung', Colors.green),
+                         _buildBrandIconElement(Icons.bolt, 'Ohne Betäubung', Colors.amber),
                          _buildBrandIconElement(Icons.clean_hands, 'Kuru Yolum', Colors.amber),
                        ],
                      ),
                      SizedBox(height: 32),
                      
                      // Standards List
-                     Text('Tedarik Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
+                     Text('Lieferstandards', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
                      _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
@@ -1217,7 +1217,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              children: [
                                Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
                                const SizedBox(width: 8),
-                               Text('Kuru Yolum Nedir?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
+                               Text('Was ist Kuru Yolum?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
                              ],
                            ),
                            const SizedBox(height: 8),
@@ -1230,10 +1230,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      ),
                      
                      SizedBox(height: 24),
-                     Text('Üretim Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
+                     Text('Produktionsstandards', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
-                     _buildCheckItem('E621 İçermez', 'Glutamat/Çin tuzu yok'),
+                     _buildCheckItem('Ohne E621', 'Kein Glutamat/Geschmacksverstärker'),
                      
                      const SizedBox(height: 40),
                   ],
@@ -2719,7 +2719,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   sliver: SliverToBoxAdapter(
                     child: Text(
-                      'Arama Sonuçları (${searchResults.length})', 
+                      'Suchergebnisse (${searchResults.length})', 
                       style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -4019,7 +4019,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           const SizedBox(width: 4),
                           if (isByWeight)
                             Text(
-                              'kg fiyatı',
+                              'Preis/kg',
                               style: TextStyle(
                                 color: textSecondary,
                                 fontSize: 10,

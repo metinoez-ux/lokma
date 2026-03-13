@@ -15,17 +15,17 @@ interface SendEmailRequest {
 // Email Templates (simplified for direct API use)
 const EmailTemplates = {
     welcome: (userName: string) => ({
-        subject: 'LOKMA Ailesine Hoş Geldiniz!',
+        subject: 'Willkommen bei LOKMA!',
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
                     <h1 style="color: white; margin: 0; font-size: 28px;">LOKMA</h1>
-                    <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Taze Et, Hızlı Teslimat</p>
+                    <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Frisches Fleisch, schnelle Lieferung</p>
                 </div>
                 <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-                    <h2 style="color: #1f2937; margin-top: 0;">Merhaba ${userName}!</h2>
+                    <h2 style="color: #1f2937; margin-top: 0;">Hallo ${userName}!</h2>
                     <p style="color: #4b5563; line-height: 1.6;">
-                        LOKMA ailesine katıldığınız için teşekkür ederiz!
+                        Vielen Dank, dass Sie sich bei LOKMA registriert haben!
                     </p>
                 </div>
                 <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
@@ -54,24 +54,24 @@ const EmailTemplates = {
     }),
 
     password_reset: (userName: string, resetLink: string) => ({
-        subject: 'Şifre Sıfırlama Talebi',
+        subject: 'Passwort zurücksetzen',
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 28px;">Şifre Sıfırlama</h1>
+                    <h1 style="color: white; margin: 0; font-size: 28px;">Passwort zurücksetzen</h1>
                 </div>
                 <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-                    <h2 style="color: #333; margin-top: 0;">Merhaba ${userName}!</h2>
+                    <h2 style="color: #333; margin-top: 0;">Hallo ${userName}!</h2>
                     <p style="color: #333; line-height: 1.6;">
-                        Hesabınız için şifre sıfırlama talebinde bulundunuz.
+                        Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt.
                     </p>
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="${resetLink}" style="background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                            Şifremi Sıfırla
+                            Passwort zurücksetzen
                         </a>
                     </div>
                     <p style="color: #888; font-size: 13px;">
-                        Bu bağlantı 1 saat geçerlidir.
+                        Dieser Link ist 1 Stunde gültig.
                     </p>
                 </div>
             </div>
@@ -118,13 +118,13 @@ export async function POST(request: NextRequest) {
         switch (body.type) {
             case 'welcome':
                 emailContent = EmailTemplates.welcome(
-                    (body.data?.userName as string) || 'Kullanıcı'
+                    (body.data?.userName as string) || 'Benutzer'
                 );
                 break;
 
             case 'password_reset':
                 emailContent = EmailTemplates.password_reset(
-                    (body.data?.userName as string) || 'Kullanıcı',
+                    (body.data?.userName as string) || 'Benutzer',
                     (body.data?.resetLink as string) || ''
                 );
                 break;
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
             case 'general':
             default:
                 emailContent = EmailTemplates.general(
-                    (body.data?.title as string) || 'Bildirim',
+                    (body.data?.title as string) || 'Benachrichtigung',
                     (body.data?.message as string) || ''
                 );
                 break;

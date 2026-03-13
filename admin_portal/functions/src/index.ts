@@ -1793,7 +1793,7 @@ export const onScheduledMonthlyDeliveryPauseReport = onSchedule(
                 }
 
                 reportData[businessId] = {
-                    companyName: business.companyName || business.brand || "Bilinmeyen İşletme",
+                    companyName: business.companyName || business.brand || "Unbekanntes Geschäft",
                     pauseCount,
                     resumeCount,
                     totalPausedHours: pausedHours,
@@ -1810,25 +1810,25 @@ export const onScheduledMonthlyDeliveryPauseReport = onSchedule(
             const businessCount = Object.keys(reportData).length;
 
             let emailHtml = `
-                <h2>📊 LOKMA İşletme Performans Raporu - ${periodString}</h2>
+                <h2>📊 LOKMA Geschäfts-Leistungsbericht - ${periodString}</h2>
                 <hr/>
-                <h3>Özet</h3>
+                <h3>Zusammenfassung</h3>
                 <ul>
-                    <li><strong>Toplam İşletme Sayısı (kapatma yapan):</strong> ${businessCount}</li>
-                    <li><strong>Toplam Durdurma Sayısı:</strong> ${totalPauses}</li>
-                    <li><strong>Toplam Durdurma Süresi:</strong> ${totalPausedHours} saat</li>
-                    <li><strong>Ort. Sipariş Teslim Süresi:</strong> ${businessesWithOrders > 0 ? Math.round(totalAvgFulfillmentMins / businessesWithOrders) : 0} dakika</li>
+                    <li><strong>Gesamtanzahl Geschäfte (mit Pausen):</strong> ${businessCount}</li>
+                    <li><strong>Gesamtanzahl Pausen:</strong> ${totalPauses}</li>
+                    <li><strong>Gesamte Pausenzeit:</strong> ${totalPausedHours} Stunden</li>
+                    <li><strong>Durchschn. Lieferzeit:</strong> ${businessesWithOrders > 0 ? Math.round(totalAvgFulfillmentMins / businessesWithOrders) : 0} Minuten</li>
                 </ul>
                 <hr/>
-                <h3>İşletmeler Detay</h3>
+                <h3>Geschäftsdetails</h3>
                 <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
                     <tr style="background-color: #f0f0f0;">
-                        <th>İşletme</th>
-                        <th>Durdurma</th>
-                        <th>Devam</th>
-                        <th>Durma Süresi (saat)</th>
-                        <th>Sipariş</th>
-                        <th>Ort. Teslim (dk)</th>
+                        <th>Geschäft</th>
+                        <th>Pausen</th>
+                        <th>Fortgesetzt</th>
+                        <th>Pausenzeit (Std.)</th>
+                        <th>Bestellungen</th>
+                        <th>Durchschn. Lieferung (Min.)</th>
                     </tr>
             `;
 
@@ -2290,7 +2290,7 @@ export const onReservationStatusChange = onDocumentUpdated(
                 // Table card display
                 const tableCardHtml = tableCardNumbers.length > 0
                     ? `<div style="background: #1b3a1b; border: 1px solid #2E7D32; border-radius: 8px; padding: 12px; margin: 15px 0;">
-                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">MASA KART NUMARANIZ</p>
+                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">IHRE TISCHKARTENUMMER</p>
                         <div style="display: flex; gap: 8px;">
                             ${tableCardNumbers.map((n: number) => `<span style="background: #2E7D32; color: white; padding: 6px 14px; border-radius: 8px; font-size: 18px; font-weight: bold;">${n}</span>`).join("")}
                         </div>
@@ -2302,52 +2302,52 @@ export const onReservationStatusChange = onDocumentUpdated(
                 await resend.emails.send({
                     from: "LOKMA Marketplace <noreply@lokma.shop>",
                     to: customerEmail,
-                    subject: `✅ Rezervasyonunuz Onaylandı – ${businessName}`,
+                    subject: `✅ Ihre Reservierung ist bestätigt – ${businessName}`,
                     html: `
                         <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
                             <div style="max-width: 600px; margin: 0 auto;">
                                 <div style="background: #2E7D32; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
                                     <h1 style="margin: 0; color: white; font-size: 22px;">LOKMA</h1>
-                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Rezervasyonunuz Onaylandı ✓</p>
+                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Ihre Reservierung ist bestätigt ✓</p>
                                 </div>
                                 <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
-                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Merhaba <strong>${customerName}</strong>,</p>
-                                    <p style="color: #ccc; margin: 0 0 20px;">Masa rezervasyonunuz onaylanmıştır. Detaylar aşağıdadır:</p>
+                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Hallo <strong>${customerName}</strong>,</p>
+                                    <p style="color: #ccc; margin: 0 0 20px;">Ihre Tischreservierung wurde bestätigt. Hier sind die Details:</p>
                                     
                                     <div style="background: #333; border-radius: 10px; padding: 18px; margin: 15px 0;">
                                         <table style="width: 100%; color: #ccc; font-size: 14px; border-collapse: collapse;">
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">İşletme</td>
+                                                <td style="padding: 6px 0; color: #999;">Restaurant</td>
                                                 <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #fff;">${businessName}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Tarih</td>
+                                                <td style="padding: 6px 0; color: #999;">Datum</td>
                                                 <td style="padding: 6px 0; text-align: right; color: #fff;">${dateStr}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Saat</td>
+                                                <td style="padding: 6px 0; color: #999;">Uhrzeit</td>
                                                 <td style="padding: 6px 0; text-align: right; color: #fff;">${timeStr}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Kişi Sayısı</td>
-                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Kişi</td>
+                                                <td style="padding: 6px 0; color: #999;">Personenanzahl</td>
+                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Personen</td>
                                             </tr>
                                         </table>
                                     </div>
 
                                     ${tableCardHtml}
 
-                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Rezervasyonu takviminize ekleyin:</p>
+                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Reservierung zum Kalender hinzufügen:</p>
                                     
                                     <div style="text-align: center; margin: 15px 0;">
                                         <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 6px 10px;">
-                                            📅 Google Takvim'e Ekle
+                                            📅 Zu Google Kalender hinzufügen
                                         </a>
                                     </div>
-                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">iCal dosyası ekte mevcuttur — Apple Takvim veya Outlook'a tek tıkla ekleyebilirsiniz.</p>
+                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">Die iCal-Datei ist im Anhang — mit einem Klick zu Apple Kalender oder Outlook hinzufügen.</p>
                                     
                                     <div style="border-top: 1px solid #444; margin-top: 20px; padding-top: 15px;">
-                                        <p style="color: #999; font-size: 12px; margin: 0;">Afiyet olsun! 🍽️</p>
+                                        <p style="color: #999; font-size: 12px; margin: 0;">Guten Appetit! 🍽️</p>
                                     </div>
                                 </div>
                                 <p style="color: #555; font-size: 11px; text-align: center; margin-top: 15px;">LOKMA Marketplace · noreply@lokma.shop</p>
@@ -2356,7 +2356,7 @@ export const onReservationStatusChange = onDocumentUpdated(
                     `,
                     attachments: [
                         {
-                            filename: "rezervasyon.ics",
+                            filename: "reservierung.ics",
                             content: icsBase64,
                         },
                     ],
@@ -2441,8 +2441,8 @@ export const onScheduledReservationReminders = onSchedule(
                     try {
                         await messaging.send({
                             notification: {
-                                title: "🍽️ Yarınki Rezervasyonunuz",
-                                body: `${businessName} – Saat ${timeStr} – ${res.partySize || 0} kişi. İptal etmek isterseniz uygulamadan yapabilirsiniz.`,
+                                title: "🍽️ Ihre Reservierung morgen",
+                                body: `${businessName} – ${timeStr} Uhr – ${res.partySize || 0} Personen. Zum Stornieren nutzen Sie bitte die App.`,
                             },
                             data: {
                                 type: "reservation_reminder_24h",
@@ -2476,14 +2476,14 @@ export const onScheduledReservationReminders = onSchedule(
                     if (!token) continue;
 
                     const resDate = res.reservationDate?.toDate?.() ?? new Date();
-                    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+                    const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
                     const notifSound2h = await getActiveNotificationSound();
                     try {
                         await messaging.send({
                             notification: {
-                                title: "⏰ Rezervasyonunuz 2 Saat Sonra!",
-                                body: `${businessName} – Saat ${timeStr} – ${res.partySize || 0} kişi. Afiyet olsun!`,
+                                title: "⏰ Ihre Reservierung in 2 Stunden!",
+                                body: `${businessName} – ${timeStr} Uhr – ${res.partySize || 0} Personen. Guten Appetit!`,
                             },
                             data: {
                                 type: "reservation_reminder_2h",
@@ -2565,8 +2565,8 @@ export const onScheduledReservationReminders = onSchedule(
                             try {
                                 await messaging.sendEachForMulticast({
                                     notification: {
-                                        title: "🔔 Yaklaşan Rezervasyon – 30 Dakika!",
-                                        body: `${customerName} – ${partySize} kişi – Saat ${timeStr}${tableInfo}. Masayı hazırladınız mı?`,
+                                        title: "🔔 Anstehende Reservierung – 30 Minuten!",
+                                        body: `${customerName} – ${partySize} Personen – ${timeStr} Uhr${tableInfo}. Ist der Tisch bereit?`,
                                     },
                                     data: {
                                         type: "reservation_staff_30m_reminder",
@@ -2591,11 +2591,11 @@ export const onScheduledReservationReminders = onSchedule(
                             if (customerToken) {
                                 const hasTable = tableCards.length > 0;
                                 const customerTitle = hasTable
-                                    ? `🪑 Masanız Hazırlandı! Masa ${tableCards.join(", ")}`
-                                    : "🍽️ Rezervasyon Hatırlatma – 30 Dakika!";
+                                    ? `🪑 Ihr Tisch ist bereit! Tisch ${tableCards.join(", ")}`
+                                    : "🍽️ Reservierungserinnerung – 30 Minuten!";
                                 const customerBody = hasTable
-                                    ? `${businessName} – Saat ${timeStr} – ${partySize} kişi. Masa numaranız: ${tableCards.join(", ")}. Afiyet olsun!`
-                                    : `${businessName} – Saat ${timeStr} – ${partySize} kişi. Görüşmek üzere!`;
+                                    ? `${businessName} – ${timeStr} Uhr – ${partySize} Personen. Ihre Tischnummer: ${tableCards.join(", ")}. Guten Appetit!`
+                                    : `${businessName} – ${timeStr} Uhr – ${partySize} Personen. Bis gleich!`;
 
                                 try {
                                     await messaging.send({

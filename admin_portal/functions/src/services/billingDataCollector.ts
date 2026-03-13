@@ -140,8 +140,8 @@ export async function collectMonthlyBillingData(
 
     // Module definitions with prices (could be from Firestore config)
     const moduleConfig: Record<string, { name: string; fee: number }> = {
-        courier: { name: "Kurye Yönetimi", fee: 15 },
-        tableOrdering: { name: "Masada Sipariş", fee: 10 },
+        courier: { name: "Kurierservice", fee: 15 },
+        tableOrdering: { name: "Tischbestellung", fee: 10 },
         loyalty: { name: "Treueprogramm", fee: 10 },
         smartNotifications: { name: "Smart Benachrichtigungen", fee: 5 },
         analytics: { name: "Erweiterte Analysen", fee: 10 },
