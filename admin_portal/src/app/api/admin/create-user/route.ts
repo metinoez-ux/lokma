@@ -390,16 +390,16 @@ export async function POST(request: NextRequest) {
                     // ═══════════════════════════════════════════════════════════════
                     // ADMIN/STAFF ROLE ASSIGNMENT EMAIL - WITH FULL ASSIGNER DETAILS
                     // ═══════════════════════════════════════════════════════════════
-                    emailSubject = `🎖️ ${businessDisplayName} - Yeni Yetkiniz!`;
+                    emailSubject = `${businessDisplayName} - Yeni Yetkiniz!`;
                     emailHtml = `
     < div style = "font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;" >
         <div style="background: linear-gradient(135deg, #1e40af, #1e3a8a); padding: 30px; border-radius: 12px; text-align: center;" >
-            <h1 style="color: white; margin: 0; font-size: 28px;" >🎖️ ${businessDisplayName} </h1>
+            <h1 style="color: white; margin: 0; font-size: 28px;" >${businessDisplayName} </h1>
                 < p style = "color: rgba(255,255,255,0.9); margin-top: 8px;" > Yetki Bildirimi </p>
                     </div>
 
                     < div style = "padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;" >
-                        <h2 style="color: #1f2937; margin-top: 0;" > Merhaba ${firstName} ! 👋</h2>
+                        <h2 style="color: #1f2937; margin-top: 0;" > Merhaba ${firstName}!</h2>
 
                             < p style = "color: #4b5563; line-height: 1.6;" >
                                 Sizi < strong style = "color: #1e40af;" > ${roleDisplayName} </strong> olarak atadık.
@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
 
                                     < !--Atayan Kişi Bilgileri-- >
                                         <div style="background: linear-gradient(135deg, #fef3c7, #fef9c3); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;" >
-                                            <p style="margin: 0; color: #92400e; font-weight: bold;" >👤 Sizi Atayan Kişi </p>
+                                            <p style="margin: 0; color: #92400e; font-weight: bold;" >Sizi Atayan Kişi </p>
                                                 < p style = "margin: 8px 0 0 0; color: #78350f;" > <strong>İsim: </strong> ${assignerName || 'Admin'}</p >
                                                     ${assignerRole ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Rol:</strong> ${assignerRoleDisplay}</p>` : ''}
                                     ${assignerEmail ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>E-posta:</strong> ${assignerEmail}</p>` : ''}
@@ -416,23 +416,23 @@ export async function POST(request: NextRequest) {
 
     < !--Atama Detayları-- >
         <div style="background: linear-gradient(135deg, #dbeafe, #eff6ff); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;" >
-            <p style="margin: 0; color: #1e3a8a; font-weight: bold;" >📋 Atama Detayları </p>
-                < p style = "margin: 8px 0 0 0; color: #374151;" >🏢 İşletme: <strong>${businessDisplayName} </strong></p >
-                    <p style="margin: 4px 0 0 0; color: #374151;" >👤 Sizin Rolünüz: <strong>${roleDisplayName} </strong></p >
+            <p style="margin: 0; color: #1e3a8a; font-weight: bold;" >Atama Detayları </p>
+                <p style="margin: 8px 0 0 0; color: #374151;" >İşletme: <strong>${businessDisplayName} </strong></p >
+                    <p style="margin: 4px 0 0 0; color: #374151;" >Sizin Rolünüz: <strong>${roleDisplayName} </strong></p >
                         </div>
 
                         < !--Giriş Bilgileri-- >
                             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;" >
-                                <p style="margin: 0; color: #1e3a8a; font-weight: bold;" >🔑 Giriş Bilgileriniz </p>
-                                    < p style = "margin: 8px 0 0 0; color: #374151;" > <strong>📧 E - posta: </strong> ${email}</p >
-                                        <p style="margin: 8px 0 0 0; color: #374151;" > <strong>🔐 Şifre: </strong> ${password}</p >
+                                <p style="margin: 0; color: #1e3a8a; font-weight: bold;" >Giriş Bilgileriniz </p>
+                                    <p style="margin: 8px 0 0 0; color: #374151;" > <strong>E-posta: </strong> ${email}</p >
+                                        <p style="margin: 8px 0 0 0; color: #374151;" > <strong>Şifre: </strong> ${password}</p >
                                             <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;" >
-                                        ⚠️ Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.
+                                        Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.
                                     </p>
     </div>
 
     < a href = "${baseUrl}/login" style = "display: inline-block; background: #1e40af; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;" >
-                                    🚀 Panele Giriş Yap
+                                    Panele Giriş Yap
     </a>
     </div>
 
@@ -446,31 +446,31 @@ export async function POST(request: NextRequest) {
                     // ═══════════════════════════════════════════════════════════════
                     // CUSTOMER WELCOME EMAIL
                     // ═══════════════════════════════════════════════════════════════
-                    emailSubject = '🎉 LOKMA Ailesine Hoş Geldiniz!';
+                    emailSubject = 'LOKMA Ailesine Hoş Geldiniz!';
                     emailHtml = `
                 < div style = "font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;" >
                     <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;" >
-                        <h1 style="color: white; margin: 0; font-size: 28px;" >🍖 LOKMA </h1>
+                        <h1 style="color: white; margin: 0; font-size: 28px;" >LOKMA </h1>
                             < p style = "color: rgba(255,255,255,0.9); margin-top: 8px;" > Taze Et, Hızlı Teslimat </p>
                                 </div>
 
                                 < div style = "padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;" >
-                                    <h2 style="color: #1f2937; margin-top: 0;" > Merhaba ${firstName} ! 👋</h2>
+                                    <h2 style="color: #1f2937; margin-top: 0;" > Merhaba ${firstName}!</h2>
 
                                         < p style = "color: #4b5563; line-height: 1.6;" >
                                             LOKMA ailesine hoş geldiniz! Hesabınız başarıyla oluşturuldu.
                                 </p>
 
                                                 < div style = "background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;" >
-                                                    <p style="margin: 0; color: #374151;" > <strong>📧 E - posta: </strong> ${email}</p >
-                                                        <p style="margin: 8px 0 0 0; color: #374151;" > <strong>🔐 Şifre: </strong> ${password}</p >
+                                                    <p style="margin: 0; color: #374151;" > <strong>E-posta: </strong> ${email}</p >
+                                                        <p style="margin: 8px 0 0 0; color: #374151;" > <strong>Şifre: </strong> ${password}</p >
                                                             <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;" >
-                                        ⚠️ Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.
+                                        Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.
                                     </p>
     </div>
 
     < a href = "${baseUrl}/login" style = "display: inline-block; background: #dc2626; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;" >
-                                    🚀 Giriş Yap
+                                    Giriş Yap
     </a>
     </div>
 
@@ -519,8 +519,8 @@ export async function POST(request: NextRequest) {
             // 2A. Send WhatsApp Message (Primary)
             try {
                 const whatsappMessage = email
-                    ? `🎉 LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\n📧 Email: ${email}\n🔐 Şifre: ${password}\n\n👉 Giriş: ${baseUrl}/login\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
-                    : `🎉 LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\n📱 Telefon ile giriş yapabilirsiniz.\n👉 ${baseUrl}/login\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
+                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nEmail: ${email}\nŞifre: ${password}\n\nGiriş: ${baseUrl}/login\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
+                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nTelefon ile giriş yapabilirsiniz.\nGiriş: ${baseUrl}/login\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
 
                 const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
                     method: 'POST',

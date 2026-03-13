@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
+import { nt, resolveLocale } from '@/lib/notification-i18n';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -10,43 +11,50 @@ const client = twilio(accountSid, authToken);
 interface WhatsAppRequest {
     to: string;
     message: string;
+    locale?: string;
     templateType?: 'order_confirmation' | 'order_ready' | 'order_rejected' | 'custom';
     templateData?: Record<string, string>;
 }
 
-// Pre-defined Turkish message templates
-const messageTemplates = {
-    order_confirmation: (data: Record<string, string>) =>
-        `🎉 Siparişiniz Alındı!\n\nMerhaba ${data.customerName || 'değerli müşterimiz'},\n\n` +
-        `📦 Sipariş No: ${data.orderId}\n` +
-        `🥩 Kasap: ${data.butcherName}\n` +
-        `💰 Toplam: ${data.total}€\n\n` +
-        `Siparişiniz hazırlandığında size yeniden haber vereceğiz.\n\n` +
-        `MIRA - Helal Et Siparişi`,
-
-    order_ready: (data: Record<string, string>) =>
-        `✅ Siparişiniz Hazır!\n\nMerhaba ${data.customerName || 'değerli müşterimiz'},\n\n` +
-        `📦 Sipariş No: ${data.orderId}\n` +
-        `🥩 ${data.butcherName} adresinden siparişinizi teslim alabilirsiniz.\n\n` +
-        `📍 Adres: ${data.address || 'Kasap adresine bakınız'}\n\n` +
-        `İyi günler dileriz!\nMIRA`,
-
-    order_rejected: (data: Record<string, string>) =>
-        `⚠️ Sipariş Güncellemesi\n\nMerhaba ${data.customerName || 'değerli müşterimiz'},\n\n` +
-        `📦 Sipariş No: ${data.orderId}\n\n` +
-        `Maalesef siparişiniz şu anda onaylanamıyor:\n${data.reason || 'Stok yetersizliği'}\n\n` +
-        `📞 Alternatifler için kasabımızı arayabilirsiniz: ${data.butcherPhone || ''}\n\n` +
-        `MIRA`,
-};
+// Locale-aware message templates
+function getTemplateMessage(locale: string, templateType: string, data: Record<string, string>): string {
+    const loc = resolveLocale(locale);
+    switch (templateType) {
+        case 'order_confirmation':
+            return nt(loc, 'whatsapp.order.confirmation', {
+                customer: data.customerName || nt(loc, 'common.defaultCustomer'),
+                orderId: data.orderId || '',
+                business: data.butcherName || nt(loc, 'common.defaultBusiness'),
+                total: data.total || '0',
+            });
+        case 'order_ready':
+            return nt(loc, 'whatsapp.order.ready', {
+                customer: data.customerName || nt(loc, 'common.defaultCustomer'),
+                orderId: data.orderId || '',
+                business: data.butcherName || nt(loc, 'common.defaultBusiness'),
+                address: data.address || '',
+            });
+        case 'order_rejected':
+            return nt(loc, 'whatsapp.order.rejected', {
+                customer: data.customerName || nt(loc, 'common.defaultCustomer'),
+                orderId: data.orderId || '',
+                reason: data.reason || '',
+                phone: data.butcherPhone || '',
+            });
+        default:
+            return nt(loc, 'whatsapp.fallback');
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {
         const body: WhatsAppRequest = await request.json();
-        const { to, message, templateType, templateData } = body;
+        const { to, message, locale: rawLocale, templateType, templateData } = body;
+        const locale = resolveLocale(rawLocale);
 
         if (!to) {
             return NextResponse.json(
-                { success: false, error: 'Telefon numarası gerekli' },
+                { success: false, error: nt(locale, 'whatsapp.phoneRequired') },
                 { status: 400 }
             );
         }
@@ -62,14 +70,9 @@ export async function POST(request: NextRequest) {
         // Determine message content
         let messageBody: string;
         if (templateType && templateType !== 'custom' && templateData) {
-            const templateFn = messageTemplates[templateType];
-            if (templateFn) {
-                messageBody = templateFn(templateData);
-            } else {
-                messageBody = message || 'MIRA bilgilendirme mesajı';
-            }
+            messageBody = getTemplateMessage(locale, templateType, templateData);
         } else {
-            messageBody = message || 'MIRA bilgilendirme mesajı';
+            messageBody = message || nt(locale, 'whatsapp.fallback');
         }
 
         // Send WhatsApp message via Twilio
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error('Twilio WhatsApp error:', error);
 
-        const errorMessage = error instanceof Error ? error.message : 'WhatsApp gönderilemedi';
+        const errorMessage = error instanceof Error ? error.message : 'WhatsApp send failed';
 
         return NextResponse.json(
             { success: false, error: errorMessage },

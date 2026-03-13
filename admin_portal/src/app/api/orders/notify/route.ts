@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmailWithResend, OrderEmailTemplates } from '@/lib/resend-email';
 import { getFirebaseMessaging } from '@/lib/firebase-admin';
+import { nt, resolveLocale } from '@/lib/notification-i18n';
 
 /**
  * Send FCM push notification
@@ -25,10 +26,10 @@ async function sendPushNotification(fcmToken: string, title: string, body: strin
                 notification: { sound: 'default' },
             },
         });
-        console.log('✅ FCM Push sent successfully to token:', fcmToken.substring(0, 20) + '...');
+        console.log('FCM Push sent successfully to token:', fcmToken.substring(0, 20) + '...');
         return { success: true };
     } catch (error) {
-        console.error('❌ FCM Error:', error);
+        console.error('FCM Error:', error);
         return { success: false, error: String(error) };
     }
 }
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
             scheduledDate,
             scheduledDateTime, // Alternative field name from mobile app
             paymentMethod,
+            locale: rawLocale, // Customer's locale from mobile app
         } = body;
 
         if (!orderId || !type) {
@@ -62,10 +64,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const locale = resolveLocale(rawLocale);
         const results: { email?: { success: boolean; error?: string }; push?: { success: boolean; error?: string } } = {};
 
         // Normalize scheduled date (mobile app sends scheduledDateTime)
-        const normalizedScheduledDate = scheduledDate || scheduledDateTime || 'Belirtilmedi';
+        const normalizedScheduledDate = scheduledDate || scheduledDateTime || nt(locale, 'common.notSpecified');
+        const businessName = butcherName || nt(locale, 'common.defaultBusiness');
 
         // Handle different notification types
         // 'order_created' from mobile app is same as 'new_order'
@@ -76,8 +80,8 @@ export async function POST(request: NextRequest) {
                 if (customerEmail) {
                     const customerTemplate = OrderEmailTemplates.orderConfirmationCustomer({
                         orderId,
-                        customerName: customerName || 'Değerli Müşteri',
-                        butcherName: butcherName || 'Kasap',
+                        customerName: customerName || nt(locale, 'common.defaultCustomer'),
+                        butcherName: businessName,
                         scheduledDate: normalizedScheduledDate,
                         deliveryType: deliveryType || 'pickup',
                         paymentMethod: paymentMethod || 'cash',
@@ -97,8 +101,8 @@ export async function POST(request: NextRequest) {
                 if (customerFcmToken) {
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '✅ Siparişiniz Alındı!',
-                        `${butcherName || 'Kasap'} siparişinizi hazırlıyor.`,
+                        nt(locale, 'order.received.title'),
+                        nt(locale, 'order.received.body', { business: businessName }),
                         { orderId, type: 'order_created' }
                     );
                     console.log('Order push notification result:', results.push);
@@ -110,8 +114,8 @@ export async function POST(request: NextRequest) {
                 if (customerEmail) {
                     const preparingTemplate = OrderEmailTemplates.orderPreparingCustomer({
                         orderId,
-                        customerName: customerName || 'Değerli Müşteri',
-                        butcherName: butcherName || 'Kasap',
+                        customerName: customerName || nt(locale, 'common.defaultCustomer'),
+                        butcherName: businessName,
                     });
 
                     results.email = await sendEmailWithResend({
@@ -126,8 +130,8 @@ export async function POST(request: NextRequest) {
                 if (customerFcmToken) {
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '👨‍🍳 Siparişiniz Hazırlanıyor!',
-                        `${butcherName || 'Kasap'} siparişinizi hazırlamaya başladı.`,
+                        nt(locale, 'order.preparing.title'),
+                        nt(locale, 'order.preparing.body', { business: businessName }),
                         { orderId, type: 'order_preparing' }
                     );
                 }
@@ -138,8 +142,8 @@ export async function POST(request: NextRequest) {
                 if (customerEmail) {
                     const readyTemplate = OrderEmailTemplates.orderReadyCustomer({
                         orderId,
-                        customerName: customerName || 'Değerli Müşteri',
-                        butcherName: butcherName || 'Kasap',
+                        customerName: customerName || nt(locale, 'common.defaultCustomer'),
+                        butcherName: businessName,
                         butcherAddress,
                     });
 
@@ -156,16 +160,16 @@ export async function POST(request: NextRequest) {
                     const hasTableService = body.hasTableService || false;
                     const isDineIn = body.isDineIn || false;
 
-                    let readyTitle = '🎉 Siparişiniz Hazır!';
-                    let readyBody = `${butcherName || 'Kasap'} siparişinizi hazırladı. Şimdi alabilirsiniz!`;
+                    let readyTitle = nt(locale, 'order.ready.title');
+                    let readyBody = nt(locale, 'order.ready.body', { business: businessName });
 
                     if (isDineIn) {
                         if (hasTableService) {
-                            readyTitle = '🍽️ Siparişiniz Geliyor!';
-                            readyBody = `${butcherName || 'Kasap'} siparişiniz masanıza geliyor. Afiyet olsun!`;
+                            readyTitle = nt(locale, 'order.ready.dineIn.title');
+                            readyBody = nt(locale, 'order.ready.dineIn.body', { business: businessName });
                         } else {
-                            readyTitle = '✅ Siparişiniz Hazır!';
-                            readyBody = `${butcherName || 'Kasap'} siparişiniz hazır. Gelip alabilirsiniz!`;
+                            readyTitle = nt(locale, 'order.ready.pickup.title');
+                            readyBody = nt(locale, 'order.ready.pickup.body', { business: businessName });
                         }
                     }
 
@@ -183,14 +187,16 @@ export async function POST(request: NextRequest) {
                 const unavailableItemsStr = body.unavailableItems || '';
                 const refundAmount = body.refundAmount || 0;
                 if (customerFcmToken) {
-                    let notifBody = `${butcherName || 'İşletme'}: Siparişiniz onaylandı ancak şu ürünler maalesef mevcut değil: ${unavailableItemsStr}.`;
+                    let notifBody = nt(locale, 'order.accepted.body', { business: businessName, items: unavailableItemsStr });
                     if (refundAmount > 0) {
-                        notifBody += ` 💳 €${refundAmount.toFixed(2)} iade kartınıza yapılacaktır.`;
+                        notifBody += nt(locale, 'order.accepted.refund', { amount: `€${refundAmount.toFixed(2)}` });
                     }
-                    notifBody += ' Anlayışınız için teşekkür ederiz. 🙏';
+                    notifBody += nt(locale, 'order.accepted.thanks');
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        refundAmount > 0 ? '✅ Sipariş Onaylandı — Kısmi İade' : '✅ Sipariş Onaylandı — Eksik Ürünler',
+                        refundAmount > 0
+                            ? nt(locale, 'order.accepted.partial.title')
+                            : nt(locale, 'order.accepted.unavailable.title'),
                         notifBody,
                         { orderId, type: 'order_accepted_with_unavailable', unavailableItems: unavailableItemsStr, refundAmount: String(refundAmount) }
                     );
@@ -206,11 +212,11 @@ export async function POST(request: NextRequest) {
                 }
                 if (customerFcmToken) {
                     const cancelBody = cancellationReason
-                        ? `Maalesef siparişiniz iptal edildi. Sebep: ${cancellationReason}. Anlayışınız için teşekkür ederiz. 🙏`
-                        : `Maalesef siparişiniz iptal edildi. Anlayışınız için teşekkür ederiz. 🙏`;
+                        ? nt(locale, 'order.cancelled.body', { reason: cancellationReason })
+                        : nt(locale, 'order.cancelled.bodyNoReason');
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '❌ Sipariş İptal Edildi',
+                        nt(locale, 'order.cancelled.title'),
                         cancelBody,
                         { orderId, type: 'order_cancelled', cancellationReason }
                     );
@@ -222,8 +228,8 @@ export async function POST(request: NextRequest) {
                 if (customerFcmToken) {
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '✅ Siparişiniz Teslim Edildi!',
-                        `${butcherName || 'Kasap'} siparişiniz başarıyla teslim edildi. Afiyet olsun!`,
+                        nt(locale, 'order.completed.title'),
+                        nt(locale, 'order.completed.body', { business: businessName }),
                         { orderId, type: 'order_completed' }
                     );
                 }
@@ -234,8 +240,11 @@ export async function POST(request: NextRequest) {
                 if (customerFcmToken) { // This is actually staff's FCM token
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '📦 Yeni Dağıtım Var!',
-                        `${butcherName || 'Kasap'} - ${body.customerName || 'Müşteri'} siparişi hazır. İlk kabul eden götürür!`,
+                        nt(locale, 'order.delivery.title'),
+                        nt(locale, 'order.delivery.body', {
+                            business: businessName,
+                            customer: body.customerName || nt(locale, 'common.defaultCustomer'),
+                        }),
                         { orderId, type: 'delivery_available' }
                     );
                 }
@@ -244,11 +253,11 @@ export async function POST(request: NextRequest) {
             case 'order_in_transit':
                 // Send notification when courier is on the way
                 if (customerFcmToken) {
-                    const courierName = body.courierName || 'Kurye';
+                    const courierName = body.courierName || nt(locale, 'common.defaultCourier');
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '🛵 Siparişiniz Yolda!',
-                        `${courierName} siparişinizi teslim etmek için yola çıktı. Canlı takip edebilirsiniz!`,
+                        nt(locale, 'order.inTransit.title'),
+                        nt(locale, 'order.inTransit.body', { courier: courierName }),
                         { orderId, type: 'order_in_transit' }
                     );
                 }

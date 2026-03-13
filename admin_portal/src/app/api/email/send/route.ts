@@ -15,17 +15,17 @@ interface SendEmailRequest {
 // Email Templates (simplified for direct API use)
 const EmailTemplates = {
     welcome: (userName: string) => ({
-        subject: '🎉 LOKMA Ailesine Hoş Geldiniz!',
+        subject: 'LOKMA Ailesine Hoş Geldiniz!',
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 28px;">🍖 LOKMA</h1>
+                    <h1 style="color: white; margin: 0; font-size: 28px;">LOKMA</h1>
                     <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Taze Et, Hızlı Teslimat</p>
                 </div>
                 <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-                    <h2 style="color: #1f2937; margin-top: 0;">Merhaba ${userName}! 👋</h2>
+                    <h2 style="color: #1f2937; margin-top: 0;">Merhaba ${userName}!</h2>
                     <p style="color: #4b5563; line-height: 1.6;">
-                        LOKMA ailesine katıldığınız için teşekkür ederiz! 🤲
+                        LOKMA ailesine katıldığınız için teşekkür ederiz!
                     </p>
                 </div>
                 <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
@@ -36,11 +36,11 @@ const EmailTemplates = {
     }),
 
     general: (title: string, message: string) => ({
-        subject: `📢 ${title}`,
+        subject: `${title}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 28px;">📢 ${title}</h1>
+                    <h1 style="color: white; margin: 0; font-size: 28px;">${title}</h1>
                     <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">LOKMA Marketplace</p>
                 </div>
                 <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
@@ -54,11 +54,11 @@ const EmailTemplates = {
     }),
 
     password_reset: (userName: string, resetLink: string) => ({
-        subject: '🔐 Şifre Sıfırlama Talebi',
+        subject: 'Şifre Sıfırlama Talebi',
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 28px;">🔐 Şifre Sıfırlama</h1>
+                    <h1 style="color: white; margin: 0; font-size: 28px;">Şifre Sıfırlama</h1>
                 </div>
                 <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
                     <h2 style="color: #333; margin-top: 0;">Merhaba ${userName}!</h2>
