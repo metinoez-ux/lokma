@@ -113,7 +113,7 @@ export default function NotificationSoundPage() {
                 activeSoundId: soundId,
                 activeSoundDisplayName: soundOption?.name || soundId,
                 updatedAt: serverTimestamp(),
-                updatedBy: admin?.uid || 'unknown',
+                updatedBy: admin?.id || 'unknown',
             });
             setActiveSound(soundId);
         } catch (e) {

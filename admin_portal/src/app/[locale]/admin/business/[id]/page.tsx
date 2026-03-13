@@ -261,10 +261,11 @@ export default function BusinessDetailsPage() {
     "overview" | "orders" | "reservations" | "settings" | "procurement"
   >(initialTab);
   const [settingsSubTab, setSettingsSubTab] = useState<
-    "isletme" | "menu" | "personel" | "masa" | "abonelik" | "teslimat" | "odeme" | "promosyon"
+    "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon"
   >("isletme");
   const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
-  const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler">("bilgiler");
+  const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat">("bilgiler");
+  const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
   // 📦 Tedarik Sipariş Yönetimi (Procurement)
@@ -2398,7 +2399,7 @@ export default function BusinessDetailsPage() {
                     { key: "personel", icon: "👷", label: "Personel", action: "tab" },
                     { key: "masa", icon: "🪑", label: "Masa", action: "tab" },
                     { key: "abonelik", icon: "💳", label: t('abonelikPlani'), action: "tab" },
-                    { key: "teslimat", icon: "🚚", label: "Teslimat", action: "tab" },
+
                     { key: "odeme", icon: "🏦", label: t('odemeBilgileri'), action: "tab" },
                     { key: "promosyon", icon: "🎁", label: "Promosyon", action: "tab" },
                   ].map((item) => {
@@ -3265,13 +3266,13 @@ export default function BusinessDetailsPage() {
                   {settingsSubTab === "personel" && t('personelYonetimi')}
                   {settingsSubTab === "masa" && t('masaAyarlari')}
                   {settingsSubTab === "abonelik" && t('abonelikPlani1')}
-                  {settingsSubTab === "teslimat" && t('teslimatAyarlari')}
+
                   {settingsSubTab === "odeme" && t('odemeBilgileri1')}
                   {settingsSubTab === "promosyon" && "🎁 Promosyon Ayarları"}
                 </h3>
                 <div className="flex items-center gap-3">
-                  {/* Kurye Aktif/Deaktif Toggle - only in Teslimat sub-tab */}
-                  {settingsSubTab === "teslimat" && formData.supportsDelivery && (
+                  {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
+                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && (
                     <button
                       onClick={async () => {
                         const newValue = !formData.temporaryDeliveryPaused;
@@ -3302,7 +3303,7 @@ export default function BusinessDetailsPage() {
                       🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
                     </button>
                   )}
-                  {settingsSubTab === "teslimat" && (
+                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && (
                     <button
                       onClick={async () => {
                         const newValue = !formData.temporaryPickupPaused;
@@ -3378,6 +3379,7 @@ export default function BusinessDetailsPage() {
                       { id: "zertifikalar" as const, label: "🏷️ Zertifikalar" },
                       { id: "gorseller" as const, label: t('gorseller') },
                       { id: "saatler" as const, label: t('acilisSaatleri') },
+                      { id: "teslimat" as const, label: "🚚 " + t('teslimatAyarlari') },
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -3692,9 +3694,32 @@ export default function BusinessDetailsPage() {
                     </div>
                   )}
 
-                  {/* ═══════ Tab 5: Açılış Saatleri ═══════ */}
+                  {/* ═══════ Tab 5: Açılış Saatleri (Genel / Kurye / Gel-Al) ═══════ */}
                   {isletmeInternalTab === "saatler" && (
                     <div className="space-y-6">
+                      {/* Saatler Sub-Tab Bar */}
+                      <div className="flex gap-2 border-b border-gray-700 pb-3 mb-4">
+                        {[
+                          { id: "genel" as const, icon: "⏰", label: t('acilisSaatleri') },
+                          { id: "kurye" as const, icon: "🛵", label: t('kuryeBaslangic').replace(' Başlangıç', '') || 'Kurye Saatleri' },
+                          { id: "gelal" as const, icon: "🛍️", label: 'Gel-Al Saatleri' },
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setSaatlerSubTab(tab.id)}
+                            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition flex items-center gap-1.5 ${saatlerSubTab === tab.id
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                              }`}
+                          >
+                            <span>{tab.icon}</span>
+                            <span>{tab.label}</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Genel Açılış Saatleri */}
+                      {saatlerSubTab === "genel" && (
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
                         <h4 className="text-white font-medium mb-4">{t('calismaSaatleri3')}</h4>
                         {isEditing ? (
@@ -3741,6 +3766,108 @@ export default function BusinessDetailsPage() {
                             ))}
                           </ul>
                         ) : (<span className="text-xs text-gray-500 italic">{t('bilgi_yok')}</span>)}
+                      </div>
+                      )}
+
+                      {/* Kurye Saatleri */}
+                      {saatlerSubTab === "kurye" && (
+                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                        <h4 className="text-white font-medium mb-2">🛵 Kurye Açılış Saatleri</h4>
+                        <p className="text-xs text-gray-400 mb-4">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('kuryeBaslangic')}</label>
+                            <input type="time" value={formData.deliveryStartTime || ""} onChange={(e) => setFormData({ ...formData, deliveryStartTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or1400')} />
+                            <p className="text-xs text-gray-500 mt-1">{t('bosAcilisSaati')}</p>
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('kuryeBitis')}</label>
+                            <input type="time" value={formData.deliveryEndTime || ""} onChange={(e) => setFormData({ ...formData, deliveryEndTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or2000')} />
+                            <p className="text-xs text-gray-500 mt-1">{t('bosKapanisSaati')}</p>
+                          </div>
+                        </div>
+                        {!formData.deliveryStartTime && !formData.deliveryEndTime && formData.openingHours && (
+                          <div className="mt-3 p-2 bg-amber-900/20 rounded border border-amber-700/50">
+                            <p className="text-xs text-amber-300">💡 Henüz özel kurye saati belirlenmedi. Genel açılış saatleri kullanılacak.</p>
+                          </div>
+                        )}
+                      </div>
+                      )}
+
+                      {/* Gel-Al Saatleri */}
+                      {saatlerSubTab === "gelal" && (
+                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                        <h4 className="text-white font-medium mb-2">🛍️ Gel-Al Açılış Saatleri</h4>
+                        <p className="text-xs text-gray-400 mb-4">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('gelAlBaslangic')}</label>
+                            <input type="time" value={formData.pickupStartTime || ""} onChange={(e) => setFormData({ ...formData, pickupStartTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or1200')} />
+                            <p className="text-xs text-gray-500 mt-1">{t('bosAcilisSaati')}</p>
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('gelAlBitis')}</label>
+                            <input type="time" value={formData.pickupEndTime || ""} onChange={(e) => setFormData({ ...formData, pickupEndTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or2100')} />
+                            <p className="text-xs text-gray-500 mt-1">{t('bosKapanisSaati')}</p>
+                          </div>
+                        </div>
+                        {!formData.pickupStartTime && !formData.pickupEndTime && formData.openingHours && (
+                          <div className="mt-3 p-2 bg-amber-900/20 rounded border border-amber-700/50">
+                            <p className="text-xs text-amber-300">💡 Henüz özel gel-al saati belirlenmedi. Genel açılış saatleri kullanılacak.</p>
+                          </div>
+                        )}
+                      </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
+                  {isletmeInternalTab === "teslimat" && (
+                    <div className="space-y-6">
+                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                        <h4 className="text-white font-medium border-b border-gray-700 pb-2 mb-4">{t('teslimatAyarlari')}</h4>
+                        <div className="space-y-4">
+                          {/* Kurye Desteği Checkbox */}
+                          <div className="flex items-center gap-3">
+                            <input type="checkbox" checked={formData.supportsDelivery} onChange={(e) => setFormData({ ...formData, supportsDelivery: e.target.checked })} disabled={!isEditing} className="w-5 h-5" />
+                            <span className="text-white">{t('kuryeDestegiVar')}</span>
+                          </div>
+                          {formData.supportsDelivery && (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              <div>
+                                <label className="text-gray-400 text-sm">{t('minSiparis')}</label>
+                                <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              </div>
+                              <div>
+                                <label className="text-gray-400 text-sm">{t('teslimatUcreti')}</label>
+                                <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              </div>
+                              <div>
+                                <label className="text-gray-400 text-sm">Maks. Mesafe (km)</label>
+                                <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Ücretsiz Teslimat Eşiği */}
+                          <div className="mt-3">
+                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('ucretsizTeslimatEsigi')}</label>
+                            <div className="flex items-center gap-2 mt-1">
+                              <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-32 bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
+                              <span className="text-gray-400 text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{t('0HerZamanTeslimatUcretiUygulanir')}</p>
+                          </div>
+
+                          {/* Ön Sipariş Checkbox */}
+                          <div className="mt-3 flex items-center gap-3">
+                            <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => setFormData({ ...formData, preOrderEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-amber-500" />
+                            <div>
+                              <span className="text-white">{t('onSiparisKabulEt')}</span>
+                              <p className="text-xs text-gray-400">{t('isletmeKapaliykenDeErtesiGunIcin')}</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -5872,256 +5999,7 @@ export default function BusinessDetailsPage() {
                 )
               }
 
-              {/* Sub-Tab: Teslimat */}
-              {
-                settingsSubTab === "teslimat" && (
-                  <div className="space-y-6">
-                    <div className="space-y-6">
-                      {/* Delivery Settings */}
-                      <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          {t('teslimatAyarlari')}
-                        </h4>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={formData.supportsDelivery}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                supportsDelivery: e.target.checked,
-                              })
-                            }
-                            disabled={!isEditing}
-                            className="w-5 h-5"
-                          />
-                          <span className="text-white">{t('kuryeDestegiVar')}</span>
-                        </div>
-                        {formData.supportsDelivery && (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            <div>
-                              <label className="text-gray-400 text-sm">
-                                {t('minSiparis')}
-                              </label>
-                              <input
-                                type="number"
-                                value={formData.minDeliveryOrder}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    minDeliveryOrder: parseFloat(e.target.value) || 0,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-gray-400 text-sm">
-                                {t('teslimatUcreti')}
-                              </label>
-                              <input
-                                type="number"
-                                value={formData.deliveryFee}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    deliveryFee: parseFloat(e.target.value) || 0,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-gray-400 text-sm">
-                                Maks. Mesafe (km)
-                              </label>
-                              <input
-                                type="number"
-                                value={formData.deliveryRadius || 5}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    deliveryRadius: parseFloat(e.target.value) || 0,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                              />
-                            </div>
-                          </div>
-                        )}
 
-                        {/* 🆕 Gelişmiş Sipariş Saatleri (Lieferando benzeri) */}
-                        <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-                          <h5 className="text-white font-medium mb-3 flex items-center gap-2">
-                            {t('gelismisSiparisSaatleri')}
-                            <span className="text-xs text-gray-500">(Opsiyonel)</span>
-                          </h5>
-                          <p className="text-xs text-gray-400 mb-3">
-                            {t('isletmeAcikOlsaBileKuryegelAl')}
-                          </p>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {/* Kurye Başlangıç Saati */}
-                            <div>
-                              <label className="text-gray-400 text-sm flex items-center gap-1">
-                                {t('kuryeBaslangic')}
-                              </label>
-                              <input
-                                type="time"
-                                value={formData.deliveryStartTime || ""}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    deliveryStartTime: e.target.value,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder={t('or1400')}
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                {t('bosAcilisSaati')}
-                              </p>
-                            </div>
-
-                            {/* Kurye Bitiş Saati */}
-                            <div>
-                              <label className="text-gray-400 text-sm flex items-center gap-1">
-                                {t('kuryeBitis')}
-                              </label>
-                              <input
-                                type="time"
-                                value={formData.deliveryEndTime || ""}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    deliveryEndTime: e.target.value,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder={t('or2000')}
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                {t('bosKapanisSaati')}
-                              </p>
-                            </div>
-
-                            {/* Gel Al Başlangıç Saati */}
-                            <div>
-                              <label className="text-gray-400 text-sm flex items-center gap-1">
-                                {t('gelAlBaslangic')}
-                              </label>
-                              <input
-                                type="time"
-                                value={formData.pickupStartTime || ""}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    pickupStartTime: e.target.value,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder={t('or1200')}
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                {t('bosAcilisSaati')}
-                              </p>
-                            </div>
-
-                            {/* Gel Al Bitiş Saati */}
-                            <div>
-                              <label className="text-gray-400 text-sm flex items-center gap-1">
-                                {t('gelAlBitis')}
-                              </label>
-                              <input
-                                type="time"
-                                value={formData.pickupEndTime || ""}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    pickupEndTime: e.target.value,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder={t('or2100')}
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                {t('bosKapanisSaati')}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Ücretsiz Teslimat Eşiği */}
-                          <div className="mt-3">
-                            <label className="text-gray-400 text-sm flex items-center gap-1">
-                              {t('ucretsizTeslimatEsigi')}
-                            </label>
-                            <div className="flex items-center gap-2 mt-1">
-                              <input
-                                type="number"
-                                value={formData.freeDeliveryThreshold || 0}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    freeDeliveryThreshold: parseFloat(e.target.value) || 0,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                className="w-32 bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
-                                min="0"
-                                step="0.01"
-                              />
-                              <span className="text-gray-400 text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {t('0HerZamanTeslimatUcretiUygulanir')}
-                            </p>
-                          </div>
-
-                          {/* Ön Sipariş Checkbox */}
-                          <div className="mt-3 flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={formData.preOrderEnabled}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  preOrderEnabled: e.target.checked,
-                                })
-                              }
-                              disabled={!isEditing}
-                              className="w-5 h-5 accent-amber-500"
-                            />
-                            <div>
-                              <span className="text-white">{t('onSiparisKabulEt')}</span>
-                              <p className="text-xs text-gray-400">
-                                {t('isletmeKapaliykenDeErtesiGunIcin')}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Bilgi mesajı */}
-                          {(formData.deliveryStartTime || formData.pickupStartTime) && (
-                            <div className="mt-2 p-2 bg-blue-900/30 rounded border border-blue-700">
-                              <p className="text-xs text-blue-300">
-                                {t('mobilUygulamadaIsletmeKartindaTeslimat')} {formData.deliveryStartTime || "..."}&apos;ten sonra&quot; /
-                                &quot;Gel Al {formData.pickupStartTime || "..."}{t('danItibarenSeklindeBadgeGosterilecek')}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                )
-              }
 
               {/* Sub-Tab: Masa */}
               {
