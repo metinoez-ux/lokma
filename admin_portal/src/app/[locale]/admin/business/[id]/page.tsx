@@ -2385,7 +2385,7 @@ export default function BusinessDetailsPage() {
                 onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
               >
-                ⚙️ Ayarlar
+                {t('ayarlar')}
                 <svg className={`w-3.5 h-3.5 transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -2396,12 +2396,12 @@ export default function BusinessDetailsPage() {
                   {[
                     { key: "isletme", icon: "🏢", label: t('isletme'), action: "tab" },
                     { key: "menu", icon: "📋", label: t('menuUrunler'), action: "tab" },
-                    { key: "personel", icon: "👷", label: "Personel", action: "tab" },
-                    { key: "masa", icon: "🪑", label: "Masa", action: "tab" },
+                    { key: "personel", icon: "👷", label: t('personel_label'), action: "tab" },
+                    { key: "masa", icon: "🪑", label: t('masa_label'), action: "tab" },
                     { key: "abonelik", icon: "💳", label: t('abonelikPlani'), action: "tab" },
 
                     { key: "odeme", icon: "🏦", label: t('odemeBilgileri'), action: "tab" },
-                    { key: "promosyon", icon: "🎁", label: "Promosyon", action: "tab" },
+                    { key: "promosyon", icon: "🎁", label: t('promosyon_label'), action: "tab" },
                   ].map((item) => {
                     return (
                       <button
@@ -3268,7 +3268,7 @@ export default function BusinessDetailsPage() {
                   {settingsSubTab === "abonelik" && t('abonelikPlani1')}
 
                   {settingsSubTab === "odeme" && t('odemeBilgileri1')}
-                  {settingsSubTab === "promosyon" && "🎁 Promosyon Ayarları"}
+                  {settingsSubTab === "promosyon" && t('promosyonAyarlari')}
                 </h3>
                 <div className="flex items-center gap-3">
                   {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
@@ -3319,7 +3319,7 @@ export default function BusinessDetailsPage() {
                             adminEmail: admin?.email || "unknown",
                           });
                           setFormData({ ...formData, temporaryPickupPaused: newValue, pickupPauseUntil: null });
-                          showToast(newValue ? '🛍️ Gel-Al durduruldu' : '🛍️ Gel-Al aktif', "success");
+                          showToast(newValue ? t('gelAlDurdurulduToast') : t('gelAlAktifToast'), "success");
                         } catch (e) {
                           showToast(t('hataOlustu1'), "error");
                         }
@@ -3329,7 +3329,7 @@ export default function BusinessDetailsPage() {
                         : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500"
                         }`}
                     >
-                      🛍️ {formData.temporaryPickupPaused ? 'Gel-Al Durduruldu' : 'Gel-Al Aktif'}
+                      🛍️ {formData.temporaryPickupPaused ? t('gelAlDurduruldu') : t('gelAlAktif')}
                     </button>
                   )}
                   {/* Active/Deactive Toggle */}
@@ -3701,8 +3701,8 @@ export default function BusinessDetailsPage() {
                       <div className="flex gap-2 border-b border-gray-700 pb-3 mb-4">
                         {[
                           { id: "genel" as const, icon: "⏰", label: t('acilisSaatleri') },
-                          { id: "kurye" as const, icon: "🛵", label: t('kuryeBaslangic').replace(' Başlangıç', '') || 'Kurye Saatleri' },
-                          { id: "gelal" as const, icon: "🛍️", label: 'Gel-Al Saatleri' },
+                          { id: "kurye" as const, icon: "🛵", label: t('kuryeSaatleri') },
+                          { id: "gelal" as const, icon: "🛍️", label: t('gelAlSaatleri') },
                         ].map((tab) => (
                           <button
                             key={tab.id}
@@ -3772,7 +3772,7 @@ export default function BusinessDetailsPage() {
                       {/* Kurye Saatleri */}
                       {saatlerSubTab === "kurye" && (
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-2">🛵 Kurye Açılış Saatleri</h4>
+                        <h4 className="text-white font-medium mb-2">{t('kuryeAcilisSaatleri')}</h4>
                         <p className="text-xs text-gray-400 mb-4">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -3788,7 +3788,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         {!formData.deliveryStartTime && !formData.deliveryEndTime && formData.openingHours && (
                           <div className="mt-3 p-2 bg-amber-900/20 rounded border border-amber-700/50">
-                            <p className="text-xs text-amber-300">💡 Henüz özel kurye saati belirlenmedi. Genel açılış saatleri kullanılacak.</p>
+                            <p className="text-xs text-amber-300">{t('henuzOzelKuryeSaati')}</p>
                           </div>
                         )}
                       </div>
@@ -3797,7 +3797,7 @@ export default function BusinessDetailsPage() {
                       {/* Gel-Al Saatleri */}
                       {saatlerSubTab === "gelal" && (
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-2">🛍️ Gel-Al Açılış Saatleri</h4>
+                        <h4 className="text-white font-medium mb-2">{t('gelAlAcilisSaatleri')}</h4>
                         <p className="text-xs text-gray-400 mb-4">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -3813,7 +3813,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         {!formData.pickupStartTime && !formData.pickupEndTime && formData.openingHours && (
                           <div className="mt-3 p-2 bg-amber-900/20 rounded border border-amber-700/50">
-                            <p className="text-xs text-amber-300">💡 Henüz özel gel-al saati belirlenmedi. Genel açılış saatleri kullanılacak.</p>
+                            <p className="text-xs text-amber-300">{t('henuzOzelGelAlSaati')}</p>
                           </div>
                         )}
                       </div>
@@ -3843,7 +3843,7 @@ export default function BusinessDetailsPage() {
                                 <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
-                                <label className="text-gray-400 text-sm">Maks. Mesafe (km)</label>
+                                <label className="text-gray-400 text-sm">{t('maksMesafe')}</label>
                                 <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                             </div>
