@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
@@ -28,10 +29,13 @@ interface TipEntry {
     driverName: string;
     driverId: string;
     paymentMethod: string;
+    customerName: string;
 }
 
 export default function DriverTipsOverviewPage() {
     const t = useTranslations('AdminDriversTips');
+    const { admin } = useAdmin();
+    const isSuperAdminUser = admin?.adminType === 'super';
     const [loading, setLoading] = useState(true);
     const [drivers, setDrivers] = useState<DriverTipData[]>([]);
     const [tipEntries, setTipEntries] = useState<TipEntry[]>([]);
@@ -127,6 +131,7 @@ export default function DriverTipsOverviewPage() {
                         driverName: driverMap.get(courierId)?.name || t('unknown_driver'),
                         driverId: courierId,
                         paymentMethod: data.paymentMethod || 'card',
+                        customerName: data.customerName || data.userName || '',
                     });
 
                     // Aggregate stats per driver
@@ -417,13 +422,23 @@ export default function DriverTipsOverviewPage() {
                             ))}
                         </div>
 
-                        {/* GDPR Notice */}
+                        {/* GDPR Notice — only for non-super admins */}
+                        {!isSuperAdminUser && (
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
                             <span className="text-blue-500 dark:text-blue-400">🛡️</span>
                             <span className="text-blue-700 dark:text-blue-300 text-xs">
                                 {t('gdpr_notice')}
                             </span>
                         </div>
+                        )}
+                        {isSuperAdminUser && (
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+                            <span className="text-green-500 dark:text-green-400">🔓</span>
+                            <span className="text-green-700 dark:text-green-300 text-xs">
+                                Super Admin: Volle Transparenz aktiv — Kundennamen, Bestell-IDs und alle Details sind sichtbar.
+                            </span>
+                        </div>
+                        )}
 
                         {/* Tip entries table */}
                         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
@@ -434,6 +449,8 @@ export default function DriverTipsOverviewPage() {
                                             <th className="px-4 py-3 font-medium">{t('th_date')}</th>
                                             <th className="px-4 py-3 font-medium">{t('th_time')}</th>
                                             <th className="px-4 py-3 font-medium">{t('th_driver')}</th>
+                                            {isSuperAdminUser && <th className="px-4 py-3 font-medium">Kunde</th>}
+                                            {isSuperAdminUser && <th className="px-4 py-3 font-medium">Bestell-ID</th>}
                                             <th className="px-4 py-3 font-medium">{t('th_city')}</th>
                                             <th className="px-4 py-3 font-medium text-right">{t('th_order_total')}</th>
                                             <th className="px-4 py-3 font-medium text-center">{t('th_payment')}</th>
@@ -443,7 +460,7 @@ export default function DriverTipsOverviewPage() {
                                     <tbody>
                                         {filteredEntries.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                                                <td colSpan={isSuperAdminUser ? 9 : 7} className="px-4 py-8 text-center text-gray-500">
                                                     {t('no_entries')}
                                                 </td>
                                             </tr>
@@ -453,6 +470,8 @@ export default function DriverTipsOverviewPage() {
                                                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatDate(entry.deliveredAt)}</td>
                                                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{formatTime(entry.deliveredAt)}</td>
                                                     <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{entry.driverName}</td>
+                                                    {isSuperAdminUser && <td className="px-4 py-3 text-gray-700 dark:text-gray-200 font-medium">{entry.customerName || '—'}</td>}
+                                                    {isSuperAdminUser && <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{entry.orderId.substring(0, 12)}...</td>}
                                                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{entry.city || '—'}</td>
                                                     <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{formatCurrency(entry.orderTotal)}</td>
                                                     <td className="px-4 py-3 text-center">

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, Timestamp, collectionGroup } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useTranslations } from 'next-intl';
 
@@ -38,15 +38,16 @@ const { admin, loading: adminLoading } = useAdmin();
     const [exporting, setExporting] = useState(false);
 
     const businessId = admin?.butcherId;
+    const isSuperAdminUser = admin?.adminType === 'super';
 
     useEffect(() => {
-        if (!adminLoading && businessId) {
+        if (!adminLoading && (businessId || isSuperAdminUser)) {
             loadShifts();
         }
-    }, [adminLoading, businessId, selectedMonth]);
+    }, [adminLoading, businessId, isSuperAdminUser, selectedMonth]);
 
     const loadShifts = async () => {
-        if (!businessId) return;
+        if (!businessId && !isSuperAdminUser) return;
         setLoading(true);
         try {
             const [year, month] = selectedMonth.split('-').map(Number);
@@ -56,12 +57,24 @@ const { admin, loading: adminLoading } = useAdmin();
             const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
             const endStr = `${year}-${String(month).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
 
-            const q = query(
-                collection(db, 'businesses', businessId, 'shifts'),
-                where('date', '>=', startStr),
-                where('date', '<=', endStr),
-                orderBy('date', 'desc')
-            );
+            let q;
+            if (isSuperAdminUser) {
+                // Super Admin: query ALL businesses' shifts via collectionGroup
+                q = query(
+                    collectionGroup(db, 'shifts'),
+                    where('date', '>=', startStr),
+                    where('date', '<=', endStr),
+                    orderBy('date', 'desc')
+                );
+            } else {
+                // Regular admin: only their business
+                q = query(
+                    collection(db, 'businesses', businessId!, 'shifts'),
+                    where('date', '>=', startStr),
+                    where('date', '<=', endStr),
+                    orderBy('date', 'desc')
+                );
+            }
 
             const snapshot = await getDocs(q);
             const records: ShiftRecord[] = snapshot.docs.map(doc => {
@@ -264,7 +277,7 @@ const { admin, loading: adminLoading } = useAdmin();
     };
 
     if (adminLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
-    if (!admin?.butcherId) return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
+    if (!admin?.butcherId && admin?.adminType !== 'super') return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-900 text-white">
