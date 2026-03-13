@@ -196,8 +196,8 @@ export default function BusinessDetailsPage() {
   const businessTypeLabels: Record<string, { label: string; emoji: string; color: string }> = {
     // === MERKEZI TİPLER (business-types.ts ile uyumlu) ===
     kasap: { label: "Kasap", emoji: "🥩", color: "bg-red-600" },
-    market: { label: "Market", emoji: "🛒", color: "bg-green-600" },
-    restoran: { label: t('restoran'), emoji: "🍽️", color: "bg-amber-600" },
+    market: { label: "Market", emoji: "", color: "bg-green-600" },
+    restoran: { label: t('restoran'), emoji: "", color: "bg-amber-600" },
     pastane: { label: t('pastaneTatlici'), emoji: "🎂", color: "bg-pink-600" },
     cicekci: { label: t('cicekci'), emoji: "🌸", color: "bg-purple-600" },
     cigkofte: { label: t('cigKofteci'), emoji: "🥙", color: "bg-emerald-600" },
@@ -268,7 +268,7 @@ export default function BusinessDetailsPage() {
   const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
-  // 📦 Tedarik Sipariş Yönetimi (Procurement)
+  //  Tedarik Sipariş Yönetimi (Procurement)
   const [procurementSubTab, setProcurementSubTab] = useState<'suppliers' | 'orders'>('orders');
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [supplierOrders, setSupplierOrders] = useState<any[]>([]);
@@ -407,7 +407,7 @@ export default function BusinessDetailsPage() {
     deliveryRadius: 5,
     minDeliveryOrder: 0,
     deliveryFee: 0,
-    // 🆕 Gelişmiş Sipariş Saatleri (Lieferando benzeri)
+    // 🆕 {t('gelismis')} Sipariş Saatleri (Lieferando benzeri)
     deliveryStartTime: "" as string,   // "HH:MM" - Kurye başlangıç saati
     deliveryEndTime: "" as string,     // "HH:MM" - Kurye bitiş saati
     pickupStartTime: "" as string,     // "HH:MM" - Gel Al başlangıç saati
@@ -455,7 +455,7 @@ export default function BusinessDetailsPage() {
     hasReservation: false,   // Masa rezervasyonu aktif mi?
     tableCapacity: 0,        // Toplam oturma kapasitesi (kişi)
     maxReservationTables: 0, // Aynı anda rezerve edilebilecek max masa sayısı
-    // 🆕 Gelişmiş Masa Yönetimi
+    // 🆕 {t('gelismis')} Masa Yönetimi
     tables: [] as { label: string; section: string; sortOrder: number }[],
     tableSections: [] as string[],
     // 🆕 Yerinde Sipariş Ayarları
@@ -610,7 +610,7 @@ export default function BusinessDetailsPage() {
   // 🆕 Plan features resolved from subscription_plans collection
   const [planFeatures, setPlanFeatures] = useState<Record<string, boolean>>({});
 
-  // 📦 Template Selection Modal State
+  //  Template Selection Modal State
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateProducts, setTemplateProducts] = useState<any[]>([]);
   const [selectedTemplateProducts, setSelectedTemplateProducts] = useState<Record<string, boolean>>({});
@@ -700,7 +700,7 @@ export default function BusinessDetailsPage() {
           deliveryRadius: d.deliveryRadius || 5,
           minDeliveryOrder: d.minDeliveryOrder || 0,
           deliveryFee: d.deliveryFee || 0,
-          // 🆕 Gelişmiş Sipariş Saatleri
+          // 🆕 {t('gelismis')} Sipariş Saatleri
           deliveryStartTime: d.deliveryStartTime || "",
           deliveryEndTime: d.deliveryEndTime || "",
           pickupStartTime: d.pickupStartTime || "",
@@ -748,7 +748,7 @@ export default function BusinessDetailsPage() {
           hasReservation: d.hasReservation || false,
           tableCapacity: d.tableCapacity || 0,
           maxReservationTables: d.maxReservationTables || 0,
-          // 🆕 Gelişmiş Masa Yönetimi
+          // 🆕 {t('gelismis')} Masa Yönetimi
           tables: Array.isArray(d.tables) ? d.tables : [],
           tableSections: Array.isArray(d.tableSections) ? d.tableSections : [],
           // 🆕 Yerinde Sipariş Ayarları
@@ -826,7 +826,7 @@ export default function BusinessDetailsPage() {
     }
   }, [businessId]);
 
-  // 📦 Load Suppliers
+  //  Load Suppliers
   const loadSuppliers = useCallback(async () => {
     if (!businessId) return;
     setLoadingSuppliers(true);
@@ -841,7 +841,7 @@ export default function BusinessDetailsPage() {
     }
   }, [businessId]);
 
-  // 📋 Load Supplier Orders
+  //  Load Supplier Orders
   const loadSupplierOrders = useCallback(async () => {
     if (!businessId) return;
     setLoadingSupplierOrders(true);
@@ -1082,7 +1082,7 @@ export default function BusinessDetailsPage() {
       await loadInlineCategories();
       setShowCategoryModal(false);
       setEditingCategory(null);
-      setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
+      setCategoryForm({ name: { tr: '' }, icon: '', isActive: true });
     } catch (error) {
       console.error('Error saving category:', error);
     }
@@ -1116,14 +1116,14 @@ export default function BusinessDetailsPage() {
     }
   };
 
-  // 📋 Default Menu Template: detect kasap-type business
+  //  Default Menu Template: detect kasap-type business
   const isKasapType = (() => {
     const types = formData.types || [];
     const kasapTypes = ['kasap', 'market', 'balik', 'sarkuteri', 'manav', 'bakkal'];
     return types.some((t: string) => kasapTypes.includes(t.toLowerCase()));
   })();
 
-  // 📋 Apply default kasap CATEGORY template from Firestore (categories only)
+  //  Apply default kasap CATEGORY template from Firestore (categories only)
   const [applyingTemplate, setApplyingTemplate] = useState(false);
   const [applyingProductTemplate, setApplyingProductTemplate] = useState(false);
 
@@ -1162,7 +1162,7 @@ export default function BusinessDetailsPage() {
       }
 
       await loadInlineCategories();
-      showToast(`${categories.length} kategori başarıyla eklendi ✅`, 'success');
+      showToast(`${categories.length} kategori başarıyla eklendi `, 'success');
     } catch (error) {
       console.error('Error applying category template:', error);
       showToast('Kategori şablonu uygulanırken hata oluştu', 'error');
@@ -1170,7 +1170,7 @@ export default function BusinessDetailsPage() {
     setApplyingTemplate(false);
   };
 
-  // 📦 AI Category Mapping: product.category → business category name
+  //  AI Category Mapping: product.category → business category name
   const suggestCategoryForProduct = (product: any, categories: any[]): string => {
     const name = typeof product.name === 'object'
       ? (product.name.tr || product.name.de || '').toLowerCase()
@@ -1207,7 +1207,7 @@ export default function BusinessDetailsPage() {
       : 'Kategorisiz';
   };
 
-  // 📦 Open Template Selection Modal (was: auto-add all)
+  //  Open Template Selection Modal (was: auto-add all)
   const applyProductTemplate = async () => {
     if (!businessId) return;
     setApplyingProductTemplate(true);
@@ -1242,7 +1242,7 @@ export default function BusinessDetailsPage() {
     setApplyingProductTemplate(false);
   };
 
-  // 📦 Batch Save Selected Template Products
+  //  Batch Save Selected Template Products
   const saveSelectedTemplateProducts = async () => {
     if (!businessId) return;
     setSavingTemplate(true);
@@ -1275,7 +1275,7 @@ export default function BusinessDetailsPage() {
 
       await loadInlineProducts();
       setShowTemplateModal(false);
-      showToast(`${productCount} ürün başarıyla eklendi ✅`, 'success');
+      showToast(`${productCount} ürün başarıyla eklendi `, 'success');
     } catch (error) {
       console.error('Error saving template products:', error);
       showToast('Ürün şablonu kaydedilirken hata oluştu', 'error');
@@ -1351,7 +1351,7 @@ export default function BusinessDetailsPage() {
     const count = selectedInlineProducts.size;
     setConfirmModal({
       show: true,
-      title: '🗑️ Toplu Sil',
+      title: '️ Toplu Sil',
       message: `${count} ürün silinecek. Devam?`,
       confirmText: 'Evet, Sil',
       confirmColor: 'bg-red-600 hover:bg-red-500',
@@ -1535,7 +1535,7 @@ export default function BusinessDetailsPage() {
         if (ef.isFeatured !== undefined) updateData.isFeatured = ef.isFeatured;
         if (ef.brandLabels !== undefined) updateData.brandLabels = ef.brandLabels;
         await updateDoc(doc(db, `businesses/${businessId}/products`, editingInlineProduct.id), updateData);
-        showToast('Ürün güncellendi ✅', 'success');
+        showToast('Ürün güncellendi ', 'success');
         setProductModalOpen(false);
         setEditingInlineProduct(null);
         setEditFormFull({});
@@ -2029,7 +2029,7 @@ export default function BusinessDetailsPage() {
         deliveryRadius: Number(formData.deliveryRadius) || 0,
         minDeliveryOrder: Number(formData.minDeliveryOrder) || 0,
         deliveryFee: Number(formData.deliveryFee) || 0,
-        // 🆕 Gelişmiş Sipariş Saatleri
+        // 🆕 {t('gelismis')} Sipariş Saatleri
         deliveryStartTime: formData.deliveryStartTime || null,
         deliveryEndTime: formData.deliveryEndTime || null,
         pickupStartTime: formData.pickupStartTime || null,
@@ -2047,7 +2047,7 @@ export default function BusinessDetailsPage() {
         hasReservation: formData.hasReservation || false,
         tableCapacity: Number(formData.tableCapacity) || 0,
         maxReservationTables: Number(formData.maxReservationTables) || 0,
-        // 🆕 Gelişmiş Masa Yönetimi
+        // 🆕 {t('gelismis')} Masa Yönetimi
         tables: formData.tables || [],
         tableSections: formData.tableSections || [],
         // 🆕 Yerinde Sipariş Ayarları
@@ -2284,7 +2284,7 @@ export default function BusinessDetailsPage() {
   if (!business && businessId !== 'new') {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
-        <p className="text-4xl mb-4">🔍</p>
+        <p className="text-4xl mb-4"></p>
         <p>{t('isletmeBulunamadi')}</p>
         <Link
           href="/admin/business"
@@ -2332,7 +2332,7 @@ export default function BusinessDetailsPage() {
                 {business && (
                   <p className="text-gray-400 text-sm">
                     {(business.shopPhone || business.contactPerson?.phone) && (
-                      <span className="mr-3">📞 {business.shopPhone || business.contactPerson?.phone}</span>
+                      <span className="mr-3"> {business.shopPhone || business.contactPerson?.phone}</span>
                     )}
                     <span>{business.address?.city}, {business.address?.country}</span>
                   </p>
@@ -2357,7 +2357,7 @@ export default function BusinessDetailsPage() {
               onClick={() => { setActiveTab("overview"); setShowSettingsDropdown(false); }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
-              📊 Dashboard
+               Dashboard
             </button>
             {admin?.adminType === 'super' && (
               <Link
@@ -2377,7 +2377,7 @@ export default function BusinessDetailsPage() {
               onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
-              📦 Tedarik ({supplierOrders.length})
+               Tedarik ({supplierOrders.length})
             </button>
             {formData.hasReservation && (
               <button
@@ -2645,7 +2645,7 @@ export default function BusinessDetailsPage() {
                   <p className="text-yellow-400 text-2xl font-bold">
                     {staffList.length}
                   </p>
-                  <p className="text-gray-400 text-sm">Personel</p>
+                  <p className="text-gray-400 text-sm">{t('personel_label')}</p>
                 </div>
               </div>
             </div>
@@ -2739,7 +2739,7 @@ export default function BusinessDetailsPage() {
                     })()}
                   </div>
                   <div className="border-t border-gray-700 pt-3">
-                    <p className="text-gray-400 text-sm">Adres</p>
+                    <p className="text-gray-400 text-sm">{t('adres_label')}</p>
                     <p className="text-white">
                       {business?.address?.street}, {business?.address?.postalCode}{" "}
                       {business?.address?.city}
@@ -2759,7 +2759,7 @@ export default function BusinessDetailsPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm">Mevcut Plan</p>
+                      <p className="text-gray-400 text-sm">{t('mevcut_plan')}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span
                           className={`w-3 h-3 rounded-full ${planInfo.color}`}
@@ -2900,7 +2900,7 @@ export default function BusinessDetailsPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm block mb-1">Birim</label>
+                          <label className="text-gray-400 text-sm block mb-1">{t('birim')}</label>
                           <select
                             value={customProductForm.unit}
                             onChange={(e) => setCustomProductForm({ ...customProductForm, unit: e.target.value })}
@@ -2908,7 +2908,7 @@ export default function BusinessDetailsPage() {
                           >
                             <option value="kg">Kg</option>
                             <option value="ad">{t('adet')}</option>
-                            <option value="pk">Paket</option>
+                            <option value="pk">{t('paket')}</option>
                           </select>
                         </div>
                       </div>
@@ -2967,7 +2967,7 @@ export default function BusinessDetailsPage() {
               </div>
               {orders.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
-                  <p className="text-4xl mb-4">📦</p>
+                  <p className="text-4xl mb-4"></p>
                   <p>{t('henuzSiparisYok')}</p>
                 </div>
               ) : (
@@ -3030,13 +3030,13 @@ export default function BusinessDetailsPage() {
                   onClick={() => setProcurementSubTab('orders')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 >
-                  📋 Tedarik Siparişleri ({supplierOrders.length})
+                   Tedarik Siparişleri ({supplierOrders.length})
                 </button>
                 <button
                   onClick={() => setProcurementSubTab('suppliers')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 >
-                  🏭 Tedarikçiler ({suppliers.length})
+                   Tedarikçiler ({suppliers.length})
                 </button>
               </div>
 
@@ -3044,7 +3044,7 @@ export default function BusinessDetailsPage() {
               {procurementSubTab === 'suppliers' && (
                 <div className="bg-gray-800 rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                    <h3 className="text-white font-bold">🏭 Tedarikçiler (Lieferanten)</h3>
+                    <h3 className="text-white font-bold"> Tedarikçiler (Lieferanten)</h3>
                     <button
                       onClick={() => {
                         setEditingSupplier(null);
@@ -3058,13 +3058,13 @@ export default function BusinessDetailsPage() {
                   </div>
                   {loadingSuppliers ? (
                     <div className="text-center py-12 text-gray-400">
-                      <span className="animate-spin inline-block">⏳</span> Yükleniyor...
+                      <span className="animate-spin inline-block"></span> Yükleniyor...
                     </div>
                   ) : suppliers.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
-                      <p className="text-4xl mb-4">🏭</p>
-                      <p>Henüz tedarikçi eklenmemiş</p>
-                      <p className="text-sm mt-1">Toptancılarınızı ekleyerek tedarik siparişlerinizi takip edin</p>
+                      <p className="text-4xl mb-4"></p>
+                      <p>{t('henuz_tedarikci_eklenmemis')}</p>
+                      <p className="text-sm mt-1">{t('toptancilari_ekleyerek_takip')}</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-700">
@@ -3072,13 +3072,13 @@ export default function BusinessDetailsPage() {
                         <div key={supplier.id} className="p-4 hover:bg-gray-750 flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <span className="text-lg">🏭</span>
+                              <span className="text-lg"></span>
                               <div>
                                 <p className="text-white font-semibold">{supplier.name}</p>
                                 <div className="flex gap-4 text-xs text-gray-400 mt-1">
-                                  {supplier.contactPerson && <span>👤 {supplier.contactPerson}</span>}
-                                  {supplier.phone && <span>📞 {supplier.phone}</span>}
-                                  {supplier.email && <span>📧 {supplier.email}</span>}
+                                  {supplier.contactPerson && <span>{supplier.contactPerson}</span>}
+                                  {supplier.phone && <span>{supplier.phone}</span>}
+                                  {supplier.email && <span>{supplier.email}</span>}
                                   {supplier.deliveryDays && <span>🚚 {supplier.deliveryDays} gün</span>}
                                   {supplier.paymentTerms && <span>💳 {supplier.paymentTerms}</span>}
                                 </div>
@@ -3106,13 +3106,13 @@ export default function BusinessDetailsPage() {
                               }}
                               className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
                             >
-                              ✏️ Düzenle
+                               Düzenle
                             </button>
                             <button
                               onClick={() => deleteSupplier(supplier.id)}
                               className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 text-red-300 rounded text-xs"
                             >
-                              🗑
+                              
                             </button>
                           </div>
                         </div>
@@ -3126,7 +3126,7 @@ export default function BusinessDetailsPage() {
               {procurementSubTab === 'orders' && (
                 <div className="bg-gray-800 rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                    <h3 className="text-white font-bold">📋 Tedarik Siparişleri (Lieferantenbestellungen)</h3>
+                    <h3 className="text-white font-bold"> Tedarik Siparişleri (Lieferantenbestellungen)</h3>
                     <button
                       onClick={() => {
                         if (suppliers.length === 0) {
@@ -3153,25 +3153,25 @@ export default function BusinessDetailsPage() {
                   </div>
                   {loadingSupplierOrders ? (
                     <div className="text-center py-12 text-gray-400">
-                      <span className="animate-spin inline-block">⏳</span> Yükleniyor...
+                      <span className="animate-spin inline-block"></span> Yükleniyor...
                     </div>
                   ) : supplierOrders.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
-                      <p className="text-4xl mb-4">📦</p>
-                      <p>Henüz tedarik siparişi yok</p>
-                      <p className="text-sm mt-1">Toptancılardan aldığınız siparişleri buradan takip edin</p>
+                      <p className="text-4xl mb-4"></p>
+                      <p>{t('henuz_tedarik_siparisi_yok')}</p>
+                      <p className="text-sm mt-1">{t('toptancilardan_siparisleri_takip')}</p>
                     </div>
                   ) : (
                     <table className="w-full text-left">
                       <thead className="bg-gray-750 text-gray-400 text-sm">
                         <tr>
-                          <th className="px-4 py-3">Sipariş No</th>
-                          <th className="px-4 py-3">Tedarikçi</th>
-                          <th className="px-4 py-3">Ürünler</th>
-                          <th className="px-4 py-3">Tutar</th>
-                          <th className="px-4 py-3">Durum</th>
-                          <th className="px-4 py-3">Tarih</th>
-                          <th className="px-4 py-3">İşlem</th>
+                          <th className="px-4 py-3">{t('siparis_no')}</th>
+                          <th className="px-4 py-3">{t('tedarikci')}</th>
+                          <th className="px-4 py-3">{t('urunler_th')}</th>
+                          <th className="px-4 py-3">{t('tutar')}</th>
+                          <th className="px-4 py-3">{t('durum_th')}</th>
+                          <th className="px-4 py-3">{t('tarih_th')}</th>
+                          <th className="px-4 py-3">{t('islem_th')}</th>
                         </tr>
                       </thead>
                       <tbody className="text-white">
@@ -3184,11 +3184,11 @@ export default function BusinessDetailsPage() {
                             cancelled: 'bg-red-600 text-red-100',
                           };
                           const statusLabels: any = {
-                            draft: '📝 Taslak',
+                            draft: ' Taslak',
                             ordered: '📤 Sipariş Verildi',
-                            partiallyDelivered: '📦 Kısmi Teslim',
-                            delivered: '✅ Teslim Alındı',
-                            cancelled: '❌ İptal',
+                            partiallyDelivered: ' Kısmi Teslim',
+                            delivered: ' Teslim Alındı',
+                            cancelled: ` ${t('iptal')}`,
                           };
                           return (
                             <tr key={order.id} className="border-t border-gray-700 hover:bg-gray-750">
@@ -3245,7 +3245,7 @@ export default function BusinessDetailsPage() {
                                     }}
                                     className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs"
                                   >
-                                    ✏️
+                                    
                                   </button>
                                 </div>
                               </td>
@@ -3433,7 +3433,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Adres */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-white font-medium pb-2">📍 {t('adres_baslik')}</h4>
+                        <h4 className="text-white font-medium pb-2"> {t('adres_baslik')}</h4>
                         <div>
                           <label className="text-gray-400 text-sm">{t('sokakCadde')}</label>
                           <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
@@ -3548,7 +3548,7 @@ export default function BusinessDetailsPage() {
                             <div className="flex gap-2 mt-1 mb-2">
                               <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500" />
                               <button type="button" onClick={() => handleGooglePlacesSearch()} disabled={googleSearchLoading || googleSearchQuery.length < 3} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                                {googleSearchLoading ? (<span className="animate-spin">⏳</span>) : (<span>🔍</span>)} {t('ara_button')}
+                                {googleSearchLoading ? (<span className="animate-spin"></span>) : (<span></span>)} {t('ara_button')}
                               </button>
                             </div>
                           )}
@@ -3616,7 +3616,7 @@ export default function BusinessDetailsPage() {
                       {admin?.adminType === 'super' ? (
                         <>
                           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                            <label className="text-gray-400 text-sm">🏷️ LOKMA Label <span className="text-xs text-purple-400">(Super Admin)</span></label>
+                            <label className="text-gray-400 text-sm"> LOKMA Label <span className="text-xs text-purple-400">(Super Admin)</span></label>
                             <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
                               <option value="">{t('secilmedi')}</option>
                               <option value="tuna">🔴 TUNA</option>
@@ -3663,7 +3663,7 @@ export default function BusinessDetailsPage() {
                               <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
                               <div className="flex items-center gap-2 my-1"><span className="text-gray-600 text-xs">{t('veya')}</span></div>
                               <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
-                                {uploading && !imageFile ? (<span className="animate-spin mr-2">⏳</span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
+                                {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
                               </button>
                               {!formData.googlePlaceId && (<p className="text-xs text-red-400">{t('google_id_gerekli')}</p>)}
                             </div>
@@ -3983,7 +3983,7 @@ export default function BusinessDetailsPage() {
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                           }`}
                       >
-                        📂 Kategoriler ({inlineCategories.length})
+                        {t('kategoriler')} ({inlineCategories.length})
                       </button>
                       <button
                         onClick={() => setMenuInternalTab("urunler")}
@@ -4001,7 +4001,7 @@ export default function BusinessDetailsPage() {
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                           }`}
                       >
-                        ⭐ Öne Çıkan ({sponsoredProducts.length})
+                        {t('one_cikan')} ({sponsoredProducts.length})
                       </button>
                     </div>
 
@@ -4013,7 +4013,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl">📂</span>
                             <div>
-                              <h4 className="text-white font-bold">Kategoriler</h4>
+                              <h4 className="text-white font-bold">{t('kategoriler')}</h4>
                               <p className="text-gray-400 text-xs">{inlineCategories.length} {t('kategori')}</p>
                             </div>
                           </div>
@@ -4041,14 +4041,14 @@ export default function BusinessDetailsPage() {
                                   disabled={applyingTemplate}
                                   className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
                                 >
-                                  {applyingTemplate ? '⏳ Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
+                                  {applyingTemplate ? ' Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
                                 </button>
                               </>
                             )}
                             <button
                               onClick={() => {
                                 setEditingCategory(null);
-                                setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
+                                setCategoryForm({ name: { tr: '' }, icon: '', isActive: true });
                                 setShowCategoryModal(true);
                               }}
                               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition"
@@ -4075,7 +4075,7 @@ export default function BusinessDetailsPage() {
                               <button
                                 onClick={() => {
                                   setEditingCategory(null);
-                                  setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
+                                  setCategoryForm({ name: { tr: '' }, icon: '', isActive: true });
                                   setShowCategoryModal(true);
                                 }}
                                 className="px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition text-sm"
@@ -4116,7 +4116,7 @@ export default function BusinessDetailsPage() {
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-white font-bold text-sm">{typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name}</h5>
                                   <p className="text-gray-500 text-xs">
-                                    {inlineProducts.filter((p: any) => p.category === (typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name) || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? '✅ Aktif' : t('pasif')}
+                                    {inlineProducts.filter((p: any) => p.category === (typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name) || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? ' Aktif' : t('pasif')}
                                   </p>
                                 </div>
 
@@ -4130,12 +4130,12 @@ export default function BusinessDetailsPage() {
                                     }}
                                     className="p-1.5 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-white text-xs"
                                     title={t('duzenle1')}
-                                  >✏️</button>
+                                  ></button>
                                   <button
                                     onClick={() => setDeletingCategoryId(cat.id)}
                                     className="p-1.5 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-white text-xs"
                                     title={t('sil')}
-                                  >🗑️</button>
+                                  >️</button>
                                 </div>
                               </div>
                             ))}
@@ -4241,7 +4241,7 @@ export default function BusinessDetailsPage() {
                         {/* Header */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-2xl">📦</span>
+                            <span className="text-2xl"></span>
                             <div>
                               <h4 className="text-white font-bold">{t('urunler1')}</h4>
                               <p className="text-gray-400 text-xs">{inlineProducts.length} {t('urun1')}</p>
@@ -4254,7 +4254,7 @@ export default function BusinessDetailsPage() {
                                 disabled={applyingProductTemplate}
                                 className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
                               >
-                                {applyingProductTemplate ? '⏳ Yükleniyor...' : '📦 Ürün Şablonu Yükle'}
+                                {applyingProductTemplate ? ` ${t('yukleniyor')}` : `${t('urun_sablonu')} ${t('yukle')}`}
                               </button>
                             )}
                             <button
@@ -4276,7 +4276,7 @@ export default function BusinessDetailsPage() {
                                 setProductSearchQuery(e.target.value);
                                 setProductCurrentPage(1);
                               }}
-                              placeholder="Ürün ara... (isim, SKU, kategori)"
+                              placeholder={t('urun_ara_placeholder')}
                               className="w-full px-4 py-2.5 pl-10 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                             />
                             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4317,7 +4317,7 @@ export default function BusinessDetailsPage() {
                                   : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
                                   }`}
                               >
-                                🏷️ Tümü {inlineProducts.length}
+                                 Tümü {inlineProducts.length}
                               </button>
                               {catNames.map(cn => {
                                 const catInfo = inlineCategories.find((c: any) => (typeof c.name === 'object' ? getLocalizedText(c.name) : c.name) === cn);
@@ -4330,7 +4330,7 @@ export default function BusinessDetailsPage() {
                                       : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
                                       }`}
                                   >
-                                    {catInfo?.icon || '📦'} {cn} {catCounts[cn]}
+                                    {catInfo?.icon || ''} {cn} {catCounts[cn]}
                                   </button>
                                 );
                               })}
@@ -4343,10 +4343,10 @@ export default function BusinessDetailsPage() {
                                   onChange={(e) => { setInlineStatusFilter(e.target.value); setProductCurrentPage(1); }}
                                   className="bg-gray-700 text-white text-xs rounded-lg px-3 py-1.5 border border-gray-600 focus:border-blue-500 focus:outline-none"
                                 >
-                                  <option value="all">🏷️ Tümü ({inlineProducts.length})</option>
-                                  <option value="active">🟢 Aktif</option>
-                                  <option value="passive">🔴 Pasif</option>
-                                  <option value="outOfStock">⚠️ Stokta Yok</option>
+                                  <option value="all"> Tümü ({inlineProducts.length})</option>
+                                  <option value="active">{t('aktif')}</option>
+                                  <option value="passive">{t('pasif')}</option>
+                                  <option value="outOfStock">{t('stokta_yok')}</option>
                                 </select>
                               </div>
                             </div>
@@ -4363,7 +4363,7 @@ export default function BusinessDetailsPage() {
                         {/* Empty state */}
                         {!loadingProducts && inlineProducts.length === 0 && (
                           <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
-                            <span className="text-4xl">📦</span>
+                            <span className="text-4xl"></span>
                             <h4 className="text-white font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
                             <p className="text-gray-400 text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
                             <button
@@ -4465,9 +4465,9 @@ export default function BusinessDetailsPage() {
                                     }}
                                     className="bg-orange-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
                                   >
-                                    <option value="" disabled>⚙️ Durum</option>
-                                    <option value="active">🟢 Aktif Yap</option>
-                                    <option value="passive">🔴 Pasif Yap</option>
+                                    <option value="" disabled> Durum</option>
+                                    <option value="active">{t('aktif_yap')}</option>
+                                    <option value="passive">{t('pasif_yap')}</option>
                                   </select>
 
                                   {/* Stock */}
@@ -4480,9 +4480,9 @@ export default function BusinessDetailsPage() {
                                     }}
                                     className="bg-yellow-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
                                   >
-                                    <option value="" disabled>📦 Stok</option>
-                                    <option value="in">✅ Stokta</option>
-                                    <option value="out">⚠️ Stokta Yok</option>
+                                    <option value="" disabled> Stok</option>
+                                    <option value="in">{t('stokta')}</option>
+                                    <option value="out">{t('stokta_yok')}</option>
                                   </select>
 
                                   {/* Featured */}
@@ -4490,7 +4490,7 @@ export default function BusinessDetailsPage() {
                                     onClick={() => handleInlineBulkFeatured()}
                                     className="bg-amber-600 hover:bg-amber-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
                                   >
-                                    ⭐ Öne Çıkan
+                                    {t('one_cikan')}
                                   </button>
 
                                   {/* Category Move */}
@@ -4505,7 +4505,7 @@ export default function BusinessDetailsPage() {
                                     <option value="" disabled>📂 Kategoriye Taşı...</option>
                                     {inlineCategories.map((cat: any) => {
                                       const cn = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
-                                      return <option key={cat.id} value={cn}>{cat.icon || '📦'} {cn}</option>;
+                                      return <option key={cat.id} value={cn}>{cat.icon || ''} {cn}</option>;
                                     })}
                                   </select>
 
@@ -4515,13 +4515,13 @@ export default function BusinessDetailsPage() {
                                       onClick={() => handleInlineBulkDelete()}
                                       className="bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
                                     >
-                                      🗑️ Sil
+                                      ️ Sil
                                     </button>
                                     <button
                                       onClick={() => setSelectedInlineProducts(new Set())}
                                       className="bg-gray-600 hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
                                     >
-                                      ✖ İptal
+                                      {t('iptal')}
                                     </button>
                                   </div>
                                 </div>
@@ -4545,12 +4545,12 @@ export default function BusinessDetailsPage() {
                                     />
                                   </div>
                                   <div></div>
-                                  <div>Ürün Adı</div>
+                                  <div>{t('urun_adi')}</div>
                                   <div>SKU</div>
                                   <div>Fiyat (Netto / Brutto)</div>
-                                  <div>Birim</div>
-                                  <div>Durum</div>
-                                  <div className="text-right">İşlemler</div>
+                                  <div>{t('birim')}</div>
+                                  <div>{t('durum_col')}</div>
+                                  <div className="text-right">{t('islemler')}</div>
                                 </div>
 
                                 {/* Table Body */}
@@ -4617,8 +4617,8 @@ export default function BusinessDetailsPage() {
                                           <div className="text-right">
                                             {appPrice ? (
                                               <div className="space-y-0.5">
-                                                <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
-                                                <div className="text-gray-400 text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
+                                                <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">{t('brutto')}</span></div>
+                                                <div className="text-gray-400 text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">{t('netto')}</span></div>
                                               </div>
                                             ) : (
                                               <span className="text-gray-600 text-xs">—</span>
@@ -4631,13 +4631,13 @@ export default function BusinessDetailsPage() {
                                             <span
                                               onClick={() => toggleProductActive(product.id, isActive)}
                                               className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-400' : 'bg-red-900/60 text-red-400'}`}
-                                              title={isActive ? 'Pasif yap' : 'Aktif yap'}
+                                              title={isActive ? t('pasif_yap') : t('aktif_yap')}
                                             >
-                                              {isActive ? 'Aktif' : 'Pasif'}
+                                              {isActive ? t('aktif') : t('pasif')}
                                             </span>
                                             {product.outOfStock && (
                                               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-400 font-medium">
-                                                Stokta Yok
+                                                {t('stokta_yok')}
                                               </span>
                                             )}
                                           </div>
@@ -4764,37 +4764,37 @@ export default function BusinessDetailsPage() {
                                                       <input value={editFormFull.sku || editingInlineProduct?.id || ''} readOnly className="w-full bg-gray-900/50 text-gray-300 text-sm rounded px-3 py-2 border border-gray-700" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Barkod</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('barkod')}</label>
                                                       <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Kategori</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('kategori_label')}</label>
                                                       <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none">
-                                                        <option value="">Kategori Seçin</option>
+                                                        <option value="">{t('kategori_secin')}</option>
                                                         {inlineCategories.map((cat: any) => (
                                                           <option key={cat.id || cat.name} value={typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}>{typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}</option>
                                                         ))}
                                                       </select>
                                                     </div>
                                                     <div className="md:col-span-2">
-                                                      <label className="text-xs text-gray-400 mb-1 block">Ürün Adı</label>
-                                                      <MultiLanguageInput label="Ürün Adı" value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('urun_adi')}</label>
+                                                      <MultiLanguageInput label={t('urun_adi_label')} value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Marka</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('marka')}</label>
                                                       <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div className="flex gap-2">
                                                       <div className="flex-1">
-                                                        <label className="text-xs text-gray-400 mb-1 block">Birim</label>
+                                                        <label className="text-xs text-gray-400 mb-1 block">{t('birim')}</label>
                                                         <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                                                          <option value="kg">Kg</option><option value="adet">Adet</option><option value="litre">Litre</option><option value="paket">Paket</option>
+                                                          <option value="kg">Kg</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
-                                                        <label className="text-xs text-gray-400 mb-1 block">Durum</label>
+                                                        <label className="text-xs text-gray-400 mb-1 block">{t('durum_label')}</label>
                                                         <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                                                          <option value="active">Aktif</option><option value="passive">Pasif</option>
+                                                          <option value="active">{t('aktif')}</option><option value="passive">{t('pasif')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
@@ -4805,7 +4805,7 @@ export default function BusinessDetailsPage() {
                                                       </div>
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3">
-                                                      <label className="text-xs text-gray-400 mb-1 block">Açıklama</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('aciklama')}</label>
                                                       <MultiLanguageInput label="Açıklama" value={editFormFull.description || { tr: '' }} onChange={(v: any) => setEditFormFull((p: any) => ({ ...p, description: v }))} isTextArea />
                                                     </div>
                                                   </div>
@@ -4825,10 +4825,10 @@ export default function BusinessDetailsPage() {
 
                                                   return (
                                                     <div className="space-y-6">
-                                                      {/* 🏦 Vergi Oranı */}
+                                                      {/* Vergi Oranı */}
                                                       <div className="border-b border-gray-700 pb-4">
                                                         <div className="flex items-center justify-between mb-3">
-                                                          <h3 className="text-sm font-medium text-amber-400">🏦 Vergi Oranı</h3>
+                                                          <h3 className="text-sm font-medium text-amber-400">{t('vergi_orani')}</h3>
                                                           <span className="text-xs text-gray-500">Netto/Brutto hesaplaması bu orana göre yapılır</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
@@ -4836,18 +4836,18 @@ export default function BusinessDetailsPage() {
                                                             <option value="0">%0 (Vergisiz)</option>
                                                             <option value="7">%7 (İndirimli)</option>
                                                             <option value="19">%19 (Standart)</option>
-                                                            <option value="custom">Manuel Giriş</option>
+                                                            <option value="custom">{t('manuel_giris')}</option>
                                                           </select>
                                                           {![0, 7, 19].includes(taxRate) && (
-                                                            <span className="px-3 py-1.5 bg-blue-900/50 text-blue-300 rounded-lg text-xs">Özel: %{taxRate}</span>
+                                                            <span className="px-3 py-1.5 bg-blue-900/50 text-blue-300 rounded-lg text-xs">{t('ozel_vergi', {rate: taxRate})}</span>
                                                           )}
                                                         </div>
                                                       </div>
 
-                                                      {/* 💰 Fiyatlandırma + Netto/Brutto Toggle */}
+                                                      {/*  {t('fiyatlandirma')} + Netto/Brutto Toggle */}
                                                       <div className="border-b border-gray-700 pb-4">
                                                         <div className="flex items-center justify-between mb-4">
-                                                          <h3 className="text-sm font-medium text-amber-400">💰 Fiyatlandırma</h3>
+                                                          <h3 className="text-sm font-medium text-amber-400"> {t('fiyatlandirma')}</h3>
                                                           <div className="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-600">
                                                             <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
                                                               Netto girişi
@@ -4860,7 +4860,7 @@ export default function BusinessDetailsPage() {
 
                                                         {/* Alış Fiyatı */}
                                                         <div className="mb-4">
-                                                          <label className="block text-sm text-gray-300 font-medium mb-2">Alış Fiyatı</label>
+                                                          <label className="block text-sm text-gray-300 font-medium mb-2">{t('alis_fiyati')}</label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
@@ -4873,7 +4873,7 @@ export default function BusinessDetailsPage() {
                                                               )}
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
                                                                 <input type="number" step="0.01" value={pp > 0 ? calcBrutto(pp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, purchasePrice: String(calcNetto(brutto)) })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
@@ -4887,7 +4887,7 @@ export default function BusinessDetailsPage() {
 
                                                         {/* Satış Fiyatı */}
                                                         <div className="mb-4">
-                                                          <label className="block text-sm text-gray-300 font-medium mb-2">Satış Fiyatı</label>
+                                                          <label className="block text-sm text-gray-300 font-medium mb-2">{t('satis_fiyati')}</label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
@@ -4900,7 +4900,7 @@ export default function BusinessDetailsPage() {
                                                               )}
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
                                                                 <input type="number" step="0.01" value={sp > 0 ? calcBrutto(sp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; const netto = calcNetto(brutto); setEditFormFull((p: any) => ({ ...p, sellingPrice: String(netto) })); setCustomProductForm((prev: any) => ({ ...prev, price: String(netto) })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
@@ -4934,7 +4934,7 @@ export default function BusinessDetailsPage() {
                                                               )}
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
                                                                 <input type="number" step="0.01" value={dp > 0 ? calcBrutto(dp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, discountedPrice: String(calcNetto(brutto)) })); }} className="w-full bg-gray-900 border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00" />
                                                               ) : (
@@ -4950,19 +4950,19 @@ export default function BusinessDetailsPage() {
                                                         <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
                                                           <div className="grid grid-cols-3 gap-3 text-center">
                                                             <div>
-                                                              <span className="block text-xs text-gray-500 mb-1">Kar Marjı</span>
+                                                              <span className="block text-xs text-gray-500 mb-1">{t('kar_marji')}</span>
                                                               <span className="text-sm font-medium text-emerald-400">
                                                                 {sp > 0 && pp > 0 ? `%${(((sp - pp) / pp) * 100).toFixed(1)}` : '--'}
                                                               </span>
                                                             </div>
                                                             <div>
-                                                              <span className="block text-xs text-gray-500 mb-1">Vergi Tutarı</span>
+                                                              <span className="block text-xs text-gray-500 mb-1">{t('vergi_tutari')}</span>
                                                               <span className="text-sm font-medium text-amber-400">
                                                                 {sp > 0 ? `€${(sp * taxRate / 100).toFixed(2)}` : '--'}
                                                               </span>
                                                             </div>
                                                             <div>
-                                                              <span className="block text-xs text-gray-500 mb-1">Brutto Satış</span>
+                                                              <span className="block text-xs text-gray-500 mb-1">{t('brutto_satis')}</span>
                                                               <span className="text-sm font-medium text-white">
                                                                 {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : '--'}
                                                               </span>
@@ -4977,7 +4977,7 @@ export default function BusinessDetailsPage() {
                                                           <h3 className="text-sm font-medium text-blue-400">📱 App Satış Fiyatı</h3>
                                                           <label className="flex items-center gap-2 cursor-pointer">
                                                             <input type="checkbox" checked={!!(editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0)} onChange={e => { if (!e.target.checked) { setEditFormFull((p: any) => ({ ...p, appPrice: '' })); } else { setEditFormFull((p: any) => ({ ...p, appPrice: editFormFull.sellingPrice || '0' })); } }} className="w-4 h-4 rounded accent-blue-500" />
-                                                            <span className="text-xs text-gray-400">Farklı fiyat uygula</span>
+                                                            <span className="text-xs text-gray-400">{t('farkli_fiyat_uygula')}</span>
                                                           </label>
                                                         </div>
                                                         <p className="text-xs text-gray-500 mb-3">Kurye ve Gel-Al siparişlerinde gösterilen fiyat</p>
@@ -4988,7 +4988,7 @@ export default function BusinessDetailsPage() {
                                                               <input type="number" step="0.01" value={editFormFull.appPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, appPrice: e.target.value }))} className="w-full bg-gray-900 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto <span className="text-gray-600">inkl. %{taxRate}</span></label>
+                                                              <label className="block text-xs text-gray-500 mb-1">{t('brutto')} <span className="text-gray-600">inkl. {taxRate}%</span></label>
                                                               <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
                                                                 {parseFloat(editFormFull.appPrice) > 0 ? `€${calcBrutto(parseFloat(editFormFull.appPrice)).toFixed(2)}` : '--'}
                                                               </div>
@@ -5001,20 +5001,20 @@ export default function BusinessDetailsPage() {
                                                         )}
                                                       </div>
 
-                                                      {/* 🏷️ Kanal Fiyatları (Konsolide) */}
+                                                      {/*  Kanal Fiyatları (Konsolide) */}
                                                       <div className="pb-4">
-                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3">🏷️ Kanal Fiyatları</h3>
+                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3"> {t('kanal_fiyatlari')}</h3>
                                                         <p className="text-xs text-gray-500 mb-3">ESL etiketi = Dükkan fiyatı = Gel-Al fiyatı. Müşteri mağazaya geldiğinde etiketteki fiyatı görür.</p>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">🏷️ ESL / Dükkan & Gel-Al Fiyatı (€)</label>
+                                                            <label className="text-xs text-gray-400 mb-1 block"> ESL / Dükkan & Gel-Al Fiyatı (€)</label>
                                                             <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
                                                             <span className="text-[10px] text-gray-600 mt-1 block">ESL etiketinde, gel-al ve dükkan siparişlerinde bu fiyat gösterilir</span>
                                                           </div>
                                                           <div>
                                                             <label className="text-xs text-gray-400 mb-1 block">🛵 Kurye Fiyatı (€)</label>
                                                             <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
-                                                            <span className="text-[10px] text-gray-600 mt-1 block">Kurye ile teslimat siparişlerinde bu fiyat gösterilir</span>
+                                                            <span className="text-[10px] text-gray-600 mt-1 block">{t('kurye_fiyat_aciklama')}</span>
                                                           </div>
                                                         </div>
                                                       </div>
@@ -5025,29 +5025,29 @@ export default function BusinessDetailsPage() {
                                                 {editInlineTab === 'stock' && (
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Stok Durumu</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('stok_durumu')}</label>
                                                       <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                                                        <option value="in">Stokta</option><option value="out">Stokta Değil</option>
+                                                        <option value="in">{t('stokta')}</option><option value="out">{t('stokta_degil')}</option>
                                                       </select>
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Mevcut Stok</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('mevcut_stok')}</label>
                                                       <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Min Stok</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('min_stok')}</label>
                                                       <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Tedarikçi</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('tedarikci_label')}</label>
                                                       <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Parti No</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('parti_no')}</label>
                                                       <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Depo Konumu</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('depo_konumu')}</label>
                                                       <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                   </div>
@@ -5057,7 +5057,7 @@ export default function BusinessDetailsPage() {
                                                   <div className="space-y-4">
                                                     {/* Mevcut Görseller */}
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-2 block">Mevcut Görseller</label>
+                                                      <label className="text-xs text-gray-400 mb-2 block">{t('mevcut_gorseller')}</label>
                                                       <div className="flex gap-2 flex-wrap">
                                                         {editingInlineProduct?.imageUrl && (
                                                           <div className="relative group">
@@ -5083,7 +5083,7 @@ export default function BusinessDetailsPage() {
                                                           </div>
                                                         ))}
                                                         {!editingInlineProduct?.imageUrl && !(editFormFull.images || editingInlineProduct?.images || []).length && (
-                                                          <p className="text-gray-500 text-sm">Görsel yok</p>
+                                                          <p className="text-gray-500 text-sm">{t('gorsel_yok')}</p>
                                                         )}
                                                       </div>
                                                     </div>
@@ -5139,7 +5139,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>📋</span> İçerik Listesi (Zutaten)
+                                                        <span></span> İçerik Listesi (Zutaten)
                                                       </h4>
                                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         <div className="md:col-span-2">
@@ -5313,15 +5313,15 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>📝</span> Dahili Notlar & Etiketler
+                                                        <span></span> Dahili Notlar & Etiketler
                                                       </h4>
                                                       <div className="space-y-3">
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Dahili Notlar</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Dahili {t('notlar')}</label>
                                                           <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Etiketler</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('etiketler')}</label>
                                                           <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                       </div>
@@ -5336,11 +5336,11 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
-                                                          <p className="text-xs text-gray-500 mb-1">Oluşturulma</p>
+                                                          <p className="text-xs text-gray-500 mb-1">{t('olusturulma')}</p>
                                                           <p className="text-xs text-gray-300">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
                                                         </div>
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
-                                                          <p className="text-xs text-gray-500 mb-1">Güncelleme</p>
+                                                          <p className="text-xs text-gray-500 mb-1">{t('guncelleme')}</p>
                                                           <p className="text-xs text-gray-300">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
                                                         </div>
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
@@ -5356,7 +5356,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
+                                                        <span></span> Fiziksel Bilgiler & Saklama (Produktdaten)
                                                       </h4>
                                                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                                         <div>
@@ -5377,16 +5377,16 @@ export default function BusinessDetailsPage() {
                                                         </div>
                                                         <div className="col-span-2">
                                                           <p className="text-xs text-amber-400/80 bg-amber-900/20 border border-amber-700/30 rounded px-3 py-2">
-                                                            ℹ️ Üretim & Son Kullanma tarihleri artık <strong>Tedarik</strong> sekmesindeki Mal Kabul (Wareneingang) ile parti bazında yönetilmektedir.
+                                                            ℹ️ Üretim & Son Kullanma tarihleri artık <strong>{t('tedarik')}</strong> sekmesindeki Mal Kabul (Wareneingang) ile parti bazında yönetilmektedir.
                                                           </p>
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Artikelnummer</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('artikelnummer')}</label>
                                                           <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2 md:col-span-3 lg:col-span-4">
                                                           <label className="text-xs text-gray-400 mb-1 block">Besondere Informationen (Özel Bilgiler)</label>
-                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder="Özel uyarılar, saklama talimatları..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                       </div>
                                                     </div>
@@ -5397,17 +5397,17 @@ export default function BusinessDetailsPage() {
                                                 {editInlineTab === 'app' && (
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Öne Çıkan Ürün</label>
+                                                      <label className="text-xs text-gray-400 mb-1 block">{t('one_cikan_urun')}</label>
                                                       <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                                                        <option value="no">Hayır</option>
+                                                        <option value="no">{t('hayir')}</option>
                                                         <option value="yes">Evet ⭐</option>
                                                       </select>
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-gray-400 mb-1 block">Stok Durumu (App)</label>
                                                       <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                                                        <option value="in">Stokta ✅</option>
-                                                        <option value="out">Stokta Yok ❌</option>
+                                                        <option value="in">{t('stokta')}</option>
+                                                        <option value="out">{t('stokta_yok')}</option>
                                                       </select>
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3">
@@ -5424,11 +5424,11 @@ export default function BusinessDetailsPage() {
                                                           ))}
                                                         </div>
                                                       ) : (
-                                                        <p className="text-gray-500 text-sm">Seçenek grubu tanımlanmamış</p>
+                                                        <p className="text-gray-500 text-sm">{t('secenek_grubu_tanimlanmamis')}</p>
                                                       )}
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3 bg-gray-900/20 rounded p-3 border border-gray-700/30">
-                                                      <p className="text-xs text-gray-500">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. Fiyatlandırma farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
+                                                      <p className="text-xs text-gray-500">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. {t('fiyatlandirma')} farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
                                                     </div>
                                                   </div>
                                                 )}
@@ -5439,7 +5439,7 @@ export default function BusinessDetailsPage() {
                                               {/* Footer */}
                                               <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-gray-700/50">
                                                 <button onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }} className="px-6 py-2 text-sm text-gray-400 hover:text-white transition">
-                                                  İptal
+                                                  {t('iptal')}
                                                 </button>
                                                 <button onClick={handleAddProduct} disabled={addingProduct} className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-500/20 transition active:scale-95 disabled:opacity-50">
                                                   {addingProduct ? 'Kaydediliyor...' : 'Kaydet'}
@@ -5538,7 +5538,7 @@ export default function BusinessDetailsPage() {
                                 {
                                   totalFiltered === 0 && productSearchQuery.trim() && (
                                     <div className="px-4 py-8 text-center">
-                                      <p className="text-gray-400 text-sm">Aranılan <span className="text-white font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
+                                      <p className="text-gray-400 text-sm">{t('aranilan')} <span className="text-white font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
                                       <button
                                         onClick={() => {
                                           setProductSearchQuery('');
@@ -5566,8 +5566,8 @@ export default function BusinessDetailsPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl">⭐</span>
                             <div>
-                              <h4 className="text-white font-bold">Öne Çıkan Ürünler</h4>
-                              <p className="text-gray-400 text-xs">Müşterilere öne çıkan olarak gösterilecek ürünler</p>
+                              <h4 className="text-white font-bold">{t('one_cikan_urunler')}</h4>
+                              <p className="text-gray-400 text-xs">{t('one_cikan_aciklama')}</p>
                             </div>
                           </div>
                         </div>
@@ -5598,7 +5598,7 @@ export default function BusinessDetailsPage() {
                           </div>
                           {sponsoredSettings.feePerConversion > 0 && (
                             <p className="text-xs text-gray-500 mt-2">
-                              💰 Dönüşüm başına ücret: {sponsoredSettings.feePerConversion}€
+                               Dönüşüm başına ücret: {sponsoredSettings.feePerConversion}€
                             </p>
                           )}
                         </div>
@@ -5610,8 +5610,8 @@ export default function BusinessDetailsPage() {
                           </div>
                         ) : inlineProducts.length === 0 ? (
                           <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
-                            <span className="text-4xl">📦</span>
-                            <h4 className="text-white font-medium mt-3">Henüz ürün eklenmemiş</h4>
+                            <span className="text-4xl"></span>
+                            <h4 className="text-white font-medium mt-3">{t('henuz_urun_eklenmemis')}</h4>
                             <p className="text-gray-400 text-sm mt-1">Önce işletmeye ürün atayın, sonra öne çıkan olarak seçin.</p>
                           </div>
                         ) : (
@@ -5710,7 +5710,7 @@ export default function BusinessDetailsPage() {
                               </>
                             ) : (
                               <>
-                                💾 Kaydet ({sponsoredProducts.length} ürün)
+                                 Kaydet ({sponsoredProducts.length} ürün)
                               </>
                             )}
                           </button>
@@ -5739,11 +5739,11 @@ export default function BusinessDetailsPage() {
                           <table className="w-full text-left text-sm">
                             <thead className="text-green-400/80 border-b border-green-700/50">
                               <tr>
-                                <th className="pb-2 pr-3">👤 Personel</th>
+                                <th className="pb-2 pr-3">{t('personel_th')}</th>
                                 <th className="pb-2 pr-3">{t('baslangic')}</th>
                                 <th className="pb-2 pr-3">{t('sure')}</th>
-                                <th className="pb-2 pr-3">📍 Konum</th>
-                                <th className="pb-2 pr-3">📋 Masalar</th>
+                                <th className="pb-2 pr-3">{t('konum_th')}</th>
+                                <th className="pb-2 pr-3">{t('masalar_th')}</th>
                                 <th className="pb-2">{t('durum')}</th>
                               </tr>
                             </thead>
@@ -5782,7 +5782,7 @@ export default function BusinessDetailsPage() {
                                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                                         : 'bg-green-500/20 text-green-300 border border-green-500/30'
                                         }`}>
-                                        {isPaused ? '⏸ Mola' : '✅ Aktif'}
+                                        {isPaused ? t('mola') : t('aktif_status')}
                                       </span>
                                     </td>
                                   </tr>
@@ -5818,7 +5818,7 @@ export default function BusinessDetailsPage() {
 
                     {/* Search */}
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
                       <input
                         type="text"
                         placeholder={t('isimEpostaVeyaTelefonIleAra')}
@@ -5843,7 +5843,7 @@ export default function BusinessDetailsPage() {
 
                       {staffList.length === 0 ? (
                         <div className="text-center py-8 text-gray-400">
-                          <p className="text-4xl mb-2">👥</p>
+                          <p className="text-4xl mb-2"></p>
                           <p>{t('henuzPersonelYok')}</p>
                         </div>
                       ) : (
@@ -5867,7 +5867,7 @@ export default function BusinessDetailsPage() {
                             }).length === 0 && (
                                 <tr>
                                   <td colSpan={4} className="py-8 text-center text-gray-400">
-                                    <p className="text-2xl mb-2">👥</p>
+                                    <p className="text-2xl mb-2"></p>
                                     <p>{staffStatusFilter === 'archived' ? t('arsivlenmisPersonelBulunamadi') : t('personelBulunamadi')}</p>
                                   </td>
                                 </tr>
@@ -5893,7 +5893,7 @@ export default function BusinessDetailsPage() {
                                     ? 'bg-purple-600'
                                     : 'bg-blue-600'
                                     }`}>
-                                    {staff.adminType || 'Personel'}
+                                    {staff.adminType || t('personel_rol')}
                                   </span>
                                 </td>
                                 <td className="py-4">
@@ -6007,7 +6007,7 @@ export default function BusinessDetailsPage() {
                         />
                         <input
                           type="text"
-                          placeholder="Soyisim (opsiyonel)"
+                          placeholder={t('soyisim_opsiyonel')}
                           value={inviteLastName}
                           onChange={(e) => setInviteLastName(e.target.value)}
                           className="bg-gray-700 text-white px-3 py-2 rounded-lg"
@@ -6041,13 +6041,13 @@ export default function BusinessDetailsPage() {
                         className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
                       />
                       <div className="mt-3">
-                        <label className="text-gray-400 text-sm">Rol</label>
+                        <label className="text-gray-400 text-sm">{t('rol')}</label>
                         <select
                           value={inviteRole}
                           onChange={(e) => setInviteRole(e.target.value)}
                           className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
                         >
-                          <option value="Personel">👤 Personel</option>
+                          <option value="Personel">{t('personel_rol')}</option>
                           <option value="Admin">{t('isletmeAdmin')}</option>
                         </select>
                       </div>
@@ -6072,13 +6072,13 @@ export default function BusinessDetailsPage() {
                           {inviteResult.notifications && (
                             <div className="flex flex-wrap gap-2 text-xs">
                               <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
-                                {inviteResult.notifications.email?.sent ? '✅' : '❌'} Email
+                                {inviteResult.notifications.email?.sent ? '✓' : '✗'} Email
                               </span>
                               <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
-                                {inviteResult.notifications.whatsapp?.sent ? '✅' : '❌'} WhatsApp
+                                {inviteResult.notifications.whatsapp?.sent ? '✓' : '✗'} WhatsApp
                               </span>
                               <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
-                                {inviteResult.notifications.sms?.sent ? '✅' : '❌'} SMS
+                                {inviteResult.notifications.sms?.sent ? '✓' : '✗'} SMS
                               </span>
                             </div>
                           )}
@@ -6102,10 +6102,10 @@ export default function BusinessDetailsPage() {
                 settingsSubTab === "masa" && (
                   <div className="space-y-6">
                     <div className="space-y-6">
-                      {/* 🍽️ Masa Rezervasyonu */}
+                      {/* {t('masa_rezervasyonu')} */}
                       <div className="space-y-4">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          🍽️ Masa Rezervasyonu
+                          {t('masa_rezervasyonu')}
                         </h4>
                         <div className="flex items-center gap-3">
                           <input
@@ -6177,7 +6177,7 @@ export default function BusinessDetailsPage() {
                         )}
                       </div>
 
-                      {/* 🍽️ Yerinde Sipariş Ayarları */}
+                      {/*  Yerinde Sipariş Ayarları */}
                       <div className="space-y-4">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2">
                           {t('yerindeSiparisAyarlari')}
@@ -6295,7 +6295,7 @@ export default function BusinessDetailsPage() {
                       {/* Bank Details (SEPA) */}
                       <div className="space-y-4">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          🏦 Banka Bilgileri (SEPA)
+                          {t('banka_bilgileri_sepa')}
                         </h4>
                         <div>
                           <label className="text-gray-400 text-sm">
@@ -6489,7 +6489,7 @@ export default function BusinessDetailsPage() {
 
 
 
-        {/* 🍽️ Reservations Tab */}
+        {/*  Reservations Tab */}
         {
           activeTab === "reservations" && formData.hasReservation && (
             <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
@@ -6514,7 +6514,7 @@ export default function BusinessDetailsPage() {
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
                   <p className="text-2xl font-bold text-teal-400">{formData.tableCapacity || 0}</p>
-                  <p className="text-xs text-gray-400 mt-1">Oturma Kapasitesi</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('oturma_kapasitesi')}</p>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
                   <p className="text-2xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
@@ -6679,7 +6679,7 @@ export default function BusinessDetailsPage() {
                           <div key={sec || '__nosection'} className="mb-4">
                             {sec && (
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-amber-400 text-sm font-bold">📍 {sec}</span>
+                                <span className="text-amber-400 text-sm font-bold"> {sec}</span>
                                 <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
@@ -6735,7 +6735,7 @@ export default function BusinessDetailsPage() {
                                     }}
                                     className="text-red-500/60 hover:text-red-400 text-xs transition"
                                   >
-                                    🗑
+                                    
                                   </button>
                                 </div>
                               ))}
@@ -6894,7 +6894,7 @@ export default function BusinessDetailsPage() {
                   >
                     <option value="">{t('rolSec')}</option>
                     <option value={t('isletmeAdmin1')}>{t('isletmeAdmin1')}</option>
-                    <option value="Personel">Personel</option>
+                    <option value="Personel">{t('personel_rol')}</option>
                   </select>
                 </div>
               )}
@@ -6921,7 +6921,7 @@ export default function BusinessDetailsPage() {
       }
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* 📦 TEMPLATE SELECTION MODAL — Full-Screen Product Picker      */}
+      {/*  TEMPLATE SELECTION MODAL — Full-Screen Product Picker      */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       {
         showTemplateModal && (
@@ -6932,7 +6932,7 @@ export default function BusinessDetailsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      📦 Ürün Şablonu — Ürün Seçimi
+                      {t('urun_sablonu')} — Ürün Seçimi
                     </h2>
                     <p className="text-gray-400 text-sm mt-1">
                       {templateProducts.length} ürün mevcut · {Object.values(selectedTemplateProducts).filter(Boolean).length} seçili
@@ -6954,20 +6954,20 @@ export default function BusinessDetailsPage() {
                     onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, true])))}
                     className="px-3 py-1.5 bg-green-600/20 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition border border-green-600/30"
                   >
-                    ✅ Hepsini Seç
+                     Hepsini Seç
                   </button>
                   <button
                     onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, false])))}
                     className="px-3 py-1.5 bg-red-600/20 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition border border-red-600/30"
                   >
-                    ❌ Hiçbirini Seçme
+                     Hiçbirini Seçme
                   </button>
                   <div className="flex-1 min-w-[200px]">
                     <input
                       type="text"
                       value={templateSearch}
                       onChange={(e) => setTemplateSearch(e.target.value)}
-                      placeholder="🔍 Ürün ara..."
+                      placeholder="{t('urun_ara')}"
                       className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
@@ -6976,7 +6976,7 @@ export default function BusinessDetailsPage() {
                     onChange={(e) => setTemplateFilter(e.target.value)}
                     className="px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
                   >
-                    <option value="all">📋 Tüm Kategoriler</option>
+                    <option value="all"> {t('tum_kategoriler')}</option>
                     {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
                       <option key={cat} value={cat}>
                         {cat === 'et' ? '🥩 Et' : cat === 'tavuk' ? '🐔 Tavuk' : cat === 'dondurulmus' ? '🧊 Dondurulmuş' :
@@ -7006,7 +7006,7 @@ export default function BusinessDetailsPage() {
                       const categoryIcon = product.category === 'et' ? '🥩' : product.category === 'tavuk' ? '🐔' :
                         product.category === 'dondurulmus' ? '🧊' : product.category === 'wurstchen' ? '🌭' :
                           product.category === 'wurst' ? '🥓' : product.category === 'sucuk' ? '🧄' :
-                            product.category === 'pastirma' ? '🥓' : product.category === 'kavurma' ? '🍖' : '📦';
+                            product.category === 'pastirma' ? '🥓' : product.category === 'kavurma' ? '🍖' : '';
 
                       return (
                         <div
@@ -7046,7 +7046,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-medium truncate">{prodName}</p>
                             <p className="text-gray-400 text-xs">
-                              {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : '📦 Adet'}
+                              {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : ' Adet'}
                               {product.defaultPrice ? ` · €${product.defaultPrice.toFixed(2)}` : ''}
                             </p>
                           </div>
@@ -7067,7 +7067,7 @@ export default function BusinessDetailsPage() {
                                 const catName = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
                                 return (
                                   <option key={cat.id} value={catName}>
-                                    {cat.icon || '📦'} {catName}
+                                    {cat.icon || ''} {catName}
                                   </option>
                                 );
                               })}
@@ -7090,7 +7090,7 @@ export default function BusinessDetailsPage() {
                     onClick={() => setShowTemplateModal(false)}
                     className="px-4 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium text-sm transition"
                   >
-                    İptal
+                    {t('iptal')}
                   </button>
                   <button
                     onClick={saveSelectedTemplateProducts}
@@ -7104,7 +7104,7 @@ export default function BusinessDetailsPage() {
                       </>
                     ) : (
                       <>
-                        ✅ {Object.values(selectedTemplateProducts).filter(Boolean).length} Ürünü Kaydet
+                         {Object.values(selectedTemplateProducts).filter(Boolean).length} Ürünü Kaydet
                       </>
                     )}
                   </button>
@@ -7122,7 +7122,7 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
             <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">{editingSupplier ? '✏️ Tedarikçi Düzenle' : '🏭 Yeni Tedarikçi Ekle'}</h2>
+                <h2 className="text-xl font-bold text-white">{editingSupplier ? ' Tedarikçi Düzenle' : ' Yeni Tedarikçi Ekle'}</h2>
                 <button onClick={() => setShowSupplierModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-4">
@@ -7130,17 +7130,17 @@ export default function BusinessDetailsPage() {
                   <div className="md:col-span-2">
                     <label className="text-xs text-gray-400 mb-1 block">Firma Adı *</label>
                     <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
-                      placeholder="Metro Großhandel, TUNA Fleisch GmbH..."
+                      placeholder={t('tedarikci_adi_placeholder')}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Yetkili Kişi</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('yetkili_kisi')}</label>
                     <input value={supplierForm.contactPerson} onChange={e => setSupplierForm((p: any) => ({ ...p, contactPerson: e.target.value }))}
-                      placeholder="İsim Soyisim"
+                      placeholder={t('isim_soyisim_placeholder')}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Telefon</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('telefon')}</label>
                     <input value={supplierForm.phone} onChange={e => setSupplierForm((p: any) => ({ ...p, phone: e.target.value }))}
                       placeholder="+49 ..."
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
@@ -7158,15 +7158,15 @@ export default function BusinessDetailsPage() {
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400 mb-1 block">Adres</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('adres')}</label>
                     <input value={supplierForm.address} onChange={e => setSupplierForm((p: any) => ({ ...p, address: e.target.value }))}
-                      placeholder="Straße, PLZ Stadt"
+                      placeholder={t('adres_placeholder')}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Ödeme Koşulları</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('odeme_kosullari')}</label>
                     <input value={supplierForm.paymentTerms} onChange={e => setSupplierForm((p: any) => ({ ...p, paymentTerms: e.target.value }))}
-                      placeholder="30 Tage netto, Sofortzahlung..."
+                      placeholder={t('odeme_kosullari_placeholder')}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
@@ -7182,26 +7182,26 @@ export default function BusinessDetailsPage() {
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Durum</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('durum_label')}</label>
                     <select value={supplierForm.isActive ? 'active' : 'inactive'} onChange={e => setSupplierForm((p: any) => ({ ...p, isActive: e.target.value === 'active' }))}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                      <option value="active">✅ Aktif</option>
-                      <option value="inactive">⏸ Pasif</option>
+                      <option value="active">{t('aktif')}</option>
+                      <option value="inactive">{t('pasif')}</option>
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('notlar')}</label>
                     <textarea value={supplierForm.notes} onChange={e => setSupplierForm((p: any) => ({ ...p, notes: e.target.value }))}
-                      rows={2} placeholder="Özel koşullar, sabit sipariş günleri vb..."
+                      rows={2} placeholder={t('ozel_kosullar_placeholder')}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                   </div>
                 </div>
               </div>
               <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
                 <button onClick={saveSupplier} disabled={savingSupplier || !supplierForm.name.trim()}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                  {savingSupplier ? '⏳ Kaydediliyor...' : editingSupplier ? '✅ Güncelle' : '✅ Kaydet'}
+                  {savingSupplier ? ' Kaydediliyor...' : editingSupplier ? ' Güncelle' : ' Kaydet'}
                 </button>
               </div>
             </div>
@@ -7217,7 +7217,7 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
             <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">{editingOrder ? '✏️ Sipariş Düzenle' : '📋 Yeni Tedarik Siparişi'}</h2>
+                <h2 className="text-xl font-bold text-white">{editingOrder ? ' Sipariş Düzenle' : ' Yeni Tedarik Siparişi'}</h2>
                 <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-5">
@@ -7238,12 +7238,12 @@ export default function BusinessDetailsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Beklenen Teslimat</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('beklenen_teslimat')}</label>
                     <input type="date" value={orderForm.expectedDeliveryDate} onChange={e => setOrderForm((p: any) => ({ ...p, expectedDeliveryDate: e.target.value }))}
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Fatura No</label>
+                    <label className="text-xs text-gray-400 mb-1 block">{t('fatura_no')}</label>
                     <input value={orderForm.invoiceNumber} onChange={e => setOrderForm((p: any) => ({ ...p, invoiceNumber: e.target.value }))}
                       placeholder="RE-2026-001"
                       className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
@@ -7253,7 +7253,7 @@ export default function BusinessDetailsPage() {
                 {/* Order Lines */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-sm font-semibold text-white">📦 Sipariş Kalemleri</h3>
+                    <h3 className="text-sm font-semibold text-white"> {t('siparis_kalemleri')}</h3>
                     <button
                       onClick={() => setOrderForm((p: any) => ({
                         ...p,
@@ -7274,13 +7274,13 @@ export default function BusinessDetailsPage() {
                               onClick={() => setOrderForm((p: any) => ({ ...p, items: p.items.filter((_: any, i: number) => i !== idx) }))}
                               className="text-red-400 hover:text-red-300 text-xs"
                             >
-                              🗑 Kaldır
+                               Kaldır
                             </button>
                           )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="col-span-2">
-                            <label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label>
+                            <label className="text-xs text-gray-400 mb-1 block">{t('urun_adi_label')} *</label>
                             <div className="relative">
                               <input
                                 value={item.productName}
@@ -7289,7 +7289,7 @@ export default function BusinessDetailsPage() {
                                   newItems[idx] = { ...newItems[idx], productName: e.target.value };
                                   setOrderForm((p: any) => ({ ...p, items: newItems }));
                                 }}
-                                placeholder="Ürün adı yazın veya listeden seçin..."
+                                placeholder={t('urun_adi_sec_placeholder')}
                                 className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                                 list={`product-list-${idx}`}
                               />
@@ -7316,7 +7316,7 @@ export default function BusinessDetailsPage() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Birim</label>
+                            <label className="text-xs text-gray-400 mb-1 block">{t('birim_label')}</label>
                             <select
                               value={item.unit}
                               onChange={e => {
@@ -7327,9 +7327,9 @@ export default function BusinessDetailsPage() {
                               className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600">
                               <option value="kg">kg</option>
                               <option value="adet">Adet (Stück)</option>
-                              <option value="paket">Paket</option>
+                              <option value="paket">{t('paket')}</option>
                               <option value="kutu">Kutu (Karton)</option>
-                              <option value="lt">Litre</option>
+                              <option value="lt">{t('litre')}</option>
                             </select>
                           </div>
                           <div>
@@ -7347,7 +7347,7 @@ export default function BusinessDetailsPage() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Birim Fiyat (EK) *</label>
+                            <label className="text-xs text-gray-400 mb-1 block">{t('birim_fiyat_ek')} *</label>
                             <input
                               type="number"
                               min="0" step="0.01"
@@ -7362,7 +7362,7 @@ export default function BusinessDetailsPage() {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Satır Toplam</label>
+                            <label className="text-xs text-gray-400 mb-1 block">{t('satir_toplam')}</label>
                             <p className="text-white text-sm font-semibold py-2">
                               {formatCurrency(Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0), (business as any)?.currency || 'EUR')}
                             </p>
@@ -7385,17 +7385,17 @@ export default function BusinessDetailsPage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
+                  <label className="text-xs text-gray-400 mb-1 block">{t('notlar')}</label>
                   <textarea value={orderForm.notes} onChange={e => setOrderForm((p: any) => ({ ...p, notes: e.target.value }))}
-                    rows={2} placeholder="Sipariş notları..."
+                    rows={2} placeholder={t('siparis_notlari_placeholder')}
                     className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                 </div>
               </div>
               <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
                 <button onClick={saveSupplierOrder} disabled={savingOrder || !orderForm.supplierId}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                  {savingOrder ? '⏳ Kaydediliyor...' : editingOrder ? '✅ Güncelle' : '✅ Sipariş Oluştur'}
+                  {savingOrder ? ' Kaydediliyor...' : editingOrder ? ' Güncelle' : ' Sipariş Oluştur'}
                 </button>
               </div>
             </div>
@@ -7430,7 +7430,7 @@ export default function BusinessDetailsPage() {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Teslim Alınan Miktar</label>
+                        <label className="text-xs text-gray-400 mb-1 block">{t('teslim_alinan_miktar')}</label>
                         <input
                           type="number" min="0" step="0.1"
                           value={item.receivedQuantity || ''}
@@ -7457,7 +7457,7 @@ export default function BusinessDetailsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
+                        <label className="text-xs text-gray-400 mb-1 block">{t('uretim_tarihi')}</label>
                         <input
                           type="date"
                           value={item.productionDate || ''}
@@ -7490,10 +7490,10 @@ export default function BusinessDetailsPage() {
                             : 'bg-gray-700 text-gray-400'
                           }`}>
                           {Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
-                            ? '✅ Tam'
+                            ? ' Tam'
                             : Number(item.receivedQuantity || 0) > 0
-                              ? `📦 Kısmi (${item.receivedQuantity}/${item.orderedQuantity})`
-                              : '⏳ Bekliyor'}
+                              ? ` Kısmi (${item.receivedQuantity}/${item.orderedQuantity})`
+                              : ' Bekliyor'}
                         </div>
                       </div>
                     </div>
@@ -7505,10 +7505,10 @@ export default function BusinessDetailsPage() {
                   {goodsReceiptOrder.items.filter((it: any) => Number(it.receivedQuantity || 0) >= Number(it.orderedQuantity)).length} / {goodsReceiptOrder.items.length} kalem tam teslim
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                  <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
                   <button onClick={processGoodsReceipt} disabled={savingOrder}
                     className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {savingOrder ? '⏳ Kaydediliyor...' : '📥 Mal Kabulü Kaydet'}
+                    {savingOrder ? ' Kaydediliyor...' : '📥 Mal Kabulü Kaydet'}
                   </button>
                 </div>
               </div>
