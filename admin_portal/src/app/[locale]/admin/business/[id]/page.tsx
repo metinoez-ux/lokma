@@ -2170,7 +2170,7 @@ export default function BusinessDetailsPage() {
       show: true,
       title: newStatus ? t('hesabiAktifEt') : t('hesabiDeaktifEt'),
       message: `${t('buKasabi')} ${action} ${t('yapmakIstediginizeEminMisiniz')}`,
-      confirmText: newStatus ? t('aktif_et') : "Deaktif Et",
+      confirmText: newStatus ? t('aktif_et') : t('deaktifEt'),
       confirmColor: newStatus
         ? "bg-green-600 hover:bg-green-500"
         : "bg-red-600 hover:bg-red-500",
@@ -2182,7 +2182,7 @@ export default function BusinessDetailsPage() {
             updatedAt: new Date(),
           });
           setBusiness({ ...business, isActive: newStatus });
-          showToast(`Kasap ${action} ${t('yapildi')}`, "success");
+          showToast(t('isletmeDurumDegisti'), "success");
         } catch (error) {
           console.error("Toggle error:", error);
           showToast(t('hataOlustu'), "error");
@@ -3369,7 +3369,7 @@ export default function BusinessDetailsPage() {
                     {[
                       { id: "bilgiler" as const, label: t('isletmeBilgileri') },
                       { id: "fatura" as const, label: t('fatura_adresi') },
-                      { id: "zertifikalar" as const, label: "Zertifikalar" },
+                      { id: "zertifikalar" as const, label: t('sertifikalarLabel') },
                       { id: "gorseller" as const, label: t('gorseller') },
                       { id: "saatler" as const, label: t('acilisSaatleri') },
                       { id: "teslimat" as const, label: t('teslimatAyarlari') },
@@ -3430,14 +3430,14 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Adres */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-white font-medium pb-2">📍 Adres</h4>
+                        <h4 className="text-white font-medium pb-2">📍 {t('adres_baslik')}</h4>
                         <div>
-                          <label className="text-gray-400 text-sm">Sokak/Cadde</label>
+                          <label className="text-gray-400 text-sm">{t('sokakCadde')}</label>
                           <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-gray-400 text-sm">Posta Kodu</label>
+                            <label className="text-gray-400 text-sm">{t('postaKodu')}</label>
                             <input type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
@@ -3451,22 +3451,22 @@ export default function BusinessDetailsPage() {
                         <h4 className="text-white font-medium pb-2">{t('iletisim')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Telefon</label>
+                            <label className="text-gray-400 text-sm">{t('telefon_label')}</label>
                             <input type="tel" value={formData.shopPhone || ''} onChange={(e) => setFormData({ ...formData, shopPhone: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">E-Mail</label>
+                            <label className="text-gray-400 text-sm">{t('ePosta')}</label>
                             <input type="email" value={formData.shopEmail || ''} onChange={(e) => setFormData({ ...formData, shopEmail: e.target.value })} disabled={!isEditing} placeholder="info@example.com" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">Website</label>
+                          <label className="text-gray-400 text-sm">{t('webSitesi')}</label>
                           <input type="url" value={formData.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} disabled={!isEditing} placeholder="https://www.example.com" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         </div>
                       </div>
                       {/* Sosyal Medya */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-white font-medium pb-2">📱 Sosyal Medya</h4>
+                        <h4 className="text-white font-medium pb-2">📱 {t('sosyalMedya')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-gray-400 text-sm">{t('instagram')}</label>
@@ -3504,34 +3504,34 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Impressum / Rechtliche Angaben */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-white font-medium pb-2">📜 Impressum / Rechtliche Angaben</h4>
-                        <p className="text-gray-500 text-xs -mt-2">Diese Angaben werden im Impressum der mobilen App angezeigt.</p>
+                        <h4 className="text-white font-medium pb-2">📜 {t('impressumBaslik')}</h4>
+                        <p className="text-gray-500 text-xs -mt-2">{t('impressumAciklama')}</p>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Rechtsform</label>
+                            <label className="text-gray-400 text-sm">{t('rechtsform')}</label>
                             <select value={formData.legalForm || ''} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
-                              <option value="">— Bitte wählen —</option>
+                              <option value="">{t('bitteWaehlen')}</option>
                               {Object.entries(GERMAN_LEGAL_FORM_LABELS).map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
                               ))}
                             </select>
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Geschäftsführer / Inhaber</label>
+                            <label className="text-gray-400 text-sm">{t('geschaeftsfuehrer')}</label>
                             <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">Vertretungsberechtigte/r</label>
+                          <label className="text-gray-400 text-sm">{t('vertretungsberechtigter')}</label>
                           <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">Registergericht</label>
+                            <label className="text-gray-400 text-sm">{t('registergericht')}</label>
                             <input type="text" value={formData.registerCourt || ''} onChange={(e) => setFormData({ ...formData, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Mönchengladbach" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Handelsregisternummer</label>
+                            <label className="text-gray-400 text-sm">{t('handelsregisternummer')}</label>
                             <input type="text" value={formData.registerNumber || ''} onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. HRB 12345" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
                           </div>
                         </div>
@@ -3545,7 +3545,7 @@ export default function BusinessDetailsPage() {
                             <div className="flex gap-2 mt-1 mb-2">
                               <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500" />
                               <button type="button" onClick={() => handleGooglePlacesSearch()} disabled={googleSearchLoading || googleSearchQuery.length < 3} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                                {googleSearchLoading ? (<span className="animate-spin">⏳</span>) : (<span>🔍</span>)} Ara
+                                {googleSearchLoading ? (<span className="animate-spin">⏳</span>) : (<span>🔍</span>)} {t('ara_button')}
                               </button>
                             </div>
                           )}
@@ -3558,7 +3558,7 @@ export default function BusinessDetailsPage() {
                                   {place.rating && (<p className="text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
                                 </button>
                               ))}
-                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-gray-400 hover:text-white text-sm">✕ Kapat</button>
+                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-gray-400 hover:text-white text-sm">✕ {t('kapat_button')}</button>
                             </div>
                           )}
                           <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
@@ -3585,11 +3585,11 @@ export default function BusinessDetailsPage() {
                             </div>
                             <div>
                               <label className="text-gray-400 text-sm">{t('fatura_adresi')}</label>
-                              <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder="Sokak / Cadde" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder={t('sokakCadde')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="text-gray-400 text-sm">Posta Kodu</label>
+                                <label className="text-gray-400 text-sm">{t('postaKodu')}</label>
                                 <input type="text" value={formData.billingPostalCode || ''} onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
