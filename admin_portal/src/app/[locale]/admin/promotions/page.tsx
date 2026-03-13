@@ -6,6 +6,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 import { subscriptionService } from '@/services/subscriptionService';
 import DealsTab from '@/components/promotions/DealsTab';
 import CouponsTab from '@/components/promotions/CouponsTab';
@@ -99,26 +100,26 @@ interface BusinessPromotion {
 
 const PROMOTION_TYPES = [
     // — Klasik İndirim Modelleri — (Free+)
-    { value: 'percentOff', label: 'Yüzde İndirim (%)', icon: '🔥', minPlanTier: 'free' },
-    { value: 'fixedOff', label: 'Sabit İndirim (€)', icon: '🎉', minPlanTier: 'free' },
-    { value: 'freeDelivery', label: 'Ücretsiz Teslimat', icon: '🚚', minPlanTier: 'basic' },
-    { value: 'buyXGetY', label: '1 Al 1 Bedava (BOGO)', icon: '🎁', minPlanTier: 'standard' },
-    { value: 'minOrderDiscount', label: 'Min. Siparişe İndirim', icon: '💰', minPlanTier: 'basic' },
+    { value: 'percentOff', labelKey: 'percentOff', icon: '🔥', minPlanTier: 'free' },
+    { value: 'fixedOff', labelKey: 'fixedOff', icon: '🎉', minPlanTier: 'free' },
+    { value: 'freeDelivery', labelKey: 'freeDelivery', icon: '🚚', minPlanTier: 'basic' },
+    { value: 'buyXGetY', labelKey: 'buyXGetY', icon: '🎁', minPlanTier: 'standard' },
+    { value: 'minOrderDiscount', labelKey: 'minOrderDiscount', icon: '💰', minPlanTier: 'basic' },
     // — Zamanlı & Etkinlik — (Standard+)
-    { value: 'happyHour', label: 'Happy Hour', icon: '⏰', minPlanTier: 'standard' },
-    { value: 'flashSale', label: 'Flash Sale (Anlık Fırsat)', icon: '⚡', minPlanTier: 'standard' },
+    { value: 'happyHour', labelKey: 'happyHour', icon: '⏰', minPlanTier: 'standard' },
+    { value: 'flashSale', labelKey: 'flashSale', icon: '⚡', minPlanTier: 'standard' },
     // — Sadakat & Ödül — (Standard+)
-    { value: 'loyaltyCard', label: 'Puan Kartı (Stempelkarte)', icon: '🎖️', minPlanTier: 'standard' },
-    { value: 'cashback', label: 'Cashback (Bakiye İade)', icon: '💸', minPlanTier: 'ultra' },
-    { value: 'spinWheel', label: 'Çark Çevir (Gamification)', icon: '🎰', minPlanTier: 'ultra' },
+    { value: 'loyaltyCard', labelKey: 'loyaltyCard', icon: '🎖️', minPlanTier: 'standard' },
+    { value: 'cashback', labelKey: 'cashback', icon: '💸', minPlanTier: 'ultra' },
+    { value: 'spinWheel', labelKey: 'spinWheel', icon: '🎰', minPlanTier: 'ultra' },
     // — Ürün & Sepet Bazlı — (Standard+)
-    { value: 'bundleDeal', label: 'Bundle / Combo Paket', icon: '📦', minPlanTier: 'standard' },
-    { value: 'productDiscount', label: 'Ürün Bazlı İndirim', icon: '🏷️', minPlanTier: 'basic' },
-    { value: 'cartBooster', label: 'Sepet Büyütücü (X€ üstü → Y bedava)', icon: '🛒', minPlanTier: 'standard' },
+    { value: 'bundleDeal', labelKey: 'bundleDeal', icon: '📦', minPlanTier: 'standard' },
+    { value: 'productDiscount', labelKey: 'productDiscount', icon: '🏷️', minPlanTier: 'basic' },
+    { value: 'cartBooster', labelKey: 'cartBooster', icon: '🛒', minPlanTier: 'standard' },
     // — Hedefli & Otomatik — (Premium)
-    { value: 'segmentCampaign', label: 'Segmentli Kampanya (VIP/Yeni/Geri)', icon: '🎯', minPlanTier: 'ultra' },
-    { value: 'firstOrderSurprise', label: 'İlk Sipariş Sürprizi', icon: '💳', minPlanTier: 'standard' },
-    { value: 'pushPromo', label: 'Push-Only Promosyon', icon: '📲', minPlanTier: 'ultra' },
+    { value: 'segmentCampaign', labelKey: 'segmentCampaign', icon: '🎯', minPlanTier: 'ultra' },
+    { value: 'firstOrderSurprise', labelKey: 'firstOrderSurprise', icon: '💳', minPlanTier: 'standard' },
+    { value: 'pushPromo', labelKey: 'pushPromo', icon: '📲', minPlanTier: 'ultra' },
 ];
 
 // Default safety limits per plan tier (max total redemptions if user sets none)
@@ -169,32 +170,32 @@ function checkConflicts(
     if (conflicting.length === 0) return null;
 
     const typeLabels = conflicting.map(p => {
-        const info = PROMOTION_TYPES.find(t => t.value === p.type);
+        const info = PROMOTION_TYPES.find(pt => pt.value === p.type);
         return `${info?.icon || '🎯'} ${p.title}`;
     });
 
     return {
         conflictingPromos: conflicting.map(p => ({ id: p.id, title: p.title, type: p.type })),
         group: 'A',
-        message: `⚠️ Bu kampanya türü, zaten aktif olan ${typeLabels.join(', ')} ile çakışıyor. Aynı anda en fazla 1 genel sepet indirimi aktif olabilir.`,
+        message: `⚠️ ${typeLabels.join(', ')}`,
     };
 }
 
 const POPUP_FORMATS = [
-    { value: 'bottomSheet', label: 'Alt Sayfa (Bottom Sheet)', desc: 'Ekranın altından yukarı kayar' },
-    { value: 'centerModal', label: 'Ortada Popup (Modal)', desc: 'Ekranın ortasında görünür' },
-    { value: 'topBanner', label: 'Üst Banner', desc: 'Üstten aşağı kayar, otomatik kapanır' },
-    { value: 'snackbar', label: 'Bildirim Çubuğu', desc: 'Küçük bildirim stili, altta görünür' },
+    { value: 'bottomSheet', labelKey: 'bottomSheet', descKey: 'bottomSheetDesc' },
+    { value: 'centerModal', labelKey: 'centerModal', descKey: 'centerModalDesc' },
+    { value: 'topBanner', labelKey: 'topBanner', descKey: 'topBannerDesc' },
+    { value: 'snackbar', labelKey: 'snackbar', descKey: 'snackbarDesc' },
 ];
 
 const DAY_OPTIONS = [
-    { value: 'mon', label: 'Pzt' },
-    { value: 'tue', label: 'Sal' },
-    { value: 'wed', label: 'Çar' },
-    { value: 'thu', label: 'Per' },
-    { value: 'fri', label: 'Cum' },
-    { value: 'sat', label: 'Cmt' },
-    { value: 'sun', label: 'Paz' },
+    { value: 'mon', labelKey: 'mon' },
+    { value: 'tue', labelKey: 'tue' },
+    { value: 'wed', labelKey: 'wed' },
+    { value: 'thu', labelKey: 'thu' },
+    { value: 'fri', labelKey: 'fri' },
+    { value: 'sat', labelKey: 'sat' },
+    { value: 'sun', labelKey: 'sun' },
 ];
 
 const ALL_DAYS = DAY_OPTIONS.map(d => d.value);
@@ -205,6 +206,7 @@ const ALL_DAYS = DAY_OPTIONS.map(d => d.value);
 
 function PromotionsPageContent() {
     const { admin, loading: adminLoading } = useAdmin();
+    const t = useTranslations('AdminPromotions');
     const params = useParams();
     const searchParams = useSearchParams();
     const locale = (params?.locale as string) || 'tr';
@@ -423,10 +425,10 @@ function PromotionsPageContent() {
         setSavingFreeDrink(true);
         try {
             await updateDoc(doc(db, 'businesses', businessId), fields);
-            setFreeDrinkToast('✅ Kaydedildi');
+            setFreeDrinkToast(`✅ ${t('saved')}`);
         } catch (e) {
             console.error('freeDrink save err:', e);
-            setFreeDrinkToast('❌ Kaydedilemedi');
+            setFreeDrinkToast(`❌ ${t('saveFailed')}`);
         }
         setSavingFreeDrink(false);
         setTimeout(() => setFreeDrinkToast(''), 2000);
@@ -475,14 +477,14 @@ function PromotionsPageContent() {
 
     const handleSave = async () => {
         if (!formData.title.trim()) {
-            alert('Kampanya başlığı gereklidir.');
+            alert(t('titleRequired'));
             return;
         }
 
         // Resolve the target businessId — for Super Admin, allow using admin.managedBusinessId or first available
         const targetBusinessId = businessId || (isSuperAdmin ? admin?.businessId : null);
         if (!targetBusinessId) {
-            alert('İşletme bulunamadı. Lütfen bir işletme seçili olduğundan emin olun.');
+            alert(t('businessNotFound'));
             console.error('handleSave: No businessId available.', { businessId, adminBusinessId: admin?.businessId, isSuperAdmin });
             return;
         }
@@ -515,11 +517,11 @@ function PromotionsPageContent() {
         setConflictWarning(null);
         setForceOverrideConflict(false);
         try {
-            const typeInfo = PROMOTION_TYPES.find(t => t.value === formData.type);
-            const autoBadge = formData.type === 'percentOff' ? `%${formData.value} İndirim` :
-                formData.type === 'fixedOff' ? `${formData.value}€ İndirim` :
-                    formData.type === 'freeDelivery' ? 'Ücretsiz Teslimat' :
-                        formData.type === 'buyXGetY' ? `${formData.buyX} Al ${formData.getY} Öde` :
+            const typeInfo = PROMOTION_TYPES.find(pt => pt.value === formData.type);
+            const autoBadge = formData.type === 'percentOff' ? t('percentDiscount', { value: formData.value }) :
+                formData.type === 'fixedOff' ? t('fixedDiscount', { value: formData.value }) :
+                    formData.type === 'freeDelivery' ? t('freeDeliveryBadge') :
+                        formData.type === 'buyXGetY' ? t('bogoLabel', { x: formData.buyX, y: formData.getY }) :
                             `${typeInfo?.icon || ''} ${formData.title}`;
 
             const saveData: Record<string, any> = {
@@ -604,7 +606,7 @@ function PromotionsPageContent() {
             setFormData(defaultForm);
         } catch (error) {
             console.error('Error saving promotion:', error);
-            alert('Kampanya kaydedilirken hata oluştu. Konsolu kontrol edin.');
+            alert(t('saveError'));
         }
         setSaving(false);
     };
@@ -629,7 +631,7 @@ function PromotionsPageContent() {
 
         // BUG FIX: Prevent reactivation if campaign limit is reached
         if (!promo.isActive && campaignLimit !== null && activePromoCount >= campaignLimit) {
-            alert(`Kampanya limitine ulaştınız (${activePromoCount}/${campaignLimit}). Yeni kampanya aktif edemezsiniz.`);
+            alert(t('limitReachedAlert'));
             return;
         }
 
@@ -707,8 +709,8 @@ function PromotionsPageContent() {
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">Erişim Yok</h2>
-                    <p className="text-gray-400 mt-2">Promosyon yönetimi için bir işletmeye bağlı olmanız gerekir.</p>
+                    <h2 className="text-xl font-bold text-white mt-4">{t('noAccess')}</h2>
+                    <p className="text-gray-400 mt-2">{t('noAccessDesc')}</p>
                 </div>
             </div>
         );
@@ -731,14 +733,14 @@ function PromotionsPageContent() {
                         <div className="flex items-center gap-3">
                             <span className="text-3xl">🎯</span>
                             <div>
-                                <h1 className="text-xl font-bold">Promosyon Merkezi</h1>
+                                <h1 className="text-xl font-bold">{t('title')}</h1>
                                 <p className="text-orange-200 text-sm">
-                                    {activePromoCount} aktif kampanya
+                                    {activePromoCount} {t('activeCampaigns')}
                                     {campaignLimit !== null && (
-                                        <span className="ml-1 opacity-80">/ {campaignLimit} hak ({businessPlanName})</span>
+                                        <span className="ml-1 opacity-80">/ {campaignLimit} {t('rights')} ({businessPlanName})</span>
                                     )}
                                     {campaignLimit === null && (
-                                        <span className="ml-1 opacity-80">· Sınırsız ({businessPlanName})</span>
+                                        <span className="ml-1 opacity-80">· {t('unlimited')} ({businessPlanName})</span>
                                     )}
                                 </p>
                             </div>
@@ -749,17 +751,17 @@ function PromotionsPageContent() {
                                     onClick={() => setShowTemplateSelector(true)}
                                     disabled={!canCreateCampaign}
                                     className={`px-4 py-2 rounded-lg font-medium transition ${canCreateCampaign ? 'bg-white/20 hover:bg-white/30' : 'bg-white/10 opacity-50 cursor-not-allowed'}`}
-                                    title={!hasCampaignFeature ? 'Planınız kampanya özelliğini içermiyor' : isAtCampaignLimit ? `Kampanya limitine ulaştınız (${campaignLimit})` : ''}
+                                    title={!hasCampaignFeature ? t('noCampaignFeature') : isAtCampaignLimit ? t('campaignLimitReached') : ''}
                                 >
-                                    📋 Şablondan Oluştur
+                                    📋 {t('createFromTemplate')}
                                 </button>
                                 <button
                                     onClick={() => { setEditingPromo(null); setFormData(defaultForm); setShowModal(true); }}
                                     disabled={!canCreateCampaign}
                                     className={`px-4 py-2 rounded-lg font-medium transition ${canCreateCampaign ? 'bg-white/20 hover:bg-white/30' : 'bg-white/10 opacity-50 cursor-not-allowed'}`}
-                                    title={!hasCampaignFeature ? 'Planınız kampanya özelliğini içermiyor' : isAtCampaignLimit ? `Kampanya limitine ulaştınız (${campaignLimit})` : ''}
+                                    title={!hasCampaignFeature ? t('noCampaignFeature') : isAtCampaignLimit ? t('campaignLimitReached') : ''}
                                 >
-                                    + Özel Kampanya
+                                    + {t('customCampaign')}
                                 </button>
                             </>)}
                         </div>
@@ -771,7 +773,7 @@ function PromotionsPageContent() {
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-700/40">
                                 🔒 {businessPlanName}
                             </span>
-                            <span className="text-amber-400/60">Kampanya özelliği yok · <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">Plan Yükselt</a></span>
+                            <span className="text-amber-400/60">{t('noCampaignFeatureShort')} · <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">{t('upgradePlan')}</a></span>
                         </div>
                     )}
                     {mainTab === 'kampanya' && hasCampaignFeature && isAtCampaignLimit && (
@@ -779,7 +781,7 @@ function PromotionsPageContent() {
                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-700/40">
                                 ⚠️ Limit: {activePromoCount}/{campaignLimit}
                             </span>
-                            <span className="text-amber-400/60">Mevcut birini deaktif edin veya <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">planınızı yükseltin</a>.</span>
+                            <span className="text-amber-400/60">{t('deactivateOrUpgrade')} <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">{t('upgradeYourPlan')}</a>.</span>
                         </div>
                     )}
                 </div>
@@ -790,10 +792,10 @@ function PromotionsPageContent() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex gap-0 overflow-x-auto">
                         {([
-                            { key: 'kampanya', label: 'Kampanya', icon: '🎯', desc: 'Aktif kampanyalar' },
-                            { key: 'kuponlar', label: 'Kuponlar', icon: '🎫', desc: 'Kupon kodları' },
-                            ...(isSuperAdmin ? [{ key: 'sablonlar', label: 'Şablonlar', icon: '📋', desc: 'Kampanya şablonları' }] : []),
-                            ...(isRestaurantSegment(businessType) ? [{ key: 'bedava_icecek', label: 'Bedava İçecek', icon: '🥤', desc: 'Restoran promosyonu' }] : []),
+                            { key: 'kampanya', label: t('tabCampaign'), icon: '🎯', desc: t('tabCampDesc') },
+                            { key: 'kuponlar', label: t('tabCoupons'), icon: '🎫', desc: t('tabCouponsDesc') },
+                            ...(isSuperAdmin ? [{ key: 'sablonlar', label: t('tabTemplates'), icon: '📋', desc: t('tabTemplatesDesc') }] : []),
+                            ...(isRestaurantSegment(businessType) ? [{ key: 'bedava_icecek', label: t('tabFreeDrink'), icon: '🥤', desc: t('tabFreeDrinkDesc') }] : []),
                         ] as { key: string; label: string; icon: string; desc: string }[]).map(tab => (
                             <button
                                 key={tab.key}
@@ -821,8 +823,8 @@ function PromotionsPageContent() {
                             <div className="flex items-center gap-3">
                                 <span className="text-2xl">🥤</span>
                                 <div>
-                                    <h2 className="text-white font-bold">Bedava İçecek Promosyonu</h2>
-                                    <p className="text-emerald-300/70 text-xs mt-0.5">Sepet eşiğine ulaşan müşteriye 1 bedava içecek — sadece yemek segmenti</p>
+                                    <h2 className="text-white font-bold">{t('freeDrinkTitle')}</h2>
+                                    <p className="text-emerald-300/70 text-xs mt-0.5">{t('freeDrinkDesc')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -856,16 +858,16 @@ function PromotionsPageContent() {
                                 <span>{freeDrinkEnabled ? '✅' : '🚫'}</span>
                                 <span className="font-medium">
                                     {freeDrinkEnabled
-                                        ? 'Aktif — Müşteriler sepette 1 bedava içecek seçebilir'
-                                        : 'Deaktif — Sepette bedava içecek bölümü gösterilmez'}
+                                        ? t('freeDrinkActive')
+                                        : t('freeDrinkInactive')}
                                 </span>
                             </div>
 
                             {/* Minimum sipariş tutarı */}
                             <div>
                                 <label className="text-gray-300 text-sm font-medium block mb-2">
-                                    Minimum Sipariş Tutarı
-                                    <span className="ml-2 text-gray-500 font-normal text-xs">(0 = her siparişte aktif)</span>
+                                    {t('minimumOrderAmount')}
+                                    <span className="ml-2 text-gray-500 font-normal text-xs">{t('everyOrderActive')}</span>
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <span className="text-gray-400 font-bold">€</span>
@@ -881,8 +883,8 @@ function PromotionsPageContent() {
                                     />
                                     <span className="text-gray-500 text-xs">
                                         {freeDrinkMinimumOrder === 0
-                                            ? '→ Her siparişte aktif'
-                                            : `→ Sepet €${freeDrinkMinimumOrder.toFixed(2)} olunca aktif`}
+                                            ? t('activeEveryOrder')
+                                            : t('activeAtAmount', { amount: freeDrinkMinimumOrder.toFixed(2) })}
                                     </span>
                                 </div>
                             </div>
@@ -892,10 +894,10 @@ function PromotionsPageContent() {
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
                                         <label className="text-gray-300 text-sm font-medium">
-                                            Bedava Sunulacak Ürünler
+                                            {t('freeProducts')}
                                         </label>
                                         <p className="text-gray-500 text-xs mt-0.5">
-                                            Müşteri bu ürünlerden birini seçer — en fazla 5
+                                            {t('customerSelectsOne')}
                                         </p>
                                     </div>
                                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${freeDrinkProducts.length >= 5
@@ -909,7 +911,7 @@ function PromotionsPageContent() {
                                 {loadingProducts ? (
                                     <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
                                         <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-emerald-500 rounded-full" />
-                                        Ürünler yükleniyor...
+                                        {t('productsLoading')}
                                     </div>
                                 ) : businessProducts.length === 0 ? (
                                     <div className="text-center py-6 text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">
@@ -922,8 +924,8 @@ function PromotionsPageContent() {
                                             const isSelected = freeDrinkProducts.includes(p.id);
                                             const atMax = freeDrinkProducts.length >= 5 && !isSelected;
                                             const productName = typeof p.name === 'object'
-                                                ? (p.name?.tr ?? p.name?.de ?? p.name?.en ?? 'Ürün')
-                                                : (p.name ?? 'Ürün');
+                                                ? (p.name?.tr ?? p.name?.de ?? p.name?.en ?? t('product'))
+                                                : (p.name ?? t('product'));
                                             const productCategory = typeof p.category === 'object'
                                                 ? (p.category?.tr ?? p.category?.de ?? p.category?.en ?? '')
                                                 : (p.category ?? '');
@@ -963,11 +965,11 @@ function PromotionsPageContent() {
 
                             {/* Info */}
                             <div className="p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg">
-                                <p className="text-blue-300 text-xs font-bold mb-1">ℹ️ Nasıl çalışır?</p>
+                                <p className="text-blue-300 text-xs font-bold mb-1">{`ℹ️ ${t('howItWorks')}`}</p>
                                 <ul className="text-blue-200/60 text-xs space-y-1 list-disc list-inside">
-                                    <li>Müşteri sepeti minimum tutara ulaştığında içecek seçim bölümü açılır</li>
-                                    <li>Tüm siparişlerde aktif olması için minimum tutarı 0 bırakın</li>
-                                    <li>Yukarıdan seçtiğiniz ürünler müşteriye seçenek olarak gösterilir</li>
+                                    <li>{t('howItWorks1')}</li>
+                                    <li>{t('howItWorks2')}</li>
+                                    <li>{t('howItWorks3')}</li>
                                 </ul>
                             </div>
                         </div>
@@ -980,9 +982,9 @@ function PromotionsPageContent() {
                     {/* Tabs */}
                     <div className="flex gap-2 mb-4">
                         {[
-                            { key: 'active' as const, label: '🟢 Aktif', count: promotions.filter(p => p.isActive && (!p.validUntil || new Date(p.validUntil) >= now)).length },
-                            { key: 'expired' as const, label: '⏰ Süresi Dolmuş', count: promotions.filter(p => p.validUntil && new Date(p.validUntil) < now).length },
-                            { key: 'all' as const, label: '📋 Tümü', count: promotions.length },
+                            { key: 'active' as const, label: `🟢 ${t('active')}`, count: promotions.filter(p => p.isActive && (!p.validUntil || new Date(p.validUntil) >= now)).length },
+                            { key: 'expired' as const, label: `⏰ ${t('expired')}`, count: promotions.filter(p => p.validUntil && new Date(p.validUntil) < now).length },
+                            { key: 'all' as const, label: `📋 ${t('all')}`, count: promotions.length },
                         ].map(tab => (
                             <button
                                 key={tab.key}
@@ -1001,20 +1003,20 @@ function PromotionsPageContent() {
                         filteredPromos.length === 0 ? (
                             <div className="bg-gray-800 rounded-xl p-12 text-center">
                                 <span className="text-5xl">🎯</span>
-                                <h3 className="text-lg font-medium text-white mt-4">Henüz kampanya yok</h3>
-                                <p className="text-gray-400 mt-2">Müşterilerinize özel kampanyalar oluşturun!</p>
+                                <h3 className="text-lg font-medium text-white mt-4">{t('noCampaignsYet')}</h3>
+                                <p className="text-gray-400 mt-2">{t('createCampaignsForCustomers')}</p>
                                 <button
                                     onClick={() => canCreateCampaign ? setShowTemplateSelector(true) : undefined}
                                     disabled={!canCreateCampaign}
                                     className={`mt-4 px-6 py-3 rounded-lg transition ${canCreateCampaign ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-600 text-gray-400 cursor-not-allowed'}`}
                                 >
-                                    📋 Şablondan Hızlı Oluştur
+                                    {`📋 ${t('quickCreateFromTemplate')}`}
                                 </button>
                             </div>
                         ) : (
                             <div className="grid gap-4 md:grid-cols-2">
                                 {filteredPromos.map(promo => {
-                                    const typeInfo = PROMOTION_TYPES.find(t => t.value === promo.type);
+                                    const typeInfo = PROMOTION_TYPES.find(pt => pt.value === promo.type);
                                     const isExpired = promo.validUntil && new Date(promo.validUntil) < now;
                                     const formatInfo = POPUP_FORMATS.find(f => f.value === promo.popupFormat);
 
@@ -1031,13 +1033,13 @@ function PromotionsPageContent() {
                                                     <span className="text-2xl">{typeInfo?.icon || '🎯'}</span>
                                                     <div>
                                                         <h3 className="text-white font-semibold text-sm">{promo.title}</h3>
-                                                        <span className="text-xs text-gray-400">{typeInfo?.label}</span>
+                                                        <span className="text-xs text-gray-400">{t(typeInfo?.labelKey || 'percentOff')}</span>
                                                     </div>
                                                 </div>
                                                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${isExpired ? 'bg-gray-700 text-gray-400' :
                                                     promo.isActive ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-400'
                                                     }`}>
-                                                    {isExpired ? '⏰ Sona Erdi' : promo.isActive ? '✅ Aktif' : '⏸️ Pasif'}
+                                                    {isExpired ? `⏰ ${t('ended')}` : promo.isActive ? `✅ ${t('activeStatus')}` : `⏸️ ${t('passive')}`}
                                                 </span>
                                             </div>
 
@@ -1050,12 +1052,12 @@ function PromotionsPageContent() {
                                                 <div className="flex flex-wrap gap-1.5 mt-2">
                                                     {/* Value */}
                                                     <span className="text-xs bg-orange-900/30 text-orange-300 px-2 py-0.5 rounded-full">
-                                                        {promo.valueType === 'percent' ? `%${promo.value}` : `€${promo.value}`} indirim
+                                                        {promo.valueType === 'percent' ? `%${promo.value}` : `€${promo.value}`} {t('discount')}
                                                     </span>
                                                     {/* Methods */}
                                                     {promo.validDeliveryMethods?.map((m: string) => (
                                                         <span key={m} className="text-xs bg-blue-900/30 text-blue-300 px-2 py-0.5 rounded-full">
-                                                            {m === 'delivery' ? '🚴 Kurye' : '🏠 Gel-Al'}
+                                                            {m === 'delivery' ? `🚴 ${t('courier')}` : `🏠 ${t('gelAl')}`}
                                                         </span>
                                                     ))}
                                                     {/* Min order */}
@@ -1073,17 +1075,17 @@ function PromotionsPageContent() {
                                                     {/* Popup */}
                                                     {promo.showAsPopup && (
                                                         <span className="text-xs bg-pink-900/30 text-pink-300 px-2 py-0.5 rounded-full">
-                                                            {formatInfo?.label || 'Popup'}
+                                                            {t(formatInfo?.labelKey || 'bottomSheet')}
                                                         </span>
                                                     )}
                                                     {/* Usage limits badges */}
                                                     {(promo.maxRedemptions || promo.dailyLimit || promo.weeklyLimit || promo.perUserLimit || promo.perUserDailyLimit) && (
                                                         <span className="text-xs bg-yellow-900/30 text-yellow-300 px-2 py-0.5 rounded-full" title={[
-                                                            promo.maxRedemptions ? `Toplam: ${promo.maxRedemptions}` : '',
-                                                            promo.dailyLimit ? `Günlük: ${promo.dailyLimit}` : '',
-                                                            promo.weeklyLimit ? `Haftalık: ${promo.weeklyLimit}` : '',
-                                                            promo.perUserLimit ? `Kişi başı: ${promo.perUserLimit}` : '',
-                                                            promo.perUserDailyLimit ? `Kişi/gün: ${promo.perUserDailyLimit}` : '',
+                                                            promo.maxRedemptions ? `${t('totalLabel')}: ${promo.maxRedemptions}` : '',
+                                                            promo.dailyLimit ? `${t('dailyLabel')}: ${promo.dailyLimit}` : '',
+                                                            promo.weeklyLimit ? `${t('weeklyLabel')}: ${promo.weeklyLimit}` : '',
+                                                            promo.perUserLimit ? `${t('perUserLabel')}: ${promo.perUserLimit}` : '',
+                                                            promo.perUserDailyLimit ? `${t('perUserDailyLabel')}: ${promo.perUserDailyLimit}` : '',
                                                         ].filter(Boolean).join(' · ')}>
                                                             📊 Limitli
                                                         </span>
@@ -1093,7 +1095,7 @@ function PromotionsPageContent() {
                                                 {/* Stats */}
                                                 <div className="flex gap-4 mt-3 text-xs text-gray-400">
                                                     {promo.redemptions != null && (
-                                                        <span>📊 {promo.redemptions} kullanım</span>
+                                                        <span>{`📊 ${promo.redemptions} ${t('usage')}`}</span>
                                                     )}
                                                     {promo.totalDiscountGiven != null && (
                                                         <span>💸 {promo.totalDiscountGiven.toFixed(2)}€</span>
@@ -1183,16 +1185,16 @@ function PromotionsPageContent() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                         <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold text-white">📋 Kampanya Şablonları</h2>
+                                <h2 className="text-xl font-bold text-white">{`📋 ${t('campaignTemplates')}`}</h2>
                                 <button onClick={() => setShowTemplateSelector(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
                             </div>
                             <p className="text-gray-400 text-sm mb-4">
                                 Hazır şablonlardan seçin, tek tıkla kampanya oluşturun.
-                                <span className="text-gray-500 block mt-1">Planınız: <strong className="text-gray-300">{businessPlanName}</strong></span>
+                                <span className="text-gray-500 block mt-1">{t('yourPlan')}: <strong className="text-gray-300">{businessPlanName}</strong></span>
                             </p>
 
                             {templates.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">Henüz şablon oluşturulmamış</p>
+                                <p className="text-gray-500 text-center py-8">{t('noTemplatesYet')}</p>
                             ) : (
                                 <div className="space-y-3">
                                     {templates.map(tpl => {
@@ -1233,10 +1235,10 @@ function PromotionsPageContent() {
                                                         <p className="text-gray-400 text-sm">{tpl.description}</p>
                                                         <div className="flex gap-2 mt-1">
                                                             <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded">
-                                                                {PROMOTION_TYPES.find(t => t.value === tpl.type)?.label}
+                                                                {PROMOTION_TYPES.find(pt => pt.value === tpl.type)?.icon}
                                                             </span>
                                                             <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded">
-                                                                {tpl.defaultDurationDays} gün
+                                                                {tpl.defaultDurationDays} {t('days')}
                                                             </span>
                                                             {tierLabel && (
                                                                 <span className={`text-xs px-2 py-0.5 rounded ${tierAllowed
@@ -1270,13 +1272,13 @@ function PromotionsPageContent() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                         <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl my-8">
                             <h2 className="text-xl font-bold text-white mb-4">
-                                {editingPromo ? 'Kampanya Düzenle' : 'Yeni Kampanya'}
+                                {editingPromo ? t('editCampaign') : t('newCampaign')}
                             </h2>
 
                             {/* ⚠️ Çakışma Uyarı Banner'ı */}
                             {conflictWarning && (
                                 <div className="mb-4 p-4 bg-red-900/30 border border-red-600/50 rounded-xl">
-                                    <p className="text-red-300 text-sm font-semibold mb-2">⚠️ Kampanya Çakışması Tespit Edildi</p>
+                                    <p className="text-red-300 text-sm font-semibold mb-2">{`⚠️ ${t('conflictDetected')}`}</p>
                                     <p className="text-red-200/80 text-xs mb-3">{conflictWarning.message}</p>
                                     <div className="flex gap-2">
                                         <button
@@ -1293,7 +1295,7 @@ function PromotionsPageContent() {
                                             onClick={() => setConflictWarning(null)}
                                             className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg text-xs hover:bg-gray-600 transition"
                                         >
-                                            İptal
+                                            {t('cancel')}
                                         </button>
                                     </div>
                                 </div>
@@ -1301,23 +1303,23 @@ function PromotionsPageContent() {
 
                             {/* Title */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">Kampanya Başlığı</label>
+                                <label className="text-gray-400 text-sm mb-1 block">{t('campaignTitle')}</label>
                                 <input
                                     type="text"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="Örn: İlk Siparişine 5€ İndirim!"
+                                    placeholder={t('campaignTitlePlaceholder')}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                                 />
                             </div>
 
                             {/* Description */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">Açıklama</label>
+                                <label className="text-gray-400 text-sm mb-1 block">{t('description')}</label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Kampanya detayları..."
+                                    placeholder={t('descriptionPlaceholder')}
                                     rows={2}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 resize-none"
                                 />
@@ -1325,18 +1327,18 @@ function PromotionsPageContent() {
 
                             {/* Type */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">Kampanya Türü</label>
+                                <label className="text-gray-400 text-sm mb-1 block">{t('campaignType')}</label>
                                 <select
                                     value={formData.type}
                                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                                 >
-                                    {PROMOTION_TYPES.map(t => {
-                                        const isAllowed = isSuperAdmin || canUseTier(businessPlanCode, t.minPlanTier);
+                                    {PROMOTION_TYPES.map(pt => {
+                                        const isAllowed = isSuperAdmin || canUseTier(businessPlanCode, pt.minPlanTier);
                                         return (
-                                            <option key={t.value} value={t.value} disabled={!isAllowed}>
-                                                {t.icon} {t.label}
-                                                {!isAllowed ? ` 🔒 (${t.minPlanTier}+ plan gerekli)` : ''}
+                                            <option key={pt.value} value={pt.value} disabled={!isAllowed}>
+                                                {pt.icon} {t(pt.labelKey || 'percentOff')}
+                                                {!isAllowed ? ` 🔒 (${pt.minPlanTier}+ ${t('planRequired')})` : ''}
                                             </option>
                                         );
                                     })}
@@ -1347,7 +1349,7 @@ function PromotionsPageContent() {
                             {formData.type !== 'freeDelivery' && formData.type !== 'buyXGetY' && formData.type !== 'loyaltyCard' && (
                                 <div className="mb-4">
                                     <label className="text-gray-400 text-sm mb-1 block">
-                                        İndirim Değeri {formData.type === 'percentOff' || formData.type === 'happyHour' ? '(%)' : '(€)'}
+                                        {t('discountValue')} {formData.type === 'percentOff' || formData.type === 'happyHour' ? '(%)' : '(€)'}
                                     </label>
                                     <input
                                         type="number"
@@ -1362,7 +1364,7 @@ function PromotionsPageContent() {
                             {formData.type === 'buyXGetY' && (
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">Al (X)</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">{t('buyX')}</label>
                                         <input
                                             type="number"
                                             value={formData.buyX}
@@ -1371,7 +1373,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">Öde (Y)</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">{t('payY')}</label>
                                         <input
                                             type="number"
                                             value={formData.getY}
@@ -1386,7 +1388,7 @@ function PromotionsPageContent() {
                             {formData.type === 'happyHour' && (
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">⏰ Başlangıç</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">{`⏰ ${t('startTime')}`}</label>
                                         <input
                                             type="time"
                                             value={formData.happyHourStart}
@@ -1395,7 +1397,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">⏰ Bitiş</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">{`⏰ ${t('endTime')}`}</label>
                                         <input
                                             type="time"
                                             value={formData.happyHourEnd}
@@ -1409,9 +1411,9 @@ function PromotionsPageContent() {
                             {/* 💸 Cashback fields (C-1) */}
                             {formData.type === 'cashback' && (
                                 <div className="mb-4 bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                                    <label className="text-emerald-300 text-sm font-semibold mb-2 block">💸 Cashback Ayarları</label>
+                                    <label className="text-emerald-300 text-sm font-semibold mb-2 block">{`💸 ${t('cashbackSettings')}`}</label>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">Cashback Oranı (%)</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">{t('cashbackRate')}</label>
                                         <input
                                             type="number"
                                             value={formData.cashbackPercent}
@@ -1419,7 +1421,7 @@ function PromotionsPageContent() {
                                             min={1} max={100}
                                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-emerald-500"
                                         />
-                                        <p className="text-gray-500 text-xs mt-1">Sipariş tutarının yüzde kaçı bakiye olarak iade edilecek</p>
+                                        <p className="text-gray-500 text-xs mt-1">{t('cashbackDesc')}</p>
                                     </div>
                                 </div>
                             )}
@@ -1427,42 +1429,42 @@ function PromotionsPageContent() {
                             {/* 🎯 Segment Campaign fields (C-2) */}
                             {formData.type === 'segmentCampaign' && (
                                 <div className="mb-4 bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
-                                    <label className="text-purple-300 text-sm font-semibold mb-2 block">🎯 Hedef Segment</label>
+                                    <label className="text-purple-300 text-sm font-semibold mb-2 block">{`🎯 ${t('targetSegment')}`}</label>
                                     <select
                                         value={formData.targetSegment}
                                         onChange={(e) => setFormData({ ...formData, targetSegment: e.target.value })}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
                                     >
-                                        <option value="">Segment seçin...</option>
-                                        <option value="vip">👑 VIP Müşteriler</option>
-                                        <option value="new">🆕 Yeni Müşteriler</option>
-                                        <option value="returning">🔄 Geri Dönen Müşteriler</option>
-                                        <option value="at_risk">⚠️ Kaybedilme Riski</option>
-                                        <option value="inactive">😴 İnaktif Müşteriler</option>
-                                        <option value="high_spender">💎 Yüksek Harcama</option>
-                                        <option value="frequent_buyer">🛍️ Sık Alışveriş</option>
+                                        <option value="">{t('selectSegment')}</option>
+                                        <option value="vip">{`👑 ${t('vipCustomers')}`}</option>
+                                        <option value="new">{`🆕 ${t('newCustomersSegment')}`}</option>
+                                        <option value="returning">{`🔄 ${t('returningCustomers')}`}</option>
+                                        <option value="at_risk">{`⚠️ ${t('atRisk')}`}</option>
+                                        <option value="inactive">{`😴 ${t('inactiveCustomers')}`}</option>
+                                        <option value="high_spender">{`💎 ${t('highSpender')}`}</option>
+                                        <option value="frequent_buyer">{`🛍️ ${t('frequentBuyer')}`}</option>
                                     </select>
-                                    <p className="text-gray-500 text-xs mt-1">Bu kampanya yalnızca seçili segmentteki müşterilere uygulanır</p>
+                                    <p className="text-gray-500 text-xs mt-1">{t('segmentOnlyNote')}</p>
                                 </div>
                             )}
 
                             {/* 📦 Bundle Deal fields (C-3) */}
                             {formData.type === 'bundleDeal' && (
                                 <div className="mb-4 bg-blue-900/20 rounded-lg p-4 border border-blue-800/30">
-                                    <label className="text-blue-300 text-sm font-semibold mb-2 block">📦 Bundle / Combo Ayarları</label>
+                                    <label className="text-blue-300 text-sm font-semibold mb-2 block">{`📦 ${t('bundleSettings')}`}</label>
                                     <div className="grid grid-cols-1 gap-3">
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">Bundle Fiyatı (€)</label>
+                                            <label className="text-gray-400 text-sm mb-1 block">{t('bundlePrice')}</label>
                                             <input
                                                 type="number"
                                                 value={formData.bundlePrice || ''}
                                                 onChange={(e) => setFormData({ ...formData, bundlePrice: e.target.value ? Number(e.target.value) : undefined })}
-                                                placeholder="Paket fiyatı"
+                                                placeholder={t('packagePrice')}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">Ürün ID'leri (virgülle ayırın)</label>
+                                            <label className="text-gray-400 text-sm mb-1 block">{t('productIds')}</label>
                                             <input
                                                 type="text"
                                                 value={formData.bundleProductIds.join(', ')}
@@ -1470,7 +1472,7 @@ function PromotionsPageContent() {
                                                 placeholder="urun_1, urun_2, urun_3"
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
                                             />
-                                            <p className="text-gray-500 text-xs mt-1">Combo'ya dahil ürünlerin ID'lerini girin</p>
+                                            <p className="text-gray-500 text-xs mt-1">{t('bundleProductsNote')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1479,57 +1481,57 @@ function PromotionsPageContent() {
                             {/* 🛒 Cart Booster fields (C-4) */}
                             {formData.type === 'cartBooster' && (
                                 <div className="mb-4 bg-amber-900/20 rounded-lg p-4 border border-amber-800/30">
-                                    <label className="text-amber-300 text-sm font-semibold mb-2 block">🛒 Sepet Büyütücü Ayarları</label>
+                                    <label className="text-amber-300 text-sm font-semibold mb-2 block">{`🛒 ${t('cartBoosterSettings')}`}</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">Eşik Tutar (€)</label>
+                                            <label className="text-gray-400 text-sm mb-1 block">{t('thresholdAmount')}</label>
                                             <input
                                                 type="number"
                                                 value={formData.boosterThreshold || ''}
                                                 onChange={(e) => setFormData({ ...formData, boosterThreshold: e.target.value ? Number(e.target.value) : undefined })}
-                                                placeholder="Min. sepet tutarı"
+                                                placeholder={t('minCartAmount')}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500"
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">Ödül (€)</label>
+                                            <label className="text-gray-400 text-sm mb-1 block">{t('reward')}</label>
                                             <input
                                                 type="number"
                                                 value={formData.boosterReward || ''}
                                                 onChange={(e) => setFormData({ ...formData, boosterReward: e.target.value ? Number(e.target.value) : undefined })}
-                                                placeholder="Hediye indirim"
+                                                placeholder={t('giftDiscount')}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-amber-500"
                                             />
                                         </div>
                                     </div>
-                                    <p className="text-gray-500 text-xs mt-2">Örn: €30 üstü sepete €5 hediye indirim</p>
+                                    <p className="text-gray-500 text-xs mt-2">{t('cartBoosterExample')}</p>
                                 </div>
                             )}
 
                             {/* 🏷️ Product Discount fields (C-5) */}
                             {formData.type === 'productDiscount' && (
                                 <div className="mb-4 bg-rose-900/20 rounded-lg p-4 border border-rose-800/30">
-                                    <label className="text-rose-300 text-sm font-semibold mb-2 block">🏷️ Ürün Bazlı İndirim</label>
+                                    <label className="text-rose-300 text-sm font-semibold mb-2 block">{`🏷️ ${t('productBasedDiscount')}`}</label>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">Hedef Ürün ID</label>
+                                        <label className="text-gray-400 text-sm mb-1 block">{t('targetProductId')}</label>
                                         <input
                                             type="text"
                                             value={formData.targetProductId}
                                             onChange={(e) => setFormData({ ...formData, targetProductId: e.target.value })}
-                                            placeholder="Ürün ID'si"
+                                            placeholder={t('productIdLabel')}
                                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-rose-500"
                                         />
-                                        <p className="text-gray-500 text-xs mt-1">İndirim uygulanacak ürünün Firestore ID'si</p>
+                                        <p className="text-gray-500 text-xs mt-1">{t('productDiscountNote')}</p>
                                     </div>
                                 </div>
                             )}
 
                             {/* 📂 Kategori / Ürün Filtresi (M-1) — tüm tipler için opsiyonel */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block font-medium">📂 Kategori / Ürün Filtresi — Opsiyonel</label>
+                                <label className="text-gray-400 text-sm mb-2 block font-medium">{`📂 ${t('categoryProductFilter')}`}</label>
                                 <div className="grid grid-cols-1 gap-3">
                                     <div>
-                                        <label className="text-gray-500 text-xs mb-1 block">Geçerli Kategoriler (virgülle ayırın, boş = tümü)</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('validCategories')}</label>
                                         <input
                                             type="text"
                                             value={formData.validCategories.join(', ')}
@@ -1539,7 +1541,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-500 text-xs mb-1 block">Geçerli Ürün ID'leri (virgülle ayırın, boş = tümü)</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('validProductIds')}</label>
                                         <input
                                             type="text"
                                             value={formData.validProducts.join(', ')}
@@ -1553,22 +1555,22 @@ function PromotionsPageContent() {
 
                             {/* Min Order */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">Min. Sipariş Tutarı (€) — Opsiyonel</label>
+                                <label className="text-gray-400 text-sm mb-1 block">{t('minOrderAmount')}</label>
                                 <input
                                     type="number"
                                     value={formData.minOrderAmount || ''}
                                     onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value ? Number(e.target.value) : undefined })}
-                                    placeholder="Boş = sınırsız"
+                                    placeholder={t('emptyUnlimited')}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500"
                                 />
                             </div>
 
                             {/* Usage Limits */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block font-medium">📊 Kullanım Limitleri — Opsiyonel (Boş = sınırsız)</label>
+                                <label className="text-gray-400 text-sm mb-2 block font-medium">{`📊 ${t('usageLimits')}`}</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-gray-500 text-xs mb-1 block">Toplam Max Kullanım</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('totalMaxUsage')}</label>
                                         <input
                                             type="number"
                                             value={formData.maxRedemptions || ''}
@@ -1578,7 +1580,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-500 text-xs mb-1 block">Kişi Başı Toplam</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('perUserTotal')}</label>
                                         <input
                                             type="number"
                                             value={formData.perUserLimit || ''}
@@ -1588,7 +1590,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-500 text-xs mb-1 block">Günlük Limit</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('dailyLimit')}</label>
                                         <input
                                             type="number"
                                             value={formData.dailyLimit || ''}
@@ -1598,7 +1600,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-500 text-xs mb-1 block">Haftalık Limit</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('weeklyLimit')}</label>
                                         <input
                                             type="number"
                                             value={formData.weeklyLimit || ''}
@@ -1608,12 +1610,12 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="text-gray-500 text-xs mb-1 block">Kişi Başı Günlük Limit</label>
+                                        <label className="text-gray-500 text-xs mb-1 block">{t('perUserDailyLimit')}</label>
                                         <input
                                             type="number"
                                             value={formData.perUserDailyLimit || ''}
                                             onChange={(e) => setFormData({ ...formData, perUserDailyLimit: e.target.value ? Number(e.target.value) : undefined })}
-                                            placeholder="∞ — Bir müşteri günde kaç kez kullanabilir"
+                                            placeholder={`∞ — ${t('perUserDailyPlaceholder')}`}
                                             className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
@@ -1623,7 +1625,7 @@ function PromotionsPageContent() {
                             {/* Dates */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Başlangıç</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">{t('startDate')}</label>
                                     <input
                                         type="date"
                                         value={formData.validFrom}
@@ -1632,7 +1634,7 @@ function PromotionsPageContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">Bitiş</label>
+                                    <label className="text-gray-400 text-sm mb-1 block">{t('endDate')}</label>
                                     <input
                                         type="date"
                                         value={formData.validUntil}
@@ -1644,7 +1646,7 @@ function PromotionsPageContent() {
 
                             {/* Valid Days */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">Geçerli Günler</label>
+                                <label className="text-gray-400 text-sm mb-1 block">{t('validDays')}</label>
                                 <div className="flex flex-wrap gap-1.5">
                                     {DAY_OPTIONS.map(d => (
                                         <button
@@ -1659,7 +1661,7 @@ function PromotionsPageContent() {
                                                 ? 'bg-orange-600 text-white'
                                                 : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
                                         >
-                                            {d.label}
+                                            {t(d.labelKey || 'mon')}
                                         </button>
                                     ))}
                                 </div>
@@ -1667,7 +1669,7 @@ function PromotionsPageContent() {
 
                             {/* Display Options */}
                             <div className="mb-4 bg-gray-700/50 rounded-lg p-4">
-                                <label className="text-gray-300 text-sm font-semibold mb-3 block">📱 Gösterim Ayarları</label>
+                                <label className="text-gray-300 text-sm font-semibold mb-3 block">{`📱 ${t('displaySettings')}`}</label>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1676,7 +1678,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, showAsPopup: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">Uygulama açılışında popup göster</span>
+                                        <span className="text-gray-300 text-sm">{t('showPopupOnOpen')}</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1685,7 +1687,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, showInDiscovery: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">Ana sayfa kartında badge göster</span>
+                                        <span className="text-gray-300 text-sm">{t('showBadgeOnCard')}</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1694,7 +1696,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, showInStore: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">Mağaza sayfasında banner göster</span>
+                                        <span className="text-gray-300 text-sm">{t('showBannerInStore')}</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1703,7 +1705,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, newCustomersOnly: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">Sadece yeni müşterilere göster</span>
+                                        <span className="text-gray-300 text-sm">{t('showOnlyNewCustomers')}</span>
                                     </label>
                                 </div>
                             </div>
@@ -1711,7 +1713,7 @@ function PromotionsPageContent() {
                             {/* Popup Format Selector */}
                             {formData.showAsPopup && (
                                 <div className="mb-4 bg-blue-900/20 rounded-lg p-4 border border-blue-800/30">
-                                    <label className="text-blue-300 text-sm font-semibold mb-3 block">📱 Popup Formatı</label>
+                                    <label className="text-blue-300 text-sm font-semibold mb-3 block">{`📱 ${t('popupFormat')}`}</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {POPUP_FORMATS.map(f => (
                                             <button
@@ -1721,8 +1723,8 @@ function PromotionsPageContent() {
                                                     ? 'bg-blue-700/40 border-blue-500 text-white'
                                                     : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50'}`}
                                             >
-                                                <span className="font-medium block">{f.label}</span>
-                                                <span className="text-xs text-gray-400">{f.desc}</span>
+                                                <span className="font-medium block">{t(f.labelKey || 'bottomSheet')}</span>
+                                                <span className="text-xs text-gray-400">{t(f.descKey || 'bottomSheetDesc')}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -1738,7 +1740,7 @@ function PromotionsPageContent() {
                                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                         className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                     />
-                                    <span className="text-gray-300">Aktif (hemen yayınla)</span>
+                                    <span className="text-gray-300">{t('activePublishNow')}</span>
                                 </label>
                             </div>
 
@@ -1748,14 +1750,14 @@ function PromotionsPageContent() {
                                     onClick={() => { setShowModal(false); setConflictWarning(null); setForceOverrideConflict(false); }}
                                     className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
                                 >
-                                    İptal
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={saving || !formData.title.trim()}
                                     className="flex-1 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
                                 >
-                                    {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                    {saving ? t('saving') : t('save')}
                                 </button>
                             </div>
                         </div>
@@ -1768,12 +1770,12 @@ function PromotionsPageContent() {
                 isOpen={!!confirmDelete}
                 onClose={() => setConfirmDelete(null)}
                 onConfirm={handleDelete}
-                title="Kampanyayı Sil"
-                message="Bu kampanyayı kalıcı olarak silmek istediğinizden emin misiniz?"
+                title={t('deleteCampaign')}
+                message={t('deleteConfirm')}
                 itemName={confirmDelete?.title}
                 variant="danger"
-                confirmText="Evet, Sil"
-                loadingText="Siliniyor..."
+                confirmText={t('yesDelete')}
+                loadingText={t('deleting')}
             />
         </div >
     );
@@ -1783,7 +1785,7 @@ export default function PromotionsPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-                <div className="text-xl">Yükleniyor...</div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
         }>
             <PromotionsPageContent />

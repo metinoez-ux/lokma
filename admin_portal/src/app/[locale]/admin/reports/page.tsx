@@ -4,25 +4,26 @@ import { useState, useEffect } from 'react';
 import { collection, query, orderBy, where, onSnapshot, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 
 // Report statuses
-const reportStatuses = {
-    new: { label: 'Neu', color: 'yellow', icon: '🆕' },
-    in_review: { label: 'In Bearbeitung', color: 'blue', icon: '🔍' },
-    resolved: { label: 'Erledigt', color: 'green', icon: '✅' },
-    dismissed: { label: 'Abgelehnt', color: 'gray', icon: '❌' },
+const reportStatusKeys = {
+    new: { labelKey: 'statusNew', color: 'yellow', icon: '🆕' },
+    in_review: { labelKey: 'statusInReview', color: 'blue', icon: '🔍' },
+    resolved: { labelKey: 'statusResolved', color: 'green', icon: '✅' },
+    dismissed: { labelKey: 'statusDismissed', color: 'gray', icon: '❌' },
 } as const;
 
-type ReportStatus = keyof typeof reportStatuses;
+type ReportStatus = keyof typeof reportStatusKeys;
 
 // Topic labels
-const topicLabels: Record<string, string> = {
-    food_safety: '🍽️ Lebensmittelsicherheit',
-    description: '📝 Beschreibung',
-    images: '🖼️ Bilder',
-    allergens: '⚠️ Allergene',
-    forbidden: '🚫 Verbotene Inhaltsstoffe',
-    other: '📋 Sonstiges',
+const topicLabelKeys: Record<string, { icon: string; labelKey: string }> = {
+    food_safety: { icon: '🍽️', labelKey: 'topicFoodSafety' },
+    description: { icon: '📝', labelKey: 'topicDescription' },
+    images: { icon: '🖼️', labelKey: 'topicImages' },
+    allergens: { icon: '⚠️', labelKey: 'topicAllergens' },
+    forbidden: { icon: '🚫', labelKey: 'topicForbidden' },
+    other: { icon: '📋', labelKey: 'topicOther' },
 };
 
 interface LegalReport {
@@ -46,6 +47,7 @@ interface LegalReport {
 
 export default function ReportsPage() {
     const { admin, loading: adminLoading } = useAdmin();
+    const t = useTranslations('AdminReports');
     const [reports, setReports] = useState<LegalReport[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -128,12 +130,12 @@ export default function ReportsPage() {
                 updateData.adminNotes = adminNotes.trim();
             }
             await updateDoc(doc(db, 'legal_reports', reportId), updateData);
-            showToast('Status aktualisiert', 'success');
+            showToast(t('statusUpdated'), 'success');
             setSelectedReport(null);
             setAdminNotes('');
         } catch (error) {
             console.error('Error updating report:', error);
-            showToast('Fehler beim Aktualisieren', 'error');
+            showToast(t('updateError'), 'error');
         }
     };
 
@@ -173,10 +175,10 @@ export default function ReportsPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                            🚩 Meldungen — Rechtliche Bedenken
+                            🚩 {t('title')}
                         </h1>
                         <p className="text-sm text-gray-400 mt-1">
-                            Eingegangene Beschwerden und Meldungen von Nutzern
+                            {t('subtitle')}
                         </p>
                     </div>
 
@@ -184,19 +186,19 @@ export default function ReportsPage() {
                     <div className="flex gap-2 shrink-0">
                         <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-yellow-400">{stats.new}</p>
-                            <p className="text-[10px] text-yellow-300">Neu</p>
+                            <p className="text-[10px] text-yellow-300">{t('statusNew')}</p>
                         </div>
                         <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-blue-400">{stats.inReview}</p>
-                            <p className="text-[10px] text-blue-300">In Bearbeitung</p>
+                            <p className="text-[10px] text-blue-300">{t('statusInReview')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-green-400">{stats.resolved}</p>
-                            <p className="text-[10px] text-green-300">Erledigt</p>
+                            <p className="text-[10px] text-green-300">{t('statusResolved')}</p>
                         </div>
                         <div className="bg-gray-600/20 border border-gray-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-gray-400">{stats.total}</p>
-                            <p className="text-[10px] text-gray-300">Gesamt</p>
+                            <p className="text-[10px] text-gray-300">{t('total')}</p>
                         </div>
                     </div>
                 </div>
@@ -208,9 +210,9 @@ export default function ReportsPage() {
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                     >
-                        <option value="all">Alle Status</option>
-                        {Object.entries(reportStatuses).map(([key, value]) => (
-                            <option key={key} value={key}>{value.icon} {value.label}</option>
+                        <option value="all">{t('allStatus')}</option>
+                        {Object.entries(reportStatusKeys).map(([key, value]) => (
+                            <option key={key} value={key}>{value.icon} {t(value.labelKey)}</option>
                         ))}
                     </select>
                 </div>
@@ -223,12 +225,12 @@ export default function ReportsPage() {
                 ) : filteredReports.length === 0 ? (
                     <div className="text-center py-20 bg-gray-800 rounded-xl">
                         <p className="text-4xl mb-3">📭</p>
-                        <p className="text-gray-400">Keine Meldungen gefunden</p>
+                        <p className="text-gray-400">{t('noReports')}</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {filteredReports.map((report) => {
-                            const statusInfo = reportStatuses[report.status] || reportStatuses.new;
+                            const statusInfo = reportStatusKeys[report.status] || reportStatusKeys.new;
                             return (
                                 <div
                                     key={report.id}
@@ -246,7 +248,7 @@ export default function ReportsPage() {
                                                             report.status === 'resolved' ? 'bg-green-600/30 text-green-300' :
                                                                 'bg-gray-600/30 text-gray-300'
                                                     }`}>
-                                                    {statusInfo.icon} {statusInfo.label}
+                                                    {statusInfo.icon} {t(statusInfo.labelKey)}
                                                 </span>
                                                 <span className="text-xs text-gray-500">
                                                     {formatDate(report.createdAt)}
@@ -254,7 +256,7 @@ export default function ReportsPage() {
                                             </div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-sm text-orange-400 font-medium">
-                                                    {topicLabels[report.topic] || report.topic}
+                                                    {(() => { const tl = topicLabelKeys[report.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : report.topic; })()}
                                                 </span>
                                                 <span className="text-gray-600">•</span>
                                                 <span className="text-sm text-gray-400 truncate">
@@ -285,7 +287,7 @@ export default function ReportsPage() {
                             {/* Modal Header */}
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                    🚩 Meldung Details
+                                    🚩 {t('reportDetails')}
                                 </h2>
                                 <button onClick={() => setSelectedReport(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
                             </div>
@@ -297,8 +299,8 @@ export default function ReportsPage() {
                                             selectedReport.status === 'resolved' ? 'bg-green-600/30 text-green-300' :
                                                 'bg-gray-600/30 text-gray-300'
                                     }`}>
-                                    {(reportStatuses[selectedReport.status] || reportStatuses.new).icon}{' '}
-                                    {(reportStatuses[selectedReport.status] || reportStatuses.new).label}
+                                    {(reportStatusKeys[selectedReport.status] || reportStatusKeys.new).icon}{' '}
+                                    {t((reportStatusKeys[selectedReport.status] || reportStatusKeys.new).labelKey)}
                                 </span>
                                 <span className="text-xs text-gray-500 ml-3">{formatDate(selectedReport.createdAt)}</span>
                             </div>
@@ -306,36 +308,36 @@ export default function ReportsPage() {
                             {/* Info */}
                             <div className="space-y-3 mb-6">
                                 <div className="bg-gray-700/50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Thema</p>
-                                    <p className="text-sm text-white">{topicLabels[selectedReport.topic] || selectedReport.topic}</p>
+                                    <p className="text-xs text-gray-400 mb-1">{t('topic')}</p>
+                                    <p className="text-sm text-white">{(() => { const tl = topicLabelKeys[selectedReport.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : selectedReport.topic; })()}</p>
                                 </div>
                                 <div className="bg-gray-700/50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Grund</p>
+                                    <p className="text-xs text-gray-400 mb-1">{t('reason')}</p>
                                     <p className="text-sm text-white">{selectedReport.reason}</p>
                                 </div>
                                 <div className="bg-gray-700/50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-400 mb-1">Beschreibung</p>
+                                    <p className="text-xs text-gray-400 mb-1">{t('description')}</p>
                                     <p className="text-sm text-white whitespace-pre-wrap">{selectedReport.description}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-400 mb-1">🏪 Geschäft</p>
+                                        <p className="text-xs text-gray-400 mb-1">🏪 {t('business')}</p>
                                         <p className="text-sm text-white">{selectedReport.businessName}</p>
                                     </div>
                                     {selectedReport.productName && (
                                         <div className="bg-gray-700/50 rounded-lg p-3">
-                                            <p className="text-xs text-gray-400 mb-1">📦 Produkt</p>
+                                            <p className="text-xs text-gray-400 mb-1">📦 {t('product')}</p>
                                             <p className="text-sm text-white">{selectedReport.productName}</p>
                                         </div>
                                     )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-400 mb-1">👤 Melder</p>
+                                        <p className="text-xs text-gray-400 mb-1">👤 {t('reporter')}</p>
                                         <p className="text-sm text-white">{selectedReport.reporterName}</p>
                                     </div>
                                     <div className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-400 mb-1">📧 E-Mail</p>
+                                        <p className="text-xs text-gray-400 mb-1">📧 {t('emailLabel')}</p>
                                         <p className="text-sm text-orange-400">{selectedReport.reporterEmail}</p>
                                     </div>
                                 </div>
@@ -343,13 +345,13 @@ export default function ReportsPage() {
 
                             {/* Admin Notes */}
                             <div className="mb-4">
-                                <label className="text-xs text-gray-400 block mb-1">Admin Notizen</label>
+                                <label className="text-xs text-gray-400 block mb-1">{t('adminNotes')}</label>
                                 <textarea
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
                                     className="w-full bg-gray-700 text-white text-sm rounded-lg p-3 border border-gray-600 focus:border-orange-500 outline-none resize-none"
                                     rows={3}
-                                    placeholder="Notizen zur Bearbeitung…"
+                                    placeholder={t('notesPlaceholder')}
                                 />
                             </div>
 
@@ -360,7 +362,7 @@ export default function ReportsPage() {
                                         onClick={() => handleStatusChange(selectedReport.id, 'in_review')}
                                         className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
                                     >
-                                        🔍 In Bearbeitung
+                                        🔍 {t('inReview')}
                                     </button>
                                 )}
                                 {selectedReport.status !== 'resolved' && (
@@ -368,7 +370,7 @@ export default function ReportsPage() {
                                         onClick={() => handleStatusChange(selectedReport.id, 'resolved')}
                                         className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition-colors"
                                     >
-                                        ✅ Erledigt
+                                        ✅ {t('resolved')}
                                     </button>
                                 )}
                                 {selectedReport.status !== 'dismissed' && (
@@ -376,7 +378,7 @@ export default function ReportsPage() {
                                         onClick={() => handleStatusChange(selectedReport.id, 'dismissed')}
                                         className="flex-1 px-4 py-2.5 bg-gray-600 hover:bg-gray-500 text-white text-sm font-medium rounded-xl transition-colors"
                                     >
-                                        ❌ Ablehnen
+                                        ❌ {t('dismiss')}
                                     </button>
                                 )}
                             </div>

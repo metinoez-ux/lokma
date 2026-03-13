@@ -31,7 +31,7 @@ interface BusinessInfo {
 
 export default function BusinessPerformancePage() {
     
-  const t = useTranslations('AdminBusiness[idPerformance');
+  const t = useTranslations('AdminBusinessPerformance');
 const params = useParams();
     const businessId = params.id as string;
 

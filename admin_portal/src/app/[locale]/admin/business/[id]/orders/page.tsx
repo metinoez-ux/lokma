@@ -41,7 +41,7 @@ interface BusinessInfo {
 
 export default function BusinessOrdersPage() {
     
-  const t = useTranslations('AdminBusiness[idOrders');
+  const t = useTranslations('AdminBusinessOrders');
 const params = useParams();
     const businessId = params.id as string;
 

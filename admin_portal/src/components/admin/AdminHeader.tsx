@@ -256,24 +256,24 @@ export default function AdminHeader() {
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
-                                    🎯 Promosyon
+                                    🎯 {t('promotions')}
                                     <span className="text-[10px]">▼</span>
                                 </Link>
                                 {/* Dropdown */}
                                 <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
                                     <div className="py-1">
                                         <Link href="/admin/promotions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            🎯 İşletme Kampanyaları
+                                            🎯 {t('businessCampaigns')}
                                         </Link>
                                         <Link href="/admin/coupons" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            🎟️ Kuponlar
+                                            🎟️ {t('coupons')}
                                         </Link>
                                         <Link href="/admin/deals" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            🔥 Fırsatlar
+                                            🔥 {t('deals')}
                                         </Link>
                                         <div className="border-t border-gray-600 my-1"></div>
                                         <Link href="/admin/promotion-templates" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            📋 Kampanya Şablonları
+                                            📋 {t('campaignTemplates')}
                                         </Link>
                                     </div>
                                 </div>
@@ -288,7 +288,7 @@ export default function AdminHeader() {
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
-                                    Service
+                                    {t('service')}
                                     <span className="text-[10px]">▼</span>
                                 </Link>
                                 {/* Dropdown */}
@@ -298,7 +298,7 @@ export default function AdminHeader() {
                                             📋 {t('activityLogs')}
                                         </Link>
                                         <Link href="/admin/reports" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            🚩 Meldungen
+                                            🚩 {t('reports')}
                                         </Link>
                                     </div>
                                 </div>
@@ -350,7 +350,7 @@ export default function AdminHeader() {
                                             {admin.displayName || 'Super Admin'}
                                         </span>
                                         <span className="text-red-200 text-[10px] leading-tight font-medium">
-                                            Süper Admin
+                                            {t('superAdmin')}
                                         </span>
                                     </div>
                                     <span className="text-red-200 text-[10px] ml-1">▼</span>
@@ -379,7 +379,7 @@ export default function AdminHeader() {
                                             href="/admin/settings/company"
                                             className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
                                         >
-                                            🏢 Firmeneinstellungen
+                                            🏢 {t('companySettings')}
                                         </Link>
                                         <Link
                                             href="/admin/ui-translations"
@@ -463,8 +463,8 @@ export default function AdminHeader() {
                                     { href: '/admin/dashboard?view=customers', label: t('customers') },
                                     { href: '/admin/orders/suppliers', label: t('suppliers') },
                                     { href: '/admin/products', label: t('productsCategories') },
-                                    { href: '/admin/promotions', label: '🎯 Kampanyalar' },
-                                    { href: '/admin/reports', label: '🚩 Meldungen' },
+                                    { href: '/admin/promotions', label: `🎯 ${t('promotions')}` },
+                                    { href: '/admin/reports', label: `🚩 ${t('reports')}` },
                                 ].map(({ href, label }) => (
                                     <Link
                                         key={href}

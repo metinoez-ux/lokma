@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
  */
 export default function ButcherDetailRedirect() {
   
-  const t = useTranslations('AdminButchers[id');
+  const t = useTranslations('AdminButchersDetail');
 const router = useRouter();
   const params = useParams();
   const id = params.id as string;

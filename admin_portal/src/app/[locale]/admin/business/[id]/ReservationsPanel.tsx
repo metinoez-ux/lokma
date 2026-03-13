@@ -45,7 +45,7 @@ export default function ReservationsPanel({
     staffName = "Admin",
 }: ReservationsPanelProps) {
     
-  const t = useTranslations('AdminBusiness[id');
+  const t = useTranslations('AdminBusinessDetail');
 const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<"all" | "pending" | "confirmed" | "rejected" | "cancelled">("pending");

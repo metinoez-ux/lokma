@@ -132,7 +132,7 @@ interface MasterProduct {
 
 export default function KermesDetailPage() {
 
-    const t = useTranslations('AdminKermes[id');
+    const t = useTranslations('AdminKermesDetail');
     const params = useParams();
     const router = useRouter();
     const { admin, loading: adminLoading } = useAdmin();

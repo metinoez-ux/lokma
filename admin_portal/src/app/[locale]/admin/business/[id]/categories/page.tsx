@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 export default function BusinessCategoriesRedirect() {
     
-  const t = useTranslations('AdminBusiness[idCategories');
+  const t = useTranslations('AdminBusinessCategories');
 const router = useRouter();
     const params = useParams();
     const businessId = params.id as string;

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { auth } from '@/lib/firebase';
 import { CompanySettings, GermanLegalForm, GERMAN_LEGAL_FORM_LABELS } from '@/types';
 import { getCompanySettings, saveCompanySettings } from '@/lib/companySettings';
@@ -33,6 +34,7 @@ const DEFAULT_SETTINGS: CompanySettings = {
 
 export default function CompanySettingsPage() {
     const router = useRouter();
+    const t = useTranslations('AdminCompanySettings');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ uid: string; email: string } | null>(null);
@@ -82,10 +84,10 @@ export default function CompanySettingsPage() {
             setSavedAt(now);
             setOriginalSettings(JSON.stringify(settings));
             setHasChanges(false);
-            alert('✅ Firmeneinstellungen erfolgreich gespeichert!');
+            alert(`✅ ${t('saveSuccess')}`);
         } catch (err) {
             console.error('Save error:', err);
-            alert('❌ Fehler beim Speichern der Einstellungen');
+            alert(`❌ ${t('saveError')}`);
         } finally {
             setSaving(false);
         }
@@ -110,16 +112,16 @@ export default function CompanySettingsPage() {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                            🏢 Firmeneinstellungen
+                            🏢 {t('title')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Offizielle Firmendaten für Rechnungen, Impressum und Geschäftsverkehr
+                            {t('subtitle')}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         {savedAt && (
                             <span className="text-xs text-gray-500">
-                                Zuletzt gespeichert: {savedAt}
+                                {t('lastSaved')}: {savedAt}
                             </span>
                         )}
                         <button
@@ -130,7 +132,7 @@ export default function CompanySettingsPage() {
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                                 }`}
                         >
-                            {saving ? '⏳ Speichern...' : hasChanges ? '💾 Speichern' : '✅ Gespeichert'}
+                            {saving ? `⏳ ${t('saving')}` : hasChanges ? `💾 ${t('save')}` : `✅ ${t('saved')}`}
                         </button>
                     </div>
                 </div>
@@ -139,7 +141,7 @@ export default function CompanySettingsPage() {
                 {hasChanges && (
                     <div className="bg-amber-600/20 border border-amber-600/40 rounded-xl p-3 mb-6 flex items-center gap-3">
                         <span className="text-amber-400">⚠️</span>
-                        <span className="text-amber-300 text-sm">Sie haben ungespeicherte Änderungen</span>
+                        <span className="text-amber-300 text-sm">{t('unsavedChanges')}</span>
                     </div>
                 )}
 
@@ -147,9 +149,9 @@ export default function CompanySettingsPage() {
                 <div className="space-y-6">
 
                     {/* === SECTION 1: Firmendaten === */}
-                    <Section title="Firmendaten" icon="🏛️" description="Name, Rechtsform und Adresse Ihres Unternehmens">
+                    <Section title={t('companyData')} icon="🏛️" description={t('companyDataDesc')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="Firmenname *" required>
+                            <Field label={`${t('companyName')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.companyName}
@@ -158,7 +160,7 @@ export default function CompanySettingsPage() {
                                     className="input-field"
                                 />
                             </Field>
-                            <Field label="Rechtsform *" required>
+                            <Field label={`${t('legalForm')} *`} required>
                                 <select
                                     value={settings.legalForm}
                                     onChange={e => updateField('legalForm', e.target.value as GermanLegalForm)}
@@ -170,7 +172,7 @@ export default function CompanySettingsPage() {
                                 </select>
                             </Field>
                         </div>
-                        <Field label="Straße und Hausnummer *" full required>
+                        <Field label={`${t('streetAddress')} *`} full required>
                             <input
                                 type="text"
                                 value={settings.address}
@@ -180,7 +182,7 @@ export default function CompanySettingsPage() {
                             />
                         </Field>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <Field label="PLZ *" required>
+                            <Field label={`${t('postalCode')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.postalCode}
@@ -190,7 +192,7 @@ export default function CompanySettingsPage() {
                                     maxLength={5}
                                 />
                             </Field>
-                            <Field label="Stadt *" required>
+                            <Field label={`${t('city')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.city}
@@ -199,7 +201,7 @@ export default function CompanySettingsPage() {
                                     className="input-field"
                                 />
                             </Field>
-                            <Field label="Land">
+                            <Field label={t('country')}>
                                 <input
                                     type="text"
                                     value={settings.country}
@@ -211,9 +213,9 @@ export default function CompanySettingsPage() {
                     </Section>
 
                     {/* === SECTION 2: Kontaktdaten === */}
-                    <Section title="Kontaktdaten" icon="📞" description="Telefonnummern und E-Mail-Adressen">
+                    <Section title={t('contactData')} icon="📞" description={t('contactDataDesc')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="Telefon (Hauptnummer) *" required>
+                            <Field label={`${t('mainPhone')} *`} required>
                                 <input
                                     type="tel"
                                     value={settings.phone}
@@ -222,7 +224,7 @@ export default function CompanySettingsPage() {
                                     className="input-field"
                                 />
                             </Field>
-                            <Field label="E-Mail *" required>
+                            <Field label={`${t('email')} *`} required>
                                 <input
                                     type="email"
                                     value={settings.email}
@@ -231,7 +233,7 @@ export default function CompanySettingsPage() {
                                     className="input-field"
                                 />
                             </Field>
-                            <Field label="Kundenservice-Hotline">
+                            <Field label={t('customerServicePhone')}>
                                 <input
                                     type="tel"
                                     value={settings.customerServicePhone || ''}
@@ -240,7 +242,7 @@ export default function CompanySettingsPage() {
                                     className="input-field"
                                 />
                             </Field>
-                            <Field label="Geschäftskunden Info-Hotline">
+                            <Field label={t('businessInfoPhone')}>
                                 <input
                                     type="tel"
                                     value={settings.businessInfoPhone || ''}
@@ -250,7 +252,7 @@ export default function CompanySettingsPage() {
                                 />
                             </Field>
                         </div>
-                        <Field label="Website" full>
+                        <Field label={t('website')} full>
                             <input
                                 type="url"
                                 value={settings.website || ''}
@@ -262,9 +264,9 @@ export default function CompanySettingsPage() {
                     </Section>
 
                     {/* === SECTION 3: Steuerdaten === */}
-                    <Section title="Steuerdaten" icon="📋" description="Steuernummer und Umsatzsteuer-Identifikationsnummer">
+                    <Section title={t('taxData')} icon="📋" description={t('taxDataDesc')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="Steuernummer *" required>
+                            <Field label={`${t('taxNumber')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.taxId}
@@ -272,9 +274,9 @@ export default function CompanySettingsPage() {
                                     placeholder="z.B. 123/456/78901"
                                     className="input-field"
                                 />
-                                <p className="text-gray-500 text-xs mt-1">Format: xxx/xxx/xxxxx (Finanzamt)</p>
+                                <p className="text-gray-500 text-xs mt-1">{t('taxNumberHint')}</p>
                             </Field>
-                            <Field label="USt-IdNr. *" required>
+                            <Field label={`${t('vatId')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.vatId}
@@ -282,15 +284,15 @@ export default function CompanySettingsPage() {
                                     placeholder="DE123456789"
                                     className="input-field"
                                 />
-                                <p className="text-gray-500 text-xs mt-1">Umsatzsteuer-Identifikationsnummer (DE...)</p>
+                                <p className="text-gray-500 text-xs mt-1">{t('vatIdHint')}</p>
                             </Field>
                         </div>
                     </Section>
 
                     {/* === SECTION 4: Bankverbindung === */}
-                    <Section title="Bankverbindung" icon="🏦" description="IBAN, BIC und Kontodaten für Rechnungen">
+                    <Section title={t('bankDetails')} icon="🏦" description={t('bankDetailsDesc')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Field label="IBAN *" required>
+                            <Field label={`${t('iban')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.iban}
@@ -299,7 +301,7 @@ export default function CompanySettingsPage() {
                                     className="input-field font-mono"
                                 />
                             </Field>
-                            <Field label="BIC / SWIFT *" required>
+                            <Field label={`${t('bicSwift')} *`} required>
                                 <input
                                     type="text"
                                     value={settings.bic}
@@ -308,7 +310,7 @@ export default function CompanySettingsPage() {
                                     className="input-field font-mono"
                                 />
                             </Field>
-                            <Field label="Bank Name">
+                            <Field label={t('bankName')}>
                                 <input
                                     type="text"
                                     value={settings.bankName || ''}
@@ -317,12 +319,12 @@ export default function CompanySettingsPage() {
                                     className="input-field"
                                 />
                             </Field>
-                            <Field label="Kontoinhaber (falls abweichend)">
+                            <Field label={t('accountHolder')}>
                                 <input
                                     type="text"
                                     value={settings.accountHolder || ''}
                                     onChange={e => updateField('accountHolder', e.target.value)}
-                                    placeholder="Falls abweichend vom Firmennamen"
+                                    placeholder={t('accountHolderPlaceholder')}
                                     className="input-field"
                                 />
                             </Field>
@@ -355,7 +357,7 @@ export default function CompanySettingsPage() {
                         return (
                             <Section title={rc.title} icon={rc.icon} description={rc.desc}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <Field label="Amtsgericht">
+                                    <Field label={t('court')}>
                                         <input
                                             type="text"
                                             value={settings.registerCourt || ''}
@@ -412,12 +414,12 @@ export default function CompanySettingsPage() {
                                         />
                                     </Field>
                                     {lc.showRepresentative && (
-                                        <Field label="Vertretungsberechtigte/r">
+                                        <Field label={t('authorizedRep')}>
                                             <input
                                                 type="text"
                                                 value={settings.authorizedRepresentative || ''}
                                                 onChange={e => updateField('authorizedRepresentative', e.target.value)}
-                                                placeholder="Falls vorhanden"
+                                                placeholder={t('ifApplicable')}
                                                 className="input-field"
                                             />
                                         </Field>
@@ -432,11 +434,9 @@ export default function CompanySettingsPage() {
                         <div className="flex items-start gap-3">
                             <span className="text-2xl">ℹ️</span>
                             <div>
-                                <h4 className="text-blue-400 font-medium text-sm">Verwendung der Firmendaten</h4>
+                                <h4 className="text-blue-400 font-medium text-sm">{t('dataUsageTitle')}</h4>
                                 <p className="text-gray-400 text-xs mt-1">
-                                    Diese Daten werden automatisch in allen generierten Rechnungen (PDF &amp; XRechnung),
-                                    Lexware-Übertragungen, DATEV-Exporten und im Impressum verwendet.
-                                    Änderungen gelten für alle zukünftig erstellten Dokumente.
+                                    {t('dataUsageDesc')}
                                 </p>
                             </div>
                         </div>
@@ -452,7 +452,7 @@ export default function CompanySettingsPage() {
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                                 }`}
                         >
-                            {saving ? '⏳ Wird gespeichert...' : hasChanges ? '💾 Einstellungen speichern' : '✅ Alles gespeichert'}
+                            {saving ? `⏳ ${t('beingSaved')}` : hasChanges ? `💾 ${t('saveSettings')}` : `✅ ${t('allSaved')}`}
                         </button>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { auth } from '@/lib/firebase';
 
@@ -10,7 +11,7 @@ const API_SERVICES = [
         keyId: 'imagen',
         label: 'Google Imagen 4',
         service: 'imagen',
-        description: 'KI-basierte Bildgenerierung für Produktfotos',
+        descKey: 'imagenDesc',
         icon: '🎨',
         color: 'purple',
         placeholder: 'AIzaSy...',
@@ -19,7 +20,7 @@ const API_SERVICES = [
         keyId: 'gemini',
         label: 'Google Gemini AI',
         service: 'gemini',
-        description: 'KI-Menüanalyse und Textverarbeitung',
+        descKey: 'geminiDesc',
         icon: '🤖',
         color: 'blue',
         placeholder: 'AIzaSy...',
@@ -36,6 +37,7 @@ interface StoredKey {
 
 export default function ApiKeysPage() {
     const { admin } = useAdmin();
+    const t = useTranslations('AdminApiKeys');
     const [keys, setKeys] = useState<Record<string, StoredKey>>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export default function ApiKeysPage() {
             }));
             setEditingKey(null);
             setNewKeyValue('');
-            setFeedback({ type: 'success', message: `${label} wurde erfolgreich gespeichert` });
+            setFeedback({ type: 'success', message: `${label} ${t('savedSuccess')}` });
         } catch (err: any) {
             setFeedback({ type: 'error', message: err.message });
         } finally {
@@ -120,7 +122,7 @@ export default function ApiKeysPage() {
 
     // ── Delete key ───────────────────────────────────────
     const handleDelete = async (keyId: string, label: string) => {
-        if (!confirm(`"${label}" wirklich löschen?`)) return;
+        if (!confirm(`"${label}" ${t('confirmDelete')}`)) return;
 
         setSaving(keyId);
         setFeedback(null);
@@ -140,7 +142,7 @@ export default function ApiKeysPage() {
                 delete copy[keyId];
                 return copy;
             });
-            setFeedback({ type: 'success', message: `${label} wurde gelöscht` });
+            setFeedback({ type: 'success', message: `${label} ${t('deletedSuccess')}` });
         } catch (err: any) {
             setFeedback({ type: 'error', message: err.message });
         } finally {
@@ -154,8 +156,8 @@ export default function ApiKeysPage() {
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
                     <span className="text-6xl block mb-4">🔒</span>
-                    <h1 className="text-2xl font-bold text-white mb-2">Zugriff verweigert</h1>
-                    <p className="text-gray-400">Nur Super-Admins können API-Schlüssel verwalten.</p>
+                    <h1 className="text-2xl font-bold text-white mb-2">{t('accessDenied')}</h1>
+                    <p className="text-gray-400">{t('superAdminOnly')}</p>
                 </div>
             </div>
         );
@@ -170,9 +172,9 @@ export default function ApiKeysPage() {
                         🔑
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold">API-Schlüssel</h1>
+                        <h1 className="text-3xl font-bold">{t('title')}</h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Verschlüsselte Verwaltung externer API-Dienste
+                            {t('subtitle')}
                         </p>
                     </div>
                 </div>
@@ -181,11 +183,9 @@ export default function ApiKeysPage() {
                 <div className="bg-emerald-950/30 border border-emerald-800/50 rounded-2xl p-5 mb-8 flex items-start gap-3">
                     <span className="text-2xl flex-shrink-0 mt-0.5">🛡️</span>
                     <div>
-                        <h3 className="font-bold text-emerald-300 text-sm">AES-256-GCM Verschlüsselung</h3>
+                        <h3 className="font-bold text-emerald-300 text-sm">{t('encryption')}</h3>
                         <p className="text-emerald-400/70 text-xs mt-1">
-                            Alle API-Schlüssel werden mit militärischer AES-256-GCM-Verschlüsselung in Firestore
-                            gespeichert. Die Schlüssel werden niemals im Klartext übertragen oder im Client-Code
-                            angezeigt.
+                            {t('encryptionDesc')}
                         </p>
                     </div>
                 </div>
@@ -213,7 +213,7 @@ export default function ApiKeysPage() {
                 {loading ? (
                     <div className="text-center py-16">
                         <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-400 text-sm">Schlüssel werden geladen...</p>
+                        <p className="text-gray-400 text-sm">{t('loading')}</p>
                     </div>
                 ) : (
                     /* Key Cards */
@@ -246,15 +246,15 @@ export default function ApiKeysPage() {
                                                 <h3 className="font-bold text-white text-lg">{svc.label}</h3>
                                                 {stored ? (
                                                     <span className="px-2 py-0.5 bg-emerald-900/50 text-emerald-400 text-xs rounded-full font-medium">
-                                                        Konfiguriert
+                                                        {t('configured')}
                                                     </span>
                                                 ) : (
                                                     <span className="px-2 py-0.5 bg-yellow-900/50 text-yellow-400 text-xs rounded-full font-medium">
-                                                        Nicht konfiguriert
+                                                        {t('notConfigured')}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-gray-400 text-sm mt-0.5">{svc.description}</p>
+                                            <p className="text-gray-400 text-sm mt-0.5">{t(svc.descKey)}</p>
                                         </div>
                                     </div>
 
@@ -262,14 +262,14 @@ export default function ApiKeysPage() {
                                     {stored && !isEditing && (
                                         <div className="mt-4 bg-gray-900/80 rounded-xl p-4 border border-gray-700/50">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-gray-500 text-xs font-medium">SCHLÜSSEL</span>
+                                                <span className="text-gray-500 text-xs font-medium">{t('keyLabel')}</span>
                                                 <code className="text-amber-400 font-mono text-sm bg-gray-800 px-2 py-0.5 rounded">
                                                     {stored.masked}
                                                 </code>
                                             </div>
                                             <div className="flex items-center gap-4 text-xs text-gray-500">
                                                 <span>
-                                                    Aktualisiert:{' '}
+                                                    {t('updated')}:{' '}
                                                     {stored.updatedAt
                                                         ? new Date(stored.updatedAt).toLocaleDateString('de-DE', {
                                                             day: '2-digit',
@@ -280,7 +280,7 @@ export default function ApiKeysPage() {
                                                         })
                                                         : '—'}
                                                 </span>
-                                                {stored.updatedBy && <span>Von: {stored.updatedBy}</span>}
+                                                {stored.updatedBy && <span>{t('by')}: {stored.updatedBy}</span>}
                                             </div>
                                         </div>
                                     )}
@@ -289,7 +289,7 @@ export default function ApiKeysPage() {
                                     {isEditing && (
                                         <div className="mt-4">
                                             <label className="block text-xs text-gray-400 font-medium mb-2">
-                                                {stored ? 'Neuen Schlüssel eingeben' : 'API-Schlüssel eingeben'}
+                                                {stored ? t('enterNewKey') : t('enterKey')}
                                             </label>
                                             <input
                                                 type="password"
@@ -308,10 +308,10 @@ export default function ApiKeysPage() {
                                                     {isSaving ? (
                                                         <>
                                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                            Speichern...
+                                                            {t('savingKey')}
                                                         </>
                                                     ) : (
-                                                        <>🔐 Verschlüsselt speichern</>
+                                                        <>🔐 {t('saveEncrypted')}</>
                                                     )}
                                                 </button>
                                                 <button
@@ -321,7 +321,7 @@ export default function ApiKeysPage() {
                                                     }}
                                                     className="px-4 py-2 bg-gray-700 text-gray-300 rounded-xl text-sm hover:bg-gray-600 transition-all"
                                                 >
-                                                    Abbrechen
+                                                    {t('cancel')}
                                                 </button>
                                             </div>
                                         </div>
@@ -342,9 +342,9 @@ export default function ApiKeysPage() {
                                                     }`}
                                             >
                                                 {stored ? (
-                                                    <>✏️ Schlüssel ändern</>
+                                                    <>✏️ {t('changeKey')}</>
                                                 ) : (
-                                                    <>🔑 Schlüssel hinzufügen</>
+                                                    <>🔑 {t('addKey')}</>
                                                 )}
                                             </button>
                                             {stored && (
@@ -353,7 +353,7 @@ export default function ApiKeysPage() {
                                                     disabled={isSaving}
                                                     className="px-4 py-2 bg-red-900/30 text-red-400 rounded-xl text-sm font-medium hover:bg-red-900/50 transition-all disabled:opacity-50"
                                                 >
-                                                    🗑️ Löschen
+                                                    🗑️ {t('deleteKey')}
                                                 </button>
                                             )}
                                         </div>
@@ -367,24 +367,24 @@ export default function ApiKeysPage() {
                 {/* Additional Info */}
                 <div className="mt-8 bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
                     <h3 className="text-sm font-bold text-gray-300 mb-3 flex items-center gap-2">
-                        <span>ℹ️</span> Hinweise
+                        <span>ℹ️</span> {t('notes')}
                     </h3>
                     <ul className="space-y-2 text-xs text-gray-500">
                         <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">•</span>
-                            API-Schlüssel werden mit AES-256-GCM verschlüsselt in Firestore gespeichert
+                            {t('note1')}
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">•</span>
-                            Der Bildgenerator verwendet den Imagen-Schlüssel über einen sicheren Server-Proxy
+                            {t('note2')}
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">•</span>
-                            Schlüssel werden niemals im Client-Browser angezeigt oder übertragen
+                            {t('note3')}
                         </li>
                         <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">•</span>
-                            Nur Super-Admins können auf diese Seite zugreifen
+                            {t('note4')}
                         </li>
                     </ul>
                 </div>

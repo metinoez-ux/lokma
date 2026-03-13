@@ -1913,7 +1913,7 @@ export default function SuperAdminDashboard() {
                                     : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                                     }`}
                             >
-                                ✅ Aktif ({users.filter(u => (u as any).isActive !== false).length})
+                                ✅ {tNav('aktif')} ({users.filter(u => (u as any).isActive !== false).length})
                             </button>
                             <button
                                 onClick={() => setUserStatusFilter('archived')}
@@ -1943,7 +1943,7 @@ export default function SuperAdminDashboard() {
                                                 loadAllUsers(1);
                                             }
                                         }}
-                                        placeholder="{t('searchPlaceholder')}"
+                                        placeholder={tNav('i_sim_e_posta_veya_telefon_ile_ara')}
                                         className="w-full px-4 py-3 pl-12 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                                     />
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">🔍</span>
@@ -1967,16 +1967,16 @@ export default function SuperAdminDashboard() {
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
                                         <option value="createdAt">{tNav('kayit_tarihi')}</option>
-                                        <option value="firstName">👤 İsim (A-Z)</option>
-                                        <option value="lastName">👤 Soyisim (A-Z)</option>
+                                        <option value="firstName">👤 {tNav('adi')} (A-Z)</option>
+                                        <option value="lastName">👤 {tNav('soyadi')} (A-Z)</option>
                                     </select>
                                     <select
                                         value={allUsersSortOrder}
                                         onChange={(e) => setAllUsersSortOrder(e.target.value as 'asc' | 'desc')}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
-                                        <option value="desc">⬇️ Yeniden Eskiye</option>
-                                        <option value="asc">⬆️ Eskiden Yeniye</option>
+                                        <option value="desc">⬇️ {tNav('yeniden_eskiye')}</option>
+                                        <option value="asc">⬆️ {tNav('eskiden_yeniye')}</option>
                                     </select>
 
                                     {/* User Type Filter */}
@@ -1988,9 +1988,9 @@ export default function SuperAdminDashboard() {
                                         <option value="all">{tNav('tumu')}</option>
                                         <option value="user">{tNav('sadece_kullanicilar')}</option>
                                         <option value="admin">🎫 {t('businessAdmins')}</option>
-                                        <option value="staff">👷 Personel</option>
+                                        <option value="staff">👷 {tNav('staff')}</option>
                                         <option value="driver">{tNav('tum_suruculer')}</option>
-                                        <option value="driver_lokma">🚚 LOKMA Filosu</option>
+                                        <option value="driver_lokma">🚚 {tNav('lokma_filosu_surucusu')}</option>
                                         <option value="driver_business">{tNav('i_sletme_suruculeri')}</option>
                                         {/* 🔒 SECURITY: Super Admin filter only visible to super admins */}
                                         {admin?.adminType === 'super' && (
@@ -2001,7 +2001,7 @@ export default function SuperAdminDashboard() {
                                     {/* Pagination */}
                                     <div className="flex-1" />
                                     <span className="text-gray-400 text-sm">
-                                        Sayfa {allUsersPage} / {Math.ceil(allUsersTotal / USERS_PER_PAGE) || 1}
+                                        {tNav('sayfa')} {allUsersPage} / {Math.ceil(allUsersTotal / USERS_PER_PAGE) || 1}
                                     </span>
                                     <button
                                         onClick={() => loadAllUsers(allUsersPage - 1)}
@@ -2015,7 +2015,7 @@ export default function SuperAdminDashboard() {
                                         disabled={allUsersPage >= Math.ceil(allUsersTotal / USERS_PER_PAGE)}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg disabled:opacity-50"
                                     >
-                                        Sonraki ▶
+                                        {tNav('sonraki')} ▶
                                     </button>
                                 </div>
                             )}
@@ -2188,7 +2188,7 @@ export default function SuperAdminDashboard() {
                                                             }`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${(user as any).isActive !== false ? 'bg-green-500 animate-pulse' : 'bg-red-500'
                                                                 }`}></span>
-                                                            {(user as any).isActive !== false ? 'AKTİF' : 'PASİF'}
+                                                            {(user as any).isActive !== false ? tNav('aktif').toUpperCase() : tNav('pasif').toUpperCase()}
                                                         </span>
 
                                                         {/* Role Badge - Color coded by role type */}
@@ -2227,7 +2227,7 @@ export default function SuperAdminDashboard() {
                                                                 ? 'bg-emerald-600 text-white'
                                                                 : 'bg-amber-600 text-white'
                                                                 }`}>
-                                                                {(user.adminProfile as any)?.driverType === 'lokma_fleet' ? '🚚 LOKMA Filo' : tNav('i_sletme_surucu')}
+                                                                {(user.adminProfile as any)?.driverType === 'lokma_fleet' ? `🚚 ${tNav('lokma_filosu_surucusu')}` : tNav('i_sletme_surucu')}
                                                             </span>
                                                         )}
                                                         {/* Location - City, Country */}
