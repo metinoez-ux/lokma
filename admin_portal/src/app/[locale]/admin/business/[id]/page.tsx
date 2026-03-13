@@ -369,7 +369,7 @@ export default function BusinessDetailsPage() {
   };
 
   // Form state for editing
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
   const [formData, setFormData] = useState({
     companyName: "",
     customerId: "",
@@ -411,6 +411,8 @@ export default function BusinessDetailsPage() {
     deliveryEndTime: "" as string,     // "HH:MM" - Kurye bitiş saati
     pickupStartTime: "" as string,     // "HH:MM" - Gel Al başlangıç saati
     pickupEndTime: "" as string,       // "HH:MM" - Gel Al bitiş saati
+    deliveryHours: "" as string,       // Per-day kurye saatleri (same format as openingHours)
+    pickupHours: "" as string,         // Per-day gel-al saatleri (same format as openingHours)
     preOrderEnabled: false,            // Kapalıyken ön sipariş alabilir mi?
     freeDeliveryThreshold: 0,          // Bu tutarın üzerinde teslimat ücretsiz (€)
     // 🆕 Geçici Kurye Kapatma
@@ -701,6 +703,8 @@ export default function BusinessDetailsPage() {
           deliveryEndTime: d.deliveryEndTime || "",
           pickupStartTime: d.pickupStartTime || "",
           pickupEndTime: d.pickupEndTime || "",
+          deliveryHours: Array.isArray(d.deliveryHours) ? d.deliveryHours.join("\n") : (d.deliveryHours || ""),
+          pickupHours: Array.isArray(d.pickupHours) ? d.pickupHours.join("\n") : (d.pickupHours || ""),
           preOrderEnabled: d.preOrderEnabled || false,
           freeDeliveryThreshold: d.freeDeliveryThreshold || 0,
           // 🆕 Geçici Kurye Kapatma
@@ -2027,6 +2031,8 @@ export default function BusinessDetailsPage() {
         deliveryEndTime: formData.deliveryEndTime || null,
         pickupStartTime: formData.pickupStartTime || null,
         pickupEndTime: formData.pickupEndTime || null,
+        deliveryHours: formData.deliveryHours ? formData.deliveryHours.split("\n") : [],
+        pickupHours: formData.pickupHours ? formData.pickupHours.split("\n") : [],
         preOrderEnabled: formData.preOrderEnabled || false,
         freeDeliveryThreshold: Number(formData.freeDeliveryThreshold) || 0,
         // 🆕 Geçici Kurye Kapatma
@@ -2394,14 +2400,13 @@ export default function BusinessDetailsPage() {
               {showSettingsDropdown && (
                 <div className="absolute top-full left-0 mt-1 w-56 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 overflow-hidden">
                   {[
-                    { key: "isletme", icon: "🏢", label: t('isletme'), action: "tab" },
-                    { key: "menu", icon: "📋", label: t('menuUrunler'), action: "tab" },
-                    { key: "personel", icon: "👷", label: t('personel_label'), action: "tab" },
-                    { key: "masa", icon: "🪑", label: t('masa_label'), action: "tab" },
-                    { key: "abonelik", icon: "💳", label: t('abonelikPlani'), action: "tab" },
-
-                    { key: "odeme", icon: "🏦", label: t('odemeBilgileri'), action: "tab" },
-                    { key: "promosyon", icon: "🎁", label: t('promosyon_label'), action: "tab" },
+                    { key: "isletme", label: t('isletme'), action: "tab" },
+                    { key: "menu", label: t('menuUrunler'), action: "tab" },
+                    { key: "personel", label: t('personel_label'), action: "tab" },
+                    { key: "masa", label: t('masa_label'), action: "tab" },
+                    { key: "abonelik", label: t('abonelikPlani'), action: "tab" },
+                    { key: "odeme", label: t('odemeBilgileri'), action: "tab" },
+                    { key: "promosyon", label: t('promosyon_label'), action: "tab" },
                   ].map((item) => {
                     return (
                       <button
@@ -2416,7 +2421,6 @@ export default function BusinessDetailsPage() {
                           : "text-gray-300 hover:bg-gray-700 hover:text-white"
                           }`}
                       >
-                        <span>{item.icon}</span>
                         <span>{item.label}</span>
                       </button>
                     );
@@ -3319,7 +3323,7 @@ export default function BusinessDetailsPage() {
                             adminEmail: admin?.email || "unknown",
                           });
                           setFormData({ ...formData, temporaryPickupPaused: newValue, pickupPauseUntil: null });
-                          showToast(newValue ? t('gelAlDurdurulduToast') : t('gelAlAktifToast'), "success");
+                          showToast(newValue ? t('gelAlDurduruldu') : t('gelAlAktifToast'), "success");
                         } catch (e) {
                           showToast(t('hataOlustu1'), "error");
                         }
@@ -3332,39 +3336,28 @@ export default function BusinessDetailsPage() {
                       🛍️ {formData.temporaryPickupPaused ? t('gelAlDurduruldu') : t('gelAlAktif')}
                     </button>
                   )}
-                  {/* Active/Deactive Toggle */}
-                  {business && settingsSubTab === "isletme" && (
-                    <button
-                      onClick={toggleActiveStatus}
-                      className={`px-4 py-2 rounded-lg text-white font-medium ${business.isActive ? "bg-red-600 hover:bg-red-500" : "bg-green-600 hover:bg-green-500"}`}
-                    >
-                      {business.isActive ? "🔴 Deaktif Et" : t('aktif_et')}
-                    </button>
-                  )}
-                  {!isEditing && settingsSubTab === 'isletme' ? (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-                    >
-                      {t('duzenle')}
-                    </button>
-                  ) : isEditing && settingsSubTab === 'isletme' ? (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
-                      >
-                        {t('iptal1')}
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50"
-                      >
-                        {saving ? "Kaydediliyor..." : "💾 Kaydet"}
-                      </button>
-                    </div>
-                  ) : null}
+                   {/* İşletme Faaliyetlerini Durdur — Super Admin Only */}
+                   {business && settingsSubTab === "isletme" && admin?.adminType === 'super' && (
+                     <button
+                       onClick={toggleActiveStatus}
+                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${business.isActive
+                         ? "bg-gray-700 text-red-400 border border-red-500/30 hover:bg-red-900/30 hover:border-red-500/60"
+                         : "bg-gray-700 text-green-400 border border-green-500/30 hover:bg-green-900/30 hover:border-green-500/60"
+                         }`}
+                     >
+                       {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
+                     </button>
+                   )}
+                   {/* Kaydet — her zaman görünür */}
+                   {settingsSubTab === 'isletme' && (
+                     <button
+                       onClick={handleSave}
+                       disabled={saving}
+                       className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium transition"
+                     >
+                       {saving ? "..." : t('kaydet')}
+                     </button>
+                   )}
                 </div>
               </div>
 
@@ -3376,10 +3369,10 @@ export default function BusinessDetailsPage() {
                     {[
                       { id: "bilgiler" as const, label: t('isletmeBilgileri') },
                       { id: "fatura" as const, label: t('fatura_adresi') },
-                      { id: "zertifikalar" as const, label: "🏷️ Zertifikalar" },
+                      { id: "zertifikalar" as const, label: "Zertifikalar" },
                       { id: "gorseller" as const, label: t('gorseller') },
                       { id: "saatler" as const, label: t('acilisSaatleri') },
-                      { id: "teslimat" as const, label: "🚚 " + t('teslimatAyarlari') },
+                      { id: "teslimat" as const, label: t('teslimatAyarlari') },
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -3697,127 +3690,191 @@ export default function BusinessDetailsPage() {
                   {/* ═══════ Tab 5: Açılış Saatleri (Genel / Kurye / Gel-Al) ═══════ */}
                   {isletmeInternalTab === "saatler" && (
                     <div className="space-y-6">
-                      {/* Saatler Sub-Tab Bar */}
-                      <div className="flex gap-2 border-b border-gray-700 pb-3 mb-4">
-                        {[
-                          { id: "genel" as const, icon: "⏰", label: t('acilisSaatleri') },
-                          { id: "kurye" as const, icon: "🛵", label: t('kuryeSaatleri') },
-                          { id: "gelal" as const, icon: "🛍️", label: t('gelAlSaatleri') },
-                        ].map((tab) => (
-                          <button
-                            key={tab.id}
-                            onClick={() => setSaatlerSubTab(tab.id)}
-                            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition flex items-center gap-1.5 ${saatlerSubTab === tab.id
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                              }`}
-                          >
-                            <span>{tab.icon}</span>
-                            <span>{tab.label}</span>
-                          </button>
-                        ))}
-                      </div>
+                      {/* Left Sidebar + Content Grid Layout */}
+                      <div className="flex gap-0 rounded-xl overflow-hidden border border-gray-700">
+                        {/* Left Sidebar Navigation */}
+                        <div className="w-48 bg-gray-800/80 border-r border-gray-700 flex-shrink-0">
+                          {[
+                            { id: "genel" as const, label: t('acilisSaatleri') },
+                            { id: "kurye" as const, label: t('kuryeSaatleri') },
+                            { id: "gelal" as const, label: t('gelAlSaatleri') },
+                          ].map((tab) => (
+                            <button
+                              key={tab.id}
+                              onClick={() => setSaatlerSubTab(tab.id)}
+                              className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-gray-700/50 last:border-0 ${saatlerSubTab === tab.id
+                                ? "bg-blue-600/20 text-blue-400 border-l-2 border-l-blue-500"
+                                : "text-gray-400 hover:bg-gray-700/50 hover:text-white border-l-2 border-l-transparent"
+                                }`}
+                            >
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
 
-                      {/* Genel Açılış Saatleri */}
-                      {saatlerSubTab === "genel" && (
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-4">{t('calismaSaatleri3')}</h4>
-                        {isEditing ? (
-                          <div className="space-y-2">
-                            {[
-                              { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
-                            ].map((dayObj) => {
-                              const currentLine = formData.openingHours?.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
-                              const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
-                              let startTime = ""; let endTime = "";
-                              if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
-                              const updateHours = (newStart: string, newEnd: string, newClosed: boolean) => {
-                                const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
-                                  const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
-                                  const existingLine = formData.openingHours?.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
-                                  if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
-                                  if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
-                                  return existingLine || `${d}${t('kapali2')}`;
-                                });
-                                setFormData({ ...formData, openingHours: newLines.join("\n") });
-                              };
-                              return (
-                                <div key={dayObj.tr} className="flex items-center gap-3">
-                                  <span className="w-20 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
-                                  <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                  <span className="text-gray-500 font-bold">-</span>
-                                  <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                  <label className="flex items-center cursor-pointer ml-auto">
-                                    <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                    <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                    <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
-                                  </label>
+                        {/* Right Content Area */}
+                        <div className="flex-1 bg-gray-800/30 p-6">
+                          {/* === Genel Açılış Saatleri === */}
+                          {saatlerSubTab === "genel" && (
+                            <div>
+                              <h4 className="text-white font-medium mb-4">{t('calismaSaatleri3')}</h4>
+                              <div className="space-y-2">
+                                {[
+                                  { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
+                                ].map((dayObj) => {
+                                  const currentLine = formData.openingHours?.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
+                                  const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
+                                  let startTime = ""; let endTime = "";
+                                  if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+                                  const updateHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+                                    const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
+                                      const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
+                                      const existingLine = formData.openingHours?.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
+                                      if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
+                                      if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
+                                      return existingLine || `${d}${t('kapali2')}`;
+                                    });
+                                    setFormData({ ...formData, openingHours: newLines.join("\n") });
+                                  };
+                                  return (
+                                    <div key={dayObj.tr} className="flex items-center gap-3">
+                                      <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
+                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <span className="text-gray-500 font-bold">–</span>
+                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <label className="flex items-center cursor-pointer ml-auto relative">
+                                        <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                        <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                      </label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* === Kurye Saatleri (Per-Day) === */}
+                          {saatlerSubTab === "kurye" && (
+                            <div>
+                              <div className="flex items-center justify-between mb-4">
+                                <div>
+                                  <h4 className="text-white font-medium">{t('kuryeAcilisSaatleri')}</h4>
+                                  <p className="text-xs text-gray-400 mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        ) : formData.openingHours ? (
-                          <ul className="space-y-1">
-                            {formData.openingHours.split("\n").map((line, i) => (
-                              <li key={i} className="text-xs text-gray-300 flex justify-between border-b border-gray-700/50 pb-1 last:border-0">
-                                <span className="font-medium text-gray-400 w-24">{line.split(": ")[0]}</span>
-                                <span className="font-mono">{(() => { const parts = line.split(": "); const content = parts.length > 1 ? parts.slice(1).join(": ").trim() : ""; if (content.toLowerCase().includes(t('kapali1')) || content.toLowerCase().includes("closed")) return t('kapali'); if (!content || content === "-" || content === "–") return "-"; return content; })()}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (<span className="text-xs text-gray-500 italic">{t('bilgi_yok')}</span>)}
-                      </div>
-                      )}
+                                {!formData.deliveryHours && formData.openingHours && (
+                                  <button
+                                    onClick={() => setFormData({ ...formData, deliveryHours: formData.openingHours })}
+                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+                                  >
+                                    {t('genelSaatleriKopyala')}
+                                  </button>
+                                )}
+                              </div>
+                              {!formData.deliveryHours && !formData.deliveryStartTime && !formData.deliveryEndTime && formData.openingHours && (
+                                <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-700/50">
+                                  <p className="text-xs text-amber-300">{t('henuzOzelKuryeSaati')}</p>
+                                </div>
+                              )}
+                              <div className="space-y-2">
+                                {[
+                                  { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
+                                ].map((dayObj) => {
+                                  const hoursData = formData.deliveryHours || formData.openingHours || "";
+                                  const currentLine = hoursData.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
+                                  const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
+                                  let startTime = ""; let endTime = "";
+                                  if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+                                  const updateDeliveryHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+                                    const baseHours = formData.deliveryHours || formData.openingHours || "";
+                                    const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
+                                      const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
+                                      const existingLine = baseHours.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
+                                      if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
+                                      if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
+                                      return existingLine || `${d}${t('kapali2')}`;
+                                    });
+                                    setFormData({ ...formData, deliveryHours: newLines.join("\n") });
+                                  };
+                                  return (
+                                    <div key={dayObj.tr} className="flex items-center gap-3">
+                                      <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
+                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <span className="text-gray-500 font-bold">–</span>
+                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <label className="flex items-center cursor-pointer ml-auto relative">
+                                        <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                        <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                      </label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
 
-                      {/* Kurye Saatleri */}
-                      {saatlerSubTab === "kurye" && (
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-2">{t('kuryeAcilisSaatleri')}</h4>
-                        <p className="text-xs text-gray-400 mb-4">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('kuryeBaslangic')}</label>
-                            <input type="time" value={formData.deliveryStartTime || ""} onChange={(e) => setFormData({ ...formData, deliveryStartTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or1400')} />
-                            <p className="text-xs text-gray-500 mt-1">{t('bosAcilisSaati')}</p>
-                          </div>
-                          <div>
-                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('kuryeBitis')}</label>
-                            <input type="time" value={formData.deliveryEndTime || ""} onChange={(e) => setFormData({ ...formData, deliveryEndTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or2000')} />
-                            <p className="text-xs text-gray-500 mt-1">{t('bosKapanisSaati')}</p>
-                          </div>
+                          {/* === Gel-Al Saatleri (Per-Day) === */}
+                          {saatlerSubTab === "gelal" && (
+                            <div>
+                              <div className="flex items-center justify-between mb-4">
+                                <div>
+                                  <h4 className="text-white font-medium">{t('gelAlAcilisSaatleri')}</h4>
+                                  <p className="text-xs text-gray-400 mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+                                </div>
+                                {!formData.pickupHours && formData.openingHours && (
+                                  <button
+                                    onClick={() => setFormData({ ...formData, pickupHours: formData.openingHours })}
+                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+                                  >
+                                    {t('genelSaatleriKopyala')}
+                                  </button>
+                                )}
+                              </div>
+                              {!formData.pickupHours && !formData.pickupStartTime && !formData.pickupEndTime && formData.openingHours && (
+                                <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-700/50">
+                                  <p className="text-xs text-amber-300">{t('henuzOzelGelAlSaati')}</p>
+                                </div>
+                              )}
+                              <div className="space-y-2">
+                                {[
+                                  { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
+                                ].map((dayObj) => {
+                                  const hoursData = formData.pickupHours || formData.openingHours || "";
+                                  const currentLine = hoursData.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
+                                  const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
+                                  let startTime = ""; let endTime = "";
+                                  if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+                                  const updatePickupHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+                                    const baseHours = formData.pickupHours || formData.openingHours || "";
+                                    const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
+                                      const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
+                                      const existingLine = baseHours.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
+                                      if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
+                                      if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
+                                      return existingLine || `${d}${t('kapali2')}`;
+                                    });
+                                    setFormData({ ...formData, pickupHours: newLines.join("\n") });
+                                  };
+                                  return (
+                                    <div key={dayObj.tr} className="flex items-center gap-3">
+                                      <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
+                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <span className="text-gray-500 font-bold">–</span>
+                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <label className="flex items-center cursor-pointer ml-auto relative">
+                                        <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                        <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                      </label>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {!formData.deliveryStartTime && !formData.deliveryEndTime && formData.openingHours && (
-                          <div className="mt-3 p-2 bg-amber-900/20 rounded border border-amber-700/50">
-                            <p className="text-xs text-amber-300">{t('henuzOzelKuryeSaati')}</p>
-                          </div>
-                        )}
                       </div>
-                      )}
-
-                      {/* Gel-Al Saatleri */}
-                      {saatlerSubTab === "gelal" && (
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-2">{t('gelAlAcilisSaatleri')}</h4>
-                        <p className="text-xs text-gray-400 mb-4">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('gelAlBaslangic')}</label>
-                            <input type="time" value={formData.pickupStartTime || ""} onChange={(e) => setFormData({ ...formData, pickupStartTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or1200')} />
-                            <p className="text-xs text-gray-500 mt-1">{t('bosAcilisSaati')}</p>
-                          </div>
-                          <div>
-                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('gelAlBitis')}</label>
-                            <input type="time" value={formData.pickupEndTime || ""} onChange={(e) => setFormData({ ...formData, pickupEndTime: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 [color-scheme:dark]" placeholder={t('or2100')} />
-                            <p className="text-xs text-gray-500 mt-1">{t('bosKapanisSaati')}</p>
-                          </div>
-                        </div>
-                        {!formData.pickupStartTime && !formData.pickupEndTime && formData.openingHours && (
-                          <div className="mt-3 p-2 bg-amber-900/20 rounded border border-amber-700/50">
-                            <p className="text-xs text-amber-300">{t('henuzOzelGelAlSaati')}</p>
-                          </div>
-                        )}
-                      </div>
-                      )}
                     </div>
                   )}
 

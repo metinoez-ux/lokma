@@ -185,12 +185,15 @@
     "gelAlAktifToast": "🛍️ Afhaal actief",
     "kuryeSaatleri": "Koerier Tijden",
     "gelAlSaatleri": "Afhaal Tijden",
-    "kuryeAcilisSaatleri": "🛵 Openingstijden Koerier",
-    "gelAlAcilisSaatleri": "🛍️ Openingstijden Afhaal",
-    "henuzOzelKuryeSaati": "💡 Nog geen aangepaste koeriertijden ingesteld. Algemene openingstijden worden gebruikt.",
-    "henuzOzelGelAlSaati": "💡 Nog geen aangepaste afhaaltijden ingesteld. Algemene openingstijden worden gebruikt.",
+    "kuryeAcilisSaatleri": "Openingstijden Koerier",
+    "gelAlAcilisSaatleri": "Openingstijden Afhaal",
+    "henuzOzelKuryeSaati": "Nog geen aangepaste koeriertijden ingesteld. Algemene openingstijden worden gebruikt.",
+    "henuzOzelGelAlSaati": "Nog geen aangepaste afhaaltijden ingesteld. Algemene openingstijden worden gebruikt.",
     "maksMesafe": "Max. afstand (km)",
-    "mola": "⏸ Pauze"
+    "mola": "Pauze",
+    "tumFaaliyetleriDurdur": "Alle activiteiten stoppen",
+    "aktif_et": "Activeren",
+    "genelSaatleriKopyala": "Algemene tijden kopiëren"
   },
   "AdminCustomerService": {
     "title": "Customer Service",
