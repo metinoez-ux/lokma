@@ -848,7 +848,11 @@
         "handelsregisternummer": "Handelsregisternummer",
         "ara_button": "Suchen",
         "kapat_button": "Schließen",
-        "yeni_personel_ekle": "Neues Personal hinzufügen"
+        "yeni_personel_ekle": "Neues Personal hinzufügen",
+        "pazartesi": "Montag",
+        "cuma": "Freitag",
+        "cumartesi": "Samstag",
+        "pazar": "Sonntag"
     },
     "AdminBusiness[id": {
         "adet": "Menge",

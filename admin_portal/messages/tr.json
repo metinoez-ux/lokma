@@ -848,7 +848,11 @@
         "handelsregisternummer": "Ticaret Sicil Numarası",
         "ara_button": "Ara",
         "kapat_button": "Kapat",
-        "yeni_personel_ekle": "Yeni Personel Ekle"
+        "yeni_personel_ekle": "Yeni Personel Ekle",
+        "pazartesi": "Pazartesi",
+        "cuma": "Cuma",
+        "cumartesi": "Cumartesi",
+        "pazar": "Pazar"
     },
     "AdminBusiness[id": {
         "adet": "Adet",

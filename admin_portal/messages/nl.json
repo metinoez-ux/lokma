@@ -214,7 +214,18 @@
         "handelsregisternummer": "Handelsregisternummer",
         "ara_button": "Zoeken",
         "kapat_button": "Sluiten",
-        "yeni_personel_ekle": "Nieuw personeel toevoegen"
+        "yeni_personel_ekle": "Nieuw personeel toevoegen",
+        "pazartesi": "Maandag",
+        "sali": "Dinsdag",
+        "carsamba": "Woensdag",
+        "persembe": "Donderdag",
+        "cuma": "Vrijdag",
+        "cumartesi": "Zaterdag",
+        "pazar": "Zondag",
+        "kapali": "Gesloten",
+        "kapali1": "gesloten",
+        "kapali2": ": Gesloten",
+        "acik": "Open"
     },
     "AdminCustomerService": {
         "title": "Customer Service",
