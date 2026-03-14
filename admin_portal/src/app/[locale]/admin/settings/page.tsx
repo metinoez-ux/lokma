@@ -100,6 +100,21 @@ export default function SettingsPage() {
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-violet-400 transition text-xl">→</span>
                             </Link>
+
+                            {/* Bon Yazıcı */}
+                            <Link
+                                href="/admin/settings/printer"
+                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-cyan-600 hover:bg-cyan-950/20 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-cyan-900/50 flex items-center justify-center text-2xl group-hover:bg-cyan-800/50 transition">
+                                    🖨️
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white group-hover:text-cyan-300 transition">Bon-Drucker</h3>
+                                    <p className="text-xs text-gray-500">IP-Adresse, Port und Druckerverbindung</p>
+                                </div>
+                                <span className="ml-auto text-gray-600 group-hover:text-cyan-400 transition text-xl">→</span>
+                            </Link>
                         </div>
 
                         {/* Hesabım - Alt bölümler */}
@@ -212,6 +227,21 @@ export default function SettingsPage() {
                                     <p className="text-xs text-gray-500">{t('bildirim_sesi_desc') || 'Push notification ses ayarları'}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-rose-400 transition text-xl">→</span>
+                            </Link>
+
+                            {/* 🖨️ Bon Yazıcı */}
+                            <Link
+                                href="/admin/settings/printer"
+                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-cyan-600 hover:bg-cyan-950/20 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-cyan-900/50 flex items-center justify-center text-2xl group-hover:bg-cyan-800/50 transition">
+                                    🖨️
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white group-hover:text-cyan-300 transition">Bon-Drucker</h3>
+                                    <p className="text-xs text-gray-500">IP-Adresse, Port und Druckerverbindung</p>
+                                </div>
+                                <span className="ml-auto text-gray-600 group-hover:text-cyan-400 transition text-xl">→</span>
                             </Link>
                         </div>
                     </div>

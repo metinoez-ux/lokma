@@ -8,7 +8,11 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
-import { printOrder, testPrint, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/services/printerService';
+import {
+    printOrder, testPrint, PrinterSettings, DEFAULT_PRINTER_SETTINGS,
+    checkHealth, sendPrinterAlert, PrinterHealthState, DEFAULT_HEALTH_STATE,
+    PrintRetryQueue, requestWakeLock,
+} from '@/services/printerService';
 
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
@@ -113,6 +117,17 @@ export default function OrdersPage() {
     const [showPrinterPanel, setShowPrinterPanel] = useState(false);
     const [testingPrint, setTestingPrint] = useState(false);
     const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
+
+    // Printer health monitoring
+    const [printerHealth, setPrinterHealth] = useState<PrinterHealthState>(DEFAULT_HEALTH_STATE);
+    const printerHealthRef = useRef<PrinterHealthState>(DEFAULT_HEALTH_STATE);
+    const healthIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const alarmAudioRef = useRef<HTMLAudioElement | null>(null);
+    const [alarmPlaying, setAlarmPlaying] = useState(false);
+    const retryQueueRef = useRef(new PrintRetryQueue());
+    const wakeLockReleaseRef = useRef<(() => Promise<void>) | null>(null);
+    const [retryQueueSize, setRetryQueueSize] = useState(0);
+    const lastPrintSuccessRef = useRef<string | null>(null);
 
     // Unavailable items modal state
     const [showUnavailableModal, setShowUnavailableModal] = useState(false);
@@ -385,6 +400,165 @@ export default function OrdersPage() {
         localStorage.setItem('lokma_printer_settings', JSON.stringify(newSettings));
     };
 
+    // ─── Printer Health Heartbeat (every 30s) ───────────────────
+    useEffect(() => {
+        if (!printerSettings.enabled || !printerSettings.printerIp) {
+            // Reset health state if printer is not configured
+            setPrinterHealth(DEFAULT_HEALTH_STATE);
+            printerHealthRef.current = DEFAULT_HEALTH_STATE;
+            return;
+        }
+
+        const runHealthCheck = async () => {
+            const prev = printerHealthRef.current;
+            const result = await checkHealth(printerSettings);
+
+            const newState: PrinterHealthState = {
+                status: result.online ? 'online' : 'offline',
+                lastChecked: new Date(),
+                lastOnline: result.online ? new Date() : prev.lastOnline,
+                responseTimeMs: result.responseTimeMs,
+                consecutiveFailures: result.online ? 0 : prev.consecutiveFailures + 1,
+                error: result.error,
+            };
+
+            // Only declare offline after OFFLINE_THRESHOLD consecutive failures
+            if (!result.online && newState.consecutiveFailures < 2) {
+                newState.status = 'checking';
+            }
+
+            printerHealthRef.current = newState;
+            setPrinterHealth(newState);
+
+            // ─── Transition: online → offline ───
+            if (prev.status === 'online' && newState.status === 'offline') {
+                // Play alarm
+                try {
+                    if (!alarmAudioRef.current) {
+                        alarmAudioRef.current = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+                        alarmAudioRef.current.loop = true;
+                    }
+                    // Construct a simple alarm beep using Web Audio API
+                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const playBeep = () => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.value = 880;
+                        osc.type = 'square';
+                        gain.gain.value = 0.3;
+                        osc.start();
+                        setTimeout(() => { osc.stop(); }, 200);
+                    };
+                    playBeep();
+                    setAlarmPlaying(true);
+                    // Repeat beeps every 5 seconds
+                    const alarmInterval = setInterval(playBeep, 5000);
+                    (alarmAudioRef.current as any)._alarmInterval = alarmInterval;
+                } catch { /* Audio not available */ }
+
+                // Send email alert
+                const businessName = businessFilter !== 'all' && businesses[businessFilter]
+                    ? businesses[businessFilter]
+                    : 'LOKMA Marketplace';
+                sendPrinterAlert({
+                    type: 'offline',
+                    businessName,
+                    printerIp: printerSettings.printerIp,
+                    printerPort: printerSettings.printerPort,
+                    errorDetails: result.error,
+                    lastSuccessfulPrint: lastPrintSuccessRef.current || undefined,
+                    adminEmail: admin?.email,
+                });
+            }
+
+            // ─── Transition: offline → online ───
+            if ((prev.status === 'offline') && newState.status === 'online') {
+                // Stop alarm
+                stopAlarm();
+
+                // Send recovery email
+                const businessName = businessFilter !== 'all' && businesses[businessFilter]
+                    ? businesses[businessFilter]
+                    : 'LOKMA Marketplace';
+                sendPrinterAlert({
+                    type: 'online',
+                    businessName,
+                    printerIp: printerSettings.printerIp,
+                    printerPort: printerSettings.printerPort,
+                    adminEmail: admin?.email,
+                });
+
+                // Process retry queue
+                if (retryQueueRef.current.size > 0) {
+                    const printed = await retryQueueRef.current.processQueue(
+                        printerSettings,
+                        (item) => showToast(`🔄 Nachgedruckt: #${item.id.slice(0, 6).toUpperCase()}`, 'success'),
+                        (item, err) => showToast(`❌ Druck fehlgeschlagen: #${item.id.slice(0, 6).toUpperCase()}`, 'error')
+                    );
+                    setRetryQueueSize(retryQueueRef.current.size);
+                    if (printed > 0) {
+                        showToast(`🖨️ ${printed} Bon(s) aus Warteschlange gedruckt`, 'success');
+                    }
+                }
+            }
+        };
+
+        // Initial check
+        runHealthCheck();
+        // Start interval
+        healthIntervalRef.current = setInterval(runHealthCheck, 30000);
+
+        return () => {
+            if (healthIntervalRef.current) clearInterval(healthIntervalRef.current);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [printerSettings.enabled, printerSettings.printerIp, printerSettings.printerPort]);
+
+    // Stop alarm function
+    const stopAlarm = useCallback(() => {
+        if (alarmAudioRef.current) {
+            const interval = (alarmAudioRef.current as any)._alarmInterval;
+            if (interval) clearInterval(interval);
+            try { alarmAudioRef.current.pause(); } catch { /* ignore */ }
+        }
+        setAlarmPlaying(false);
+    }, []);
+
+    // ─── Screen Wake Lock ────────────────────────────────────────
+    useEffect(() => {
+        if (!printerSettings.enabled) return;
+
+        let cancelled = false;
+
+        const acquireWakeLock = async () => {
+            const result = await requestWakeLock();
+            if (!cancelled && result.release) {
+                wakeLockReleaseRef.current = result.release;
+            }
+        };
+
+        acquireWakeLock();
+
+        // Re-acquire on visibility change (tab comes back to foreground)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && !cancelled) {
+                acquireWakeLock();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            cancelled = true;
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (wakeLockReleaseRef.current) {
+                wakeLockReleaseRef.current();
+                wakeLockReleaseRef.current = null;
+            }
+        };
+    }, [printerSettings.enabled]);
+
     // Handle test print
     const handleTestPrint = async () => {
         setTestingPrint(true);
@@ -432,11 +606,24 @@ export default function OrdersPage() {
 
             if (result.success) {
                 showToast('🖨️ Bon gedruckt!', 'success');
+                lastPrintSuccessRef.current = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
             } else {
                 showToast(`🖨️ Druckfehler: ${result.message}`, 'error');
+                // Add to retry queue
+                retryQueueRef.current.add(
+                    order,
+                    order.businessName || businesses[order.businessId] || 'LOKMA'
+                );
+                setRetryQueueSize(retryQueueRef.current.size);
             }
         } catch (err: any) {
             showToast(`🖨️ Fehler: ${err.message}`, 'error');
+            // Add to retry queue
+            retryQueueRef.current.add(
+                order,
+                order.businessName || businesses[order.businessId] || 'LOKMA'
+            );
+            setRetryQueueSize(retryQueueRef.current.size);
         } finally {
             setPrintingOrderId(null);
         }
@@ -984,17 +1171,38 @@ export default function OrdersPage() {
 
                     {/* Printer Toggle + Pause Pills + Quick Stats */}
                     <div className="flex items-center gap-3 shrink-0">
-                        {/* Printer Toggle */}
+                        {/* Printer Toggle with Health Status */}
                         <button
                             onClick={() => setShowPrinterPanel(!showPrinterPanel)}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
-                                printerSettings.enabled && printerSettings.printerIp
+                                !printerSettings.enabled || !printerSettings.printerIp
+                                    ? 'bg-gray-700 border border-gray-600 text-gray-400'
+                                    : printerHealth.status === 'online'
                                     ? 'bg-green-600/20 border border-green-500/50 text-green-400'
+                                    : printerHealth.status === 'offline'
+                                    ? 'bg-red-600/20 border border-red-500/50 text-red-400 animate-pulse'
+                                    : printerHealth.status === 'checking'
+                                    ? 'bg-yellow-600/20 border border-yellow-500/50 text-yellow-400'
                                     : 'bg-gray-700 border border-gray-600 text-gray-400'
                             }`}
-                            title="Drucker-Einstellungen"
+                            title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
                         >
-                            🖨️ {printerSettings.enabled ? 'Aktiv' : 'Drucker'}
+                            {/* Health Status Dot */}
+                            {printerSettings.enabled && printerSettings.printerIp && (
+                                <span className={`w-2 h-2 rounded-full inline-block ${
+                                    printerHealth.status === 'online' ? 'bg-green-400' :
+                                    printerHealth.status === 'offline' ? 'bg-red-500 animate-ping' :
+                                    printerHealth.status === 'checking' ? 'bg-yellow-400 animate-pulse' :
+                                    'bg-gray-500'
+                                }`} />
+                            )}
+                            🖨️ {!printerSettings.enabled ? 'Drucker' : printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Aktiv'}
+                            {/* Retry Queue Badge */}
+                            {retryQueueSize > 0 && (
+                                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                                    {retryQueueSize}
+                                </span>
+                            )}
                         </button>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
@@ -1099,77 +1307,137 @@ export default function OrdersPage() {
             </div>
 
             {/* Printer Settings Panel */}
+            {/* ─── PRINTER OFFLINE BANNER ─── */}
+            {printerHealth.status === 'offline' && printerSettings.enabled && (
+                <div className="max-w-7xl mx-auto mb-4">
+                    <div className="bg-red-900/50 border-2 border-red-500 rounded-xl p-4 flex items-center gap-4 animate-pulse">
+                        <span className="text-4xl">🚨</span>
+                        <div className="flex-1">
+                            <h3 className="text-red-300 font-bold text-lg">DRUCKER OFFLINE!</h3>
+                            <p className="text-red-200 text-sm">
+                                Der Bon-Drucker ({printerSettings.printerIp}:{printerSettings.printerPort}) ist nicht erreichbar.
+                                Neue Bestellungen können NICHT gedruckt werden!
+                                {printerHealth.error && <span className="block text-red-400 text-xs mt-1">Fehler: {printerHealth.error}</span>}
+                                {retryQueueSize > 0 && <span className="block text-yellow-300 text-xs mt-1">📋 {retryQueueSize} Bon(s) in der Warteschlange</span>}
+                            </p>
+                        </div>
+                        {alarmPlaying && (
+                            <button
+                                onClick={stopAlarm}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition"
+                                title="Alarm stumm schalten"
+                            >
+                                🔇 Alarm aus
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {showPrinterPanel && (
                 <div className="max-w-7xl mx-auto mb-4">
                     <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-white font-bold flex items-center gap-2">🖨️ Drucker-Einstellungen</h3>
-                            <button onClick={() => setShowPrinterPanel(false)} className="text-gray-400 hover:text-white">✕</button>
+                            <h3 className="text-white font-bold flex items-center gap-2">
+                                🖨️ Bon-Drucker
+                                {/* Live Status Badge */}
+                                {printerSettings.enabled && printerSettings.printerIp && (
+                                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        printerHealth.status === 'online' ? 'bg-green-500/20 text-green-400 border border-green-500/40' :
+                                        printerHealth.status === 'offline' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+                                        printerHealth.status === 'checking' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' :
+                                        'bg-gray-600/20 text-gray-400 border border-gray-500/40'
+                                    }`}>
+                                        {printerHealth.status === 'online' ? '● Online' :
+                                         printerHealth.status === 'offline' ? '● Offline' :
+                                         printerHealth.status === 'checking' ? '● Prüfe...' : '● Unbekannt'}
+                                        {printerHealth.responseTimeMs && printerHealth.status === 'online' ? ` (${printerHealth.responseTimeMs}ms)` : ''}
+                                    </span>
+                                )}
+                            </h3>
+                            <button onClick={() => setShowPrinterPanel(false)} className="text-gray-400 hover:text-white" title="Schließen">✕</button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {/* Enable Toggle */}
-                            <div className="flex items-center gap-3">
-                                <label className="text-gray-300 text-sm whitespace-nowrap">Aktiviert</label>
-                                <button
-                                    onClick={() => savePrinterSettings({ ...printerSettings, enabled: !printerSettings.enabled })}
-                                    className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.enabled ? 'bg-green-500' : 'bg-gray-600'}`}
+
+                        {/* Read-only printer info + Controls */}
+                        {(!printerSettings.enabled || !printerSettings.printerIp) ? (
+                            <div className="bg-gray-900 rounded-xl p-4 text-center">
+                                <p className="text-gray-400 text-sm mb-3">Kein Drucker konfiguriert</p>
+                                <a
+                                    href="/admin/settings/printer"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-medium transition"
                                 >
-                                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${printerSettings.enabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                                </button>
+                                    ⚙️ Drucker einrichten
+                                </a>
                             </div>
-                            {/* IP Address */}
-                            <div>
-                                <label className="text-gray-400 text-xs block mb-1">IP-Adresse</label>
-                                <input
-                                    type="text"
-                                    value={printerSettings.printerIp}
-                                    onChange={(e) => savePrinterSettings({ ...printerSettings, printerIp: e.target.value })}
-                                    placeholder="192.168.188.177"
-                                    className="w-full px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
-                                />
-                            </div>
-                            {/* Port */}
-                            <div>
-                                <label className="text-gray-400 text-xs block mb-1">Port</label>
-                                <input
-                                    type="number"
-                                    value={printerSettings.printerPort}
-                                    onChange={(e) => savePrinterSettings({ ...printerSettings, printerPort: parseInt(e.target.value) || 9100 })}
-                                    className="w-full px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
-                                />
-                            </div>
-                            {/* Copies */}
-                            <div>
-                                <label className="text-gray-400 text-xs block mb-1">Kopien</label>
-                                <select
-                                    value={printerSettings.printCopies}
-                                    onChange={(e) => savePrinterSettings({ ...printerSettings, printCopies: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
-                                >
-                                    <option value={1}>1</option>
-                                    <option value={2}>2</option>
-                                    <option value={3}>3</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-                            <div className="flex items-center gap-3">
-                                <label className="text-gray-300 text-sm">Auto-Print bei neuen Bestellungen</label>
-                                <button
-                                    onClick={() => savePrinterSettings({ ...printerSettings, autoPrint: !printerSettings.autoPrint })}
-                                    className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.autoPrint ? 'bg-amber-500' : 'bg-gray-600'}`}
-                                >
-                                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${printerSettings.autoPrint ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                                </button>
-                            </div>
-                            <button
-                                onClick={handleTestPrint}
-                                disabled={testingPrint || !printerSettings.printerIp}
-                                className="px-4 py-2 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition text-sm disabled:opacity-50"
-                            >
-                                {testingPrint ? '⏳ Druckt...' : '🖨️ Test-Bon drucken'}
-                            </button>
-                        </div>
+                        ) : (
+                            <>
+                                {/* Read-only config info */}
+                                <div className="bg-gray-900 rounded-xl p-3 mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-4 text-sm">
+                                        <div>
+                                            <span className="text-gray-500">Drucker:</span>
+                                            <span className="ml-1 text-white font-mono">{printerSettings.printerIp}:{printerSettings.printerPort}</span>
+                                        </div>
+                                        {printerHealth.responseTimeMs > 0 && printerHealth.status === 'online' && (
+                                            <div>
+                                                <span className="text-gray-500">Latenz:</span>
+                                                <span className="ml-1 text-green-400">{printerHealth.responseTimeMs}ms</span>
+                                            </div>
+                                        )}
+                                        {retryQueueSize > 0 && (
+                                            <div>
+                                                <span className="text-gray-500">Warteschlange:</span>
+                                                <span className="ml-1 text-yellow-400 font-medium">{retryQueueSize} Bon(s)</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <a
+                                        href="/admin/settings/printer"
+                                        className="text-cyan-400 hover:text-cyan-300 text-xs transition"
+                                    >
+                                        ⚙️ Einstellungen
+                                    </a>
+                                </div>
+
+                                {/* Copies + Auto-Print + Test Print */}
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                    <div className="flex items-center gap-6">
+                                        {/* Copies */}
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-gray-400 text-sm">Kopien:</label>
+                                            <select
+                                                value={printerSettings.printCopies}
+                                                onChange={(e) => savePrinterSettings({ ...printerSettings, printCopies: parseInt(e.target.value) })}
+                                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                                title="Anzahl der Kopien"
+                                            >
+                                                <option value={1}>1</option>
+                                                <option value={2}>2</option>
+                                                <option value={3}>3</option>
+                                            </select>
+                                        </div>
+                                        {/* Auto-Print */}
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-gray-400 text-sm">Auto-Print</label>
+                                            <button
+                                                onClick={() => savePrinterSettings({ ...printerSettings, autoPrint: !printerSettings.autoPrint })}
+                                                className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.autoPrint ? 'bg-amber-500' : 'bg-gray-600'}`}
+                                            >
+                                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${printerSettings.autoPrint ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {/* Test Print */}
+                                    <button
+                                        onClick={handleTestPrint}
+                                        disabled={testingPrint}
+                                        className="px-4 py-2 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition text-sm disabled:opacity-50"
+                                    >
+                                        {testingPrint ? '⏳ Druckt...' : '🖨️ Test-Bon drucken'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
