@@ -884,6 +884,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             businessName: _butcherData?['companyName'],
             isPickUp: _isPickUp,
             isDineIn: _isDineIn,
+            isScheduledOrder: _scheduledDeliverySlot != null && !_isPickUp && !_isDineIn,
+            scheduledDate: _scheduledDeliverySlot,
             onDismiss: () {
               // DO NOT clear cart here — it will be cleared AFTER navigation
               // in the dialog's onPressed handler via post-frame callback
@@ -898,12 +900,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         // 📅 Takvim Entegrasyonu — tüm ileri tarihli siparişlerde native takvime ekle
         // Kurye, Gel-Al, Masa Rezervasyonu, Kermes — hepsi destekleniyor
         if (_scheduledDeliverySlot != null) {
+          // Capture cart items before clearing
+          final calendarItems = cart.items.map((item) => {
+            'productName': item.product.name,
+            'quantity': item.quantity,
+            'totalPrice': item.totalPrice,
+          }).toList();
+          final calendarDeliveryMethod = _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery');
           // Small delay so confirmation dialog renders first
           Future.delayed(const Duration(milliseconds: 800), () {
             if (mounted) {
               _showCalendarSavePrompt(
                 businessName: cart.butcherName ?? _butcherData?['companyName'] ?? 'LOKMA',
                 orderNumber: orderNumber,
+                items: calendarItems,
+                grandTotal: grandTotalWithDonation,
+                deliveryMethod: calendarDeliveryMethod,
               );
             }
           });
@@ -933,6 +945,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   void _showCalendarSavePrompt({
     required String businessName,
     String? orderNumber,
+    List<Map<String, dynamic>>? items,
+    double? grandTotal,
+    String? deliveryMethod,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = _accentColor;
@@ -994,6 +1009,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       deliveryTime: _scheduledDeliverySlot!,
                       businessName: businessName,
                       orderNumber: orderNumber,
+                      items: items,
+                      grandTotal: grandTotal,
+                      deliveryMethod: deliveryMethod,
                     );
                   }
                 },

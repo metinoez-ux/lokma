@@ -774,6 +774,7 @@
     "filter_meal_cards_title": "Buoni Pasto",
     "filter_meal_cards_subtitle": "Attività che accettano Sodexo, Ticket, ecc.",
     "free_delivery_label": "Consegna Gratuita",
+    "reservation_available": "Prenotazione tavolo possibile",
     "filter_open_now": "Attività aperte ora",
     "filter_open_now_title": "Aperto Ora",
     "filter_tuna_verified": "Attività verificate da Tuna",
@@ -1476,7 +1477,14 @@
     "reservation_event_title": "Prenotazione tavolo – {}",
     "reservation_event_description": "Prenotazione tavolo per {} ospiti presso {}. Prenotato tramite LOKMA.",
     "table_card": "N. carta tavolo",
-    "save_to_calendar_question": "Vuoi salvare questo evento nel tuo calendario?"
+    "save_to_calendar_question": "Vuoi salvare questo evento nel tuo calendario?",
+    "order_label": "Ordine",
+    "pickup_mode": "Ritiro",
+    "dine_in_mode": "Sul posto",
+    "delivery_mode": "Consegna",
+    "oclock": "",
+    "items_label": "Articoli ordinati",
+    "total_label": "Totale"
   },
   "group_order": {
     "start_group_order": "Avvia ordine di gruppo",
@@ -1653,6 +1661,8 @@
   "order_confirmation": {
     "title": "Ordine ricevuto!",
     "preparing_by": "Il tuo ordine sarà preparato da {businessName}.",
+    "scheduled_by": "Il tuo preordine presso {businessName} è confermato.",
+    "scheduled_confirmed": "Il tuo preordine è confermato.",
     "order_forwarded": "Il tuo ordine è stato inoltrato.",
     "served_at_table": "Sarà servito al tuo tavolo",
     "estimated_time": "Tempo stimato: 30-45 min",

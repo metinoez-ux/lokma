@@ -53,6 +53,9 @@ const { admin, loading: adminLoading } = useAdmin();
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [occupiedCards, setOccupiedCards] = useState<Set<number>>(new Set());
     const [cardModalLoading, setCardModalLoading] = useState(false);
+    // Printer state
+    const [printingId, setPrintingId] = useState<string | null>(null);
+    const printedAutoRef = useRef<Set<string>>(new Set()); // track auto-printed IDs
 
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
@@ -328,6 +331,84 @@ const { admin, loading: adminLoading } = useAdmin();
             showToast(t('durum_guncellenirken_hata_olustu'), 'error');
         }
     };
+
+    // --- Reservation Printing ---
+    const handlePrintReservation = async (reservation: Reservation) => {
+        const printerIp = typeof window !== 'undefined' ? localStorage.getItem('printerIp') || '' : '';
+        const printerPort = typeof window !== 'undefined' ? parseInt(localStorage.getItem('printerPort') || '9100') : 9100;
+        if (!printerIp) {
+            showToast('Yazici IP ayarlanmamis. Siparisler sayfasindan ayarlayin.', 'error');
+            return;
+        }
+        setPrintingId(reservation.id);
+        try {
+            const bizName = reservation.businessName || businesses[reservation.businessId] || 'LOKMA';
+            const res = await fetch('/api/print', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    printerIp,
+                    printerPort,
+                    businessName: bizName,
+                    reservation: {
+                        id: reservation.id,
+                        customerName: reservation.customerName,
+                        customerPhone: reservation.customerPhone,
+                        customerEmail: reservation.customerEmail,
+                        partySize: reservation.partySize,
+                        reservationDate: reservation.reservationDate.toISOString(),
+                        timeSlot: reservation.timeSlot,
+                        notes: reservation.notes,
+                        tableCardNumbers: reservation.tableCardNumbers,
+                    },
+                }),
+            });
+            if (res.ok) {
+                showToast('Rezervasyon yazdirildi', 'success');
+            } else {
+                const data = await res.json();
+                showToast(`Yazdirma hatasi: ${data.error}`, 'error');
+            }
+        } catch (err: any) {
+            showToast(`Yazdirma hatasi: ${err.message}`, 'error');
+        } finally {
+            setPrintingId(null);
+        }
+    };
+
+    // --- Auto-print 20 min before reservation ---
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const printerIp = typeof window !== 'undefined' ? localStorage.getItem('printerIp') || '' : '';
+            if (!printerIp) return; // no printer configured
+
+            const now = new Date();
+            reservations.forEach((r) => {
+                if (r.status !== 'confirmed') return;
+                if (printedAutoRef.current.has(r.id)) return;
+
+                // Parse reservation time
+                const resDateTime = new Date(r.reservationDate);
+                if (r.timeSlot) {
+                    const [hh, mm] = r.timeSlot.split(':').map(Number);
+                    if (!isNaN(hh) && !isNaN(mm)) {
+                        resDateTime.setHours(hh, mm, 0, 0);
+                    }
+                }
+
+                const diffMs = resDateTime.getTime() - now.getTime();
+                const diffMin = diffMs / 60000;
+
+                // Print when between 0 and 20 minutes away
+                if (diffMin > 0 && diffMin <= 20) {
+                    printedAutoRef.current.add(r.id);
+                    handlePrintReservation(r);
+                }
+            });
+        }, 60000); // check every 60 seconds
+
+        return () => clearInterval(interval);
+    }, [reservations, businesses]);
 
     // Format date
     const formatDate = (date: Date) => {
@@ -640,6 +721,15 @@ const { admin, loading: adminLoading } = useAdmin();
                                             >
                                                 👁️ Detay
                                             </button>
+                                            {reservation.status === 'confirmed' && (
+                                                <button
+                                                    onClick={() => handlePrintReservation(reservation)}
+                                                    disabled={printingId === reservation.id}
+                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${printingId === reservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                                >
+                                                    {printingId === reservation.id ? '⏳...' : '🖨️'}
+                                                </button>
+                                            )}
                                             {reservation.notes && (
                                                 <span className="text-yellow-400 text-xs" title={reservation.notes}>📝</span>
                                             )}
@@ -765,12 +855,21 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </>
                                 )}
                                 {selectedReservation.status === 'confirmed' && (
-                                    <button
-                                        onClick={() => handleStatusChange(selectedReservation, 'cancelled')}
-                                        className="flex-1 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition"
-                                    >
-                                        🚫 İptal Et
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => handlePrintReservation(selectedReservation)}
+                                            disabled={printingId === selectedReservation.id}
+                                            className={`flex-1 py-3 rounded-lg font-medium transition ${printingId === selectedReservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                        >
+                                            {printingId === selectedReservation.id ? '⏳ Yazdiriliyor...' : '🖨️ Yazdir'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleStatusChange(selectedReservation, 'cancelled')}
+                                            className="flex-1 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition"
+                                        >
+                                            🚫 İptal Et
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>

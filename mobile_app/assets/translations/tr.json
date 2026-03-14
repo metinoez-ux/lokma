@@ -760,6 +760,7 @@
     "filter_meal_cards_title": "Yemek Kartı",
     "filter_meal_cards_subtitle": "Sodexo, Ticket vb. kabul eden işletmeler",
     "free_delivery_label": "Teslimat Bedava",
+    "reservation_available": "Masa Rezervasyonu mümkün",
     "filter_open_now": "Şu anda açık olan işletmeler",
     "filter_open_now_title": "Şimdi Açık",
     "filter_tuna_verified": "Tuna tarafından onaylı işletmeler",
@@ -1476,7 +1477,14 @@
     "reservation_event_title": "Masa Rezervasyonu – {}",
     "reservation_event_description": "{} kişilik masa rezervasyonu, {}. LOKMA üzerinden rezerve edildi.",
     "table_card": "Masa kartı no.",
-    "save_to_calendar_question": "Bu etkinliği takviminize kaydetmek ister misiniz?"
+    "save_to_calendar_question": "Bu etkinliği takviminize kaydetmek ister misiniz?",
+    "order_label": "Sipariş",
+    "pickup_mode": "Gel Al",
+    "dine_in_mode": "Masa Siparişi",
+    "delivery_mode": "Kurye",
+    "oclock": "",
+    "items_label": "Sipariş İçeriği",
+    "total_label": "Toplam Tutar"
   },
   "group_order": {
     "start_group_order": "Grup Siparişi Başlat",
@@ -1661,6 +1669,8 @@
   "order_confirmation": {
     "title": "Sipariş Alındı!",
     "preparing_by": "Siparişiniz {businessName} tarafından hazırlanacak.",
+    "scheduled_by": "{businessName} için ileri tarihli siparişiniz onaylandı.",
+    "scheduled_confirmed": "İleri tarihli siparişiniz onaylandı.",
     "order_forwarded": "Siparişiniz iletildi.",
     "served_at_table": "Masanızda servis edilecek",
     "estimated_time": "Tahmini süre: 30-45 dk",

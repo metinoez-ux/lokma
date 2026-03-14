@@ -9,6 +9,8 @@ class OrderConfirmationDialog extends StatelessWidget {
   final String? businessName;
   final bool isPickUp;
   final bool isDineIn;
+  final bool isScheduledOrder;
+  final DateTime? scheduledDate;
   final VoidCallback? onDismiss;
   final VoidCallback? onClearCart;
 
@@ -19,6 +21,8 @@ class OrderConfirmationDialog extends StatelessWidget {
     this.businessName,
     this.isPickUp = true,
     this.isDineIn = false,
+    this.isScheduledOrder = false,
+    this.scheduledDate,
     this.onDismiss,
     this.onClearCart,
   });
@@ -69,9 +73,13 @@ class OrderConfirmationDialog extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                businessName != null
-                  ? 'order_confirmation.preparing_by'.tr(namedArgs: {'businessName': businessName!})
-                  : 'order_confirmation.order_forwarded'.tr(),
+                isScheduledOrder && scheduledDate != null
+                  ? (businessName != null
+                    ? 'order_confirmation.scheduled_by'.tr(namedArgs: {'businessName': businessName!})
+                    : 'order_confirmation.scheduled_confirmed'.tr())
+                  : (businessName != null
+                    ? 'order_confirmation.preparing_by'.tr(namedArgs: {'businessName': businessName!})
+                    : 'order_confirmation.order_forwarded'.tr()),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: subtextColor, fontSize: 14, height: 1.4),
               ),
@@ -187,6 +195,40 @@ class OrderConfirmationDialog extends StatelessWidget {
         ],
       );
     } else {
+      // Scheduled delivery order — show scheduled date/time
+      if (isScheduledOrder && scheduledDate != null) {
+        return Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.calendar_today, color: accentColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  _formatScheduledDay(context),
+                  style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.schedule, color: accentColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  _formatScheduledClock(),
+                  style: TextStyle(color: accentColor, fontSize: 22, fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  ' Uhr',
+                  style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ],
+        );
+      }
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -221,5 +263,28 @@ class OrderConfirmationDialog extends StatelessWidget {
 
   String _formatPickupClock() {
     return '${pickupDate.hour.toString().padLeft(2, '0')}:${pickupDate.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatScheduledDay(BuildContext context) {
+    final date = scheduledDate!;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final checkDate = DateTime(date.year, date.month, date.day);
+
+    if (checkDate == today) {
+      return 'order_confirmation.today'.tr();
+    } else if (checkDate == tomorrow) {
+      return 'order_confirmation.tomorrow'.tr();
+    } else {
+      final locale = context.locale.toString();
+      final formatter = DateFormat('EEEE, d MMMM', locale);
+      return formatter.format(date);
+    }
+  }
+
+  String _formatScheduledClock() {
+    final date = scheduledDate!;
+    return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

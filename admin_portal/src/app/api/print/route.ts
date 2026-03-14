@@ -27,12 +27,27 @@ const CMD = {
     UNDERLINE_OFF: Buffer.from([ESC, 0x2D, 0x00]),     // Underline off
 };
 
-// Helper to encode text (handle German/Turkish chars via Latin-1 + codepage)
+// ASCII transliteration for German/Turkish special characters
+// Standard German convention: ß→ss, ü→ue, ö→oe, ä→ae
+const CHAR_REPLACE: Record<string, string> = {
+    'ä': 'ae', 'Ä': 'Ae', 'ö': 'oe', 'Ö': 'Oe',
+    'ü': 'ue', 'Ü': 'Ue', 'ß': 'ss',
+    'ç': 'c', 'Ç': 'C', 'ş': 's', 'Ş': 'S',
+    'ğ': 'g', 'Ğ': 'G', 'ı': 'i', 'İ': 'I',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'á': 'a', 'à': 'a', 'â': 'a',
+    'ó': 'o', 'ò': 'o', 'ô': 'o',
+    'ú': 'u', 'ù': 'u', 'û': 'u',
+    'ñ': 'n', 'Ñ': 'N', '€': 'EUR',
+};
+
+// Helper to encode text for receipt printer (pure ASCII — works on all printers)
 function encodeText(text: string): Buffer {
-    // Set codepage to PC858 (Latin-1 + Euro) for German umlauts
-    const codepageCmd = Buffer.from([ESC, 0x74, 19]); // PC858
-    const textBuf = Buffer.from(text, 'latin1');
-    return Buffer.concat([codepageCmd, textBuf]);
+    let ascii = '';
+    for (const ch of text) {
+        ascii += CHAR_REPLACE[ch] || ch;
+    }
+    return Buffer.from(ascii, 'ascii');
 }
 
 function textLine(text: string): Buffer {
@@ -80,6 +95,24 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     parts.push(CMD.FONT_NORMAL);
     parts.push(CMD.BOLD_OFF);
     parts.push(CMD.ALIGN_LEFT);
+
+    // --- SCHEDULED TIME (BIG — if pre-order) ---
+    if (order.scheduledAt) {
+        parts.push(separator('*'));
+        parts.push(CMD.ALIGN_CENTER);
+        parts.push(CMD.BOLD_ON);
+        parts.push(textLine('ISTENEN SAAT / BESTELLUNG FUER'));
+        parts.push(CMD.FONT_LARGE);
+        const schedDate = new Date(order.scheduledAt);
+        const schedDateStr = schedDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const schedTimeStr = schedDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        parts.push(textLine(schedDateStr));
+        parts.push(textLine(`${schedTimeStr} Uhr`));
+        parts.push(CMD.FONT_NORMAL);
+        parts.push(CMD.BOLD_OFF);
+        parts.push(CMD.ALIGN_LEFT);
+    }
+
     parts.push(separator());
 
     // --- ITEMS ---
@@ -185,9 +218,12 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     if (order.paymentMethod) {
         const payLabels: Record<string, string> = {
             cash: 'Nakit / Bar',
+            cashOnDelivery: 'Nakit / Barzahlung',
             card: 'Kart / Karte',
+            cardOnDelivery: 'Kart / Kartenzahlung',
             online: 'Online',
-            stripe: 'Stripe',
+            stripe: 'Online / Stripe',
+            paypal: 'PayPal',
         };
         parts.push(textLine(`Odeme: ${payLabels[order.paymentMethod] || order.paymentMethod}`));
     }
@@ -198,6 +234,119 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     const dateStr = now.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     parts.push(textLine(`${dateStr}  ${timeStr}`));
+    parts.push(textLine('--- LOKMA ---'));
+    parts.push(CMD.ALIGN_LEFT);
+
+    // Feed and cut
+    parts.push(CMD.FEED_5);
+    parts.push(CMD.PARTIAL_CUT);
+
+    return Buffer.concat(parts);
+}
+
+// Build reservation receipt
+function buildReservationReceipt(reservation: any, businessName?: string): Buffer {
+    const parts: Buffer[] = [];
+
+    // INIT
+    parts.push(CMD.INIT);
+
+    // --- HEADER ---
+    parts.push(CMD.ALIGN_CENTER);
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_DOUBLE_H);
+    parts.push(textLine(businessName || 'LOKMA'));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+
+    // Type badge
+    parts.push(CMD.BOLD_ON);
+    parts.push(textLine('MASA REZERVASYONU'));
+    parts.push(textLine('TISCHRESERVIERUNG'));
+    parts.push(CMD.BOLD_OFF);
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator('='));
+
+    // --- RESERVATION NUMBER (BIG) ---
+    parts.push(CMD.ALIGN_CENTER);
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_LARGE);
+    const resId = reservation.reservationNumber || reservation.id?.substring(0, 6)?.toUpperCase() || '---';
+    parts.push(textLine(`REZ #${resId}`));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator());
+
+    // --- DATE & TIME (LARGE + BOLD) ---
+    parts.push(CMD.ALIGN_CENTER);
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_DOUBLE);
+    const resDate = reservation.reservationDate
+        ? new Date(reservation.reservationDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : '--.--.----';
+    const resTime = reservation.timeSlot
+        || (reservation.reservationDate
+            ? new Date(reservation.reservationDate).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+            : '--:--');
+    parts.push(textLine(resDate));
+    parts.push(textLine(`${resTime} Uhr`));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator());
+
+    // --- PARTY SIZE ---
+    parts.push(CMD.ALIGN_CENTER);
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_DOUBLE);
+    parts.push(textLine(`${reservation.partySize || '?'} Kisi / Personen`));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator());
+
+    // --- TABLE CARD NUMBERS ---
+    if (reservation.tableCardNumbers && reservation.tableCardNumbers.length > 0) {
+        parts.push(CMD.ALIGN_CENTER);
+        parts.push(CMD.BOLD_ON);
+        parts.push(textLine('MASA / TISCH'));
+        parts.push(CMD.FONT_DOUBLE);
+        parts.push(textLine(`Nr. ${reservation.tableCardNumbers.join(', ')}`));
+        parts.push(CMD.FONT_NORMAL);
+        parts.push(CMD.BOLD_OFF);
+        parts.push(CMD.ALIGN_LEFT);
+        parts.push(separator());
+    }
+
+    // --- CUSTOMER INFO ---
+    parts.push(CMD.BOLD_ON);
+    parts.push(textLine('MUSTERI / KUNDE'));
+    parts.push(CMD.BOLD_OFF);
+    parts.push(textLine(`Ad: ${reservation.customerName || 'Unbekannt'}`));
+    if (reservation.customerPhone) {
+        parts.push(textLine(`Tel: ${reservation.customerPhone}`));
+    }
+    if (reservation.customerEmail) {
+        parts.push(textLine(`Email: ${reservation.customerEmail}`));
+    }
+    parts.push(separator());
+
+    // --- NOTES ---
+    if (reservation.notes) {
+        parts.push(CMD.BOLD_ON);
+        parts.push(textLine('NOT / NOTIZ'));
+        parts.push(CMD.BOLD_OFF);
+        parts.push(textLine(reservation.notes));
+        parts.push(separator());
+    }
+
+    // --- FOOTER ---
+    parts.push(CMD.ALIGN_CENTER);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    parts.push(textLine(`Erstellt: ${dateStr} ${timeStr}`));
     parts.push(textLine('--- LOKMA ---'));
     parts.push(CMD.ALIGN_LEFT);
 
@@ -253,7 +402,7 @@ async function sendToPrinter(ip: string, port: number, data: Buffer, timeoutMs =
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { printerIp, printerPort = 9100, order, businessName, testPrint } = body;
+        const { printerIp, printerPort = 9100, order, reservation, businessName, testPrint } = body;
 
         if (!printerIp) {
             return NextResponse.json({ error: 'printerIp is required' }, { status: 400 });
@@ -275,9 +424,12 @@ export async function POST(req: NextRequest) {
                 customerPhone: '0176 12345678',
                 deliveryAddress: { street: 'Teststr. 42', zipCode: '41836', city: 'Hueckelhoven' },
             }, businessName || 'LOKMA Test');
+        } else if (reservation) {
+            // Build a reservation receipt
+            receiptData = buildReservationReceipt(reservation, businessName);
         } else {
             if (!order) {
-                return NextResponse.json({ error: 'order data is required' }, { status: 400 });
+                return NextResponse.json({ error: 'order or reservation data is required' }, { status: 400 });
             }
             receiptData = buildReceipt(order, businessName);
         }

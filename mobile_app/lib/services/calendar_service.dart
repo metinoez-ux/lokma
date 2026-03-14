@@ -269,16 +269,66 @@ class CalendarService {
     required DateTime deliveryTime,
     required String businessName,
     String? orderNumber,
+    List<Map<String, dynamic>>? items,
+    double? grandTotal,
+    String? deliveryMethod, // 'delivery', 'pickup', 'dineIn'
   }) {
-    final title = 'calendar.order_event_title'.tr(args: [businessName]);
-    final desc = orderNumber != null
-        ? 'calendar.order_event_description'.tr(args: [orderNumber, businessName])
-        : 'calendar.order_event_description_simple'.tr(args: [businessName]);
+    // Build title with delivery type — visible in calendar overview
+    String modeLabel;
+    if (deliveryMethod == 'pickup') {
+      modeLabel = 'calendar.pickup_mode'.tr();
+    } else if (deliveryMethod == 'dineIn') {
+      modeLabel = 'calendar.dine_in_mode'.tr();
+    } else {
+      modeLabel = 'calendar.delivery_mode'.tr();
+    }
+    final title = 'LOKMA $modeLabel – $businessName';
+
+    // Build rich description with order details
+    final buf = StringBuffer();
+
+    // Header line
+    if (orderNumber != null) {
+      buf.writeln('🧾 ${'calendar.order_label'.tr()} #$orderNumber');
+    }
+    buf.writeln('🏪 $businessName');
+    buf.writeln('');
+
+    // Delivery method
+    if (deliveryMethod == 'pickup') {
+      buf.writeln('📦 ${'calendar.pickup_mode'.tr()}');
+    } else if (deliveryMethod == 'dineIn') {
+      buf.writeln('🍽️ ${'calendar.dine_in_mode'.tr()}');
+    } else {
+      buf.writeln('🚴 ${'calendar.delivery_mode'.tr()}');
+    }
+
+    // Scheduled time
+    final timeStr = '${deliveryTime.hour.toString().padLeft(2, '0')}:${deliveryTime.minute.toString().padLeft(2, '0')}';
+    buf.writeln('⏰ $timeStr ${'calendar.oclock'.tr()}');
+    buf.writeln('');
+
+    // Order items
+    if (items != null && items.isNotEmpty) {
+      buf.writeln('── ${'calendar.items_label'.tr()} ──');
+      for (final item in items) {
+        final name = item['productName'] ?? '';
+        final qty = item['quantity'] ?? 1;
+        final price = (item['totalPrice'] as num?)?.toDouble() ?? 0.0;
+        buf.writeln('• ${qty}x $name — ${price.toStringAsFixed(2).replaceAll('.', ',')} €');
+      }
+      buf.writeln('');
+    }
+
+    // Grand total
+    if (grandTotal != null) {
+      buf.writeln('💰 ${'calendar.total_label'.tr()}: ${grandTotal.toStringAsFixed(2).replaceAll('.', ',')} €');
+    }
 
     return showCalendarPickerAndSave(
       context: context,
       title: title,
-      description: desc,
+      description: buf.toString().trim(),
       startTime: deliveryTime,
       duration: const Duration(minutes: 30),
       location: businessName,

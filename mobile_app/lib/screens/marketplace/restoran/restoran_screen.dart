@@ -2366,6 +2366,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       ],
                                     );
                                   } else {
+                                    final hasReservation = data['hasReservation'] as bool? ?? false;
                                     return Row(
                                       children: [
                                         Icon(Icons.location_on_outlined,
@@ -2388,6 +2389,35 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                             fontWeight: FontWeight.w400,
                                           ),
                                         ),
+                                        if (hasReservation) ...[
+                                          Text(' · ',
+                                              style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.7),
+                                                  fontSize: 13)),
+                                          Icon(Icons.event_seat,
+                                              color: lokmaPink,
+                                              size: 14),
+                                          const SizedBox(width: 4),
+                                          Icon(Icons.schedule,
+                                              color: lokmaPink,
+                                              size: 14),
+                                          const SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              tr('marketplace.reservation_available'),
+                                              style: TextStyle(
+                                                color: lokmaPink,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     );
                                   }

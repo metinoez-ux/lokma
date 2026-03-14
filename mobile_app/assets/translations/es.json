@@ -774,6 +774,7 @@
     "filter_meal_cards_title": "Tarjeta de Comida",
     "filter_meal_cards_subtitle": "Negocios que aceptan Sodexo, Ticket, etc.",
     "free_delivery_label": "Envío Gratis",
+    "reservation_available": "Reserva de mesa disponible",
     "filter_open_now": "Negocios abiertos ahora",
     "filter_open_now_title": "Abierto Ahora",
     "filter_tuna_verified": "Negocios verificados por Tuna",
@@ -1476,7 +1477,14 @@
     "reservation_event_title": "Reserva de mesa – {}",
     "reservation_event_description": "Reserva de mesa para {} comensales en {}. Reservado a través de LOKMA.",
     "table_card": "N.º tarjeta de mesa",
-    "save_to_calendar_question": "¿Desea guardar este evento en su calendario?"
+    "save_to_calendar_question": "¿Desea guardar este evento en su calendario?",
+    "order_label": "Pedido",
+    "pickup_mode": "Recogida",
+    "dine_in_mode": "En el local",
+    "delivery_mode": "Envío",
+    "oclock": "h",
+    "items_label": "Artículos",
+    "total_label": "Total"
   },
   "group_order": {
     "start_group_order": "Iniciar pedido grupal",
@@ -1653,6 +1661,8 @@
   "order_confirmation": {
     "title": "¡Pedido recibido!",
     "preparing_by": "Su pedido será preparado por {businessName}.",
+    "scheduled_by": "Su pedido programado en {businessName} está confirmado.",
+    "scheduled_confirmed": "Su pedido programado está confirmado.",
     "order_forwarded": "Su pedido ha sido enviado.",
     "served_at_table": "Será servido en su mesa",
     "estimated_time": "Tiempo estimado: 30-45 min",

@@ -8,7 +8,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
-import { printOrder, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/services/printerService';
+import { printOrder, testPrint, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/services/printerService';
 
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
@@ -110,6 +110,9 @@ export default function OrdersPage() {
     // Printer state
     const [printerSettings, setPrinterSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS);
     const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
+    const [showPrinterPanel, setShowPrinterPanel] = useState(false);
+    const [testingPrint, setTestingPrint] = useState(false);
+    const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
 
     // Unavailable items modal state
     const [showUnavailableModal, setShowUnavailableModal] = useState(false);
@@ -364,12 +367,40 @@ export default function OrdersPage() {
         { label: 'Unbegrenzt', minutes: null },
     ] as const;
 
-    // Load printer settings
+    // Load printer settings from localStorage (with admin fallback)
     useEffect(() => {
-        if (admin?.printerSettings) {
+        const saved = localStorage.getItem('lokma_printer_settings');
+        if (saved) {
+            try {
+                setPrinterSettings(JSON.parse(saved));
+            } catch { /* ignore */ }
+        } else if (admin?.printerSettings) {
             setPrinterSettings(admin.printerSettings as PrinterSettings);
         }
     }, [admin]);
+
+    // Save printer settings to localStorage
+    const savePrinterSettings = (newSettings: PrinterSettings) => {
+        setPrinterSettings(newSettings);
+        localStorage.setItem('lokma_printer_settings', JSON.stringify(newSettings));
+    };
+
+    // Handle test print
+    const handleTestPrint = async () => {
+        setTestingPrint(true);
+        try {
+            const result = await testPrint(printerSettings, 'LOKMA Marketplace');
+            if (result.success) {
+                showToast('🖨️ Test-Bon gedruckt!', 'success');
+            } else {
+                showToast(`🖨️ Fehler: ${result.message}`, 'error');
+            }
+        } catch (err: any) {
+            showToast(`🖨️ Fehler: ${err.message}`, 'error');
+        } finally {
+            setTestingPrint(false);
+        }
+    };
 
     // Handle print order
     const handlePrintOrder = async (order: Order) => {
@@ -383,7 +414,7 @@ export default function OrdersPage() {
                 orderNumber: order.orderNumber || order.id.slice(0, 6).toUpperCase(),
                 orderType: order.type,
                 items: order.items?.map(item => ({
-                    name: item.name,
+                    name: item.productName || item.name,
                     quantity: item.quantity,
                     price: item.price,
                     unit: item.unit,
@@ -396,6 +427,7 @@ export default function OrdersPage() {
                 tableNumber: order.tableNumber,
                 note: order.notes,
                 paymentMethod: order.paymentMethod,
+                scheduledAt: order.scheduledAt ? order.scheduledAt.toDate().toISOString() : undefined,
             }, order.businessName || businesses[order.businessId] || 'LOKMA');
 
             if (result.success) {
@@ -409,6 +441,33 @@ export default function OrdersPage() {
             setPrintingOrderId(null);
         }
     };
+
+    // --- Auto-print scheduled orders 15 min before ---
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (!printerSettings.enabled || !printerSettings.printerIp) return;
+            const now = new Date();
+
+            orders.forEach((order) => {
+                // Only scheduled orders that have been accepted/preparing
+                if (!order.scheduledAt || !order.isScheduledOrder) return;
+                if (order.status !== 'accepted' && order.status !== 'preparing' && order.status !== 'pending') return;
+                if (scheduledAutoPrintedRef.current.has(order.id)) return;
+
+                const schedTime = order.scheduledAt.toDate();
+                const diffMs = schedTime.getTime() - now.getTime();
+                const diffMin = diffMs / 60000;
+
+                // Print when 0–15 minutes before scheduled time
+                if (diffMin > 0 && diffMin <= 15) {
+                    scheduledAutoPrintedRef.current.add(order.id);
+                    handlePrintOrder(order);
+                }
+            });
+        }, 60000);
+
+        return () => clearInterval(interval);
+    }, [orders, printerSettings, businesses]);
 
     // Real-time orders subscription
     useEffect(() => {
@@ -923,7 +982,21 @@ export default function OrdersPage() {
                         </div>
                     </div>
 
-                    {/* Pause Pills + Quick Stats */}
+                    {/* Printer Toggle + Pause Pills + Quick Stats */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {/* Printer Toggle */}
+                        <button
+                            onClick={() => setShowPrinterPanel(!showPrinterPanel)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
+                                printerSettings.enabled && printerSettings.printerIp
+                                    ? 'bg-green-600/20 border border-green-500/50 text-green-400'
+                                    : 'bg-gray-700 border border-gray-600 text-gray-400'
+                            }`}
+                            title="Drucker-Einstellungen"
+                        >
+                            🖨️ {printerSettings.enabled ? 'Aktiv' : 'Drucker'}
+                        </button>
+                    </div>
                     <div className="flex items-center gap-3 shrink-0">
                         {/* ─── Pause Pill Buttons (only when business selected) ─── */}
                         {businessFilter !== 'all' && (
@@ -1024,6 +1097,82 @@ export default function OrdersPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Printer Settings Panel */}
+            {showPrinterPanel && (
+                <div className="max-w-7xl mx-auto mb-4">
+                    <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-bold flex items-center gap-2">🖨️ Drucker-Einstellungen</h3>
+                            <button onClick={() => setShowPrinterPanel(false)} className="text-gray-400 hover:text-white">✕</button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Enable Toggle */}
+                            <div className="flex items-center gap-3">
+                                <label className="text-gray-300 text-sm whitespace-nowrap">Aktiviert</label>
+                                <button
+                                    onClick={() => savePrinterSettings({ ...printerSettings, enabled: !printerSettings.enabled })}
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.enabled ? 'bg-green-500' : 'bg-gray-600'}`}
+                                >
+                                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${printerSettings.enabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                                </button>
+                            </div>
+                            {/* IP Address */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">IP-Adresse</label>
+                                <input
+                                    type="text"
+                                    value={printerSettings.printerIp}
+                                    onChange={(e) => savePrinterSettings({ ...printerSettings, printerIp: e.target.value })}
+                                    placeholder="192.168.188.177"
+                                    className="w-full px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                />
+                            </div>
+                            {/* Port */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">Port</label>
+                                <input
+                                    type="number"
+                                    value={printerSettings.printerPort}
+                                    onChange={(e) => savePrinterSettings({ ...printerSettings, printerPort: parseInt(e.target.value) || 9100 })}
+                                    className="w-full px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                />
+                            </div>
+                            {/* Copies */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">Kopien</label>
+                                <select
+                                    value={printerSettings.printCopies}
+                                    onChange={(e) => savePrinterSettings({ ...printerSettings, printCopies: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                >
+                                    <option value={1}>1</option>
+                                    <option value={2}>2</option>
+                                    <option value={3}>3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+                            <div className="flex items-center gap-3">
+                                <label className="text-gray-300 text-sm">Auto-Print bei neuen Bestellungen</label>
+                                <button
+                                    onClick={() => savePrinterSettings({ ...printerSettings, autoPrint: !printerSettings.autoPrint })}
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.autoPrint ? 'bg-amber-500' : 'bg-gray-600'}`}
+                                >
+                                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${printerSettings.autoPrint ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                                </button>
+                            </div>
+                            <button
+                                onClick={handleTestPrint}
+                                disabled={testingPrint || !printerSettings.printerIp}
+                                className="px-4 py-2 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition text-sm disabled:opacity-50"
+                            >
+                                {testingPrint ? '⏳ Druckt...' : '🖨️ Test-Bon drucken'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Visual Order Status Workflow - Matching Super Admin Dashboard */}
             <div className="max-w-7xl mx-auto mb-6">
