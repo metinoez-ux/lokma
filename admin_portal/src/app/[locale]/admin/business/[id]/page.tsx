@@ -175,16 +175,17 @@ export default function BusinessDetailsPage() {
     }
   }
 
-  // Turkish status labels for order display
+  // Localized status labels for order display
   const orderStatusLabels: Record<string, { label: string; color: string }> = {
-    pending: { label: "Beklemede", color: "bg-yellow-600" },
+    pending: { label: t('order_pending'), color: "bg-yellow-600" },
     accepted: { label: t('onaylandi'), color: "bg-blue-600" },
     preparing: { label: t('hazirlaniyor'), color: "bg-blue-600" },
     ready: { label: t('hazir'), color: "bg-green-600" },
-    onTheWay: { label: "Yolda", color: "bg-indigo-600" },
-    delivered: { label: "Teslim Edildi", color: "bg-gray-600" },
+    onTheWay: { label: t('order_onTheWay'), color: "bg-indigo-600" },
+    delivered: { label: t('order_delivered'), color: "bg-gray-600" },
     completed: { label: t('tamamlandi'), color: "bg-gray-600" },
     cancelled: { label: t('iptal1'), color: "bg-red-600" },
+    payment_failed: { label: t('order_payment_failed'), color: "bg-red-800" },
   };
 
   // Fallback plan labels for badge display (dynamic plans override these)
