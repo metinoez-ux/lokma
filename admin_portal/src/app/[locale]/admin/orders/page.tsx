@@ -414,7 +414,7 @@ export default function OrdersPage() {
                 orderNumber: order.orderNumber || order.id.slice(0, 6).toUpperCase(),
                 orderType: order.type,
                 items: order.items?.map(item => ({
-                    name: item.productName || item.name,
+                    name: (item as any).productName || item.name,
                     quantity: item.quantity,
                     price: item.price,
                     unit: item.unit,
