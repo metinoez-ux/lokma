@@ -262,7 +262,7 @@ export default function BusinessDetailsPage() {
     "overview" | "orders" | "reservations" | "settings" | "procurement"
   >(initialTab);
   const [settingsSubTab, setSettingsSubTab] = useState<
-    "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon"
+    "isletme" | "menu" | "personel" | "masa" | "abonelik" | "odeme" | "promosyon" | "marketing"
   >("isletme");
   const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
   const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat">("bilgiler");
@@ -322,7 +322,7 @@ export default function BusinessDetailsPage() {
       setActiveTab(tab as any);
     }
     const subTab = searchParams.get('subTab');
-    if (subTab && ['isletme', 'menu', 'personel', 'masa', 'abonelik', 'teslimat', 'odeme', 'promosyon'].includes(subTab)) {
+    if (subTab && ['isletme', 'menu', 'personel', 'masa', 'abonelik', 'teslimat', 'odeme', 'promosyon', 'marketing'].includes(subTab)) {
       setSettingsSubTab(subTab as any);
       setActiveTab('settings');
     }
@@ -610,6 +610,69 @@ export default function BusinessDetailsPage() {
 
   // 🆕 Plan features resolved from subscription_plans collection
   const [planFeatures, setPlanFeatures] = useState<Record<string, boolean>>({});
+
+  // 📢 Marketing Boost campaign state
+  const [boostCampaigns, setBoostCampaigns] = useState<any[]>([]);
+  const [loadingBoostCampaigns, setLoadingBoostCampaigns] = useState(false);
+  const [showBoostForm, setShowBoostForm] = useState(false);
+  const [boostSaving, setBoostSaving] = useState(false);
+  const [boostForm, setBoostForm] = useState({
+    campaignName: '',
+    model: 'cpc' as 'cpc' | 'payPerOrder',
+    bidAmount: '0.30',
+    budgetType: 'weekly' as 'daily' | 'weekly' | 'total',
+    budgetAmount: '50',
+    activeDays: [0, 1, 2, 3, 4, 5, 6] as number[],
+    activeHoursStart: '00:00',
+    activeHoursEnd: '23:59',
+    endDate: '',
+  });
+
+  // 📢 Load boost campaigns when Marketing tab is opened
+  useEffect(() => {
+    if (settingsSubTab !== 'marketing' || !businessId) return;
+    const loadCampaigns = async () => {
+      setLoadingBoostCampaigns(true);
+      try {
+        const q = query(collection(db, 'boost_campaigns'), where('businessId', '==', businessId));
+        const snap = await getDocs(q);
+        const campaigns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        setBoostCampaigns(campaigns);
+      } catch (err) {
+        console.error('Error loading boost campaigns:', err);
+      }
+      setLoadingBoostCampaigns(false);
+    };
+    loadCampaigns();
+  }, [settingsSubTab, businessId]);
+
+  // 🔒 Reusable overlay for plan-gated modules — always visible (teaser) but locked if not in plan
+  const LockedModuleOverlay = ({ featureKey, children }: { featureKey: string; children: React.ReactNode }) => {
+    const isAvailable = planFeatures[featureKey];
+    if (isAvailable) return <>{children}</>;
+    return (
+      <div className="relative">
+        <div className="opacity-40 pointer-events-none select-none filter blur-[0.5px]">
+          {children}
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="bg-gray-800/95 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-6 text-center max-w-md shadow-2xl">
+            <span className="text-4xl">🔒</span>
+            <h3 className="text-white font-bold mt-3 text-lg">{t('buFonksiyonPlaninizdaMevcutDegil')}</h3>
+            <p className="text-gray-400 text-sm mt-2">
+              {t('mevcutPlan')}: <strong className="text-white">{business?.subscriptionPlan || 'free'}</strong>
+            </p>
+            <a
+              href={`/${params.locale}/admin/plans`}
+              className="mt-4 inline-block px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-semibold rounded-xl hover:from-amber-400 hover:to-amber-500 transition shadow-lg"
+            >
+              {t('planlariIncele')}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   //  Template Selection Modal State
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -2309,8 +2372,9 @@ export default function BusinessDetailsPage() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${toast.type === "success" ? "bg-green-600" : "bg-red-600"} text-white`}
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-2xl border ${toast.type === "success" ? "bg-green-600/95 border-green-500/50" : "bg-red-600/95 border-red-500/50"} text-white text-sm font-medium backdrop-blur-sm flex items-center gap-2`}
         >
+          <span>{toast.type === "success" ? "✓" : "✗"}</span>
           {toast.message}
         </div>
       )}
@@ -2365,7 +2429,7 @@ export default function BusinessDetailsPage() {
                 href={`/admin/business/${businessId}/performance`}
                 className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-500"
               >
-                📈 Performans
+                📈 {t('performans')}
               </Link>
             )}
             <button
@@ -2378,16 +2442,14 @@ export default function BusinessDetailsPage() {
               onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
-               Tedarik ({supplierOrders.length})
+               {t('tedarik')} ({supplierOrders.length})
             </button>
-            {formData.hasReservation && (
-              <button
-                onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
-              >
-                {t('masaRezervasyonlari')}
-              </button>
-            )}
+            <button
+              onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"} ${!planFeatures.reservations ? 'opacity-60' : ''}`}
+            >
+              {!planFeatures.reservations && '🔒 '}{t('masaRezervasyonlari')}
+            </button>
 
             {/* Ayarlar Dropdown */}
             <div className="relative settings-dropdown-container">
@@ -2403,15 +2465,17 @@ export default function BusinessDetailsPage() {
 
               {showSettingsDropdown && (
                 <div className="absolute top-full left-0 mt-1 w-56 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 overflow-hidden">
-                  {[
+                  {([
                     { key: "isletme", label: t('isletme'), action: "tab" },
                     { key: "menu", label: t('menuUrunler'), action: "tab" },
-                    { key: "personel", label: t('personel_label'), action: "tab" },
-                    { key: "masa", label: t('masa_label'), action: "tab" },
+                    { key: "personel", label: t('personel_label'), action: "tab", featureKey: "staffShiftTracking" },
+                    { key: "masa", label: t('masa_label'), action: "tab", featureKey: "dineInQR" },
                     { key: "abonelik", label: t('abonelikPlani'), action: "tab" },
                     { key: "odeme", label: t('odemeBilgileri'), action: "tab" },
-                    { key: "promosyon", label: t('promosyon_label'), action: "tab" },
-                  ].map((item) => {
+                    { key: "promosyon", label: t('promosyon_label'), action: "tab", featureKey: "promotions" },
+                    { key: "marketing", label: t('marketing_boost'), action: "tab", featureKey: "marketing" },
+                  ] as { key: string; label: string; action: string; featureKey?: string }[]).map((item) => {
+                    const isGated = item.featureKey && !planFeatures[item.featureKey];
                     return (
                       <button
                         key={item.key}
@@ -2423,9 +2487,9 @@ export default function BusinessDetailsPage() {
                         className={`flex items-center gap-3 px-4 py-2.5 text-sm transition w-full text-left ${activeTab === "settings" && settingsSubTab === item.key
                           ? "bg-red-600/20 text-red-400 font-medium"
                           : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                          }`}
+                          } ${isGated ? 'opacity-60' : ''}`}
                       >
-                        <span>{item.label}</span>
+                        <span>{isGated ? '🔒 ' : ''}{item.label}</span>
                       </button>
                     );
                   })}
@@ -3024,6 +3088,7 @@ export default function BusinessDetailsPage() {
         {/* Procurement Tab */}
         {
           activeTab === "procurement" && (
+            <LockedModuleOverlay featureKey="supplyChain">
             <div className="space-y-4">
               {/* Sub-tabs */}
               <div className="flex gap-2 mb-4">
@@ -3259,6 +3324,7 @@ export default function BusinessDetailsPage() {
                 </div>
               )}
             </div>
+            </LockedModuleOverlay>
           )
         }
 
@@ -3277,10 +3343,11 @@ export default function BusinessDetailsPage() {
 
                   {settingsSubTab === "odeme" && t('odemeBilgileri1')}
                   {settingsSubTab === "promosyon" && t('promosyonAyarlari')}
+                  {settingsSubTab === "marketing" && t('marketing_boost')}
                 </h3>
                 <div className="flex items-center gap-3">
                   {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
-                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && (
+                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && planFeatures.delivery && (
                     <button
                       onClick={async () => {
                         const newValue = !formData.temporaryDeliveryPaused;
@@ -3311,7 +3378,7 @@ export default function BusinessDetailsPage() {
                       🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
                     </button>
                   )}
-                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && (
+                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && planFeatures.pickup && (
                     <button
                       onClick={async () => {
                         const newValue = !formData.temporaryPickupPaused;
@@ -3775,11 +3842,15 @@ export default function BusinessDetailsPage() {
                                   <h4 className="text-white font-medium">{t('kuryeAcilisSaatleri')}</h4>
                                   <p className="text-xs text-gray-400 mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
-                                {!formData.deliveryHours && formData.openingHours && (
+                                {formData.openingHours && (
                                   <button
-                                    onClick={() => setFormData({ ...formData, deliveryHours: formData.openingHours })}
-                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+                                    onClick={() => {
+                                      if (formData.deliveryHours && !confirm('Mevcut kurye saatleri genel açılış saatleri ile değiştirilecek. Devam edilsin mi?')) return;
+                                      setFormData({ ...formData, deliveryHours: formData.openingHours });
+                                    }}
+                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
                                   >
+                                    <span>↻</span>
                                     {t('genelSaatleriKopyala')}
                                   </button>
                                 )}
@@ -3844,11 +3915,15 @@ export default function BusinessDetailsPage() {
                                   <h4 className="text-white font-medium">{t('gelAlAcilisSaatleri')}</h4>
                                   <p className="text-xs text-gray-400 mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
-                                {!formData.pickupHours && formData.openingHours && (
+                                {formData.openingHours && (
                                   <button
-                                    onClick={() => setFormData({ ...formData, pickupHours: formData.openingHours })}
-                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition"
+                                    onClick={() => {
+                                      if (formData.pickupHours && !confirm('Mevcut gel al saatleri genel açılış saatleri ile değiştirilecek. Devam edilsin mi?')) return;
+                                      setFormData({ ...formData, pickupHours: formData.openingHours });
+                                    }}
+                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
                                   >
+                                    <span>↻</span>
                                     {t('genelSaatleriKopyala')}
                                   </button>
                                 )}
@@ -3911,6 +3986,7 @@ export default function BusinessDetailsPage() {
 
                   {/* ═══════ Tab 6: Teslimat Ayarları ═══════ */}
                   {isletmeInternalTab === "teslimat" && (
+                    <LockedModuleOverlay featureKey="delivery">
                     <div className="space-y-6">
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2 mb-4">{t('teslimatAyarlari')}</h4>
@@ -3967,6 +4043,7 @@ export default function BusinessDetailsPage() {
                         </div>
                       </div>
                     </div>
+                    </LockedModuleOverlay>
                   )}
                 </>
               )}
@@ -4000,9 +4077,9 @@ export default function BusinessDetailsPage() {
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
                           ? "bg-amber-600 text-white"
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                          }`}
+                          } ${!planFeatures.sponsoredProducts ? 'opacity-60' : ''}`}
                       >
-                        {t('one_cikan')} ({sponsoredProducts.length})
+                        {!planFeatures.sponsoredProducts && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
                       </button>
                     </div>
 
@@ -5561,6 +5638,7 @@ export default function BusinessDetailsPage() {
 
                     {/* ==================== SPONSORED PRODUCTS ==================== */}
                     {menuInternalTab === "sponsored" && (
+                      <LockedModuleOverlay featureKey="sponsoredProducts">
                       <div className="space-y-4">
                         {/* Header */}
                         <div className="flex items-center justify-between">
@@ -5577,7 +5655,7 @@ export default function BusinessDetailsPage() {
                         <div className="bg-gray-800/60 rounded-xl border border-amber-500/30 p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-gray-300 font-medium">
-                              Sponsored Ürün Kullanımı
+                              {t('sponsored_kullanim')}
                             </span>
                             <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
                               ? 'text-red-400'
@@ -5599,7 +5677,7 @@ export default function BusinessDetailsPage() {
                           </div>
                           {sponsoredSettings.feePerConversion > 0 && (
                             <p className="text-xs text-gray-500 mt-2">
-                               Dönüşüm başına ücret: {sponsoredSettings.feePerConversion}€
+                               {t('sponsored_donusum_ucret')} {sponsoredSettings.feePerConversion}€
                             </p>
                           )}
                         </div>
@@ -5613,7 +5691,7 @@ export default function BusinessDetailsPage() {
                           <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
                             <span className="text-4xl"></span>
                             <h4 className="text-white font-medium mt-3">{t('henuz_urun_eklenmemis')}</h4>
-                            <p className="text-gray-400 text-sm mt-1">Önce işletmeye ürün atayın, sonra öne çıkan olarak seçin.</p>
+                            <p className="text-gray-400 text-sm mt-1">{t('sponsored_urun_once_ekle')}</p>
                           </div>
                         ) : (
                           <div className="space-y-1">
@@ -5694,10 +5772,10 @@ export default function BusinessDetailsPage() {
                                   sponsoredProducts: sponsoredProducts,
                                   hasSponsoredProducts: sponsoredProducts.length > 0,
                                 });
-                                showToast('Öne çıkan ürünler kaydedildi! ⭐', 'success');
+                                showToast(t('sponsored_kaydedildi'), 'success');
                               } catch (error) {
                                 console.error('Error saving sponsored products:', error);
-                                showToast('Kaydetme hatası!', 'error');
+                                showToast(t('sponsored_kaydetme_hatasi'), 'error');
                               }
                               setSponsoredSaving(false);
                             }}
@@ -5707,16 +5785,17 @@ export default function BusinessDetailsPage() {
                             {sponsoredSaving ? (
                               <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                Kaydediliyor...
+                                {t('sponsored_kaydediliyor')}
                               </>
                             ) : (
                               <>
-                                 Kaydet ({sponsoredProducts.length} ürün)
+                                 {t('sponsored_kaydet')} ({sponsoredProducts.length} {t('sponsored_urun')})
                               </>
                             )}
                           </button>
                         </div>
                       </div>
+                      </LockedModuleOverlay>
                     )}
                   </div>
                 )
@@ -5725,6 +5804,7 @@ export default function BusinessDetailsPage() {
               {/* Sub-Tab: Personel */}
               {
                 settingsSubTab === "personel" && (
+                  <LockedModuleOverlay featureKey="staffShiftTracking">
                   <div className="space-y-6">
 
                     {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
@@ -5832,7 +5912,7 @@ export default function BusinessDetailsPage() {
                     {/* Staff Table */}
                     <div>
                       <h3 className="text-white font-medium mb-3">
-                        Mevcut Personel ({staffList.filter(s => {
+                        {t('personel_mevcut')} ({staffList.filter(s => {
                           const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
                           const matchesSearch = !staffSearchQuery ||
                             s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
@@ -5852,7 +5932,7 @@ export default function BusinessDetailsPage() {
                           <thead className="text-gray-400 border-b border-gray-700">
                             <tr>
                               <th className="pb-3 py-2">{t('kullanici')}</th>
-                              <th className="pb-3 py-2">Rol</th>
+                              <th className="pb-3 py-2">{t('personel_rol')}</th>
                               <th className="pb-3 py-2">{t('durum')}</th>
                               <th className="pb-3 py-2">{t('islemler')}</th>
                             </tr>
@@ -6093,6 +6173,7 @@ export default function BusinessDetailsPage() {
                       )}
                     </div>
                   </div>
+                  </LockedModuleOverlay>
                 )
               }
 
@@ -6366,21 +6447,483 @@ export default function BusinessDetailsPage() {
 
               {/* 🎁 Promosyon Sub-Tab → direkt yönlendirme */}
               {
-                settingsSubTab === "promosyon" && (() => {
-                  // Promosyon sekmesi açılınca direkt promotions sayfasına git
-                  if (typeof window !== 'undefined') {
-                    window.location.href = `/${params.locale}/admin/promotions?businessId=${businessId}`;
-                  }
-                  return (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center">
-                        <span className="text-4xl">🎁</span>
-                        <p className="text-gray-400 mt-3 text-sm">Promosyon sayfasına yönlendiriliyor...</p>
-                      </div>
-                    </div>
-                  );
-                })()
+                settingsSubTab === "promosyon" && (
+                  <LockedModuleOverlay featureKey="promotions">
+                    {(() => {
+                      // Promosyon sekmesi açılınca direkt promotions sayfasına git — only if feature available
+                      if (planFeatures.promotions && typeof window !== 'undefined') {
+                        window.location.href = `/${params.locale}/admin/promotions?businessId=${businessId}`;
+                      }
+                      return (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="text-center">
+                            <span className="text-4xl">🎁</span>
+                            <p className="text-gray-400 mt-3 text-sm">{t('promosyonAyarlari')}</p>
+                            <p className="text-gray-500 text-xs mt-1">{t('kampanyaOlusturVeYonet')}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </LockedModuleOverlay>
+                )
               }
+
+
+              {/* 📢 Marketing Boost Sub-Tab */}
+              {
+                settingsSubTab === "marketing" && (
+                  <LockedModuleOverlay featureKey="marketing">
+                    <div className="space-y-6">
+                      {/* Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl">📢</span>
+                          <div>
+                            <h3 className="text-xl font-bold text-white">{t('marketing_boost')}</h3>
+                            <p className="text-sm text-gray-400">{t('marketingBoostAciklama')}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowBoostForm(!showBoostForm)}
+                          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                        >
+                          {showBoostForm ? t('boost_kapat') : t('boost_yeni_kampanya_btn')}
+                        </button>
+                      </div>
+
+                      {/* How It Works Info Card */}
+                      <div className="bg-gradient-to-br from-purple-900/30 to-indigo-900/20 border border-purple-500/30 rounded-xl p-5">
+                        <h4 className="text-purple-300 font-bold text-sm mb-3 flex items-center gap-2">
+                          <span>💡</span> {t('nasil_calisir')}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <span className="text-2xl">🎯</span>
+                            <p className="text-white text-xs font-medium mt-1">{t('boost_step1')}</p>
+                            <p className="text-gray-500 text-[10px] mt-0.5">{t('boost_step1_desc')}</p>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-2xl">💰</span>
+                            <p className="text-white text-xs font-medium mt-1">{t('boost_step2')}</p>
+                            <p className="text-gray-500 text-[10px] mt-0.5">{t('boost_step2_desc')}</p>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-2xl">🚀</span>
+                            <p className="text-white text-xs font-medium mt-1">{t('boost_step3')}</p>
+                            <p className="text-gray-500 text-[10px] mt-0.5">{t('boost_step3_desc')}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Ranking Algorithm Explanation */}
+                      <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
+                        <h4 className="text-gray-300 font-bold text-sm mb-2 flex items-center gap-2">
+                          <span>📊</span> {t('boost_ranking')}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: t('boost_rank_bid'), pct: 40, color: 'bg-purple-500' },
+                            { label: t('boost_rank_rating'), pct: 20, color: 'bg-yellow-500' },
+                            { label: t('boost_rank_ctr'), pct: 20, color: 'bg-blue-500' },
+                            { label: t('boost_rank_distance'), pct: 10, color: 'bg-green-500' },
+                            { label: t('boost_rank_volume'), pct: 10, color: 'bg-orange-500' },
+                          ].map(f => (
+                            <div key={f.label} className="flex items-center gap-1.5 bg-gray-900/60 px-2.5 py-1.5 rounded-lg">
+                              <div className={`w-2 h-2 rounded-full ${f.color}`} />
+                              <span className="text-gray-300 text-xs">{f.label}</span>
+                              <span className="text-gray-500 text-[10px] font-bold">%{f.pct}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* ==== New Campaign Form ==== */}
+                      {showBoostForm && (
+                        <div className="bg-gray-800/60 border border-purple-500/30 rounded-xl p-5 space-y-5">
+                          <h4 className="text-white font-bold flex items-center gap-2">
+                            <span>🆕</span> {t('boost_yeni_kampanya')}
+                          </h4>
+
+                          {/* Campaign Name */}
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">{t('boost_kampanya_adi')}</label>
+                            <input
+                              type="text"
+                              placeholder={t('boost_kampanya_adi_placeholder')}
+                              value={boostForm.campaignName}
+                              onChange={e => setBoostForm(p => ({ ...p, campaignName: e.target.value }))}
+                              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                            />
+                          </div>
+
+                          {/* Model Selection */}
+                          <div>
+                            <label className="text-sm text-gray-400 mb-2 block">{t('boost_fiyatlandirma_modeli')}</label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setBoostForm(p => ({ ...p, model: 'cpc' }))}
+                                className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                  boostForm.model === 'cpc'
+                                    ? 'border-blue-500 bg-blue-900/20'
+                                    : 'border-gray-700 bg-gray-900/40 hover:border-gray-500'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">🔵</span>
+                                  <span className="text-white font-bold text-sm">CPC</span>
+                                </div>
+                                <p className="text-gray-400 text-xs">{t('boost_cpc_aciklama')}</p>
+                                <p className="text-blue-400 text-[10px] mt-1 font-medium">{t('boost_cpc_model_label')}</p>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setBoostForm(p => ({ ...p, model: 'payPerOrder' }))}
+                                className={`p-4 rounded-xl border-2 transition-all text-left ${
+                                  boostForm.model === 'payPerOrder'
+                                    ? 'border-green-500 bg-green-900/20'
+                                    : 'border-gray-700 bg-gray-900/40 hover:border-gray-500'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">🟢</span>
+                                  <span className="text-white font-bold text-sm">Pay-per-Order</span>
+                                </div>
+                                <p className="text-gray-400 text-xs">{t('boost_ppo_aciklama')}</p>
+                                <p className="text-green-400 text-[10px] mt-1 font-medium">{t('boost_ppo_model_label')}</p>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Bid Amount + Budget */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm text-gray-400 mb-1 block">
+                                {boostForm.model === 'cpc' ? t('boost_tiklama_basina') : t('boost_siparis_basina')}
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  step="0.05"
+                                  min="0.10"
+                                  value={boostForm.bidAmount}
+                                  onChange={e => setBoostForm(p => ({ ...p, bidAmount: e.target.value }))}
+                                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€</span>
+                              </div>
+                              <p className="text-gray-600 text-[10px] mt-1">{t('boost_min_bid')}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm text-gray-400 mb-1 block">{t('boost_butce')}</label>
+                              <div className="flex gap-2">
+                                <select
+                                  value={boostForm.budgetType}
+                                  onChange={e => setBoostForm(p => ({ ...p, budgetType: e.target.value as any }))}
+                                  className="bg-gray-900 border border-gray-600 rounded-lg px-2 py-2.5 text-white text-xs focus:border-purple-500 outline-none"
+                                  title={t('boost_butce_turu')}
+                                >
+                                  <option value="daily">{t('boost_gunluk')}</option>
+                                  <option value="weekly">{t('boost_haftalik')}</option>
+                                  <option value="total">{t('boost_toplam')}</option>
+                                </select>
+                                <input
+                                  type="number"
+                                  min="5"
+                                  value={boostForm.budgetAmount}
+                                  onChange={e => setBoostForm(p => ({ ...p, budgetAmount: e.target.value }))}
+                                  className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                />
+                              </div>
+                              {boostForm.model === 'cpc' && parseFloat(boostForm.bidAmount) > 0 && (
+                                <p className="text-purple-400 text-[10px] mt-1">
+                                  ≈ {Math.floor(parseFloat(boostForm.budgetAmount) / parseFloat(boostForm.bidAmount))} {t('boost_per_tiklama')} / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Active Days */}
+                          <div>
+                            <label className="text-sm text-gray-400 mb-2 block">{t('boost_aktif_gunler')}</label>
+                            <div className="flex gap-1.5">
+                              {[t('boost_day_mon'), t('boost_day_tue'), t('boost_day_wed'), t('boost_day_thu'), t('boost_day_fri'), t('boost_day_sat'), t('boost_day_sun')].map((day, i) => {
+                                const dayIdx = i === 6 ? 0 : i + 1; // Mon=1,...,Sat=6,Sun=0
+                                const isActive = boostForm.activeDays.includes(dayIdx);
+                                return (
+                                  <button
+                                    key={day}
+                                    type="button"
+                                    onClick={() => {
+                                      setBoostForm(p => ({
+                                        ...p,
+                                        activeDays: isActive
+                                          ? p.activeDays.filter(d => d !== dayIdx)
+                                          : [...p.activeDays, dayIdx]
+                                      }));
+                                    }}
+                                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                                      isActive
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                                    }`}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Active Hours */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm text-gray-400 mb-1 block">{t('boost_baslangic_saati')}</label>
+                              <input
+                                type="time"
+                                value={boostForm.activeHoursStart}
+                                onChange={e => setBoostForm(p => ({ ...p, activeHoursStart: e.target.value }))}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm text-gray-400 mb-1 block">{t('boost_bitis_saati')}</label>
+                              <input
+                                type="time"
+                                value={boostForm.activeHoursEnd}
+                                onChange={e => setBoostForm(p => ({ ...p, activeHoursEnd: e.target.value }))}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Campaign End Date */}
+                          <div>
+                            <label className="text-sm text-gray-400 mb-1 block">{t('boost_bitis_tarihi')}</label>
+                            <input
+                              type="date"
+                              value={boostForm.endDate}
+                              onChange={e => setBoostForm(p => ({ ...p, endDate: e.target.value }))}
+                              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                              placeholder={t('boost_bitis_placeholder')}
+                            />
+                            <p className="text-gray-600 text-[10px] mt-1">{t('boost_bitis_aciklama')}</p>
+                          </div>
+
+                          {/* Summary Card */}
+                          {boostForm.campaignName && (
+                            <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/30 border border-purple-500/40 rounded-xl p-4">
+                              <h5 className="text-purple-300 font-bold text-sm mb-2">{t('boost_kampanya_ozeti')}</h5>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div><span className="text-gray-500">{t('boost_ozet_ad')}</span> <span className="text-white">{boostForm.campaignName}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_model')}</span> <span className="text-white">{boostForm.model === 'cpc' ? t('boost_cpc_label') : t('boost_ppo_label')}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_bid')}</span> <span className="text-white">{boostForm.bidAmount}€ / {boostForm.model === 'cpc' ? t('boost_per_tiklama') : t('boost_per_siparis')}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_butce')}</span> <span className="text-white">{boostForm.budgetAmount}€ / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_gunler')}</span> <span className="text-white">{boostForm.activeDays.length === 7 ? t('boost_her_gun') : `${boostForm.activeDays.length} ${t('boost_gun')}`}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_saatler')}</span> <span className="text-white">{boostForm.activeHoursStart} - {boostForm.activeHoursEnd}</span></div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Save Button */}
+                          <div className="flex justify-end gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setShowBoostForm(false)}
+                              className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl text-sm transition-all"
+                            >
+                              {t('boost_iptal')}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!boostForm.campaignName || boostSaving}
+                              onClick={async () => {
+                                if (!businessId || !boostForm.campaignName) return;
+                                setBoostSaving(true);
+                                try {
+                                  const campaignData = {
+                                    businessId,
+                                    businessName: formData.companyName || '',
+                                    campaignName: boostForm.campaignName,
+                                    model: boostForm.model,
+                                    bidAmount: parseFloat(boostForm.bidAmount) || 0.30,
+                                    budgetType: boostForm.budgetType,
+                                    budgetAmount: parseFloat(boostForm.budgetAmount) || 50,
+                                    budgetSpent: 0,
+                                    activeDays: boostForm.activeDays,
+                                    activeHoursStart: boostForm.activeHoursStart,
+                                    activeHoursEnd: boostForm.activeHoursEnd,
+                                    startDate: new Date().toISOString().split('T')[0],
+                                    endDate: boostForm.endDate || null,
+                                    status: 'active',
+                                    metrics: { impressions: 0, clicks: 0, orders: 0, ctr: 0, roas: 0, totalSpent: 0 },
+                                    targetZipCodes: [],
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                  };
+                                  const docRef = await addDoc(collection(db, 'boost_campaigns'), campaignData);
+                                  setBoostCampaigns(prev => [...prev, { id: docRef.id, ...campaignData }]);
+                                  await updateDoc(doc(db, 'businesses', businessId), {
+                                    hasActiveBoost: true,
+                                    activeBoostCampaignId: docRef.id,
+                                  });
+                                  setShowBoostForm(false);
+                                  setBoostForm({
+                                    campaignName: '', model: 'cpc', bidAmount: '0.30',
+                                    budgetType: 'weekly', budgetAmount: '50',
+                                    activeDays: [0, 1, 2, 3, 4, 5, 6],
+                                    activeHoursStart: '00:00', activeHoursEnd: '23:59', endDate: '',
+                                  });
+                                  showToast(t('boost_olusturuldu'), 'success');
+                                } catch (error) {
+                                  console.error('Error creating boost campaign:', error);
+                                  showToast(t('boost_olusturma_hatasi'), 'error');
+                                }
+                                setBoostSaving(false);
+                              }}
+                              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                            >
+                              {boostSaving ? (
+                                <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> {t('boost_olusturuluyor')}</>
+                              ) : (
+                                <>{t('boost_kampanya_baslat')}</>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ==== Active Campaigns List ==== */}
+                      <div>
+                        <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                          <span>📋</span> {t('boost_aktif_kampanyalar')}
+                        </h4>
+                        {loadingBoostCampaigns ? (
+                          <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />
+                          </div>
+                        ) : boostCampaigns.length === 0 ? (
+                          <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
+                            <span className="text-4xl">📭</span>
+                            <h4 className="text-white font-medium mt-3">{t('boost_kampanya_yok')}</h4>
+                            <p className="text-gray-500 text-sm mt-1">{t('boost_kampanya_yok_aciklama')}</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {boostCampaigns.map((campaign: any) => {
+                              const budgetPct = campaign.budgetAmount > 0 ? (campaign.budgetSpent / campaign.budgetAmount) * 100 : 0;
+                              return (
+                                <div key={campaign.id} className={`bg-gray-800/60 rounded-xl p-4 border transition-all ${
+                                  campaign.status === 'active' ? 'border-purple-500/40' : 'border-gray-700'
+                                }`}>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`w-2.5 h-2.5 rounded-full ${
+                                        campaign.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'
+                                      }`} />
+                                      <h5 className="text-white font-bold text-sm">{campaign.campaignName}</h5>
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                        campaign.model === 'cpc'
+                                          ? 'bg-blue-900/50 text-blue-400 border border-blue-500/30'
+                                          : 'bg-green-900/50 text-green-400 border border-green-500/30'
+                                      }`}>
+                                        {campaign.model === 'cpc' ? 'CPC' : 'Pay-per-Order'}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={async () => {
+                                        if (!campaign.id) return;
+                                        const newStatus = campaign.status === 'active' ? 'paused' : 'active';
+                                        try {
+                                          await updateDoc(doc(db, 'boost_campaigns', campaign.id), { status: newStatus, updatedAt: new Date().toISOString() });
+                                          setBoostCampaigns(prev => prev.map(c => c.id === campaign.id ? { ...c, status: newStatus } : c));
+                                          if (newStatus === 'paused') {
+                                            await updateDoc(doc(db, 'businesses', businessId!), { hasActiveBoost: false });
+                                          } else {
+                                            await updateDoc(doc(db, 'businesses', businessId!), { hasActiveBoost: true, activeBoostCampaignId: campaign.id });
+                                          }
+                                          showToast(newStatus === 'active' ? t('boost_aktiflestirildi') : t('boost_duraklatildi'), 'success');
+                                        } catch (err) {
+                                          showToast(t('boost_guncelleme_hatasi'), 'error');
+                                        }
+                                      }}
+                                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                        campaign.status === 'active'
+                                          ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/40'
+                                          : 'bg-green-600/20 text-green-400 hover:bg-green-600/40'
+                                      }`}
+                                    >
+                                      {campaign.status === 'active' ? t('boost_duraklat') : t('boost_aktiflestir')}
+                                    </button>
+                                  </div>
+                                  {/* Stats Row */}
+                                  <div className="grid grid-cols-4 gap-3 mb-3">
+                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                      <p className="text-gray-500 text-[10px]">Bid</p>
+                                      <p className="text-white font-bold text-sm">{campaign.bidAmount}€</p>
+                                    </div>
+                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                      <p className="text-gray-500 text-[10px]">{t('boost_gosterim')}</p>
+                                      <p className="text-white font-bold text-sm">{campaign.metrics?.impressions || 0}</p>
+                                    </div>
+                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                      <p className="text-gray-500 text-[10px]">{campaign.model === 'cpc' ? t('boost_tiklama') : t('boost_siparis')}</p>
+                                      <p className="text-white font-bold text-sm">{campaign.model === 'cpc' ? (campaign.metrics?.clicks || 0) : (campaign.metrics?.orders || 0)}</p>
+                                    </div>
+                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                      <p className="text-gray-500 text-[10px]">ROAS</p>
+                                      <p className="text-white font-bold text-sm">{campaign.metrics?.roas ? `${campaign.metrics.roas}x` : '—'}</p>
+                                    </div>
+                                  </div>
+                                  {/* Budget Progress */}
+                                  <div>
+                                    <div className="flex justify-between text-[10px] mb-1">
+                                      <span className="text-gray-500">{t('boost_harcanan')} {campaign.budgetSpent?.toFixed(2) || '0.00'}€</span>
+                                      <span className="text-gray-500">{t('boost_butce_label')} {campaign.budgetAmount}€ ({campaign.budgetType === 'daily' ? t('boost_gunluk_label') : campaign.budgetType === 'weekly' ? t('boost_haftalik_label') : t('boost_toplam_label')})</span>
+                                    </div>
+                                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                      <div
+                                        className={`h-1.5 rounded-full transition-all ${budgetPct >= 90 ? 'bg-red-500' : budgetPct >= 70 ? 'bg-yellow-500' : 'bg-purple-500'}`}
+                                        style={{ width: `${Math.min(budgetPct, 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Competitor Comparison */}
+                      <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4">
+                        <h4 className="text-gray-400 font-bold text-xs mb-3">{t('boost_platform_karsilastirma')}</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-gray-500 border-b border-gray-700">
+                                <th className="text-left pb-2">{t('boost_platform')}</th>
+                                <th className="text-left pb-2">{t('boost_model')}</th>
+                                <th className="text-left pb-2">{t('boost_ort_maliyet')}</th>
+                                <th className="text-left pb-2">{t('boost_sonuc')}</th>
+                              </tr>
+                            </thead>
+                            <tbody className="text-gray-300">
+                              <tr className="border-b border-gray-800"><td className="py-1.5">🔵 Uber Eats</td><td>CPC</td><td>{t('boost_uber_cost')}</td><td>{t('boost_uber_result')}</td></tr>
+                              <tr className="border-b border-gray-800"><td className="py-1.5">🟢 Wolt</td><td>Pay-per-Order</td><td>{t('boost_wolt_cost')}</td><td>{t('boost_wolt_result')}</td></tr>
+                              <tr className="border-b border-gray-800"><td className="py-1.5">🟠 Lieferando</td><td>TopRank</td><td>{t('boost_lieferando_cost')}</td><td>{t('boost_lieferando_result')}</td></tr>
+                              <tr className="border-b border-gray-800"><td className="py-1.5">🟣 Yemeksepeti</td><td>Hybrid</td><td>{t('boost_yemeksepeti_cost')}</td><td>{t('boost_yemeksepeti_result')}</td></tr>
+                              <tr className="bg-purple-900/20"><td className="py-1.5 font-bold text-purple-300">🟣 LOKMA</td><td className="text-purple-300">CPC + PPO</td><td className="text-purple-300">{t('boost_lokma_cost')}</td><td className="text-purple-300">{t('boost_lokma_result')}</td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                    </div>
+                  </LockedModuleOverlay>
+                )
+              }
+
 
 
               {/* Reviews Section - shown in İşletme sub-tab */}
@@ -6492,7 +7035,8 @@ export default function BusinessDetailsPage() {
 
         {/*  Reservations Tab */}
         {
-          activeTab === "reservations" && formData.hasReservation && (
+          activeTab === "reservations" && (
+            <LockedModuleOverlay featureKey="reservations">
             <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
               <ReservationsPanel
                 businessId={businessId}
@@ -6500,12 +7044,14 @@ export default function BusinessDetailsPage() {
                 staffName={admin?.displayName || admin?.email || "Admin"}
               />
             </div>
+            </LockedModuleOverlay>
           )
         }
 
         {/* 🪑 Dine-In content — rendered within Masa sub-tab */}
         {
-          activeTab === "settings" && settingsSubTab === "masa" && (planFeatures.dineInQR || planFeatures.waiterOrder) && (
+          activeTab === "settings" && settingsSubTab === "masa" && (
+            <LockedModuleOverlay featureKey="dineInQR">
             <div className="space-y-6">
               {/* ── Header Stats Row ── */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -6869,6 +7415,7 @@ export default function BusinessDetailsPage() {
                 </p>
               </div>
             </div>
+            </LockedModuleOverlay>
           )
         }
 

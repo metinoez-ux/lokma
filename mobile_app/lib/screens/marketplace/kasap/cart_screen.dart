@@ -71,11 +71,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   bool _loadingButcherParams = true; // ignore: unused_field
   bool _isSubmitting = false;
   OpeningHoursHelper? _hoursHelper;
+  OpeningHoursHelper? _deliveryHoursHelper;  // Kurye-specific hours
+  OpeningHoursHelper? _pickupHoursHelper;    // Gel Al-specific hours
   String _orderNote = '';
   DateTime? _selectedPickupSlot; // 🆕 Selected pickup time for Gel Al
   DateTime? _scheduledDeliverySlot; // 🆕 Scheduled delivery time for Kurye (null = ASAP)
   bool _scheduledInfoDismissed = false; // 🆕 Info note dismiss state
   bool _deliveryTimeExplicitlyChosen = false; // 🆕 No default selection
+  bool _wantsScheduledDelivery = false; // 🆕 Tracks user intent: true = schedule, false = asap
 
   // 🌟 Sponsored Products ("Bir şey mi unuttun?")
   List<Map<String, dynamic>> _sponsoredProductsList = [];
@@ -227,6 +230,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           // Create hours helper if hours exist
           if (data != null && data['openingHours'] != null) {
             _hoursHelper = OpeningHoursHelper(data['openingHours']);
+          }
+          // Mode-specific hours helpers (Kurye / Gel Al)
+          if (data != null && data['deliveryHours'] != null) {
+            _deliveryHoursHelper = OpeningHoursHelper(data['deliveryHours']);
+          }
+          if (data != null && data['pickupHours'] != null) {
+            _pickupHoursHelper = OpeningHoursHelper(data['pickupHours']);
           }
           // If dine-in and business requires payFirst, reset payment method
           if (_isDineIn && data?['dineInPaymentMode'] == 'payFirst' && _paymentMethod == 'payLater') {
@@ -2558,6 +2568,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         sku: item.sku,
         masterId: '',
         name: item.name,
+        nameData: item.name,
         description: '',
         category: '',
         price: item.price,
@@ -6763,11 +6774,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   /// 🆕 Gel Al: Apple-style Cupertino wheel picker for pickup time
   Widget _buildPickupTimePicker(StateSetter setSheetState) {
-    if (_hoursHelper == null) {
+    // 🎯 Use pickup-specific hours, fallback to general
+    final effectiveHelper = _pickupHoursHelper ?? _hoursHelper;
+    if (effectiveHelper == null) {
       return const SizedBox.shrink();
     }
 
-    final grouped = _hoursHelper!.getAvailableSlotsGroupedByDay(
+    final grouped = effectiveHelper.getAvailableSlotsGroupedByDay(
       isPickup: true,
       daysToCheck: 3,
       prepTimeMinutes: 30,
@@ -6855,7 +6868,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 Icon(Icons.schedule, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'Teslim Alma Saati',
+                  'checkout.pickup'.tr(),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -7015,14 +7028,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   /// horizontal day chips, and scrollable 5-min time slot radio list.
   Widget _buildDeliveryTimePicker(StateSetter setSheetState) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bool isScheduled = _scheduledDeliverySlot != null;
-    final bool isAsapChosen = _deliveryTimeExplicitlyChosen && !isScheduled;
-    final bool isScheduledChosen = _deliveryTimeExplicitlyChosen && isScheduled;
+
     // Neutral selection color — matches theme
     final selColor = isDark ? Colors.white : Colors.black87;
 
+    // 🎯 Use delivery-specific hours, fallback to general
+    final effectiveHelper = _deliveryHoursHelper ?? _hoursHelper;
+
     // Generate slots with 5-min intervals
-    final grouped = _hoursHelper?.getAvailableSlotsGroupedByDay(
+    final grouped = effectiveHelper?.getAvailableSlotsGroupedByDay(
       isPickup: false,
       daysToCheck: 7,
       prepTimeMinutes: 60,
@@ -7031,6 +7045,29 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
     final now = DateTime.now();
     final dayKeys = grouped.keys.toList();
+
+    // 🎯 Check if business is currently open for delivery
+    final bool isCurrentlyOpenForDelivery = effectiveHelper?.isOpenAt(now) ?? true;
+    // Get next opening time if closed
+    String? nextOpenLabel;
+    if (!isCurrentlyOpenForDelivery && effectiveHelper != null) {
+      final nextOpen = effectiveHelper.getNextOpenDateTime(now);
+      if (nextOpen != null) {
+        final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+        final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+        final tomorrow = now.add(const Duration(days: 1));
+        final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+        if (isToday) {
+          nextOpenLabel = 'marketplace.opens_today'.tr(namedArgs: {'time': timeStr});
+        } else if (isTomorrow) {
+          nextOpenLabel = 'marketplace.opens_tomorrow'.tr(namedArgs: {'time': timeStr});
+        } else {
+          final dayNames = ['common.day_monday', 'common.day_tuesday', 'common.day_wednesday', 'common.day_thursday', 'common.day_friday', 'common.day_saturday', 'common.day_sunday'];
+          final dayName = dayNames[nextOpen.weekday - 1].tr();
+          nextOpenLabel = 'marketplace.opens_on_day'.tr(namedArgs: {'day': dayName, 'time': timeStr});
+        }
+      }
+    }
 
     return StatefulBuilder(
       builder: (context, setPickerState) {
@@ -7052,6 +7089,221 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         final currentTimeSlots =
             dayKeys.isNotEmpty ? (grouped[dayKeys[selectedDayIndex]] ?? []) : <DateTime>[];
 
+        // ── When business is closed: show Cupertino wheel directly (like Abholung) ──
+        if (!isCurrentlyOpenForDelivery) {
+          // Don't auto-select any slot — user must consciously pick a time
+          // Just ensure scheduling flags are set so the order is treated as scheduled
+          if (!_deliveryTimeExplicitlyChosen) {
+            _wantsScheduledDelivery = true;
+            _deliveryTimeExplicitlyChosen = true;
+          }
+
+          // Day labels for wheel
+          final dayLabels = dayKeys.map((dateKey) {
+            final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
+            final tomorrow = now.add(const Duration(days: 1));
+            final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
+            if (isToday) return 'common.today'.tr();
+            if (isTomorrow) return 'common.tomorrow'.tr();
+            final dayNames = ['common.day_monday', 'common.day_tuesday', 'common.day_wednesday', 'common.day_thursday', 'common.day_friday', 'common.day_saturday', 'common.day_sunday'];
+            return dayNames[dateKey.weekday - 1].tr();
+          }).toList();
+
+          int currentDayIdx = selectedDayIndex;
+          int currentTimeIdx = 0;
+          if (_scheduledDeliverySlot != null && currentTimeSlots.isNotEmpty) {
+            final idx = currentTimeSlots.indexWhere((s) =>
+                s.hour == _scheduledDeliverySlot!.hour && s.minute == _scheduledDeliverySlot!.minute);
+            if (idx >= 0) currentTimeIdx = idx;
+          }
+          final timeCtrl = FixedExtentScrollController(initialItem: currentTimeIdx);
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Closed notice
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.grey[500]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'checkout.business_closed_schedule'.tr(),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w100,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Lieferzeit label
+              Row(
+                children: [
+                  Icon(Icons.schedule, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'checkout.delivery_time_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  if (_scheduledDeliverySlot != null) ...[
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.white : const Color(0xFF1A1A1A)).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${dayLabels.isNotEmpty ? dayLabels[currentDayIdx] : ''}, ${_scheduledDeliverySlot!.hour.toString().padLeft(2, '0')}:${_scheduledDeliverySlot!.minute.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Cupertino wheel picker (same as Abholung)
+              Container(
+                height: 150,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  children: [
+                    // Selection highlight bar
+                    Center(
+                      child: Container(
+                        height: 36,
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.grey[800]!.withValues(alpha: 0.8)
+                              : Colors.grey[300]!.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        // Day picker (left wheel)
+                        Expanded(
+                          flex: 5,
+                          child: CupertinoPicker(
+                            scrollController: FixedExtentScrollController(initialItem: currentDayIdx),
+                            itemExtent: 36,
+                            diameterRatio: 1.2,
+                            squeeze: 1.1,
+                            selectionOverlay: const SizedBox.shrink(),
+                            onSelectedItemChanged: (index) {
+                              final newSlots = grouped[dayKeys[index]] ?? [];
+                              setPickerState(() {
+                                currentDayIdx = index;
+                                currentTimeIdx = 0;
+                                timeCtrl.jumpToItem(0);
+                              });
+                              if (newSlots.isNotEmpty) {
+                                _scheduledDeliverySlot = newSlots.first;
+                                _wantsScheduledDelivery = true;
+                                _deliveryTimeExplicitlyChosen = true;
+                                setSheetState(() {});
+                              }
+                            },
+                            children: List.generate(dayLabels.length, (index) {
+                              final isSelected = index == currentDayIdx;
+                              return Center(
+                                child: Text(
+                                  dayLabels[index],
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 18 : 15,
+                                    fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.onSurface
+                                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                        // Separator
+                        Container(
+                          width: 1,
+                          height: 100,
+                          color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        ),
+                        // Time picker (right wheel)
+                        Expanded(
+                          flex: 4,
+                          child: CupertinoPicker(
+                            scrollController: timeCtrl,
+                            itemExtent: 36,
+                            diameterRatio: 1.2,
+                            squeeze: 1.1,
+                            selectionOverlay: const SizedBox.shrink(),
+                            onSelectedItemChanged: (index) {
+                              final slots = grouped[dayKeys[currentDayIdx]] ?? [];
+                              setPickerState(() {
+                                currentTimeIdx = index;
+                              });
+                              if (slots.isNotEmpty && index < slots.length) {
+                                _scheduledDeliverySlot = slots[index];
+                                _wantsScheduledDelivery = true;
+                                _deliveryTimeExplicitlyChosen = true;
+                                setSheetState(() {});
+                              }
+                            },
+                            children: List.generate(currentTimeSlots.length, (index) {
+                              final slot = currentTimeSlots[index];
+                              final timeStr = '${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+                              final isSelected = index == currentTimeIdx;
+                              return Center(
+                                child: Text(
+                                  timeStr,
+                                  style: TextStyle(
+                                    fontSize: isSelected ? 18 : 15,
+                                    fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.onSurface
+                                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        // ── Business is OPEN: show Jetzt / Für später planen radio flow ──
+
+        // Derive selection state after auto-select
+        final bool isScheduled = _scheduledDeliverySlot != null;
+        final bool isAsapChosen = _deliveryTimeExplicitlyChosen && !_wantsScheduledDelivery;
+        final bool isScheduledChosen = _deliveryTimeExplicitlyChosen && _wantsScheduledDelivery;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -7066,6 +7318,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               onTap: () {
                 _scheduledDeliverySlot = null;
                 _deliveryTimeExplicitlyChosen = true;
+                _wantsScheduledDelivery = false;
                 _scheduledInfoDismissed = false;
                 setSheetState(() {});
                 setPickerState(() {});
@@ -7082,16 +7335,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               isSelected: isScheduledChosen,
               icon: Icons.schedule,
               onTap: () {
+                _deliveryTimeExplicitlyChosen = true;
+                _wantsScheduledDelivery = true;
+                _scheduledInfoDismissed = false;
                 if (!isScheduled && dayKeys.isNotEmpty) {
                   final firstSlots = grouped[dayKeys.first] ?? [];
                   if (firstSlots.isNotEmpty) {
                     _scheduledDeliverySlot = firstSlots.first;
-                    _deliveryTimeExplicitlyChosen = true;
-                    _scheduledInfoDismissed = false;
-                    setSheetState(() {});
-                    setPickerState(() {});
                   }
                 }
+                setSheetState(() {});
+                setPickerState(() {});
               },
             ),
 
@@ -7411,7 +7665,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     required String label,
     required bool isSelected,
     required IconData icon,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -8174,7 +8428,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       icon: Icons.description_outlined,
                       iconColor: brandRed,
                       title: 'checkout.delivery_notes'.tr(),
-                      trailing: Icon(Icons.add_circle_outline, color: neutralIcon, size: 24),
+                      trailing: (widget.noteController.text.trim().isNotEmpty)
+                          ? Icon(Icons.check_circle, color: Colors.grey[700], size: 24)
+                          : Icon(Icons.add_circle_outline, color: neutralIcon, size: 24),
                       dividerColor: dividerColor,
                       onTap: () {
                         // Show order note bottom sheet
@@ -8221,7 +8477,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               ],
                             ),
                           ),
-                        );
+                        ).then((_) => setState(() {}));
                       },
                     ),
 
@@ -8236,8 +8492,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             ? 'checkout.select_time'.tr()
                             : (parent._scheduledDeliverySlot != null
                                 ? '📅 ${parent._scheduledDeliverySlot!.day.toString().padLeft(2,'0')}.${parent._scheduledDeliverySlot!.month.toString().padLeft(2,'0')} · ${parent._scheduledDeliverySlot!.hour.toString().padLeft(2,'0')}:${parent._scheduledDeliverySlot!.minute.toString().padLeft(2,'0')}'
-                                : 'checkout.now'.tr()),
-                        badge: !parent._deliveryTimeExplicitlyChosen
+                                : (parent._wantsScheduledDelivery ? 'checkout.plan_for_later'.tr() : 'checkout.now'.tr())),
+                        badge: (!parent._deliveryTimeExplicitlyChosen || (parent._wantsScheduledDelivery && parent._scheduledDeliverySlot == null))
                             ? Container(
                                 margin: const EdgeInsets.only(left: 6),
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -8287,18 +8543,26 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       SizedBox(
                                         width: double.infinity,
                                         child: ElevatedButton(
-                                          onPressed: () {
-                                            // Persist to parent on dismiss
-                                            setState(() {});
-                                            Navigator.pop(ctx);
-                                          },
+                                          onPressed: (parent._wantsScheduledDelivery && parent._scheduledDeliverySlot == null)
+                                              ? null  // Disabled until a time slot is selected
+                                              : () {
+                                                  // Persist to parent on dismiss
+                                                  setState(() {});
+                                                  Navigator.pop(ctx);
+                                                },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: parent._accentColor,
                                             foregroundColor: Colors.white,
+                                            disabledBackgroundColor: Colors.grey[300],
+                                            disabledForegroundColor: Colors.grey[500],
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                             padding: const EdgeInsets.symmetric(vertical: 14),
                                           ),
-                                          child: Text('checkout.done'.tr()),
+                                          child: Text(
+                                            (parent._wantsScheduledDelivery && parent._scheduledDeliverySlot == null)
+                                                ? 'checkout.select_time'.tr()
+                                                : 'checkout.done'.tr(),
+                                          ),
                                         ),
                                       ),
                                     ],

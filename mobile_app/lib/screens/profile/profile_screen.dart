@@ -38,7 +38,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         title: Text('profile.my_account'.tr(),
             style: TextStyle(
@@ -824,7 +828,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: isSelected ? primaryColor : Colors.transparent,
+            color: isSelected
+                ? (isDark ? const Color(0xFFFB335B) : primaryColor)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12), // Pill inner
           ),
           child: Center(
@@ -904,11 +910,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         onTap: () async {
           HapticFeedback.mediumImpact();
           await context.setLocale(Locale(langCode));
+          // Sync language preference to Firestore for push notification localization
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            try {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .set({'language': langCode}, SetOptions(merge: true));
+            } catch (_) {}
+          }
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: isSelected ? primaryColor : Colors.transparent,
+            color: isSelected
+                ? (isDark ? const Color(0xFFFB335B) : primaryColor)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(

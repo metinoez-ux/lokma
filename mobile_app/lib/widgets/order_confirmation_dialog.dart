@@ -107,6 +107,19 @@ class OrderConfirmationDialog extends StatelessWidget {
                 style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
               ),
 
+              const SizedBox(height: 12),
+
+              // Bon Appetit 😋
+              Text(
+                'order_confirmation.bon_appetit'.tr(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
               const SizedBox(height: 16),
 
               // Notification reminder

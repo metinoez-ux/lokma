@@ -1390,6 +1390,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           sku: item.sku,
                           masterId: '',
                           name: item.name,
+                          nameData: item.name,
                           description: '',
                           category: '',
                           price: item.price,

@@ -20,6 +20,7 @@ import 'package:lokma_app/providers/bottom_nav_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
+import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
 import '../../../utils/currency_utils.dart';
 import '../../../providers/search_provider.dart';
 
@@ -1411,29 +1412,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          // İlk item: Count header
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 12),
-              child: Text(
-                tr('discovery.businesses_at_service',
-                    namedArgs: {'count': restaurants.length.toString()}),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            );
-          }
-
-          // Restaurant cards (index-1 because first is header)
-          final restaurantIndex = index - 1;
-          final doc = restaurants[restaurantIndex];
+          final doc = restaurants[index];
           final data = doc.data() as Map<String, dynamic>;
           return _buildRestaurantCard(doc.id, data);
         },
-        childCount: restaurants.length + 1, // +1 for header
+        childCount: restaurants.length,
       ),
     );
   }
@@ -1763,6 +1746,40 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   child: Text(
                     preOrderEnabled ? tr('marketplace.see_menu_and_order') : tr('marketplace.see_menu'),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // "Find Open Businesses" text link
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => OpenPartnersMapSheet(
+                        allBusinesses: _allBusinesses,
+                        userLat: _userLat,
+                        userLng: _userLng,
+                        deliveryMode: _deliveryMode,
+                        activeSegment: 'essen',
+                        sectorTypes: _yemekSectorTypes,
+                      ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: onSurface.withValues(alpha: 0.7),
+                  ),
+                  child: Text(
+                    'marketplace.find_open_businesses'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                 ),
               ),

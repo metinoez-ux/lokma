@@ -13,6 +13,7 @@ import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
+import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../utils/currency_utils.dart';
 
@@ -547,6 +548,40 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
+              // "Find Open Businesses" text link
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => OpenPartnersMapSheet(
+                        allBusinesses: _allBusinesses,
+                        userLat: _userLat,
+                        userLng: _userLng,
+                        deliveryMode: _deliveryMode,
+                        activeSegment: 'markt',
+                        sectorTypes: _marketSectorTypes,
+                      ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: onSurface.withValues(alpha: 0.7),
+                  ),
+                  child: Text(
+                    'marketplace.find_open_businesses'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           actionsPadding: EdgeInsets.zero,
@@ -839,13 +874,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: _deliveryMode == 'gelal' ? 215 : 190,
+              expandedHeight: _deliveryMode == 'gelal' ? 200 : 175,
               collapsedHeight: 120, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
                   // Scroll oranını hesapla (0 = tamamen açık, 1 = tamamen kapalı)
-                  final expandedHeight = _deliveryMode == 'gelal' ? 215.0 : 190.0;
+                  final expandedHeight = _deliveryMode == 'gelal' ? 200.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) / 
@@ -894,6 +929,23 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               ),
             ),
             
+            // "Bei X Partnern bestellen" header — matches Essen tab
+            if (!_isLoading && _filteredBusinesses.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 7, 20, 8),
+                  child: Text(
+                    tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ),
+
             // Market List
             SliverPadding(
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
@@ -1147,7 +1199,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 2),
       child: GestureDetector(
         onTap: () {
           // 🆕 Lieferando tarzı: Arama'ya tıklayınca SmartSearchScreen'e git
@@ -1453,25 +1505,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          if (index == 0) {
-            // Count header as first item
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                tr('discovery.businesses_at_service', namedArgs: {'count': markets.length.toString()}),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            );
-          }
-          final doc = markets[index - 1];
+          final doc = markets[index];
           final data = doc.data() as Map<String, dynamic>;
           return _buildMarketCard(doc.id, data);
         },
-        childCount: markets.length + 1, // +1 for header
+        childCount: markets.length,
       ),
     );
   }

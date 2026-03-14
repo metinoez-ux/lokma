@@ -1,28 +1,116 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../orders/courier_tracking_screen.dart';
 import '../../services/order_service.dart';
 import '../../services/chat_service.dart';
+import '../../providers/cart_provider.dart';
+import '../../models/butcher_product.dart';
+import '../../models/product_option.dart';
+import '../../utils/currency_utils.dart';
+import 'notification_trash_screen.dart';
 
-class NotificationHistoryScreen extends StatefulWidget {
+class NotificationHistoryScreen extends ConsumerStatefulWidget {
   const NotificationHistoryScreen({super.key});
 
   @override
-  State<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
+  ConsumerState<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
 }
 
-class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
+class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+  bool _isEditMode = false;
+  final Set<String> _selectedIds = {}; // orderId or generic docId
+  String _activeFilter = 'all'; // 'all', 'orders', 'promotions'
+  bool _sortNewestFirst = true; // true = newest first, false = oldest first
+
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('tr', timeago.TrMessages());
     _markAllAsRead();
+  }
+
+  // ── Trash helpers ─────────────────────────────────────────────────────
+  Future<void> _trashOrderGroup(_OrderGroup group) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final batch = FirebaseFirestore.instance.batch();
+    final now = Timestamp.now();
+    for (final docId in group.docIds) {
+      batch.update(
+        FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+        {'trashedAt': now},
+      );
+    }
+    await batch.commit();
+  }
+
+  Future<void> _trashGenericNotification(String docId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users').doc(user.uid).collection('notifications').doc(docId)
+        .update({'trashedAt': Timestamp.now()});
+  }
+
+  Future<void> _undoTrashOrderGroup(_OrderGroup group) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final batch = FirebaseFirestore.instance.batch();
+    for (final docId in group.docIds) {
+      batch.update(
+        FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+        {'trashedAt': FieldValue.delete()},
+      );
+    }
+    await batch.commit();
+  }
+
+  Future<void> _undoTrashGeneric(String docId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users').doc(user.uid).collection('notifications').doc(docId)
+        .update({'trashedAt': FieldValue.delete()});
+  }
+
+  Future<void> _trashSelected(List<dynamic> combined) async {
+    final user = _auth.currentUser;
+    if (user == null || _selectedIds.isEmpty) return;
+    final batch = FirebaseFirestore.instance.batch();
+    final now = Timestamp.now();
+    for (final item in combined) {
+      if (item is _OrderGroup && _selectedIds.contains(item.orderId)) {
+        for (final docId in item.docIds) {
+          batch.update(
+            FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+            {'trashedAt': now},
+          );
+        }
+      } else if (item is Map<String, dynamic>) {
+        final docId = item['_docId'] as String?;
+        if (docId != null && _selectedIds.contains(docId)) {
+          batch.update(
+            FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+            {'trashedAt': now},
+          );
+        }
+      }
+    }
+    await batch.commit();
+    setState(() { _selectedIds.clear(); _isEditMode = false; });
+  }
+
+  bool _isActiveOrder(_OrderGroup group) {
+    const active = {'pending', 'accepted', 'preparing', 'ready', 'onTheWay', 'readyForPickup'};
+    final latest = group.statuses.last['status'] as String? ?? '';
+    return active.contains(latest);
   }
 
   Future<void> _markAllAsRead() async {
@@ -52,21 +140,24 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
   // ── Status helpers ──────────────────────────────────────────────────────
   // 'iconData' = Material Icon (preferred), 'icon' = emoji fallback
   static final _statusMeta = <String, Map<String, dynamic>>{
-    'pending':   {'label': 'Sipariş Verildi',    'icon': '', 'color': 0xFFFF9800, 'iconData': Icons.receipt_long_rounded},
-    'accepted':  {'label': 'Onaylandı',          'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
-    'preparing': {'label': 'Hazırlanıyor',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service, 'assetIcon': 'assets/icons/food_preparing.png'},
-    'ready':     {'label': 'Hazır',              'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.inventory_2_rounded, 'assetIcon': 'assets/icons/food_ready.png'},
-    'onTheWay':       {'label': 'Yola Çıktı',          'icon': '', 'color': 0xFF00BCD4, 'iconData': Icons.delivery_dining},
-    'readyForPickup': {'label': 'Alınmaya Hazır',      'icon': '', 'color': 0xFF007AFF, 'iconData': Icons.storefront_rounded},
-    'delivered': {'label': 'Teslim Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
-    'served':    {'label': 'Servis Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.restaurant_rounded},
-    'completed': {'label': 'Tamamlandı',         'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.verified_rounded},
-    'rejected':  {'label': 'Reddedildi',         'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.cancel_outlined},
-    'cancelled': {'label': 'İptal Edildi',       'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.block_rounded},
+    'pending':   {'labelKey': 'notifications.order_placed',    'icon': '', 'color': 0xFFFF9800, 'iconData': Icons.receipt_long_rounded},
+    'accepted':  {'labelKey': 'notifications.confirmed',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
+    'preparing': {'labelKey': 'notifications.preparing',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service, 'assetIcon': 'assets/icons/food_preparing.png'},
+    'ready':     {'labelKey': 'notifications.ready',           'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.inventory_2_rounded, 'assetIcon': 'assets/icons/food_ready.png'},
+    'onTheWay':       {'labelKey': 'notifications.on_the_way',       'icon': '', 'color': 0xFF00BCD4, 'iconData': Icons.delivery_dining},
+    'readyForPickup': {'labelKey': 'notifications.ready_for_pickup', 'icon': '', 'color': 0xFF007AFF, 'iconData': Icons.storefront_rounded},
+    'delivered': {'labelKey': 'notifications.delivered',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
+    'served':    {'labelKey': 'notifications.served',          'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.restaurant_rounded},
+    'completed': {'labelKey': 'notifications.completed',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.verified_rounded},
+    'rejected':  {'labelKey': 'notifications.rejected',        'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.cancel_outlined},
+    'cancelled': {'labelKey': 'notifications.cancelled',       'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.block_rounded},
   };
 
-  Map<String, dynamic> _meta(String status) =>
-      _statusMeta[status] ?? {'label': status, 'icon': '', 'color': 0xFF9E9E9E, 'iconData': Icons.info_outline};
+  Map<String, dynamic> _meta(String status) {
+    final base = _statusMeta[status] ?? {'labelKey': status, 'icon': '', 'color': 0xFF9E9E9E, 'iconData': Icons.info_outline};
+    final key = base['labelKey'] as String? ?? status;
+    return {...base, 'label': key.contains('.') ? key.tr() : key};
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,34 +178,88 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.notifications_rounded, size: 20, color: Theme.of(context).colorScheme.onSurface),
-            const SizedBox(width: 6),
-            Text(
-              tr('profile.notifications'),
+        title: _isEditMode
+          ? Text(
+              _selectedIds.isEmpty
+                ? 'notifications.select_all'.tr()
+                : 'notifications.items_selected'.tr().replaceAll('{}', '${_selectedIds.length}'),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
                 fontSize: 17,
               ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.notifications_rounded, size: 20, color: Theme.of(context).colorScheme.onSurface),
+                const SizedBox(width: 6),
+                Text(
+                  tr('profile.notifications'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
+                ),
+              ],
+            ),
+        centerTitle: !_isEditMode,
+        leading: _isEditMode
+          ? IconButton(
+              icon: Icon(Icons.close, color: Theme.of(context).iconTheme.color),
+              onPressed: () => setState(() { _isEditMode = false; _selectedIds.clear(); }),
+            )
+          : IconButton(
+              padding: const EdgeInsets.all(12),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).iconTheme.color),
+              onPressed: () {
+                if (GoRouter.of(context).canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+            ),
+        actions: [
+          if (!_isEditMode) ...[
+            // ── Trash folder button with badge ──
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users').doc(user.uid).collection('notifications')
+                  .where('trashedAt', isNull: false)
+                  .snapshots(),
+              builder: (context, trashSnap) {
+                final trashCount = trashSnap.data?.docs.length ?? 0;
+                return IconButton(
+                  icon: Badge(
+                    isLabelVisible: trashCount > 0,
+                    label: Text('$trashCount', style: const TextStyle(fontSize: 10)),
+                    backgroundColor: const Color(0xFFFB335B),
+                    child: Icon(Icons.delete_outline_rounded, color: Theme.of(context).iconTheme.color),
+                  ),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationTrashScreen()),
+                  ),
+                );
+              },
+            ),
+            // ── Edit mode toggle ──
+            IconButton(
+              icon: Icon(Icons.checklist_rounded, color: Theme.of(context).iconTheme.color),
+              onPressed: () => setState(() { _isEditMode = true; }),
+            ),
+          ] else ...[
+            // ── Select all button ──
+            IconButton(
+              icon: Icon(Icons.select_all_rounded, color: Theme.of(context).iconTheme.color),
+              tooltip: 'notifications.select_all'.tr(),
+              onPressed: () {}, // will be connected after combined list is built
             ),
           ],
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          padding: const EdgeInsets.all(12),
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).iconTheme.color),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/');
-            }
-          },
-        ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -164,23 +309,29 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             );
           }
 
-          // ── Group by orderId ──────────────────────────────────────
+          // ── Filter trashed & Group by orderId ─────────────────────
           final List<_OrderGroup> orderGroups = [];
           final List<Map<String, dynamic>> genericNotifications = [];
 
           // Collect all order_status notifications grouped by orderId
           final Map<String, List<Map<String, dynamic>>> orderMap = {};
+          final Map<String, List<String>> orderDocIds = {}; // orderId → list of doc IDs
 
           for (final doc in docs) {
             final data = doc.data() as Map<String, dynamic>;
+            // Skip trashed notifications
+            if (data['trashedAt'] != null) continue;
+
             final type = data['type'] as String?;
             final orderId = data['orderId'] as String?;
 
             if (type == 'order_status' && orderId != null && orderId.isNotEmpty) {
               orderMap.putIfAbsent(orderId, () => []);
+              orderDocIds.putIfAbsent(orderId, () => []);
               orderMap[orderId]!.add(data);
+              orderDocIds[orderId]!.add(doc.id);
             } else {
-              genericNotifications.add(data);
+              genericNotifications.add({...data, '_docId': doc.id});
             }
           }
 
@@ -239,6 +390,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
               businessCity: bCity,
               businessPostalCode: bPostal,
               orderType: oType,
+              docIds: orderDocIds[entry.key] ?? [],
             ));
           }
 
@@ -278,28 +430,358 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             }
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: combined.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final item = combined[index];
-              if (item is _OrderGroup) {
-                return _OrderTimelineCard(
-                  group: item,
-                  isDark: isDark,
-                  isFirst: index == 0,
-                  metaFn: _meta,
-                );
-              } else {
-                return _GenericNotificationCard(
-                  data: item as Map<String, dynamic>,
-                  isDark: isDark,
-                );
-              }
-            },
+          // Apply category filter
+          final List<dynamic> filtered;
+          if (_activeFilter == 'orders') {
+            filtered = combined.where((item) => item is _OrderGroup).toList();
+          } else if (_activeFilter == 'promotions') {
+            filtered = combined.where((item) => item is! _OrderGroup).toList();
+          } else {
+            filtered = combined;
+          }
+
+          // Apply sort direction (reverse for oldest-first)
+          if (!_sortNewestFirst) {
+            // Keep active orders pinned at top, reverse only completed ones
+            final activeItems = filtered.where((item) =>
+              item is _OrderGroup && _isActiveOrder(item)).toList();
+            final inactiveItems = filtered.where((item) =>
+              !(item is _OrderGroup && _isActiveOrder(item))).toList();
+            filtered
+              ..clear()
+              ..addAll(activeItems)
+              ..addAll(inactiveItems.reversed);
+          }
+
+          return Column(
+            children: [
+              // ── Filter chips ──
+              if (!_isEditMode)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      _buildFilterChip('all', 'notifications.filter_all'.tr(), isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('orders', 'notifications.filter_orders'.tr(), isDark),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('promotions', 'notifications.filter_promotions'.tr(), isDark),
+                      const Spacer(),
+                      // Sort toggle button
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() => _sortNewestFirst = !_sortNewestFirst);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[800] : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedRotation(
+                                turns: _sortNewestFirst ? 0.0 : 0.5,
+                                duration: const Duration(milliseconds: 300),
+                                child: Icon(
+                                  Icons.arrow_downward_rounded,
+                                  size: 14,
+                                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _sortNewestFirst
+                                  ? 'notifications.sort_newest'.tr()
+                                  : 'notifications.sort_oldest'.tr(),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        tr('notifications.no_notifications_yet'),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    )
+                  : Stack(
+                    children: [
+                      ListView.separated(
+                        padding: EdgeInsets.only(left: 16, right: 16, top: 4, bottom: _isEditMode ? 80 : 12),
+                        itemCount: filtered.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final item = filtered[index];
+                  if (item is _OrderGroup) {
+                    final isActive = _isActiveOrder(item);
+                    final card = _OrderTimelineCard(
+                      group: item,
+                      isDark: isDark,
+                      isFirst: index == 0,
+                      metaFn: _meta,
+                    );
+                    if (_isEditMode) {
+                      if (isActive) return Opacity(opacity: 0.5, child: card);
+                      return _buildSelectableCard(
+                        id: item.orderId,
+                        isDark: isDark,
+                        child: card,
+                      );
+                    }
+                    if (isActive) return card;
+                    return GestureDetector(
+                      onLongPress: () {
+                        HapticFeedback.mediumImpact();
+                        setState(() {
+                          _isEditMode = true;
+                          _selectedIds.add(item.orderId);
+                        });
+                      },
+                      child: _buildDismissible(
+                        key: Key('order_${item.orderId}'),
+                        isDark: isDark,
+                        onDismissed: () async {
+                          await _trashOrderGroup(item);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('notifications.notification_trashed'.tr()),
+                                action: SnackBarAction(
+                                  label: 'notifications.undo'.tr(),
+                                  textColor: const Color(0xFF4CAF50),
+                                  onPressed: () => _undoTrashOrderGroup(item),
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          }
+                        },
+                        child: card,
+                      ),
+                    );
+                  } else {
+                    final data = item as Map<String, dynamic>;
+                    final docId = data['_docId'] as String? ?? '';
+                    final card = _GenericNotificationCard(data: data, isDark: isDark);
+                    if (_isEditMode) {
+                      return _buildSelectableCard(
+                        id: docId,
+                        isDark: isDark,
+                        child: card,
+                      );
+                    }
+                    return GestureDetector(
+                      onLongPress: () {
+                        HapticFeedback.mediumImpact();
+                        setState(() {
+                          _isEditMode = true;
+                          _selectedIds.add(docId);
+                        });
+                      },
+                      child: _buildDismissible(
+                        key: Key('generic_$docId'),
+                        isDark: isDark,
+                        onDismissed: () async {
+                          await _trashGenericNotification(docId);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('notifications.notification_trashed'.tr()),
+                                action: SnackBarAction(
+                                  label: 'notifications.undo'.tr(),
+                                  textColor: const Color(0xFF4CAF50),
+                                  onPressed: () => _undoTrashGeneric(docId),
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          }
+                        },
+                        child: card,
+                      ),
+                    );
+                  }
+                },
+              ),
+              // ── Floating bottom bar for edit mode ──
+              if (_isEditMode && _selectedIds.isNotEmpty)
+                Positioned(
+                  left: 16, right: 16, bottom: 16,
+                  child: SafeArea(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.15),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'notifications.items_selected'.tr().replaceAll('{}', '${_selectedIds.length}'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: () => _trashSelected(combined),
+                            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFFB335B), size: 20),
+                            label: Text(
+                              'notifications.trash_selected'.tr(),
+                              style: const TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+            ),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  // ── Filter chip widget ────────────────────────────────────────────────
+  Widget _buildFilterChip(String filterKey, String label, bool isDark) {
+    final isSelected = _activeFilter == filterKey;
+    return GestureDetector(
+      onTap: () => setState(() { _activeFilter = filterKey; }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFFB335B)
+              : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFFFB335B)
+                : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+            width: 0.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.grey[400] : Colors.grey[600]),
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Swipe-to-trash widget ─────────────────────────────────────────────
+  Widget _buildDismissible({
+    required Key key,
+    required bool isDark,
+    required Future<void> Function() onDismissed,
+    required Widget child,
+  }) {
+    return Dismissible(
+      key: key,
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        await onDismissed();
+        return false; // handled via Firestore, stream will update UI
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFB335B).withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.delete_outline_rounded, color: Color(0xFFFB335B), size: 24),
+            const SizedBox(height: 2),
+            Text(
+              'notifications.trash'.tr(),
+              style: const TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  // ── Selectable card for edit/bulk mode ─────────────────────────────────
+  Widget _buildSelectableCard({
+    required String id,
+    required bool isDark,
+    required Widget child,
+  }) {
+    final selected = _selectedIds.contains(id);
+    return GestureDetector(
+      onTap: () => setState(() {
+        if (selected) { _selectedIds.remove(id); } else { _selectedIds.add(id); }
+      }),
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? const Color(0xFFFB335B) : Colors.transparent,
+              border: Border.all(
+                color: selected ? const Color(0xFFFB335B) : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                width: 2,
+              ),
+            ),
+            child: selected
+                ? const Icon(Icons.check, color: Colors.white, size: 16)
+                : null,
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: child),
+        ],
       ),
     );
   }
@@ -316,6 +798,7 @@ class _OrderGroup {
   final String businessCity;
   final String businessPostalCode;
   final String orderType; // 'delivery', 'pickup', 'dineIn'
+  final List<String> docIds; // Firestore doc IDs for all notifications in this group
 
   _OrderGroup({
     required this.orderId,
@@ -327,11 +810,12 @@ class _OrderGroup {
     this.businessCity = '',
     this.businessPostalCode = '',
     this.orderType = 'delivery',
+    this.docIds = const [],
   });
 }
 
 // ── Order timeline card ───────────────────────────────────────────────────
-class _OrderTimelineCard extends StatefulWidget {
+class _OrderTimelineCard extends ConsumerStatefulWidget {
   final _OrderGroup group;
   final bool isDark;
   final bool isFirst;
@@ -345,10 +829,10 @@ class _OrderTimelineCard extends StatefulWidget {
   });
 
   @override
-  State<_OrderTimelineCard> createState() => _OrderTimelineCardState();
+  ConsumerState<_OrderTimelineCard> createState() => _OrderTimelineCardState();
 }
 
-class _OrderTimelineCardState extends State<_OrderTimelineCard> {
+class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
   late bool _expanded;
 
   // Full pipeline steps (dynamic based on order type)
@@ -458,7 +942,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
           dt.day == orderDate.day;
       if (sameDay) return timeStr; // Same day → only time
       // Different day → prefix with day+month
-      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      final months = ['notifications.month_jan'.tr(), 'notifications.month_feb'.tr(), 'notifications.month_mar'.tr(), 'notifications.month_apr'.tr(), 'notifications.month_may'.tr(), 'notifications.month_jun'.tr(), 'notifications.month_jul'.tr(), 'notifications.month_aug'.tr(), 'notifications.month_sep'.tr(), 'notifications.month_oct'.tr(), 'notifications.month_nov'.tr(), 'notifications.month_dec'.tr()];
       return '${dt.day} ${months[dt.month - 1]} $timeStr';
     }
 
@@ -467,7 +951,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
       final dt = allStatusDateTimes['pending'];
       final timeStr = allStatusTimestamps['pending'] ?? '';
       if (dt == null || timeStr.isEmpty) return timeStr;
-      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      final months = ['notifications.month_jan'.tr(), 'notifications.month_feb'.tr(), 'notifications.month_mar'.tr(), 'notifications.month_apr'.tr(), 'notifications.month_may'.tr(), 'notifications.month_jun'.tr(), 'notifications.month_jul'.tr(), 'notifications.month_aug'.tr(), 'notifications.month_sep'.tr(), 'notifications.month_oct'.tr(), 'notifications.month_nov'.tr(), 'notifications.month_dec'.tr()];
       return '${dt.day} ${months[dt.month - 1]} | $timeStr';
     }
 
@@ -549,7 +1033,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
           // Fallback: parse reason from notification body text
           // Body format: "... - Sebep: {reason}. ..." or "... - Sebep: {reason}"
           final body = s['body'] as String? ?? '';
-          if (body.contains('Sebep: ')) {
+          if (body.contains('Sebep: ') || body.contains('${"notifications.reason_prefix".tr()}: ')) {
             final start = body.indexOf('Sebep: ') + 7;
             var end = body.indexOf('.', start);
             if (end < 0 || end > start + 100) end = body.length;
@@ -585,15 +1069,15 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
         ? Colors.white.withValues(alpha: 0.1)
         : const Color(0xFF3A3A3C).withValues(alpha: 0.08);
     final timestampColor = isDark
-        ? Colors.white.withValues(alpha: 0.5)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.5);
+        ? Colors.white.withValues(alpha: 0.55)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.8);
 
     // ── Format order date for header ──
     String headerDateStr = '';
     final pendingDt = allStatusDateTimes['pending'];
     final headerDt = pendingDt ?? (allStatusDateTimes.isNotEmpty ? allStatusDateTimes.values.first : null);
     if (headerDt != null) {
-      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      final months = ['notifications.month_jan'.tr(), 'notifications.month_feb'.tr(), 'notifications.month_mar'.tr(), 'notifications.month_apr'.tr(), 'notifications.month_may'.tr(), 'notifications.month_jun'.tr(), 'notifications.month_jul'.tr(), 'notifications.month_aug'.tr(), 'notifications.month_sep'.tr(), 'notifications.month_oct'.tr(), 'notifications.month_nov'.tr(), 'notifications.month_dec'.tr()];
       headerDateStr = '${headerDt.day} ${months[headerDt.month - 1]} ${headerDt.year}  |  ${headerDt.hour.toString().padLeft(2, '0')}:${headerDt.minute.toString().padLeft(2, '0')}';
     }
 
@@ -905,7 +1389,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     const SizedBox(width: 4),
                                   ],
                                   Text(
-                                    stepMeta['label'] as String,
+                                    (stepMeta['label'] as String?) ?? (stepMeta['labelKey'] as String? ?? '').tr(),
                                     style: TextStyle(
                                       color: isCompleted
                                           ? (stepStatus == 'cancelled' || stepStatus == 'rejected'
@@ -924,9 +1408,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               Text(
                                 timeStr,
                                 style: TextStyle(
-                                  color: timestampColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                                  color: cardSubtleColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: 0.3,
                                 ),
                               )
                             else if (!isCompleted)
@@ -946,7 +1431,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                'Sebep: $cancellationReason',
+                                '${'notifications.reason_prefix'.tr()}: $cancellationReason',
                                 style: const TextStyle(
                                   color: Color(0xFFF44336),
                                   fontSize: 11,
@@ -983,8 +1468,8 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                 child: Text.rich(
                                   TextSpan(
                                     children: [
-                                      const TextSpan(
-                                        text: 'Planlanan Teslimat: ',
+                                      TextSpan(
+                                        text: '${'notifications.scheduled_delivery'.tr()}: ',
                                         style: TextStyle(
                                           color: Color(0xFF4CAF50),
                                           fontSize: 12,
@@ -1060,7 +1545,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         foregroundColor: Colors.white,
                         backgroundColor: isDark
                             ? Colors.white.withValues(alpha: 0.12)
-                            : const Color(0xFF2C2C2E),
+                            : const Color(0xFF6B6B6D),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -1263,6 +1748,9 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Order type line above business name
+                            _buildOrderTypeInline(order, isDark),
+                            const SizedBox(height: 6),
                             Text(
                               order.butcherName,
                               style: TextStyle(
@@ -1273,7 +1761,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Sipariş #${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                              '${'notifications.order_number'.tr()} #${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                               style: TextStyle(
                                 color: isDark ? Colors.grey[400] : Colors.grey[600],
                                 fontSize: 13,
@@ -1316,7 +1804,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                       const SizedBox(height: 16),
                       // Items header
                       Text(
-                        'Ürünler',
+                        'notifications.products_header'.tr(),
                         style: TextStyle(
                           color: colorScheme.onSurface,
                           fontSize: 15,
@@ -1389,7 +1877,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Toplam',
+                            'notifications.total'.tr(),
                             style: TextStyle(
                               color: colorScheme.onSurface,
                               fontSize: 16,
@@ -1422,6 +1910,164 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           ],
                         ),
                       ],
+                      // ── Delivery address ────────────────────────────
+                      if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Divider(color: isDark ? Colors.grey[800] : Colors.grey[200], height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.location_on, size: 16, color: Colors.grey[500]),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'notifications.delivery_address_label'.tr(),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w400,
+                                      color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    order.deliveryAddress!,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400,
+                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      // ── Payment method + status card ────────────────
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[900] : Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                        ),
+                        child: Column(
+                          children: [
+                            if (order.paymentMethod != null) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.payment, size: 16, color: Colors.grey[600]),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _getPaymentMethodLabel(order.paymentMethod!),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    '${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${(order.createdAt.year % 100).toString().padLeft(2, '0')} ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[300]),
+                              ),
+                            ],
+                            Row(
+                              children: [
+                                Icon(
+                                  order.status == OrderStatus.delivered || order.status == OrderStatus.served
+                                      ? Icons.check_circle_outline
+                                      : Icons.info_outline,
+                                  size: 16,
+                                  color: _getStatusColor(order.status),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _getStatusLabel(order.status),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _getStatusColor(order.status),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // ── Reorder button ──────────────────────────────
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(sheetCtx); // close bottom sheet
+                            _reorderItems(order);
+                          },
+                          icon: const Icon(Icons.replay, size: 18),
+                          label: Text(
+                            'orders.reorder'.tr(),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF6B6B6D),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                          ),
+                        ),
+                      ),
+                      // ── Rating action buttons ───────────────────────
+                      if (order.status == OrderStatus.delivered || order.status == OrderStatus.served) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            // Rate courier (only for delivery orders)
+                            if (order.orderType == OrderType.delivery && order.courierName != null) ...[
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _showCourierRatingSheet(sheetCtx, order),
+                                  icon: const Icon(Icons.delivery_dining, size: 16),
+                                  label: Text('notifications.rate_courier'.tr(), style: const TextStyle(fontSize: 12)),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: isDark ? Colors.white : Colors.black87,
+                                    side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            // Rate business
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _showBusinessRatingSheet(sheetCtx, order),
+                                icon: const Icon(Icons.star_outline, size: 16),
+                                label: Text('notifications.rate_business'.tr(), style: const TextStyle(fontSize: 12)),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: isDark ? Colors.white : Colors.black87,
+                                  side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -1435,10 +2081,345 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
       if (ctx.mounted) {
         Navigator.pop(ctx); // dismiss loading
         ScaffoldMessenger.of(ctx).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
+          SnackBar(content: Text('${'notifications.error_prefix'.tr()}: $e')),
         );
       }
     }
+  }
+
+  // ── Helper: order type tag ───────────────────────────────────────────────
+  Widget _buildOrderTypeTag(LokmaOrder order, bool isDark) {
+    final IconData icon;
+    final String label;
+    final Color color;
+
+    if (order.tableSessionId != null) {
+      icon = Icons.groups;
+      label = 'orders.label_group_order'.tr();
+      color = const Color(0xFFE91E63);
+    } else {
+      switch (order.orderType) {
+        case OrderType.delivery:
+          icon = Icons.delivery_dining;
+          label = 'orders.label_courier'.tr();
+          color = const Color(0xFF2196F3);
+          break;
+        case OrderType.pickup:
+          icon = Icons.storefront;
+          label = 'orders.label_pickup'.tr();
+          color = const Color(0xFFFFC107);
+          break;
+        case OrderType.dineIn:
+          icon = Icons.restaurant;
+          label = 'orders.label_table'.tr();
+          color = const Color(0xFF9C27B0);
+          break;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.3),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Helper: order type inline (for detail sheet header) ──────────────────
+  Widget _buildOrderTypeInline(LokmaOrder order, bool isDark) {
+    final IconData icon;
+    final String label;
+    final Color color;
+
+    if (order.tableSessionId != null) {
+      icon = Icons.restaurant;
+      label = 'orders.label_table'.tr();
+      color = const Color(0xFF9C27B0);
+    } else {
+      switch (order.orderType) {
+        case OrderType.delivery:
+          icon = Icons.delivery_dining;
+          label = 'notifications.delivery_order_label'.tr();
+          color = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+          break;
+        case OrderType.pickup:
+          icon = Icons.storefront;
+          label = 'notifications.pickup_order_label'.tr();
+          color = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+          break;
+        case OrderType.dineIn:
+          icon = Icons.restaurant;
+          label = 'orders.label_table'.tr();
+          color = const Color(0xFF9C27B0);
+          break;
+      }
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: color),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Helper: payment method label ─────────────────────────────────────────
+  String _getPaymentMethodLabel(String method) {
+    switch (method.toLowerCase()) {
+      case 'cash':
+        return 'orders.payment_cash'.tr();
+      case 'card':
+      case 'online':
+        return 'orders.payment_card'.tr();
+      case 'cardondelivery':
+      case 'card_on_delivery':
+      case 'kapidakart':
+        return 'notifications.payment_card_on_delivery'.tr();
+      case 'card_nfc':
+        return 'notifications.payment_card_nfc'.tr();
+      default:
+        return method;
+    }
+  }
+
+  // ── Helper: status color ─────────────────────────────────────────────────
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.delivered:
+      case OrderStatus.served:
+        return const Color(0xFF4CAF50);
+      case OrderStatus.cancelled:
+        return const Color(0xFFF44336);
+      case OrderStatus.onTheWay:
+        return const Color(0xFF2196F3);
+      case OrderStatus.preparing:
+      case OrderStatus.ready:
+        return const Color(0xFFFF9800);
+      default:
+        return const Color(0xFF9E9E9E);
+    }
+  }
+
+  // ── Helper: status label ─────────────────────────────────────────────────
+  String _getStatusLabel(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return 'orders.status_pending'.tr();
+      case OrderStatus.accepted:
+        return 'orders.status_accepted'.tr();
+      case OrderStatus.preparing:
+        return 'orders.status_preparing'.tr();
+      case OrderStatus.ready:
+        return 'orders.status_ready'.tr();
+      case OrderStatus.onTheWay:
+        return 'orders.status_on_the_way'.tr();
+      case OrderStatus.served:
+        return 'orders.status_served'.tr();
+      case OrderStatus.delivered:
+        return 'orders.status_delivered'.tr();
+      case OrderStatus.cancelled:
+        return 'orders.status_cancelled'.tr();
+    }
+  }
+
+  // ── Reorder: reconstruct cart items and navigate ─────────────────────────
+  void _reorderItems(LokmaOrder order) {
+    final cartNotifier = ref.read(cartProvider.notifier);
+    cartNotifier.clearCart();
+
+    for (final item in order.items) {
+      final product = ButcherProduct(
+        butcherId: order.butcherId,
+        id: item.sku,
+        sku: item.sku,
+        masterId: '',
+        name: item.name,
+        nameData: item.name,
+        description: '',
+        category: '',
+        price: item.price,
+        unitType: item.unit,
+        imageUrl: item.imageUrl,
+        minQuantity: item.unit == 'kg' ? 0.5 : 1.0,
+        stepQuantity: item.unit == 'kg' ? 0.5 : 1.0,
+      );
+
+      final selectedOpts = item.selectedOptions
+          .map((o) => SelectedOption.fromMap(o))
+          .toList();
+
+      cartNotifier.addToCart(
+        product,
+        item.quantity,
+        order.butcherId,
+        order.butcherName,
+        selectedOptions: selectedOpts,
+        note: item.itemNote,
+      );
+    }
+
+    if (mounted) context.go('/cart');
+  }
+
+  // ── Rating bottom sheet: courier ─────────────────────────────────────────
+  void _showCourierRatingSheet(BuildContext ctx, LokmaOrder order) {
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+    int _rating = 0;
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      builder: (bCtx) {
+        return StatefulBuilder(builder: (bCtx, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(bCtx).viewInsets.bottom, left: 20, right: 20, top: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('notifications.rate_courier'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                if (order.courierName != null) ...[
+                  const SizedBox(height: 4),
+                  Text(order.courierName!, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    return IconButton(
+                      icon: Icon(i < _rating ? Icons.star : Icons.star_border, color: const Color(0xFFFFC107), size: 36),
+                      onPressed: () => setSheetState(() => _rating = i + 1),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _rating > 0 ? () {
+                      // Save courier rating to Firestore
+                      FirebaseFirestore.instance.collection('meat_orders').doc(order.id).update({
+                        'courierRating': _rating,
+                        'courierRatedAt': FieldValue.serverTimestamp(),
+                      });
+                      Navigator.pop(bCtx);
+                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('notifications.rating_saved'.tr())));
+                    } : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC107),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: Text('notifications.submit_rating'.tr()),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  // ── Rating bottom sheet: business ────────────────────────────────────────
+  void _showBusinessRatingSheet(BuildContext ctx, LokmaOrder order) {
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+    int _rating = 0;
+    final _reviewController = TextEditingController();
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      builder: (bCtx) {
+        return StatefulBuilder(builder: (bCtx, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(bCtx).viewInsets.bottom, left: 20, right: 20, top: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('notifications.rate_business'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                const SizedBox(height: 4),
+                Text(order.butcherName, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    return IconButton(
+                      icon: Icon(i < _rating ? Icons.star : Icons.star_border, color: const Color(0xFFFFC107), size: 36),
+                      onPressed: () => setSheetState(() => _rating = i + 1),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _reviewController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'notifications.write_review_hint'.tr(),
+                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                    filled: true,
+                    fillColor: isDark ? Colors.grey[900] : Colors.grey[50],
+                  ),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _rating > 0 ? () {
+                      // Save business rating + review to Firestore
+                      final reviewData = <String, dynamic>{
+                        'businessRating': _rating,
+                        'businessRatedAt': FieldValue.serverTimestamp(),
+                      };
+                      if (_reviewController.text.trim().isNotEmpty) {
+                        reviewData['businessReview'] = _reviewController.text.trim();
+                      }
+                      FirebaseFirestore.instance.collection('meat_orders').doc(order.id).update(reviewData);
+                      Navigator.pop(bCtx);
+                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('notifications.rating_saved'.tr())));
+                    } : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC107),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    ),
+                    child: Text('notifications.submit_rating'.tr()),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          );
+        });
+      },
+    );
   }
 }
 
@@ -1451,14 +2432,14 @@ class _OrderStatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusLabel = {
-      OrderStatus.pending: 'Sipariş Verildi',
-      OrderStatus.accepted: 'Onaylandı',
-      OrderStatus.preparing: 'Hazırlanıyor',
-      OrderStatus.ready: 'Hazır',
-      OrderStatus.onTheWay: 'Yola Çıktı',
-      OrderStatus.delivered: 'Teslim Edildi',
-      OrderStatus.served: 'Servis Edildi',
-      OrderStatus.cancelled: 'İptal Edildi',
+      OrderStatus.pending: 'notifications.order_placed'.tr(),
+      OrderStatus.accepted: 'notifications.confirmed'.tr(),
+      OrderStatus.preparing: 'notifications.preparing'.tr(),
+      OrderStatus.ready: 'notifications.ready'.tr(),
+      OrderStatus.onTheWay: 'notifications.on_the_way'.tr(),
+      OrderStatus.delivered: 'notifications.delivered'.tr(),
+      OrderStatus.served: 'notifications.served'.tr(),
+      OrderStatus.cancelled: 'notifications.cancelled'.tr(),
     }[order.status] ?? order.status.name;
 
     final statusColor = {
@@ -1517,14 +2498,14 @@ class _GenericNotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = data['title'] as String? ?? 'Bildirim';
+    final title = data['title'] as String? ?? 'notifications.notification'.tr();
     final body = data['body'] as String? ?? '';
     final createdAt = data['createdAt'] as Timestamp?;
     final isRead = data['read'] as bool? ?? true;
 
     String timeString = '';
     if (createdAt != null) {
-      timeString = timeago.format(createdAt.toDate(), locale: 'tr');
+      timeString = timeago.format(createdAt.toDate(), locale: context.locale.languageCode);
     }
 
     return Container(
@@ -1733,7 +2714,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sipariş #${widget.orderNumber}',
+                        '${'notifications.order_number'.tr()} #${widget.orderNumber}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,

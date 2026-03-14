@@ -640,6 +640,101 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
                 const SizedBox(height: 16),
 
+                // ── Weekly Opening Hours Schedule ──
+                if (data?['openingHours'] != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.schedule_rounded, size: 16, color: accent),
+                            const SizedBox(width: 6),
+                            Text(
+                              'marketplace.opening_hours_title'.tr(),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        ...List.generate(7, (i) {
+                          final dayNamesDisplay = [
+                            'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
+                            'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+                          ];
+                          final now = DateTime.now();
+                          final isToday = (now.weekday - 1) == i;
+                          final date = now.add(Duration(days: i - (now.weekday - 1)));
+                          final helper = OpeningHoursHelper(data?['openingHours']);
+                          final hoursStr = helper.getHoursStringForDate(date);
+                          
+                          final isClosed = hoursStr == null || 
+                              hoursStr.toLowerCase().contains('kapalı') || 
+                              hoursStr.toLowerCase().contains('closed') ||
+                              hoursStr.trim() == '-' || 
+                              hoursStr.trim().isEmpty;
+                          
+                          final displayHours = isClosed 
+                              ? 'marketplace.closed_day'.tr()
+                              : hoursStr!.replaceAll('–', '-').trim();
+
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            margin: const EdgeInsets.only(bottom: 2),
+                            decoration: BoxDecoration(
+                              color: isToday 
+                                  ? accent.withValues(alpha: isDark ? 0.15 : 0.08)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 90,
+                                  child: Text(
+                                    isToday 
+                                        ? '${dayNamesDisplay[i]} • ${'marketplace.today'.tr()}'
+                                        : dayNamesDisplay[i],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                                      color: isToday ? accent : textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    displayHours,
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                                      color: isClosed 
+                                          ? Colors.red.shade400 
+                                          : (isToday ? accent : textPrimary),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
                 // ── Body text ──
                 Text(
                   preOrderEnabled
@@ -681,7 +776,62 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ],
 
-                const SizedBox(height: 28),
+                // ── Business Type + Address Info ──
+                if (data?['type'] != null || data?['address'] != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        if (data?['type'] != null)
+                          Row(
+                            children: [
+                              Icon(Icons.storefront_rounded, size: 16, color: accent),
+                              const SizedBox(width: 8),
+                              Text(
+                                (data!['type'] as String?)?.replaceFirst(
+                                  (data['type'] as String?)?.substring(0, 1) ?? '',
+                                  (data['type'] as String?)?.substring(0, 1).toUpperCase() ?? '',
+                                ) ?? '',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        if (data?['type'] != null && data?['address'] != null)
+                          const SizedBox(height: 6),
+                        if (data?['address'] != null)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.location_on_outlined, size: 16, color: textSecondary),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  data!['address'].toString(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondary,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
 
                 // ── Primary CTA: See menu ──
                 FilledButton(
@@ -702,18 +852,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
                 const SizedBox(height: 10),
 
-                // ── Secondary: Go back ──
-                TextButton(
+                // ── Secondary CTA: Find Open Businesses ──
+                OutlinedButton.icon(
                   onPressed: () {
                     Navigator.pop(sheetCtx);
-                    context.pop();
+                    context.go('/');
                   },
-                  style: TextButton.styleFrom(
-                    foregroundColor: textSecondary,
-                    minimumSize: const Size(double.infinity, 44),
-                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  icon: const Icon(Icons.explore_rounded, size: 18),
+                  label: Text('marketplace.find_open_businesses'.tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: accent,
+                    side: BorderSide(color: accent.withValues(alpha: 0.4)),
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
-                  child: Text('common.close'.tr()),
                 ),
               ],
             ),
@@ -1940,7 +2093,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
       final Map<String, String> enToTr = {
         'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
-        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar',
+        'Montag': 'Pazartesi', 'Dienstag': 'Salı', 'Mittwoch': 'Çarşamba',
+        'Donnerstag': 'Perşembe', 'Freitag': 'Cuma', 'Samstag': 'Cumartesi', 'Sonntag': 'Pazar',
       };
       
       List<String> standardizedLines = [];

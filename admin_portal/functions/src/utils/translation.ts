@@ -185,8 +185,15 @@ export async function getUserLanguage(userId: string): Promise<string> {
 
         if (userDoc.exists) {
             const data = userDoc.data();
-            if (data && data.language) {
-                return data.language; // Expected to be 'tr', 'en', 'de', etc.
+            // Check multiple possible field names for language preference
+            const rawLang = data?.language || data?.preferredLanguage || data?.locale || data?.lang;
+            if (rawLang) {
+                // Normalize: 'de-DE' → 'de', 'tr_TR' → 'tr'
+                const normalized = rawLang.split(/[-_]/)[0].toLowerCase();
+                const supportedLangs = ['de', 'tr', 'en', 'es', 'fr', 'it', 'nl'];
+                if (supportedLangs.includes(normalized)) {
+                    return normalized;
+                }
             }
         }
     } catch (error) {
