@@ -1012,7 +1012,7 @@ export default function BusinessDetailsPage() {
         actualDeliveryDate: allReceived ? serverTimestamp() : null,
         updatedAt: serverTimestamp(),
       });
-      showToast(allReceived ? 'Tam teslim alındı ✓' : 'Kısmi teslim kaydedildi ✓', 'success');
+      showToast(allReceived ? t('procurement_full_delivery') : t('procurement_partial_delivery'), 'success');
       setShowGoodsReceiptModal(false);
       setGoodsReceiptOrder(null);
       loadSupplierOrders();
@@ -1472,7 +1472,7 @@ export default function BusinessDetailsPage() {
       }
       await batch.commit();
       setSelectedInlineProducts(new Set());
-      showToast(`${count} ürün stok durumu güncellendi`, "success");
+      showToast(`${count} ${t('procurement_stock_updated')}`, "success");
       loadProducts();
     } catch (error) {
       console.error("Bulk stock error:", error);
@@ -3096,13 +3096,13 @@ export default function BusinessDetailsPage() {
                   onClick={() => setProcurementSubTab('orders')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 >
-                   Tedarik Siparişleri ({supplierOrders.length})
+                   {t('procurement_orders')} ({supplierOrders.length})
                 </button>
                 <button
                   onClick={() => setProcurementSubTab('suppliers')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 >
-                   Tedarikçiler ({suppliers.length})
+                   {t('procurement_suppliers')} ({suppliers.length})
                 </button>
               </div>
 
@@ -3110,7 +3110,7 @@ export default function BusinessDetailsPage() {
               {procurementSubTab === 'suppliers' && (
                 <div className="bg-gray-800 rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                    <h3 className="text-white font-bold"> Tedarikçiler (Lieferanten)</h3>
+                    <h3 className="text-white font-bold">{t('procurement_suppliers')}</h3>
                     <button
                       onClick={() => {
                         setEditingSupplier(null);
@@ -3119,12 +3119,12 @@ export default function BusinessDetailsPage() {
                       }}
                       className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
                     >
-                      + Tedarikçi Ekle
+                      {t('procurement_supplier_add')}
                     </button>
                   </div>
                   {loadingSuppliers ? (
                     <div className="text-center py-12 text-gray-400">
-                      <span className="animate-spin inline-block"></span> Yükleniyor...
+                      <span className="animate-spin inline-block"></span> {t('procurement_loading')}
                     </div>
                   ) : suppliers.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
@@ -3192,11 +3192,11 @@ export default function BusinessDetailsPage() {
               {procurementSubTab === 'orders' && (
                 <div className="bg-gray-800 rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                    <h3 className="text-white font-bold"> Tedarik Siparişleri (Lieferantenbestellungen)</h3>
+                    <h3 className="text-white font-bold">{t('procurement_orders')}</h3>
                     <button
                       onClick={() => {
                         if (suppliers.length === 0) {
-                          showToast('Önce bir tedarikçi ekleyin', 'error');
+                          showToast(t('procurement_add_supplier_first'), 'error');
                           setProcurementSubTab('suppliers');
                           return;
                         }
@@ -3214,12 +3214,12 @@ export default function BusinessDetailsPage() {
                       }}
                       className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
                     >
-                      + Yeni Sipariş
+                      {t('procurement_new_order')}
                     </button>
                   </div>
                   {loadingSupplierOrders ? (
                     <div className="text-center py-12 text-gray-400">
-                      <span className="animate-spin inline-block"></span> Yükleniyor...
+                      <span className="animate-spin inline-block"></span> {t('procurement_loading')}
                     </div>
                   ) : supplierOrders.length === 0 ? (
                     <div className="text-center py-12 text-gray-400">
@@ -3250,17 +3250,17 @@ export default function BusinessDetailsPage() {
                             cancelled: 'bg-red-600 text-red-100',
                           };
                           const statusLabels: any = {
-                            draft: ' Taslak',
-                            ordered: '📤 Sipariş Verildi',
-                            partiallyDelivered: ' Kısmi Teslim',
-                            delivered: ' Teslim Alındı',
+                            draft: t('procurement_status_draft'),
+                            ordered: t('procurement_status_ordered'),
+                            partiallyDelivered: t('procurement_status_partial'),
+                            delivered: t('procurement_status_delivered'),
                             cancelled: ` ${t('iptal')}`,
                           };
                           return (
                             <tr key={order.id} className="border-t border-gray-700 hover:bg-gray-750">
                               <td className="px-4 py-3 font-mono text-sm text-blue-400">{order.orderNumber}</td>
                               <td className="px-4 py-3">{order.supplierName}</td>
-                              <td className="px-4 py-3 text-sm text-gray-400">{order.items?.length || 0} kalem</td>
+                              <td className="px-4 py-3 text-sm text-gray-400">{order.items?.length || 0} {t('procurement_items_count')}</td>
                               <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-gray-600'}`}>
@@ -3280,19 +3280,19 @@ export default function BusinessDetailsPage() {
                                       }}
                                       className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-xs"
                                     >
-                                      📥 Mal Kabul
+                                      {t('procurement_goods_receipt')}
                                     </button>
                                   )}
                                   {order.status === 'draft' && (
                                     <button
                                       onClick={async () => {
                                         await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', order.id), { status: 'ordered', updatedAt: serverTimestamp() });
-                                        showToast('Sipariş verildi olarak işaretlendi', 'success');
+                                        showToast(t('procurement_order_marked'), 'success');
                                         loadSupplierOrders();
                                       }}
                                       className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
                                     >
-                                      📤 Sipariş Ver
+                                      {t('procurement_place_order')}
                                     </button>
                                   )}
                                   <button
@@ -3845,7 +3845,7 @@ export default function BusinessDetailsPage() {
                                 {formData.openingHours && (
                                   <button
                                     onClick={() => {
-                                      if (formData.deliveryHours && !confirm('Mevcut kurye saatleri genel açılış saatleri ile değiştirilecek. Devam edilsin mi?')) return;
+                                      if (formData.deliveryHours && !confirm(t('procurement_delivery_hours_confirm'))) return;
                                       setFormData({ ...formData, deliveryHours: formData.openingHours });
                                     }}
                                     className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
@@ -3918,7 +3918,7 @@ export default function BusinessDetailsPage() {
                                 {formData.openingHours && (
                                   <button
                                     onClick={() => {
-                                      if (formData.pickupHours && !confirm('Mevcut gel al saatleri genel açılış saatleri ile değiştirilecek. Devam edilsin mi?')) return;
+                                      if (formData.pickupHours && !confirm(t('procurement_pickup_hours_confirm'))) return;
                                       setFormData({ ...formData, pickupHours: formData.openingHours });
                                     }}
                                     className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"

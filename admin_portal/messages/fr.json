@@ -1206,7 +1206,32 @@
     "mevcut_personel": "Personnel actuel",
     "saat_kisa": "h",
     "dakika_kisa": "min",
-    "performans": "Performance"
+    "performans": "Performance",
+    "procurement_orders": "Commandes",
+    "procurement_suppliers": "Fournisseurs",
+    "procurement_supplier_add": "+ Ajouter Fournisseur",
+    "procurement_loading": "Chargement...",
+    "procurement_new_order": "+ Nouvelle Commande",
+    "procurement_add_supplier_first": "Veuillez d'abord ajouter un fournisseur",
+    "procurement_status_draft": "Brouillon",
+    "procurement_status_ordered": "📤 Commandé",
+    "procurement_status_partial": "Livraison Partielle",
+    "procurement_status_delivered": "Livré",
+    "procurement_items_count": "articles",
+    "procurement_goods_receipt": "📥 Réception",
+    "procurement_place_order": "📤 Commander",
+    "procurement_edit": "Modifier",
+    "procurement_full_delivery": "Livraison complète ✓",
+    "procurement_partial_delivery": "Livraison partielle enregistrée ✓",
+    "procurement_stock_updated": "Statut du stock mis à jour",
+    "procurement_order_marked": "Marqué comme commandé",
+    "procurement_delivery_hours_confirm": "Les horaires de livraison existants seront remplacés. Continuer?",
+    "procurement_pickup_hours_confirm": "Les horaires de retrait existants seront remplacés. Continuer?",
+    "procurement_category_template": "📂 Charger Modèle",
+    "procurement_saving": "Enregistrement...",
+    "procurement_save": "Enregistrer",
+    "procurement_upload_image": "📤 Télécharger Image",
+    "procurement_stock_supply": "Stock & Approvisionnement"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",
@@ -6805,5 +6830,6 @@
     "thisMonth": "This Month",
     "filterByStatus": "Filter by Status",
     "filterByMethod": "Filter by Method"
-  }
+  },
+  "app_name": "LOKMA"
 }
