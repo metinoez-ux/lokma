@@ -34,10 +34,10 @@ const { admin, loading: adminLoading } = useAdmin();
     });
 
     const categoryLabels: Record<SupplierCategory, string> = {
-        meat: '🥩 Fleisch',
-        vegetable: '🥦 Gemüse',
-        packaging: '📦 Verpackung',
-        spices: '🧂 Gewürze',
+        meat: t('cat_meat'),
+        vegetable: t('cat_vegetable'),
+        packaging: t('cat_packaging'),
+        spices: t('cat_spices'),
         other: t('diger')
     };
 
@@ -249,7 +249,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">Telefon (WhatsApp)</label>
+                                    <label className="block text-gray-400 text-xs mb-1">{t('phone_whatsapp')}</label>
                                     <input
                                         type="tel"
                                         value={formData.phone}
@@ -271,7 +271,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">E-Mail (Optional)</label>
+                                    <label className="block text-gray-400 text-xs mb-1">{t('email_optional')}</label>
                                     <input
                                         type="email"
                                         value={formData.email}
@@ -282,7 +282,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
 
                             <div>
-                                <label className="block text-gray-400 text-xs mb-1">Adresse / Notizen</label>
+                                <label className="block text-gray-400 text-xs mb-1">{t('address_notes')}</label>
                                 <textarea
                                     rows={3}
                                     value={formData.notes}
@@ -293,13 +293,13 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
                         </div>
                         <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-300 hover:text-white">Abbrechen</button>
+                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-300 hover:text-white">{t('cancel')}</button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving || !formData.name}
                                 className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-bold"
                             >
-                                {saving ? 'Wird gespeichert...' : t('kaydet')}
+                                {saving ? t('saving_progress') : t('kaydet')}
                             </button>
                         </div>
                     </div>
@@ -316,7 +316,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 itemName={confirmDeleteSupplier?.name}
                 variant="danger"
                 confirmText={t('evet_sil')}
-                loadingText="Wird gelöscht..."
+                loadingText={t('deleting_progress')}
             />
         </div>
     );

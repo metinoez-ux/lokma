@@ -2757,7 +2757,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                           <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-400' : 'bg-blue-600/30 text-blue-400'}`}>
-                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'Lieferung' : 'Gel-Al'}
+                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
                         <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
@@ -2800,7 +2800,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                           <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-400' : 'bg-blue-600/30 text-blue-400'}`}>
-                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'Lieferung' : 'Gel-Al'}
+                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
                         <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>

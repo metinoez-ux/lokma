@@ -91,10 +91,10 @@ const { admin } = useAdmin();
 
             // 2. Actions
             if (method === 'whatsapp') {
-                const message = `Hallo ${selectedSupplier.name},\n\nMeine Bestellliste:\n` +
+                const message = `${t('wa_greeting')} ${selectedSupplier.name},\n\n${t('wa_order_list')}:\n` +
                     items.map(i => `- ${i.quantity} ${i.unit} ${i.name}`).join('\n') +
-                    (orderNote ? `\n\nAnmerkung: ${orderNote}` : '') +
-                    (deliveryDate ? `\nLieferung: ${deliveryDate}` : '');
+                    (orderNote ? `\n\n${t('wa_note')}: ${orderNote}` : '') +
+                    (deliveryDate ? `\n${t('wa_delivery')}: ${deliveryDate}` : '');
 
                 const url = `https://wa.me/${selectedSupplier.phone}?text=${encodeURIComponent(message)}`;
                 window.open(url, '_blank');
@@ -118,7 +118,7 @@ const { admin } = useAdmin();
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">← Abbrechen</Link>
+                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">{t('cancel_back')}</Link>
                         <h1 className="text-3xl font-bold">{t('yeni_siparis_olustur')}</h1>
                         <p className="text-gray-400">{t('adim')} {step}/3: {step === 1 ? t('tedarikci_secimi') : step === 2 ? t('urunleri_gir') : t('onizleme_gonder')}</p>
                     </div>
@@ -232,13 +232,13 @@ const { admin } = useAdmin();
                         </div>
 
                         <div className="flex justify-between">
-                            <button onClick={() => setStep(1)} className="text-gray-400 hover:text-white">← Zurück</button>
+                            <button onClick={() => setStep(1)} className="text-gray-400 hover:text-white">{t('back')}</button>
                             <button
                                 onClick={() => setStep(3)}
                                 disabled={items.length === 0}
                                 className="bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed px-8 py-3 rounded-xl font-bold shadow-lg shadow-green-900/20"
                             >
-                                Weiter →
+                                {t('next')}
                             </button>
                         </div>
                     </div>
@@ -271,8 +271,8 @@ const { admin } = useAdmin();
                             <table className="w-full mb-8">
                                 <thead>
                                     <tr className="border-b border-black text-left text-sm uppercase">
-                                        <th className="pb-2 w-24">Menge</th>
-                                        <th className="pb-2 w-20">Einheit</th>
+                                        <th className="pb-2 w-24">{t('quantity')}</th>
+                                        <th className="pb-2 w-20">{t('unit')}</th>
                                         <th className="pb-2">{t('urun_adi')}</th>
                                     </tr>
                                 </thead>

@@ -31,6 +31,7 @@ const DEFAULT_ICONS = ['🥩', '🐑', '🐄', '🐔', '🥓', '📦', '🍖', '
 
 function CategoriesPageContent() {
     const { admin, loading: adminLoading } = useAdmin();
+    const t = useTranslations('AdminCategories');
     const searchParams = useSearchParams();
     const urlBusinessId = searchParams.get('businessId');
 
@@ -68,7 +69,7 @@ function CategoriesPageContent() {
                 const snapshot = await getDocs(collection(db, 'businesses'));
                 const biz = snapshot.docs.map(doc => ({
                     id: doc.id,
-                    name: doc.data().name || doc.data().businessName || 'Unbenannt',
+                    name: doc.data().name || doc.data().businessName || t('unnamed'),
                     city: doc.data().city,
                     plz: doc.data().plz,
                 })) as Business[];
@@ -206,12 +207,12 @@ function CategoriesPageContent() {
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">Kein Zugriff</h2>
+                    <h2 className="text-xl font-bold text-white mt-4">{t('no_access')}</h2>
                     <p className="text-gray-400 mt-2">
-                        Sie müssen mit einem Unternehmen verbunden sein, um Kategorien zu verwalten.
+                        {t('no_access_desc')}
                     </p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
-                        Zum Dashboard
+                        {t('go_to_dashboard')}
                     </Link>
                 </div>
             </div>
@@ -242,15 +243,15 @@ function CategoriesPageContent() {
                         <div className="flex items-center gap-3">
                             <span className="text-3xl">🗂️</span>
                             <div>
-                                <h1 className="text-xl font-bold">Kategorieverwaltung</h1>
-                                <p className="text-violet-200 text-sm">{categories.length} Kategorien</p>
+                                <h1 className="text-xl font-bold">{t('category_management')}</h1>
+                                <p className="text-violet-200 text-sm">{t('categories_count', { count: categories.length })}</p>
                             </div>
                         </div>
                         <button
                             onClick={openAdd}
                             className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition"
                         >
-                            + Neue Kategorie
+                            + {t('new_category')}
                         </button>
                     </div>
                 </div>
@@ -260,13 +261,13 @@ function CategoriesPageContent() {
                 {categories.length === 0 ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <span className="text-5xl">🗂️</span>
-                        <h3 className="text-lg font-medium text-white mt-4">Noch keine Kategorien vorhanden</h3>
-                        <p className="text-gray-400 mt-2">Fügen Sie Kategorien hinzu, um Ihre Produkte zu organisieren.</p>
+                        <h3 className="text-lg font-medium text-white mt-4">{t('no_categories')}</h3>
+                        <p className="text-gray-400 mt-2">{t('no_categories_desc')}</p>
                         <button
                             onClick={openAdd}
                             className="mt-4 px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition"
                         >
-                            + Erste Kategorie hinzufügen
+                            + {t('add_first_category')}
                         </button>
                     </div>
                 ) : (
@@ -284,7 +285,7 @@ function CategoriesPageContent() {
                                             onClick={() => moveCategory(index, 'up')}
                                             disabled={index === 0}
                                             className="text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-                                            title="Nach oben"
+                                            title={t('move_up')}
                                         >
                                             ▲
                                         </button>
@@ -293,7 +294,7 @@ function CategoriesPageContent() {
                                             onClick={() => moveCategory(index, 'down')}
                                             disabled={index === categories.length - 1}
                                             className="text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
-                                            title="Nach unten"
+                                            title={t('move_down')}
                                         >
                                             ▼
                                         </button>
@@ -306,7 +307,7 @@ function CategoriesPageContent() {
                                     <div className="flex-1">
                                         <h3 className="text-white font-bold text-lg">{category.name}</h3>
                                         <p className="text-gray-500 text-sm">
-                                            {category.productCount || 0} Produkte • {category.isActive ? '✅ Aktiv' : '🔴 Inaktiv'}
+                                            {category.productCount || 0} {t('products_count', { count: category.productCount || 0 })} {category.isActive ? t('active') : t('inactive')}
                                         </p>
                                     </div>
 
@@ -315,14 +316,14 @@ function CategoriesPageContent() {
                                         <button
                                             onClick={() => openEdit(category)}
                                             className="p-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg transition text-white"
-                                            title="Bearbeiten"
+                                            title={t('edit')}
                                         >
                                             ✏️
                                         </button>
                                         <button
                                             onClick={() => setConfirmDelete(category)}
                                             className="p-2 bg-red-600 hover:bg-red-500 rounded-lg transition text-white"
-                                            title="Löschen"
+                                            title={t('delete_btn')}
                                         >
                                             🗑️
                                         </button>
@@ -339,12 +340,12 @@ function CategoriesPageContent() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
                         <h2 className="text-xl font-bold text-white mb-4">
-                            {editingCategory ? 'Kategorie bearbeiten' : 'Neue Kategorie'}
+                            {editingCategory ? t('edit_category') : t('new_category')}
                         </h2>
 
                         {/* Icon Selection */}
                         <div className="mb-4">
-                            <label className="text-gray-400 text-sm mb-2 block">Symbol</label>
+                            <label className="text-gray-400 text-sm mb-2 block">{t('icon_label')}</label>
                             <div className="flex flex-wrap gap-2">
                                 {DEFAULT_ICONS.map(icon => (
                                     <button
@@ -363,12 +364,12 @@ function CategoriesPageContent() {
 
                         {/* Name Input */}
                         <div className="mb-4">
-                            <label className="text-gray-400 text-sm mb-2 block">Kategoriename</label>
+                            <label className="text-gray-400 text-sm mb-2 block">{t('category_name')}</label>
                             <input
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="z.B. Rindfleisch, Lammfleisch..."
+                                placeholder={t('name_placeholder')}
                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500"
                             />
                         </div>
@@ -382,7 +383,7 @@ function CategoriesPageContent() {
                                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                     className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500 focus:ring-violet-500"
                                 />
-                                <span className="text-gray-300">Aktiv (in der App sichtbar)</span>
+                                <span className="text-gray-300">{t('active_visible')}</span>
                             </label>
                         </div>
 
@@ -392,14 +393,14 @@ function CategoriesPageContent() {
                                 onClick={() => setShowModal(false)}
                                 className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
                             >
-                                Abbrechen
+                                {t('cancel')}
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving || !formData.name.trim()}
                                 className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition disabled:opacity-50"
                             >
-                                {saving ? 'Wird gespeichert...' : 'Speichern'}
+                                {saving ? t('saving') : t('save')}
                             </button>
                         </div>
                     </div>
@@ -411,12 +412,12 @@ function CategoriesPageContent() {
                 isOpen={!!confirmDelete}
                 onClose={() => setConfirmDelete(null)}
                 onConfirm={handleDeleteConfirm}
-                title="Kategorie löschen"
-                message="Sind Sie sicher, dass Sie diese Kategorie endgültig löschen möchten?"
+                title={t('delete_category')}
+                message={t('delete_confirm')}
                 itemName={confirmDelete?.name}
                 variant="danger"
-                confirmText="Ja, löschen"
-                loadingText="Wird gelöscht..."
+                confirmText={t('confirm_delete')}
+                loadingText={t('deleting')}
             />
         </div>
     );
