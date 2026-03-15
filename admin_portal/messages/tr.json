@@ -1341,7 +1341,10 @@
     "cert_haccp_label": "HACCP",
     "cert_msc_label": "MSC",
     "cert_fairtrade_label": "Fairtrade",
-    "cert_eigenmarke_label": "Ozel Marka"
+    "cert_eigenmarke_label": "Ozel Marka",
+    "edit_title": "Duzenle",
+    "delete_title": "Sil",
+    "reject_title": "Reddet"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",
@@ -2064,7 +2067,11 @@
     "yonlendiriliyor": "Yönlendiriliyor...",
     "zorunlu_alan_daire_kat_veya_site_apartma": "Zorunlu alan: Daire, Kat veya Site/Apartman adı",
     "admin_panel_access": "Yonetim Paneli Erisimi",
-    "congratulations": "Tebrikler"
+    "congratulations": "Tebrikler",
+    "role_assign_error": "Rol atanirken hata olustu",
+    "error_occurred_msg": "Hata olustu",
+    "save_error": "Kaydetme hatasi",
+    "admin_location_title": "Admin konumunu girin"
   },
   "AdminDeliverysettings": {
     "0_her_zaman_teslimat_ucreti_uygulanir": "0 = her zaman teslimat ücreti uygulanır",
@@ -3180,7 +3187,9 @@
     "month": "Ay",
     "germany": "Almanya",
     "reduced": "İndirimli",
-    "standard": "Standart"
+    "standard": "Standart",
+    "pdf_create_error": "PDF olusturma hatasi",
+    "datev_format_title": "DATEV Format (Muhasebeci)"
   },
   "AdminKermes": {
     "2IsimOpsiyonel": "2. İsim (Opsiyonel)",
@@ -5147,7 +5156,16 @@
     "yukleniyor": "Yükleniyor...",
     "one_cikan_aciklama": "Müşterilere öne çıkan olarak gösterilecek ürünler",
     "henuz_urun_atanmamis": "Henüz ürün atanmamış",
-    "farkli_fiyat": "Farklı fiyat uygula"
+    "farkli_fiyat": "Farklı fiyat uygula",
+    "category_template_error": "Kategori sablonu uygulanirken hata olustu",
+    "select_products_for_assign": "Lutfen isletmeye atamak istediginiz urunleri secin.",
+    "select_products_for_category": "Lutfen kategori degistirilecek urunleri secin.",
+    "category_change_error": "Kategori degistirme sirasinda hata olustu!",
+    "error_occurred": "Hata olustu!",
+    "delete_error": "Silme hatasi!",
+    "save_error": "Kaydetme hatasi!",
+    "delete_title": "Sil",
+    "delete_group_title": "Grubu Sil"
   },
   "AdminReports": {
     "title": "Bildirimler — Hukuki Endişeler",
@@ -5245,7 +5263,9 @@
     "search": "Ara...",
     "actions": "İşlemler",
     "status": "Durum",
-    "checking_table_status": "Masa durumu kontrol ediliyor..."
+    "checking_table_status": "Masa durumu kontrol ediliyor...",
+    "printer_ip_not_set": "Yazici IP ayarlanmamis. Siparisler sayfasindan ayarlayin.",
+    "reservation_printed": "Rezervasyon yazdirildi"
   },
   "AdminSectors": {
     "aciklama": "Açıklama",
@@ -7433,5 +7453,10 @@
     "unit_price": "Birim Fiy.",
     "cancelled_by": "Iptal Eden:",
     "reason": "Sebep:"
+  },
+  "AdminOrders": {
+    "alarm_mute_title": "Alarmi sustur",
+    "close_title": "Kapat",
+    "copy_count_title": "Kopya sayisi"
   }
 }

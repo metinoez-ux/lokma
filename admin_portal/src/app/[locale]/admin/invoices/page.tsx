@@ -393,7 +393,7 @@ export default function InvoicesPage() {
                                 });
                             }}
                             className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-500"
-                            title="DATEV Format (Muhasebeci)"
+                            title={t('datev_format_title')}
                         >
                             📊 DATEV
                         </button>
@@ -714,7 +714,7 @@ export default function InvoicesPage() {
                                                                 URL.revokeObjectURL(url);
                                                             } catch (err) {
                                                                 console.error('PDF error:', err);
-                                                                alert('PDF oluşturma hatası');
+                                                                alert(t('pdf_create_error'));
                                                             }
                                                         }}
                                                         className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500"

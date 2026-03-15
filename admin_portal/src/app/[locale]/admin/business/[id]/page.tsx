@@ -5007,14 +5007,14 @@ export default function BusinessDetailsPage() {
                                                 }, 100);
                                               }}
                                               className="text-xs px-2 py-1 bg-blue-600/80 hover:bg-blue-500 text-white rounded transition"
-                                              title="Düzenle"
+                                              title={t('edit_title')}
                                             >
                                               Düzenle
                                             </button>
                                             <button
                                               onClick={() => handleDeleteProduct(product.id)}
                                               className="text-xs px-2 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded transition"
-                                              title="Sil"
+                                              title={t('delete_title')}
                                             >
                                               Sil
                                             </button>

@@ -667,7 +667,7 @@ const params = useParams();
                                                                     <button
                                                                         onClick={() => setRejectingOrder(order)}
                                                                         className="w-8 h-8 rounded-full bg-gray-600 hover:bg-red-600 flex items-center justify-center text-white"
-                                                                        title="Reddet"
+                                                                        title={t('reject_title')}
                                                                     >
                                                                         ✕
                                                                     </button>

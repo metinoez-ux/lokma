@@ -337,7 +337,7 @@ const { admin, loading: adminLoading } = useAdmin();
         const printerIp = typeof window !== 'undefined' ? localStorage.getItem('printerIp') || '' : '';
         const printerPort = typeof window !== 'undefined' ? parseInt(localStorage.getItem('printerPort') || '9100') : 9100;
         if (!printerIp) {
-            showToast('Yazici IP ayarlanmamis. Siparisler sayfasindan ayarlayin.', 'error');
+            showToast(t('printer_ip_not_set'), 'error');
             return;
         }
         setPrintingId(reservation.id);
@@ -364,7 +364,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 }),
             });
             if (res.ok) {
-                showToast('Rezervasyon yazdirildi', 'success');
+                showToast(t('reservation_printed'), 'success');
             } else {
                 const data = await res.json();
                 showToast(`Yazdirma hatasi: ${data.error}`, 'error');

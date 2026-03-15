@@ -1103,7 +1103,10 @@
     "cert_haccp_label": "HACCP",
     "cert_msc_label": "MSC",
     "cert_fairtrade_label": "Fairtrade",
-    "cert_eigenmarke_label": "Huismerk"
+    "cert_eigenmarke_label": "Huismerk",
+    "edit_title": "Bewerken",
+    "delete_title": "Verwijderen",
+    "reject_title": "Afwijzen"
   },
   "AdminCompanySettings": {
     "title": "Company Settings",
@@ -1227,7 +1230,11 @@
   "AdminDashboard": {
     "yonlendiriliyor": "Yönlendiriliyor...",
     "admin_panel_access": "Toegang tot het Beheerderspaneel",
-    "congratulations": "Gefeliciteerd"
+    "congratulations": "Gefeliciteerd",
+    "role_assign_error": "Fout bij het toewijzen van de rol",
+    "error_occurred_msg": "Fout opgetreden",
+    "save_error": "Fout bij opslaan",
+    "admin_location_title": "Voer admin-locatie in"
   },
   "AdminDriversTips": {
     "loading": "Fooiengegevens laden...",
@@ -1417,7 +1424,9 @@
     "month": "Month",
     "germany": "Germany",
     "reduced": "Reduced",
-    "standard": "Standard"
+    "standard": "Standard",
+    "pdf_create_error": "Fout bij PDF-creatie",
+    "datev_format_title": "DATEV Formaat (Boekhouder)"
   },
   "AdminNav": {
     "businessCampaigns": "Bedrijfscampagnes",
@@ -1462,7 +1471,16 @@
     "kaydet": "Kaydet",
     "one_cikan_aciklama": "Producten die als uitgelicht worden getoond aan klanten",
     "henuz_urun_atanmamis": "Nog geen producten toegewezen",
-    "farkli_fiyat": "Andere prijs toepassen"
+    "farkli_fiyat": "Andere prijs toepassen",
+    "category_template_error": "Fout bij toepassen van sjabloon",
+    "select_products_for_assign": "Selecteer producten om toe te wijzen.",
+    "select_products_for_category": "Selecteer producten voor categoriewijziging.",
+    "category_change_error": "Fout bij het wijzigen van categorie!",
+    "error_occurred": "Fout opgetreden!",
+    "delete_error": "Fout bij verwijderen!",
+    "save_error": "Fout bij opslaan!",
+    "delete_title": "Verwijderen",
+    "delete_group_title": "Groep verwijderen"
   },
   "AdminReports": {
     "title": "Reports — Legal Concerns",
@@ -2133,7 +2151,9 @@
     "search": "Search...",
     "actions": "Actions",
     "status": "Status",
-    "checking_table_status": "Tafelstatus wordt gecontroleerd..."
+    "checking_table_status": "Tafelstatus wordt gecontroleerd...",
+    "printer_ip_not_set": "Printer IP niet ingesteld.",
+    "reservation_printed": "Reservering afgedrukt"
   },
   "AdminStatistics": {
     "title": "Statistics",
@@ -5855,5 +5875,10 @@
     "unit_price": "Eenheidsprijs",
     "cancelled_by": "Geannuleerd door:",
     "reason": "Reden:"
+  },
+  "AdminOrders": {
+    "alarm_mute_title": "Alarm dempen",
+    "close_title": "Sluiten",
+    "copy_count_title": "Aantal kopien"
   }
 }

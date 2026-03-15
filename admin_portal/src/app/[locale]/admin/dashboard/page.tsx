@@ -1344,7 +1344,7 @@ export default function SuperAdminDashboard() {
             showToast(tNav('admin_rolu_basariyla_atandi'), 'success');
         } catch (error) {
             console.error('Assign role error:', error);
-            showToast('Rol atanırken hata oluştu: ' + (error instanceof Error ? error.message : tNav('bilinmeyen_hata')), 'error');
+            showToast(t('role_assign_error') + ': ' + (error instanceof Error ? error.message : tNav('bilinmeyen_hata')), 'error');
         }
         setAssigning(false);
     };
@@ -1381,7 +1381,7 @@ export default function SuperAdminDashboard() {
                     showToast(tNav('admin_yetkisi_kaldirildi'), 'success');
                 } catch (error) {
                     console.error('Remove admin error:', error);
-                    showToast('Hata oluştu: ' + (error as Error).message, 'error');
+                    showToast(t('error_occurred_msg') + ': ' + (error as Error).message, 'error');
                 }
             },
         });
@@ -1606,7 +1606,7 @@ export default function SuperAdminDashboard() {
             showToast(tNav('admin_bilgileri_guncellendi'), 'success');
         } catch (error) {
             console.error('Save admin error:', error);
-            showToast('Kaydetme hatası: ' + (error instanceof Error ? error.message : tNav('bilinmeyen_hata')), 'error');
+            showToast(t('save_error') + ': ' + (error instanceof Error ? error.message : tNav('bilinmeyen_hata')), 'error');
         }
         setSaving(false);
     };
@@ -3353,7 +3353,7 @@ export default function SuperAdminDashboard() {
                                                 onChange={(e) => setEditLocation(e.target.value)}
                                                 placeholder={tNav('orn_huckelhoven_almanya')}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder:text-gray-500"
-                                                title="Admin konumunu girin"
+                                                title={t('admin_location_title')}
                                             />
                                         </div>
 

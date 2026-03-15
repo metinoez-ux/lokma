@@ -497,7 +497,7 @@ function GlobalProductsPageContent() {
             alert(`${categories.length} kategori başarıyla yüklendi ✅`);
         } catch (error) {
             console.error('Error applying category template:', error);
-            alert('Kategori şablonu uygulanırken hata oluştu');
+            alert(t('category_template_error'));
         }
         setApplyingCategoryTemplate(false);
     };
@@ -935,7 +935,7 @@ function GlobalProductsPageContent() {
     // 🆕 Bu İşletmeye Ata: Copy selected master products to business products subcollection
     const handleAssignToThisBusiness = () => {
         if (!isBusinessContext || !contextBusinessId || selectedProducts.size === 0) {
-            alert('Lütfen işletmeye atamak istediğiniz ürünleri seçin.');
+            alert(t('select_products_for_assign'));
             return;
         }
 
@@ -1000,7 +1000,7 @@ function GlobalProductsPageContent() {
     // 🆕 Toplu Kategori Değiştir: Change category of selected products in business subcollection
     const handleBulkChangeCategory = (newCategoryName: string) => {
         if (!isBusinessContext || !contextBusinessId || selectedProducts.size === 0) {
-            alert('Lütfen kategori değiştirilecek ürünleri seçin.');
+            alert(t('select_products_for_category'));
             return;
         }
 
@@ -1034,7 +1034,7 @@ function GlobalProductsPageContent() {
                     alert(`✅ ${updatedCount} ürünün kategorisi "${newCategoryName}" olarak değiştirildi!`);
                 } catch (error) {
                     console.error("Bulk category change error:", error);
-                    alert('Kategori değiştirme sırasında hata oluştu!');
+                    alert(t('category_change_error'));
                 } finally {
                     setIsProcessingBulk(false);
                 }
@@ -1704,7 +1704,7 @@ function GlobalProductsPageContent() {
                                                                 <button
                                                                     onClick={() => handleCategoryDelete(cat)}
                                                                     className="p-2 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-white text-sm"
-                                                                    title="Sil"
+                                                                    title={t('delete_title')}
                                                                 >🗑️</button>
                                                             </div>
                                                         </div>
@@ -1952,7 +1952,7 @@ function GlobalProductsPageContent() {
                                                                             alert(`⭐ ${added} ürün öne çıkan olarak eklendi!`);
                                                                         } catch (err) {
                                                                             console.error('Sponsored update error:', err);
-                                                                            alert('Hata oluştu!');
+                                                                            alert(t('error_occurred'));
                                                                         }
                                                                     }}
                                                                     className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition"
@@ -2025,7 +2025,7 @@ function GlobalProductsPageContent() {
                                                                             setSelectedBusinessProducts(new Set());
                                                                         } catch (err) {
                                                                             console.error(err);
-                                                                            alert('Silme hatası!');
+                                                                            alert(t('delete_error'));
                                                                         }
                                                                     }}
                                                                     className="px-2.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition"
@@ -2379,7 +2379,7 @@ function GlobalProductsPageContent() {
                                                         alert('⭐ Öne çıkan ürünler kaydedildi!');
                                                     } catch (error) {
                                                         console.error('Error saving sponsored products:', error);
-                                                        alert('Kaydetme hatası!');
+                                                        alert(t('save_error'));
                                                     }
                                                     setSponsoredSaving(false);
                                                 }}
@@ -2618,7 +2618,7 @@ function GlobalProductsPageContent() {
                                                         fetchProducts();
                                                         if (isBusinessContext) fetchBusinessProducts();
                                                         setSelectedProducts(new Set());
-                                                    } catch (err) { console.error(err); alert('Hata oluştu'); }
+                                                    } catch (err) { console.error(err); alert(t('error_occurred')); }
                                                 }}
                                                 disabled={isProcessingBulk}
                                                 className="bg-gray-700 text-white border border-gray-500 rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer focus:ring-2 focus:ring-orange-500 outline-none disabled:opacity-50"
@@ -3684,7 +3684,7 @@ function GlobalProductsPageContent() {
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
                                                                                 className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
-                                                                                title="Grubu Sil"
+                                                                                title={t('delete_group_title')}
                                                                             >
                                                                                 🗑️
                                                                             </button>

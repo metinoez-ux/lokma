@@ -1341,7 +1341,10 @@
     "cert_haccp_label": "HACCP",
     "cert_msc_label": "MSC",
     "cert_fairtrade_label": "Comercio Justo",
-    "cert_eigenmarke_label": "Marca Propia"
+    "cert_eigenmarke_label": "Marca Propia",
+    "edit_title": "Editar",
+    "delete_title": "Eliminar",
+    "reject_title": "Rechazar"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",
@@ -2041,7 +2044,11 @@
     "yonlendiriliyor": "Yönlendiriliyor...",
     "zorunlu_alan_daire_kat_veya_site_apartma": "Campo obligatorio: Nombre del departamento, piso o sitio/apartamento",
     "admin_panel_access": "Acceso al Panel de Administracion",
-    "congratulations": "Felicidades"
+    "congratulations": "Felicidades",
+    "role_assign_error": "Error al asignar el rol",
+    "error_occurred_msg": "Error ocurrido",
+    "save_error": "Error al guardar",
+    "admin_location_title": "Ingrese ubicacion del admin"
   },
   "AdminDeliverysettings": {
     "0_her_zaman_teslimat_ucreti_uygulanir": "0 = siempre se aplica la tarifa de envío",
@@ -3157,7 +3164,9 @@
     "month": "Month",
     "germany": "Germany",
     "reduced": "Reduced",
-    "standard": "Standard"
+    "standard": "Standard",
+    "pdf_create_error": "Error al crear PDF",
+    "datev_format_title": "Formato DATEV (Contable)"
   },
   "AdminKermes": {
     "2IsimOpsiyonel": "2. İsim (Opsiyonel)",
@@ -5122,7 +5131,16 @@
     "yukleniyor": "Yükleniyor...",
     "one_cikan_aciklama": "Productos que se mostrarán como destacados para los clientes",
     "henuz_urun_atanmamis": "Aún no se han asignado productos",
-    "farkli_fiyat": "Aplicar precio diferente"
+    "farkli_fiyat": "Aplicar precio diferente",
+    "category_template_error": "Error al aplicar la plantilla de categoria",
+    "select_products_for_assign": "Seleccione los productos para asignar al negocio.",
+    "select_products_for_category": "Seleccione productos para cambio de categoria.",
+    "category_change_error": "Error al cambiar la categoria!",
+    "error_occurred": "Error ocurrido!",
+    "delete_error": "Error al eliminar!",
+    "save_error": "Error al guardar!",
+    "delete_title": "Eliminar",
+    "delete_group_title": "Eliminar grupo"
   },
   "AdminReports": {
     "title": "Reports — Legal Concerns",
@@ -5220,7 +5238,9 @@
     "search": "Search...",
     "actions": "Actions",
     "status": "Status",
-    "checking_table_status": "Comprobando estado de la mesa..."
+    "checking_table_status": "Comprobando estado de la mesa...",
+    "printer_ip_not_set": "IP de impresora no configurada.",
+    "reservation_printed": "Reserva impresa"
   },
   "AdminSectors": {
     "aciklama": "Descripción",
@@ -7372,5 +7392,10 @@
     "unit_price": "Precio Unitario",
     "cancelled_by": "Cancelado por:",
     "reason": "Motivo:"
+  },
+  "AdminOrders": {
+    "alarm_mute_title": "Silenciar alarma",
+    "close_title": "Cerrar",
+    "copy_count_title": "Numero de copias"
   }
 }

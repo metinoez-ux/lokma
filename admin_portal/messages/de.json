@@ -1341,7 +1341,10 @@
     "cert_haccp_label": "HACCP",
     "cert_msc_label": "MSC",
     "cert_fairtrade_label": "Fairtrade",
-    "cert_eigenmarke_label": "Eigenmarke"
+    "cert_eigenmarke_label": "Eigenmarke",
+    "edit_title": "Bearbeiten",
+    "delete_title": "Loeschen",
+    "reject_title": "Ablehnen"
   },
   "AdminBusinessDetail": {
     "pending": "Ausstehend",
@@ -2042,7 +2045,11 @@
     "yonlendiriliyor": "Yönlendiriliyor...",
     "zorunlu_alan_daire_kat_veya_site_apartma": "Erforderliches Feld: Name der Wohnung, des Stockwerks oder des Standorts/der Wohnung",
     "admin_panel_access": "Zugang zum Verwaltungspanel",
-    "congratulations": "Herzlichen Glueckwunsch"
+    "congratulations": "Herzlichen Glueckwunsch",
+    "role_assign_error": "Fehler beim Zuweisen der Rolle",
+    "error_occurred_msg": "Fehler aufgetreten",
+    "save_error": "Fehler beim Speichern",
+    "admin_location_title": "Admin-Standort eingeben"
   },
   "AdminDeliverysettings": {
     "0_her_zaman_teslimat_ucreti_uygulanir": "0 = Es fallen immer Versandkosten an",
@@ -3158,7 +3165,9 @@
     "month": "Monat",
     "germany": "Deutschland",
     "reduced": "Ermäßigt",
-    "standard": "Standard"
+    "standard": "Standard",
+    "pdf_create_error": "Fehler beim Erstellen der PDF",
+    "datev_format_title": "DATEV Format (Buchhalter)"
   },
   "AdminKermes": {
     "2IsimOpsiyonel": "2. İsim (Opsiyonel)",
@@ -5125,7 +5134,16 @@
     "yukleniyor": "Yükleniyor...",
     "one_cikan_aciklama": "Produkte, die den Kunden als hervorgehoben angezeigt werden",
     "henuz_urun_atanmamis": "Noch keine Produkte zugewiesen",
-    "farkli_fiyat": "Anderen Preis anwenden"
+    "farkli_fiyat": "Anderen Preis anwenden",
+    "category_template_error": "Fehler beim Anwenden der Kategorievorlage",
+    "select_products_for_assign": "Bitte waehlen Sie die Produkte aus, die Sie dem Unternehmen zuweisen moechten.",
+    "select_products_for_category": "Bitte waehlen Sie die Produkte fuer die Kategorieaenderung.",
+    "category_change_error": "Fehler beim Kategoriewechsel!",
+    "error_occurred": "Fehler aufgetreten!",
+    "delete_error": "Fehler beim Loeschen!",
+    "save_error": "Fehler beim Speichern!",
+    "delete_title": "Loeschen",
+    "delete_group_title": "Gruppe loeschen"
   },
   "AdminReports": {
     "title": "Meldungen — Rechtliche Bedenken",
@@ -5223,7 +5241,9 @@
     "search": "Suchen...",
     "actions": "Aktionen",
     "status": "Status",
-    "checking_table_status": "Tischstatus wird geprueft..."
+    "checking_table_status": "Tischstatus wird geprueft...",
+    "printer_ip_not_set": "Drucker-IP nicht konfiguriert. Bitte in den Bestellungen einstellen.",
+    "reservation_printed": "Reservierung gedruckt"
   },
   "AdminSectors": {
     "aciklama": "Beschreibung",
@@ -7411,5 +7431,10 @@
     "unit_price": "Stueckpreis",
     "cancelled_by": "Storniert von:",
     "reason": "Grund:"
+  },
+  "AdminOrders": {
+    "alarm_mute_title": "Alarm stumm schalten",
+    "close_title": "Schliessen",
+    "copy_count_title": "Anzahl der Kopien"
   }
 }
