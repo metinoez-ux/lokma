@@ -1009,17 +1009,17 @@ export default function BusinessDetailsPage() {
       };
       if (editingSupplier) {
         await updateDoc(doc(db, 'businesses', businessId, 'suppliers', editingSupplier.id), data);
-        showToast('Tedarikçi güncellendi ✓', 'success');
+        showToast(t('supplier_updated'), 'success');
       } else {
         await addDoc(collection(db, 'businesses', businessId, 'suppliers'), { ...data, createdAt: serverTimestamp() });
-        showToast('Tedarikçi eklendi ✓', 'success');
+        showToast(t('supplier_added'), 'success');
       }
       setShowSupplierModal(false);
       setEditingSupplier(null);
       loadSuppliers();
     } catch (err) {
       console.error('Error saving supplier:', err);
-      showToast('Hata oluştu', 'error');
+      showToast(t('error_occurred'), 'error');
     } finally {
       setSavingSupplier(false);
     }
@@ -1050,17 +1050,17 @@ export default function BusinessDetailsPage() {
       };
       if (editingOrder) {
         await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', editingOrder.id), data);
-        showToast('Sipariş güncellendi ✓', 'success');
+        showToast(t('order_updated'), 'success');
       } else {
         await addDoc(collection(db, 'businesses', businessId, 'supplierOrders'), { ...data, createdBy: admin?.email || '', createdAt: serverTimestamp() });
-        showToast('Sipariş oluşturuldu ✓', 'success');
+        showToast(t('order_created'), 'success');
       }
       setShowOrderModal(false);
       setEditingOrder(null);
       loadSupplierOrders();
     } catch (err) {
       console.error('Error saving order:', err);
-      showToast('Hata oluştu', 'error');
+      showToast(t('error_occurred'), 'error');
     } finally {
       setSavingOrder(false);
     }
@@ -1090,7 +1090,7 @@ export default function BusinessDetailsPage() {
       loadSupplierOrders();
     } catch (err) {
       console.error('Error processing goods receipt:', err);
-      showToast('Hata oluştu', 'error');
+      showToast(t('error_occurred'), 'error');
     } finally {
       setSavingOrder(false);
     }
@@ -1098,14 +1098,14 @@ export default function BusinessDetailsPage() {
 
   // Delete supplier
   const deleteSupplier = async (supplierId: string) => {
-    if (!businessId || !confirm('Bu tedarikçiyi silmek istediğinize emin misiniz?')) return;
+    if (!businessId || !confirm(t('confirm_delete_supplier'))) return;
     try {
       await deleteDoc(doc(db, 'businesses', businessId, 'suppliers', supplierId));
-      showToast('Tedarikçi silindi', 'success');
+      showToast(t('supplier_deleted'), 'success');
       loadSuppliers();
     } catch (err) {
       console.error('Error deleting supplier:', err);
-      showToast('Silinemedi', 'error');
+      showToast(t('delete_failed'), 'error');
     }
   };
 
@@ -1270,7 +1270,7 @@ export default function BusinessDetailsPage() {
       // Fetch template from Firestore (categories only)
       const templateDoc = await getDoc(doc(db, 'defaultMenuTemplates', 'kasap'));
       if (!templateDoc.exists()) {
-        showToast('Şablon bulunamadı!', 'error');
+        showToast(t('template_not_found'), 'error');
         setApplyingTemplate(false);
         return;
       }
@@ -1298,10 +1298,10 @@ export default function BusinessDetailsPage() {
       }
 
       await loadInlineCategories();
-      showToast(`${categories.length} kategori başarıyla eklendi `, 'success');
+      showToast(t('categories_added_count', {count: categories.length}), 'success');
     } catch (error) {
       console.error('Error applying category template:', error);
-      showToast('Kategori şablonu uygulanırken hata oluştu', 'error');
+      showToast(t('category_template_error'), 'error');
     }
     setApplyingTemplate(false);
   };
@@ -1340,7 +1340,7 @@ export default function BusinessDetailsPage() {
     // Fallback: first category
     return categories.length > 0
       ? (typeof categories[0].name === 'object' ? getLocalizedText(categories[0].name) : categories[0].name)
-      : 'Kategorisiz';
+      : t('uncategorized');
   };
 
   //  Open Template Selection Modal (was: auto-add all)
@@ -1373,7 +1373,7 @@ export default function BusinessDetailsPage() {
       setShowTemplateModal(true);
     } catch (error) {
       console.error('Error loading template products:', error);
-      showToast('Şablon ürünleri yüklenirken hata oluştu', 'error');
+      showToast(t('product_template_load_error'), 'error');
     }
     setApplyingProductTemplate(false);
   };
@@ -1411,10 +1411,10 @@ export default function BusinessDetailsPage() {
 
       await loadInlineProducts();
       setShowTemplateModal(false);
-      showToast(`${productCount} ürün başarıyla eklendi `, 'success');
+      showToast(t('products_added_count', {count: productCount}), 'success');
     } catch (error) {
       console.error('Error saving template products:', error);
-      showToast('Ürün şablonu kaydedilirken hata oluştu', 'error');
+      showToast(t('product_template_save_error'), 'error');
     }
     setSavingTemplate(false);
   };
@@ -1671,7 +1671,7 @@ export default function BusinessDetailsPage() {
         if (ef.isFeatured !== undefined) updateData.isFeatured = ef.isFeatured;
         if (ef.brandLabels !== undefined) updateData.brandLabels = ef.brandLabels;
         await updateDoc(doc(db, `businesses/${businessId}/products`, editingInlineProduct.id), updateData);
-        showToast('Ürün güncellendi ', 'success');
+        showToast(t('product_updated'), 'success');
         setProductModalOpen(false);
         setEditingInlineProduct(null);
         setEditFormFull({});
@@ -5028,11 +5028,11 @@ export default function BusinessDetailsPage() {
                                               <div className="flex items-center justify-between mb-4">
                                                 <div className="flex gap-1 overflow-x-auto">
                                                   {[
-                                                    { key: 'general', label: 'Genel' },
-                                                    { key: 'pricing', label: 'Fiyat & Vergi' },
-                                                    { key: 'stock', label: 'Stok & Tedarik' },
-                                                    { key: 'media', label: 'Medya' },
-                                                    { key: 'contentCompliance', label: 'İçerik & Uyum' },
+                                                    { key: 'general', label: t('tab_general') },
+                                                    { key: 'pricing', label: t('tab_pricing') },
+                                                    { key: 'stock', label: t('tab_stock') },
+                                                    { key: 'media', label: t('tab_media') },
+                                                    { key: 'contentCompliance', label: t('tab_content_compliance') },
                                                     { key: 'app', label: 'App' },
                                                   ].map(tab => (
                                                     <button
@@ -5129,13 +5129,13 @@ export default function BusinessDetailsPage() {
                                                       <div className="border-b border-gray-700 pb-4">
                                                         <div className="flex items-center justify-between mb-3">
                                                           <h3 className="text-sm font-medium text-amber-400">{t('vergi_orani')}</h3>
-                                                          <span className="text-xs text-gray-500">Netto/Brutto hesaplaması bu orana göre yapılır</span>
+                                                          <span className="text-xs text-gray-500">{t('netto_brutto_hint')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                           <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white">
-                                                            <option value="0">%0 (Vergisiz)</option>
-                                                            <option value="7">%7 (İndirimli)</option>
-                                                            <option value="19">%19 (Standart)</option>
+                                                            <option value="0">{t('tax_zero')}</option>
+                                                            <option value="7">{t('tax_reduced')}</option>
+                                                            <option value="19">{t('tax_standard')}</option>
                                                             <option value="custom">{t('manuel_giris')}</option>
                                                           </select>
                                                           {![0, 7, 19].includes(taxRate) && (
@@ -5150,10 +5150,10 @@ export default function BusinessDetailsPage() {
                                                           <h3 className="text-sm font-medium text-amber-400"> {t('fiyatlandirma')}</h3>
                                                           <div className="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-600">
                                                             <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
-                                                              Netto girişi
+                                                              {t('netto_input')}
                                                             </button>
                                                             <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'brutto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
-                                                              Brutto girişi
+                                                              {t('brutto_input')}
                                                             </button>
                                                           </div>
                                                         </div>
@@ -5215,7 +5215,7 @@ export default function BusinessDetailsPage() {
                                                         {/* İndirimli Fiyat */}
                                                         <div className="mb-4">
                                                           <label className="block text-sm text-gray-300 font-medium mb-2 flex items-center gap-2">
-                                                            İndirimli Fiyat
+                                                            {t('discounted_price')}
                                                             {discountPct && (
                                                               <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-600/80 text-white animate-pulse">
                                                                 -%{discountPct}
@@ -5274,13 +5274,13 @@ export default function BusinessDetailsPage() {
                                                       {/* 📱 App Satış Fiyatı */}
                                                       <div className="border-b border-gray-700 pb-4">
                                                         <div className="flex items-center justify-between mb-3">
-                                                          <h3 className="text-sm font-medium text-blue-400">📱 App Satış Fiyatı</h3>
+                                                          <h3 className="text-sm font-medium text-blue-400">{t('app_sales_price')}</h3>
                                                           <label className="flex items-center gap-2 cursor-pointer">
                                                             <input type="checkbox" checked={!!(editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0)} onChange={e => { if (!e.target.checked) { setEditFormFull((p: any) => ({ ...p, appPrice: '' })); } else { setEditFormFull((p: any) => ({ ...p, appPrice: editFormFull.sellingPrice || '0' })); } }} className="w-4 h-4 rounded accent-blue-500" />
                                                             <span className="text-xs text-gray-400">{t('farkli_fiyat_uygula')}</span>
                                                           </label>
                                                         </div>
-                                                        <p className="text-xs text-gray-500 mb-3">Kurye ve Gel-Al siparişlerinde gösterilen fiyat</p>
+                                                        <p className="text-xs text-gray-500 mb-3">{t('app_price_desc')}</p>
                                                         {editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0 ? (
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
@@ -5296,7 +5296,7 @@ export default function BusinessDetailsPage() {
                                                           </div>
                                                         ) : (
                                                           <div className="px-4 py-3 bg-gray-800/40 border border-gray-700 rounded-lg text-center">
-                                                            <span className="text-sm text-gray-500">💡 Satış fiyatı ile aynı{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
+                                                            <span className="text-sm text-gray-500">{t('same_as_selling_price')}{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
                                                           </div>
                                                         )}
                                                       </div>
@@ -5304,16 +5304,16 @@ export default function BusinessDetailsPage() {
                                                       {/*  Kanal Fiyatları (Konsolide) */}
                                                       <div className="pb-4">
                                                         <h3 className="text-sm font-medium text-emerald-400 mb-3"> {t('kanal_fiyatlari')}</h3>
-                                                        <p className="text-xs text-gray-500 mb-3">ESL etiketi = Dükkan fiyatı = Gel-Al fiyatı. Müşteri mağazaya geldiğinde etiketteki fiyatı görür.</p>
+                                                        <p className="text-xs text-gray-500 mb-3">{t('esl_price_hint')}</p>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block"> ESL / Dükkan & Gel-Al Fiyatı (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
-                                                            <span className="text-[10px] text-gray-600 mt-1 block">ESL etiketinde, gel-al ve dükkan siparişlerinde bu fiyat gösterilir</span>
+                                                            <label className="text-xs text-gray-400 mb-1 block">{t('esl_store_pickup_price')} (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+                                                            <span className="text-[10px] text-gray-600 mt-1 block">{t('esl_price_hint')}</span>
                                                           </div>
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">🛵 Kurye Fiyatı (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                            <label className="text-xs text-gray-400 mb-1 block">{t('courier_price_label')} (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
                                                             <span className="text-[10px] text-gray-600 mt-1 block">{t('kurye_fiyat_aciklama')}</span>
                                                           </div>
                                                         </div>
@@ -5404,7 +5404,7 @@ export default function BusinessDetailsPage() {
                                                               const uploadTask = uploadBytesResumable(storageRef, file);
                                                               uploadTask.on('state_changed', () => { }, (error) => {
                                                                 console.error('Image upload error:', error);
-                                                                showToast('Görsel yüklenirken hata oluştu', 'error');
+                                                                showToast(t('image_upload_error'), 'error');
                                                               }, async () => {
                                                                 const url = await getDownloadURL(uploadTask.snapshot.ref);
                                                                 setEditFormFull((p: any) => ({
@@ -5412,7 +5412,7 @@ export default function BusinessDetailsPage() {
                                                                   imageUrl: p.imageUrl || url,
                                                                   images: [...(p.images || []), url]
                                                                 }));
-                                                                showToast('Görsel yüklendi ✓', 'success');
+                                                                showToast(t('image_uploaded'), 'success');
                                                               });
                                                             } catch (err) {
                                                               console.error('Upload error:', err);
@@ -5439,19 +5439,19 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span></span> İçerik Listesi (Zutaten)
+                                                        <span></span> {t('ingredients_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         <div className="md:col-span-2">
-                                                          <label className="text-xs text-gray-400 mb-1 block">Ürün İçeriği / Zutaten (LMIV sırasına göre)</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('ingredients_label')}</label>
                                                           <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Tüketim Bilgisi (Verbraucherinformation)</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('consumption_info_label')}</label>
                                                           <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Katkı Maddeleri / Zusatzstoffe</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('additives_label')}</label>
                                                           <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
@@ -5472,7 +5472,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>⚠️</span> Alerjenler — EU 1169/2011 Annex II (14 Pflichtallergen)
+                                                        <span></span> {t('allergens_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                                                         {[
@@ -5519,7 +5519,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>🥗</span> Besin Değerleri — Nährwerte pro 100g (Big 7 + Ek)
+                                                        <span></span> {t('nutrition_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
                                                         {[
@@ -5561,7 +5561,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>🏅</span> Sertifikalar & Etiketler (Zertifikate)
+                                                        <span></span> {t('certificates_title')}
                                                       </h4>
                                                       <div className="flex flex-wrap gap-2">
                                                         {[
@@ -5613,7 +5613,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span></span> Dahili Notlar & Etiketler
+                                                        <span></span> {t('internal_notes_title')}
                                                       </h4>
                                                       <div className="space-y-3">
                                                         <div>
@@ -5632,7 +5632,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span>🕒</span> Denetim İzi
+                                                        <span></span> {t('audit_trail_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
@@ -5656,7 +5656,7 @@ export default function BusinessDetailsPage() {
                                                     {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <span></span> Fiziksel Bilgiler & Saklama (Produktdaten)
+                                                        <span></span> {t('physical_info_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                                         <div>
@@ -5672,12 +5672,12 @@ export default function BusinessDetailsPage() {
                                                           <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">MHD (Mindesthaltbarkeit)</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('mhd_label')}</label>
                                                           <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2">
                                                           <p className="text-xs text-amber-400/80 bg-amber-900/20 border border-amber-700/30 rounded px-3 py-2">
-                                                            ℹ️ Üretim & Son Kullanma tarihleri artık <strong>{t('tedarik')}</strong> sekmesindeki Mal Kabul (Wareneingang) ile parti bazında yönetilmektedir.
+                                                            {t('mhd_note')}
                                                           </p>
                                                         </div>
                                                         <div>
@@ -5685,7 +5685,7 @@ export default function BusinessDetailsPage() {
                                                           <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2 md:col-span-3 lg:col-span-4">
-                                                          <label className="text-xs text-gray-400 mb-1 block">Besondere Informationen (Özel Bilgiler)</label>
+                                                          <label className="text-xs text-gray-400 mb-1 block">{t('special_info_label')}</label>
                                                           <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                       </div>
