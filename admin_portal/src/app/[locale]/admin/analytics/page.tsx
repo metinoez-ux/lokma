@@ -364,7 +364,7 @@ export default function UnifiedAnalyticsPage() {
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 rounded-xl p-3 border border-emerald-700/50">
                         <p className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.revenue)}</p>
-                        <p className="text-xs text-gray-400">Ciro</p>
+                        <p className="text-xs text-gray-400">{t('revenue')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 rounded-xl p-3 border border-cyan-700/50">
                         <p className="text-2xl font-bold text-cyan-400">{formatCurrency(stats.avgOrderValue)}</p>
@@ -376,7 +376,7 @@ export default function UnifiedAnalyticsPage() {
                     </div>
                     <div className="bg-gradient-to-br from-red-900/50 to-red-800/30 rounded-xl p-3 border border-red-700/50">
                         <p className="text-2xl font-bold text-red-400">{stats.cancelled}</p>
-                        <p className="text-xs text-gray-400">İptal</p>
+                        <p className="text-xs text-gray-400">{t('cancellation')}</p>
                     </div>
                 </div>
 

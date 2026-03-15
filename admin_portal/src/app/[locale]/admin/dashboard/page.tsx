@@ -5164,11 +5164,11 @@ export default function SuperAdminDashboard() {
                                                                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                                                                         <div style="background: linear-gradient(135deg, #059669, #047857); padding: 30px; border-radius: 12px; text-align: center;">
                                                                             <h1 style="color: white; margin: 0; font-size: 28px;">🎖️ LOKMA Admin</h1>
-                                                                            <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Yönetim Paneli Erişimi</p>
+                                                                            <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">${t('admin_panel_access')}</p>
                                                                         </div>
                                                                         
                                                                         <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-                                                                            <h2 style="color: #1f2937; margin-top: 0;">Tebrikler ${editingUserProfile.firstName}! 🎉</h2>
+                                                                            <h2 style="color: #1f2937; margin-top: 0;">${t('congratulations')} ${editingUserProfile.firstName}! </h2>
                                                                             
                                                                             <p style="color: #4b5563; line-height: 1.6;">
                                                                                 LOKMA platformunda yönetici yetkiniz aktif edildi.

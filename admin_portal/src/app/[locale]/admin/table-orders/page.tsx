@@ -564,7 +564,7 @@ export default function TableOrdersPage() {
                                         )}
                                         {remaining > 0 && session.grandTotal > 0 && (
                                             <div className="text-right">
-                                                <span className="text-amber-400 text-xs">Kalan</span>
+                                                <span className="text-amber-400 text-xs">{t('remaining')}</span>
                                                 <p className="text-amber-400 font-bold">{formatCurrency(remaining, session.currency)}</p>
                                             </div>
                                         )}
@@ -610,7 +610,7 @@ export default function TableOrdersPage() {
                             {/* Session Info */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-700/30 rounded-lg p-3">
-                                    <span className="text-gray-400 text-xs">Host</span>
+                                    <span className="text-gray-400 text-xs">{t('host')}</span>
                                     <p className="text-white font-medium">👑 {selectedSession.hostName}</p>
                                 </div>
                                 <div className="bg-gray-700/30 rounded-lg p-3">
@@ -633,7 +633,7 @@ export default function TableOrdersPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal, selectedSession.currency)}</p>
-                                        <p className="text-amber-400/70 text-xs">Kalan</p>
+                                        <p className="text-amber-400/70 text-xs">{t('remaining')}</p>
                                     </div>
                                 </div>
                                 {/* Progress bar */}
@@ -658,7 +658,7 @@ export default function TableOrdersPage() {
                                             <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/40 text-gray-400 text-xs font-medium">
                                                 <div className="col-span-6">{t('urun')}</div>
                                                 <div className="col-span-2 text-center">{t('adet')}</div>
-                                                <div className="col-span-2 text-right">Birim Fiy.</div>
+                                                <div className="col-span-2 text-right">{t('unit_price')}</div>
                                                 <div className="col-span-2 text-right">{t('toplam')}</div>
                                             </div>
                                             <div className="divide-y divide-gray-700/50">
@@ -693,7 +693,7 @@ export default function TableOrdersPage() {
                                                         {p.isHost && '👑 '}{p.name}
                                                     </span>
                                                     {p.isHost && (
-                                                        <span className="text-amber-400 text-xs bg-amber-600/20 px-2 py-0.5 rounded">Host</span>
+                                                        <span className="text-amber-400 text-xs bg-amber-600/20 px-2 py-0.5 rounded">{t('host')}</span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -735,11 +735,11 @@ export default function TableOrdersPage() {
                                     <h3 className="text-red-400 font-bold text-sm mb-2">🔴 İptal Bilgisi</h3>
                                     <div className="space-y-1 text-sm">
                                         <p className="text-gray-300">
-                                            <span className="text-gray-500">İptal Eden:</span>{' '}
+                                            <span className="text-gray-500">{t('cancelled_by')}</span>{' '}
                                             {selectedSession.cancelledBy || '-'}
                                         </p>
                                         <p className="text-gray-300">
-                                            <span className="text-gray-500">Sebep:</span>{' '}
+                                            <span className="text-gray-500">{t('reason')}</span>{' '}
                                             {selectedSession.cancelReason || '-'}
                                         </p>
                                         <p className="text-gray-300">

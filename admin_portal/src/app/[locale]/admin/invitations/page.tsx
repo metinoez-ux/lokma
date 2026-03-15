@@ -283,7 +283,7 @@ export default function InvitationsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-gray-300 text-sm mb-2">Rol</label>
+                                <label className="block text-gray-300 text-sm mb-2">{t('role_label')}</label>
                                 <select
                                     value={inviteRole}
                                     onChange={(e) => setInviteRole(e.target.value as 'super_admin' | 'admin')}
@@ -306,7 +306,7 @@ export default function InvitationsPage() {
                         {/* Recent Invitations */}
                         {invitations.length > 0 && (
                             <div className="mt-8">
-                                <h3 className="text-white font-semibold mb-3">Son Davetiyeler</h3>
+                                <h3 className="text-white font-semibold mb-3">{t('recent_invitations')}</h3>
                                 <div className="space-y-2">
                                     {invitations.slice(0, 5).map((inv) => (
                                         <div key={inv.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
@@ -364,13 +364,13 @@ export default function InvitationsPage() {
                                                 <h4 className="text-white font-medium mb-3">{t('kayit_bilgileri')}</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <div>
-                                                        <span className="text-gray-400">Ad Soyad:</span>
+                                                        <span className="text-gray-400">{t('full_name')}</span>
                                                         <span className="text-white ml-2">
                                                             {inv.registrationData.firstName} {inv.registrationData.lastName}
                                                         </span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-400">Telefon:</span>
+                                                        <span className="text-gray-400">{t('phone')}</span>
                                                         <span className="text-white ml-2">{inv.registrationData.phone}</span>
                                                     </div>
                                                     <div>
@@ -378,7 +378,7 @@ export default function InvitationsPage() {
                                                         <span className="text-white ml-2">{inv.registrationData.dateOfBirth}</span>
                                                     </div>
                                                     <div className="col-span-2">
-                                                        <span className="text-gray-400">Adres:</span>
+                                                        <span className="text-gray-400">{t('address')}</span>
                                                         <span className="text-white ml-2">
                                                             {inv.registrationData.address.street} {inv.registrationData.address.houseNumber},
                                                             {inv.registrationData.address.postalCode} {inv.registrationData.address.city}
@@ -412,7 +412,7 @@ export default function InvitationsPage() {
                 {/* Super Admins Tab */}
                 {activeTab === 'superadmins' && (
                     <div className="bg-gray-800 rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">Mevcut Super Adminler</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">{t('existing_super_admins')}</h2>
                         <div className="space-y-2">
                             {superAdmins.map((email, index) => (
                                 <div key={index} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">

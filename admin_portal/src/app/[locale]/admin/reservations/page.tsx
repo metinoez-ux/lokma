@@ -471,11 +471,11 @@ const { admin, loading: adminLoading } = useAdmin();
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-4 py-2 text-center">
                             <p className="text-2xl font-bold text-green-400">{stats.confirmed}</p>
-                            <p className="text-xs text-green-300">Onaylanan</p>
+                            <p className="text-xs text-green-300">{t('confirmed')}</p>
                         </div>
                         <div className="bg-red-600/20 border border-red-500/30 rounded-xl px-4 py-2 text-center">
                             <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
-                            <p className="text-xs text-red-300">Reddedilen</p>
+                            <p className="text-xs text-red-300">{t('rejected')}</p>
                         </div>
                     </div>
                 </div>
@@ -894,7 +894,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             {cardModalLoading ? (
                                 <div className="text-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" />
-                                    <p className="text-gray-400 mt-3 text-sm">Masa durumu kontrol ediliyor...</p>
+                                    <p className="text-gray-400 mt-3 text-sm">{t('checking_table_status')}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-3">

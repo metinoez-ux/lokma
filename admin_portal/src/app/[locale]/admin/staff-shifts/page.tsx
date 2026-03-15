@@ -194,7 +194,7 @@ const { admin, loading: adminLoading } = useAdmin();
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Vardiya Raporu - ${monthLabel}</title>
+    <title>${t('shift_report')} - ${monthLabel}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 30px; color: #1a1a1a; font-size: 11px; }
@@ -220,9 +220,9 @@ const { admin, loading: adminLoading } = useAdmin();
     <h1>📋 Vardiya Raporu</h1>
     <p class="subtitle">${monthLabel} — Toplam ${shifts.length} vardiya kaydı</p>
 
-    <div class="section-title">Personel Özeti</div>
+    <div class="section-title">${t('staff_summary')}</div>
     <table class="summary-table">
-        <thead><tr><th>Personel</th><th>Vardiya</th><th>Toplam</th><th>Mola</th><th>Net Çalışma</th><th>Kurye</th></tr></thead>
+        <thead><tr><th>${t('staff')}</th><th>${t('shift')}</th><th>${t('total')}</th><th>${t('break_col')}</th><th>${t('net_work')}</th><th>${t('courier')}</th></tr></thead>
         <tbody>
             ${staffSummary.map(s => `<tr>
                 <td>${s.name}</td>
@@ -235,9 +235,9 @@ const { admin, loading: adminLoading } = useAdmin();
         </tbody>
     </table>
 
-    <div class="section-title">Detaylı Vardiya Kayıtları</div>
+    <div class="section-title">${t('detailed_records')}</div>
     <table>
-        <thead><tr><th>Personel</th><th>Tarih</th><th>Başlangıç</th><th>Bitiş</th><th>Toplam</th><th>Mola</th><th>Net</th><th>Masalar</th><th>Kurye</th><th>Durum</th></tr></thead>
+        <thead><tr><th>${t('staff')}</th><th>${t('date')}</th><th>${t('start')}</th><th>${t('end')}</th><th>${t('total')}</th><th>${t('break_col')}</th><th>${t('net')}</th><th>${t('tables')}</th><th>${t('courier')}</th><th>${t('status')}</th></tr></thead>
         <tbody>
             ${shifts.map(s => `<tr>
                 <td>${s.staffName}</td>
@@ -360,12 +360,12 @@ const { admin, loading: adminLoading } = useAdmin();
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-gray-700">
-                                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Personel</th>
-                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Vardiya</th>
+                                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('staff')}</th>
+                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('shift')}</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('toplam')}</th>
-                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Mola</th>
+                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('break_col')}</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('net_calisma')}</th>
-                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Kurye</th>
+                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('courier')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -415,15 +415,15 @@ const { admin, loading: adminLoading } = useAdmin();
                             <table className="w-full min-w-[900px]">
                                 <thead>
                                     <tr className="border-b border-gray-700">
-                                        <th className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase">Personel</th>
+                                        <th className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase">{t('staff')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('tarih')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('baslangic')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('bitis')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('toplam')}</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Mola</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Net</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Masalar</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Rol</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('break_col')}</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('net')}</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('tables')}</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('role')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('durum')}</th>
                                     </tr>
                                 </thead>

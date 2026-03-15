@@ -403,7 +403,7 @@ const params = useParams();
                     </div>
                     <div className="bg-yellow-600/20 rounded-lg p-4 border-l-4 border-yellow-500">
                         <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
-                        <div className="text-sm text-yellow-300">Bekliyor</div>
+                        <div className="text-sm text-yellow-300">{t('waiting')}</div>
                     </div>
                     <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
                         <div className="text-2xl font-bold text-blue-400">{stats.preparing}</div>
@@ -438,7 +438,7 @@ const params = useParams();
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4">
                         {/* Search */}
                         <div className="col-span-2">
-                            <label className="block text-xs text-gray-400 mb-1">Ara</label>
+                            <label className="block text-xs text-gray-400 mb-1">{t('search')}</label>
                             <input
                                 type="text"
                                 placeholder={t('siparis_no_musteri_adi')}
@@ -457,11 +457,11 @@ const params = useParams();
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500"
                             >
                                 <option value="all">{t('tumu')}</option>
-                                <option value="pending">Bekliyor</option>
+                                <option value="pending">{t('pending')}</option>
                                 <option value="preparing">{t('hazirlaniyor')}</option>
                                 <option value="ready">{t('hazir')}</option>
                                 <option value="completed">{t('tamamlandi')}</option>
-                                <option value="cancelled">İptal</option>
+                                <option value="cancelled">{t('cancelled')}</option>
                             </select>
                         </div>
 
@@ -752,7 +752,7 @@ const params = useParams();
                                 </div>
 
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Red Nedeni</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('rejection_reason')}</label>
                                     <textarea
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
@@ -816,6 +816,7 @@ function EditOrderModal({
     onSave: (items: OrderItem[], total: number) => void;
     formatPrice: (n: number) => string;
 }) {
+    const t = useTranslations('AdminBusinessOrders');
     const [items, setItems] = useState<OrderItem[]>(order.items || []);
 
     const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
@@ -859,10 +860,10 @@ function EditOrderModal({
                     <table className="min-w-full divide-y divide-gray-200 mb-4">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Ürün</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Miktar (kg)</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Fiyat (€/kg)</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Toplam</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('product')}</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('quantity_kg')}</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('price_kg')}</th>
+                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">{t('total')}</th>
                                 <th className="px-3 py-2"></th>
                             </tr>
                         </thead>
@@ -912,7 +913,7 @@ function EditOrderModal({
                         </tbody>
                         <tfoot className="bg-gray-50">
                             <tr>
-                                <td colSpan={3} className="px-3 py-2 text-sm font-bold text-right">Yeni Toplam:</td>
+                                <td colSpan={3} className="px-3 py-2 text-sm font-bold text-right">{t('new_total')}</td>
                                 <td className="px-3 py-2 text-sm font-bold text-red-600">{formatPrice(total)}</td>
                                 <td></td>
                             </tr>
