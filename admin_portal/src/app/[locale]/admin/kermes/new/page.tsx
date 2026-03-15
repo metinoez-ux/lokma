@@ -417,7 +417,7 @@ function NewKermesContent() {
                                     type="button"
                                     onClick={() => setOrganization(null)}
                                     className="text-gray-400 hover:text-white transition ml-2"
-                                    title="Seçimi temizle"
+                                    title={t('clear_selection_title')}
                                 >
                                     ✕
                                 </button>

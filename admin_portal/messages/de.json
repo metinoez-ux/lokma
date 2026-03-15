@@ -3446,7 +3446,8 @@
     "soy": "Soja",
     "celery": "Sellerie",
     "mustard": "Senf",
-    "sesame": "Sesam"
+    "sesame": "Sesam",
+    "clear_selection_title": "Auswahl loeschen"
   },
   "AdminKermesNew": {
     "0_yok": "0 = keine",
@@ -5143,7 +5144,8 @@
     "delete_error": "Fehler beim Loeschen!",
     "save_error": "Fehler beim Speichern!",
     "delete_title": "Loeschen",
-    "delete_group_title": "Gruppe loeschen"
+    "delete_group_title": "Gruppe loeschen",
+    "featured_title": "Hervorgehoben"
   },
   "AdminReports": {
     "title": "Meldungen — Rechtliche Bedenken",
@@ -7436,5 +7438,17 @@
     "alarm_mute_title": "Alarm stumm schalten",
     "close_title": "Schliessen",
     "copy_count_title": "Anzahl der Kopien"
+  },
+  "AdminAiMenu": {
+    "delete_group_title": "Gruppe loeschen",
+    "delete_option_title": "Option loeschen",
+    "delete_title": "Loeschen"
+  },
+  "AdminUITranslations": {
+    "key_already_exists": "Dieser Schluessel existiert bereits!",
+    "csv_import_success": "{count} Zeilen CSV erfolgreich importiert. Vergessen Sie nicht, \"Alle Speichern\" zu druecken.",
+    "optgroup_admin": "Admin Panel (Web)",
+    "optgroup_notifications": "Benachrichtigungen (Push & Sound)",
+    "optgroup_mobile": "Mobile App (App)"
   }
 }

@@ -189,7 +189,7 @@ export default function TranslationsPage() {
         const exists = translationKeys.some(k => k.namespace === namespace && k.key === key);
 
         if (exists) {
-            alert("Bu anahtar zaten mevcut!");
+            alert(t('key_already_exists'));
             return;
         }
 
@@ -397,7 +397,7 @@ export default function TranslationsPage() {
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
                         >
                             <option value="All">{t('tum_alanlar_namespaces')}</option>
-                            <optgroup label="Admin Panel (Web)">
+                            <optgroup label={t('optgroup_admin')}>
                                 {namespaces.filter(ns => ['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global'].includes(ns) && ns !== 'All').map(ns => (
                                     <option key={ns} value={ns}>{ns}</option>
                                 ))}
@@ -407,7 +407,7 @@ export default function TranslationsPage() {
                                     <option key={ns} value={ns}>{ns}</option>
                                 ))}
                             </optgroup>
-                            <optgroup label="Mobil Uygulama (App)">
+                            <optgroup label={t('optgroup_mobile')}>
                                 {namespaces.filter(ns => !['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global', 'PushNotifications', 'AlexaNotifications', 'All'].includes(ns)).map(ns => (
                                     <option key={ns} value={ns}>{ns}</option>
                                 ))}

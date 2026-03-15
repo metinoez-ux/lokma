@@ -3468,7 +3468,8 @@
     "soy": "Soya",
     "celery": "Kereviz",
     "mustard": "Hardal",
-    "sesame": "Susam"
+    "sesame": "Susam",
+    "clear_selection_title": "Secimi temizle"
   },
   "AdminKermesNew": {
     "0_yok": "0 = yok",
@@ -5165,7 +5166,8 @@
     "delete_error": "Silme hatasi!",
     "save_error": "Kaydetme hatasi!",
     "delete_title": "Sil",
-    "delete_group_title": "Grubu Sil"
+    "delete_group_title": "Grubu Sil",
+    "featured_title": "One Cikan"
   },
   "AdminReports": {
     "title": "Bildirimler — Hukuki Endişeler",
@@ -7458,5 +7460,17 @@
     "alarm_mute_title": "Alarmi sustur",
     "close_title": "Kapat",
     "copy_count_title": "Kopya sayisi"
+  },
+  "AdminAiMenu": {
+    "delete_group_title": "Grubu sil",
+    "delete_option_title": "Secenegi sil",
+    "delete_title": "Sil"
+  },
+  "AdminUITranslations": {
+    "key_already_exists": "Bu anahtar zaten mevcut!",
+    "csv_import_success": "{count} satir CSV basariyla ice aktarildi. Kalici olarak kaydetmek icin \"Tumunu Kaydet\" butonuna basmayi unutmayin.",
+    "optgroup_admin": "Admin Panel (Web)",
+    "optgroup_notifications": "Bildirimler (Push & Ses)",
+    "optgroup_mobile": "Mobil Uygulama (App)"
   }
 }

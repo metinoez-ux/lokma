@@ -2131,7 +2131,7 @@ function GlobalProductsPageContent() {
                                                                             <td className="py-3 pr-4">
                                                                                 <div className="flex items-center gap-2">
                                                                                     <span className="text-white font-medium">{getLocalizedText(product.name)}</span>
-                                                                                    {isSponsoredProduct && <span className="text-amber-400 text-xs" title="Öne Çıkan">⭐</span>}
+                                                                                    {isSponsoredProduct && <span className="text-amber-400 text-xs" title={t('featured_title')}>⭐</span>}
                                                                                 </div>
                                                                             </td>
                                                                             <td className="py-3 pr-2">

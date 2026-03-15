@@ -1480,7 +1480,8 @@
     "delete_error": "Fout bij verwijderen!",
     "save_error": "Fout bij opslaan!",
     "delete_title": "Verwijderen",
-    "delete_group_title": "Groep verwijderen"
+    "delete_group_title": "Groep verwijderen",
+    "featured_title": "Uitgelicht"
   },
   "AdminReports": {
     "title": "Reports — Legal Concerns",
@@ -3814,7 +3815,8 @@
     "soy": "Soja",
     "celery": "Selderij",
     "mustard": "Mosterd",
-    "sesame": "Sesam"
+    "sesame": "Sesam",
+    "clear_selection_title": "Selectie wissen"
   },
   "AdminKermesDetail": {
     "2_sokak_adi_opsiyonel": "2. Street Name (Optional)",
@@ -5880,5 +5882,17 @@
     "alarm_mute_title": "Alarm dempen",
     "close_title": "Sluiten",
     "copy_count_title": "Aantal kopien"
+  },
+  "AdminAiMenu": {
+    "delete_group_title": "Groep verwijderen",
+    "delete_option_title": "Optie verwijderen",
+    "delete_title": "Verwijderen"
+  },
+  "AdminUITranslations": {
+    "key_already_exists": "Deze sleutel bestaat al!",
+    "csv_import_success": "{count} rijen CSV geimporteerd. Vergeet niet op \"Alles Opslaan\" te drukken.",
+    "optgroup_admin": "Admin Paneel (Web)",
+    "optgroup_notifications": "Meldingen (Push & Geluid)",
+    "optgroup_mobile": "Mobiele App (App)"
   }
 }

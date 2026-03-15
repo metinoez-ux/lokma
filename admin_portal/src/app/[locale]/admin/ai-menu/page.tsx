@@ -895,7 +895,7 @@ function AIMenuPageContent() {
                                                                                     setParsedMenu({ ...parsedMenu, products: newProducts });
                                                                                 }}
                                                                                 className="text-red-400 hover:text-red-300 text-[10px]"
-                                                                                title="Grubu sil"
+                                                                                title={t('delete_group_title')}
                                                                             >
                                                                                 🗑
                                                                             </button>
@@ -961,7 +961,7 @@ function AIMenuPageContent() {
                                                     <button
                                                         onClick={() => removeProduct(prod._origIdx)}
                                                         className="text-red-400 hover:text-red-300 text-sm mt-1"
-                                                        title="Sil"
+                                                        title={t('delete_title')}
                                                     >
                                                         🗑️
                                                     </button>

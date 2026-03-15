@@ -3445,7 +3445,8 @@
     "soy": "Soja",
     "celery": "Apio",
     "mustard": "Mostaza",
-    "sesame": "Sesamo"
+    "sesame": "Sesamo",
+    "clear_selection_title": "Borrar seleccion"
   },
   "AdminKermesNew": {
     "0_yok": "0 = ninguno",
@@ -5140,7 +5141,8 @@
     "delete_error": "Error al eliminar!",
     "save_error": "Error al guardar!",
     "delete_title": "Eliminar",
-    "delete_group_title": "Eliminar grupo"
+    "delete_group_title": "Eliminar grupo",
+    "featured_title": "Destacado"
   },
   "AdminReports": {
     "title": "Reports — Legal Concerns",
@@ -7397,5 +7399,17 @@
     "alarm_mute_title": "Silenciar alarma",
     "close_title": "Cerrar",
     "copy_count_title": "Numero de copias"
+  },
+  "AdminAiMenu": {
+    "delete_group_title": "Eliminar grupo",
+    "delete_option_title": "Eliminar opcion",
+    "delete_title": "Eliminar"
+  },
+  "AdminUITranslations": {
+    "key_already_exists": "Esta clave ya existe!",
+    "csv_import_success": "{count} filas CSV importadas. No olvide presionar \"Guardar Todo\".",
+    "optgroup_admin": "Panel Admin (Web)",
+    "optgroup_notifications": "Notificaciones (Push y Sonido)",
+    "optgroup_mobile": "App Movil (App)"
   }
 }
