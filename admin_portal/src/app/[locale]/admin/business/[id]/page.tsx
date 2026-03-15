@@ -42,6 +42,7 @@ import { subscriptionService } from "@/services/subscriptionService";
 
 import { Star, History } from "lucide-react";
 import ReservationsPanel from "./ReservationsPanel";
+import ReservationCapacityConfig from "@/components/ReservationCapacityConfig";
 
 // Local interface for meat orders
 interface MeatOrder {
@@ -865,18 +866,43 @@ export default function BusinessDetailsPage() {
           freeDrinkMinimumOrder: d.freeDrinkMinimumOrder ?? 0,
         });
 
-        // 🆕 Resolve plan features from subscription_plans collection
+        // Resolve plan features from subscription_plans collection
         const planCode = d.subscriptionPlan || 'basic';
         try {
-          const plansQuery = query(
+          // Try matching by code first
+          let plansQuery = query(
             collection(db, 'subscription_plans'),
             where('code', '==', planCode)
           );
-          const planSnap = await getDocs(plansQuery);
-          if (!planSnap.empty) {
+          let planSnap = await getDocs(plansQuery);
+          
+          // If not found by code, try by document ID (e.g. free_pkg vs free)
+          if (planSnap.empty) {
+            const { getDoc, doc: docRef } = await import('firebase/firestore');
+            const planDocSnap = await getDoc(docRef(db, 'subscription_plans', planCode));
+            if (planDocSnap.exists()) {
+              const planData = planDocSnap.data();
+              setPlanFeatures(planData.features || {});
+              if (planData.features?.sponsoredProducts) {
+                setSponsoredSettings({
+                  enabled: true,
+                  feePerConversion: planData.sponsoredFeePerConversion ?? 0.40,
+                  maxProductsPerBusiness: planData.sponsoredMaxProducts ?? 5,
+                });
+              }
+            } else {
+              // Fallback: set sensible defaults so basic features work
+              setPlanFeatures({
+                clickAndCollect: true,
+                reservations: true,
+                dineInQR: true,
+                waiterOrder: true,
+                pickup: true,
+              });
+            }
+          } else {
             const planData = planSnap.docs[0].data();
             setPlanFeatures(planData.features || {});
-            // 🌟 Load sponsored product settings from plan
             if (planData.features?.sponsoredProducts) {
               setSponsoredSettings({
                 enabled: true,
@@ -7258,12 +7284,19 @@ export default function BusinessDetailsPage() {
         {
           activeTab === "reservations" && (
             <LockedModuleOverlay featureKey="reservations">
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-              <ReservationsPanel
-                businessId={businessId}
-                businessName={formData.companyName || ""}
-                staffName={admin?.displayName || admin?.email || "Admin"}
-              />
+            <div className="space-y-6">
+              {/* Capacity Management Config */}
+              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                <ReservationCapacityConfig businessId={businessId} />
+              </div>
+              {/* Reservations List */}
+              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                <ReservationsPanel
+                  businessId={businessId}
+                  businessName={formData.companyName || ""}
+                  staffName={admin?.displayName || admin?.email || "Admin"}
+                />
+              </div>
             </div>
             </LockedModuleOverlay>
           )
@@ -7518,7 +7551,7 @@ export default function BusinessDetailsPage() {
                 {/* Empty state */}
                 {formData.tables.length === 0 && (
                   <div className="bg-gray-800/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
-                    <span className="text-4xl">🪑</span>
+                    <span className="text-4xl">&#x1FA91;</span>
                     <p className="text-white font-semibold mt-3">{t('henuzMasaTanimlanmadi')}</p>
                     <p className="text-gray-400 text-sm mt-1">
                       {t('yukaridanMasaSayisiniGirerekOtomatikOlusturun')}
@@ -7532,68 +7565,84 @@ export default function BusinessDetailsPage() {
                 <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      {t('masaQrKodlari')}
+                       {t('masaQrKodlari')}
                       <span className="text-sm font-normal text-gray-400">
                         · {formData.tables.length} masa
                       </span>
                     </h2>
-                    <button
-                      onClick={() => {
-                        for (const table of formData.tables) {
-                          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://lokma.web.app/dinein/${businessId}/table/${table.label}`)}`;
-                          const link = document.createElement('a');
-                          link.href = qrUrl;
-                          link.download = `Masa_${table.label}_QR.png`;
-                          link.target = '_blank';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }
-                      }}
-                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
-                    >
-                      {t('tumunuIndir')}
-                    </button>
-                  </div>
-
-                  {/* Compact grid — small QR thumbnails */}
-                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
-                    {formData.tables.map((table: any, idx: number) => {
-                      const qrData = `https://lokma.web.app/dinein/${businessId}/table/${table.label}`;
-                      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrData)}`;
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`;
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          const { downloadAllTableCardsAsSinglePDF } = await import('@/utils/tableCardPdfGenerator');
+                          await downloadAllTableCardsAsSinglePDF(formData.tables, businessId, formData.companyName || 'Isletme');
+                        }}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                      >
+                        PDF Kart (Tek PDF)
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const { downloadAllTableCardPDFs } = await import('@/utils/tableCardPdfGenerator');
+                          await downloadAllTableCardPDFs(formData.tables, businessId, formData.companyName || 'Isletme');
+                        }}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                      >
+                        PDF Kartlar (Ayri)
+                      </button>
+                      <button
+                        onClick={() => {
+                          for (const table of formData.tables) {
+                            const tableQrTarget = `https://lokma.web.app/dinein/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
+                            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(tableQrTarget)}`;
                             const link = document.createElement('a');
-                            link.href = downloadUrl;
+                            link.href = qrUrl;
                             link.download = `Masa_${table.label}_QR.png`;
                             link.target = '_blank';
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                          }}
-                          className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-amber-500 hover:bg-gray-700/50 transition cursor-pointer group"
-                          title={`Masa ${table.label} QR kodunu indir`}
-                        >
-                          <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
-                            <img
-                              src={qrImageUrl}
-                              alt={`Masa ${table.label}`}
-                              className="w-full h-full object-contain"
-                              loading="lazy"
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-gray-300 group-hover:text-amber-400 transition">
-                            M{table.label}
-                            {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
-                          </span>
-                        </button>
+                          }
+                        }}
+                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                      >
+                        QR PNG
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Compact grid — small QR thumbnails */}
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                    {formData.tables.map((table: any, idx: number) => {
+                      const qrData = `https://lokma.web.app/dinein/${businessId}/table/${table.label}${table.section ? `?section=${encodeURIComponent(table.section)}` : ''}`;
+                      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrData)}`;
+                      return (
+                        <div key={idx} className="flex flex-col gap-1">
+                          <button
+                            onClick={async () => {
+                              const { downloadTableCardPDF } = await import('@/utils/tableCardPdfGenerator');
+                              await downloadTableCardPDF(table.label, businessId, formData.companyName || 'Isletme');
+                            }}
+                            className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
+                            title={`Masa ${table.label} PDF kart indir`}
+                          >
+                            <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
+                              <img
+                                src={qrImageUrl}
+                                alt={`Masa ${table.label}`}
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                              />
+                            </div>
+                            <span className="text-xs font-bold text-gray-300 group-hover:text-red-400 transition">
+                              M{table.label}
+                              {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
+                            </span>
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-500 mt-3">{t('qrKodunaTiklayarakTekTekIndirebilirsiniz')}</p>
+                  <p className="text-xs text-gray-500 mt-3">Masa kartina tiklayarak A6 PDF kart indirebilirsiniz. Ustteki butonlarla toplu indirme yapabilirsiniz.</p>
                 </div>
               )}
 

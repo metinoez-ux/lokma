@@ -5,6 +5,7 @@ import { collection, collectionGroup, getDocs, getDoc, doc, updateDoc, query, or
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
+import TableManagementPanel from '@/components/TableManagementPanel';
 
 const reservationStatuses = {
     pending: { label: 'Beklemede', color: 'yellow', icon: '⏳' },
@@ -38,6 +39,7 @@ export default function ReservationsPage() {
 const { admin, loading: adminLoading } = useAdmin();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
+    const [businessCountries, setBusinessCountries] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [dateFilter, setDateFilter] = useState<string>('all');
@@ -56,6 +58,8 @@ const { admin, loading: adminLoading } = useAdmin();
     // Printer state
     const [printingId, setPrintingId] = useState<string | null>(null);
     const printedAutoRef = useRef<Set<string>>(new Set()); // track auto-printed IDs
+    // Table management
+    const [showTableManagement, setShowTableManagement] = useState(false);
 
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
@@ -84,15 +88,18 @@ const { admin, loading: adminLoading } = useAdmin();
             const snapshot = await getDocs(collection(db, 'businesses'));
             const map: Record<string, string> = {};
             const maxTablesMap: Record<string, number> = {};
+            const countriesMap: Record<string, string> = {};
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 if (data.hasReservation) {
                     map[doc.id] = data.companyName || doc.id;
                     maxTablesMap[doc.id] = data.maxReservationTables || 0;
+                    countriesMap[doc.id] = data.country || 'DE';
                 }
             });
             setBusinesses(map);
             setBusinessMaxTables(maxTablesMap);
+            setBusinessCountries(countriesMap);
         };
         loadBusinesses();
     }, []);
@@ -459,8 +466,8 @@ const { admin, loading: adminLoading } = useAdmin();
                         </p>
                     </div>
 
-                    {/* Quick Stats */}
-                    <div className="flex gap-3">
+                    {/* Quick Stats + Table Management Button */}
+                    <div className="flex items-center gap-3 flex-wrap">
                         <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-4 py-2 text-center">
                             <p className="text-2xl font-bold text-blue-400">{stats.total}</p>
                             <p className="text-xs text-blue-300">{t('toplam')}</p>
@@ -477,9 +484,39 @@ const { admin, loading: adminLoading } = useAdmin();
                             <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
                             <p className="text-xs text-red-300">{t('rejected')}</p>
                         </div>
+                        {/* Table Management Toggle Button */}
+                        {(businessFilter !== 'all' || admin?.adminType !== 'super') && (
+                            <button
+                                onClick={() => setShowTableManagement(!showTableManagement)}
+                                className={`px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ${
+                                    showTableManagement
+                                        ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
+                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
+                                }`}
+                            >
+                                Masa Yonetimi
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Table Management Panel */}
+            {showTableManagement && (() => {
+                const ownerBizId = admin?.adminType !== 'super'
+                    ? ((admin as any)?.butcherId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.businessId)
+                    : (businessFilter !== 'all' ? businessFilter : null);
+                if (!ownerBizId) return null;
+                return (
+                    <div className="max-w-6xl mx-auto mb-6">
+                        <TableManagementPanel
+                            businessId={ownerBizId}
+                            businessName={businesses[ownerBizId] || ''}
+                            country={businessCountries[ownerBizId]}
+                        />
+                    </div>
+                );
+            })()}
 
             {/* Filters */}
             <div className="max-w-6xl mx-auto mb-6">
