@@ -1,32 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, orderBy, where, onSnapshot, Timestamp, doc, getDoc, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
+import { useOrdersStandalone, Order } from '@/hooks/useOrders';
 
-interface OrderItem {
-    productId: string;
-    name: string;
-    productName?: string;
-    quantity: number;
-    price: number;
-    unit?: string;
-}
-
-interface Order {
-    id: string;
-    businessId: string;
-    businessName?: string;
-    items: OrderItem[];
-    total: number;
-    status: string;
-    type: string;
-    createdAt: Timestamp;
-    currency?: string;
-}
+// Order type is now imported from @/hooks/useOrders (canonical)
 
 type CompareMode = 'none' | 'lastWeek' | 'lastMonth' | 'lastYear';
 
@@ -50,7 +32,8 @@ export default function StatisticsPage() {
 
     const t = useTranslations('AdminStatistics');
     const { admin, loading: adminLoading } = useAdmin();
-    const [orders, setOrders] = useState<Order[]>([]);
+    // Orders from unified hook (single Firestore listener)
+    const { orders, loading: ordersLoading } = useOrdersStandalone({ initialDateFilter: 'all' });
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState<string>('all');
@@ -167,49 +150,13 @@ export default function StatisticsPage() {
         return { startDate: compStartDate, endDate: compEndDate };
     };
 
-    // Real-time orders subscription - scoped by business for non-super admins
+    // Orders are now provided by useOrdersStandalone hook (canonical field mapping)
+    // Update loading based on hook state
     useEffect(() => {
-        if (adminLoading) return;
-        setLoading(true);
-
-        const businessId = admin?.adminType !== 'super'
-            ? ((admin as any)?.butcherId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.kermesId || (admin as any)?.businessId)
-            : null;
-
-        // For non-super admins: simple butcherId query (no composite index needed)
-        // For super admins: full query with date range
-        const q = businessId
-            ? query(collection(db, 'meat_orders'), where('butcherId', '==', businessId))
-            : query(
-                collection(db, 'meat_orders'),
-                where('createdAt', '>=', Timestamp.fromDate(new Date(2020, 0, 1))),
-                orderBy('createdAt', 'desc')
-            );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => {
-                const d = doc.data();
-                return {
-                    id: doc.id,
-                    businessId: d.butcherId || d.businessId || '',
-                    businessName: d.butcherName || d.businessName || '',
-                    items: d.items || [],
-                    total: d.totalPrice || d.totalAmount || d.total || 0,
-                    status: d.status || 'pending',
-                    type: d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
-                    createdAt: d.createdAt,
-                    currency: d.currency,
-                };
-            }) as Order[];
-            setOrders(data);
+        if (!ordersLoading) {
             setLoading(false);
-        }, (error) => {
-            console.error('Error loading orders:', error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [admin, adminLoading]);
+        }
+    }, [ordersLoading]);
 
     // Staff admin: Load delivery pause logs & order performance stats
     const staffBusinessId = admin?.adminType !== 'super'
