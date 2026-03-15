@@ -106,25 +106,26 @@ function getStartDateForFilter(filter: DateFilter): Date {
 
 // ============================================================
 // ORDER STATUS CONSTANTS
+// labelKey = i18n key, use t(labelKey) in consumer components
 // ============================================================
 
-export const ORDER_STATUSES = {
-  pending:   { label: 'Ausstehend',      color: 'yellow',  icon: '' },
-  accepted:  { label: 'Bestatigt',       color: 'blue',    icon: '' },
-  preparing: { label: 'In Zubereitung',  color: 'amber',   icon: '' },
-  ready:     { label: 'Bereit',          color: 'green',   icon: '' },
-  served:    { label: 'Serviert',        color: 'teal',    icon: '' },
-  onTheWay:  { label: 'Unterwegs',       color: 'indigo',  icon: '' },
-  delivered: { label: 'Geliefert',       color: 'emerald', icon: '' },
-  completed: { label: 'Abgeschlossen',   color: 'emerald', icon: '' },
-  cancelled: { label: 'Storniert',       color: 'red',     icon: '' },
-} as const;
+export const ORDER_STATUSES: Record<string, { labelKey: string; color: string }> = {
+  pending:   { labelKey: 'status_pending',    color: 'yellow' },
+  accepted:  { labelKey: 'status_accepted',   color: 'blue' },
+  preparing: { labelKey: 'status_preparing',  color: 'amber' },
+  ready:     { labelKey: 'status_ready',      color: 'green' },
+  served:    { labelKey: 'status_served',     color: 'teal' },
+  onTheWay:  { labelKey: 'status_onTheWay',   color: 'indigo' },
+  delivered: { labelKey: 'status_delivered',  color: 'emerald' },
+  completed: { labelKey: 'status_completed',  color: 'emerald' },
+  cancelled: { labelKey: 'status_cancelled',  color: 'red' },
+};
 
-export const ORDER_TYPES = {
-  pickup:   { label: 'Abholung',   icon: '', color: 'green' },
-  delivery: { label: 'Lieferung',  icon: '', color: 'blue' },
-  dine_in:  { label: 'Vor Ort',    icon: '', color: 'amber' },
-} as const;
+export const ORDER_TYPES: Record<string, { labelKey: string; color: string }> = {
+  pickup:   { labelKey: 'type_pickup',    color: 'green' },
+  delivery: { labelKey: 'type_delivery',  color: 'blue' },
+  dine_in:  { labelKey: 'type_dineIn',    color: 'amber' },
+};
 
 // ============================================================
 // ORDERS CONTEXT - Shared state across components

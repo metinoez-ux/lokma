@@ -5,6 +5,7 @@ import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { ORDER_STATUSES, ORDER_TYPES } from '@/hooks/useOrders';
 
 import { useTranslations, useLocale } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
@@ -14,28 +15,11 @@ import {
     PrintRetryQueue, requestWakeLock,
 } from '@/services/printerService';
 
-// Canonical Order Status Set (7 statuses)
-// Synchronized with Mobile App OrderStatus enum
-const orderStatuses = {
-    pending: { label: 'Ausstehend', color: 'yellow', icon: '⏳' },
-    accepted: { label: 'Bestätigt', color: 'blue', icon: '✅' },
-    preparing: { label: 'In Zubereitung', color: 'amber', icon: '👨‍🍳' },
-    ready: { label: 'Bereit', color: 'green', icon: '📦' },
-    served: { label: 'Serviert', color: 'teal', icon: '🍽️' },
-    onTheWay: { label: 'Unterwegs', color: 'indigo', icon: '🛵' },
-    delivered: { label: 'Geliefert', color: 'emerald', icon: '🎉' },
-    completed: { label: 'Abgeschlossen', color: 'emerald', icon: '✔️' },
-    cancelled: { label: 'Storniert', color: 'red', icon: '❌' },
-} as const;
+// Order status/type constants imported from useOrders hook (i18n key-based)
+const orderStatuses = ORDER_STATUSES;
+const orderTypes = ORDER_TYPES;
 
 type OrderStatus = keyof typeof orderStatuses;
-
-const orderTypes = {
-    pickup: { label: 'Abholung', icon: '🏃', color: 'green' },
-    delivery: { label: 'Lieferung', icon: '🛵', color: 'blue' },
-    dine_in: { label: 'Vor Ort', icon: '🍽️', color: 'amber' },
-} as const;
-
 type OrderType = keyof typeof orderTypes;
 
 interface OrderItem {
@@ -216,7 +200,7 @@ export default function OrdersPage() {
 
         // For dine-in ready orders, mark as delivered (= completed)
         if (status === 'ready' && order.type === 'dine_in') {
-            return { label: '🍽️ Serviert', action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
+            return { label: t('action_served'), action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
         }
 
         return null; // No action for ready (non-dine-in), onTheWay, delivered, cancelled
@@ -348,9 +332,9 @@ export default function OrdersPage() {
                 timestamp: serverTimestamp(),
                 adminEmail: admin?.email || 'unknown',
             });
-            showToast(`${type === 'delivery' ? '🛵 Lieferung' : '🛍️ Abholung'} pausiert${minutes ? ` (${minutes} Min.)` : ''}`, 'success');
+            showToast(t(type === 'delivery' ? 'pause_delivery' : 'pause_pickup') + (minutes ? ` (${minutes} Min.)` : ''), 'success');
         } catch (e) {
-            showToast('Fehler aufgetreten', 'error');
+            showToast(t('pause_error'), 'error');
         }
         setShowDeliveryTimerMenu(false);
         setShowPickupTimerMenu(false);
@@ -371,9 +355,9 @@ export default function OrdersPage() {
                 timestamp: serverTimestamp(),
                 adminEmail: admin?.email || 'unknown',
             });
-            showToast(`${type === 'delivery' ? '🛵 Lieferung' : '🛍️ Abholung'} wieder aktiv`, 'success');
+            showToast(t(type === 'delivery' ? 'pause_resumed_delivery' : 'pause_resumed_pickup'), 'success');
         } catch (e) {
-            showToast('Fehler aufgetreten', 'error');
+            showToast(t('pause_error'), 'error');
         }
     };
 
@@ -497,12 +481,12 @@ export default function OrdersPage() {
                 if (retryQueueRef.current.size > 0) {
                     const printed = await retryQueueRef.current.processQueue(
                         printerSettings,
-                        (item) => showToast(`🔄 Nachgedruckt: #${item.id.slice(0, 6).toUpperCase()}`, 'success'),
-                        (item, err) => showToast(`❌ Druck fehlgeschlagen: #${item.id.slice(0, 6).toUpperCase()}`, 'error')
+                        (item) => showToast(t('print_reprinted', { id: item.id.slice(0, 6).toUpperCase() }), 'success'),
+                        (item, err) => showToast(t('print_failed', { id: item.id.slice(0, 6).toUpperCase() }), 'error')
                     );
                     setRetryQueueSize(retryQueueRef.current.size);
                     if (printed > 0) {
-                        showToast(`🖨️ ${printed} Bon(s) aus Warteschlange gedruckt`, 'success');
+                        showToast(t('print_queue_done', { count: String(printed) }), 'success');
                     }
                 }
             }
@@ -568,12 +552,12 @@ export default function OrdersPage() {
         try {
             const result = await testPrint(printerSettings, 'LOKMA Marketplace');
             if (result.success) {
-                showToast('🖨️ Test-Bon gedruckt!', 'success');
+                showToast(t('print_test_success'), 'success');
             } else {
-                showToast(`🖨️ Fehler: ${result.message}`, 'error');
+                showToast(t('print_error', { message: result.message }), 'error');
             }
         } catch (err: any) {
-            showToast(`🖨️ Fehler: ${err.message}`, 'error');
+            showToast(t('print_error', { message: err.message }), 'error');
         } finally {
             setTestingPrint(false);
         }
@@ -582,7 +566,7 @@ export default function OrdersPage() {
     // Handle print order
     const handlePrintOrder = async (order: Order) => {
         if (!printerSettings.enabled || !printerSettings.printerIp) {
-            showToast('Drucker nicht konfiguriert. Einstellungen → IoT-Bereich.', 'error');
+            showToast(t('print_not_configured'), 'error');
             return;
         }
         setPrintingOrderId(order.id);
@@ -608,10 +592,10 @@ export default function OrdersPage() {
             }, order.businessName || businesses[order.businessId] || 'LOKMA');
 
             if (result.success) {
-                showToast('🖨️ Bon gedruckt!', 'success');
+                showToast(t('print_success'), 'success');
                 lastPrintSuccessRef.current = new Date().toLocaleString(dateLocale, { timeZone: 'Europe/Berlin' });
             } else {
-                showToast(`🖨️ Druckfehler: ${result.message}`, 'error');
+                showToast(t('print_error', { message: result.message }), 'error');
                 // Add to retry queue
                 retryQueueRef.current.add(
                     order,
@@ -620,7 +604,7 @@ export default function OrdersPage() {
                 setRetryQueueSize(retryQueueRef.current.size);
             }
         } catch (err: any) {
-            showToast(`🖨️ Fehler: ${err.message}`, 'error');
+            showToast(t('print_error', { message: err.message }), 'error');
             // Add to retry queue
             retryQueueRef.current.add(
                 order,
@@ -904,7 +888,7 @@ export default function OrdersPage() {
                             if (refundData.refunded) {
                                 refundAmount = refundData.refundAmount;
                                 refundSucceeded = true;
-                                showToast(`${formatCurrency(refundAmount, order?.currency)} Teilrückerstattung verarbeitet`, 'success');
+                                showToast(t('refund_success', { amount: formatCurrency(refundAmount, order?.currency) }), 'success');
                             }
                         } catch (refundError) {
                             console.error('Error processing partial refund:', refundError);
@@ -1085,7 +1069,7 @@ export default function OrdersPage() {
                             >
                                 <option value="all">{t('filters.allStatuses')}</option>
                                 {Object.entries(orderStatuses).map(([key, value]) => (
-                                    <option key={key} value={key}>{value.icon} {value.label}</option>
+                                    <option key={key} value={key}>{t(value.labelKey)}</option>
                                 ))}
                             </select>
 
@@ -1096,7 +1080,7 @@ export default function OrdersPage() {
                             >
                                 <option value="all">{t('filters.allTypes')}</option>
                                 {Object.entries(orderTypes).map(([key, value]) => (
-                                    <option key={key} value={key}>{value.icon} {value.label}</option>
+                                    <option key={key} value={key}>{t(value.labelKey)}</option>
                                 ))}
                             </select>
 
@@ -1220,8 +1204,7 @@ export default function OrdersPage() {
                                             : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500'
                                             }`}
                                     >
-                                        <span>{deliveryPaused ? '⏸' : '🛵'}</span>
-                                        <span>Kurye</span>
+                                        <span>{t(deliveryPaused ? 'status_paused' : 'type_delivery')}</span>
                                         {deliveryPaused && deliveryCountdown && (
                                             <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
                                                 {deliveryCountdown}
@@ -1256,8 +1239,7 @@ export default function OrdersPage() {
                                             : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500'
                                             }`}
                                     >
-                                        <span>{pickupPaused ? '⏸' : '🛍️'}</span>
-                                        <span>Gel-Al</span>
+                                        <span>{t(pickupPaused ? 'status_paused' : 'pickup_label')}</span>
                                         {pickupPaused && pickupCountdown && (
                                             <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
                                                 {pickupCountdown}
@@ -1267,7 +1249,7 @@ export default function OrdersPage() {
                                     {/* Timer Selection Dropdown */}
                                     {showPickupTimerMenu && (
                                         <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
-                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">Gel-Al süre seçin</p>
+                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">{t('select_pause_duration')}</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {PAUSE_DURATIONS.map(d => (
                                                     <button
@@ -1660,7 +1642,7 @@ export default function OrdersPage() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-400">{t('modal.status')}</span>
                                 <span className={`px-3 py-1 rounded-full text-sm bg-${orderStatuses[selectedOrder.status].color}-600/20 text-${orderStatuses[selectedOrder.status].color}-400`}>
-                                    {orderStatuses[selectedOrder.status].icon} {orderStatuses[selectedOrder.status].label}
+                                    {t(orderStatuses[selectedOrder.status]?.labelKey || 'status_pending')}
                                 </span>
                             </div>
 
@@ -1676,7 +1658,7 @@ export default function OrdersPage() {
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-400">{t('modal.type')}</span>
                                 <span className="text-white">
-                                    {orderTypes[selectedOrder.type]?.icon} {orderTypes[selectedOrder.type]?.label}
+                                    {t(orderTypes[selectedOrder.type]?.labelKey || 'type_pickup')}
                                 </span>
                             </div>
 
@@ -1958,8 +1940,7 @@ export default function OrdersPage() {
                                                 : 'bg-gray-700 text-white hover:bg-gray-600'
                                                 }`}
                                         >
-                                            <span>{value.icon}</span>
-                                            <span>{value.label}</span>
+                                            <span>{t(value.labelKey)}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -2235,7 +2216,7 @@ function OrderCard({
                 </span>
                 <div className="flex items-center gap-1">
                     <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-400`}>
-                        {typeInfo?.icon} {typeInfo?.label}
+                        {t(typeInfo?.labelKey || 'type_pickup')}
                     </span>
                 </div>
             </div>

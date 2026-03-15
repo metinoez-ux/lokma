@@ -572,7 +572,7 @@ export default function StatisticsPage() {
                                 {stats.completed}
                                 {changes && formatChange(changes.completed)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">Tamamlanan</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('completed_label')}</p>
                             {compStats && (
                                 <p className="text-xs text-gray-500">{t('onceki')} {compStats.completed}</p>
                             )}
@@ -894,15 +894,15 @@ export default function StatisticsPage() {
                             </div>
                             <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
                                 <div className="text-3xl font-bold text-green-400">{perfStats.completedOrders}</div>
-                                <div className="text-sm text-green-300">Tamamlanan</div>
+                                <div className="text-sm text-green-300">{t('completed_label')}</div>
                             </div>
                             <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
-                                <div className="text-3xl font-bold text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">dk</span></div>
+                                <div className="text-3xl font-bold text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">{t('minutes_short')}</span></div>
                                 <div className="text-sm text-blue-300">{t('ort_hazirlama')}</div>
                             </div>
                             <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
-                                <div className="text-3xl font-bold text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
-                                <div className="text-sm text-purple-300">Ort. Teslim</div>
+                                <div className="text-3xl font-bold text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">{t('minutes_short')}</span></div>
+                                <div className="text-sm text-purple-300">{t('avg_delivery')}</div>
                             </div>
                             <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
                                 <div className="text-3xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
@@ -917,7 +917,7 @@ export default function StatisticsPage() {
                                 <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
                             </div>
                             <div className="bg-gray-900 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">▶️</span><span className="text-gray-400">Devam Ettirme</span></div>
+                                <div className="flex items-center gap-2 mb-2"><span className="text-gray-400">{t('retention_label')}</span></div>
                                 <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
                             </div>
                             <div className="bg-gray-900 rounded-lg p-4">
