@@ -1655,6 +1655,7 @@
     "already_used": "Vous avez déjà utilisé ce coupon"
   },
   "reservation": {
+    "title": "Reservation",
     "please_login_first": "Veuillez vous connecter d'abord",
     "please_select_time": "Veuillez sélectionner une heure",
     "time_slot_full": "Ce créneau est complet ! Veuillez choisir un autre horaire.",

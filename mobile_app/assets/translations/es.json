@@ -1655,6 +1655,7 @@
     "already_used": "Ya ha utilizado este cupón"
   },
   "reservation": {
+    "title": "Reserva",
     "please_login_first": "Por favor, inicie sesión primero",
     "please_select_time": "Por favor, seleccione una hora",
     "time_slot_full": "¡Este horario está completo! Seleccione otro horario.",

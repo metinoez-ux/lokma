@@ -930,6 +930,7 @@
     "profile": "Profil"
   },
   "reservation": {
+    "title": "Reservierung",
     "please_login_first": "Bitte melden Sie sich zuerst an",
     "please_select_time": "Bitte wähle eine Uhrzeit",
     "time_slot_full": "Diese Uhrzeit ist ausgebucht! Bitte wählen Sie eine andere Uhrzeit.",

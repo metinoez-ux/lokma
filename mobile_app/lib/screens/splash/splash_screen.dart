@@ -56,8 +56,8 @@ class _SplashScreenState extends State<SplashScreen> {
       setState(() => _showBitten = true);
     }
 
-    // Hold bitten O for 1 second
-    await Future.delayed(const Duration(milliseconds: 1000));
+    // Hold bitten O for 1.5 seconds
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     // Navigate to app
     if (mounted) {

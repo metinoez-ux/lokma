@@ -2757,6 +2757,57 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            ],
 
 
+                            // Reservation badge
+                            if (data?['hasReservation'] == true) ...[
+                              Text('  ·  ', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                              InkWell(
+                                onTap: () {
+                                  final hasMasaTab = (data?['hasReservation'] as bool? ?? false) ||
+                                      (_planFeatures['dineInQR'] == true) ||
+                                      (_planFeatures['waiterOrder'] == true);
+                                  if (hasMasaTab) {
+                                    setState(() => _deliveryModeIndex = 2);
+                                    HapticFeedback.lightImpact();
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        _getAccent(context).withValues(alpha: 0.12),
+                                        _getAccent(context).withValues(alpha: 0.06),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: _getAccent(context).withValues(alpha: 0.25),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.table_restaurant_rounded, size: 13, color: _getAccent(context)),
+                                      const SizedBox(width: 3),
+                                      Icon(Icons.schedule_rounded, size: 11, color: _getAccent(context).withValues(alpha: 0.7)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        tr('reservation.title'),
+                                        style: TextStyle(
+                                          color: _getAccent(context),
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: -0.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+
                          ],
                        ),
                      ],

@@ -1671,6 +1671,7 @@
     "already_used": "You have already used this coupon"
   },
   "reservation": {
+    "title": "Reservation",
     "please_login_first": "Please log in first",
     "please_select_time": "Please select a time",
     "time_slot_full": "This time slot is full! Please select a different time.",

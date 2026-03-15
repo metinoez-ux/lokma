@@ -1671,6 +1671,7 @@
     "already_used": "Bu kuponu zaten kullandınız"
   },
   "reservation": {
+    "title": "Rezervasyon",
     "please_login_first": "Lütfen önce giriş yapın",
     "please_select_time": "Lütfen bir saat seçin",
     "time_slot_full": "Bu saat dolmuş! Lütfen farklı bir saat seçin.",
