@@ -126,6 +126,7 @@ export const subscriptionService = {
                 features: {
                     clickAndCollect: true,
                     delivery: false,
+                    pickup: true,
                     onlinePayment: false,
                     campaigns: false,
                     basicStatsOnly: true,
@@ -137,7 +138,9 @@ export const subscriptionService = {
                     scaleIntegration: false,
                     accountingIntegration: false,
                     aiSupplierOrdering: false,
-                    // 🎯 Promosyon Modülleri
+                    reservations: true,
+                    dineInQR: true,
+                    waiterOrder: false,
                     sponsoredProducts: false,
                     couponSystem: false,
                     referralSystem: false,
@@ -187,8 +190,9 @@ export const subscriptionService = {
                 features: {
                     clickAndCollect: true,
                     delivery: false,
+                    pickup: true,
                     onlinePayment: false,
-                    campaigns: true, // campaignLimit: 1 ile sınırlı — 1 kampanya hakkı
+                    campaigns: true,
                     basicStatsOnly: true,
                     marketing: false,
                     prioritySupport: false,
@@ -198,13 +202,15 @@ export const subscriptionService = {
                     scaleIntegration: false,
                     accountingIntegration: false,
                     aiSupplierOrdering: false,
-                    // 🎯 Promosyon Modülleri
+                    reservations: true,
+                    dineInQR: true,
+                    waiterOrder: true,
                     sponsoredProducts: false,
                     couponSystem: false,
                     referralSystem: false,
                     firstOrderDiscount: false,
-                    freeDrink: true,        // Basic'te gratis içecek aktif
-                    donationRoundUp: true,   // Basic'te bağış yuvarlama aktif
+                    freeDrink: true,
+                    donationRoundUp: true,
                 },
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -247,19 +253,22 @@ export const subscriptionService = {
                 isActive: true,
                 features: {
                     clickAndCollect: true,
-                    delivery: true, // Kurye entegrasyonu
-                    onlinePayment: true, // Kart/Apple Pay
+                    delivery: true,
+                    pickup: true,
+                    onlinePayment: true,
                     campaigns: true,
-                    basicStatsOnly: false, // Detaylı rapor
+                    basicStatsOnly: false,
                     marketing: false,
                     prioritySupport: true,
                     liveCourierTracking: true,
                     eslIntegration: false,
-                    posIntegration: true, // Planned
-                    scaleIntegration: true, // Planned
-                    accountingIntegration: true, // Planned
-                    aiSupplierOrdering: true, // B2B Sipariş
-                    // 🎯 Promosyon Modülleri
+                    posIntegration: true,
+                    scaleIntegration: true,
+                    accountingIntegration: true,
+                    aiSupplierOrdering: true,
+                    reservations: true,
+                    dineInQR: true,
+                    waiterOrder: true,
                     sponsoredProducts: true,
                     couponSystem: true,
                     referralSystem: true,
@@ -309,18 +318,21 @@ export const subscriptionService = {
                 features: {
                     clickAndCollect: true,
                     delivery: true,
+                    pickup: true,
                     onlinePayment: true,
                     campaigns: true,
                     basicStatsOnly: false,
                     marketing: true,
                     prioritySupport: true,
                     liveCourierTracking: true,
-                    eslIntegration: true, // ESL Etiketleri Dahil
+                    eslIntegration: true,
                     posIntegration: true,
                     scaleIntegration: true,
                     accountingIntegration: true,
                     aiSupplierOrdering: true,
-                    // 🎯 Promosyon Modülleri — Ultra: Hepsi açık
+                    reservations: true,
+                    dineInQR: true,
+                    waiterOrder: true,
                     sponsoredProducts: true,
                     couponSystem: true,
                     referralSystem: true,

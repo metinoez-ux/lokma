@@ -629,12 +629,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             // Collapsing Header - Pinned (konum + arama her zaman görünür)
             SliverAppBar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
               pinned: true,
               floating: false,
-              clipBehavior: Clip.hardEdge, // Overflow'u kesin gizle
+              clipBehavior: Clip.hardEdge,
               expandedHeight: (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 200 : 175,
               collapsedHeight:
-                  120, // Daraltılmış yükseklik (sadece konum + arama)
+                  120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {

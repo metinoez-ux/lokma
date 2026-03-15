@@ -13,35 +13,17 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  static const Color lokmaRed = Color(0xFFFB335B);
-
-  late final AnimationController _fadeController;
-  late final Animation<double> _fadeAnimation;
+class _SplashScreenState extends State<SplashScreen> {
+  bool _showBitten = false;
 
   @override
   void initState() {
     super.initState();
-
-    // Fade-in animation: 1 second with a smooth ease-in curve
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
-
-    // Start fade-in and initialize app
-    _fadeController.forward();
     _initAndNavigate();
   }
 
   Future<void> _initAndNavigate() async {
     // Only auto-detect system language on FIRST launch
-    // Once the user has chosen a language (or first detection ran), don't override it
     try {
       final prefs = await SharedPreferences.getInstance();
       final hasLanguageBeenSet = prefs.getBool('language_set') ?? false;
@@ -53,7 +35,6 @@ class _SplashScreenState extends State<SplashScreen>
         if (mounted) {
           await context.setLocale(Locale(langToSet));
           await prefs.setBool('language_set', true);
-          // Sync language preference to Firestore for push notification localization
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
             try {
@@ -67,13 +48,18 @@ class _SplashScreenState extends State<SplashScreen>
       }
     } catch (_) {}
 
-    // Wait for the fade-in animation to complete (1 second)
+    // Phase 1: Show whole O for 1.5 seconds
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    // Phase 2: Switch to bitten O
+    if (mounted) {
+      setState(() => _showBitten = true);
+    }
+
+    // Hold bitten O for 1 second
     await Future.delayed(const Duration(milliseconds: 1000));
 
-    // Brief pause at full opacity so the user sees the logo clearly
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Navigate
+    // Navigate to app
     if (mounted) {
       final prefs = await SharedPreferences.getInstance();
       final hasSeenOnboarding = prefs.getBool('onboarding_seen') ?? false;
@@ -86,45 +72,26 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Match the gradient's top color for status bar area
-      backgroundColor: const Color(0xFFE8456B),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SizedBox.expand(
-          child: Image.asset(
-            'assets/images/lokma_splash.png',
+      backgroundColor: const Color(0xFFFF0033),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Bottom layer: whole O (always visible)
+          Image.asset(
+            'assets/images/lokma_splash_whole.png',
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFE8456B), Color(0xFFFF1A1A)],
-                ),
-              ),
-              child: const Center(
-                child: Text(
-                  'LOKMA',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 4,
-                  ),
-                ),
-              ),
-            ),
           ),
-        ),
+          // Top layer: bitten O (appears on top, instant switch)
+          if (_showBitten)
+            Image.asset(
+              'assets/images/lokma_splash_bitten.png',
+              fit: BoxFit.cover,
+            ),
+        ],
       ),
     );
   }
 }
+
