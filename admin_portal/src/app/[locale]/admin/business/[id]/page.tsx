@@ -5476,20 +5476,20 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                                                         {[
-                                                          { key: 'gluten', label: 'Glüten', emoji: '🌾', de: 'Getreide' },
-                                                          { key: 'crustaceans', label: 'Kabuklular', emoji: '🦐', de: 'Krebstiere' },
-                                                          { key: 'eggs', label: 'Yumurta', emoji: '🥚', de: 'Eier' },
-                                                          { key: 'fish', label: 'Balık', emoji: '🐟', de: 'Fisch' },
-                                                          { key: 'peanuts', label: 'Yer Fıstığı', emoji: '🥜', de: 'Erdnüsse' },
-                                                          { key: 'soy', label: 'Soya', emoji: '🫘', de: 'Soja' },
-                                                          { key: 'milk', label: 'Süt/Laktoz', emoji: '🥛', de: 'Milch' },
-                                                          { key: 'treeNuts', label: 'Sert Kabuklu', emoji: '🌰', de: 'Schalenfrüchte' },
-                                                          { key: 'celery', label: 'Kereviz', emoji: '🥬', de: 'Sellerie' },
-                                                          { key: 'mustard', label: 'Hardal', emoji: '🟡', de: 'Senf' },
-                                                          { key: 'sesame', label: 'Susam', emoji: '⚪', de: 'Sesam' },
-                                                          { key: 'sulfites', label: 'Sülfitler', emoji: '🧪', de: 'Sulfite' },
-                                                          { key: 'lupin', label: 'Lupin', emoji: '🌸', de: 'Lupinen' },
-                                                          { key: 'molluscs', label: 'Yumuşakçalar', emoji: '🐚', de: 'Weichtiere' },
+                                                          { key: 'gluten', label: t('allergen_gluten'), emoji: '🌾' },
+                                                          { key: 'crustaceans', label: t('allergen_crustaceans'), emoji: '🦐' },
+                                                          { key: 'eggs', label: t('allergen_eggs'), emoji: '🥚' },
+                                                          { key: 'fish', label: t('allergen_fish'), emoji: '🐟' },
+                                                          { key: 'peanuts', label: t('allergen_peanuts'), emoji: '🥜' },
+                                                          { key: 'soy', label: t('allergen_soy'), emoji: '🫘' },
+                                                          { key: 'milk', label: t('allergen_milk'), emoji: '🥛' },
+                                                          { key: 'treeNuts', label: t('allergen_treeNuts'), emoji: '🌰' },
+                                                          { key: 'celery', label: t('allergen_celery'), emoji: '🥬' },
+                                                          { key: 'mustard', label: t('allergen_mustard'), emoji: '🟡' },
+                                                          { key: 'sesame', label: t('allergen_sesame'), emoji: '⚪' },
+                                                          { key: 'sulfites', label: t('allergen_sulfites'), emoji: '🧪' },
+                                                          { key: 'lupin', label: t('allergen_lupin'), emoji: '🌸' },
+                                                          { key: 'molluscs', label: t('allergen_molluscs'), emoji: '🐚' },
                                                         ].map(allergen => {
                                                           const checked = (editFormFull.allergens || {})[allergen.key] === true;
                                                           return (
@@ -5507,7 +5507,6 @@ export default function BusinessDetailsPage() {
                                                             >
                                                               <span className="text-lg">{allergen.emoji}</span>
                                                               <span className="text-[10px] font-medium leading-tight">{allergen.label}</span>
-                                                              <span className="text-[9px] opacity-60">{allergen.de}</span>
                                                             </button>
                                                           );
                                                         })}
@@ -5523,18 +5522,18 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
                                                         {[
-                                                          { key: 'energie_kj', label: 'Energie', unit: 'kJ', required: true },
-                                                          { key: 'energie_kcal', label: 'Energie', unit: 'kcal', required: true },
-                                                          { key: 'fett', label: 'Fett', unit: 'g', required: true },
-                                                          { key: 'gesaettigte_fettsaeuren', label: 'ges. Fetts.', unit: 'g', required: true },
-                                                          { key: 'kohlenhydrate', label: 'Kohlenh.', unit: 'g', required: true },
-                                                          { key: 'zucker', label: 'Zucker', unit: 'g', required: true },
-                                                          { key: 'protein', label: 'Eiweiß', unit: 'g', required: true },
-                                                          { key: 'salz', label: 'Salz', unit: 'g', required: true },
-                                                          { key: 'ballaststoffe', label: 'Ballastst.', unit: 'g', required: false },
-                                                          { key: 'einfach_unges_fett', label: 'einf. ung. F.', unit: 'g', required: false },
-                                                          { key: 'mehrfach_unges_fett', label: 'mehrf. ung. F.', unit: 'g', required: false },
-                                                          { key: 'staerke', label: 'Stärke', unit: 'g', required: false },
+                                                          { key: 'energie_kj', label: t('nutrition_energie'), unit: 'kJ', required: true },
+                                                          { key: 'energie_kcal', label: t('nutrition_energie'), unit: 'kcal', required: true },
+                                                          { key: 'fett', label: t('nutrition_fett'), unit: 'g', required: true },
+                                                          { key: 'gesaettigte_fettsaeuren', label: t('nutrition_ges_fetts'), unit: 'g', required: true },
+                                                          { key: 'kohlenhydrate', label: t('nutrition_kohlenh'), unit: 'g', required: true },
+                                                          { key: 'zucker', label: t('nutrition_zucker'), unit: 'g', required: true },
+                                                          { key: 'protein', label: t('nutrition_eiweiss'), unit: 'g', required: true },
+                                                          { key: 'salz', label: t('nutrition_salz'), unit: 'g', required: true },
+                                                          { key: 'ballaststoffe', label: t('nutrition_ballaststoffe'), unit: 'g', required: false },
+                                                          { key: 'einfach_unges_fett', label: t('nutrition_einf_ung_f'), unit: 'g', required: false },
+                                                          { key: 'mehrfach_unges_fett', label: t('nutrition_mehrf_ung_f'), unit: 'g', required: false },
+                                                          { key: 'staerke', label: t('nutrition_staerke'), unit: 'g', required: false },
                                                         ].map(item => (
                                                           <div key={item.key}>
                                                             <span className={`text-[9px] block mb-0.5 ${item.required ? 'text-green-500 font-medium' : 'text-gray-600'}`}>
@@ -5553,7 +5552,7 @@ export default function BusinessDetailsPage() {
                                                           </div>
                                                         ))}
                                                       </div>
-                                                      <p className="text-[10px] text-gray-600 mt-1">* EU Big 7 — zorunlu beyan alanları</p>
+                                                      <p className="text-[10px] text-gray-600 mt-1">{t('eu_big7_note')}</p>
                                                     </div>
 
                                                     <hr className="border-gray-700/50" />
@@ -5565,19 +5564,19 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="flex flex-wrap gap-2">
                                                         {[
-                                                          { key: 'cert_tuna', label: 'TUNA', emoji: '🐟', color: 'blue' },
-                                                          { key: 'cert_akdeniz', label: 'Akdeniz', emoji: '🌊', color: 'cyan' },
-                                                          { key: 'cert_halal', label: 'Halal', emoji: '☪️', color: 'green' },
-                                                          { key: 'cert_bio', label: 'Bio / Organic', emoji: '🌿', color: 'green' },
-                                                          { key: 'cert_vegan', label: 'Vegan', emoji: '🌱', color: 'green' },
-                                                          { key: 'cert_vegetarian', label: 'Vegetarisch', emoji: '🥬', color: 'green' },
-                                                          { key: 'cert_glutenfree', label: 'Glutenfrei', emoji: '🚫', color: 'amber' },
-                                                          { key: 'cert_lactosefree', label: 'Laktosefrei', emoji: '🚫', color: 'amber' },
-                                                          { key: 'cert_ifs', label: 'IFS Food', emoji: '🛡️', color: 'purple' },
-                                                          { key: 'cert_haccp', label: 'HACCP', emoji: '✅', color: 'purple' },
-                                                          { key: 'cert_msc', label: 'MSC', emoji: '🔵', color: 'blue' },
-                                                          { key: 'cert_fairtrade', label: 'Fairtrade', emoji: '🟢', color: 'green' },
-                                                          { key: 'cert_eigenmarke', label: 'Eigenmarke', emoji: '🇩🇪', color: 'gray' },
+                                                          { key: 'cert_tuna', label: t('cert_tuna_label'), emoji: '🐟', color: 'blue' },
+                                                          { key: 'cert_akdeniz', label: t('cert_akdeniz_label'), emoji: '🌊', color: 'cyan' },
+                                                          { key: 'cert_halal', label: t('cert_halal_label'), emoji: '☪️', color: 'green' },
+                                                          { key: 'cert_bio', label: t('cert_bio_label'), emoji: '🌿', color: 'green' },
+                                                          { key: 'cert_vegan', label: t('cert_vegan_label'), emoji: '🌱', color: 'green' },
+                                                          { key: 'cert_vegetarian', label: t('cert_vegetarian_label'), emoji: '🥬', color: 'green' },
+                                                          { key: 'cert_glutenfree', label: t('cert_glutenfree_label'), emoji: '🚫', color: 'amber' },
+                                                          { key: 'cert_lactosefree', label: t('cert_lactosefree_label'), emoji: '🚫', color: 'amber' },
+                                                          { key: 'cert_ifs', label: t('cert_ifs_label'), emoji: '🛡️', color: 'purple' },
+                                                          { key: 'cert_haccp', label: t('cert_haccp_label'), emoji: '✅', color: 'purple' },
+                                                          { key: 'cert_msc', label: t('cert_msc_label'), emoji: '🔵', color: 'blue' },
+                                                          { key: 'cert_fairtrade', label: t('cert_fairtrade_label'), emoji: '🟢', color: 'green' },
+                                                          { key: 'cert_eigenmarke', label: t('cert_eigenmarke_label'), emoji: '🇩🇪', color: 'gray' },
                                                         ].map(cert => {
                                                           const selected = (editFormFull.certifications || []).includes(cert.key);
                                                           return (
