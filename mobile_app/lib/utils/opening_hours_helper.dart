@@ -11,10 +11,12 @@ class OpeningHoursHelper {
 
     final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
     final dayNamesEng = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final dayNamesDe = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
     
     final dayIndex = date.weekday - 1;
     final dayTr = dayNamesTr[dayIndex];
     final dayEng = dayNamesEng[dayIndex];
+    final dayDe = dayNamesDe[dayIndex];
 
     if (openingHours is Map) {
        final map = openingHours as Map;
@@ -22,11 +24,13 @@ class OpeningHoursHelper {
        if (map.containsKey(dayTr)) return map[dayTr]?.toString();
        // Try English Key
        if (map.containsKey(dayEng)) return map[dayEng]?.toString();
+       // Try German Key
+       if (map.containsKey(dayDe)) return map[dayDe]?.toString();
        
        // Try Case-Insensitive Scan
        for (var key in map.keys) {
          final k = key.toString().trim().toLowerCase();
-         if (k == dayTr.toLowerCase() || k == dayEng.toLowerCase()) {
+         if (k == dayTr.toLowerCase() || k == dayEng.toLowerCase() || k == dayDe.toLowerCase()) {
            return map[key]?.toString();
          }
        }
@@ -40,7 +44,7 @@ class OpeningHoursHelper {
        // If multiple days are on the same line (e.g. "Mon: 9-5, Tue: 9-5"), the subsequent days will be included in the capture group,
        // but the isOpenAt logic splits by comma and ignores invalid time ranges, so it degrades gracefully.
        final dayPattern = RegExp(
-         '(${RegExp.escape(dayTr)}|${RegExp.escape(dayEng)})\\s*:\\s*([^\\n]+)', 
+         '(${RegExp.escape(dayTr)}|${RegExp.escape(dayEng)}|${RegExp.escape(dayDe)})\\s*:\\s*([^\\n]+)', 
          caseSensitive: false,
          multiLine: true
        );
@@ -58,7 +62,7 @@ class OpeningHoursHelper {
           if (parts.isEmpty) continue;
           
           final dayPart = parts[0].trim().toLowerCase();
-          if (dayPart == dayTr.toLowerCase() || dayPart == dayEng.toLowerCase()) {
+          if (dayPart == dayTr.toLowerCase() || dayPart == dayEng.toLowerCase() || dayPart == dayDe.toLowerCase()) {
              // Found match. Strip "Day:"
              if (parts.length > 1) {
                  return parts.sublist(1).join(':').trim(); 
@@ -169,32 +173,48 @@ class OpeningHoursHelper {
     return false;
   }
 
-  // Find next open time
+  // Find next open time — checks ALL shifts per day (e.g. "09:00-14:00, 17:00-22:00")
   DateTime? getNextOpenDateTime(DateTime from) {
-    // Check next 7 days (scan efficiently)
+    // Check next 7 days
     for (int i = 0; i < 7; i++) {
        final date = from.add(Duration(days: i));
        final hoursStr = _getHoursStringForDate(date);
-       if (hoursStr == null || hoursStr.toLowerCase().contains('kapalı')) continue;
+       if (hoursStr == null) continue;
        
-       // Parse start time of this day
-       try {
-         final cleaned = hoursStr.split(',')[0].replaceAll('–', '-').replaceAll('.', ':').trim();
-         final parts = cleaned.split('-');
-         if (parts.length < 2) continue;
-         
-         final parsedStart = _parseTime(parts[0]);
-         if (parsedStart == null) continue;
-         
-         final start = TimeOfDay(hour: parsedStart.hour, minute: parsedStart.minute);
-         
-         final candidate = DateTime(date.year, date.month, date.day, start.hour, start.minute);
-         
+       final lower = hoursStr.toLowerCase().trim();
+       if (lower.contains('kapalı') || lower.contains('closed') || lower == '-' || lower.isEmpty) continue;
+       if (lower.contains('24 saat') || lower.contains('open 24')) {
+         // 24-hour — next candidate is start of this day (or now if today)
+         final candidate = DateTime(date.year, date.month, date.day, 0, 0);
          if (candidate.isAfter(from)) return candidate;
-         // If "today" and open time is past, check if we are currently open (handled by isOpenAt) 
-         // or if there is a second shift?
-         // This simple logic finds the NEXT START of a shift.
+         continue; // already past
+       }
+       
+       // Parse ALL comma-separated shifts and find the earliest future start
+       try {
+         final ranges = hoursStr.split(',');
+         DateTime? earliest;
          
+         for (var range in ranges) {
+           var cleaned = range.replaceAll('–', '-').replaceAll('.', ':').trim();
+           if (cleaned.isEmpty || cleaned == '-') continue;
+           
+           final parts = cleaned.split('-');
+           if (parts.length < 2) continue;
+           
+           final parsedStart = _parseTime(parts[0]);
+           if (parsedStart == null) continue;
+           
+           final candidate = DateTime(date.year, date.month, date.day, parsedStart.hour, parsedStart.minute);
+           
+           if (candidate.isAfter(from)) {
+             if (earliest == null || candidate.isBefore(earliest)) {
+               earliest = candidate;
+             }
+           }
+         }
+         
+         if (earliest != null) return earliest;
        } catch (e) { continue; }
     }
     return null;
@@ -239,6 +259,38 @@ class OpeningHoursHelper {
         final nextOpen = getNextOpenDateTime(cursor);
         if (nextOpen != null) {
           cursor = nextOpen.add(const Duration(minutes: 30));
+        } else {
+          // Fallback: advance day-by-day to find ANY day with opening hours
+          // This prevents the "dead cursor" problem where cursor stays at a closed time
+          for (int d = 1; d <= daysToCheck; d++) {
+            final futureDate = now.add(Duration(days: d));
+            final hrs = _getHoursStringForDate(futureDate);
+            if (hrs != null && hrs.trim().isNotEmpty && hrs != '-') {
+              final lower = hrs.toLowerCase();
+              if (lower.contains('kapalı') || lower.contains('closed')) continue;
+              if (lower.contains('24 saat') || lower.contains('open 24')) {
+                cursor = DateTime(futureDate.year, futureDate.month, futureDate.day, 0, 30);
+                break;
+              }
+              // Try to parse the first shift's start time
+              try {
+                final ranges = hrs.split(',');
+                for (var range in ranges) {
+                  var cleaned = range.replaceAll('–', '-').replaceAll('.', ':').trim();
+                  final parts = cleaned.split('-');
+                  if (parts.length < 2) continue;
+                  final parsedStart = _parseTime(parts[0]);
+                  if (parsedStart != null) {
+                    cursor = DateTime(futureDate.year, futureDate.month, futureDate.day, parsedStart.hour, parsedStart.minute);
+                    cursor = cursor.add(const Duration(minutes: 30)); // prep buffer
+                    break;
+                  }
+                }
+                // If we moved cursor to a future date, break outer loop
+                if (cursor.isAfter(now.add(const Duration(hours: 12)))) break;
+              } catch (_) { continue; }
+            }
+          }
         }
       }
     }

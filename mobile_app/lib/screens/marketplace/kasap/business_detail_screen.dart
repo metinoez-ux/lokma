@@ -1475,7 +1475,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           final deliveryEnd = data?['deliveryEndTime']?.toString() ?? '';
           final pickupStart = data?['pickupStartTime']?.toString() ?? '';
           final pickupEnd = data?['pickupEndTime']?.toString() ?? '';
-          final hasPickup = pickupStart.trim().isNotEmpty || pickupEnd.trim().isNotEmpty;
+          // Per-day arrays saved by admin portal
+          final deliveryHoursRaw = data?['deliveryHours'];
+          final pickupHoursRaw = data?['pickupHours'];
+          final List<dynamic>? deliveryHoursArray = deliveryHoursRaw is List ? deliveryHoursRaw : null;
+          final List<dynamic>? pickupHoursArray = pickupHoursRaw is List ? pickupHoursRaw : null;
+          final hasPickup = pickupStart.trim().isNotEmpty || pickupEnd.trim().isNotEmpty || (pickupHoursArray != null && pickupHoursArray.isNotEmpty);
           
           // Build dynamic tabs list
           final List<Tab> tabs = [
@@ -1493,6 +1498,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             tabViews.add(_buildServiceHoursTab(
               deliveryStart, deliveryEnd,
               isDark, textColor, subtitleColor, accent,
+              perDayHours: deliveryHoursArray,
             ));
           }
           if (hasPickup) {
@@ -1503,6 +1509,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             tabViews.add(_buildServiceHoursTab(
               pickupStart, pickupEnd,
               isDark, textColor, subtitleColor, accent,
+              perDayHours: pickupHoursArray,
             ));
           }
           
@@ -2157,9 +2164,64 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
   // ═══ SERVICE HOURS TAB (Delivery / Pickup) ═══
-  Widget _buildServiceHoursTab(String startTime, String endTime, bool isDark, Color textColor, Color subtitleColor, Color accent) {
+  // Now reads per-day hours arrays from Firestore (deliveryHours / pickupHours).
+  // Falls back to uniform startTime/endTime if per-day data is missing.
+  Widget _buildServiceHoursTab(String startTime, String endTime, bool isDark, Color textColor, Color subtitleColor, Color accent, {List<dynamic>? perDayHours}) {
+    final dayNamesDisplay = [
+      'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
+      'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+    ];
+    final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    final Map<String, String> aliasToTr = {
+      'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
+      'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar',
+      'Montag': 'Pazartesi', 'Dienstag': 'Salı', 'Mittwoch': 'Çarşamba',
+      'Donnerstag': 'Perşembe', 'Freitag': 'Cuma', 'Samstag': 'Cumartesi', 'Sonntag': 'Pazar',
+    };
+    final now = DateTime.now();
+    final todayIndex = now.weekday - 1;
+
+    // ── Try per-day array first ──
+    if (perDayHours != null && perDayHours.isNotEmpty) {
+      final lines = perDayHours.map((e) => e.toString().trim()).where((l) => l.isNotEmpty).toList();
+      // Standardize day names to Turkish
+      final List<String> standardizedLines = [];
+      for (var line in lines) {
+        String clean = line;
+        for (var entry in aliasToTr.entries) {
+          if (clean.startsWith(entry.key)) {
+            clean = clean.replaceFirst(entry.key, entry.value);
+            break;
+          }
+        }
+        clean = clean.replaceAll('–', '-').replaceAll('—', '-');
+        standardizedLines.add(clean);
+      }
+
+      final bool structureMatch = standardizedLines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      if (structureMatch) {
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: List.generate(7, (i) {
+            final dayNameTr = dayNamesTr[i];
+            final line = standardizedLines.firstWhere(
+              (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+              orElse: () => '$dayNameTr: Kapalı',
+            );
+            String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+            final isClosed = content.isEmpty ||
+                content.toLowerCase().contains('kapalı') ||
+                content.toLowerCase().contains('geschlossen') ||
+                content.toLowerCase().contains('closed');
+            if (isClosed) content = 'common.closed'.tr();
+            return _buildDayRow(dayNamesDisplay[i], content, todayIndex == i, isDark, textColor, subtitleColor, accent);
+          }),
+        );
+      }
+    }
+
+    // ── Fallback: uniform startTime / endTime ──
     final hasCustomHours = startTime.trim().isNotEmpty && endTime.trim().isNotEmpty;
-    
     if (!hasCustomHours) {
       return Center(
         child: Column(
@@ -2174,14 +2236,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       );
     }
 
-    final dayNamesDisplay = [
-      'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
-      'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
-    ];
-    final now = DateTime.now();
-    final todayIndex = now.weekday - 1;
     final hoursText = '$startTime - $endTime';
-
     return ListView(
       padding: EdgeInsets.zero,
       children: List.generate(7, (i) {

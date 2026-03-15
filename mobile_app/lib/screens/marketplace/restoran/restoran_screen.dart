@@ -1437,8 +1437,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final currentHour = now.hour;
     final currentMinute = now.minute;
 
-    final deliveryStartTime = data['deliveryStartTime'] as String?;
-    final pickupStartTime = data['pickupStartTime'] as String?;
+    // ── Extract today's start times from per-day arrays (admin portal format) ──
+    String? deliveryStartTime = data['deliveryStartTime'] as String?;
+    String? pickupStartTime = data['pickupStartTime'] as String?;
+    final deliveryTodayStart = _extractTodayStartFromArray(data['deliveryHours'], now);
+    final pickupTodayStart = _extractTodayStartFromArray(data['pickupHours'], now);
+    // Per-day array takes priority over single value
+    if (deliveryTodayStart != null) deliveryStartTime = deliveryTodayStart;
+    if (pickupTodayStart != null) pickupStartTime = pickupTodayStart;
 
     // 🆕 First check openingHours — if business is closed per its schedule, mark unavailable
     if (!_isBusinessOpenNow(data)) {
@@ -1550,6 +1556,51 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final match = regex.firstMatch(timeStr);
     if (match != null) {
       return (int.parse(match.group(1)!), int.parse(match.group(2)!));
+    }
+    return null;
+  }
+
+  /// Extract today's start time from a per-day hours array (e.g. ["Montag: 11:30 - 22:00", ...]).
+  /// Returns the start time string (e.g. "11:30") or null if today is closed or data is missing.
+  String? _extractTodayStartFromArray(dynamic hoursData, DateTime now) {
+    if (hoursData == null) return null;
+    List<String> lines = [];
+    if (hoursData is List) {
+      lines = hoursData.map((e) => e.toString().trim()).where((l) => l.isNotEmpty).toList();
+    } else if (hoursData is String && hoursData.isNotEmpty) {
+      lines = hoursData.split(RegExp(r'\r?\n')).where((l) => l.trim().isNotEmpty).toList();
+    }
+    if (lines.isEmpty) return null;
+
+    // Map all day name variants to weekday index (1=Monday .. 7=Sunday)
+    final dayAliases = <String, int>{
+      'Pazartesi': 1, 'Monday': 1, 'Montag': 1,
+      'Salı': 2, 'Tuesday': 2, 'Dienstag': 2,
+      'Çarşamba': 3, 'Wednesday': 3, 'Mittwoch': 3,
+      'Perşembe': 4, 'Thursday': 4, 'Donnerstag': 4,
+      'Cuma': 5, 'Friday': 5, 'Freitag': 5,
+      'Cumartesi': 6, 'Saturday': 6, 'Samstag': 6,
+      'Pazar': 7, 'Sunday': 7, 'Sonntag': 7,
+    };
+
+    // Find today's line
+    for (final line in lines) {
+      for (final entry in dayAliases.entries) {
+        if (line.startsWith(entry.key) && entry.value == now.weekday) {
+          // Check if closed
+          final lower = line.toLowerCase();
+          if (lower.contains('kapalı') || lower.contains('closed') || lower.contains('geschlossen')) {
+            return null;
+          }
+          // Extract time part after ":"
+          final colonIdx = line.indexOf(':');
+          if (colonIdx < 0) return null;
+          final timePart = line.substring(colonIdx + 1).trim();
+          // Extract the first HH:MM (start time)
+          final timeMatch = RegExp(r'(\d{1,2}:\d{2})').firstMatch(timePart);
+          return timeMatch?.group(1);
+        }
+      }
     }
     return null;
   }
@@ -1921,7 +1972,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                color: Colors.grey[200],
+                                color: const Color(0xFF1C1C1E),
                                 child: const Center(
                                   child: SizedBox(
                                     width: 24,
@@ -1934,7 +1985,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 ),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                color: Colors.grey[200],
+                                color: const Color(0xFF1C1C1E),
                                 child: const Center(
                                   child: Icon(Icons.restaurant,
                                       color: lokmaPink, size: 48),
@@ -1942,7 +1993,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               ),
                             )
                           : Container(
-                              color: Colors.grey[200],
+                              color: const Color(0xFF1C1C1E),
                               child: const Center(
                                 child: Icon(Icons.restaurant,
                                     color: lokmaPink, size: 48),
@@ -1954,16 +2005,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     if (!isAvailable)
                       Positioned.fill(
                         child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 
-                                0.4), // Slightly lighter dark overlay
-                            borderRadius: const BorderRadius.only(
-                              topLeft:
-                                  Radius.circular(12), // Match main card radius
-                              topRight:
-                                  Radius.circular(12), // Match main card radius
-                            ),
-                          ),
+                          color: Colors.black.withValues(alpha: 
+                              0.4), // Slightly lighter dark overlay
                         ),
                       ),
 
@@ -1996,13 +2039,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           right: 0,
                           child: Container(
                             padding: EdgeInsets.symmetric(vertical: timeInfo != null ? 5 : 6),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF2C2C2E),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                topRight: Radius.circular(12),
-                              ),
-                            ),
+                            color: const Color(0xFF2C2C2E),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
