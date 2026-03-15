@@ -1231,7 +1231,8 @@
     "procurement_saving": "Wird gespeichert...",
     "procurement_save": "Speichern",
     "procurement_upload_image": "📤 Bild hochladen (Datei wählen)",
-    "procurement_stock_supply": "Bestand & Nachschub"
+    "procurement_stock_supply": "Bestand & Nachschub",
+    "tamamlanan": "Abgeschlossen"
   },
   "AdminBusinessDetail": {
     "pending": "Ausstehend",
@@ -3824,6 +3825,9 @@
     "aktif": "aktiv",
     "aktiflestir": "Aktivieren",
     "allUsers": "Alle Benutzer",
+    "personen": "Personen",
+    "volunteers": "Kermes-Partner",
+    "partners": "Lokma-Partner",
     "alt_kirilimlari_nokta_ile_ayirarak_girin": "Geben Sie durch Punkte getrennte Unterbrüche ein",
     "ana_kategori_girin_orn_app_adminportal_g": "Geben Sie die Hauptkategorie oder das App-Adminportal g ein",
     "anahtar_key_veya_metin_icinde_ara": "Suche innerhalb eines Schlüssels oder Textes",
@@ -4133,7 +4137,8 @@
     "yeniden_eskiye": "Neueste zuerst",
     "yetki_yonetimi": "Behördenverwaltung",
     "yetkiyi_kaldir": "Autorisierung entfernen",
-    "zorunlu_alan_daire_kat_veya_site_apartma": "Obligatorisches Feld ebenerdiger Boden oder Grundstückswohnung"
+    "zorunlu_alan_daire_kat_veya_site_apartma": "Obligatorisches Feld ebenerdiger Boden oder Grundstückswohnung",
+    "benutzerverwaltung": "Benutzerverwaltung"
   },
   "AdminOrdersCreate": {
     "adim": "Schritt",
@@ -4430,7 +4435,13 @@
         "subtitle": "Aktuelle Bestellungen",
         "title": "Bestellstatus (Live)"
       },
-      "kurye_sure_secin": "Kurier-Zeitraum wählen"
+      "kurye_sure_secin": "Kurier-Zeitraum wählen",
+      "preOrders": "Vorbestellungen",
+      "scheduledPickup": "Geplante Abholung",
+      "pickupTime": "Abholzeit",
+      "free": "GRATIS",
+      "today": "Heute",
+      "tomorrow": "Morgen"
     }
   },
   "AdminProducts": {

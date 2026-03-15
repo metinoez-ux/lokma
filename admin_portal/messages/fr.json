@@ -1231,7 +1231,8 @@
     "procurement_saving": "Enregistrement...",
     "procurement_save": "Enregistrer",
     "procurement_upload_image": "📤 Télécharger Image",
-    "procurement_stock_supply": "Stock & Approvisionnement"
+    "procurement_stock_supply": "Stock & Approvisionnement",
+    "tamamlanan": "Terminé"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",
@@ -3824,6 +3825,9 @@
     "aktif": "actif",
     "aktiflestir": "Activer",
     "allUsers": "Tous les utilisateurs",
+    "personen": "Personnes",
+    "volunteers": "Kermes-Partner",
+    "partners": "Lokma-Partner",
     "alt_kirilimlari_nokta_ile_ayirarak_girin": "Entrez les sous-séparés par des points",
     "ana_kategori_girin_orn_app_adminportal_g": "Entrez la catégorie principale ou le portail d'administration de l'application g",
     "anahtar_key_veya_metin_icinde_ara": "Rechercher dans la clé ou le texte",
@@ -4133,7 +4137,8 @@
     "yeniden_eskiye": "Plus récent d'abord",
     "yetki_yonetimi": "Gestion des autorités",
     "yetkiyi_kaldir": "supprimer l'autorisation",
-    "zorunlu_alan_daire_kat_veya_site_apartma": "Champ obligatoire étage plat ou appartement de chantier"
+    "zorunlu_alan_daire_kat_veya_site_apartma": "Champ obligatoire étage plat ou appartement de chantier",
+    "benutzerverwaltung": "Gestion des Utilisateurs"
   },
   "AdminOrdersCreate": {
     "adim": "étape",
@@ -4430,7 +4435,13 @@
         "subtitle": "Commandes actuelles",
         "title": "Statut des commandes (Direct)"
       },
-      "kurye_sure_secin": "Sélectionner la durée du coursier"
+      "kurye_sure_secin": "Sélectionner la durée du coursier",
+      "preOrders": "Précommandes",
+      "scheduledPickup": "Ramassage prévu",
+      "pickupTime": "Heure de ramassage",
+      "free": "GRATUIT",
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain"
     }
   },
   "AdminProducts": {

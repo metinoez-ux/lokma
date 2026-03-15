@@ -1231,7 +1231,8 @@
     "procurement_saving": "Saving...",
     "procurement_save": "Save",
     "procurement_upload_image": "📤 Upload Image (Choose File)",
-    "procurement_stock_supply": "Stock & Supply"
+    "procurement_stock_supply": "Stock & Supply",
+    "tamamlanan": "Completed"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",
@@ -3824,6 +3825,9 @@
     "aktif": "active",
     "aktiflestir": "Activate",
     "allUsers": "All Users",
+    "personen": "People",
+    "volunteers": "Kermes-Partner",
+    "partners": "Lokma-Partner",
     "alt_kirilimlari_nokta_ile_ayirarak_girin": "Enter subbreaks separated by dots",
     "ana_kategori_girin_orn_app_adminportal_g": "Enter main category orn app adminportal g",
     "anahtar_key_veya_metin_icinde_ara": "Search within key or text",
@@ -4133,7 +4137,8 @@
     "yeniden_eskiye": "Newest First",
     "yetki_yonetimi": "Authority management",
     "yetkiyi_kaldir": "remove authorization",
-    "zorunlu_alan_daire_kat_veya_site_apartma": "Mandatory field flat floor or site apartment"
+    "zorunlu_alan_daire_kat_veya_site_apartma": "Mandatory field flat floor or site apartment",
+    "benutzerverwaltung": "User Management"
   },
   "AdminOrdersCreate": {
     "adim": "step",
@@ -4430,7 +4435,13 @@
         "subtitle": "Current orders",
         "title": "Order Statuses (Live)"
       },
-      "kurye_sure_secin": "Select courier time"
+      "kurye_sure_secin": "Select courier time",
+      "preOrders": "Pre-orders",
+      "scheduledPickup": "Scheduled Pickup",
+      "pickupTime": "Pickup Time",
+      "free": "FREE",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
     }
   },
   "AdminProducts": {

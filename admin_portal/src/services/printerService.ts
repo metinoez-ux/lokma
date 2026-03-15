@@ -9,6 +9,7 @@ export interface PrinterSettings {
     printerPort: number;
     autoPrint: boolean;
     printCopies: number;
+    printServerUrl: string; // e.g. http://localhost:3000 — local relay for cloud deployments
 }
 
 export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
@@ -17,7 +18,18 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
     printerPort: 9100,
     autoPrint: false,
     printCopies: 1,
+    printServerUrl: '',
 };
+
+// Helper: resolve API URL — uses local relay if configured
+function getApiUrl(settings: PrinterSettings, path: string): string {
+    if (settings.printServerUrl) {
+        // Strip trailing slash from base URL
+        const base = settings.printServerUrl.replace(/\/$/, '');
+        return `${base}${path}`;
+    }
+    return path; // relative = same server
+}
 
 // ─── Health Status ───────────────────────────────────────────────
 
@@ -54,7 +66,7 @@ export async function checkHealth(
     }
 
     try {
-        const res = await fetch('/api/print/health', {
+        const res = await fetch(getApiUrl(settings, '/api/print/health'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -93,7 +105,7 @@ export async function sendPrinterAlert(params: {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(params),
-        });
+        });  // alerts always go to same server (not relay)
 
         const data = await res.json();
         return {
@@ -120,7 +132,7 @@ export async function printOrder(
     }
 
     try {
-        const res = await fetch('/api/print', {
+        const res = await fetch(getApiUrl(settings, '/api/print'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -156,7 +168,7 @@ export async function testPrint(
     }
 
     try {
-        const res = await fetch('/api/print', {
+        const res = await fetch(getApiUrl(settings, '/api/print'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

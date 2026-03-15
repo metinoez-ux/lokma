@@ -995,7 +995,8 @@
     "procurement_saving": "Opslaan...",
     "procurement_save": "Opslaan",
     "procurement_upload_image": "📤 Afbeelding Uploaden",
-    "procurement_stock_supply": "Voorraad & Levering"
+    "procurement_stock_supply": "Voorraad & Levering",
+    "tamamlanan": "Voltooid"
   },
   "AdminCompanySettings": {
     "title": "Company Settings",
@@ -1311,6 +1312,9 @@
   },
   "AdminNav": {
     "businessCampaigns": "Bedrijfscampagnes",
+    "personen": "Personen",
+    "volunteers": "Kermes-Partner",
+    "partners": "Lokma-Partner",
     "campaignTemplates": "Campagnesjablonen",
     "companySettings": "Bedrijfsinstellingen",
     "coupons": "Coupons",
@@ -1321,7 +1325,8 @@
     "sayfa": "Pagina",
     "service": "Service",
     "sonraki": "Volgende",
-    "yeniden_eskiye": "Nieuwste eerst"
+    "yeniden_eskiye": "Nieuwste eerst",
+    "benutzerverwaltung": "Gebruikersbeheer"
   },
   "AdminProducts": {
     "evet_sil": "Evet, Sil",
@@ -2299,7 +2304,13 @@
   },
   "AdminPortal": {
     "Orders": {
-      "kurye_sure_secin": "Koerier tijd selecteren"
+      "kurye_sure_secin": "Koerier tijd selecteren",
+      "preOrders": "Voorbestellingen",
+      "scheduledPickup": "Geplande afhaling",
+      "pickupTime": "Afhaaltijd",
+      "free": "GRATIS",
+      "today": "Vandaag",
+      "tomorrow": "Morgen"
     }
   },
   "AdminActivitylogs": {

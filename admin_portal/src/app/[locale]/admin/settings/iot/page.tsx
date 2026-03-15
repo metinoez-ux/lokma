@@ -549,7 +549,7 @@ export default function IoTSettingsPage() {
                                                     setPrintTestLoading(true);
                                                     setPrintTestResult(null);
                                                     const result = await testPrinterPrint(
-                                                        { enabled: true, printerIp, printerPort, autoPrint, printCopies },
+                                                        { enabled: true, printerIp, printerPort, autoPrint, printCopies, printServerUrl: '' },
                                                         admin?.businessName || 'LOKMA'
                                                     );
                                                     setPrintTestResult(result.success ? `✅ ${result.message}` : `❌ ${result.message}`);

@@ -188,32 +188,50 @@ export default function AdminHeader() {
                                 </div>
                             </div>
 
-                            {/* Users & Logisitics Nav */}
+                            {/* Personen Nav — 5 Category User Segregation */}
                             <div className="relative group">
-                                <Link
-                                    href="/admin/dashboard"
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/dashboard') || isActiveNav('/admin/drivers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/drivers/tips')
+                                <button
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/dashboard') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/drivers/tips')
                                         ? 'bg-white/15 text-white'
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
-                                    {t('userManagement')}
+                                    {t('benutzerverwaltung')}
                                     <span className="text-[10px]">▼</span>
-                                </Link>
-                                {/* Dropdown */}
-                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
+                                </button>
+                                {/* Mega Dropdown — 5 Categories */}
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[220px] overflow-hidden">
                                     <div className="py-1">
-                                        <Link href="/admin/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            {t('userManagement')}
+                                        {/* Category Header */}
+                                        <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">{t('personen')}</p>
+                                        <Link href="/admin/customers" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">👤</span> {t('customers')}
                                         </Link>
-                                        <Link href="/admin/drivers" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            {t('drivers')}
+                                        <Link href="/admin/partners" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">🏪</span> {t('partners')}
                                         </Link>
-                                        <Link href="/admin/drivers/tips" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            {t('tips')}
+                                        {admin?.adminType === 'super' && (
+                                        <Link href="/admin/superadmins" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">👑</span> {t('superAdmins')}
                                         </Link>
-                                        <Link href="/admin/staff-shifts" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            {t('shifts')}
+                                        )}
+                                        <Link href="/admin/drivers" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">🚗</span> {t('drivers')}
+                                        </Link>
+                                        <Link href="/admin/volunteers" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">🤝</span> {t('volunteers')}
+                                        </Link>
+                                        {/* Separator */}
+                                        <div className="border-t border-gray-700 my-1"></div>
+                                        {/* Operational Links */}
+                                        <Link href="/admin/dashboard" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">📋</span> {t('allUsers')}
+                                        </Link>
+                                        <Link href="/admin/drivers/tips" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">💰</span> {t('tips')}
+                                        </Link>
+                                        <Link href="/admin/staff-shifts" className="flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            <span className="text-sm">📅</span> {t('shifts')}
                                         </Link>
                                     </div>
                                 </div>

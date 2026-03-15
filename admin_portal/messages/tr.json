@@ -1231,7 +1231,8 @@
     "procurement_saving": "Kaydediliyor...",
     "procurement_save": "Kaydet",
     "procurement_upload_image": "📤 Görsel Yükle (Dosya Seç)",
-    "procurement_stock_supply": "Stok & Tedarik"
+    "procurement_stock_supply": "Stok & Tedarik",
+    "tamamlanan": "Tamamlanan"
   },
   "AdminBusinessDetail": {
     "pending": "Beklemede",
@@ -3846,6 +3847,9 @@
     "aktif": "Aktif",
     "aktiflestir": "Aktiflestir",
     "allUsers": "Tüm Kullanıcılar",
+    "personen": "Kişiler",
+    "volunteers": "Kermes-Partner",
+    "partners": "Lokma-Partner",
     "alt_kirilimlari_nokta_ile_ayirarak_girin": "Alt kirilimlari nokta ile ayirarak girin",
     "ana_kategori_girin_orn_app_adminportal_g": "Ana kategori girin orn app adminportal g",
     "anahtar_key_veya_metin_icinde_ara": "Anahtar key veya metin icinde ara",
@@ -4155,7 +4159,8 @@
     "yeniden_eskiye": "Yeniden Eskiye",
     "yetki_yonetimi": "Yetki yonetimi",
     "yetkiyi_kaldir": "Yetkiyi kaldir",
-    "zorunlu_alan_daire_kat_veya_site_apartma": "Zorunlu alan daire kat veya site apartma"
+    "zorunlu_alan_daire_kat_veya_site_apartma": "Zorunlu alan daire kat veya site apartma",
+    "benutzerverwaltung": "Kullanıcı Yönetimi"
   },
   "AdminOrdersCreate": {
     "adim": "Adım",
@@ -4452,7 +4457,13 @@
         "subtitle": "Şu anki siparişler",
         "title": "Sipariş Durumları (Anlık)"
       },
-      "kurye_sure_secin": "Kurye süre seçin"
+      "kurye_sure_secin": "Kurye süre seçin",
+      "preOrders": "Ön Siparişler",
+      "scheduledPickup": "Planlanan Teslim Alma",
+      "pickupTime": "Teslim Alma Saati",
+      "free": "ÜCRETSİZ",
+      "today": "Bugün",
+      "tomorrow": "Yarın"
     }
   },
   "AdminProducts": {

@@ -1231,7 +1231,8 @@
     "procurement_saving": "Guardando...",
     "procurement_save": "Guardar",
     "procurement_upload_image": "📤 Subir Imagen",
-    "procurement_stock_supply": "Stock y Suministro"
+    "procurement_stock_supply": "Stock y Suministro",
+    "tamamlanan": "Completado"
   },
   "AdminBusinessDetail": {
     "pending": "Pending",
@@ -3822,6 +3823,9 @@
     "aktif": "activo",
     "aktiflestir": "Activar",
     "allUsers": "Todos los Usuarios",
+    "personen": "Personas",
+    "volunteers": "Kermes-Partner",
+    "partners": "Lokma-Partner",
     "alt_kirilimlari_nokta_ile_ayirarak_girin": "Introduzca subdivisiones separadas por puntos",
     "ana_kategori_girin_orn_app_adminportal_g": "Ingrese a la categoría principal o al portal de administración de la aplicación g",
     "anahtar_key_veya_metin_icinde_ara": "Buscar dentro de clave o texto",
@@ -4130,7 +4134,8 @@
     "yeniden_eskiye": "Más reciente primero",
     "yetki_yonetimi": "Gestión de autoridades",
     "yetkiyi_kaldir": "eliminar autorización",
-    "zorunlu_alan_daire_kat_veya_site_apartma": "Obligatorio campo piso plano o apartamento de obra"
+    "zorunlu_alan_daire_kat_veya_site_apartma": "Obligatorio campo piso plano o apartamento de obra",
+    "benutzerverwaltung": "Gestión de Usuarios"
   },
   "AdminOrdersCreate": {
     "adim": "paso",
@@ -4427,7 +4432,13 @@
         "subtitle": "Pedidos actuales",
         "title": "Estados de Pedido (En vivo)"
       },
-      "kurye_sure_secin": "Seleccionar tiempo de mensajero"
+      "kurye_sure_secin": "Seleccionar tiempo de mensajero",
+      "preOrders": "Pedidos anticipados",
+      "scheduledPickup": "Recogida programada",
+      "pickupTime": "Hora de recogida",
+      "free": "GRATIS",
+      "today": "Hoy",
+      "tomorrow": "Mañana"
     }
   },
   "AdminProducts": {

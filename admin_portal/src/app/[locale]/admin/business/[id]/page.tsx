@@ -22,6 +22,7 @@ import {
   serverTimestamp,
   onSnapshot,
   writeBatch,
+  Timestamp,
 } from "firebase/firestore";
 import {
   ref,
@@ -59,6 +60,7 @@ interface MeatOrder {
   | "preparing"
   | "ready"
   | "onTheWay"
+  | "served"
   | "delivered"
   | "completed"
   | "cancelled";
@@ -66,6 +68,41 @@ interface MeatOrder {
   currency?: string;
 }
 
+/** 
+ * Normalize order status from Firestore - handles legacy values.
+ * Mirrors the mobile app's _parseOrderStatus logic in order_service.dart
+ */
+function normalizeOrderStatus(rawStatus: string | undefined): MeatOrder['status'] {
+  const s = (rawStatus || 'pending').toString();
+  switch (s) {
+    case 'completed':
+    case 'picked_up':
+      return 'delivered';
+    case 'out_for_delivery':
+      return 'onTheWay';
+    case 'confirmed':
+      return 'accepted';
+    case 'ready_for_pickup':
+    case 'ready_for_delivery':
+      return 'ready';
+    case 'pending_payment':
+      return 'pending';
+    case 'refunded':
+      return 'cancelled';
+    case 'pending':
+    case 'accepted':
+    case 'preparing':
+    case 'ready':
+    case 'onTheWay':
+    case 'served':
+    case 'delivered':
+    case 'cancelled':
+      return s as MeatOrder['status'];
+    default:
+      console.warn('[ORDER STATUS] Unknown status:', s, '- defaulting to pending');
+      return 'pending';
+  }
+}
 
 
 // Add global declaration for Google Maps
@@ -252,6 +289,10 @@ export default function BusinessDetailsPage() {
   const [loading, setLoading] = useState(true); // Data loading state
   const [business, setBusiness] = useState<ButcherPartner | null>(null);
   const [orders, setOrders] = useState<MeatOrder[]>([]);
+  const [orderDateFilter, setOrderDateFilter] = useState<string>('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState<string>('all');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -854,25 +895,51 @@ export default function BusinessDetailsPage() {
     setLoading(false);
   }, [businessId]);
 
-  // Load orders
-  const loadOrders = useCallback(async () => {
-    if (!businessId) return;
-    try {
-      // Query meat_orders collection with butcherId (matches main Orders page)
-      // Note: removed orderBy to avoid index requirement - sorting client-side
-      const ordersQuery = query(
-        collection(db, "meat_orders"),
-        where("butcherId", "==", businessId),
-        limit(50),
-      );
-      const ordersSnap = await getDocs(ordersQuery);
-      const ordersData = ordersSnap.docs
+   // Real-time orders listener - uses EXACT same approach as Bestellzentrum (/admin/orders)
+  // Bestellzentrum fetches orders by date, then filters by businessId client-side
+  // We do the same to guarantee 100% parity
+  useEffect(() => {
+    if (!businessId) {
+      console.warn('[ORDERS DEBUG] No businessId - skipping order fetch');
+      return;
+    }
+    console.log('[ORDERS DEBUG] Setting up orders listener for businessId:', businessId, 'dateFilter:', orderDateFilter);
+    
+    // Same date logic as Bestellzentrum
+    let startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    if (orderDateFilter === 'week') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (orderDateFilter === 'month') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (orderDateFilter === 'all') {
+      startDate = new Date(2020, 0, 1); // Far past - same as Bestellzentrum
+    }
+    // else 'today' - startDate is already start of today
+    
+    const ordersQuery = query(
+      collection(db, "meat_orders"),
+      where("createdAt", ">=", Timestamp.fromDate(startDate)),
+      orderBy("createdAt", "desc"),
+    );
+
+    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
+      console.log('[ORDERS DEBUG] Total docs from Firestore:', snapshot.docs.length);
+      
+      // Client-side filter: match orders where butcherId OR businessId equals this business
+      // This is exactly how Bestellzentrum filters: businessId: d.businessId || d.butcherId
+      const businessOrders = snapshot.docs
+        .filter((doc) => {
+          const d = doc.data();
+          return d.butcherId === businessId || d.businessId === businessId;
+        })
         .map((doc) => {
           const d = doc.data();
           return {
             id: doc.id,
             ...d,
-            // Normalize total price with fallbacks (matches main orders page)
+            status: d.status || 'pending',
             totalPrice: d.totalPrice || d.totalAmount || d.total || 0,
             customerName: d.customerName || d.userDisplayName || d.userName || '',
             customerPhone: d.customerPhone || d.userPhone || '',
@@ -882,13 +949,18 @@ export default function BusinessDetailsPage() {
         .sort((a, b) => {
           const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
           const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
-          return bTime - aTime; // DESC
+          return bTime - aTime;
         });
-      setOrders(ordersData);
-    } catch (error) {
-      console.error("Error loading orders:", error);
-    }
-  }, [businessId]);
+
+      console.log('[ORDERS DEBUG] Business orders:', businessOrders.length);
+      console.log('[ORDERS DEBUG] Statuses:', businessOrders.map(o => `${o.orderNumber}:${o.status}`));
+      setOrders(businessOrders);
+    }, (error) => {
+      console.error("[ORDERS DEBUG] Error loading orders:", error);
+    });
+
+    return () => unsubOrders();
+  }, [businessId, orderDateFilter]);
 
   //  Load Suppliers
   const loadSuppliers = useCallback(async () => {
@@ -1661,13 +1733,12 @@ export default function BusinessDetailsPage() {
   useEffect(() => {
     if (admin) {
       loadBusiness();
-      loadOrders();
       loadStaff();
       loadProducts(); // Load products when admin is ready
       loadSuppliers();
       loadSupplierOrders();
     }
-  }, [admin, loadBusiness, loadOrders, loadStaff, loadProducts, loadSuppliers, loadSupplierOrders]);
+  }, [admin, loadBusiness, loadStaff, loadProducts, loadSuppliers, loadSupplierOrders]);
 
   // 🔴 Real-time active shifts listener
   // Mobile writes shiftBusinessId (not businessId) — query both fields + merge
@@ -2607,73 +2678,223 @@ export default function BusinessDetailsPage() {
               </div>
             </div>
 
-            {/* Order Status Timeline */}
+            {/* Kanban Board - matches partner Bestellzentrum layout */}
             <div className="bg-gray-800 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-bold">
-                  {t('siparisDurumlariAnlik')}
-                </h3>
-                <span className="text-gray-400 text-sm">
-                  {t('suAnkiSiparisler')}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {/* Bekleyen - Yanıp söner */}
-                <div
-                  className={`flex-1 min-w-[100px] bg-yellow-600/20 border-2 border-yellow-500 rounded-lg p-4 text-center relative ${orders.filter((o) => o.status === "pending").length > 0 ? "animate-pulse" : ""}`}
-                >
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-500 rounded-full border-2 border-gray-800"></div>
-                  <p
-                    className={`text-yellow-400 text-3xl font-bold ${orders.filter((o) => o.status === "pending").length > 0 ? "animate-bounce" : ""}`}
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-white font-bold text-lg">
+                    Bestellzentrum
+                  </h3>
+                  <span className="text-gray-400 text-sm">
+                    {t('suAnkiSiparisler')}
+                  </span>
+                </div>
+                {/* Filters - identical to Bestellzentrum */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={orderDateFilter}
+                    onChange={(e) => setOrderDateFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                   >
-                    {orders.filter((o) => o.status === "pending").length}
-                  </p>
-                  <p className="text-yellow-300 text-sm font-medium">
-                    {t('bekleyen')}
-                  </p>
-                </div>
+                    <option value="today">Heute</option>
+                    <option value="week">Diese Woche</option>
+                    <option value="month">Dieser Monat</option>
+                    <option value="all">Alle</option>
+                  </select>
 
-                <div className="text-gray-500 text-xl">→</div>
+                  <select
+                    value={orderStatusFilter}
+                    onChange={(e) => setOrderStatusFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                  >
+                    <option value="all">Alle Status</option>
+                    <option value="pending">Ausstehend</option>
+                    <option value="accepted">Bestatigt</option>
+                    <option value="preparing">In Zubereitung</option>
+                    <option value="ready">Bereit</option>
+                    <option value="served">Serviert</option>
+                    <option value="onTheWay">Unterwegs</option>
+                    <option value="delivered">Geliefert</option>
+                    <option value="cancelled">Storniert</option>
+                  </select>
 
-                {/* Hazırlanıyor */}
-                <div className="flex-1 min-w-[100px] bg-blue-600/20 border border-blue-600/30 rounded-lg p-4 text-center relative">
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-gray-800"></div>
-                  <p className="text-blue-400 text-3xl font-bold">
-                    {orders.filter((o) => o.status === "preparing").length}
-                  </p>
-                  <p className="text-gray-400 text-sm">{t('hazirlaniyor1')}</p>
-                </div>
-
-                <div className="text-gray-500 text-xl">→</div>
-
-                {/* Hazır / Yolda */}
-                <div className="flex-1 min-w-[100px] bg-purple-600/20 border border-purple-600/30 rounded-lg p-4 text-center relative">
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-purple-500 rounded-full border-2 border-gray-800"></div>
-                  <p className="text-purple-400 text-3xl font-bold">
-                    {
-                      orders.filter(
-                        (o) => o.status === "ready" || o.status === "onTheWay",
-                      ).length
-                    }
-                  </p>
-                  <p className="text-gray-400 text-sm">{t('haziryolda')}</p>
-                </div>
-
-                <div className="text-gray-500 text-xl">→</div>
-
-                {/* Tamamlanan */}
-                <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></div>
-                  <p className="text-green-400 text-3xl font-bold">
-                    {orders.filter((o) => o.status === "completed" || o.status === "delivered").length}
-                  </p>
-                  <p className="text-gray-400 text-sm">✓ Tamamlanan</p>
+                  <select
+                    value={orderTypeFilter}
+                    onChange={(e) => setOrderTypeFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                  >
+                    <option value="all">Alle Typen</option>
+                    <option value="pickup">Abholung</option>
+                    <option value="delivery">Lieferung</option>
+                    <option value="dine_in">Vor Ort</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Timeline line */}
-              <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-blue-500 to-green-500 rounded-full opacity-50"></div>
+              {/* Apply filters - same logic as Bestellzentrum's filteredOrders */}
+              {(() => {
+                const filteredOrders = orders.filter(order => {
+                  if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) return false;
+                  const orderType = (order as any).orderType || (order as any).deliveryMethod || (order as any).deliveryType || (order as any).fulfillmentType || 'pickup';
+                  const normalizedType = orderType === 'dineIn' ? 'dine_in' : orderType;
+                  if (orderTypeFilter !== 'all' && normalizedType !== orderTypeFilter) return false;
+                  return true;
+                });
+
+                return (
+              <div className="grid grid-cols-5 gap-3" style={{ minHeight: '300px' }}>
+                {/* Column: Ausstehend (Pending) */}
+                <div className="bg-gray-900/50 rounded-xl p-3 border border-yellow-600/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="text-yellow-400 font-semibold text-sm">
+                      Ausstehend ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredOrders.filter(o => o.status === 'pending' || o.status === 'accepted').map(order => (
+                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-yellow-500">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-400' : 'bg-blue-600/30 text-blue-400'}`}>
+                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'Lieferung' : 'Gel-Al'}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        {(order as any).isScheduledOrder && (order as any).scheduledDeliveryTime && (
+                          <div className="mb-1.5">
+                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
+                              {(() => {
+                                const d = (order as any).scheduledDeliveryTime?.toDate?.();
+                                if (!d) return '';
+                                const now = new Date();
+                                const isToday = d.toDateString() === now.toDateString();
+                                const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                                return isToday ? `Heute ${time}` : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ` ${time}`;
+                              })()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-gray-500 text-xs">
+                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column: In Zubereitung (Preparing) */}
+                <div className="bg-gray-900/50 rounded-xl p-3 border border-blue-600/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="text-blue-400 font-semibold text-sm">
+                      In Zubereitung ({filteredOrders.filter(o => o.status === 'preparing').length})
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredOrders.filter(o => o.status === 'preparing').map(order => (
+                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-blue-500">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-400' : 'bg-blue-600/30 text-blue-400'}`}>
+                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'Lieferung' : 'Gel-Al'}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-gray-500 text-xs">
+                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column: Bereit (Ready) */}
+                <div className="bg-gray-900/50 rounded-xl p-3 border border-green-600/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-green-400 font-semibold text-sm">
+                      Bereit ({filteredOrders.filter(o => o.status === 'ready').length})
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredOrders.filter(o => o.status === 'ready').map(order => (
+                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-green-500">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                        </div>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-gray-500 text-xs">
+                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column: Auf dem Weg (On the Way) */}
+                <div className="bg-gray-900/50 rounded-xl p-3 border border-amber-600/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <span className="text-amber-400 font-semibold text-sm">
+                      Auf dem Weg ({filteredOrders.filter(o => o.status === 'onTheWay').length})
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredOrders.filter(o => o.status === 'onTheWay').map(order => (
+                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-amber-500">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                        </div>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-gray-500 text-xs">
+                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column: Abgeschlossen (Completed) */}
+                <div className="bg-gray-900/50 rounded-xl p-3 border border-green-600/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-green-400 font-semibold text-sm">
+                      Abgeschlossen ({filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length})
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).map(order => (
+                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-green-500">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                        </div>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-gray-500 text-xs">
+                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+                );
+              })()}
             </div>
 
             {/* Revenue Summary */}
@@ -2683,6 +2904,7 @@ export default function BusinessDetailsPage() {
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-green-400 text-2xl font-bold">
                     {formatCurrency(orders
+                      .filter(o => o.status !== 'cancelled')
                       .reduce((sum, o) => sum + (o.totalPrice || 0), 0), business?.currency)}
                   </p>
                   <p className="text-gray-400 text-sm">{t('toplam_ciro')}</p>
@@ -3024,7 +3246,7 @@ export default function BusinessDetailsPage() {
               <div className="p-4 border-b border-gray-700 flex justify-between items-center">
                 <h3 className="text-white font-bold">{t('sonSiparisler')}</h3>
                 <Link
-                  href={`/admin/butchers/${business?.id}/orders`}
+                  href={`/admin/business/${business?.id}/orders`}
                   className="text-blue-400 hover:underline text-sm"
                 >
                   {t('tumunuGor')}

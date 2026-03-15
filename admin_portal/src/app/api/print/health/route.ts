@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import net from 'net';
 
+// CORS headers for local print relay (lokma.web.app → localhost:3000)
+const CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle CORS preflight
+export async function OPTIONS() {
+    return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 /**
  * Printer Health Check API
  * Tests TCP connectivity to a receipt printer without sending print data.
@@ -140,7 +152,7 @@ export async function POST(req: NextRequest) {
             timestamp: new Date().toISOString(),
             printerIp,
             printerPort,
-        });
+        }, { headers: CORS_HEADERS });
     } catch (error: any) {
         console.error('Health check error:', error);
         return NextResponse.json(
@@ -150,7 +162,7 @@ export async function POST(req: NextRequest) {
                 error: error.message,
                 timestamp: new Date().toISOString(),
             },
-            { status: 500 }
+            { status: 500, headers: CORS_HEADERS }
         );
     }
 }

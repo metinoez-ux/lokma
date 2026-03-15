@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import net from 'net';
 
+// CORS headers for local print relay (lokma.web.app → localhost:3000)
+const CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle CORS preflight
+export async function OPTIONS() {
+    return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 // ESC/POS Commands
 const ESC = 0x1B;
 const GS = 0x1D;
@@ -405,7 +417,7 @@ export async function POST(req: NextRequest) {
         const { printerIp, printerPort = 9100, order, reservation, businessName, testPrint } = body;
 
         if (!printerIp) {
-            return NextResponse.json({ error: 'printerIp is required' }, { status: 400 });
+            return NextResponse.json({ error: 'printerIp is required' }, { status: 400, headers: CORS_HEADERS });
         }
 
         let receiptData: Buffer;
@@ -444,12 +456,12 @@ export async function POST(req: NextRequest) {
             success: true,
             message: `Receipt printed successfully (${copies} copy/copies)`,
             bytesWritten: receiptData.length
-        });
+        }, { headers: CORS_HEADERS });
     } catch (error: any) {
         console.error('Print error:', error);
         return NextResponse.json({
             error: 'Print failed',
             details: error.message
-        }, { status: 500 });
+        }, { status: 500, headers: CORS_HEADERS });
     }
 }

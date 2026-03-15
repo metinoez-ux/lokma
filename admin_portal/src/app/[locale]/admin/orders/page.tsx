@@ -6,7 +6,7 @@ import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 import {
     printOrder, testPrint, PrinterSettings, DEFAULT_PRINTER_SETTINGS,
@@ -92,6 +92,9 @@ interface Order {
 
 export default function OrdersPage() {
     const t = useTranslations('AdminPortal.Orders');
+    const locale = useLocale();
+    // Map next-intl locale codes to BCP-47 locale tags for date/time formatting
+    const dateLocale = locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'en' ? 'en-US' : locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : locale === 'nl' ? 'nl-NL' : 'de-DE';
     const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
@@ -606,7 +609,7 @@ export default function OrdersPage() {
 
             if (result.success) {
                 showToast('🖨️ Bon gedruckt!', 'success');
-                lastPrintSuccessRef.current = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
+                lastPrintSuccessRef.current = new Date().toLocaleString(dateLocale, { timeZone: 'Europe/Berlin' });
             } else {
                 showToast(`🖨️ Druckfehler: ${result.message}`, 'error');
                 // Add to retry queue
@@ -1007,7 +1010,7 @@ export default function OrdersPage() {
     const formatDate = (timestamp: Timestamp | undefined) => {
         if (!timestamp) return '-';
         const date = timestamp.toDate();
-        return date.toLocaleString('de-DE', {
+        return date.toLocaleString(dateLocale, {
             day: '2-digit',
             month: '2-digit',
             hour: '2-digit',
@@ -1188,14 +1191,13 @@ export default function OrdersPage() {
                             title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
                         >
                             {/* Health Status Dot */}
-                            {printerSettings.enabled && printerSettings.printerIp && (
-                                <span className={`w-2 h-2 rounded-full inline-block ${
-                                    printerHealth.status === 'online' ? 'bg-green-400' :
-                                    printerHealth.status === 'offline' ? 'bg-red-500 animate-ping' :
-                                    printerHealth.status === 'checking' ? 'bg-yellow-400 animate-pulse' :
-                                    'bg-gray-500'
-                                }`} />
-                            )}
+                            <span className={`w-2 h-2 rounded-full inline-block ${
+                                !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-500' :
+                                printerHealth.status === 'online' ? 'bg-green-400' :
+                                printerHealth.status === 'offline' ? 'bg-red-500 animate-ping' :
+                                printerHealth.status === 'checking' ? 'bg-yellow-400 animate-pulse' :
+                                'bg-gray-500'
+                            }`} />
                             🖨️ {!printerSettings.enabled ? 'Drucker' : printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Aktiv'}
                             {/* Retry Queue Badge */}
                             {retryQueueSize > 0 && (
@@ -1341,19 +1343,19 @@ export default function OrdersPage() {
                             <h3 className="text-white font-bold flex items-center gap-2">
                                 🖨️ Bon-Drucker
                                 {/* Live Status Badge */}
-                                {printerSettings.enabled && printerSettings.printerIp && (
-                                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                        printerHealth.status === 'online' ? 'bg-green-500/20 text-green-400 border border-green-500/40' :
-                                        printerHealth.status === 'offline' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
-                                        printerHealth.status === 'checking' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' :
-                                        'bg-gray-600/20 text-gray-400 border border-gray-500/40'
-                                    }`}>
-                                        {printerHealth.status === 'online' ? '● Online' :
-                                         printerHealth.status === 'offline' ? '● Offline' :
-                                         printerHealth.status === 'checking' ? '● Prüfe...' : '● Unbekannt'}
-                                        {printerHealth.responseTimeMs && printerHealth.status === 'online' ? ` (${printerHealth.responseTimeMs}ms)` : ''}
-                                    </span>
-                                )}
+                                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-600/20 text-gray-400 border border-gray-500/40' :
+                                    printerHealth.status === 'online' ? 'bg-green-500/20 text-green-400 border border-green-500/40' :
+                                    printerHealth.status === 'offline' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+                                    printerHealth.status === 'checking' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' :
+                                    'bg-gray-600/20 text-gray-400 border border-gray-500/40'
+                                }`}>
+                                    {!printerSettings.enabled || !printerSettings.printerIp ? '● Nicht konfiguriert' :
+                                     printerHealth.status === 'online' ? '● Online' :
+                                     printerHealth.status === 'offline' ? '● Offline' :
+                                     printerHealth.status === 'checking' ? '● Prüfe...' : '● Unbekannt'}
+                                    {printerHealth.responseTimeMs && printerHealth.status === 'online' ? ` (${printerHealth.responseTimeMs}ms)` : ''}
+                                </span>
                             </h3>
                             <button onClick={() => setShowPrinterPanel(false)} className="text-gray-400 hover:text-white" title="Schließen">✕</button>
                         </div>
@@ -1553,7 +1555,7 @@ export default function OrdersPage() {
                                     <>
                                         <div className="flex items-center gap-2 pt-3 pb-1">
                                             <div className="flex-1 h-px bg-purple-500/30"></div>
-                                            <span className="text-purple-400 text-xs font-medium whitespace-nowrap">🕐 Vorbestellungen ({preOrders.length})</span>
+                                            <span className="text-purple-400 text-xs font-medium whitespace-nowrap">🕐 {t('preOrders')} ({preOrders.length})</span>
                                             <div className="flex-1 h-px bg-purple-500/30"></div>
                                         </div>
                                         {preOrders.slice(0, 10).map(order => (
@@ -1685,10 +1687,10 @@ export default function OrdersPage() {
                                 return (
                                     <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
                                         <span className={isFuture ? 'text-purple-300 font-medium' : 'text-gray-400'}>
-                                            {isFuture ? '🕐 Geplante Abholung' : 'Abholzeit'}
+                                            {isFuture ? `🕐 ${t('scheduledPickup')}` : t('pickupTime')}
                                         </span>
                                         <span className={isFuture ? 'text-purple-200 font-bold' : 'text-white'}>
-                                            {d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                                            {d.toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
                                 );
@@ -1819,7 +1821,7 @@ export default function OrdersPage() {
                                                         <span className="bg-amber-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
                                                         {/* 🥤 Free Drink Badge */}
                                                         {item.isFreeDrink && (
-                                                            <span className="bg-emerald-500 text-white text-[10px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 tracking-wide">GRATIS</span>
+                                                            <span className="bg-emerald-500 text-white text-[10px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 tracking-wide">{t('free')}</span>
                                                         )}
                                                         <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : item.isFreeDrink ? 'text-emerald-300' : 'text-gray-300'}`}>
                                                             {item.quantity}x {item.productName || item.name}
@@ -1964,17 +1966,21 @@ export default function OrdersPage() {
                             </div>
 
                             {/* Print Action */}
-                            {printerSettings.enabled && printerSettings.printerIp && (
-                                <div className="border-t border-gray-700 pt-4">
-                                    <button
-                                        onClick={() => handlePrintOrder(selectedOrder)}
-                                        disabled={printingOrderId === selectedOrder.id}
-                                        className="w-full px-4 py-3 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
-                                    >
-                                        {printingOrderId === selectedOrder.id ? '⏳ Druckt...' : '🖨️ Bon drucken'}
-                                    </button>
-                                </div>
-                            )}
+                            <div className="border-t border-gray-700 pt-4">
+                                <button
+                                    onClick={() => printerSettings.enabled && printerSettings.printerIp ? handlePrintOrder(selectedOrder) : setShowPrinterPanel(true)}
+                                    disabled={printingOrderId === selectedOrder.id}
+                                    className={`w-full px-4 py-3 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 ${
+                                        !printerSettings.enabled || !printerSettings.printerIp
+                                            ? 'bg-gray-700 border border-gray-600 text-gray-400 hover:bg-gray-600'
+                                            : 'bg-amber-600/20 border border-amber-500/50 text-amber-400 hover:bg-amber-600/30'
+                                    }`}
+                                >
+                                    {!printerSettings.enabled || !printerSettings.printerIp
+                                        ? '🖨️ Drucker einrichten'
+                                        : printingOrderId === selectedOrder.id ? '⏳ Druckt...' : '🖨️ Bon drucken'}
+                                </button>
+                            </div>
 
 
                         </div>
@@ -2191,6 +2197,8 @@ function OrderCard({
     t: any;
     isPreOrder?: boolean;
 }) {
+    const locale = useLocale();
+    const dateLocale = locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'en' ? 'en-US' : locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : locale === 'nl' ? 'nl-NL' : 'de-DE';
     const statusInfo = orderStatuses[order.status];
     const typeInfo = orderTypes[order.type];
     const itemCount = order.items?.length || 0;
@@ -2207,10 +2215,10 @@ function OrderCard({
         tomorrow.setDate(tomorrow.getDate() + 1);
         const isTomorrow = d.toDateString() === tomorrow.toDateString();
 
-        const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        if (isToday) return `Heute ${time}`;
-        if (isTomorrow) return `Morgen ${time}`;
-        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
+        const time = d.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' });
+        if (isToday) return `${t('today')} ${time}`;
+        if (isTomorrow) return `${t('tomorrow')} ${time}`;
+        return d.toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
     };
 
     return (
@@ -2247,7 +2255,7 @@ function OrderCard({
                 <div className="mb-1 space-y-0.5">
                     <div className="flex items-center gap-2 flex-wrap">
                         <span className="px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 text-xs font-medium">
-                            🍽️ Tisch {order.tableNumber ? `#${order.tableNumber}` : ''}
+                            🍽️ {t('kanban.table')} {order.tableNumber ? `#${order.tableNumber}` : ''}
                         </span>
                         {order.isGroupOrder && (
                             <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
@@ -2277,7 +2285,7 @@ function OrderCard({
                         </span>
                     )}
                     <span className="text-gray-500 text-xs">
-                        {order.createdAt?.toDate().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                        {order.createdAt?.toDate().toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                     </span>
                 </div>
             </div>
