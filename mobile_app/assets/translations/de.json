@@ -86,7 +86,8 @@
     "logging_in_with_number": "Sie werden mit {phone} angemeldet...",
     "sms_code_sent_to": "SMS-Code wurde an {phone} gesendet",
     "verifying_code": "Code wird überprüft...",
-    "please_wait": "Bitte warten..."
+    "please_wait": "Bitte warten...",
+    "phone_check_failed": "Nummer konnte nicht überprüft werden. Bitte überprüfe deine Internetverbindung."
   },
   "business_details": {
     "all": "Alle",

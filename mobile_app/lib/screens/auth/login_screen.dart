@@ -4,11 +4,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/referral_service.dart';
+
+/// Phone number check result before sending SMS
+enum _PhoneStatus { idle, notRegistered, alreadyRegistered }
 
 class LoginScreen extends ConsumerStatefulWidget {
   final bool embedded;
@@ -48,6 +52,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _smsCodeController = TextEditingController();
   String? _verificationId;
   bool _codeSent = false;
+  _PhoneStatus _phoneStatus = _PhoneStatus.idle;  // pre-send check result
+  String _checkedFormattedPhone = '';              // the phone we last checked
   
   // GPS-based country code
   String _countryCode = '+49';  // Default to Germany
@@ -321,6 +327,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(height: widget.embedded ? 40 : 60),
                   
@@ -332,8 +339,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Auth Content
                   if (authState.isLoading || _isLoading)
                     Padding(
-                      padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(color: Colors.white),
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Column(
+                        children: [
+                          const CircularProgressIndicator(color: Colors.white),
+                          const SizedBox(height: 20),
+                          Text(
+                            _buildLoadingMessage(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     )
                   else
                     _buildCurrentView(),
@@ -432,7 +453,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           label: _authMode == 0 ? tr('auth.sms_ile_giris_yap') : tr('auth.sms_ile_kayit_ol'),
           color: Colors.white,
           textColor: lokmaDark,
-          onTap: () => setState(() => _loginMode = 'phone'),
+          onTap: () => setState(() {
+            _loginMode = 'phone';
+            _phoneStatus = _PhoneStatus.idle;
+            _codeSent = false;
+          }),
         ),
         
         const SizedBox(height: 12),
@@ -758,24 +783,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _loginMode = 'main';
               _codeSent = false;
               _verificationId = null;
+              _phoneStatus = _PhoneStatus.idle;
               _phoneController.clear();
               _smsCodeController.clear();
             }),
-            icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           ),
         ),
-        
+
         Text(
-          _codeSent ? tr('auth.sms_kodunu_gir') : tr('auth.telefon_ile_giris'),
-          style: TextStyle(
+          _codeSent
+              ? tr('auth.sms_kodunu_gir')
+              : _authMode == 1
+                  ? tr('auth.sms_ile_kayit_ol')
+                  : tr('auth.sms_ile_giris_yap'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.w600,
           ),
         ),
-        
+
         const SizedBox(height: 32),
-        
+
         if (!_codeSent) ...[
           // Phone input with country code prefix
           Container(
@@ -786,14 +816,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             child: Row(
               children: [
-                // Country code prefix (tappable to change)
+                // Country code picker
                 GestureDetector(
                   onTap: _showCountryPicker,
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.only(
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
                       ),
@@ -803,14 +833,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         Text(
                           '$_countryFlag $_countryCode',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_drop_down, color: Colors.white54, size: 20),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_drop_down, color: Colors.white54, size: 20),
                       ],
                     ),
                   ),
@@ -820,7 +850,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    autofocus: true,
+                    onChanged: (_) {
+                      // Reset status when user edits the number
+                      if (_phoneStatus != _PhoneStatus.idle) {
+                        setState(() => _phoneStatus = _PhoneStatus.idle);
+                      }
+                    },
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: _exampleNumber,
                       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
@@ -832,28 +869,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 12),
-          
-          Text(
-            tr('auth.sms_ile_dogrulama_kodu_gonderi'),
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
-          ),
-          
-          SizedBox(height: 24),
-          
-          _buildPrimaryButton(
-            label: tr('auth.sms_kodu_gonder'),
-            onTap: _handleSendSmsCode,
-          ),
+
+          // ── Status banners (shown BEFORE sending code) ──────────────────
+          if (_phoneStatus == _PhoneStatus.notRegistered) ...[
+            _buildPhoneStatusBanner(
+              message: tr('auth.phone_not_registered'),
+              suggestion: tr('auth.want_to_register_with_this_number'),
+              actionLabel: tr('auth.yeni_musteri'),
+              onAction: () => setState(() {
+                _authMode = 1;          // switch to Register mode
+                _phoneStatus = _PhoneStatus.idle;
+              }),
+            ),
+            const SizedBox(height: 16),
+          ] else if (_phoneStatus == _PhoneStatus.alreadyRegistered) ...[
+            _buildPhoneStatusBanner(
+              message: tr('auth.phone_already_registered'),
+              suggestion: tr('auth.want_to_login_with_this_number'),
+              actionLabel: tr('auth.giris_yap'),
+              onAction: () => setState(() {
+                _authMode = 0;          // switch to Login mode
+                _phoneStatus = _PhoneStatus.idle;
+              }),
+            ),
+            const SizedBox(height: 16),
+          ] else ...[
+            Text(
+              _authMode == 0
+                  ? tr('auth.sms_ile_dogrulama_kodu_gonderi')
+                  : tr('auth.yeni_hesap_icin_sms_kodu_gonderilecek'),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          // Send SMS button — hidden when a status banner is shown so the user
+          // must explicitly choose (register / login) before retrying.
+          if (_phoneStatus == _PhoneStatus.idle)
+            _buildPrimaryButton(
+              label: tr('auth.sms_kodu_gonder'),
+              onTap: _handleSendSmsCode,
+            ),
+
         ] else ...[
           Text(
             tr('auth.6_haneli_dogrulama_kodunu_giri'),
             style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
           ),
-          
-          SizedBox(height: 24),
-          
+
+          const SizedBox(height: 24),
+
           _buildTextField(
             controller: _smsCodeController,
             label: '',
@@ -862,30 +929,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             keyboardType: TextInputType.number,
             maxLength: 6,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 28,
               letterSpacing: 12,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           _buildPrimaryButton(
             label: tr('auth.dogrula_ve_giris_yap'),
             onTap: _handleVerifySmsCode,
           ),
-          
+
           TextButton(
             onPressed: _handleSendSmsCode,
             child: Text(
               tr('auth.kodu_tekrar_gonder'),
-              style: TextStyle(color: Colors.white70),
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
         ],
       ],
+    );
+  }
+
+  /// Status banner shown when phone lookup result prevents SMS from being sent.
+  Widget _buildPhoneStatusBanner({
+    required String message,
+    required String suggestion,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            suggestion,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: onAction,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                actionLabel,
+                style: const TextStyle(
+                  color: Color(0xFFFF0033),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1045,6 +1163,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // HANDLERS
   // ═══════════════════════════════════════════════════════════════════
   
+  String _buildLoadingMessage() {
+    final phone = _phoneController.text.trim();
+    if (_loginMode == 'phone' && phone.isNotEmpty) {
+      if (_authMode == 1) {
+        return tr('auth.registering_with_number', namedArgs: {'phone': phone});
+      } else {
+        return tr('auth.logging_in_with_number', namedArgs: {'phone': phone});
+      }
+    }
+    if (_loginMode == 'phone' && _codeSent) {
+      return tr('auth.verifying_code');
+    }
+    return tr('auth.please_wait');
+  }
+
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature coming soon!'), backgroundColor: lokmaRed),
@@ -1183,54 +1316,101 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleSendSmsCode() async {
-    final phone = _phoneController.text.trim().replaceAll(' ', '').replaceAll('-', '');
-    if (phone.isEmpty) {
+    final raw = _phoneController.text.trim().replaceAll(' ', '').replaceAll('-', '');
+    if (raw.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr('auth.phone_number_required')), backgroundColor: Colors.red),
       );
       return;
     }
-    
-    // Combine country code with local number (remove leading 0 if present)
-    final localNumber = phone.startsWith('0') ? phone.substring(1) : phone;
+
+    final localNumber = raw.startsWith('0') ? raw.substring(1) : raw;
     final formattedPhone = '$_countryCode$localNumber';
-    debugPrint('📱 Sending SMS to: $formattedPhone');
-    
-    setState(() => _isLoading = true);
-    
+
+    setState(() {
+      _isLoading = true;
+      _phoneStatus = _PhoneStatus.idle;
+    });
+
+    // ── Step 1: Check Firestore for existing account ─────────────────────
     try {
-      // NOTE: Test mode disabled - using production APNs verification
-      // To enable test mode for Firebase test numbers, uncomment the line below:
-      // await FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
-      debugPrint('📱 Using production APNs verification');
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phoneNumber', isEqualTo: formattedPhone)
+          .limit(1)
+          .get();
+      final exists = snapshot.docs.isNotEmpty;
 
+      if (_authMode == 0 && !exists) {
+        // LOGIN mode — number not in our system
+        debugPrint('Phone lookup: $formattedPhone NOT found (login mode)');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _phoneStatus = _PhoneStatus.notRegistered;
+            _checkedFormattedPhone = formattedPhone;
+          });
+        }
+        return;
+      }
+
+      if (_authMode == 1 && exists) {
+        // REGISTER mode — number already taken
+        debugPrint('Phone lookup: $formattedPhone ALREADY registered (register mode)');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _phoneStatus = _PhoneStatus.alreadyRegistered;
+            _checkedFormattedPhone = formattedPhone;
+          });
+        }
+        return;
+      }
+    } catch (e) {
+      debugPrint('Firestore phone lookup error: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // LOGIN modunda lookup basarisiz olursa kullaniciya haber ver
+        // Kayit modunda engelleme — devam et
+        if (_authMode == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr('auth.phone_check_failed')),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+      }
+    }
+
+    // ── Step 2: Send SMS code via Firebase Auth ───────────────────────────
+    debugPrint('Sending SMS to: $formattedPhone (authMode=$_authMode)');
+
+    try {
       await FirebaseAuth.instance.verifyPhoneNumber(
-
         phoneNumber: formattedPhone,
         timeout: const Duration(seconds: 60),
         forceResendingToken: null,
         codeSent: (verificationId, resendToken) async {
-          debugPrint('✅ SMS Code Sent! VerificationId: $verificationId');
-          // Persist verification state for reCAPTCHA redirect
+          debugPrint('SMS sent. verificationId: $verificationId');
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('sms_verification_id', verificationId);
           await prefs.setString('sms_phone_number', formattedPhone);
           await prefs.setInt('sms_verification_time', DateTime.now().millisecondsSinceEpoch);
-          debugPrint('💾 Saved verification state to SharedPreferences');
-          
           if (!mounted) return;
           setState(() {
             _verificationId = verificationId;
             _codeSent = true;
             _isLoading = false;
-            _loginMode = 'phone';  // Ensure we're in phone mode
+            _loginMode = 'phone';
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(tr('auth.sms_code_sent')), backgroundColor: Colors.green),
           );
         },
         verificationFailed: (error) {
-          debugPrint('❌ SMS Verification Failed: ${error.code} - ${error.message}');
+          debugPrint('SMS verification failed: ${error.code} - ${error.message}');
           if (!mounted) return;
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1238,12 +1418,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
         },
         verificationCompleted: (credential) async {
-          debugPrint('✅ Auto verification completed');
+          debugPrint('Auto verification completed');
           try {
             await FirebaseAuth.instance.signInWithCredential(credential);
             if (mounted) setState(() => _isLoading = false);
           } catch (e) {
-            debugPrint('❌ Auto sign-in error: $e');
+            debugPrint('Auto sign-in error: $e');
             if (mounted) {
               setState(() => _isLoading = false);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -1253,13 +1433,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         },
         codeAutoRetrievalTimeout: (verificationId) {
-          debugPrint('⏱️ Auto retrieval timeout: $verificationId');
           _verificationId = verificationId;
         },
       );
-
     } catch (e) {
-      debugPrint('❌ SMS Exception: $e');
+      debugPrint('SMS exception: $e');
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
