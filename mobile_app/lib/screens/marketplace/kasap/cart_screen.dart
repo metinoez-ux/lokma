@@ -8357,6 +8357,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                                     userAgentPackageName: 'com.lokma.app',
                                                   ),
                                                   MarkerLayer(
+                                                    rotate: true,
                                                     markers: [
                                                       Marker(
                                                         point: LatLng(_addressLat!, _addressLng!),

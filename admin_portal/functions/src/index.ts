@@ -84,21 +84,36 @@ export const onNewOrder = onDocumentCreated(
         let pickupTimeStr = "";
         let pickupDate: Date | null = null;
 
-        // Helper to format a date nicely
+        // Helper to format a date nicely in Europe/Berlin timezone
+        // Cloud Functions runs in UTC — must convert to local Berlin time
         const formatScheduledDate = (d: Date): string => {
-            const hours = d.getHours().toString().padStart(2, "0");
-            const minutes = d.getMinutes().toString().padStart(2, "0");
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tz = "Europe/Berlin";
+            const timeFmt = new Intl.DateTimeFormat("de-DE", {
+                timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false,
+            });
+            const parts = timeFmt.formatToParts(d);
+            const hours = (parts.find(p => p.type === "hour")?.value ?? "00").padStart(2, "0");
+            const minutes = (parts.find(p => p.type === "minute")?.value ?? "00").padStart(2, "0");
 
-            if (d.toDateString() === today.toDateString()) {
+            // Compare dates in Berlin timezone (YYYY-MM-DD format)
+            const dateFmt = (dt: Date) => new Intl.DateTimeFormat("en-CA", {
+                timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
+            }).format(dt);
+            const dDateStr = dateFmt(d);
+            const todayStr = dateFmt(new Date());
+            const tomorrowStr = dateFmt(new Date(Date.now() + 86400000));
+
+            if (dDateStr === todayStr) {
                 return `${getDateLabel(lang, 'today')} ${hours}:${minutes}`;
-            } else if (d.toDateString() === tomorrow.toDateString()) {
+            } else if (dDateStr === tomorrowStr) {
                 return `${getDateLabel(lang, 'tomorrow')} ${hours}:${minutes}`;
             } else {
                 const dayNames = getDayNames(lang);
-                return `${dayNames[d.getDay()]} ${hours}:${minutes}`;
+                const dowFmt = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" });
+                const dowShort = dowFmt.format(d);
+                const dowMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+                const dayIdx = dowMap[dowShort] ?? d.getDay();
+                return `${dayNames[dayIdx]} ${hours}:${minutes}`;
             }
         };
 
@@ -2070,32 +2085,55 @@ export const onNewReservation = onDocumentCreated(
                 .get();
             legacySnap.docs.forEach(collectTokens);
 
-            if (staffTokens.length === 0) {
-                console.log(`[Reservation] No staff tokens found for business ${businessId}`);
-                return;
-            }
-
             // Remove duplicates
             const uniqueTokens = [...new Set(staffTokens)];
 
-            const notifSound = await getActiveNotificationSound();
-            const message = {
-                notification: {
-                    title: "🍽️ Yeni Masa Rezervasyonu!",
-                    body: `${customerName} – ${partySize} kişi – ${dateStr} ${timeStr}`,
-                },
-                data: {
-                    type: "new_reservation",
-                    reservationId: event.params.reservationId,
-                    businessId: businessId,
-                    customerName: customerName,
-                },
-                ...buildSoundConfig(notifSound),
-                tokens: uniqueTokens,
-            };
+            if (uniqueTokens.length > 0) {
+                const notifSound = await getActiveNotificationSound();
+                const message = {
+                    notification: {
+                        title: "🍽️ Yeni Masa Rezervasyonu!",
+                        body: `${customerName} – ${partySize} kişi – ${dateStr} ${timeStr}`,
+                    },
+                    data: {
+                        type: "new_reservation",
+                        reservationId: event.params.reservationId,
+                        businessId: businessId,
+                        customerName: customerName,
+                    },
+                    ...buildSoundConfig(notifSound),
+                    tokens: uniqueTokens,
+                };
 
-            const response = await messaging.sendEachForMulticast(message);
-            console.log(`[Reservation] Notified ${response.successCount}/${uniqueTokens.length} staff devices`);
+                const response = await messaging.sendEachForMulticast(message);
+                console.log(`[Reservation] Notified ${response.successCount}/${uniqueTokens.length} staff devices`);
+            } else {
+                console.log(`[Reservation] No staff tokens found for business ${businessId}`);
+            }
+
+            // ── Persist notification to customer's notification history ──
+            const userId = reservation.userId;
+            if (userId) {
+                const businessName = reservation.businessName || "Restaurant";
+                try {
+                    await db.collection("users").doc(userId).collection("notifications").add({
+                        title: "🍽️ Rezervasyon Alındı",
+                        body: `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi`,
+                        type: "reservation_status",
+                        reservationId: event.params.reservationId,
+                        businessId: businessId,
+                        businessName: businessName,
+                        status: "pending",
+                        partySize: partySize,
+                        reservationDate: reservation.reservationDate,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        read: false,
+                    });
+                    console.log(`[Reservation] Saved pending notification for user ${userId}`);
+                } catch (notifError) {
+                    console.error("[Reservation] Error saving notification history:", notifError);
+                }
+            }
 
         } catch (error) {
             console.error("[Reservation] Error notifying staff:", error);
@@ -2198,11 +2236,41 @@ export const onReservationStatusChange = onDocumentUpdated(
             } catch (error) {
                 console.error("[Reservation] Error notifying staff about cancellation:", error);
             }
+
+            // Persist cancellation to customer's notification history
+            const cancelUserId = after.userId;
+            console.log(`[Reservation] Cancel notification: userId=${cancelUserId}`);
+            if (cancelUserId) {
+                const cancellationReason = after.cancellationReason || "";
+                const cancellationNote = after.cancellationNote || "";
+                try {
+                    await db.collection("users").doc(cancelUserId).collection("notifications").add({
+                        title: "Rezervasyon Iptal Edildi",
+                        body: `${businessName} – ${dateStr} ${timeStr} – ${partySize} kisi`,
+                        type: "reservation_status",
+                        reservationId: event.params.reservationId,
+                        businessId: businessId,
+                        businessName: businessName,
+                        status: "cancelled",
+                        cancellationReason: cancellationReason,
+                        cancellationNote: cancellationNote,
+                        partySize: partySize,
+                        reservationDate: after.reservationDate,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        read: false,
+                    });
+                    console.log(`[Reservation] Saved cancelled notification for user ${cancelUserId}`);
+                } catch (notifError) {
+                    console.error("[Reservation] Error saving cancellation notification:", notifError);
+                }
+            } else {
+                console.log(`[Reservation] No userId found, skipping cancel notification persistence`);
+            }
             return;
         }
 
         // ─── Staff-initiated status change → notify customer ───
-        if (newStatus !== "confirmed" && newStatus !== "rejected") return;
+        if (newStatus !== "confirmed" && newStatus !== "rejected" && newStatus !== "reactivated") return;
 
         const customerFcmToken = after.customerFcmToken || after.userFcmToken;
 
@@ -2212,6 +2280,9 @@ export const onReservationStatusChange = onDocumentUpdated(
         if (newStatus === "confirmed") {
             title = "✅ Rezervasyonunuz Onaylandı!";
             body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Afiyet olsun!`;
+        } else if (newStatus === "reactivated") {
+            title = "✅ Rezervasyonunuz Tekrar Aktif!";
+            body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Rezervasyonunuz tekrar aktif edildi.`;
         } else {
             title = "❌ Rezervasyonunuz Reddedildi";
             body = `${businessName} – ${dateStr} ${timeStr} için rezervasyonunuz maalesef onaylanmadı.`;
@@ -2236,6 +2307,32 @@ export const onReservationStatusChange = onDocumentUpdated(
             } catch (error) {
                 console.error(`[Reservation] Error sending ${newStatus} push notification:`, error);
             }
+        }
+
+        // ── Persist status change to customer's notification history ──
+        const userId = after.userId;
+        console.log(`[Reservation] Notification persistence: userId=${userId}, status=${newStatus}`);
+        if (userId) {
+            try {
+                await db.collection("users").doc(userId).collection("notifications").add({
+                    title,
+                    body,
+                    type: "reservation_status",
+                    reservationId: event.params.reservationId,
+                    businessId: businessId,
+                    businessName: businessName,
+                    status: newStatus,
+                    partySize: partySize,
+                    reservationDate: after.reservationDate,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                });
+                console.log(`[Reservation] Saved ${newStatus} notification for user ${userId}`);
+            } catch (notifError) {
+                console.error(`[Reservation] Error saving ${newStatus} notification:`, notifError);
+            }
+        } else {
+            console.log(`[Reservation] No userId found in reservation document, skipping notification persistence`);
         }
 
         // ─── Send confirmation email with calendar links ───

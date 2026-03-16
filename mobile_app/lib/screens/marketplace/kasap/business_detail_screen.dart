@@ -22,6 +22,7 @@ import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'cart_screen.dart';
 import 'product_customization_sheet.dart';
+import 'reservation_booking_screen.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import '../../../utils/currency_utils.dart';
 
@@ -1636,6 +1637,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                   userAgentPackageName: 'shop.lokma.app',
                                                 ),
                                                 MarkerLayer(
+                                                  rotate: true,
                                                   markers: [
                                                     Marker(
                                                       point: center,
@@ -2762,41 +2764,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               Text('  ·  ', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                               InkWell(
                                 onTap: () {
-                                  final hasMasaTab = (data?['hasReservation'] as bool? ?? false) ||
-                                      (_planFeatures['dineInQR'] == true) ||
-                                      (_planFeatures['waiterOrder'] == true);
-                                  if (hasMasaTab) {
-                                    setState(() => _deliveryModeIndex = 2);
-                                    HapticFeedback.lightImpact();
-                                  }
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ReservationBookingScreen(
+                                        businessId: widget.businessId,
+                                        businessName: data?['companyName'] ?? data?['name'] ?? '',
+                                      ),
+                                    ),
+                                  );
                                 },
                                 borderRadius: BorderRadius.circular(20),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                   decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        _getAccent(context).withValues(alpha: 0.12),
-                                        _getAccent(context).withValues(alpha: 0.06),
-                                      ],
-                                    ),
+                                    color: _getAccent(context),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: _getAccent(context).withValues(alpha: 0.25),
-                                      width: 0.5,
-                                    ),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.table_restaurant_rounded, size: 13, color: _getAccent(context)),
-                                      const SizedBox(width: 3),
-                                      Icon(Icons.schedule_rounded, size: 11, color: _getAccent(context).withValues(alpha: 0.7)),
+                                      const Icon(Icons.table_restaurant_rounded, size: 13, color: Colors.white),
                                       const SizedBox(width: 4),
                                       Text(
-                                        tr('reservation.title'),
-                                        style: TextStyle(
-                                          color: _getAccent(context),
+                                        'reservation.table_reservation'.tr(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
                                           fontSize: 11.5,
                                           fontWeight: FontWeight.w600,
                                           letterSpacing: -0.2,
@@ -3281,467 +3275,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      );
   }
 
-  // LIEFERANDO STYLE: Quick Add Product Bottom Sheet
+  // LIEFERANDO STYLE: Unified Product Bottom Sheet
   void _showProductBottomSheet(ButcherProduct product) {
-    // Route products with optionGroups to the new customization sheet
-    if (product.optionGroups.isNotEmpty) {
-      final data = _butcherDoc?.data() as Map<String, dynamic>?;
-      final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-      // Always open fresh sheet from product listing (edit happens in cart screen)
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (ctx) => ProductCustomizationSheet(
-          product: product,
-          businessId: widget.businessId,
-          businessName: butcherName,
-        ),
-      );
-      return;
-    }
-
-    final isByWeight = product.unitType == 'kg';
-    final cart = ref.read(cartProvider);
-    final existingCartItem = cart.items.firstWhere(
-      (item) => item.product.sku == product.sku,
-      orElse: () => CartItem(product: product, quantity: 0),
-    );
-    final isEditing = existingCartItem.quantity > 0;
-    double selectedQty = isEditing ? existingCartItem.quantity : (_selections[product.sku] ?? (isByWeight ? product.minQuantity : 1));
-    final noteController = TextEditingController(text: isEditing ? (existingCartItem.note ?? '') : '');
-    
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        final accent = _getAccent(ctx);
-        final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
-        final textPrimary = isDark ? Colors.white : Colors.black87;
-        final textSecondary = isDark ? Colors.white54 : Colors.black45;
-        final divider = isDark ? Colors.white12 : Colors.grey[200]!;
-        
-        return StatefulBuilder(
-          builder: (context, setStateModal) {
-            final totalPrice = product.effectiveAppPrice * selectedQty;
-            
-            return Container(
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Handle
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12, bottom: 4),
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white24 : Colors.black12,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Scrollable content
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          
-                          // Product Image (if available)
-                          if (product.imageUrl?.isNotEmpty == true) ...[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: SizedBox(
-                                width: double.infinity,
-                                height: 180,
-                                child: Image.network(
-                                  product.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                          ],
-
-                          // Product Name
-                          Text(
-                            product.name,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-
-                          // Price
-                          Text(
-                            '${'marketplace.from_price'.tr()} ${CurrencyUtils.getCurrencySymbol()}${product.effectiveAppPrice.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
-                          // Description
-                          if (product.description.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              product.description,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: textSecondary,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-
-                          // Produktinfo link
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: () {
-                              // Show Produktinfo bottom sheet (Lieferando Style)
-                              final warningBg = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
-                              final dividerClr = isDark ? Colors.white12 : Colors.black12;
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (ctx2) => Container(
-                                  constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx2).size.height * 0.85),
-                                  decoration: BoxDecoration(
-                                    color: bg,
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Handle bar
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 12, bottom: 8),
-                                        child: Container(width: 36, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white24 : Colors.black12, borderRadius: BorderRadius.circular(2))),
-                                      ),
-                                      // Header with back button
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                                        child: Row(
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () => Navigator.of(ctx2).pop(),
-                                              child: Icon(Icons.arrow_back, color: textPrimary, size: 24),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(child: Text('marketplace.product_info'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary))),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Divider(height: 1, color: dividerClr),
-                                      // Content
-                                      Flexible(
-                                        child: SingleChildScrollView(
-                                          padding: const EdgeInsets.all(20),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              // Product name
-                                              Text(product.name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
-                                              const SizedBox(height: 24),
-                                              // Allergene Section
-                                              Row(
-                                                children: [
-                                                  Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
-                                                  const SizedBox(width: 8),
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                    decoration: BoxDecoration(
-                                                      color: product.allergens.isNotEmpty ? const Color(0xFFE8F5E9) : (isDark ? Colors.white10 : Colors.grey[200]),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                    ),
-                                                    child: Text(
-                                                      product.allergens.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
-                                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: product.allergens.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 12),
-                                              if (product.allergens.isNotEmpty)
-                                                ...product.allergens.map((allergen) => Padding(
-                                                  padding: const EdgeInsets.only(bottom: 8),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.eco_outlined, size: 18, color: textSecondary),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(child: Text(allergen, style: TextStyle(fontSize: 14, color: textPrimary))),
-                                                    ],
-                                                  ),
-                                                ))
-                                              else
-                                                Text('marketplace.no_info_available'.tr(), style: TextStyle(fontSize: 14, color: textSecondary)),
-                                              const SizedBox(height: 20),
-                                              Divider(color: dividerClr),
-                                              const SizedBox(height: 16),
-                                              // Zusatzstoffe Section
-                                              Row(
-                                                children: [
-                                                  Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
-                                                  const SizedBox(width: 8),
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                    decoration: BoxDecoration(
-                                                      color: product.additives.isNotEmpty ? const Color(0xFFE8F5E9) : (isDark ? Colors.white10 : Colors.grey[200]),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                    ),
-                                                    child: Text(
-                                                      product.additives.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
-                                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: product.additives.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 12),
-                                              if (product.additives.isNotEmpty)
-                                                ...product.additives.map((additive) => Padding(
-                                                  padding: const EdgeInsets.only(bottom: 8),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.science_outlined, size: 18, color: textSecondary),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(child: Text(additive, style: TextStyle(fontSize: 14, color: textPrimary))),
-                                                    ],
-                                                  ),
-                                                ))
-                                              else
-                                                Text('marketplace.no_info_available'.tr(), style: TextStyle(fontSize: 14, color: textSecondary)),
-                                              const SizedBox(height: 24),
-                                              // Haftungsausschluss
-                                              Container(
-                                                padding: const EdgeInsets.all(16),
-                                                decoration: BoxDecoration(color: warningBg, borderRadius: BorderRadius.circular(12)),
-                                                child: Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Icon(Icons.warning_amber_rounded, size: 24, color: isDark ? Colors.amber : Colors.amber[700]),
-                                                    const SizedBox(width: 12),
-                                                    Expanded(
-                                                      child: Text(
-                                                        'marketplace.disclaimer_text'.tr(),
-                                                        style: TextStyle(fontSize: 13, color: textSecondary, height: 1.5),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 24),
-                                              // Rechtliche Bedenken melden
-                                              GestureDetector(
-                                                onTap: () {
-                                                  showModalBottomSheet(
-                                                    context: context,
-                                                    isScrollControlled: true,
-                                                    backgroundColor: Colors.transparent,
-                                                    builder: (_) => DraggableScrollableSheet(
-                                                      initialChildSize: 0.85,
-                                                      maxChildSize: 0.95,
-                                                      minChildSize: 0.5,
-                                                      builder: (_, controller) => LegalReportSheet(
-                                                        businessId: widget.businessId,
-                                                        businessName: _butcherDoc?['companyName'] ?? _butcherDoc?['name'] ?? 'common.business'.tr(),
-                                                        productId: product.id,
-                                                        productName: product.name,
-                                                        productCategory: product.category,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                child: Text('marketplace.report_legal_concerns'.tr(), style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : Colors.black54, decoration: TextDecoration.underline)),
-                                              ),
-                                              const SizedBox(height: 16),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'marketplace.product_info'.tr(),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: accent,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                                decorationColor: accent,
-                              ),
-                            ),
-                          ),
-
-                          Divider(color: divider, height: 24),
-                          
-                          // Note Field (optional)
-                          TextField(
-                            controller: noteController,
-                            maxLength: 40,
-                            style: TextStyle(color: textPrimary, fontSize: 14),
-                            decoration: InputDecoration(
-                              hintText: 'marketplace.add_note_hint'.tr(),
-                              hintStyle: TextStyle(color: textSecondary, fontSize: 13),
-                              prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
-                              filled: true,
-                              fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                              counterText: '',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              isDense: true,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Bottom Bar: [trash] [qty] [+]  |  [Ekle €X.XX]
-                  Container(
-                    padding: EdgeInsets.only(
-                      left: 16, right: 16, top: 12,
-                      bottom: MediaQuery.of(context).padding.bottom + 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: bg,
-                      border: Border(top: BorderSide(color: divider)),
-                    ),
-                    child: Row(
-                      children: [
-                        // Left: Trash / Qty / +
-                        Container(
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.white10 : Colors.grey[100],
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Trash / Minus
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    if (selectedQty <= (isByWeight ? product.minQuantity : 1)) {
-                                      if (isEditing) {
-                                        ref.read(cartProvider.notifier).removeFromCart(product.sku);
-                                        setState(() => _selections.remove(product.sku));
-                                      }
-                                      Navigator.pop(context);
-                                      return;
-                                    }
-                                    setStateModal(() => selectedQty -= isByWeight ? product.stepQuantity : 1);
-                                  },
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: SizedBox(
-                                    width: 40, height: 40,
-                                    child: Icon(
-                                      selectedQty <= (isByWeight ? product.minQuantity : 1)
-                                          ? Icons.delete_outline
-                                          : Icons.remove,
-                                      color: selectedQty <= (isByWeight ? product.minQuantity : 1)
-                                          ? accent
-                                          : textPrimary,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Quantity
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
-                                child: Text(
-                                  isByWeight
-                                      ? '${(selectedQty * 1000).toStringAsFixed(0)}g'
-                                      : selectedQty.toStringAsFixed(0),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: textPrimary,
-                                  ),
-                                ),
-                              ),
-                              // Plus
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    setStateModal(() => selectedQty += isByWeight ? product.stepQuantity : 1);
-                                  },
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: SizedBox(
-                                    width: 40, height: 40,
-                                    child: Icon(Icons.add, color: accent, size: 20),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        // Right: Add/Update button with price
-                        Expanded(
-                          child: SizedBox(
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
-                                final noteText = noteController.text.trim().isNotEmpty ? noteController.text.trim() : null;
-                                HapticFeedback.heavyImpact();
-                                ref.read(cartProvider.notifier).addToCart(product, selectedQty, widget.businessId, butcherName, note: noteText);
-                                setState(() => _selections[product.sku] = selectedQty);
-                                Navigator.pop(context);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: accent,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                '${isEditing ? 'marketplace.update_item'.tr() : 'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${totalPrice.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+      builder: (ctx) => ProductCustomizationSheet(
+        product: product,
+        businessId: widget.businessId,
+        businessName: butcherName,
+      ),
     );
   }
+
+
 
   // LIEFERANDO STYLE: Horizontal Product Card (List Item)
   Widget _buildLieferandoProductCard(

@@ -114,6 +114,8 @@
     "select_business": "Select a business to order!",
     "view_order": "View Order",
     "items": "items",
+    "continue_ordering": "Continue Ordering",
+    "delete_order": "Delete Order",
     "rate": "Rate",
     "reorder": "Reorder",
     "order_date": "Order",
@@ -982,9 +984,11 @@
     "order_send_failed": "Order could not be sent: $e",
     "no_orders": "No orders",
     "courier_tracking": "Courier Tracking",
+    "refresh": "Refresh",
     "order_not_found": "Order not found",
     "on_the_way": "On the way",
     "waiting_courier_location": "Waiting for courier location...",
+    "courier_location_unavailable": "The courier hasn't shared their location yet. It will appear on the map once available.",
     "my_account": "My Account",
     "total_bill": "Total Bill",
     "cannot_rate_before_completion": "Your order is not complete yet. You can rate after it's delivered.",
@@ -1682,7 +1686,19 @@
     "date_label": "Date",
     "today": "Today",
     "time_label": "Time",
-    "optional": "Optional"
+    "optional": "Optional",
+    "table_reservation": "Table Reservation",
+    "party_size_label": "Number of People",
+    "day_closed": "{}: Closed",
+    "past_time_error": "You cannot select a past time",
+    "create_error": "Reservation could not be created: {}",
+    "time_prefix": "Time {}",
+    "party_count": "{} People",
+    "no_slots_available": "No available time found for this date",
+    "slot_full_label": "FULL",
+    "slots_remaining": "{} left",
+    "notes_label": "Notes",
+    "notes_hint": "Write your special requests (e.g. birthday, high chair...)"
   },
   "order_confirmation": {
     "title": "Order Received!",
@@ -1762,6 +1778,13 @@
     "delivery_order_label": "Delivery order",
     "pickup_order_label": "Pickup order",
     "payment_card_on_delivery": "Card on delivery",
-    "payment_card_nfc": "Card on delivery (NFC)"
+    "payment_card_nfc": "Card on delivery (NFC)",
+    "payment_method_label": "Selected Payment Method",
+    "order_status_label": "Order Status",
+    "last_action_label": "Last action",
+    "just_now": "just now",
+    "minutes_ago": "{}min ago",
+    "hours_ago": "{}h ago",
+    "days_ago": "{}d ago"
   }
 }

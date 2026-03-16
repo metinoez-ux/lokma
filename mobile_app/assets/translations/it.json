@@ -113,6 +113,8 @@
     "select_business": "Seleziona un'attività per ordinare!",
     "view_order": "Vedi Ordine",
     "items": "articoli",
+    "continue_ordering": "Continua l'ordine",
+    "delete_order": "Elimina ordine",
     "rate": "Valuta",
     "reorder": "Riordina",
     "order_date": "Ordine",
@@ -974,9 +976,11 @@
     "order_send_failed": "Impossibile inviare l'ordine: $e",
     "no_orders": "Nessun ordine",
     "courier_tracking": "Tracciamento Corriere",
+    "refresh": "Aggiorna",
     "order_not_found": "Ordine non trovato",
     "on_the_way": "In arrivo",
     "waiting_courier_location": "In attesa della posizione del corriere...",
+    "courier_location_unavailable": "Il corriere non ha ancora condiviso la sua posizione. Apparira sulla mappa non appena disponibile.",
     "my_account": "Il mio conto",
     "total_bill": "Conto totale",
     "cannot_rate_before_completion": "Il tuo ordine non è ancora completo. Puoi valutarlo dopo la consegna.",
@@ -1666,7 +1670,19 @@
     "date_label": "Data",
     "today": "Oggi",
     "time_label": "Ora",
-    "optional": "Opzionale"
+    "optional": "Opzionale",
+    "table_reservation": "Prenotazione tavolo",
+    "party_size_label": "Numero di persone",
+    "day_closed": "{}: Chiuso",
+    "past_time_error": "Non puoi selezionare un orario passato",
+    "create_error": "Impossibile creare la prenotazione: {}",
+    "time_prefix": "Ora {}",
+    "party_count": "{} Persone",
+    "no_slots_available": "Nessun orario disponibile per questa data",
+    "slot_full_label": "PIENO",
+    "slots_remaining": "{} rimasto/i",
+    "notes_label": "Note",
+    "notes_hint": "Scrivi le tue richieste speciali (es. compleanno, seggiolone...)"
   },
   "order_confirmation": {
     "title": "Ordine ricevuto!",
@@ -1745,6 +1761,13 @@
     "delivery_order_label": "Ordine di consegna",
     "pickup_order_label": "Ordine da ritirare",
     "payment_card_on_delivery": "Carta alla consegna",
-    "payment_card_nfc": "Carta alla consegna (NFC)"
+    "payment_card_nfc": "Carta alla consegna (NFC)",
+    "payment_method_label": "Metodo di Pagamento Selezionato",
+    "order_status_label": "Stato dell'Ordine",
+    "last_action_label": "Ultima azione",
+    "just_now": "proprio ora",
+    "minutes_ago": "{}min fa",
+    "hours_ago": "{}h fa",
+    "days_ago": "{}g fa"
   }
 }

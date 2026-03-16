@@ -112,7 +112,9 @@
     "login": "Iniciar Sesión",
     "select_business": "Selecciona un negocio para pedir",
     "view_order": "Ver Pedido",
-    "items": "artículos",
+    "items": "articulos",
+    "continue_ordering": "Seguir pidiendo",
+    "delete_order": "Eliminar pedido",
     "rate": "Valorar",
     "reorder": "Volver a pedir",
     "order_date": "Pedido",
@@ -974,9 +976,11 @@
     "order_send_failed": "El pedido no se pudo enviar: $e",
     "no_orders": "Sin pedidos",
     "courier_tracking": "Seguimiento de mensajería",
+    "refresh": "Actualizar",
     "order_not_found": "Pedido no encontrado",
     "on_the_way": "En camino",
     "waiting_courier_location": "Esperando la ubicación del mensajero...",
+    "courier_location_unavailable": "El mensajero aun no comparte su ubicacion. Aparecera en el mapa cuando este disponible.",
     "my_account": "Mi cuenta",
     "total_bill": "Factura total",
     "cannot_rate_before_completion": "Su pedido aún no está completo. Puede calificar después de que se entregue.",
@@ -1666,7 +1670,19 @@
     "date_label": "Fecha",
     "today": "Hoy",
     "time_label": "Hora",
-    "optional": "Opcional"
+    "optional": "Opcional",
+    "table_reservation": "Reserva de mesa",
+    "party_size_label": "Numero de personas",
+    "day_closed": "{}: Cerrado",
+    "past_time_error": "No puede seleccionar una hora pasada",
+    "create_error": "No se pudo crear la reserva: {}",
+    "time_prefix": "Hora {}",
+    "party_count": "{} Personas",
+    "no_slots_available": "No se encontraron horarios disponibles para esta fecha",
+    "slot_full_label": "COMPLETO",
+    "slots_remaining": "{} restante(s)",
+    "notes_label": "Notas",
+    "notes_hint": "Escriba sus solicitudes especiales (ej. cumpleanos, silla alta...)"
   },
   "order_confirmation": {
     "title": "¡Pedido recibido!",
@@ -1745,6 +1761,13 @@
     "delivery_order_label": "Pedido de entrega",
     "pickup_order_label": "Pedido para recoger",
     "payment_card_on_delivery": "Tarjeta en la entrega",
-    "payment_card_nfc": "Tarjeta en la entrega (NFC)"
+    "payment_card_nfc": "Tarjeta en la entrega (NFC)",
+    "payment_method_label": "Metodo de Pago Seleccionado",
+    "order_status_label": "Estado del Pedido",
+    "last_action_label": "Ultima accion",
+    "just_now": "ahora mismo",
+    "minutes_ago": "hace {}min",
+    "hours_ago": "hace {}h",
+    "days_ago": "hace {}d"
   }
 }

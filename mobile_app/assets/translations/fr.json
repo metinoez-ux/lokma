@@ -113,6 +113,8 @@
     "select_business": "Sélectionnez un commerce pour commander !",
     "view_order": "Voir la commande",
     "items": "articles",
+    "continue_ordering": "Continuer la commande",
+    "delete_order": "Supprimer la commande",
     "rate": "Évaluer",
     "reorder": "Commander à nouveau",
     "order_date": "Commande",
@@ -974,9 +976,11 @@
     "order_send_failed": "La commande n'a pas pu être envoyée : $e",
     "no_orders": "Pas de commandes",
     "courier_tracking": "Suivi de coursier",
+    "refresh": "Actualiser",
     "order_not_found": "Commande introuvable",
     "on_the_way": "En route",
     "waiting_courier_location": "En attente de l'emplacement du coursier...",
+    "courier_location_unavailable": "Le coursier ne partage pas encore sa position. Elle apparaitra sur la carte des qu'elle sera disponible.",
     "my_account": "Mon compte",
     "total_bill": "Facture totale",
     "cannot_rate_before_completion": "Votre commande n'est pas encore terminée. Vous pouvez la noter après sa livraison.",
@@ -1666,7 +1670,19 @@
     "date_label": "Date",
     "today": "Aujourd'hui",
     "time_label": "Heure",
-    "optional": "Optionnel"
+    "optional": "Optionnel",
+    "table_reservation": "Reservation de table",
+    "party_size_label": "Nombre de personnes",
+    "day_closed": "{} : Ferme",
+    "past_time_error": "Vous ne pouvez pas selectionner une heure passee",
+    "create_error": "La reservation n'a pas pu etre creee : {}",
+    "time_prefix": "Heure {}",
+    "party_count": "{} Personnes",
+    "no_slots_available": "Aucun creneau disponible pour cette date",
+    "slot_full_label": "COMPLET",
+    "slots_remaining": "{} restant(s)",
+    "notes_label": "Notes",
+    "notes_hint": "Ecrivez vos demandes speciales (ex. anniversaire, chaise haute...)"
   },
   "order_confirmation": {
     "title": "Commande reçue !",
@@ -1745,6 +1761,13 @@
     "delivery_order_label": "Commande de livraison",
     "pickup_order_label": "Commande à emporter",
     "payment_card_on_delivery": "Carte à la livraison",
-    "payment_card_nfc": "Carte à la livraison (NFC)"
+    "payment_card_nfc": "Carte a la livraison (NFC)",
+    "payment_method_label": "Mode de Paiement Choisi",
+    "order_status_label": "Statut de la Commande",
+    "last_action_label": "Derniere action",
+    "just_now": "a l'instant",
+    "minutes_ago": "il y a {}min",
+    "hours_ago": "il y a {}h",
+    "days_ago": "il y a {}j"
   }
 }

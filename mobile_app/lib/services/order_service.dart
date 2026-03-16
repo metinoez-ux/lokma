@@ -71,6 +71,7 @@ class LokmaOrder {
   final bool hasPrecisePin;       // true when customer set a precise meeting point
   final String? deliveryPinCode;  // 4-digit PIN for precise location verification
   final DateTime? scheduledTime;
+  final bool isScheduledOrder;
   final String? notes;
   final String? courierId;
   final String? courierName;
@@ -111,6 +112,7 @@ class LokmaOrder {
     this.hasPrecisePin = false,
     this.deliveryPinCode,
     this.scheduledTime,
+    this.isScheduledOrder = false,
     this.notes,
     this.courierId,
     this.courierName,
@@ -169,7 +171,10 @@ class LokmaOrder {
       deliveryPinLng: (data['deliveryPinLng'] as num?)?.toDouble(),
       hasPrecisePin: data['hasPrecisePin'] == true,
       deliveryPinCode: data['deliveryPinCode'] as String?,
-      scheduledTime: (data['scheduledTime'] as Timestamp?)?.toDate(),
+      scheduledTime: (data['scheduledDeliveryTime'] as Timestamp?)?.toDate()
+          ?? (data['scheduledDateTime'] as Timestamp?)?.toDate()
+          ?? (data['scheduledTime'] as Timestamp?)?.toDate(),
+      isScheduledOrder: data['isScheduledOrder'] == true,
       notes: data['notes'] ?? data['orderNote'],
       courierId: data['courierId'],
       courierName: data['courierName'],
