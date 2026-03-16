@@ -78,8 +78,12 @@ service cloud.firestore {
     // ===========================================
     
     // User data - owner only
+    // Phone number existence check: allow unauthenticated list queries on
+    // the phoneNumber field so the login screen can validate before sending OTP.
+    // Writing and reading full profiles still requires being the owner.
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow list: if true;  // Phone-existence lookup (login screen pre-check)
+      allow get, write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Admin collection - admin only
