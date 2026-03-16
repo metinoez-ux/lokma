@@ -138,8 +138,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
       body: Stack(
         children: [
           widget.child,
-          // Floating active delivery button
-          if (_activeOrdersStream != null && !isCartPage)
+          // Floating active delivery button (only when logged in)
+          if (_activeOrdersStream != null && !isCartPage && FirebaseAuth.instance.currentUser != null)
             StreamBuilder<List<LokmaOrder>>(
               stream: _activeOrdersStream,
               builder: (context, snapshot) {
@@ -153,7 +153,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
             ),
         ],
       ),
-      bottomNavigationBar: (isCartPage || !isBottomNavVisible) 
+      bottomNavigationBar: (isCartPage || !isBottomNavVisible || (currentPath == '/profile' && FirebaseAuth.instance.currentUser == null)) 
         ? null 
         : GlassBottomBar(
             currentIndex: selectedIndex,

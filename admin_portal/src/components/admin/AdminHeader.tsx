@@ -1,14 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, Link } from '@/i18n/routing';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { auth, db } from '@/lib/firebase';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, doc, getDoc } from 'firebase/firestore';
 import { AdminType } from '@/types';
 import { getRoleLabel } from '@/lib/business-types';
-import { LanguageSwitcher } from '../LanguageSwitcher';
+import { locales, localeNames, localeFlags, Locale } from '@/i18n';
+import {
+    checkHealth, sendPrinterAlert,
+    PrinterSettings, DEFAULT_PRINTER_SETTINGS,
+    PrinterHealthState, DEFAULT_HEALTH_STATE,
+} from '@/services/printerService';
 
 
 
@@ -59,6 +64,107 @@ export default function AdminHeader() {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // Printer health monitoring state
+    const [printerSettings, setPrinterSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS);
+    const [printerHealth, setPrinterHealth] = useState<PrinterHealthState>(DEFAULT_HEALTH_STATE);
+    const printerHealthRef = useRef<PrinterHealthState>(DEFAULT_HEALTH_STATE);
+    const healthIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Load printer settings from Firestore for non-super admins
+    useEffect(() => {
+        const loadPrinterSettings = async () => {
+            if (admin?.butcherId && admin?.adminType !== 'super') {
+                try {
+                    const businessDoc = await getDoc(doc(db, 'businesses', admin.butcherId));
+                    if (businessDoc.exists()) {
+                        const data = businessDoc.data();
+                        if (data.printerSettings) {
+                            setPrinterSettings({
+                                enabled: data.printerSettings.enabled || false,
+                                printerIp: data.printerSettings.printerIp || '',
+                                printerPort: data.printerSettings.printerPort || 9100,
+                                autoPrint: data.printerSettings.autoPrint || false,
+                                printCopies: data.printerSettings.printCopies || 1,
+                                printServerUrl: data.printerSettings.printServerUrl || '',
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading printer settings:', error);
+                }
+            }
+        };
+        loadPrinterSettings();
+    }, [admin?.butcherId, admin?.adminType]);
+
+    // Printer health heartbeat (every 30s)
+    useEffect(() => {
+        if (!printerSettings.enabled || !printerSettings.printerIp || admin?.adminType === 'super') {
+            setPrinterHealth(DEFAULT_HEALTH_STATE);
+            printerHealthRef.current = DEFAULT_HEALTH_STATE;
+            return;
+        }
+
+        const runHealthCheck = async () => {
+            const prev = printerHealthRef.current;
+            const result = await checkHealth(printerSettings);
+
+            const newState: PrinterHealthState = {
+                status: result.online ? 'online' : 'offline',
+                lastChecked: new Date(),
+                lastOnline: result.online ? new Date() : prev.lastOnline,
+                responseTimeMs: result.responseTimeMs,
+                consecutiveFailures: result.online ? 0 : prev.consecutiveFailures + 1,
+                error: result.error,
+            };
+
+            if (!result.online && newState.consecutiveFailures < 2) {
+                newState.status = 'checking';
+            }
+
+            printerHealthRef.current = newState;
+            setPrinterHealth(newState);
+
+            // Transition: online -> offline
+            if (prev.status === 'online' && newState.status === 'offline') {
+                const bName = businessInfo?.companyName || 'LOKMA Marketplace';
+                sendPrinterAlert({
+                    type: 'offline',
+                    businessName: bName,
+                    printerIp: printerSettings.printerIp,
+                    printerPort: printerSettings.printerPort,
+                    errorDetails: result.error,
+                    adminEmail: admin?.email,
+                });
+            }
+
+            // Transition: offline -> online
+            if (prev.status === 'offline' && newState.status === 'online') {
+                const bName = businessInfo?.companyName || 'LOKMA Marketplace';
+                sendPrinterAlert({
+                    type: 'online',
+                    businessName: bName,
+                    printerIp: printerSettings.printerIp,
+                    printerPort: printerSettings.printerPort,
+                    adminEmail: admin?.email,
+                });
+            }
+        };
+
+        runHealthCheck();
+        healthIntervalRef.current = setInterval(runHealthCheck, 30000);
+
+        return () => {
+            if (healthIntervalRef.current) clearInterval(healthIntervalRef.current);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [printerSettings.enabled, printerSettings.printerIp, printerSettings.printerPort, admin?.adminType]);
+
+    // Language change handler (replaces LanguageSwitcher component)
+    const handleLocaleChange = (newLocale: Locale) => {
+        router.replace(pathname, { locale: newLocale });
+    };
 
     // Check if a nav item is active (simplified - pathname only)
     const isActiveNav = (href: string) => {
@@ -345,9 +451,8 @@ export default function AdminHeader() {
                             })}
                         </div>
 
-                        {/* Right Side - Settings, Locale, Profile */}
+                        {/* Right Side - Settings, Profile */}
                         <div className="flex items-center shrink-0 gap-2">
-                            <LanguageSwitcher />
                             <div className="relative group ml-2">
                                 <button className="flex items-center gap-1.5 hover:bg-white/10 rounded-lg px-2 py-1 transition">
                                     <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10 shadow-sm">
@@ -383,6 +488,23 @@ export default function AdminHeader() {
                                         <p className="text-gray-400 text-xs truncate">
                                             {admin.email || (admin as any).phoneNumber || ''}
                                         </p>
+                                    </div>
+
+                                    {/* Language Selection */}
+                                    <div className="py-2 border-b border-gray-700">
+                                        <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">{t('language')}</p>
+                                        <div className="flex flex-wrap gap-1 px-3 py-1">
+                                            {locales.map((l) => (
+                                                <button
+                                                    key={l}
+                                                    onClick={() => handleLocaleChange(l)}
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}`}
+                                                >
+                                                    <span>{localeFlags[l]}</span>
+                                                    <span>{localeNames[l]}</span>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     <div className="py-2 border-b border-gray-700">
@@ -570,9 +692,38 @@ export default function AdminHeader() {
                                 </div>
                             </div>
 
-                            {/* Profile & Role */}
-                            <div className="flex items-center shrink-0 gap-4 z-50">
-                                <LanguageSwitcher />
+                            {/* Printer Status + Profile & Role */}
+                            <div className="flex items-center shrink-0 gap-3 z-50">
+                                {/* Printer Health Indicator */}
+                                <Link
+                                    href="/admin/settings/printer"
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                        !printerSettings.enabled || !printerSettings.printerIp
+                                            ? 'bg-gray-700/50 border border-gray-600 text-gray-400'
+                                            : printerHealth.status === 'online'
+                                            ? 'bg-green-600/20 border border-green-500/50 text-green-400'
+                                            : printerHealth.status === 'offline'
+                                            ? 'bg-red-600/20 border border-red-500/50 text-red-400 animate-pulse'
+                                            : printerHealth.status === 'checking'
+                                            ? 'bg-yellow-600/20 border border-yellow-500/50 text-yellow-400'
+                                            : 'bg-gray-700/50 border border-gray-600 text-gray-400'
+                                    }`}
+                                    title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Pruefe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
+                                >
+                                    <span className={`w-2 h-2 rounded-full inline-block ${
+                                        !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-500' :
+                                        printerHealth.status === 'online' ? 'bg-green-400' :
+                                        printerHealth.status === 'offline' ? 'bg-red-500 animate-ping' :
+                                        printerHealth.status === 'checking' ? 'bg-yellow-400 animate-pulse' :
+                                        'bg-gray-500'
+                                    }`} />
+                                    {!printerSettings.enabled || !printerSettings.printerIp
+                                        ? 'Drucker'
+                                        : printerHealth.status === 'online' ? 'Online'
+                                        : printerHealth.status === 'offline' ? 'OFFLINE'
+                                        : printerHealth.status === 'checking' ? 'Pruefe...'
+                                        : 'Drucker'}
+                                </Link>
                                 <div className="relative group">
                                     <button className="flex items-center gap-1.5 hover:bg-white/5 rounded-lg px-2 py-1 transition">
                                         <div className="w-7 h-7 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
@@ -598,7 +749,7 @@ export default function AdminHeader() {
                                         </div>
                                         <span className="text-slate-500 text-[10px]">▼</span>
                                     </button>
-                                    <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px]">
+                                    <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
                                         <div className="px-4 py-3 border-b border-gray-700">
                                             <p className="text-white text-sm font-medium truncate">
                                                 {admin.displayName || 'Admin'}
@@ -606,6 +757,22 @@ export default function AdminHeader() {
                                             <p className="text-gray-400 text-xs truncate">
                                                 {admin.email || (admin as any).phoneNumber || ''}
                                             </p>
+                                        </div>
+                                        {/* Language Selection */}
+                                        <div className="py-2 border-b border-gray-700">
+                                            <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">{t('language')}</p>
+                                            <div className="flex flex-wrap gap-1 px-3 py-1">
+                                                {locales.map((l) => (
+                                                    <button
+                                                        key={l}
+                                                        onClick={() => handleLocaleChange(l)}
+                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}`}
+                                                    >
+                                                        <span>{localeFlags[l]}</span>
+                                                        <span>{localeNames[l]}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                         <Link
                                             href="/account"
@@ -618,7 +785,7 @@ export default function AdminHeader() {
                                             disabled={loggingOut}
                                             className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm disabled:opacity-50"
                                         >
-                                            {loggingOut ? '⏳ ...' : t('logout')}
+                                            {loggingOut ? '...' : t('logout')}
                                         </button>
                                     </div>
                                 </div>

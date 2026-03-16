@@ -837,16 +837,28 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               ],
               // Payment mapping and status inside a structured table view
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[900] : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
-                ),
-                child: Column(
-                  children: [
-                    if (order.paymentMethod != null) ...[
+              // ── Payment method card with timestamp ────────────────
+              if (order.paymentMethod != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[900] : Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'notifications.payment_method_label'.tr(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: isDark ? Colors.grey[500] : Colors.grey[500],
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -856,60 +868,40 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                               const SizedBox(width: 8),
                               Text(
                                 order.paymentMethod == 'cash' ? 'orders.pay_cash'.tr() 
-                                    : order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' ? 'Kapıda Kart' 
-                                    : order.paymentMethod == 'card_nfc' ? 'Kapıda Kart (NFC)' 
+                                    : order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' ? 'Kapida Kart' 
+                                    : order.paymentMethod == 'card_nfc' ? 'Kapida Kart (NFC)' 
                                     : order.paymentMethod == 'card' ? 'orders.pay_card'.tr() 
                                     : 'orders.pay_online'.tr(),
                                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
                               ),
                             ],
                           ),
-                          Text(
-                            '${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${(order.createdAt.year % 100).toString().padLeft(2, '0')} ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          Builder(
+                            builder: (context) {
+                              final now = DateTime.now();
+                              final diff = now.difference(order.updatedAt);
+                              String relativeTime;
+                              if (diff.inMinutes < 1) {
+                                relativeTime = 'notifications.just_now'.tr();
+                              } else if (diff.inMinutes < 60) {
+                                relativeTime = 'notifications.minutes_ago'.tr(args: ['${diff.inMinutes}']);
+                              } else if (diff.inHours < 24) {
+                                relativeTime = 'notifications.hours_ago'.tr(args: ['${diff.inHours}']);
+                              } else {
+                                relativeTime = 'notifications.days_ago'.tr(args: ['${diff.inDays}']);
+                              }
+                              return Text(
+                                '${'notifications.last_action_label'.tr()}: $relativeTime',
+                                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                              );
+                            },
                           ),
                         ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[300]),
-                      ),
                     ],
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              order.status == OrderStatus.delivered || order.status == OrderStatus.served ? Icons.check_circle_outline : Icons.info_outline,
-                              size: 16,
-                              color: _getStatusColor(order.status),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _getStatusTextCustom(order),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: _getStatusColor(order.status),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Builder(
-                          builder: (context) {
-                            final statusDate = order.deliveredAt ?? order.updatedAt;
-                            return Text(
-                              '${statusDate.day.toString().padLeft(2, '0')}.${statusDate.month.toString().padLeft(2, '0')}.${(statusDate.year % 100).toString().padLeft(2, '0')} ${statusDate.hour.toString().padLeft(2, '0')}:${statusDate.minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

@@ -11,6 +11,7 @@ import { KERMES_MENU_CATALOG, KermesMenuItemData } from '@/lib/kermes_menu_catal
 import { PlacesAutocomplete } from '@/components/PlacesAutocomplete';
 import { MapLocationPicker, SelectedLocation } from '@/components/MapLocationPicker';
 import { useTranslations } from 'next-intl';
+import { normalizeTimeString } from '@/utils/timeUtils';
 
 // Etkinlik özellikleri - Firestore'dan dinamik yüklenir
 interface KermesFeature {
@@ -276,8 +277,8 @@ export default function KermesDetailPage() {
                 // Tarih/Saat
                 date: startD ? startD.toISOString().split('T')[0] : '',
                 endDate: endD ? endD.toISOString().split('T')[0] : '',
-                openingTime: data.openingTime || '',
-                closingTime: data.closingTime || '',
+                openingTime: normalizeTimeString(data.openingTime || '') || '',
+                closingTime: normalizeTimeString(data.closingTime || '') || '',
                 // Konum
                 address: data.address || '',
                 secondStreetName: data.secondStreetName || '',
@@ -434,9 +435,9 @@ export default function KermesDetailPage() {
                 description: editForm.description || null,
                 descriptionSecondary: editForm.descriptionSecondary || null,
                 secondaryLanguage: editForm.secondaryLanguage || 'de',
-                // Saat
-                openingTime: editForm.openingTime || null,
-                closingTime: editForm.closingTime || null,
+                // Saat -- normalize before save
+                openingTime: normalizeTimeString(editForm.openingTime || '') || null,
+                closingTime: normalizeTimeString(editForm.closingTime || '') || null,
                 // Konum
                 address: editForm.address || null,
                 secondStreetName: editForm.secondStreetName || null,
@@ -794,8 +795,8 @@ export default function KermesDetailPage() {
                                             secondaryLanguage: kermes?.secondaryLanguage || 'de',
                                             date: kermes?.date ? new Date((kermes.date as any).seconds * 1000).toISOString().split('T')[0] : '',
                                             endDate: kermes?.endDate ? new Date((kermes.endDate as any).seconds * 1000).toISOString().split('T')[0] : '',
-                                            openingTime: kermes?.openingTime || '',
-                                            closingTime: kermes?.closingTime || '',
+                                            openingTime: normalizeTimeString(kermes?.openingTime || '') || '',
+                                            closingTime: normalizeTimeString(kermes?.closingTime || '') || '',
                                             address: kermes?.address || '',
                                             secondStreetName: kermes?.secondStreetName || '',
                                             city: kermes?.city || '',

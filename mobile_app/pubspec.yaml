@@ -66,6 +66,7 @@ dependencies:
   mobile_scanner: ^7.1.4
   timeago: ^3.7.1
   device_calendar: ^3.9.0
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -80,4 +81,5 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/translations/
+    - assets/sounds/
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:intl/intl.dart';
+import 'package:lokma_app/utils/time_utils.dart';
+
 
 /// OpenTable-style Reservation Booking Screen
 /// - Checks availability against maxReservationTables per time slot
@@ -133,59 +135,45 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
       1: 'Monday', 2: 'Tuesday', 3: 'Wednesday',
       4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday',
     };
-    const dayNamesTr = {
-      1: 'Pazartesi', 2: 'Salı', 3: 'Çarşamba',
-      4: 'Perşembe', 5: 'Cuma', 6: 'Cumartesi', 7: 'Pazar',
-    };
     
     final dayEn = dayNames[_selectedDate.weekday] ?? '';
-    final dayTr = dayNamesTr[_selectedDate.weekday] ?? '';
+    final dayLocalized = DateFormat('EEEE', context.locale.languageCode).format(_selectedDate);
     
     // Check if this day is marked as Closed
     final closedPattern = RegExp('$dayEn:\\s*Closed', caseSensitive: false);
     if (closedPattern.hasMatch(_openingHoursRaw)) {
-      return '$dayTr: Kapalı';
+      return 'reservation.day_closed'.tr(args: [dayLocalized]);
     }
     
     // Try to find the time range for this day
-    // Pattern: "Monday: 11:30 AM – 10:00 PM" or "Monday: 11:30 AM - 10:00 PM"
+    // Supports both 24h ("11:30 - 22:00") and AM/PM ("11:30 AM - 10:00 PM")
     final dayPattern = RegExp(
-      '$dayEn:\\s*(\\d{1,2}:\\d{2}\\s*(?:AM|PM)?)\\s*[–\\-]\\s*(\\d{1,2}:\\d{2}\\s*(?:AM|PM)?)',
+      '$dayEn:\\s*(\\d{1,2}[:.\\s]?\\d{0,2}\\s*(?:AM|PM)?)\\s*[\u2013\\-]\\s*(\\d{1,2}[:.\\s]?\\d{0,2}\\s*(?:AM|PM)?)',
       caseSensitive: false,
     );
     final match = dayPattern.firstMatch(_openingHoursRaw);
     
     if (match != null) {
-      final open = _parseTimeToHHMM(match.group(1)!.trim());
-      final close = _parseTimeToHHMM(match.group(2)!.trim());
-      return '$dayTr: $open – $close';
+      final open = normalizeTimeString(match.group(1)!.trim());
+      final close = normalizeTimeString(match.group(2)!.trim());
+      return '$dayLocalized: $open \u2013 $close';
     }
     
     // Fallback: try general time range
-    final timeRangeRegex = RegExp(r'(\d{1,2}):(\d{2})\s*(?:AM|PM)?\s*[–\-]\s*(\d{1,2}):(\d{2})\s*(?:AM|PM)?');
+    final timeRangeRegex = RegExp(r'(\d{1,2})[:.](\d{2})\s*(?:AM|PM)?\s*[\u2013\-]\s*(\d{1,2})[:.](\d{2})\s*(?:AM|PM)?');
     final generalMatch = timeRangeRegex.firstMatch(_openingHoursRaw);
     if (generalMatch != null) {
-      return '$dayTr: ${generalMatch.group(0)}';
+      final rawMatch = generalMatch.group(0) ?? '';
+      // Normalize both sides of the range
+      final rangeSep = rawMatch.contains('\u2013') ? '\u2013' : '-';
+      final rangeParts = rawMatch.split(rangeSep);
+      if (rangeParts.length == 2) {
+        return '$dayLocalized: ${normalizeTimeString(rangeParts[0].trim())} \u2013 ${normalizeTimeString(rangeParts[1].trim())}';
+      }
+      return '$dayLocalized: $rawMatch';
     }
     
     return '';
-  }
-  
-  /// Convert "11:30 AM" or "10:00 PM" to 24h "HH:MM" format
-  String _parseTimeToHHMM(String timeStr) {
-    final isPM = timeStr.toUpperCase().contains('PM');
-    final isAM = timeStr.toUpperCase().contains('AM');
-    final cleaned = timeStr.replaceAll(RegExp(r'\s*(AM|PM)\s*', caseSensitive: false), '').trim();
-    final parts = cleaned.split(':');
-    if (parts.length != 2) return cleaned;
-    
-    var hour = int.tryParse(parts[0]) ?? 0;
-    final minute = parts[1];
-    
-    if (isPM && hour < 12) hour += 12;
-    if (isAM && hour == 12) hour = 0;
-    
-    return '${hour.toString().padLeft(2, '0')}:$minute';
   }
 
   /// Parse opening hours and generate 30-min time slots for the given day
@@ -199,17 +187,28 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
     int closeMinute = 0;
 
     if (_openingHoursRaw.isNotEmpty) {
-      // Try simple parsing: look for time ranges like "10:00-22:00"
-      final timeRangeRegex = RegExp(r'(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})');
+      // Support both 24h and AM/PM, dot and colon separators
+      final timeRangeRegex = RegExp(r'(\d{1,2})[:.](\d{2})\s*(?:AM|PM)?\s*[\u2013\-]\s*(\d{1,2})[:.](\d{2})\s*(?:AM|PM)?', caseSensitive: false);
       final matches = timeRangeRegex.allMatches(_openingHoursRaw);
       
       if (matches.isNotEmpty) {
-        // Use first match as general hours
         final match = matches.first;
-        openHour = int.parse(match.group(1)!);
-        openMinute = int.parse(match.group(2)!);
-        closeHour = int.parse(match.group(3)!);
-        closeMinute = int.parse(match.group(4)!);
+        // Normalize each side through normalizeTimeString for AM/PM conversion
+        final rawOpen = match.group(0)!;
+        final sep = rawOpen.contains('\u2013') ? '\u2013' : '-';
+        final parts = rawOpen.split(sep);
+        if (parts.length == 2) {
+          final openNorm = normalizeTimeString(parts[0].trim());
+          final closeNorm = normalizeTimeString(parts[1].trim());
+          final openParts = openNorm.split(':');
+          final closeParts = closeNorm.split(':');
+          if (openParts.length == 2 && closeParts.length == 2) {
+            openHour = int.tryParse(openParts[0]) ?? openHour;
+            openMinute = int.tryParse(openParts[1]) ?? openMinute;
+            closeHour = int.tryParse(closeParts[0]) ?? closeHour;
+            closeMinute = int.tryParse(closeParts[1]) ?? closeMinute;
+          }
+        }
       }
     }
 
@@ -245,15 +244,15 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
   Future<void> _submitReservation() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _showSnackBar('Lütfen önce giriş yapın', isError: true);
+      _showSnackBar('reservation.please_login_first'.tr(), isError: true);
       return;
     }
     if (_selectedTime == null) {
-      _showSnackBar('Lütfen bir saat seçin', isError: true);
+      _showSnackBar('reservation.please_select_time'.tr(), isError: true);
       return;
     }
     if (_isSlotFull(_selectedTime!)) {
-      _showSnackBar('Bu saat dilimi dolu, lütfen başka saat seçin', isError: true);
+      _showSnackBar('reservation.time_slot_full'.tr(), isError: true);
       return;
     }
 
@@ -272,7 +271,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
 
       // Don't allow past reservations
       if (reservationDateTime.isBefore(DateTime.now())) {
-        _showSnackBar('Geçmiş bir saat seçemezsiniz', isError: true);
+        _showSnackBar('reservation.past_time_error'.tr(), isError: true);
         setState(() => _isSubmitting = false);
         return;
       }
@@ -297,7 +296,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
 
       if (_maxReservationTables > 0 && activeCount >= _maxReservationTables) {
         if (!mounted) return;
-        _showSnackBar('Bu saat dolmuş! Lütfen farklı bir saat seçin.', isError: true);
+        _showSnackBar('reservation.time_slot_full'.tr(), isError: true);
         await _loadSlotsForDate(_selectedDate); // Refresh slot counts
         setState(() => _isSubmitting = false);
         return;
@@ -336,7 +335,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
 
       _showPendingConfirmationDialog();
     } catch (e) {
-      _showSnackBar('Rezervasyon oluşturulamadı: $e', isError: true);
+      _showSnackBar('reservation.create_error'.tr(args: [e.toString()]), isError: true);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -373,11 +372,11 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                   _buildDetailRow(Icons.store, widget.businessName, textPrimary),
                   const SizedBox(height: 8),
                   _buildDetailRow(Icons.calendar_today,
-                      DateFormat('d MMMM yyyy, EEEE', 'tr').format(_selectedDate), textPrimary),
+                      DateFormat('d MMMM yyyy, EEEE', context.locale.languageCode).format(_selectedDate), textPrimary),
                   const SizedBox(height: 8),
-                  _buildDetailRow(Icons.access_time, 'Saat $_selectedTime', textPrimary),
+                  _buildDetailRow(Icons.access_time, 'reservation.time_prefix'.tr(args: [_selectedTime ?? '']), textPrimary),
                   const SizedBox(height: 8),
-                  _buildDetailRow(Icons.people, '$_partySize Kişi', textPrimary),
+                  _buildDetailRow(Icons.people, 'reservation.party_count'.tr(args: ['$_partySize']), textPrimary),
                 ],
               ),
             ),
@@ -395,9 +394,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Lütfen işletmeden onay bildirimini bekleyin. '
-                      'İşletme personeli talebinizi incelediğinde '
-                      'bildirim alacaksınız.',
+                      'reservation.await_confirmation'.tr(),
                       style: TextStyle(fontSize: 12, color: textSecondary),
                     ),
                   ),
@@ -462,7 +459,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
         title: Column(
           children: [
             Text(
-              'Masa Rezervasyonu',
+              'reservation.table_reservation'.tr(),
               style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             Text(
@@ -489,7 +486,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                       Icon(Icons.people, color: _accent, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Kişi Sayısı',
+                        'reservation.party_size_label'.tr(),
                         style: TextStyle(
                           color: textPrimary,
                           fontSize: 16,
@@ -633,7 +630,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                   Text(
                                     isToday
                                         ? 'reservation.today'.tr()
-                                        : DateFormat('EEE', 'tr').format(date),
+                                        : DateFormat('EEE', context.locale.languageCode).format(date),
                                     style: TextStyle(
                                       color: isSelected ? Colors.white70 : textSecondary,
                                       fontSize: 11,
@@ -649,7 +646,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                     ),
                                   ),
                                   Text(
-                                    DateFormat('MMM', 'tr').format(date),
+                                    DateFormat('MMM', context.locale.languageCode).format(date),
                                     style: TextStyle(
                                       color: isSelected ? Colors.white70 : textSecondary,
                                       fontSize: 11,
@@ -724,7 +721,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                             Icon(Icons.event_busy, color: Colors.grey[400], size: 40),
                             const SizedBox(height: 8),
                             Text(
-                              'Bu tarih için uygun saat bulunamadı',
+                              'reservation.no_slots_available'.tr(),
                               style: TextStyle(color: textSecondary, fontSize: 14),
                             ),
                           ],
@@ -810,7 +807,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                 ),
                                 if (isFull)
                                   Text(
-                                    'DOLU',
+                                    'reservation.slot_full_label'.tr(),
                                     style: TextStyle(
                                       color: Colors.red[400],
                                       fontSize: 9,
@@ -819,7 +816,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                   )
                                 else if (_maxReservationTables > 0 && remaining <= 3)
                                   Text(
-                                    '$remaining kaldı',
+                                    'reservation.slots_remaining'.tr(args: ['$remaining']),
                                     style: TextStyle(
                                       color: isSelected ? Colors.white70 : Colors.amber[700],
                                       fontSize: 9,
@@ -849,7 +846,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                       Icon(Icons.note_alt_outlined, color: _accent, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Notlar',
+                        'reservation.notes_label'.tr(),
                         style: TextStyle(
                           color: textPrimary,
                           fontSize: 16,
@@ -872,7 +869,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                     style: TextStyle(color: textPrimary),
                     decoration: InputDecoration(
                       hintText:
-                          'Özel isteklerinizi yazın (ör: doğum günü, çocuk sandalyesi...)',
+                          'reservation.notes_hint'.tr(),
                       hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                       filled: true,
                       fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
@@ -901,13 +898,13 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                     children: [
                       _buildSummaryItem(
                         Icons.people,
-                        '$_partySize Kişi',
+                        'reservation.party_count'.tr(args: ['$_partySize']),
                         textPrimary,
                         textSecondary,
                       ),
                       _buildSummaryItem(
                         Icons.calendar_today,
-                        DateFormat('d MMM', 'tr').format(_selectedDate),
+                        DateFormat('d MMM', context.locale.languageCode).format(_selectedDate),
                         textPrimary,
                         textSecondary,
                       ),
@@ -946,14 +943,14 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Row(
+                          : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.restaurant, size: 20),
-                                SizedBox(width: 8),
+                                const Icon(Icons.restaurant, size: 20),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Rezervasyon Talebi Gönder',
-                                  style: TextStyle(
+                                  'reservation.send_request'.tr(),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -964,7 +961,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'İşletme onayı gereklidir',
+                    'reservation.business_approval_required'.tr(),
                     style: TextStyle(color: textSecondary, fontSize: 11),
                     textAlign: TextAlign.center,
                   ),

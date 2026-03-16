@@ -11,6 +11,7 @@ import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/referral_service.dart';
+import '../auth/login_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -37,7 +38,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: user != null ? AppBar(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? Theme.of(context).scaffoldBackgroundColor
             : Colors.white,
@@ -49,132 +50,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600)),
         centerTitle: true,
-      ),
-      body: user == null ? _buildLoginPrompt() : _buildProfile(user),
+      ) : null,
+      body: user == null ? const LoginScreen(embedded: true) : _buildProfile(user),
     );
   }
 
-  Widget _buildLoginPrompt() {
-    // Directly navigate to the new LOKMA branded login screen
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // LOKMA Logo
-            ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Image.asset(
-                'assets/images/lokma_logo.png',
-                height: 120,
-                width: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 120,
-                  width: 120,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFB335B),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Center(
-                    child: Text('🍕', style: TextStyle(fontSize: 48)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'LOKMA',
-              style: TextStyle(
-                color: Color(0xFFFB335B),
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Fresh. Fast. Local.',
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 16,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              'profile.login_subtitle'.tr(),
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
 
-            // Single prominent login button
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                context.push('/login');
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFB335B),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFB335B).withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'profile.login_register_button'.tr(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Guest option
-            TextButton(
-              onPressed: () async {
-                setState(() => _isLoading = true);
-                try {
-                  await _auth.signInAnonymously();
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('${'profile.login_error'.tr()}: $e'),
-                          backgroundColor: Colors.red),
-                    );
-                  }
-                }
-                setState(() => _isLoading = false);
-              },
-              child: Text(
-                'profile.continue_as_guest'.tr(),
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildProfile(User user) {
     return StreamBuilder<DocumentSnapshot>(

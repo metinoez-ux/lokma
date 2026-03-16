@@ -33,6 +33,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   
   // Business location from Firestore
   LatLng? _businessPosition;
+  String? _businessName;
   bool _businessFetched = false;
   
   // Auto-refresh
@@ -88,6 +89,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
             locations.first.longitude,
           );
         });
+        _centerMapOnAvailablePositions();
       }
     } catch (e) {
       debugPrint('[CourierTracking] Geocoding failed for: $address — $e');
@@ -115,12 +117,39 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
               (lat as num).toDouble(),
               (lng as num).toDouble(),
             );
+            _businessName = data['name'] as String? ?? data['businessName'] as String?;
           });
-          debugPrint('[CourierTracking] 🏪 Business location: $lat, $lng');
+          _centerMapOnAvailablePositions();
+          debugPrint('[CourierTracking] Business location: $lat, $lng, name: $_businessName');
         }
       }
     } catch (e) {
       debugPrint('[CourierTracking] Failed to fetch business location: $e');
+    }
+  }
+
+  void _centerMapOnAvailablePositions() {
+    if (!mounted) return;
+    
+    final hasB = _businessPosition != null;
+    final hasD = _deliveryPosition != null;
+    
+    if (hasB && hasD) {
+      final bounds = LatLngBounds.fromPoints([_businessPosition!, _deliveryPosition!]);
+      try {
+        _mapController.fitCamera(
+          CameraFit.bounds(
+            bounds: bounds,
+            padding: const EdgeInsets.all(60),
+          ),
+        );
+      } catch (_) {
+        _mapController.move(_businessPosition!, 14);
+      }
+    } else if (hasB) {
+      _mapController.move(_businessPosition!, 14);
+    } else if (hasD) {
+      _mapController.move(_deliveryPosition!, 14);
     }
   }
 
@@ -144,28 +173,25 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.refresh, size: 16, color: Colors.white),
-                    SizedBox(width: 4),
-                    Text('Güncelle', style: TextStyle(fontSize: 12, color: Colors.white)),
+                    Icon(Icons.refresh, size: 16, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text(tr('orders.refresh'), style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary)),
                   ],
                 ),
               ),
             ),
           ],
         ),
-        backgroundColor: _brandColor,
-        foregroundColor: Colors.white,
         actions: [
-          // Chat button
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
-            tooltip: 'Mesaj Gönder',
+            tooltip: tr('orders.send_message'),
             onPressed: () {
               if (_order != null) {
                 Navigator.push(
@@ -174,7 +200,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                     builder: (_) => OrderChatScreen(
                       orderId: widget.orderId,
                       orderNumber: _order!.orderNumber ?? widget.orderId.substring(0, 6).toUpperCase(),
-                      recipientName: _order!.courierName != null ? 'Kurye: ${_order!.courierName}' : 'Mesajlaşma',
+                      recipientName: _order!.courierName != null ? '${tr('orders.courier')}: ${_order!.courierName}' : tr('orders.messaging'),
                       recipientRole: 'courier',
                     ),
                   ),
@@ -336,7 +362,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order.courierName ?? 'Kurye',
+                      order.courierName ?? tr('orders.courier'),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -361,7 +387,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                    size: 14, color: Colors.green.shade700),
                               const SizedBox(width: 4),
                               Text(
-                                'Yolda',
+                                tr('orders.on_the_way'),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.green.shade700,
@@ -474,11 +500,15 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         
         // Map
         Expanded(
-          child: hasLocation
-              ? FlutterMap(
+          child: Stack(
+            children: [
+              SizedBox.expand(
+                child: FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    initialCenter: courierPosition,
+                    initialCenter: hasLocation
+                        ? courierPosition
+                        : (businessPosition ?? _deliveryPosition ?? const LatLng(41.0082, 28.9784)),
                     initialZoom: 14,
                   ),
                   children: [
@@ -488,34 +518,67 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                     ),
                     // Static markers (business + delivery)
                     MarkerLayer(
+                      rotate: true,
                       markers: [
-                        // 🏪 Business marker (where order was picked up)
+                        // Business marker (where order was picked up)
                         if (businessPosition != null)
                           Marker(
                             point: businessPosition,
-                            width: 44,
-                            height: 44,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: _brandColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                            width: 120,
+                            height: 64,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: _brandColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.storefront,
-                                color: Colors.white,
-                                size: 22,
-                              ),
+                                  child: const Icon(
+                                    Icons.storefront,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                if (_businessName != null)
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      _businessName!,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                        // 📍 Delivery address marker (customer location)
+                        // Delivery address marker (customer location)
                         if (_deliveryPosition != null)
                           Marker(
                             point: _deliveryPosition!,
@@ -543,58 +606,88 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           ),
                       ],
                     ),
-                    // 🏍️ Animated courier marker (hopping)
-                    AnimatedBuilder(
-                      animation: _hopAnimation,
-                      builder: (context, child) {
-                        return MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: courierPosition,
-                              width: 50,
-                              height: 50,
-                              child: Transform.translate(
-                                offset: Offset(0, _hopAnimation.value),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.shade600,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.motorcycle,
-                                    color: Colors.white,
-                                    size: 28,
+                    // Animated courier marker (hopping) -- only if location exists
+                    if (hasLocation)
+                      AnimatedBuilder(
+                        animation: _hopAnimation,
+                        builder: (context, child) {
+                          return MarkerLayer(
+                            rotate: true,
+                            markers: [
+                              Marker(
+                                point: courierPosition,
+                                width: 50,
+                                height: 50,
+                                child: Transform.translate(
+                                  offset: Offset(0, _hopAnimation.value),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade600,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.motorcycle,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                )
-              : Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Kurye konumu bekleniyor...',
-                        style: TextStyle(color: Colors.grey[600]),
+                            ],
+                          );
+                        },
                       ),
-                    ],
+                  ],
+                ),
+              ),
+              // Info banner when courier location is not available
+              if (!hasLocation)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    margin: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade700,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            tr('orders.courier_location_unavailable'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+            ],
+          ),
         ),
 
         // Collapsible order details panel
@@ -625,9 +718,9 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildLegendItem(Colors.red.shade600, Icons.motorcycle, 'Kurye', isDark),
-                _buildLegendItem(_brandColor, Icons.storefront, 'İşletme', isDark),
-                _buildLegendItem(Colors.blue.shade700, Icons.home, 'Teslimat', isDark),
+                _buildLegendItem(Colors.red.shade600, Icons.motorcycle, tr('orders.courier'), isDark),
+                _buildLegendItem(_brandColor, Icons.storefront, tr('orders.business'), isDark),
+                _buildLegendItem(Colors.blue.shade700, Icons.home, tr('orders.delivery'), isDark),
               ],
             ),
           ),
@@ -760,11 +853,11 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     final diff = nowUtc.difference(timeUtc);
     
     if (diff.isNegative || diff.inSeconds < 30) {
-      return 'Az önce';
+      return tr('orders.just_now');
     } else if (diff.inMinutes < 1) {
-      return '${diff.inSeconds} sn önce';
+      return tr('orders.seconds_ago', args: [diff.inSeconds.toString()]);
     } else if (diff.inMinutes < 60) {
-      return '${diff.inMinutes} dk önce';
+      return tr('orders.minutes_ago', args: [diff.inMinutes.toString()]);
     } else {
       final localTime = time.toLocal();
       return '${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';

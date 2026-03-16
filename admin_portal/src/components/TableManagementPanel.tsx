@@ -409,7 +409,7 @@ export default function TableManagementPanel({
                   await downloadAllTableCardsAsSinglePDF(
                     tables,
                     businessId,
-                    businessName || "Isletme",
+                    businessName || t("isletme_fallback"),
                     country
                   );
                 }}
@@ -425,7 +425,7 @@ export default function TableManagementPanel({
                   await downloadAllTableCardPDFs(
                     tables,
                     businessId,
-                    businessName || "Isletme",
+                    businessName || t("isletme_fallback"),
                     country
                   );
                 }}
@@ -440,7 +440,7 @@ export default function TableManagementPanel({
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(tableQrTarget)}`;
                     const link = document.createElement("a");
                     link.href = qrUrl;
-                    link.download = `Masa_${table.label}_QR.png`;
+                    link.download = `${t("masa_prefix")}_${table.label}_QR.png`;
                     link.target = "_blank";
                     document.body.appendChild(link);
                     link.click();
@@ -449,7 +449,7 @@ export default function TableManagementPanel({
                 }}
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
               >
-                QR PNG
+                {t("qr_png")}
               </button>
             </div>
           </div>
@@ -471,7 +471,7 @@ export default function TableManagementPanel({
                       await downloadTableCardPDF(
                         table.label,
                         businessId,
-                        businessName || "Isletme",
+                        businessName || t("isletme_fallback"),
                         country
                       );
                     }}
@@ -481,7 +481,7 @@ export default function TableManagementPanel({
                     <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
                       <img
                         src={qrImageUrl}
-                        alt={`Masa ${table.label}`}
+                        alt={`${t("masa_prefix")} ${table.label}`}
                         className="w-full h-full object-contain"
                         loading="lazy"
                       />

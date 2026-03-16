@@ -1167,14 +1167,27 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ),
                       if (hasAny)
                         Positioned(
-                          top: -4,
-                          right: -6,
+                          top: -2,
+                          right: -4,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
-                              color: lokmaPink,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.white, width: 1),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               '${favorites.length}',

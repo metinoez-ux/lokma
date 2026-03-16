@@ -58,6 +58,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [occupiedCards, setOccupiedCards] = useState<Set<number>>(new Set());
     const [cardModalLoading, setCardModalLoading] = useState(false);
+    // Cancel confirmation modal
+    const [showCancelModal, setShowCancelModal] = useState<{ resId: string } | null>(null);
+    const [cancelReason, setCancelReason] = useState("");
+    const [cancelNote, setCancelNote] = useState("");
 
     // Load maxReservationTables from business document
     useEffect(() => {
@@ -224,6 +228,73 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error("Error updating reservation:", err);
+            setNotification({ msg: t('hata_olustu'), type: "error" });
+            setTimeout(() => setNotification(null), 3000);
+        } finally {
+            setActionLoading(null);
+        }
+    }
+
+    const CANCEL_REASONS = [
+        "Masa musait degil",
+        "Isletme kapali",
+        "Personel yetersiz",
+        "Musteri ile iletisim kurulamadi",
+        "Diger",
+    ];
+
+    async function handleCancel() {
+        if (!showCancelModal || !cancelReason) return;
+        const resId = showCancelModal.resId;
+        setActionLoading(resId);
+        try {
+            const resRef = doc(db, "businesses", businessId, "reservations", resId);
+            await updateDoc(resRef, {
+                status: "cancelled",
+                cancellationReason: cancelReason,
+                cancellationNote: cancelNote.trim() || "",
+                cancelledBy: staffName,
+                cancelledAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            });
+            setReservations((prev) =>
+                prev.map((r) => (r.id === resId ? { ...r, status: "cancelled" as const, confirmedBy: staffName } : r))
+            );
+            setShowCancelModal(null);
+            setCancelReason("");
+            setCancelNote("");
+            setNotification({ msg: "Rezervasyon iptal edildi", type: "success" });
+            setTimeout(() => setNotification(null), 3000);
+        } catch (err) {
+            console.error("Error cancelling reservation:", err);
+            setNotification({ msg: t('hata_olustu'), type: "error" });
+            setTimeout(() => setNotification(null), 3000);
+        } finally {
+            setActionLoading(null);
+        }
+    }
+
+    async function handleReactivate(resId: string) {
+        setActionLoading(resId);
+        try {
+            const resRef = doc(db, "businesses", businessId, "reservations", resId);
+            await updateDoc(resRef, {
+                status: "pending",
+                reactivatedBy: staffName,
+                reactivatedAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                cancellationReason: deleteField(),
+                cancellationNote: deleteField(),
+                cancelledBy: deleteField(),
+                cancelledAt: deleteField(),
+            });
+            setReservations((prev) =>
+                prev.map((r) => (r.id === resId ? { ...r, status: "pending" as const, confirmedBy: null } : r))
+            );
+            setNotification({ msg: "Rezervasyon tekrar aktif edildi", type: "success" });
+            setTimeout(() => setNotification(null), 3000);
+        } catch (err) {
+            console.error("Error reactivating reservation:", err);
             setNotification({ msg: t('hata_olustu'), type: "error" });
             setTimeout(() => setNotification(null), 3000);
         } finally {
@@ -435,6 +506,28 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                             </button>
                                         </div>
                                     )}
+                                    {(res.status === "confirmed" || res.status === "rejected") && !isPast && (
+                                        <div className="flex gap-2 shrink-0">
+                                            <button
+                                                onClick={() => { setShowCancelModal({ resId: res.id }); setCancelReason(""); setCancelNote(""); }}
+                                                disabled={actionLoading === res.id}
+                                                className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-medium rounded-lg border border-red-500/30 transition disabled:opacity-50"
+                                            >
+                                                Iptal Et
+                                            </button>
+                                        </div>
+                                    )}
+                                    {res.status === "cancelled" && !isPast && (
+                                        <div className="flex gap-2 shrink-0">
+                                            <button
+                                                onClick={() => handleReactivate(res.id)}
+                                                disabled={actionLoading === res.id}
+                                                className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition disabled:opacity-50"
+                                            >
+                                                {actionLoading === res.id ? "..." : "Tekrar Aktif Et"}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -513,6 +606,66 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                 {selectedCards.size === 0
                                     ? t('numara_secin')
                                     : `Onayla (${selectedCards.size} masa)`}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel Confirmation Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-700">
+                            <h2 className="text-xl font-bold text-white">Rezervasyonu Iptal Et</h2>
+                            <p className="text-gray-400 text-sm mt-1">Iptal sebebini secin</p>
+                        </div>
+                        <div className="p-6 space-y-3">
+                            {CANCEL_REASONS.map((reason) => (
+                                <label
+                                    key={reason}
+                                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${
+                                        cancelReason === reason
+                                            ? "bg-red-600/20 border border-red-500/40"
+                                            : "bg-gray-700/50 border border-gray-600/30 hover:bg-gray-700"
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="cancelReason"
+                                        value={reason}
+                                        checked={cancelReason === reason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        className="accent-red-500"
+                                    />
+                                    <span className="text-sm text-gray-200">{reason}</span>
+                                </label>
+                            ))}
+                            <textarea
+                                value={cancelNote}
+                                onChange={(e) => setCancelNote(e.target.value)}
+                                placeholder="Ek aciklama (istege bagli)..."
+                                rows={2}
+                                className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                            />
+                        </div>
+                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                            <button
+                                onClick={() => { setShowCancelModal(null); setCancelReason(""); setCancelNote(""); }}
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                            >
+                                Vazgec
+                            </button>
+                            <button
+                                disabled={!cancelReason || actionLoading === showCancelModal.resId}
+                                onClick={handleCancel}
+                                className={`flex-[2] py-3 rounded-lg font-medium transition ${
+                                    !cancelReason
+                                        ? "bg-gray-600 text-gray-500 cursor-not-allowed"
+                                        : "bg-red-600 hover:bg-red-500 text-white"
+                                }`}
+                            >
+                                {actionLoading === showCancelModal.resId ? "..." : "Iptal Et"}
                             </button>
                         </div>
                     </div>

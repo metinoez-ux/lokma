@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { normalizeTimeString } from '@/utils/timeUtils';
 
 interface OpeningHoursDisplayProps {
     rawHours: string;
@@ -11,20 +12,15 @@ const OpeningHoursDisplay: React.FC<OpeningHoursDisplayProps> = ({ rawHours }) =
   const t = useTranslations('AdminComponentOpeningHoursDisplay');
 if (!rawHours) return null;
 
-    // Expected format: "Monday: Closed | Tuesday: 9:00 AM – 6:00 PM | ..."
-    const days = rawHours.split(' | ');
+    // Hem "\n" hem " | " seperatorunu destekle (eski ve yeni format)
+    const days = rawHours.includes('\n') ? rawHours.split('\n') : rawHours.split(' | ');
 
-    // Get current day index (0 = Sunday, 1 = Monday ...)
-    // Google usually orders starting Monday if using weekday_text, but we should rely on string content or index.
-    // JS getDay(): 0=Sun, 1=Mon...6=Sat. 
-    // Let's just highlight based on string matching current English day name if possible, or just list them nicely.
-
-    // Actually, let's map JS day integer to a string to find match.
+    // Bugunun gun ismini bul
     const todayIndex = new Date().getDay();
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const todayName = dayNames[todayIndex];
 
-    // Map English Google days to Turkish
+    // Gun ismi cevirisi
     const trDays: Record<string, string> = {
         'Monday': 'Pazartesi',
         'Tuesday': t('sali'),
@@ -35,20 +31,6 @@ if (!rawHours) return null;
         'Sunday': 'Pazar'
     };
 
-    // Helper to convert 12h AM/PM to 24h format (e.g. "7:30 AM" -> "07:30")
-    const to24Hour = (timeStr: string): string => {
-        return timeStr.replace(/(\d{1,2}):(\d{2})\s?(AM|PM)/gi, (match, h, m, period) => {
-            let hour = parseInt(h, 10);
-            const minute = m;
-            const isPM = period.toUpperCase() === 'PM';
-
-            if (isPM && hour < 12) hour += 12;
-            if (!isPM && hour === 12) hour = 0;
-
-            return `${hour.toString().padStart(2, '0')}:${minute}`;
-        });
-    };
-
     return (
         <div className="mt-4 bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h4 className="text-gray-300 text-sm font-semibold mb-3 flex items-center gap-2">
@@ -56,15 +38,25 @@ if (!rawHours) return null;
             </h4>
             <div className="space-y-2">
                 {days.map((dayStr, idx) => {
-                    // dayStr ex: "Monday: 9:00 AM – 6:00 PM"
-                    const parts = dayStr.split(': ');
-                    if (parts.length < 2) return <div key={idx} className="text-gray-400 text-xs">{dayStr}</div>;
+                    const trimmed = dayStr.trim();
+                    if (!trimmed) return null;
 
-                    const dayNameEng = parts[0];
-                    let hours = parts.slice(1).join(': ');
+                    // "Monday: 9:00 AM – 6:00 PM" veya "Monday: 11:30 - 22:00"
+                    const colonMatch = trimmed.match(/^([a-zA-ZçşğüöıÇŞĞÜÖİäÄ\s]+):\s*(.*)/);
+                    if (!colonMatch) return <div key={idx} className="text-gray-400 text-xs">{trimmed}</div>;
 
-                    // Convert to 24h format
-                    hours = to24Hour(hours);
+                    const dayNameEng = colonMatch[1].trim();
+                    let hours = colonMatch[2].trim();
+
+                    // Saat kismini 24h formatina normalize et
+                    const lowerHours = hours.toLowerCase();
+                    if (!lowerHours.includes('closed') && !lowerHours.includes('kapal') && !lowerHours.includes('geschlossen')) {
+                        const separator = hours.includes('\u2013') ? '\u2013' : '-';
+                        const rangeParts = hours.split(separator).map(p => p.trim());
+                        if (rangeParts.length >= 2) {
+                            hours = `${normalizeTimeString(rangeParts[0])} - ${normalizeTimeString(rangeParts[1])}`;
+                        }
+                    }
 
                     const isToday = dayNameEng === todayName;
                     const trDayName = trDays[dayNameEng] || dayNameEng;

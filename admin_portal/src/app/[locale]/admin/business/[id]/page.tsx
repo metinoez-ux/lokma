@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Fragment } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
+import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import {
   doc,
@@ -118,97 +119,28 @@ declare global {
 export default function BusinessDetailsPage() {
   const t = useTranslations('AdminBusiness');
 
-  function parseTime(timeStr: string) {
-    if (!timeStr) return null;
-    const normalized = timeStr.toUpperCase().replace(/\./g, ":");
-    let hours = 0;
-    let minutes = 0;
-    const isPM = normalized.includes("PM");
-    const isAM = normalized.includes("AM");
-    const timeParts = normalized.match(/(\d+):?(\d+)?/);
-    if (timeParts) {
-      hours = parseInt(timeParts[1]);
-      minutes = timeParts[2] ? parseInt(timeParts[2]) : 0;
-      if (isPM && hours < 12) hours += 12;
-      if (isAM && hours === 12) hours = 0;
-    }
-    const d = new Date();
-    d.setHours(hours, minutes, 0, 0);
-    return d;
-  }
-
+  // formatTo24h: paylasimli utility uzerinden -- AM/PM, 24h, nokta seperator hepsini handle eder
   function formatTo24h(timeStr: string): string {
-    const dateObj = parseTime(timeStr);
-    if (!dateObj) return timeStr;
-    const h = dateObj.getHours().toString().padStart(2, '0');
-    const m = dateObj.getMinutes().toString().padStart(2, '0');
-    return `${h}:${m}`;
+    return normalizeTimeString(timeStr) || timeStr;
   }
 
+  // checkShopStatus: paylasimli utility uzerinden -- tum gun ismi ve saat formati varyasyonlarini handle eder
   function checkShopStatus(openingHours: string | string[]) {
     try {
-      const hoursStr = Array.isArray(openingHours) ? openingHours.join("\n") : openingHours;
-      if (!hoursStr) return { isOpen: false, text: t('kapali'), isClosed: true };
+      const raw = Array.isArray(openingHours) ? openingHours.join('\n') : openingHours;
+      if (!raw) return { isOpen: false, text: t('kapali'), isClosed: true };
 
-      const now = new Date();
-
-      // Support both Turkish and English day names similar to the mobile app
-      const dayNamesTr = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-      const dayNamesEng = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-      const dayIndex = now.getDay();
-      const currentDayTr = dayNamesTr[dayIndex];
-      const currentDayEng = dayNamesEng[dayIndex];
-      // Also fallback to translated ones just in case
-      const currentDayTransTr = ["Pazar", "Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi"][dayIndex];
-
-      const todayLine = hoursStr.split("\n").find((l: string) => {
-        const lowerLine = l.toLowerCase();
-        return lowerLine.startsWith(currentDayTr.toLowerCase() + ":") ||
-          lowerLine.startsWith(currentDayTr.toLowerCase() + " ") ||
-          lowerLine.startsWith(currentDayEng.toLowerCase() + ":") ||
-          lowerLine.startsWith(currentDayEng.toLowerCase() + " ") ||
-          lowerLine.startsWith(currentDayTransTr.toLowerCase() + ":") ||
-          lowerLine.startsWith(currentDayTransTr.toLowerCase() + " ");
-      });
-
-      if (!todayLine) return { isOpen: false, text: t('kapali'), isClosed: true };
-
-      const lowerLine = todayLine.toLowerCase();
-      if (lowerLine.includes(t('kapali1').toLowerCase()) || lowerLine.includes("kapalı") || lowerLine.includes("closed")) {
+      const result = getScheduleForToday(raw);
+      if (result.isOpen) {
+        return { isOpen: true, text: t('suAnAcik') };
+      }
+      // Bugun tamamen kapali mi yoksa saat disi mi?
+      if (!result.todayOpen && !result.todayClose) {
         return { isOpen: false, text: t('bugunKapali'), isClosed: true };
       }
-
-      const timePart = todayLine.split(": ").slice(1).join(": ").trim();
-      if (!timePart || timePart === '-') return { isOpen: false, text: t('saat_bilgisi_yok'), isClosed: false };
-      if (lowerLine.includes('24 saat') || lowerLine.includes('open 24')) return { isOpen: true, text: t('suAnAcik') };
-
-      const ranges = timePart.includes(",") ? timePart.split(",") : [timePart];
-
-      for (let range of ranges) {
-        range = range.replace('–', '-').replace('.', ':').trim();
-        if (!range || range === '-') continue;
-
-        const parts = range.split("-");
-        if (parts.length < 2) continue;
-
-        const start = parseTime(parts[0].trim());
-        let end = parseTime(parts[1].trim());
-
-        if (!start || !end) continue;
-
-        // Overnight handling
-        if (end <= start) {
-          end.setDate(end.getDate() + 1);
-        }
-
-        if (now >= start && now <= end) {
-          return { isOpen: true, text: t('suAnAcik') };
-        }
-      }
-      return { isOpen: false, text: t('suAnKapali') };
+      return { isOpen: false, text: t('suAnKapali'), isClosed: false };
     } catch (e) {
-      console.error("Status checking error", e);
+      console.error('Status checking error', e);
       return { isOpen: false, text: t('hata') };
     }
   }
@@ -783,9 +715,28 @@ export default function BusinessDetailsPage() {
           country: d.address?.country || "DE",
           shopPhone: d.shopPhone || "",
           shopEmail: d.shopEmail || "",
-          openingHours: Array.isArray(d.openingHours)
-            ? d.openingHours.join("\n")
-            : d.openingHours || "",
+          openingHours: (() => {
+            const raw = Array.isArray(d.openingHours)
+              ? d.openingHours.join('\n')
+              : d.openingHours || '';
+            // Okunan veriyi 24h formatina normalize et (eski AM/PM verilerini duzeltir)
+            return raw.split('\n').map((line: string) => {
+              const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+              if (!match) return line.trim();
+              const dayName = match[1].trim();
+              const timePart = match[2].trim();
+              const lower = timePart.toLowerCase();
+              if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                return `${dayName}: Closed`;
+              }
+              const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+              const parts = timePart.split(sep).map((p: string) => p.trim());
+              if (parts.length >= 2) {
+                return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+              }
+              return line.trim();
+            }).filter(Boolean).join('\n');
+          })(),
           contactName: d.contactPerson?.name || "",
           contactSurname: d.contactPerson?.surname || "",
           contactPhone: d.contactPerson?.phone || "",
@@ -807,12 +758,48 @@ export default function BusinessDetailsPage() {
           minDeliveryOrder: d.minDeliveryOrder || 0,
           deliveryFee: d.deliveryFee || 0,
           // 🆕 {t('gelismis')} Sipariş Saatleri
-          deliveryStartTime: d.deliveryStartTime || "",
-          deliveryEndTime: d.deliveryEndTime || "",
-          pickupStartTime: d.pickupStartTime || "",
-          pickupEndTime: d.pickupEndTime || "",
-          deliveryHours: Array.isArray(d.deliveryHours) ? d.deliveryHours.join("\n") : (d.deliveryHours || ""),
-          pickupHours: Array.isArray(d.pickupHours) ? d.pickupHours.join("\n") : (d.pickupHours || ""),
+          deliveryStartTime: normalizeTimeString(d.deliveryStartTime || ''),
+          deliveryEndTime: normalizeTimeString(d.deliveryEndTime || ''),
+          pickupStartTime: normalizeTimeString(d.pickupStartTime || ''),
+          pickupEndTime: normalizeTimeString(d.pickupEndTime || ''),
+          deliveryHours: (() => {
+            const raw = Array.isArray(d.deliveryHours) ? d.deliveryHours.join('\n') : (d.deliveryHours || '');
+            return raw.split('\n').map((line: string) => {
+              const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+              if (!match) return line.trim();
+              const dayName = match[1].trim();
+              const timePart = match[2].trim();
+              const lower = timePart.toLowerCase();
+              if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                return `${dayName}: Closed`;
+              }
+              const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+              const parts = timePart.split(sep).map((p: string) => p.trim());
+              if (parts.length >= 2) {
+                return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+              }
+              return line.trim();
+            }).filter(Boolean).join('\n');
+          })(),
+          pickupHours: (() => {
+            const raw = Array.isArray(d.pickupHours) ? d.pickupHours.join('\n') : (d.pickupHours || '');
+            return raw.split('\n').map((line: string) => {
+              const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+              if (!match) return line.trim();
+              const dayName = match[1].trim();
+              const timePart = match[2].trim();
+              const lower = timePart.toLowerCase();
+              if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                return `${dayName}: Closed`;
+              }
+              const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+              const parts = timePart.split(sep).map((p: string) => p.trim());
+              if (parts.length >= 2) {
+                return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+              }
+              return line.trim();
+            }).filter(Boolean).join('\n');
+          })(),
           preOrderEnabled: d.preOrderEnabled || false,
           freeDeliveryThreshold: d.freeDeliveryThreshold || 0,
           // 🆕 Geçici Kurye Kapatma
@@ -2167,7 +2154,25 @@ export default function BusinessDetailsPage() {
         },
         shopPhone: formData.shopPhone || "",
         shopEmail: formData.shopEmail || "",
-        openingHours: formData.openingHours ? formData.openingHours.split("\n") : [],
+        openingHours: formData.openingHours
+          ? formData.openingHours.split("\n").map((line: string) => {
+              // Her satiri 24h formatina normalize et
+              const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+              if (!match) return line.trim();
+              const dayName = match[1].trim();
+              const timePart = match[2].trim();
+              const lower = timePart.toLowerCase();
+              if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                return `${dayName}: Closed`;
+              }
+              const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+              const parts = timePart.split(sep).map((p: string) => p.trim());
+              if (parts.length >= 2) {
+                return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+              }
+              return line.trim();
+            }).filter(Boolean)
+          : [],
         contactPerson: {
           name: formData.contactName || "",
           surname: formData.contactSurname || "",
@@ -2195,8 +2200,42 @@ export default function BusinessDetailsPage() {
         deliveryEndTime: formData.deliveryEndTime || null,
         pickupStartTime: formData.pickupStartTime || null,
         pickupEndTime: formData.pickupEndTime || null,
-        deliveryHours: formData.deliveryHours ? formData.deliveryHours.split("\n") : [],
-        pickupHours: formData.pickupHours ? formData.pickupHours.split("\n") : [],
+        deliveryHours: formData.deliveryHours
+          ? formData.deliveryHours.split("\n").map((line: string) => {
+              const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+              if (!match) return line.trim();
+              const dayName = match[1].trim();
+              const timePart = match[2].trim();
+              const lower = timePart.toLowerCase();
+              if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                return `${dayName}: Closed`;
+              }
+              const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+              const parts = timePart.split(sep).map((p: string) => p.trim());
+              if (parts.length >= 2) {
+                return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+              }
+              return line.trim();
+            }).filter(Boolean)
+          : [],
+        pickupHours: formData.pickupHours
+          ? formData.pickupHours.split("\n").map((line: string) => {
+              const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+              if (!match) return line.trim();
+              const dayName = match[1].trim();
+              const timePart = match[2].trim();
+              const lower = timePart.toLowerCase();
+              if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                return `${dayName}: Closed`;
+              }
+              const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+              const parts = timePart.split(sep).map((p: string) => p.trim());
+              if (parts.length >= 2) {
+                return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+              }
+              return line.trim();
+            }).filter(Boolean)
+          : [],
         preOrderEnabled: formData.preOrderEnabled || false,
         freeDeliveryThreshold: Number(formData.freeDeliveryThreshold) || 0,
         // 🆕 Geçici Kurye Kapatma
@@ -2307,7 +2346,7 @@ export default function BusinessDetailsPage() {
       console.error("Save error:", error);
       const errorMessage = error?.message || t('bilinmeyen_bir_hata');
       // Show toast
-      showToast(`Hata: ${errorMessage}`, "error");
+      showToast(`${t('hata_prefix')}: ${errorMessage}`, "error");
 
       // Show detailed alert if it looks like a storage issue
       if (
@@ -2485,7 +2524,7 @@ export default function BusinessDetailsPage() {
                 href="/admin/business"
                 className="text-gray-400 hover:text-white"
               >
-                ← Geri
+                {t('geri_buton')}
               </Link>
               <div>
                 <h1 className="text-lg font-bold text-white">
@@ -2519,7 +2558,7 @@ export default function BusinessDetailsPage() {
               onClick={() => { setActiveTab("overview"); setShowSettingsDropdown(false); }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
-               Dashboard
+               {t('dashboard')}
             </button>
             {admin?.adminType === 'super' && (
               <Link
@@ -2610,7 +2649,7 @@ export default function BusinessDetailsPage() {
                 </h3>
                 <span className="text-green-400 text-sm flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  {staffList.filter((s) => s.isActive !== false).length} Online
+                  {staffList.filter((s) => s.isActive !== false).length} {t('online_label')}
                 </span>
               </div>
 
@@ -2673,7 +2712,7 @@ export default function BusinessDetailsPage() {
                               <span className="text-xl">🏍️</span>
                               <div>
                                 <span className="text-white text-sm">
-                                  {(order as any).driverName || (order as any).claimedByName || `Kurye ${idx + 1}`}
+                                  {(order as any).driverName || (order as any).claimedByName || `${t('kurye_label')} ${idx + 1}`}
                                 </span>
                                 <p className="text-amber-400 text-xs">
                                   #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || t('musteri')}
@@ -2682,7 +2721,7 @@ export default function BusinessDetailsPage() {
                             </div>
                             <div className="text-right">
                               <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-amber-600/50 text-amber-300' : 'bg-green-600/50 text-green-300'}`}>
-                                {order.status === 'onTheWay' ? '🛵 Yolda' : t('hazir1')}
+                                {order.status === 'onTheWay' ? t('yoldaEmoji') : t('hazir1')}
                               </span>
                             </div>
                           </div>
@@ -2709,7 +2748,7 @@ export default function BusinessDetailsPage() {
               <div className="flex flex-col gap-3 mb-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-white font-bold text-lg">
-                    Bestellzentrum
+                    {t('bestellzentrum')}
                   </h3>
                   <span className="text-gray-400 text-sm">
                     {t('suAnkiSiparisler')}
@@ -2722,10 +2761,10 @@ export default function BusinessDetailsPage() {
                     onChange={(e) => setOrderDateFilter(e.target.value)}
                     className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                   >
-                    <option value="today">Heute</option>
-                    <option value="week">Diese Woche</option>
-                    <option value="month">Dieser Monat</option>
-                    <option value="all">Alle</option>
+                    <option value="today">{t('filter_heute')}</option>
+                    <option value="week">{t('filter_diese_woche')}</option>
+                    <option value="month">{t('filter_dieser_monat')}</option>
+                    <option value="all">{t('filter_alle')}</option>
                   </select>
 
                   <select
@@ -2733,15 +2772,15 @@ export default function BusinessDetailsPage() {
                     onChange={(e) => setOrderStatusFilter(e.target.value)}
                     className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                   >
-                    <option value="all">Alle Status</option>
-                    <option value="pending">Ausstehend</option>
-                    <option value="accepted">Bestatigt</option>
-                    <option value="preparing">In Zubereitung</option>
-                    <option value="ready">Bereit</option>
-                    <option value="served">Serviert</option>
-                    <option value="onTheWay">Unterwegs</option>
-                    <option value="delivered">Geliefert</option>
-                    <option value="cancelled">Storniert</option>
+                    <option value="all">{t('filter_alle_status')}</option>
+                    <option value="pending">{t('pending')}</option>
+                    <option value="accepted">{t('filter_bestaetigt')}</option>
+                    <option value="preparing">{t('filter_in_zubereitung')}</option>
+                    <option value="ready">{t('filter_bereit')}</option>
+                    <option value="served">{t('filter_serviert')}</option>
+                    <option value="onTheWay">{t('onTheWay')}</option>
+                    <option value="delivered">{t('delivered')}</option>
+                    <option value="cancelled">{t('filter_storniert')}</option>
                   </select>
 
                   <select
@@ -2749,10 +2788,10 @@ export default function BusinessDetailsPage() {
                     onChange={(e) => setOrderTypeFilter(e.target.value)}
                     className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                   >
-                    <option value="all">Alle Typen</option>
-                    <option value="pickup">Abholung</option>
-                    <option value="delivery">Lieferung</option>
-                    <option value="dine_in">Vor Ort</option>
+                    <option value="all">{t('filter_alle_typen')}</option>
+                    <option value="pickup">{t('pickup_label')}</option>
+                    <option value="delivery">{t('delivery_label')}</option>
+                    <option value="dine_in">{t('filter_vor_ort')}</option>
                   </select>
                 </div>
               </div>
@@ -2774,7 +2813,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <span className="text-yellow-400 font-semibold text-sm">
-                      Ausstehend ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
+                      {t('pending')} ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -2786,7 +2825,7 @@ export default function BusinessDetailsPage() {
                             {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         {(order as any).isScheduledOrder && (order as any).scheduledDeliveryTime && (
                           <div className="mb-1.5">
                             <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
@@ -2796,7 +2835,7 @@ export default function BusinessDetailsPage() {
                                 const now = new Date();
                                 const isToday = d.toDateString() === now.toDateString();
                                 const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                                return isToday ? `Heute ${time}` : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ` ${time}`;
+                                return isToday ? `${t('filter_heute')} ${time}` : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ` ${time}`;
                               })()}
                             </span>
                           </div>
@@ -2817,7 +2856,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <span className="text-blue-400 font-semibold text-sm">
-                      In Zubereitung ({filteredOrders.filter(o => o.status === 'preparing').length})
+                      {t('filter_in_zubereitung')} ({filteredOrders.filter(o => o.status === 'preparing').length})
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -2829,7 +2868,7 @@ export default function BusinessDetailsPage() {
                             {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2846,7 +2885,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     <span className="text-green-400 font-semibold text-sm">
-                      Bereit ({filteredOrders.filter(o => o.status === 'ready').length})
+                      {t('filter_bereit')} ({filteredOrders.filter(o => o.status === 'ready').length})
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -2855,7 +2894,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2872,7 +2911,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-amber-500"></div>
                     <span className="text-amber-400 font-semibold text-sm">
-                      Auf dem Weg ({filteredOrders.filter(o => o.status === 'onTheWay').length})
+                      {t('filter_auf_dem_weg')} ({filteredOrders.filter(o => o.status === 'onTheWay').length})
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -2881,7 +2920,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2898,7 +2937,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     <span className="text-green-400 font-semibold text-sm">
-                      Abgeschlossen ({filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length})
+                      {t('filter_abgeschlossen')} ({filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length})
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -2907,7 +2946,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || 'Kunde'}</p>
+                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">

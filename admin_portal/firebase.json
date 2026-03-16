@@ -59,7 +59,7 @@
     },
     "functions": {
         "source": "functions",
-        "codebase": "mira-notifications",
+        "codebase": "lokma-notifications",
         "runtime": "nodejs20"
     },
     "storage": {

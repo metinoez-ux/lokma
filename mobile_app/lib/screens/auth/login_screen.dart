@@ -11,7 +11,8 @@ import '../../providers/auth_provider.dart';
 import '../../services/referral_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  final bool embedded;
+  const LoginScreen({super.key, this.embedded = false});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -19,8 +20,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   // LOKMA Brand Colors
-  static const Color lokmaRed = Color(0xFFFB335B); // Rose-500 brand color
-  static const Color lokmaOrange = Color(0xFFFB335B); // Now matches brand (was wrong #FF6B35)
+  static const Color lokmaRed = Color(0xFFFF0033); // Splash screen red
   static const Color lokmaDark = Color(0xFF1A1A1A);
   
   bool _isLoading = false;
@@ -257,12 +257,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             SizedBox(height: 16),
             Text(
               tr('auth.ulke_secin'),
-              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 16),
             ...countries.map((c) => ListTile(
               leading: Text(c['flag']!, style: TextStyle(fontSize: 24)),
-              title: Text(c['name']!, style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+              title: Text(c['name']!, style: TextStyle(color: Colors.white)),
               trailing: Text(c['code']!, style: const TextStyle(color: Colors.white70)),
               onTap: () {
                 _setCountryCode(c['iso']!);
@@ -293,9 +293,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     
     // If authenticated, go home
     if (authState.isAuthenticated && !authState.isGuest) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/');
-      });
+      if (!widget.embedded) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.go('/');
+        });
+      }
     }
 
     // Show error
@@ -308,28 +310,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              lokmaDark,        // Üst - SİYAH (logo görünür)
-              lokmaDark,        // Siyah devam
-              lokmaRed,         // Orta - KIRMIZI
-              lokmaDark,        // Alt - SİYAH
-            ],
-            stops: [0.0, 0.25, 0.6, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    final content = Container(
+      color: lokmaRed,
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: screenHeight),
+          child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  SizedBox(height: 60),
+                  SizedBox(height: widget.embedded ? 40 : 60),
                   
                   // LOKMA Logo - Prominent
                   _buildLogoSection(),
@@ -340,7 +333,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (authState.isLoading || _isLoading)
                     Padding(
                       padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface),
+                      child: CircularProgressIndicator(color: Colors.white),
                     )
                   else
                     _buildCurrentView(),
@@ -353,61 +346,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
     );
+
+    if (widget.embedded) {
+      return content;
+    }
+    return Scaffold(
+      backgroundColor: lokmaRed,
+      body: content,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════
   // LOGO SECTION - Clean & Prominent
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildLogoSection() {
-    return Column(
-      children: [
-        // LOKMA Logo - Large and Prominent
-        Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: Image.asset(
-              'assets/images/lokma_logo.png',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Center(
-                child: Text(
-                  'LOKMA',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: lokmaRed,
-                  ),
-                ),
-              ),
-            ),
-          ),
+    return Image.asset(
+      'assets/images/lokma_logo_white.png',
+      width: 200,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => Text(
+        'LOKMA',
+        style: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: 2,
         ),
-        
-        SizedBox(height: 24),
-        
-        // Tagline - Official slogan
-        Text(
-          'Fresh. Fast. Local.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.surface,
-            fontSize: 18,
-            fontWeight: FontWeight.w300,
-            letterSpacing: 3,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -432,18 +397,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Column(
       children: [
         // Pill Slider - Giriş / Kayıt
-        Container(
-          height: 56,
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Row(
-            children: [
-              _buildPillTab(tr('auth.giris_yap'), 0),
-              _buildPillTab(tr('auth.yeni_musteri'), 1),
-            ],
+        GestureDetector(
+          onHorizontalDragEnd: (details) {
+            if (details.primaryVelocity == null) return;
+            if (details.primaryVelocity! < -50 && _authMode == 0) {
+              HapticFeedback.lightImpact();
+              setState(() => _authMode = 1);
+            } else if (details.primaryVelocity! > 50 && _authMode == 1) {
+              HapticFeedback.lightImpact();
+              setState(() => _authMode = 0);
+            }
+          },
+          child: Container(
+            height: 42,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(21),
+            ),
+            child: Row(
+              children: [
+                _buildPillTab(tr('auth.giris_yap'), 0),
+                _buildPillTab(tr('auth.yeni_musteri'), 1),
+              ],
+            ),
           ),
         ),
         
@@ -453,7 +430,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _buildAuthButton(
           icon: Icons.sms_outlined,
           label: _authMode == 0 ? tr('auth.sms_ile_giris_yap') : tr('auth.sms_ile_kayit_ol'),
-          color: Theme.of(context).colorScheme.surface,
+          color: Colors.white,
           textColor: lokmaDark,
           onTap: () => setState(() => _loginMode = 'phone'),
         ),
@@ -464,7 +441,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _buildAuthButton(
           icon: Icons.email_outlined,
           label: _authMode == 0 ? tr('auth.e_posta_ile_giris_yap') : tr('auth.e_posta_ile_kayit_ol'),
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           textColor: Colors.white,
           borderColor: Colors.white.withValues(alpha: 0.3),
           onTap: () => setState(() => _loginMode = 'email'),
@@ -475,15 +452,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Divider
         Row(
           children: [
-            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3))),
+            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.3))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 tr('auth.veya'),
-                style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6), fontSize: 14),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14),
               ),
             ),
-            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3))),
+            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.3))),
           ],
         ),
         
@@ -512,7 +489,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Text(
             tr('auth.misafir_olarak_devam'),
             style: TextStyle(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 14,
               decoration: TextDecoration.underline,
               decorationColor: Colors.white.withValues(alpha: 0.5),
@@ -535,11 +512,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
             ] : null,
@@ -549,8 +526,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               label,
               style: TextStyle(
                 color: isSelected ? lokmaRed : Colors.white,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 15,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 13,
               ),
             ),
           ),
@@ -574,23 +551,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 13),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: borderColor != null ? Border.all(color: borderColor) : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: textColor, size: 22),
-            const SizedBox(width: 12),
+            Icon(icon, color: textColor, size: 18),
+            const SizedBox(width: 10),
             Text(
               label,
               style: TextStyle(
                 color: textColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -602,7 +579,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildSocialCircle({
     required IconData icon,
     required VoidCallback onTap,
-    bool isGoogle = false,
   }) {
     return GestureDetector(
       onTap: () {
@@ -610,14 +586,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         onTap();
       },
       child: Container(
-        width: 56,
-        height: 56,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -625,8 +601,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         child: Icon(
           icon,
-          color: isGoogle ? Colors.red : Colors.black,
-          size: isGoogle ? 32 : 28,
+          color: Colors.black,
+          size: 26,
         ),
       ),
     );
@@ -643,7 +619,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: Colors.white,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -690,14 +666,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _passwordController.clear();
               _confirmPasswordController.clear();
             }),
-            icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface),
+            icon: Icon(Icons.arrow_back_ios, color: Colors.white),
           ),
         ),
         
         Text(
-          _authMode == 1 ? '📧 E-posta ile Kayıt' : tr('auth.e_posta_ile_giris'),
+          _authMode == 1 ? tr('auth.e_posta_ile_kayit') : tr('auth.e_posta_ile_giris'),
           style: TextStyle(
-            color: Theme.of(context).colorScheme.surface,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.w600,
           ),
@@ -785,14 +761,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _phoneController.clear();
               _smsCodeController.clear();
             }),
-            icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface),
+            icon: Icon(Icons.arrow_back_ios, color: Colors.white),
           ),
         ),
         
         Text(
-          _codeSent ? '🔐 SMS Kodunu Gir' : tr('auth.telefon_ile_giris'),
+          _codeSent ? tr('auth.sms_kodunu_gir') : tr('auth.telefon_ile_giris'),
           style: TextStyle(
-            color: Theme.of(context).colorScheme.surface,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.w600,
           ),
@@ -804,9 +780,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Phone input with country code prefix
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -816,7 +792,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
@@ -828,7 +804,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           '$_countryFlag $_countryCode',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
@@ -844,10 +820,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16),
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: _exampleNumber,
-                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4)),
+                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
@@ -861,7 +837,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           
           Text(
             tr('auth.sms_ile_dogrulama_kodu_gonderi'),
-            style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7), fontSize: 13),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
           ),
           
           SizedBox(height: 24),
@@ -873,7 +849,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ] else ...[
           Text(
             tr('auth.6_haneli_dogrulama_kodunu_giri'),
-            style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7), fontSize: 14),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
           ),
           
           SizedBox(height: 24),
@@ -890,7 +866,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               fontSize: 28,
               letterSpacing: 12,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.surface,
+              color: Colors.white,
             ),
           ),
           
@@ -952,7 +928,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (_passwordStrength < 3) ...[
           Text(
             tr('auth.guclu_sifre_icin'),
-            style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7), fontSize: 11),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
           ),
           const SizedBox(height: 4),
           _buildRequirementRow('En az 6 karakter', _passwordController.text.length >= 6),
@@ -1005,12 +981,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: obscureText,
       maxLength: maxLength,
       textAlign: textAlign,
-      style: style ?? TextStyle(color: Theme.of(context).colorScheme.surface),
+      style: style ?? TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label.isNotEmpty ? label : null,
         hintText: hint,
         labelStyle: TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4)),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
         prefixIcon: Icon(icon, color: Colors.white70),
         suffixIcon: suffixIcon,
         counterText: '',
@@ -1022,7 +998,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface, width: 2),
+          borderSide: BorderSide(color: Colors.white, width: 2),
         ),
       ),
     );
@@ -1041,7 +1017,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -1071,7 +1047,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature yakında!'), backgroundColor: lokmaOrange),
+      SnackBar(content: Text('$feature coming soon!'), backgroundColor: lokmaRed),
     );
   }
 

@@ -8,6 +8,7 @@ import 'package:lokma_app/widgets/kermes_card.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
+import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 
 /// Stitch UI - Kermes Listesi (Light Mode öncelikli, Dark Mode hazır)
 /// HTML/Tailwind referansından Flutter'a çevrildi
@@ -278,11 +279,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             String closingTime = '20:00';
             if (data['dailyHours'] != null && data['dailyHours'] is Map) {
               final dailyHours = data['dailyHours'] as Map<String, dynamic>;
-              openingTime = dailyHours['open']?.toString() ?? '10:00';
-              closingTime = dailyHours['close']?.toString() ?? '20:00';
+              openingTime = time_utils.normalizeTimeString(dailyHours['open']?.toString() ?? '10:00');
+              closingTime = time_utils.normalizeTimeString(dailyHours['close']?.toString() ?? '20:00');
             } else {
-              openingTime = data['openingTime']?.toString() ?? '10:00';
-              closingTime = data['closingTime']?.toString() ?? '20:00';
+              openingTime = time_utils.normalizeTimeString(data['openingTime']?.toString() ?? '10:00');
+              closingTime = time_utils.normalizeTimeString(data['closingTime']?.toString() ?? '20:00');
             }
             
             final features = (data['features'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();

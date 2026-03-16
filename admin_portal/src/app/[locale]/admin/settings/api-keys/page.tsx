@@ -6,16 +6,77 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import { auth } from '@/lib/firebase';
 
 // Predefined services that can be configured
+// -- Email & Messaging --
+// -- Payments --
+// -- AI & ML --
+// -- Maps & Location --
+// -- Accounting --
+// -- Cloud Storage --
+// -- Push Notifications --
 const API_SERVICES = [
+    // ── Email ────────────────────────────────────────────
     {
-        keyId: 'imagen',
-        label: 'Google Imagen 4',
-        service: 'imagen',
-        descKey: 'imagenDesc',
-        icon: '🎨',
-        color: 'purple',
-        placeholder: 'AIzaSy...',
+        keyId: 'resend',
+        label: 'Resend (Loka)',
+        service: 'resend',
+        descKey: 'resendDesc',
+        icon: '📧',
+        color: 'emerald',
+        placeholder: 're_...',
+        envVar: 'RESEND_API_KEY',
     },
+    // ── Payments ─────────────────────────────────────────
+    {
+        keyId: 'stripe_secret',
+        label: 'Stripe Secret Key (Live)',
+        service: 'stripe',
+        descKey: 'stripeDesc',
+        icon: '💳',
+        color: 'indigo',
+        placeholder: 'sk_live_...',
+        envVar: 'STRIPE_SECRET_KEY',
+    },
+    {
+        keyId: 'stripe_publishable',
+        label: 'Stripe Publishable Key (Live)',
+        service: 'stripe',
+        descKey: 'stripePublishableDesc',
+        icon: '💳',
+        color: 'indigo',
+        placeholder: 'pk_live_...',
+        envVar: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',
+    },
+    {
+        keyId: 'stripe_webhook',
+        label: 'Stripe Webhook Secret',
+        service: 'stripe',
+        descKey: 'stripeWebhookDesc',
+        icon: '🔗',
+        color: 'indigo',
+        placeholder: 'whsec_...',
+        envVar: 'STRIPE_WEBHOOK_SECRET',
+    },
+    {
+        keyId: 'stripe_test_secret',
+        label: 'Stripe Secret Key (Test)',
+        service: 'stripe',
+        descKey: 'stripeTestDesc',
+        icon: '💳',
+        color: 'slate',
+        placeholder: 'sk_test_...',
+        envVar: 'STRIPE_TEST_SECRET_KEY',
+    },
+    {
+        keyId: 'stripe_test_publishable',
+        label: 'Stripe Publishable Key (Test)',
+        service: 'stripe',
+        descKey: 'stripeTestPublishableDesc',
+        icon: '💳',
+        color: 'slate',
+        placeholder: 'pk_test_...',
+        envVar: 'NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY',
+    },
+    // ── AI & ML ──────────────────────────────────────────
     {
         keyId: 'gemini',
         label: 'Google Gemini AI',
@@ -24,6 +85,92 @@ const API_SERVICES = [
         icon: '🤖',
         color: 'blue',
         placeholder: 'AIzaSy...',
+        envVar: 'GEMINI_API_KEY',
+    },
+    {
+        keyId: 'imagen',
+        label: 'Google Imagen 4',
+        service: 'imagen',
+        descKey: 'imagenDesc',
+        icon: '🎨',
+        color: 'purple',
+        placeholder: 'AIzaSy...',
+        envVar: 'IMAGEN_API_KEY',
+    },
+    // ── Maps & Location ──────────────────────────────────
+    {
+        keyId: 'google_maps',
+        label: 'Google Maps',
+        service: 'google_maps',
+        descKey: 'googleMapsDesc',
+        icon: '🗺️',
+        color: 'green',
+        placeholder: 'AIzaSy...',
+        envVar: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
+    },
+    {
+        keyId: 'mapbox',
+        label: 'Mapbox',
+        service: 'mapbox',
+        descKey: 'mapboxDesc',
+        icon: '📍',
+        color: 'teal',
+        placeholder: 'pk.eyJ1...',
+        envVar: 'MAPBOX_API_KEY',
+    },
+    // ── Accounting ───────────────────────────────────────
+    {
+        keyId: 'lexware',
+        label: 'Lexware Office',
+        service: 'lexware',
+        descKey: 'lexwareDesc',
+        icon: '📊',
+        color: 'orange',
+        placeholder: 'lex_...',
+        envVar: 'LEXWARE_API_KEY',
+    },
+    // ── SMS / Voice ──────────────────────────────────────
+    {
+        keyId: 'twilio',
+        label: 'Twilio',
+        service: 'twilio',
+        descKey: 'twilioDesc',
+        icon: '📱',
+        color: 'red',
+        placeholder: 'SK...',
+        envVar: 'TWILIO_AUTH_TOKEN',
+    },
+    // ── Cloud (AWS S3) ───────────────────────────────────
+    {
+        keyId: 'aws_access_key',
+        label: 'AWS Access Key ID',
+        service: 'aws',
+        descKey: 'awsAccessDesc',
+        icon: '☁️',
+        color: 'yellow',
+        placeholder: 'AKIA...',
+        envVar: 'AWS_ACCESS_KEY_ID',
+    },
+    {
+        keyId: 'aws_secret',
+        label: 'AWS Secret Access Key',
+        service: 'aws',
+        descKey: 'awsSecretDesc',
+        icon: '☁️',
+        color: 'yellow',
+        placeholder: 'wJal...',
+        envVar: 'AWS_SECRET_ACCESS_KEY',
+    },
+    // ── Push Notifications ───────────────────────────────
+    {
+        keyId: 'firebase_vapid',
+        label: 'Firebase VAPID Key',
+        service: 'firebase',
+        descKey: 'firebaseVapidDesc',
+        icon: '🔔',
+        color: 'amber',
+        placeholder: 'BN...',
+        envVar: 'NEXT_PUBLIC_FIREBASE_VAPID_KEY',
     },
 ];
 
@@ -234,10 +381,21 @@ export default function ApiKeysPage() {
                                     {/* Card Header */}
                                     <div className="flex items-start gap-4">
                                         <div
-                                            className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${svc.color === 'purple'
-                                                    ? 'bg-purple-900/50'
-                                                    : 'bg-blue-900/50'
-                                                }`}
+                                            className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                                                ({
+                                                    emerald: 'bg-emerald-900/50',
+                                                    indigo: 'bg-indigo-900/50',
+                                                    slate: 'bg-slate-700/50',
+                                                    blue: 'bg-blue-900/50',
+                                                    purple: 'bg-purple-900/50',
+                                                    green: 'bg-green-900/50',
+                                                    teal: 'bg-teal-900/50',
+                                                    orange: 'bg-orange-900/50',
+                                                    red: 'bg-red-900/50',
+                                                    yellow: 'bg-yellow-900/50',
+                                                    amber: 'bg-amber-900/50',
+                                                } as Record<string, string>)[svc.color] || 'bg-gray-700/50'
+                                            }`}
                                         >
                                             {svc.icon}
                                         </div>

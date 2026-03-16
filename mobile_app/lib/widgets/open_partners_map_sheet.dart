@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
+import 'package:lokma_app/utils/time_utils.dart' as time_utils;
 
 /// Bottom-sheet map showing open partners, filtered by segment and delivery mode.
 /// Shows distance rings, km badges on markers, and tap-to-reveal info cards.
@@ -195,11 +196,11 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
       int? minutesUntilClose;
       final hoursStr = openingHelper.getHoursStringForDate(now);
       if (hoursStr != null) {
-        final cleaned = hoursStr.replaceAll('–', '-').trim();
+        final cleaned = hoursStr.replaceAll('\u2013', '-').trim();
         final rangeParts = cleaned.split('-');
         if (rangeParts.length == 2) {
-          closingTime = rangeParts[1].trim();
-          final timeParts = closingTime.replaceAll('.', ':').split(':');
+          closingTime = time_utils.normalizeTimeString(rangeParts[1].trim());
+          final timeParts = closingTime!.split(':');
           if (timeParts.length == 2) {
             final closeHour = int.tryParse(timeParts[0].trim()) ?? 0;
             final closeMinute = int.tryParse(timeParts[1].trim()) ?? 0;
@@ -472,6 +473,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                       // ── Ring Labels ──
                       if (widget.userLat != null && widget.userLng != null)
                         MarkerLayer(
+                          rotate: true,
                           markers: List.generate(_ringRadiiM.length, (i) {
                             // Place label at the north edge of each ring
                             final radiusDeg = _ringRadiiM[i] / 111320;
@@ -513,6 +515,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                       // ── User location marker ──
                       if (widget.userLat != null && widget.userLng != null)
                         MarkerLayer(
+                          rotate: true,
                           markers: [
                             Marker(
                               point:
@@ -541,6 +544,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
 
                       // ── Business markers ──
                       MarkerLayer(
+                        rotate: true,
                         markers: _openBusinesses.map((business) {
                           final isSelected =
                               _selectedBusiness?.id == business.id;

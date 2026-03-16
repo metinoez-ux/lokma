@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { PlacesAutocomplete } from '@/components/PlacesAutocomplete';
 import OrganizationSearchModal from '@/components/OrganizationSearchModal';
 import { useTranslations } from 'next-intl';
+import { normalizeTimeString } from '@/utils/timeUtils';
 
 interface Organization {
     id: string;
@@ -287,8 +288,8 @@ function NewKermesContent() {
                 date: formData.date ? Timestamp.fromDate(new Date(formData.date)) : null,
                 startDate: formData.date ? Timestamp.fromDate(new Date(formData.date)) : null,
                 endDate: formData.endDate ? Timestamp.fromDate(new Date(formData.endDate)) : null,
-                openingTime: formData.openingTime || null,
-                closingTime: formData.closingTime || null,
+                openingTime: normalizeTimeString(formData.openingTime || '') || null,
+                closingTime: normalizeTimeString(formData.closingTime || '') || null,
                 // Konum bilgileri - Ana
                 location: formData.location,
                 address: formData.address || null,

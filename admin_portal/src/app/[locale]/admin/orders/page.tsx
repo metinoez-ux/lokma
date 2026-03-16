@@ -104,6 +104,10 @@ export default function OrdersPage() {
     const [showPrinterPanel, setShowPrinterPanel] = useState(false);
     const [testingPrint, setTestingPrint] = useState(false);
     const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
+    const autoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed new orders
+    const initialLoadDoneRef = useRef(false); // skip auto-print on first load
+    const printerSettingsRef = useRef<PrinterSettings>(DEFAULT_PRINTER_SETTINGS); // ref mirror for closure
+    const businessFilterRef = useRef<string>('all'); // ref mirror for closure
 
     // Printer health monitoring
     const [printerHealth, setPrinterHealth] = useState<PrinterHealthState>(DEFAULT_HEALTH_STATE);
@@ -381,11 +385,15 @@ export default function OrdersPage() {
         }
     }, [admin]);
 
-    // Save printer settings to localStorage
     const savePrinterSettings = (newSettings: PrinterSettings) => {
         setPrinterSettings(newSettings);
+        printerSettingsRef.current = newSettings;
         localStorage.setItem('lokma_printer_settings', JSON.stringify(newSettings));
     };
+
+    // Sync refs for onSnapshot closure (avoid stale closures)
+    useEffect(() => { printerSettingsRef.current = printerSettings; }, [printerSettings]);
+    useEffect(() => { businessFilterRef.current = businessFilter; }, [businessFilter]);
 
     // ─── Printer Health Heartbeat (every 30s) ───────────────────
     useEffect(() => {
@@ -565,13 +573,15 @@ export default function OrdersPage() {
 
     // Handle print order
     const handlePrintOrder = async (order: Order) => {
-        if (!printerSettings.enabled || !printerSettings.printerIp) {
+        // Use ref to avoid stale closure (especially when called from onSnapshot)
+        const ps = printerSettingsRef.current;
+        if (!ps.enabled || !ps.printerIp) {
             showToast(t('print_not_configured'), 'error');
             return;
         }
         setPrintingOrderId(order.id);
         try {
-            const result = await printOrder(printerSettings, {
+            const result = await printOrder(ps, {
                 orderNumber: order.orderNumber || order.id.slice(0, 6).toUpperCase(),
                 orderType: order.type,
                 items: order.items?.map(item => ({
@@ -579,6 +589,8 @@ export default function OrdersPage() {
                     quantity: item.quantity,
                     price: item.price,
                     unit: item.unit,
+                    selectedOptions: (item as any).selectedOptions || (item as any).options,
+                    note: (item as any).itemNote || (item as any).note,
                 })),
                 total: order.total,
                 grandTotal: order.total,
@@ -716,6 +728,76 @@ export default function OrdersPage() {
             });
             setCheckedItems(prev => ({ ...prev, ...checks }));
             setLoading(false);
+
+            // --- Auto-print new orders ---
+            const ps = printerSettingsRef.current;
+            const bf = businessFilterRef.current;
+            const changes = snapshot.docChanges();
+            const addedChanges = changes.filter(change => change.type === 'added');
+            console.log('[AutoPrint] Snapshot received - initialLoadDone:', initialLoadDoneRef.current, 
+                'totalChanges:', changes.length, 'addedChanges:', addedChanges.length,
+                'enabled:', ps.enabled, 'autoPrint:', ps.autoPrint, 'printerIp:', ps.printerIp);
+            
+            if (initialLoadDoneRef.current && ps.enabled && ps.autoPrint && ps.printerIp) {
+                const newOrders = addedChanges
+                    .map(change => {
+                        const d = change.doc.data();
+                        return {
+                            id: change.doc.id,
+                            orderNumber: d.orderNumber || change.doc.id.slice(0, 6).toUpperCase(),
+                            businessId: d.businessId || d.butcherId || '',
+                            businessName: d.businessName || d.butcherName || '',
+                            items: d.items || [],
+                            total: d.totalPrice || d.totalAmount || d.total || 0,
+                            status: d.status || 'pending',
+                            type: (() => {
+                                const raw = d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup';
+                                if (raw === 'dineIn') return 'dine_in';
+                                return raw;
+                            })(),
+                            customerName: d.customerName || d.userDisplayName || d.userName || '',
+                            customerPhone: d.customerPhone || d.userPhone || '',
+                            address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
+                            notes: d.notes || d.orderNote || d.customerNote || '',
+                            tableNumber: d.tableNumber,
+                            paymentMethod: d.paymentMethod,
+                            scheduledAt: d.scheduledDeliveryTime || d.deliveryDate || d.scheduledDateTime || d.pickupTime,
+                        } as any;
+                    })
+                    .filter((o: any) => {
+                        if (autoPrintedRef.current.has(o.id)) {
+                            console.log('[AutoPrint] Skipping already printed:', o.id);
+                            return false;
+                        }
+                        if (o.status !== 'pending') {
+                            console.log('[AutoPrint] Skipping non-pending order:', o.id, 'status:', o.status);
+                            return false;
+                        }
+                        if (bf !== 'all' && o.businessId !== bf) {
+                            console.log('[AutoPrint] Skipping business mismatch:', o.id, 'order biz:', o.businessId, 'filter:', bf);
+                            return false;
+                        }
+                        // Skip scheduled orders -- they print 15 min before via separate interval
+                        if (o.scheduledAt) {
+                            console.log('[AutoPrint] Skipping scheduled order (will print 15min before):', o.id);
+                            return false;
+                        }
+                        return true;
+                    });
+
+                console.log('[AutoPrint] Orders to print:', newOrders.length);
+                for (const newOrder of newOrders) {
+                    autoPrintedRef.current.add(newOrder.id);
+                    handlePrintOrder(newOrder as any);
+                    console.log('[AutoPrint] Printing new order:', newOrder.id, newOrder.orderNumber);
+                }
+            } else if (initialLoadDoneRef.current) {
+                console.log('[AutoPrint] Skipped - enabled:', ps.enabled, 'autoPrint:', ps.autoPrint, 'printerIp:', ps.printerIp);
+            }
+            // Mark initial load as done after first snapshot
+            if (!initialLoadDoneRef.current) {
+                initialLoadDoneRef.current = true;
+            }
         }, (error) => {
             console.error('Error loading orders:', error);
             setLoading(false);

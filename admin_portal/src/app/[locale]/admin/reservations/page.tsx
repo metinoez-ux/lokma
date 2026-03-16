@@ -55,11 +55,17 @@ const { admin, loading: adminLoading } = useAdmin();
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [occupiedCards, setOccupiedCards] = useState<Set<number>>(new Set());
     const [cardModalLoading, setCardModalLoading] = useState(false);
+    // Cancel confirmation modal
+    const [showCancelModal, setShowCancelModal] = useState<{ reservation: Reservation } | null>(null);
+    const [cancelReason, setCancelReason] = useState("");
+    const [cancelNote, setCancelNote] = useState("");
     // Printer state
     const [printingId, setPrintingId] = useState<string | null>(null);
     const printedAutoRef = useRef<Set<string>>(new Set()); // track auto-printed IDs
     // Table management
     const [showTableManagement, setShowTableManagement] = useState(false);
+    // Collapsible date groups
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
@@ -339,6 +345,68 @@ const { admin, loading: adminLoading } = useAdmin();
         }
     };
 
+    const CANCEL_REASONS = [
+        "Masa musait degil",
+        "Isletme kapali",
+        "Personel yetersiz",
+        "Musteri ile iletisim kurulamadi",
+        "Diger",
+    ];
+
+    async function handleCancel() {
+        if (!showCancelModal || !cancelReason) return;
+        const reservation = showCancelModal.reservation;
+        try {
+            const resRef = doc(db, 'businesses', reservation.businessId, 'reservations', reservation.id);
+            await updateDoc(resRef, {
+                status: 'cancelled',
+                cancellationReason: cancelReason,
+                cancellationNote: cancelNote.trim() || '',
+                cancelledBy: admin?.displayName || admin?.email || 'Admin',
+                cancelledAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                tableCardNumbers: deleteField(),
+                tableCardAssignedBy: deleteField(),
+                tableCardAssignedAt: deleteField(),
+            });
+            setReservations(prev =>
+                prev.map(r => r.id === reservation.id ? { ...r, status: 'cancelled' as ReservationStatus, tableCardNumbers: [] } : r)
+            );
+            setShowCancelModal(null);
+            setSelectedReservation(null);
+            setCancelReason('');
+            setCancelNote('');
+            showToast('Rezervasyon iptal edildi', 'success');
+        } catch (err) {
+            console.error('Error cancelling reservation:', err);
+            showToast(t('durum_guncellenirken_hata_olustu'), 'error');
+        }
+    }
+
+    async function handleReactivate(reservation: Reservation) {
+        try {
+            const resRef = doc(db, 'businesses', reservation.businessId, 'reservations', reservation.id);
+            await updateDoc(resRef, {
+                status: 'pending',
+                reactivatedBy: admin?.displayName || admin?.email || 'Admin',
+                reactivatedAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                cancellationReason: deleteField(),
+                cancellationNote: deleteField(),
+                cancelledBy: deleteField(),
+                cancelledAt: deleteField(),
+            });
+            setReservations(prev =>
+                prev.map(r => r.id === reservation.id ? { ...r, status: 'pending' as ReservationStatus, confirmedBy: '' } : r)
+            );
+            setSelectedReservation(null);
+            showToast('Rezervasyon tekrar aktif edildi', 'success');
+        } catch (err) {
+            console.error('Error reactivating reservation:', err);
+            showToast(t('durum_guncellenirken_hata_olustu'), 'error');
+        }
+    }
+
     // --- Reservation Printing ---
     const handlePrintReservation = async (reservation: Reservation) => {
         const printerIp = typeof window !== 'undefined' ? localStorage.getItem('printerIp') || '' : '';
@@ -488,7 +556,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         {(businessFilter !== 'all' || admin?.adminType !== 'super') && (
                             <button
                                 onClick={() => setShowTableManagement(!showTableManagement)}
-                                className={`px-4 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ${
+                                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ${
                                     showTableManagement
                                         ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
                                         : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
@@ -642,7 +710,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 </div>
             </div>
 
-            {/* Reservations List */}
+            {/* Reservations List - Date Grouped & Collapsible */}
             <div className="max-w-6xl mx-auto">
                 {loading ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
@@ -654,129 +722,228 @@ const { admin, loading: adminLoading } = useAdmin();
                         <p className="text-4xl mb-4">🍽️</p>
                         <p className="text-gray-400">{t('rezervasyon_bulunamadi')}</p>
                     </div>
-                ) : (
-                    <div className="bg-gray-800 rounded-xl overflow-hidden">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-2 p-4 bg-gray-700/50 text-gray-400 text-sm font-medium">
-                            <div className="col-span-2">{t('musteri')}</div>
-                            <div className="col-span-2">{t('i_sletme')}</div>
-                            <div className="col-span-2">{t('tarih_saat')}</div>
-                            <div className="col-span-1">{t('kisi')}</div>
-                            <div className="col-span-2">{t('durum')}</div>
-                            <div className="col-span-3">{t('i_slemler')}</div>
-                        </div>
+                ) : (() => {
+                    // Group by date, sort pending first within each group
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
 
-                        {/* Reservation Rows */}
-                        <div className="divide-y divide-gray-700">
-                            {filteredReservations.map((reservation) => {
-                                const statusInfo = reservationStatuses[reservation.status] || reservationStatuses.pending;
+                    const groups: Record<string, Reservation[]> = {};
+                    const sortedRes = [...filteredReservations].sort((a, b) => {
+                        // pending first, then by date
+                        if (a.status === 'pending' && b.status !== 'pending') return -1;
+                        if (a.status !== 'pending' && b.status === 'pending') return 1;
+                        return a.reservationDate.getTime() - b.reservationDate.getTime();
+                    });
+
+                    sortedRes.forEach(r => {
+                        const dateKey = r.reservationDate.toISOString().split('T')[0];
+                        if (!groups[dateKey]) groups[dateKey] = [];
+                        groups[dateKey].push(r);
+                    });
+
+                    // Sort date keys chronologically
+                    const sortedDateKeys = Object.keys(groups).sort();
+
+                    const isToday = (dateKey: string) => dateKey === today.toISOString().split('T')[0];
+                    const isTomorrow = (dateKey: string) => dateKey === tomorrow.toISOString().split('T')[0];
+                    const isDefaultOpen = (dateKey: string) => isToday(dateKey) || isTomorrow(dateKey);
+
+                    const toggleGroup = (dateKey: string) => {
+                        setCollapsedGroups(prev => {
+                            const next = new Set(prev);
+                            if (next.has(dateKey)) next.delete(dateKey);
+                            else next.add(dateKey);
+                            return next;
+                        });
+                    };
+
+                    // default open for today/tomorrow, default closed for others
+                    // collapsedGroups tracks explicit toggles
+                    const isOpen = (dateKey: string) => {
+                        const defaultOpen = isDefaultOpen(dateKey);
+                        const explicitlyToggled = collapsedGroups.has(dateKey);
+                        return defaultOpen ? !explicitlyToggled : explicitlyToggled;
+                    };
+
+                    return (
+                        <div className="space-y-3">
+                            {sortedDateKeys.map(dateKey => {
+                                const groupReservations = groups[dateKey];
+                                const pendingCount = groupReservations.filter(r => r.status === 'pending').length;
+                                const confirmedCount = groupReservations.filter(r => r.status === 'confirmed').length;
+                                const open = isOpen(dateKey);
+                                const dateObj = new Date(dateKey + 'T00:00:00');
+                                const dateLabel = isToday(dateKey)
+                                    ? `${t('bugun')} - ${formatDate(dateObj)}`
+                                    : isTomorrow(dateKey)
+                                        ? `${t('yarin')} - ${formatDate(dateObj)}`
+                                        : formatDate(dateObj);
+
                                 return (
-                                    <div
-                                        key={reservation.id}
-                                        className="grid grid-cols-12 gap-2 p-4 hover:bg-gray-700/30 transition items-center"
-                                    >
-                                        {/* Customer */}
-                                        <div className="col-span-2">
-                                            <p className="text-white font-medium truncate">{reservation.customerName}</p>
-                                            {reservation.customerPhone && (
-                                                <a href={`tel:${reservation.customerPhone}`} className="text-blue-400 text-xs hover:underline">
-                                                    📞 {reservation.customerPhone}
-                                                </a>
-                                            )}
-                                        </div>
+                                    <div key={dateKey} className="bg-gray-800 rounded-xl overflow-hidden">
+                                        {/* Date Group Header */}
+                                        <button
+                                            onClick={() => toggleGroup(dateKey)}
+                                            className="w-full flex items-center justify-between p-4 hover:bg-gray-700/30 transition"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className={`transition-transform ${open ? 'rotate-90' : ''}`}>
+                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-gray-400">
+                                                        <path d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"/>
+                                                    </svg>
+                                                </span>
+                                                <span className={`font-bold text-sm ${
+                                                    isToday(dateKey) ? 'text-amber-400' : isTomorrow(dateKey) ? 'text-blue-400' : 'text-white'
+                                                }`}>
+                                                    {dateLabel}
+                                                </span>
+                                                <span className="text-gray-500 text-xs">
+                                                    ({groupReservations.length} {t('rez_toplam')})
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {pendingCount > 0 && (
+                                                    <span className="bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full text-xs font-medium animate-pulse">
+                                                        {pendingCount} {t('bekleyen')}
+                                                    </span>
+                                                )}
+                                                {confirmedCount > 0 && (
+                                                    <span className="bg-green-600/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded-full text-xs font-medium">
+                                                        {confirmedCount} {t('onayli')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </button>
 
-                                        {/* Business */}
-                                        <div className="col-span-2">
-                                            <p className="text-gray-300 text-sm truncate">
-                                                {reservation.businessName || businesses[reservation.businessId] || reservation.businessId.slice(0, 8)}
-                                            </p>
-                                        </div>
-
-                                        {/* Date & Time */}
-                                        <div className="col-span-2">
-                                            <p className="text-white text-sm">{formatDate(reservation.reservationDate)}</p>
-                                            <p className="text-gray-400 text-xs">{reservation.timeSlot || formatTime(reservation.reservationDate)}</p>
-                                        </div>
-
-                                        {/* Party Size */}
-                                        <div className="col-span-1">
-                                            <span className="bg-purple-600/30 text-purple-300 px-2 py-1 rounded text-sm font-bold">
-                                                👥 {reservation.partySize}
-                                            </span>
-                                            {reservation.tableCardNumbers && reservation.tableCardNumbers.length > 0 && (
-                                                <div className="mt-1 flex gap-1">
-                                                    {reservation.tableCardNumbers.map(n => (
-                                                        <span key={n} className="bg-green-600/30 text-green-300 px-1.5 py-0.5 rounded text-xs font-bold">
-                                                            🃏{n}
-                                                        </span>
-                                                    ))}
+                                        {/* Expanded Content */}
+                                        {open && (
+                                            <div className="border-t border-gray-700">
+                                                {/* Compact Table Header */}
+                                                <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/30 text-gray-500 text-xs font-medium">
+                                                    <div className="col-span-3">{t('musteri')}</div>
+                                                    <div className="col-span-2">{t('saat')}</div>
+                                                    <div className="col-span-1">{t('kisi')}</div>
+                                                    <div className="col-span-2">{t('durum')}</div>
+                                                    <div className="col-span-4">{t('i_slemler')}</div>
                                                 </div>
-                                            )}
-                                        </div>
+                                                <div className="divide-y divide-gray-700/50">
+                                                    {groupReservations.map((reservation) => {
+                                                        const statusInfo = reservationStatuses[reservation.status] || reservationStatuses.pending;
+                                                        return (
+                                                            <div
+                                                                key={reservation.id}
+                                                                className={`grid grid-cols-12 gap-2 px-4 py-3 hover:bg-gray-700/20 transition items-center ${
+                                                                    reservation.status === 'pending' ? 'bg-yellow-600/5' : ''
+                                                                }`}
+                                                            >
+                                                                {/* Customer + Business */}
+                                                                <div className="col-span-3">
+                                                                    <p className="text-white font-medium text-sm truncate">{reservation.customerName}</p>
+                                                                    <p className="text-gray-500 text-xs truncate">
+                                                                        {reservation.businessName || businesses[reservation.businessId] || ''}
+                                                                    </p>
+                                                                    {reservation.customerPhone && (
+                                                                        <a href={`tel:${reservation.customerPhone}`} className="text-blue-400 text-[10px] hover:underline">
+                                                                            {reservation.customerPhone}
+                                                                        </a>
+                                                                    )}
+                                                                </div>
 
-                                        {/* Status */}
-                                        <div className="col-span-2">
-                                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-${statusInfo.color}-600/20 text-${statusInfo.color}-400 border border-${statusInfo.color}-500/30`}>
-                                                {statusInfo.icon} {statusInfo.label}
-                                            </span>
-                                            {reservation.confirmedBy && reservation.status !== 'pending' && (
-                                                <p className="text-gray-500 text-xs mt-1">
-                                                    {reservation.status === 'confirmed' ? '✅' : '❌'} {reservation.confirmedBy}
-                                                </p>
-                                            )}
-                                        </div>
+                                                                {/* Time */}
+                                                                <div className="col-span-2">
+                                                                    <p className="text-white text-sm font-medium">{reservation.timeSlot || formatTime(reservation.reservationDate)}</p>
+                                                                </div>
 
-                                        {/* Actions */}
-                                        <div className="col-span-3 flex items-center gap-2">
-                                            {reservation.status === 'pending' && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleStatusChange(reservation, 'confirmed')}
-                                                        className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition"
-                                                    >
-                                                        {t('onayla')}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleStatusChange(reservation, 'rejected')}
-                                                        className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition"
-                                                    >
-                                                        ❌ Reddet
-                                                    </button>
-                                                </>
-                                            )}
-                                            {reservation.status === 'confirmed' && (
-                                                <button
-                                                    onClick={() => handleStatusChange(reservation, 'cancelled')}
-                                                    className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-medium transition"
-                                                >
-                                                    🚫 İptal Et
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => setSelectedReservation(reservation)}
-                                                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition"
-                                            >
-                                                👁️ Detay
-                                            </button>
-                                            {reservation.status === 'confirmed' && (
-                                                <button
-                                                    onClick={() => handlePrintReservation(reservation)}
-                                                    disabled={printingId === reservation.id}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${printingId === reservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
-                                                >
-                                                    {printingId === reservation.id ? '⏳...' : '🖨️'}
-                                                </button>
-                                            )}
-                                            {reservation.notes && (
-                                                <span className="text-yellow-400 text-xs" title={reservation.notes}>📝</span>
-                                            )}
-                                        </div>
+                                                                {/* Party Size */}
+                                                                <div className="col-span-1">
+                                                                    <span className="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded text-xs font-bold">
+                                                                        {reservation.partySize}
+                                                                    </span>
+                                                                    {reservation.tableCardNumbers && reservation.tableCardNumbers.length > 0 && (
+                                                                        <div className="mt-0.5 flex gap-0.5">
+                                                                            {reservation.tableCardNumbers.map(n => (
+                                                                                <span key={n} className="bg-green-600/30 text-green-300 px-1 py-0 rounded text-[10px] font-bold">
+                                                                                    {n}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Status */}
+                                                                <div className="col-span-2">
+                                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-${statusInfo.color}-600/20 text-${statusInfo.color}-400 border border-${statusInfo.color}-500/30`}>
+                                                                        {statusInfo.icon} {statusInfo.label}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Actions */}
+                                                                <div className="col-span-4 flex items-center gap-1.5 flex-wrap">
+                                                                    {reservation.status === 'pending' && (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => handleStatusChange(reservation, 'confirmed')}
+                                                                                className="px-2.5 py-1 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-medium transition"
+                                                                            >
+                                                                                {t('onayla')}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleStatusChange(reservation, 'rejected')}
+                                                                                className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition"
+                                                                            >
+                                                                                {t('reddet')}
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    {(reservation.status === 'confirmed' || reservation.status === 'rejected') && (
+                                                                        <button
+                                                                            onClick={() => { setShowCancelModal({ reservation }); setCancelReason(''); setCancelNote(''); }}
+                                                                            className="px-2.5 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg text-xs font-medium border border-red-500/30 transition"
+                                                                        >
+                                                                            Iptal Et
+                                                                        </button>
+                                                                    )}
+                                                                    {reservation.status === 'cancelled' && (
+                                                                        <button
+                                                                            onClick={() => handleReactivate(reservation)}
+                                                                            className="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg text-xs font-medium border border-blue-500/30 transition"
+                                                                        >
+                                                                            Tekrar Aktif Et
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => setSelectedReservation(reservation)}
+                                                                        className="px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-xs transition"
+                                                                    >
+                                                                        {t('detay')}
+                                                                    </button>
+                                                                    {reservation.status === 'confirmed' && (
+                                                                        <button
+                                                                            onClick={() => handlePrintReservation(reservation)}
+                                                                            disabled={printingId === reservation.id}
+                                                                            className={`px-2 py-1 rounded-lg text-xs font-medium transition ${printingId === reservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                                                        >
+                                                                            {printingId === reservation.id ? '...' : '🖨️'}
+                                                                        </button>
+                                                                    )}
+                                                                    {reservation.notes && (
+                                                                        <span className="text-yellow-400 text-xs" title={reservation.notes}>📝</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
 
             {/* Reservation Detail Modal */}
@@ -891,24 +1058,94 @@ const { admin, loading: adminLoading } = useAdmin();
                                         </button>
                                     </>
                                 )}
-                                {selectedReservation.status === 'confirmed' && (
+                                {(selectedReservation.status === 'confirmed' || selectedReservation.status === 'rejected') && (
                                     <>
+                                        {selectedReservation.status === 'confirmed' && (
+                                            <button
+                                                onClick={() => handlePrintReservation(selectedReservation)}
+                                                disabled={printingId === selectedReservation.id}
+                                                className={`flex-1 py-3 rounded-lg font-medium transition ${printingId === selectedReservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                            >
+                                                {printingId === selectedReservation.id ? 'Yazdiriliyor...' : 'Yazdir'}
+                                            </button>
+                                        )}
                                         <button
-                                            onClick={() => handlePrintReservation(selectedReservation)}
-                                            disabled={printingId === selectedReservation.id}
-                                            className={`flex-1 py-3 rounded-lg font-medium transition ${printingId === selectedReservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                            onClick={() => { setShowCancelModal({ reservation: selectedReservation }); setCancelReason(''); setCancelNote(''); }}
+                                            className="flex-1 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg font-medium border border-red-500/30 transition"
                                         >
-                                            {printingId === selectedReservation.id ? '⏳ Yazdiriliyor...' : '🖨️ Yazdir'}
-                                        </button>
-                                        <button
-                                            onClick={() => handleStatusChange(selectedReservation, 'cancelled')}
-                                            className="flex-1 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium transition"
-                                        >
-                                            🚫 İptal Et
+                                            Iptal Et
                                         </button>
                                     </>
                                 )}
+                                {selectedReservation.status === 'cancelled' && (
+                                    <button
+                                        onClick={() => handleReactivate(selectedReservation)}
+                                        className="flex-1 py-3 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-lg font-medium border border-blue-500/30 transition"
+                                    >
+                                        Tekrar Aktif Et
+                                    </button>
+                                )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel Confirmation Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-700">
+                            <h2 className="text-xl font-bold text-white">Rezervasyonu Iptal Et</h2>
+                            <p className="text-gray-400 text-sm mt-1">Iptal sebebini secin</p>
+                        </div>
+                        <div className="p-6 space-y-3">
+                            {CANCEL_REASONS.map((reason) => (
+                                <label
+                                    key={reason}
+                                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${
+                                        cancelReason === reason
+                                            ? 'bg-red-600/20 border border-red-500/40'
+                                            : 'bg-gray-700/50 border border-gray-600/30 hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="cancelReason"
+                                        value={reason}
+                                        checked={cancelReason === reason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        className="accent-red-500"
+                                    />
+                                    <span className="text-sm text-gray-200">{reason}</span>
+                                </label>
+                            ))}
+                            <textarea
+                                value={cancelNote}
+                                onChange={(e) => setCancelNote(e.target.value)}
+                                placeholder="Ek aciklama (istege bagli)..."
+                                rows={2}
+                                className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                            />
+                        </div>
+                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                            <button
+                                onClick={() => { setShowCancelModal(null); setCancelReason(''); setCancelNote(''); }}
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                            >
+                                Vazgec
+                            </button>
+                            <button
+                                disabled={!cancelReason}
+                                onClick={handleCancel}
+                                className={`flex-[2] py-3 rounded-lg font-medium transition ${
+                                    !cancelReason
+                                        ? 'bg-gray-600 text-gray-500 cursor-not-allowed'
+                                        : 'bg-red-600 hover:bg-red-500 text-white'
+                                }`}
+                            >
+                                Iptal Et
+                            </button>
                         </div>
                     </div>
                 </div>

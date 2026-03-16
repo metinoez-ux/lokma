@@ -7,25 +7,11 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import { subscriptionService } from '@/services/subscriptionService';
 import { useTranslations } from 'next-intl';
 
-// Helper: convert various time formats to 24h for <input type="time">
+import { normalizeTimeString } from '@/utils/timeUtils';
+
+// formatTo24h: paylasimli utility uzerinden -- tum zaman formati varyasyonlarini handle eder
 function formatTo24h(timeStr: string): string {
-    if (!timeStr) return '';
-    // Already in HH:MM format
-    if (/^\d{2}:\d{2}$/.test(timeStr.trim())) return timeStr.trim();
-    // Try AM/PM parsing
-    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (match) {
-        let h = parseInt(match[1]);
-        const m = match[2];
-        const ampm = match[3].toUpperCase();
-        if (ampm === 'PM' && h < 12) h += 12;
-        if (ampm === 'AM' && h === 12) h = 0;
-        return `${h.toString().padStart(2, '0')}:${m}`;
-    }
-    // Try plain number extraction
-    const numMatch = timeStr.match(/(\d{1,2}):(\d{2})/);
-    if (numMatch) return `${numMatch[1].padStart(2, '0')}:${numMatch[2]}`;
-    return timeStr;
+    return normalizeTimeString(timeStr) || timeStr;
 }
 
 const DAYS = [
@@ -100,23 +86,40 @@ const { admin, loading: adminLoading } = useAdmin();
                 if (docSnap.exists()) {
                     const d = docSnap.data();
 
-                    // Parse opening hours
+                    // Opening hours: normalize on read
                     let openingHoursStr = '';
                     if (Array.isArray(d.openingHours)) {
                         openingHoursStr = d.openingHours.join('\n');
                     } else if (typeof d.openingHours === 'string') {
                         openingHoursStr = d.openingHours;
                     }
+                    // Okunan satirlari 24h formatina normalize et
+                    openingHoursStr = openingHoursStr.split('\n').map((line: string) => {
+                        const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+                        if (!match) return line.trim();
+                        const dayName = match[1].trim();
+                        const timePart = match[2].trim();
+                        const lower = timePart.toLowerCase();
+                        if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                            return `${dayName}: Closed`;
+                        }
+                        const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+                        const parts = timePart.split(sep).map((p: string) => p.trim());
+                        if (parts.length >= 2) {
+                            return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+                        }
+                        return line.trim();
+                    }).filter(Boolean).join('\n');
 
                     setFormData({
                         openingHours: openingHoursStr,
                         supportsDelivery: d.supportsDelivery || d.hasDelivery || false,
                         minDeliveryOrder: d.minDeliveryOrder || d.minOrder || 0,
                         deliveryFee: d.deliveryFee || 0,
-                        deliveryStartTime: d.deliveryStartTime || '',
-                        deliveryEndTime: d.deliveryEndTime || '',
-                        pickupStartTime: d.pickupStartTime || '',
-                        pickupEndTime: d.pickupEndTime || '',
+                        deliveryStartTime: normalizeTimeString(d.deliveryStartTime || ''),
+                        deliveryEndTime: normalizeTimeString(d.deliveryEndTime || ''),
+                        pickupStartTime: normalizeTimeString(d.pickupStartTime || ''),
+                        pickupEndTime: normalizeTimeString(d.pickupEndTime || ''),
                         freeDeliveryThreshold: d.freeDeliveryThreshold || 0,
                         preOrderEnabled: d.preOrderEnabled || false,
                         // Driver configuration
@@ -208,16 +211,33 @@ const { admin, loading: adminLoading } = useAdmin();
         try {
             const docRef = doc(db, 'businesses', businessId);
             const updates: any = {
-                // Opening hours
-                openingHours: formData.openingHours ? formData.openingHours.split('\n') : [],
+                // Opening hours -- normalize before save
+                openingHours: formData.openingHours
+                    ? formData.openingHours.split('\n').map((line: string) => {
+                        const match = line.match(/^([a-zA-Z\u00c0-\u024F\s]+):\s*(.*)/);
+                        if (!match) return line.trim();
+                        const dayName = match[1].trim();
+                        const timePart = match[2].trim();
+                        const lower = timePart.toLowerCase();
+                        if (lower.includes('closed') || lower.includes('kapal') || lower.includes('geschlossen') || !timePart) {
+                            return `${dayName}: Closed`;
+                        }
+                        const sep = timePart.includes('\u2013') ? '\u2013' : '-';
+                        const parts = timePart.split(sep).map((p: string) => p.trim());
+                        if (parts.length >= 2) {
+                            return `${dayName}: ${normalizeTimeString(parts[0])} - ${normalizeTimeString(parts[1])}`;
+                        }
+                        return line.trim();
+                    }).filter(Boolean)
+                    : [],
                 // Delivery settings
                 supportsDelivery: formData.supportsDelivery,
                 minDeliveryOrder: formData.minDeliveryOrder,
                 deliveryFee: formData.deliveryFee,
-                deliveryStartTime: formData.deliveryStartTime || null,
-                deliveryEndTime: formData.deliveryEndTime || null,
-                pickupStartTime: formData.pickupStartTime || null,
-                pickupEndTime: formData.pickupEndTime || null,
+                deliveryStartTime: normalizeTimeString(formData.deliveryStartTime || '') || null,
+                deliveryEndTime: normalizeTimeString(formData.deliveryEndTime || '') || null,
+                pickupStartTime: normalizeTimeString(formData.pickupStartTime || '') || null,
+                pickupEndTime: normalizeTimeString(formData.pickupEndTime || '') || null,
                 freeDeliveryThreshold: formData.freeDeliveryThreshold,
                 preOrderEnabled: formData.preOrderEnabled,
                 // Driver configuration

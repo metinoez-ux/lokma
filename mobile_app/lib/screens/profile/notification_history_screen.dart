@@ -72,6 +72,33 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     await batch.commit();
   }
 
+  Future<void> _trashReservationGroup(_ReservationGroup group) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final batch = FirebaseFirestore.instance.batch();
+    final now = Timestamp.now();
+    for (final docId in group.docIds) {
+      batch.update(
+        FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+        {'trashedAt': now},
+      );
+    }
+    await batch.commit();
+  }
+
+  Future<void> _undoTrashReservationGroup(_ReservationGroup group) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final batch = FirebaseFirestore.instance.batch();
+    for (final docId in group.docIds) {
+      batch.update(
+        FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+        {'trashedAt': FieldValue.delete()},
+      );
+    }
+    await batch.commit();
+  }
+
   Future<void> _undoTrashGeneric(String docId) async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -87,6 +114,13 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     final now = Timestamp.now();
     for (final item in combined) {
       if (item is _OrderGroup && _selectedIds.contains(item.orderId)) {
+        for (final docId in item.docIds) {
+          batch.update(
+            FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
+            {'trashedAt': now},
+          );
+        }
+      } else if (item is _ReservationGroup && _selectedIds.contains(item.reservationId)) {
         for (final docId in item.docIds) {
           batch.update(
             FirebaseFirestore.instance.collection('users').doc(user.uid).collection('notifications').doc(docId),
@@ -309,13 +343,17 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             );
           }
 
-          // ── Filter trashed & Group by orderId ─────────────────────
+          // ── Filter trashed & Group by orderId / reservationId ─────
           final List<_OrderGroup> orderGroups = [];
+          final List<_ReservationGroup> reservationGroups = [];
           final List<Map<String, dynamic>> genericNotifications = [];
 
           // Collect all order_status notifications grouped by orderId
           final Map<String, List<Map<String, dynamic>>> orderMap = {};
-          final Map<String, List<String>> orderDocIds = {}; // orderId → list of doc IDs
+          final Map<String, List<String>> orderDocIds = {};
+          // Collect all reservation_status notifications grouped by reservationId
+          final Map<String, List<Map<String, dynamic>>> reservationMap = {};
+          final Map<String, List<String>> reservationDocIds = {};
 
           for (final doc in docs) {
             final data = doc.data() as Map<String, dynamic>;
@@ -324,12 +362,18 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
             final type = data['type'] as String?;
             final orderId = data['orderId'] as String?;
+            final reservationId = data['reservationId'] as String?;
 
             if (type == 'order_status' && orderId != null && orderId.isNotEmpty) {
               orderMap.putIfAbsent(orderId, () => []);
               orderDocIds.putIfAbsent(orderId, () => []);
               orderMap[orderId]!.add(data);
               orderDocIds[orderId]!.add(doc.id);
+            } else if (type == 'reservation_status' && reservationId != null && reservationId.isNotEmpty) {
+              reservationMap.putIfAbsent(reservationId, () => []);
+              reservationDocIds.putIfAbsent(reservationId, () => []);
+              reservationMap[reservationId]!.add(data);
+              reservationDocIds[reservationId]!.add(doc.id);
             } else {
               genericNotifications.add({...data, '_docId': doc.id});
             }
@@ -408,45 +452,102 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             return bMs.compareTo(aMs);
           });
 
-          // Build combined list: order groups + generic notifications
-          // interleaved by timestamp
+          // ── Build reservation groups from reservationMap ──
+          for (final entry in reservationMap.entries) {
+            final statuses = entry.value;
+            statuses.sort((a, b) {
+              final aTime = (a['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+              final bTime = (b['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+              return aTime.compareTo(bTime);
+            });
+            final latestTime = statuses.last['createdAt'] as Timestamp?;
+            final bName = statuses.last['businessName'] as String? ??
+                          statuses.first['businessName'] as String? ?? '';
+            final bId = statuses.last['businessId'] as String? ?? '';
+            final pSize = (statuses.last['partySize'] as num?)?.toInt() ??
+                          (statuses.first['partySize'] as num?)?.toInt() ?? 0;
+            final resDate = statuses.last['reservationDate'] as Timestamp? ??
+                            statuses.first['reservationDate'] as Timestamp?;
+
+            reservationGroups.add(_ReservationGroup(
+              reservationId: entry.key,
+              businessName: bName,
+              businessId: bId,
+              statuses: statuses,
+              latestTimestamp: latestTime,
+              partySize: pSize,
+              reservationDate: resDate,
+              docIds: reservationDocIds[entry.key] ?? [],
+            ));
+          }
+          // Sort reservation groups: pending first, then by latest timestamp
+          reservationGroups.sort((a, b) {
+            final aLatest = a.statuses.last['status'] as String? ?? '';
+            final bLatest = b.statuses.last['status'] as String? ?? '';
+            final aPending = aLatest == 'pending' ? 0 : 1;
+            final bPending = bLatest == 'pending' ? 0 : 1;
+            if (aPending != bPending) return aPending.compareTo(bPending);
+            final aMs = a.latestTimestamp?.millisecondsSinceEpoch ?? 0;
+            final bMs = b.latestTimestamp?.millisecondsSinceEpoch ?? 0;
+            return bMs.compareTo(aMs);
+          });
+
+          // Build combined list: order groups + reservation groups + generic
+          // All sorted by latest timestamp
+          final List<dynamic> allGrouped = [
+            ...orderGroups,
+            ...reservationGroups,
+            ...genericNotifications,
+          ];
+          allGrouped.sort((a, b) {
+            int aMs = 0, bMs = 0;
+            if (a is _OrderGroup) aMs = a.latestTimestamp?.millisecondsSinceEpoch ?? 0;
+            else if (a is _ReservationGroup) aMs = a.latestTimestamp?.millisecondsSinceEpoch ?? 0;
+            else if (a is Map<String, dynamic>) aMs = (a['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+            if (b is _OrderGroup) bMs = b.latestTimestamp?.millisecondsSinceEpoch ?? 0;
+            else if (b is _ReservationGroup) bMs = b.latestTimestamp?.millisecondsSinceEpoch ?? 0;
+            else if (b is Map<String, dynamic>) bMs = (b['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+            return bMs.compareTo(aMs); // newest first
+          });
+          // Pin active orders and pending reservations to top
           final List<dynamic> combined = [];
-          int oi = 0, gi = 0;
-
-          while (oi < orderGroups.length || gi < genericNotifications.length) {
-            final oTime = oi < orderGroups.length
-                ? (orderGroups[oi].latestTimestamp?.millisecondsSinceEpoch ?? 0)
-                : -1;
-            final gTime = gi < genericNotifications.length
-                ? ((genericNotifications[gi]['createdAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0)
-                : -1;
-
-            if (oTime >= gTime && oi < orderGroups.length) {
-              combined.add(orderGroups[oi]);
-              oi++;
+          final List<dynamic> pinned = [];
+          final List<dynamic> rest = [];
+          for (final item in allGrouped) {
+            if (item is _OrderGroup && activeStatuses.contains(item.statuses.last['status'] as String? ?? '')) {
+              pinned.add(item);
+            } else if (item is _ReservationGroup && (item.statuses.last['status'] as String? ?? '') == 'pending') {
+              pinned.add(item);
             } else {
-              combined.add(genericNotifications[gi]);
-              gi++;
+              rest.add(item);
             }
           }
+          combined.addAll(pinned);
+          combined.addAll(rest);
 
           // Apply category filter
           final List<dynamic> filtered;
           if (_activeFilter == 'orders') {
             filtered = combined.where((item) => item is _OrderGroup).toList();
+          } else if (_activeFilter == 'reservations') {
+            filtered = combined.where((item) => item is _ReservationGroup).toList();
           } else if (_activeFilter == 'promotions') {
-            filtered = combined.where((item) => item is! _OrderGroup).toList();
+            filtered = combined.where((item) => item is! _OrderGroup && item is! _ReservationGroup).toList();
           } else {
             filtered = combined;
           }
 
           // Apply sort direction (reverse for oldest-first)
           if (!_sortNewestFirst) {
-            // Keep active orders pinned at top, reverse only completed ones
+            // Keep active orders and pending reservations pinned at top
             final activeItems = filtered.where((item) =>
-              item is _OrderGroup && _isActiveOrder(item)).toList();
+              (item is _OrderGroup && _isActiveOrder(item)) ||
+              (item is _ReservationGroup && (item.statuses.last['status'] as String? ?? '') == 'pending')
+            ).toList();
             final inactiveItems = filtered.where((item) =>
-              !(item is _OrderGroup && _isActiveOrder(item))).toList();
+              !((item is _OrderGroup && _isActiveOrder(item)) ||
+                (item is _ReservationGroup && (item.statuses.last['status'] as String? ?? '') == 'pending'))
+            ).toList();
             filtered
               ..clear()
               ..addAll(activeItems)
@@ -455,57 +556,84 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
           return Column(
             children: [
-              // ── Filter chips ──
+              // -- Dropdown filter + sort icon --
               if (!_isEditMode)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
-                      _buildFilterChip('all', 'notifications.filter_all'.tr(), isDark),
-                      const SizedBox(width: 8),
-                      _buildFilterChip('orders', 'notifications.filter_orders'.tr(), isDark),
-                      const SizedBox(width: 8),
-                      _buildFilterChip('promotions', 'notifications.filter_promotions'.tr(), isDark),
+                      // Dropdown filter
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                            width: 0.5,
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _activeFilter,
+                            isDense: true,
+                            icon: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                            dropdownColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            items: [
+                              DropdownMenuItem(value: 'all', child: Text('notifications.filter_all'.tr())),
+                              DropdownMenuItem(value: 'orders', child: Text('notifications.filter_orders'.tr())),
+                              DropdownMenuItem(value: 'reservations', child: Text('notifications.filter_reservations'.tr())),
+                              DropdownMenuItem(value: 'promotions', child: Text('notifications.filter_promotions'.tr())),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                HapticFeedback.selectionClick();
+                                setState(() => _activeFilter = val);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
                       const Spacer(),
-                      // Sort toggle button
+                      // Sort toggle (ters ok ikonu)
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
                           setState(() => _sortNewestFirst = !_sortNewestFirst);
                         },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey[800] : Colors.grey[100],
-                            borderRadius: BorderRadius.circular(20),
+                            color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
                               width: 0.5,
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              AnimatedRotation(
-                                turns: _sortNewestFirst ? 0.0 : 0.5,
-                                duration: const Duration(milliseconds: 300),
-                                child: Icon(
-                                  Icons.arrow_downward_rounded,
-                                  size: 14,
-                                  color: isDark ? Colors.grey[300] : Colors.grey[700],
-                                ),
+                              Icon(
+                                Icons.swap_vert_rounded,
+                                size: 16,
+                                color: isDark ? Colors.grey[300] : Colors.grey[700],
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                _sortNewestFirst
-                                  ? 'notifications.sort_newest'.tr()
-                                  : 'notifications.sort_oldest'.tr(),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark ? Colors.grey[300] : Colors.grey[700],
-                                ),
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 14,
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ],
                           ),
@@ -534,7 +662,50 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = filtered[index];
-                  if (item is _OrderGroup) {
+                  if (item is _ReservationGroup) {
+                    final card = _ReservationCard(
+                      group: item,
+                      isDark: isDark,
+                    );
+                    if (_isEditMode) {
+                      return _buildSelectableCard(
+                        id: item.reservationId,
+                        isDark: isDark,
+                        child: card,
+                      );
+                    }
+                    return GestureDetector(
+                      onLongPress: () {
+                        HapticFeedback.mediumImpact();
+                        setState(() {
+                          _isEditMode = true;
+                          _selectedIds.add(item.reservationId);
+                        });
+                      },
+                      child: _buildDismissible(
+                        key: Key('reservation_${item.reservationId}'),
+                        isDark: isDark,
+                        onDismissed: () async {
+                          await _trashReservationGroup(item);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('notifications.notification_trashed'.tr()),
+                                action: SnackBarAction(
+                                  label: 'notifications.undo'.tr(),
+                                  textColor: const Color(0xFF4CAF50),
+                                  onPressed: () => _undoTrashReservationGroup(item),
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          }
+                        },
+                        child: card,
+                      ),
+                    );
+                  } else if (item is _OrderGroup) {
                     final isActive = _isActiveOrder(item);
                     final card = _OrderTimelineCard(
                       group: item,
@@ -679,39 +850,6 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     );
   }
 
-  // ── Filter chip widget ────────────────────────────────────────────────
-  Widget _buildFilterChip(String filterKey, String label, bool isDark) {
-    final isSelected = _activeFilter == filterKey;
-    return GestureDetector(
-      onTap: () => setState(() { _activeFilter = filterKey; }),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFFB335B)
-              : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7)),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFFFB335B)
-                : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
-            width: 0.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? Colors.white
-                : (isDark ? Colors.grey[400] : Colors.grey[600]),
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
 
   // ── Swipe-to-trash widget ─────────────────────────────────────────────
   Widget _buildDismissible({
@@ -810,6 +948,29 @@ class _OrderGroup {
     this.businessCity = '',
     this.businessPostalCode = '',
     this.orderType = 'delivery',
+    this.docIds = const [],
+  });
+}
+
+// ── Data model for grouped reservation notifications ──────────────────────
+class _ReservationGroup {
+  final String reservationId;
+  final String businessName;
+  final String businessId;
+  final List<Map<String, dynamic>> statuses;
+  final Timestamp? latestTimestamp;
+  final int partySize;
+  final Timestamp? reservationDate;
+  final List<String> docIds;
+
+  _ReservationGroup({
+    required this.reservationId,
+    required this.businessName,
+    this.businessId = '',
+    required this.statuses,
+    this.latestTimestamp,
+    this.partySize = 0,
+    this.reservationDate,
     this.docIds = const [],
   });
 }
@@ -1801,6 +1962,38 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           ),
                         ],
                       ),
+                      // Scheduled delivery/pickup time
+                      if (order.isScheduledOrder || order.scheduledTime != null) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFFFFB74D).withValues(alpha: 0.3) : const Color(0xFFFFE0B2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.schedule, size: 16, color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  order.scheduledTime != null
+                                      ? '${'notifications.scheduled_delivery'.tr()}: ${order.scheduledTime!.day.toString().padLeft(2, '0')}.${order.scheduledTime!.month.toString().padLeft(2, '0')}.${order.scheduledTime!.year} ${order.scheduledTime!.hour.toString().padLeft(2, '0')}:${order.scheduledTime!.minute.toString().padLeft(2, '0')}'
+                                      : 'notifications.scheduled_delivery'.tr(),
+                                  style: TextStyle(
+                                    color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       // Items header
                       Text(
@@ -1855,7 +2048,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                 ),
                               ),
                               Text(
-                                '${item.quantity} ${item.unit}',
+                                '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
                                 style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
                               ),
                               const SizedBox(width: 10),
@@ -1947,18 +2140,29 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           ],
                         ),
                       ],
-                      // ── Payment method + status card ────────────────
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[900] : Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
-                        ),
-                        child: Column(
-                          children: [
-                            if (order.paymentMethod != null) ...[
+                      // ── Payment method card with timestamp ────────────────
+                      if (order.paymentMethod != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[900] : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'notifications.payment_method_label'.tr(),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w400,
+                                  color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -1972,40 +2176,32 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                       ),
                                     ],
                                   ),
-                                  Text(
-                                    '${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${(order.createdAt.year % 100).toString().padLeft(2, '0')} ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                  Builder(
+                                    builder: (context) {
+                                      final now = DateTime.now();
+                                      final diff = now.difference(order.updatedAt);
+                                      String relativeTime;
+                                      if (diff.inMinutes < 1) {
+                                        relativeTime = 'notifications.just_now'.tr();
+                                      } else if (diff.inMinutes < 60) {
+                                        relativeTime = 'notifications.minutes_ago'.tr(args: ['${diff.inMinutes}']);
+                                      } else if (diff.inHours < 24) {
+                                        relativeTime = 'notifications.hours_ago'.tr(args: ['${diff.inHours}']);
+                                      } else {
+                                        relativeTime = 'notifications.days_ago'.tr(args: ['${diff.inDays}']);
+                                      }
+                                      return Text(
+                                        '${'notifications.last_action_label'.tr()}: $relativeTime',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[300]),
-                              ),
                             ],
-                            Row(
-                              children: [
-                                Icon(
-                                  order.status == OrderStatus.delivered || order.status == OrderStatus.served
-                                      ? Icons.check_circle_outline
-                                      : Icons.info_outline,
-                                  size: 16,
-                                  color: _getStatusColor(order.status),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _getStatusLabel(order.status),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: _getStatusColor(order.status),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                       // ── Reorder button ──────────────────────────────
                       const SizedBox(height: 16),
                       SizedBox(
@@ -2168,6 +2364,8 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
       }
     }
 
+    final isScheduled = order.isScheduledOrder || order.scheduledTime != null;
+
     return Row(
       children: [
         Icon(icon, size: 15, color: color),
@@ -2180,6 +2378,31 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
             fontWeight: FontWeight.w500,
           ),
         ),
+        if (isScheduled) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.schedule, size: 11, color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)),
+                const SizedBox(width: 3),
+                Text(
+                  'notifications.scheduled_delivery'.tr(),
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -2958,6 +3181,199 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Reservation notification card ─────────────────────────────────────────
+class _ReservationCard extends StatelessWidget {
+  final _ReservationGroup group;
+  final bool isDark;
+
+  const _ReservationCard({
+    required this.group,
+    required this.isDark,
+  });
+
+  static const _statusConfig = <String, Map<String, dynamic>>{
+    'pending':   {'labelKey': 'reservation.status_pending',   'color': 0xFFFF9800, 'icon': Icons.schedule_rounded},
+    'confirmed': {'labelKey': 'reservation.status_confirmed', 'color': 0xFF4CAF50, 'icon': Icons.check_circle_rounded},
+    'rejected':  {'labelKey': 'reservation.status_rejected',  'color': 0xFFFB335B, 'icon': Icons.cancel_rounded},
+    'cancelled': {'labelKey': 'reservation.status_cancelled', 'color': 0xFF9E9E9E, 'icon': Icons.block_rounded},
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final latestStatus = group.statuses.last['status'] as String? ?? 'pending';
+    final config = _statusConfig[latestStatus] ?? _statusConfig['pending']!;
+    final statusColor = Color(config['color'] as int);
+    final statusIcon = config['icon'] as IconData;
+    final statusLabelKey = config['labelKey'] as String;
+
+    // Format reservation date
+    String dateLabel = '';
+    String timeLabel = '';
+    if (group.reservationDate != null) {
+      final dt = group.reservationDate!.toDate();
+      final months = [
+        'notifications.month_jan', 'notifications.month_feb', 'notifications.month_mar',
+        'notifications.month_apr', 'notifications.month_may', 'notifications.month_jun',
+        'notifications.month_jul', 'notifications.month_aug', 'notifications.month_sep',
+        'notifications.month_oct', 'notifications.month_nov', 'notifications.month_dec',
+      ];
+      dateLabel = '${dt.day} ${months[dt.month - 1].tr()} ${dt.year}';
+      timeLabel = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    }
+
+    // "timeago" from latest notification
+    String agoLabel = '';
+    if (group.latestTimestamp != null) {
+      final loc = Localizations.localeOf(context).languageCode;
+      agoLabel = timeago.format(group.latestTimestamp!.toDate(), locale: loc == 'tr' ? 'tr' : 'en');
+    }
+
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white70 : Colors.black54;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: latestStatus == 'pending'
+            ? Border.all(color: statusColor.withValues(alpha: 0.4), width: 1.5)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header: icon + business name + ago ──
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.table_restaurant_rounded, color: statusColor, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.businessName,
+                        style: TextStyle(
+                          color: textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'reservation.table_reservation'.tr(),
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (agoLabel.isNotEmpty)
+                  Text(
+                    agoLabel,
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // ── Reservation details ──
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F8F8),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                children: [
+                  // Date
+                  if (dateLabel.isNotEmpty)
+                    _infoRow(Icons.calendar_today_rounded, dateLabel, textPrimary),
+                  if (dateLabel.isNotEmpty && timeLabel.isNotEmpty)
+                    const SizedBox(height: 6),
+                  // Time
+                  if (timeLabel.isNotEmpty)
+                    _infoRow(Icons.access_time_rounded, timeLabel, textPrimary),
+                  if (group.partySize > 0) ...[
+                    const SizedBox(height: 6),
+                    _infoRow(
+                      Icons.people_rounded,
+                      'reservation.party_count'.tr(args: ['${group.partySize}']),
+                      textPrimary,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // ── Status badge ──
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(statusIcon, color: statusColor, size: 15),
+                  const SizedBox(width: 5),
+                  Text(
+                    statusLabelKey.tr(),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text, Color textColor) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: textColor.withValues(alpha: 0.5)),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: textColor),
+        ),
+      ],
     );
   }
 }

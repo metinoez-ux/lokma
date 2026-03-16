@@ -13,6 +13,7 @@ import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../kasap/reservation_booking_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lokma_app/services/table_group_service.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
@@ -753,7 +754,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       ),
     );
   }
-
   // Kompakt konum başlığı (LOKMA logo, şehir+sokak, kalp ikonu)
   Widget _buildCompactLocationHeader() {
     // Get location from cached provider (no API call!)
@@ -966,22 +966,32 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
                       if (hasAny)
                         Positioned(
-                          top: -4,
-                          right: -6,
+                          top: -2,
+                          right: -4,
                           child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
-                              color: lokmaPink,
-                              borderRadius: BorderRadius.circular(6),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  width: 1),
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               '${favorites.length}',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.surface,
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -2187,76 +2197,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
                     ),
 
-                    // 🆕 Cart badge (BOTTOM RIGHT) - only when available
-                    if (isAvailable)
-                      Builder(
-                        builder: (context) {
-                          final cartState = ref.watch(cartProvider);
-                          if (cartState.butcherId == id &&
-                              cartState.items.isNotEmpty) {
-                            return Positioned(
-                              right: 12,
-                              bottom: 12,
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.2),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Icon(
-                                      Icons.shopping_cart_outlined,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      size: 24,
-                                    ),
-                                    Positioned(
-                                      right: -8,
-                                      top: -8,
-                                      child: Container(
-                                        padding: EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        constraints: BoxConstraints(
-                                            minWidth: 18, minHeight: 18),
-                                        child: Center(
-                                          child: Text(
-                                            '${cartState.items.length}',
-                                            style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .surface,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
                   ],
                 ),
 
@@ -2454,24 +2394,43 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                       .onSurface
                                                       .withValues(alpha: 0.7),
                                                   fontSize: 13)),
-                                          Icon(Icons.event_seat,
-                                              color: lokmaPink,
-                                              size: 14),
-                                          const SizedBox(width: 4),
-                                          Icon(Icons.schedule,
-                                              color: lokmaPink,
-                                              size: 14),
-                                          const SizedBox(width: 4),
-                                          Flexible(
-                                            child: Text(
-                                              tr('marketplace.reservation_available'),
-                                              style: TextStyle(
-                                                color: lokmaPink,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                          GestureDetector(
+                                            onTap: () {
+                                              HapticFeedback.lightImpact();
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => ReservationBookingScreen(
+                                                    businessId: id,
+                                                    businessName: data['companyName'] as String? ?? data['name'] as String? ?? '',
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.event_seat,
+                                                    color: lokmaPink,
+                                                    size: 14),
+                                                const SizedBox(width: 4),
+                                                Icon(Icons.schedule,
+                                                    color: lokmaPink,
+                                                    size: 14),
+                                                const SizedBox(width: 4),
+                                                Flexible(
+                                                  child: Text(
+                                                    tr('marketplace.reservation_available'),
+                                                    style: TextStyle(
+                                                      color: lokmaPink,
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
@@ -2492,6 +2451,138 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showCartBottomSheet(
+    BuildContext context, {
+    required String businessName,
+    required String businessId,
+    required int itemCount,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Business name
+                  Text(
+                    businessName.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Item count
+                  Text(
+                    '$itemCount ${tr('cart.items')}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Continue ordering button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.push(
+                            '/business/$businessId?mode=$_deliveryMode');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: lokmaPink,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        tr('cart.continue_ordering'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Delete order button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        ref.read(cartProvider.notifier).clearCart();
+                        Navigator.pop(ctx);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onSurface,
+                        side: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.2),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        tr('cart.delete_order'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

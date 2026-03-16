@@ -1,5 +1,37 @@
 
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeTimeString } from "@/utils/timeUtils";
+
+/**
+ * Google Places weekday_text satirindaki saatleri 24h formatina donusturur.
+ * Ornek: "Monday: 11:30 AM – 10:00 PM" -> "Monday: 11:30 - 22:00"
+ */
+function normalizeGoogleHoursLine(line: string): string {
+  // Gun ismi ve saat kismini ayir
+  const colonIdx = line.indexOf(':');
+  if (colonIdx === -1) return line;
+
+  const dayPart = line.substring(0, colonIdx).trim();
+  const timePart = line.substring(colonIdx + 1).trim();
+
+  // "Closed" / "Open 24 hours" gibi ozel durumlar
+  const lower = timePart.toLowerCase();
+  if (lower.includes('closed') || lower.includes('open 24')) {
+    return line;
+  }
+
+  // Seperatoru bul (en-dash veya hyphen)
+  const separator = timePart.includes('\u2013') ? '\u2013' : '-';
+  const parts = timePart.split(separator).map(p => p.trim());
+
+  if (parts.length >= 2) {
+    const start = normalizeTimeString(parts[0]);
+    const end = normalizeTimeString(parts[1]);
+    return `${dayPart}: ${start} - ${end}`;
+  }
+
+  return line;
+}
 
 export async function GET(request: NextRequest) {
     try {
@@ -81,10 +113,11 @@ export async function GET(request: NextRequest) {
         const place = data.result;
         const result: any = {};
 
-        // 2. Format Opening Hours
+        // 2. Format Opening Hours (normalize AM/PM -> 24h)
         if (place.opening_hours?.weekday_text) {
-            // Return raw array for structured editing
-            result.openingHours = place.opening_hours.weekday_text;
+            result.openingHours = place.opening_hours.weekday_text.map(
+                (line: string) => normalizeGoogleHoursLine(line)
+            );
         }
 
         // 3. Format Phone

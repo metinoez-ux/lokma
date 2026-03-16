@@ -4,12 +4,23 @@ import { useState, useEffect, useCallback } from "react";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useTranslations } from "next-intl";
+import { normalizeTimeString } from "@/utils/timeUtils";
 
 interface DiningDurationConfig {
   partySize1to2: number;
   partySize3to4: number;
   partySize5to6: number;
   partySize7plus: number;
+}
+
+interface WeeklyAvailability {
+  monday: boolean;
+  tuesday: boolean;
+  wednesday: boolean;
+  thursday: boolean;
+  friday: boolean;
+  saturday: boolean;
+  sunday: boolean;
 }
 
 interface ReservationConfig {
@@ -19,6 +30,14 @@ interface ReservationConfig {
   maxPartySize: number;
   minPartySize: number;
   diningDuration: DiningDurationConfig;
+  cleaningTimeMinutes: number;
+  reservationStartTime: string;
+  reservationEndTime: string;
+  weeklyAvailability: WeeklyAvailability;
+  maxDailyReservations: number;
+  autoConfirmUpTo: number;
+  minAdvanceHours: number;
+  bufferMinutes: number;
 }
 
 interface BlockedSlot {
@@ -32,6 +51,16 @@ interface ReservationCapacityConfigProps {
   businessId: string;
 }
 
+const DEFAULT_WEEKLY: WeeklyAvailability = {
+  monday: true,
+  tuesday: true,
+  wednesday: true,
+  thursday: true,
+  friday: true,
+  saturday: true,
+  sunday: true,
+};
+
 const DEFAULT_CONFIG: ReservationConfig = {
   reservationEnabled: true,
   totalSeats: 0,
@@ -44,6 +73,14 @@ const DEFAULT_CONFIG: ReservationConfig = {
     partySize5to6: 120,
     partySize7plus: 150,
   },
+  cleaningTimeMinutes: 15,
+  reservationStartTime: "11:00",
+  reservationEndTime: "22:00",
+  weeklyAvailability: { ...DEFAULT_WEEKLY },
+  maxDailyReservations: 0,
+  autoConfirmUpTo: 0,
+  minAdvanceHours: 2,
+  bufferMinutes: 0,
 };
 
 export default function ReservationCapacityConfig({
@@ -59,6 +96,7 @@ export default function ReservationCapacityConfig({
     type: "success" | "error";
   } | null>(null);
   const [showBlockForm, setShowBlockForm] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [newBlock, setNewBlock] = useState<BlockedSlot>({
     date: "",
     startTime: "",
@@ -108,6 +146,29 @@ export default function ReservationCapacityConfig({
                 saved.diningDuration?.partySize7plus ??
                 DEFAULT_CONFIG.diningDuration.partySize7plus,
             },
+            cleaningTimeMinutes:
+              saved.cleaningTimeMinutes ?? DEFAULT_CONFIG.cleaningTimeMinutes,
+            reservationStartTime:
+              normalizeTimeString(saved.reservationStartTime) || DEFAULT_CONFIG.reservationStartTime,
+            reservationEndTime:
+              normalizeTimeString(saved.reservationEndTime) || DEFAULT_CONFIG.reservationEndTime,
+            weeklyAvailability: {
+              monday: saved.weeklyAvailability?.monday ?? DEFAULT_WEEKLY.monday,
+              tuesday: saved.weeklyAvailability?.tuesday ?? DEFAULT_WEEKLY.tuesday,
+              wednesday: saved.weeklyAvailability?.wednesday ?? DEFAULT_WEEKLY.wednesday,
+              thursday: saved.weeklyAvailability?.thursday ?? DEFAULT_WEEKLY.thursday,
+              friday: saved.weeklyAvailability?.friday ?? DEFAULT_WEEKLY.friday,
+              saturday: saved.weeklyAvailability?.saturday ?? DEFAULT_WEEKLY.saturday,
+              sunday: saved.weeklyAvailability?.sunday ?? DEFAULT_WEEKLY.sunday,
+            },
+            maxDailyReservations:
+              saved.maxDailyReservations ?? DEFAULT_CONFIG.maxDailyReservations,
+            autoConfirmUpTo:
+              saved.autoConfirmUpTo ?? DEFAULT_CONFIG.autoConfirmUpTo,
+            minAdvanceHours:
+              saved.minAdvanceHours ?? DEFAULT_CONFIG.minAdvanceHours,
+            bufferMinutes:
+              saved.bufferMinutes ?? DEFAULT_CONFIG.bufferMinutes,
           });
         } else {
           // Fallback: use existing tableCapacity if available
@@ -116,7 +177,13 @@ export default function ReservationCapacityConfig({
             totalSeats: data.tableCapacity || 0,
           });
         }
-        setBlockedSlots(saved?.blockedSlots || []);
+        // Normalize blocked slot times on read
+        const savedSlots = saved?.blockedSlots || [];
+        setBlockedSlots(savedSlots.map((slot: BlockedSlot) => ({
+          ...slot,
+          startTime: normalizeTimeString(slot.startTime) || slot.startTime,
+          endTime: normalizeTimeString(slot.endTime) || slot.endTime,
+        })));
       }
     } catch (err) {
       console.error("Error loading reservation config:", err);
@@ -136,7 +203,14 @@ export default function ReservationCapacityConfig({
     try {
       const configData = {
         ...config,
-        blockedSlots,
+        // Normalize reservation times before save
+        reservationStartTime: normalizeTimeString(config.reservationStartTime) || config.reservationStartTime,
+        reservationEndTime: normalizeTimeString(config.reservationEndTime) || config.reservationEndTime,
+        blockedSlots: blockedSlots.map(slot => ({
+          ...slot,
+          startTime: normalizeTimeString(slot.startTime) || slot.startTime,
+          endTime: normalizeTimeString(slot.endTime) || slot.endTime,
+        })),
       };
       await updateDoc(doc(db, "businesses", businessId), {
         reservationConfig: configData,
@@ -166,14 +240,20 @@ export default function ReservationCapacityConfig({
     setBlockedSlots((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Calculate estimated daily capacity
-  const openHours = 12; // approximate
-  const slotsPerDay = (openHours * 60) / config.slotDurationMinutes;
+  // Calculate estimated daily capacity using actual reservation hours
+  const calcOpenHours = (() => {
+    const [sh, sm] = config.reservationStartTime.split(":").map(Number);
+    const [eh, em] = config.reservationEndTime.split(":").map(Number);
+    if (isNaN(sh) || isNaN(eh)) return 12;
+    return Math.max(0, (eh + em / 60) - (sh + sm / 60));
+  })();
+  const effectiveSlotMinutes = config.slotDurationMinutes + config.cleaningTimeMinutes + config.bufferMinutes;
+  const slotsPerDay = effectiveSlotMinutes > 0 ? (calcOpenHours * 60) / effectiveSlotMinutes : 0;
   const avgDiningSlots = Math.ceil(
     ((config.diningDuration.partySize1to2 +
       config.diningDuration.partySize3to4) /
       2 /
-      config.slotDurationMinutes)
+      effectiveSlotMinutes)
   );
   const turnsPerDay =
     avgDiningSlots > 0 ? Math.floor(slotsPerDay / avgDiningSlots) : 0;
@@ -485,6 +565,211 @@ export default function ReservationCapacityConfig({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Advanced Operational Settings */}
+      <div className="bg-gray-800 rounded-2xl border border-gray-700">
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full flex items-center justify-between p-6 text-left"
+        >
+          <div>
+            <h4 className="text-white font-bold text-sm">
+              {t("rc_gelismis_ayarlar")}
+            </h4>
+            <p className="text-gray-500 text-xs mt-1">
+              {t("rc_gelismis_ayarlar_aciklama")}
+            </p>
+          </div>
+          <span className={`text-gray-400 transition-transform ${showAdvanced ? "rotate-180" : ""}`}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+          </span>
+        </button>
+
+        {showAdvanced && (
+          <div className="px-6 pb-6 space-y-5">
+            {/* Cleaning Time & Buffer */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-gray-400 text-xs block mb-1">
+                  {t("rc_temizlik_suresi")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={config.cleaningTimeMinutes}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...p,
+                        cleaningTimeMinutes: Math.max(0, parseInt(e.target.value) || 0),
+                      }))
+                    }
+                    min="0"
+                    max="120"
+                    className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                  />
+                  <span className="text-gray-500 text-xs whitespace-nowrap">dk</span>
+                </div>
+                <p className="text-gray-600 text-[10px] mt-1">{t("rc_temizlik_suresi_aciklama")}</p>
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs block mb-1">
+                  {t("rc_buffer_suresi")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={config.bufferMinutes}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...p,
+                        bufferMinutes: Math.max(0, parseInt(e.target.value) || 0),
+                      }))
+                    }
+                    min="0"
+                    max="120"
+                    className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                  />
+                  <span className="text-gray-500 text-xs whitespace-nowrap">dk</span>
+                </div>
+                <p className="text-gray-600 text-[10px] mt-1">{t("rc_buffer_suresi_aciklama")}</p>
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs block mb-1">
+                  {t("rc_min_onceden")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={config.minAdvanceHours}
+                    onChange={(e) =>
+                      setConfig((p) => ({
+                        ...p,
+                        minAdvanceHours: Math.max(0, parseInt(e.target.value) || 0),
+                      }))
+                    }
+                    min="0"
+                    max="168"
+                    className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                  />
+                  <span className="text-gray-500 text-xs whitespace-nowrap">{t("rc_saat")}</span>
+                </div>
+                <p className="text-gray-600 text-[10px] mt-1">{t("rc_min_onceden_aciklama")}</p>
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs block mb-1">
+                  {t("rc_maks_gunluk")}
+                </label>
+                <input
+                  type="number"
+                  value={config.maxDailyReservations}
+                  onChange={(e) =>
+                    setConfig((p) => ({
+                      ...p,
+                      maxDailyReservations: Math.max(0, parseInt(e.target.value) || 0),
+                    }))
+                  }
+                  min="0"
+                  max="999"
+                  className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                  placeholder="0 = limitsiz"
+                />
+                <p className="text-gray-600 text-[10px] mt-1">{t("rc_maks_gunluk_aciklama")}</p>
+              </div>
+            </div>
+
+            {/* Reservation Hours */}
+            <div>
+              <label className="text-gray-400 text-xs block mb-2">
+                {t("rc_kabul_saatleri")}
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="time"
+                  value={config.reservationStartTime}
+                  onChange={(e) =>
+                    setConfig((p) => ({ ...p, reservationStartTime: e.target.value }))
+                  }
+                  className="bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                />
+                <span className="text-gray-500 text-sm">-</span>
+                <input
+                  type="time"
+                  value={config.reservationEndTime}
+                  onChange={(e) =>
+                    setConfig((p) => ({ ...p, reservationEndTime: e.target.value }))
+                  }
+                  className="bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                />
+              </div>
+              <p className="text-gray-600 text-[10px] mt-1">{t("rc_kabul_saatleri_aciklama")}</p>
+            </div>
+
+            {/* Auto-Confirm */}
+            <div>
+              <label className="text-gray-400 text-xs block mb-1">
+                {t("rc_otomatik_onay")}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={config.autoConfirmUpTo}
+                  onChange={(e) =>
+                    setConfig((p) => ({
+                      ...p,
+                      autoConfirmUpTo: Math.max(0, parseInt(e.target.value) || 0),
+                    }))
+                  }
+                  min="0"
+                  max="50"
+                  className="w-32 bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none font-medium"
+                  placeholder="0 = devre disi"
+                />
+                <span className="text-gray-500 text-xs">{t("rc_kisi")}</span>
+              </div>
+              <p className="text-gray-600 text-[10px] mt-1">{t("rc_otomatik_onay_aciklama")}</p>
+            </div>
+
+            {/* Weekly Availability */}
+            <div>
+              <label className="text-gray-400 text-xs block mb-2">
+                {t("rc_haftalik_musaitlik")}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  ["monday", t("rc_gun_pzt")],
+                  ["tuesday", t("rc_gun_sal")],
+                  ["wednesday", t("rc_gun_car")],
+                  ["thursday", t("rc_gun_per")],
+                  ["friday", t("rc_gun_cum")],
+                  ["saturday", t("rc_gun_cmt")],
+                  ["sunday", t("rc_gun_paz")],
+                ] as [keyof WeeklyAvailability, string][]).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() =>
+                      setConfig((p) => ({
+                        ...p,
+                        weeklyAvailability: {
+                          ...p.weeklyAvailability,
+                          [key]: !p.weeklyAvailability[key],
+                        },
+                      }))
+                    }
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                      config.weeklyAvailability[key]
+                        ? "bg-green-600/20 text-green-400 border border-green-500/30"
+                        : "bg-red-600/20 text-red-400 border border-red-500/30"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-gray-600 text-[10px] mt-1">{t("rc_haftalik_musaitlik_aciklama")}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Blocked Time Slots */}

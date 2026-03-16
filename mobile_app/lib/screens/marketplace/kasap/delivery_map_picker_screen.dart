@@ -304,6 +304,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
               // Business marker (small dot)
               if (widget.businessLat != null && widget.businessLng != null)
                 MarkerLayer(
+                  rotate: true,
                   markers: [
                     Marker(
                       point: LatLng(widget.businessLat!, widget.businessLng!),

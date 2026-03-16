@@ -2999,3 +2999,337 @@ export const preOrderReminder = onSchedule(
         }
     }
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPER ADMIN: Test Data Cleanup
+// Deletes ALL users (Firebase Auth + Firestore) except the protected Super Admin
+// Also deletes all test orders, ratings, and commission records
+// Protected accounts: hardcoded list of real accounts that must never be deleted
+// ─────────────────────────────────────────────────────────────────────────────
+export const cleanupTestData = onRequest(
+    { secrets: [], cors: true, timeoutSeconds: 300, memory: "512MiB" },
+    async (req, res) => {
+        // Only allow POST
+        if (req.method !== "POST") {
+            res.status(405).json({ error: "Method not allowed" });
+            return;
+        }
+
+        // Verify caller is Super Admin via Firebase Auth token
+        const authHeader = req.headers.authorization || "";
+        if (!authHeader.startsWith("Bearer ")) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        let callerUid: string;
+        try {
+            const token = authHeader.split("Bearer ")[1];
+            const decoded = await admin.auth().verifyIdToken(token);
+            callerUid = decoded.uid;
+
+            // Verify the caller is a super admin in Firestore
+            const callerDoc = await db.collection("admins").doc(callerUid).get();
+            if (!callerDoc.exists || callerDoc.data()?.adminType !== "super") {
+                res.status(403).json({ error: "Forbidden: Super Admin only" });
+                return;
+            }
+        } catch (e) {
+            res.status(401).json({ error: "Invalid token" });
+            return;
+        }
+
+        // ── Protected accounts — NEVER delete these ────────────────────────
+        const PROTECTED_EMAILS = new Set([
+            "metin.oez@gmail.com",
+        ]);
+
+        const stats: Record<string, any> = {
+            authDeleted: 0,
+            usersDeleted: 0,
+            adminsDeleted: 0,
+            ordersDeleted: 0,
+            ratingsDeleted: 0,
+            commissionRecordsDeleted: 0,
+            notificationsDeleted: 0,
+            scheduledNotificationsDeleted: 0,
+            sponsoredConversionsDeleted: 0,
+            referralsDeleted: 0,
+            groupOrdersDeleted: 0,
+            reservationsDeleted: 0,
+            businessesReset: 0,
+            errors: [] as string[],
+        };
+
+        try {
+            console.log(`[Cleanup] Started by Super Admin: ${callerUid}`);
+
+            // ── Step 1: List all Firebase Auth users ──────────────────────
+            const authUsersToDelete: string[] = [];
+            let pageToken: string | undefined;
+
+            do {
+                const result = await admin.auth().listUsers(1000, pageToken);
+                for (const user of result.users) {
+                    // Skip protected accounts
+                    if (user.email && PROTECTED_EMAILS.has(user.email)) {
+                        console.log(`[Cleanup] SKIPPING protected: ${user.email}`);
+                        continue;
+                    }
+                    // Skip the caller themselves (extra safety)
+                    if (user.uid === callerUid) continue;
+
+                    authUsersToDelete.push(user.uid);
+                }
+                pageToken = result.pageToken;
+            } while (pageToken);
+
+            console.log(`[Cleanup] Auth users to delete: ${authUsersToDelete.length}`);
+
+            // ── Step 2: Delete sub-collections for each user (notifications) ─
+            for (const uid of authUsersToDelete) {
+                try {
+                    const notifSnap = await db.collection("users").doc(uid)
+                        .collection("notifications").limit(500).get();
+                    const batch = db.batch();
+                    notifSnap.docs.forEach(d => batch.delete(d.ref));
+                    if (!notifSnap.empty) {
+                        await batch.commit();
+                        stats.notificationsDeleted += notifSnap.size;
+                    }
+                } catch (e: any) {
+                    stats.errors.push(`notifications/${uid}: ${e.message}`);
+                }
+            }
+
+            // ── Step 3: Delete Firestore users documents ─────────────────
+            const uidSet = new Set(authUsersToDelete);
+            const usersSnap = await db.collection("users").limit(500).get();
+            const usersBatch = db.batch();
+            for (const doc of usersSnap.docs) {
+                if (uidSet.has(doc.id)) {
+                    usersBatch.delete(doc.ref);
+                    stats.usersDeleted++;
+                }
+            }
+            await usersBatch.commit();
+
+            // ── Step 4: Delete admins (non-super, excluding caller) ───────
+            const adminsSnap = await db.collection("admins").get();
+            const adminsBatch = db.batch();
+            for (const doc of adminsSnap.docs) {
+                if (doc.id === callerUid) continue;
+                const data = doc.data();
+                // Never delete super admins
+                if (data.adminType === "super") continue;
+                adminsBatch.delete(doc.ref);
+                stats.adminsDeleted++;
+            }
+            await adminsBatch.commit();
+
+            // ── Step 5: Delete Firebase Auth users in batches of 1000 ─────
+            const BATCH_SIZE = 1000;
+            for (let i = 0; i < authUsersToDelete.length; i += BATCH_SIZE) {
+                const chunk = authUsersToDelete.slice(i, i + BATCH_SIZE);
+                try {
+                    const result = await admin.auth().deleteUsers(chunk);
+                    stats.authDeleted += result.successCount;
+                    if (result.errors.length > 0) {
+                        result.errors.forEach(e => {
+                            stats.errors.push(`auth/${chunk[e.index]}: ${e.error.message}`);
+                        });
+                    }
+                } catch (e: any) {
+                    stats.errors.push(`auth batch: ${e.message}`);
+                }
+            }
+
+            // ── Step 6: Delete all meat_orders ────────────────────────────
+            let hasMoreOrders = true;
+            while (hasMoreOrders) {
+                const ordersSnap = await db.collection("meat_orders").limit(400).get();
+                if (ordersSnap.empty) { hasMoreOrders = false; break; }
+                const batch = db.batch();
+                ordersSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.ordersDeleted += ordersSnap.size;
+                if (ordersSnap.size < 400) hasMoreOrders = false;
+            }
+
+            // ── Step 7: Delete all ratings ────────────────────────────────
+            const ratingsSnap = await db.collection("ratings").limit(500).get();
+            if (!ratingsSnap.empty) {
+                const batch = db.batch();
+                ratingsSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.ratingsDeleted = ratingsSnap.size;
+            }
+
+            // ── Step 8: Delete all commission_records ─────────────────────
+            const commSnap = await db.collection("commission_records").limit(500).get();
+            if (!commSnap.empty) {
+                const batch = db.batch();
+                commSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.commissionRecordsDeleted = commSnap.size;
+            }
+
+            // ── Step 9: Delete scheduled_notifications ────────────────────
+            // These reference deleted orders → would cause errors if left behind
+            const schedNotifSnap = await db.collection("scheduled_notifications").limit(500).get();
+            if (!schedNotifSnap.empty) {
+                const batch = db.batch();
+                schedNotifSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.scheduledNotificationsDeleted = schedNotifSnap.size;
+                console.log(`[Cleanup] scheduled_notifications deleted: ${schedNotifSnap.size}`);
+            }
+
+            // ── Step 10: Delete sponsored_conversions ─────────────────────
+            // These reference deleted orderIds → orphan records
+            const sponsoredSnap = await db.collection("sponsored_conversions").limit(500).get();
+            if (!sponsoredSnap.empty) {
+                const batch = db.batch();
+                sponsoredSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.sponsoredConversionsDeleted = sponsoredSnap.size;
+                console.log(`[Cleanup] sponsored_conversions deleted: ${sponsoredSnap.size}`);
+            }
+
+            // ── Step 11: Delete referrals ─────────────────────────────────
+            // These contain deleted user UIDs as referrerId / referredId
+            const referralsSnap = await db.collection("referrals").limit(500).get();
+            if (!referralsSnap.empty) {
+                const batch = db.batch();
+                referralsSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.referralsDeleted = referralsSnap.size;
+                console.log(`[Cleanup] referrals deleted: ${referralsSnap.size}`);
+            }
+
+            // ── Step 12: Delete group_orders ──────────────────────────────
+            // These contain deleted user UIDs as participants
+            const groupOrdersSnap = await db.collection("group_orders").limit(500).get();
+            if (!groupOrdersSnap.empty) {
+                const batch = db.batch();
+                groupOrdersSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.groupOrdersDeleted = groupOrdersSnap.size;
+                console.log(`[Cleanup] group_orders deleted: ${groupOrdersSnap.size}`);
+            }
+
+            // ── Step 13: Reset usage counters in all businesses ───────────
+            // Test orders inflated these counters — reset them so billing starts fresh
+            const businessesSnap = await db.collection("businesses").limit(500).get();
+            if (!businessesSnap.empty) {
+                const batch = db.batch();
+                businessesSnap.docs.forEach(doc => {
+                    batch.update(doc.ref, {
+                        usage: {},           // wipe all monthly usage counters
+                        accountBalance: 0,   // clear any accumulated cash balance
+                    });
+                });
+                await batch.commit();
+                stats.businessesReset = businessesSnap.size;
+                console.log(`[Cleanup] Businesses usage reset: ${businessesSnap.size}`);
+            }
+
+            // ── Step 14: Clean dead FCM tokens from butcher_admins ────────
+            const butcherAdminsSnap = await db.collection("butcher_admins").limit(500).get();
+            if (!butcherAdminsSnap.empty) {
+                const batch = db.batch();
+                butcherAdminsSnap.docs.forEach(doc => {
+                    batch.update(doc.ref, { fcmTokens: [], webFcmTokens: [] });
+                });
+                await batch.commit();
+                console.log(`[Cleanup] Cleared FCM tokens from ${butcherAdminsSnap.size} butcher_admins`);
+            }
+
+            // ── Step 15: Delete reservations ──────────────────────────────
+            const reservationsSnap = await db.collection("reservations").limit(500).get();
+            if (!reservationsSnap.empty) {
+                const batch = db.batch();
+                reservationsSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                stats.reservationsDeleted = reservationsSnap.size;
+                console.log(`[Cleanup] reservations deleted: ${reservationsSnap.size}`);
+            }
+
+            // ── Step 16: Delete table_sessions ────────────────────────────
+            const tableSessionsSnap = await db.collection("table_sessions").limit(500).get();
+            if (!tableSessionsSnap.empty) {
+                const batch = db.batch();
+                tableSessionsSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                console.log(`[Cleanup] table_sessions deleted: ${tableSessionsSnap.size}`);
+            }
+
+            // ── Step 17: Delete courier_locations ─────────────────────────
+            const courierLocsSnap = await db.collection("courier_locations").limit(500).get();
+            if (!courierLocsSnap.empty) {
+                const batch = db.batch();
+                courierLocsSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                console.log(`[Cleanup] courier_locations deleted: ${courierLocsSnap.size}`);
+            }
+
+            // ── Step 18: Delete promo_usages + coupon_usages ──────────────
+            for (const colName of ["promo_usages", "coupon_usages", "promotion_usages"]) {
+                const snap = await db.collection(colName).limit(500).get();
+                if (!snap.empty) {
+                    const batch = db.batch();
+                    snap.docs.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                    console.log(`[Cleanup] ${colName} deleted: ${snap.size}`);
+                }
+            }
+
+            // ── Step 19: Delete delivery_proofs ───────────────────────────
+            const proofsSnap = await db.collection("delivery_proofs").limit(500).get();
+            if (!proofsSnap.empty) {
+                const batch = db.batch();
+                proofsSnap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                console.log(`[Cleanup] delivery_proofs deleted: ${proofsSnap.size}`);
+            }
+
+            // ── Step 20: Delete abandoned carts ───────────────────────────
+            for (const colName of ["carts", "kermes_carts"]) {
+                const snap = await db.collection(colName).limit(500).get();
+                if (!snap.empty) {
+                    const batch = db.batch();
+                    snap.docs.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                    console.log(`[Cleanup] ${colName} deleted: ${snap.size}`);
+                }
+            }
+
+            // ── Step 21: Reset averageRating on all businesses ────────────
+            // Test ratings skewed the averages — reset to null so next real rating starts fresh
+            if (!businessesSnap.empty) {
+                const batch = db.batch();
+                businessesSnap.docs.forEach(doc => {
+                    batch.update(doc.ref, {
+                        averageRating: admin.firestore.FieldValue.delete(),
+                        totalRatings: admin.firestore.FieldValue.delete(),
+                        ratingCount: admin.firestore.FieldValue.delete(),
+                    });
+                });
+                await batch.commit();
+                console.log(`[Cleanup] Rating averages reset on ${businessesSnap.size} businesses`);
+            }
+
+
+            console.log("[Cleanup] Complete:", stats);
+            res.status(200).json({
+                success: true,
+                message: "Test data cleaned up successfully",
+                stats,
+            });
+
+        } catch (error: any) {
+            console.error("[Cleanup] Fatal error:", error);
+            res.status(500).json({ error: error.message, stats });
+        }
+    }
+);

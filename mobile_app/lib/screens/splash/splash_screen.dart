@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,11 +16,18 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _showBitten = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
     _initAndNavigate();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   Future<void> _initAndNavigate() async {
@@ -51,13 +59,17 @@ class _SplashScreenState extends State<SplashScreen> {
     // Phase 1: Show whole O for 1.5 seconds
     await Future.delayed(const Duration(milliseconds: 1500));
 
-    // Phase 2: Switch to bitten O
+    // Phase 2: Switch to bitten O + play bite sound
     if (mounted) {
       setState(() => _showBitten = true);
+      // Play bite crunch sound
+      try {
+        await _audioPlayer.play(AssetSource('sounds/bite_crunch.mp3'));
+      } catch (_) {}
     }
 
-    // Hold bitten O for 1.5 seconds
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // Hold bitten O for 2 seconds
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     // Navigate to app
     if (mounted) {

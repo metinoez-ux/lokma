@@ -362,6 +362,7 @@ export const parseGoogleHoursToSchedule = (googleHours: any): DaySchedule[] => {
 };
 
 // Helper: Convert DaySchedule array to string for storage
+// Format: "Monday: HH:MM - HH:MM" (24h, standard hyphen, newline separated)
 export const scheduleToString = (schedule: DaySchedule[]): string => {
     // Null safety check
     if (!schedule || schedule.length === 0) return '';
@@ -381,10 +382,10 @@ export const scheduleToString = (schedule: DaySchedule[]): string => {
             if (!day) return '';
             const dayName = dayNames[day.day] || day.day;
             if (!day.isOpen) return `${dayName}: Closed`;
-            return `${dayName}: ${day.openHour}:${day.openMinute} – ${day.closeHour}:${day.closeMinute}`;
+            return `${dayName}: ${day.openHour}:${day.openMinute} - ${day.closeHour}:${day.closeMinute}`;
         })
         .filter(Boolean)
-        .join(' | ');
+        .join('\n');
 };
 
 export default OpeningHoursEditor;

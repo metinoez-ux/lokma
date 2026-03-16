@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import net from 'net';
+import { RECEIPT_LOGO_BASE64 } from './receiptLogo';
 
 // CORS headers for local print relay (lokma.web.app → localhost:3000)
 const CORS_HEADERS = {
@@ -77,6 +78,23 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     // INIT
     parts.push(CMD.INIT);
 
+    // --- LOKMA LOGO (raster image) ---
+    parts.push(CMD.ALIGN_CENTER);
+    try {
+        const logoBuffer = Buffer.from(RECEIPT_LOGO_BASE64, 'base64');
+        parts.push(logoBuffer);
+    } catch {
+        // Fallback to text logo if image fails
+        parts.push(CMD.BOLD_ON);
+        parts.push(CMD.FONT_LARGE);
+        parts.push(textLine('LOKMA'));
+        parts.push(CMD.FONT_NORMAL);
+        parts.push(CMD.BOLD_OFF);
+        parts.push(textLine('fresh. fast. local.'));
+    }
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator());
+
     // --- HEADER ---
     parts.push(CMD.ALIGN_CENTER);
     parts.push(CMD.BOLD_ON);
@@ -134,32 +152,50 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     parts.push(separator('-'));
 
     if (order.items && Array.isArray(order.items)) {
+        let positionNum = 0;
         for (const item of order.items) {
+            positionNum++;
             const qty = item.quantity || 1;
             const name = item.name || item.productName || 'Unbekannt';
             const price = item.price ? `${(item.price * qty).toFixed(2)} EUR` : '';
-            const unit = item.unit ? ` ${item.unit}` : '';
+            // Skip "adet"/"stueck" unit - redundant
+            const rawUnit = item.unit || '';
+            const unit = (rawUnit.toLowerCase() === 'adet' || rawUnit.toLowerCase() === 'stueck') ? '' : rawUnit;
+            const unitStr = unit ? ` ${unit}` : '';
 
-            // Item line: "2x Döner Kebab          12.00 EUR"
-            const itemText = `${qty}x${unit} ${name}`;
-            const padLen = 48 - itemText.length - price.length;
-            const padding = padLen > 0 ? ' '.repeat(padLen) : ' ';
-
+            // Item line: "(#1) - 3x Tonno-Funghi" (double-height, bold for kitchen + packaging)
+            const itemText = `(#${positionNum}) - ${qty}x${unitStr} ${name}`;
+            parts.push(CMD.FONT_DOUBLE_H);
             parts.push(CMD.BOLD_ON);
-            parts.push(encodeText(`${itemText}`));
+            parts.push(textLine(itemText));
+            parts.push(CMD.FONT_NORMAL);
             parts.push(CMD.BOLD_OFF);
-            parts.push(textLine(`${padding}${price}`));
 
-            // Options / variants
-            if (item.options && Array.isArray(item.options)) {
-                for (const opt of item.options) {
-                    parts.push(textLine(`  + ${opt.name || opt}`));
+            // Price on separate line (normal size, right-aligned)
+            if (price) {
+                parts.push(CMD.ALIGN_RIGHT);
+                parts.push(textLine(price));
+                parts.push(CMD.ALIGN_LEFT);
+            }
+
+            // Options / variants (Firestore uses 'selectedOptions')
+            const opts = item.selectedOptions || item.options;
+            if (opts && Array.isArray(opts) && opts.length > 0) {
+                for (const opt of opts) {
+                    const optName = opt.optionName || opt.name || opt;
+                    const groupName = opt.groupName || '';
+                    const priceMod = opt.priceModifier ? ` +${Number(opt.priceModifier).toFixed(2)}` : '';
+                    const label = groupName ? `${groupName}: ${optName}` : optName;
+                    // Indented, normal font (smaller than item which is double-height)
+                    parts.push(textLine(`    > ${label}${priceMod}`));
                 }
             }
             // Item note
             if (item.note) {
                 parts.push(textLine(`  * ${item.note}`));
             }
+            // Small gap between items (partial feed ~20 dots, not a full line)
+            parts.push(Buffer.from([ESC, 0x4A, 20]));
         }
     }
 
