@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import Firebase
 import FirebaseAuth
+import GoogleSignIn
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -38,5 +39,14 @@ import FirebaseAuth
     }
     
     super.application(application, didReceiveRemoteNotification: userInfo, fetchCompletionHandler: completionHandler)
+  }
+
+  // Handle Google Sign-In OAuth redirect URL
+  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    // Google Sign-In OAuth callback
+    if GIDSignIn.sharedInstance.handle(url) {
+      return true
+    }
+    return super.application(app, open: url, options: options)
   }
 }

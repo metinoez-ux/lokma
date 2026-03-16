@@ -11,6 +11,7 @@ import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/referral_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../auth/login_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -36,9 +37,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     context.locale;
     final user = _auth.currentUser;
 
+    // Kullanici giris yapmamissa tam ekran LoginScreen goster (embedded degil)
+    // Bu sayede ic ice Scaffold sorunu ve layout bozulmasi engellenir
+    if (user == null) {
+      return const LoginScreen();
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: user != null ? AppBar(
+      appBar: AppBar(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
             ? Theme.of(context).scaffoldBackgroundColor
             : Colors.white,
@@ -50,8 +57,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600)),
         centerTitle: true,
-      ) : null,
-      body: user == null ? const LoginScreen(embedded: true) : _buildProfile(user),
+      ),
+      body: _buildProfile(user),
     );
   }
 
@@ -173,7 +180,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   _buildQuickAccessChip(
                                       Icons.table_restaurant,
                                       'profile.my_reservations'.tr(),
-                                      () => context.push('/my-reservations')),
+                                      () => context.push('/my-reservations'),
+                                      svgAsset: 'assets/images/icon_masa_rezervasyon.svg'),
                                   const SizedBox(width: 12),
                                   _buildQuickAccessChip(
                                       Icons.notifications_active_outlined,
@@ -482,12 +490,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   future: _getVersionString(),
                   builder: (context, snap) => Text(
                     snap.data ?? '${'profile.version'.tr()} ...',
-                    style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
                   ),
                 ),
               ),
 
+              const SizedBox(height: 12),
+
+              // === POWERED BY OZSOFT ===
+              Center(
+                child: Builder(
+                  builder: (context) {
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Powered by ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.4)
+                                : Colors.grey[500],
+                          ),
+                        ),
+                        SvgPicture.asset(
+                          'assets/images/ozsoft_logo.svg',
+                          height: 18,
+                          colorFilter: ColorFilter.mode(
+                            isDark
+                                ? Colors.white.withOpacity(0.45)
+                                : Colors.grey.shade500,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
               const SizedBox(height: 40),
+
             ],
           ),
         );
@@ -497,8 +542,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   // === Quick Access Chip (Yemeksepeti-style) ===
   Widget _buildQuickAccessChip(
-      IconData icon, String label, VoidCallback onTap) {
+      IconData icon, String label, VoidCallback onTap, {String? svgAsset}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? Colors.grey[400]! : Colors.grey[700]!;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -518,9 +564,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[700], size: 22),
+              if (svgAsset != null)
+                SvgPicture.asset(
+                  svgAsset,
+                  width: 22,
+                  height: 22,
+                  colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+                )
+              else
+                Icon(icon, color: iconColor, size: 22),
               const SizedBox(height: 6),
               Text(
                 label,

@@ -75,7 +75,12 @@
     "abd": "États-Unis",
     "ornek": "Ex.: ABC123",
     "hesabiniza_giris": "Connectez-vous",
-    "hosgeldiniz": "Bienvenue sur LOKMA"
+    "hosgeldiniz": "Bienvenue sur LOKMA",
+    "phone_not_registered": "Ce numéro n'est pas enregistré",
+    "want_to_register_with_this_number": "Ce numéro n'est pas dans notre système. Souhaitez-vous créer un nouveau compte avec ce numéro ?",
+    "phone_already_registered": "Ce numéro est déjà enregistré",
+    "want_to_login_with_this_number": "Ce numéro est enregistré dans notre système. Souhaitez-vous vous connecter ?",
+    "yeni_hesap_icin_sms_kodu_gonderilecek": "Le code SMS sera envoyé pour le nouveau compte"
   },
   "business_details": {
     "all": "Tout",
@@ -1140,8 +1145,8 @@
     "my_orders": "Mes Commandes",
     "favorites": "Favoris",
     "my_addresses": "Mes Adresses",
-    "my_reservations": "Réservation de Table",
-    "notification_settings": "Paramètres de notification",
+    "my_reservations": "Réservation\nde Table",
+    "notification_settings": "Notifications",
     "more": "Plus",
     "help_center": "Centre d'Aide",
     "terms_and_data": "Conditions et Politique de Confidentialité",

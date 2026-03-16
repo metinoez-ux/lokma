@@ -41,8 +41,10 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
   Map<String, int> _slotReservationCounts = {}; // time -> count of existing reservations
   bool _isLoadingSlots = true;
 
-  // Accent color
+  // Accent color (butonlar icin)
   static const Color _accent = Color(0xFFFB335B);
+  // Section ve summary ikonlari icin koyu gri
+  static const Color _iconGrey = Color(0xFF555555);
 
   @override
   void initState() {
@@ -451,6 +453,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, color: textPrimary, size: 20),
@@ -483,7 +486,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.people, color: _accent, size: 22),
+                      Icon(Icons.people, color: isDark ? Colors.grey[400] : _iconGrey, size: 22),
                       const SizedBox(width: 8),
                       Text(
                         'reservation.party_size_label'.tr(),
@@ -564,7 +567,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, color: _accent, size: 22),
+                      Icon(Icons.calendar_today, color: isDark ? Colors.grey[400] : _iconGrey, size: 22),
                       const SizedBox(width: 8),
                       Text(
                         'reservation.date_label'.tr(),
@@ -674,7 +677,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.access_time, color: _accent, size: 22),
+                      Icon(Icons.access_time, color: isDark ? Colors.grey[400] : _iconGrey, size: 22),
                       const SizedBox(width: 8),
                       Text(
                         'reservation.time_label'.tr(),
@@ -843,7 +846,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.note_alt_outlined, color: _accent, size: 22),
+                      Icon(Icons.note_alt_outlined, color: isDark ? Colors.grey[400] : _iconGrey, size: 22),
                       const SizedBox(width: 8),
                       Text(
                         'reservation.notes_label'.tr(),
@@ -1001,9 +1004,10 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
     Color textPrimary,
     Color textSecondary,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
-        Icon(icon, color: _accent, size: 24),
+        Icon(icon, color: isDark ? Colors.grey[400] : _iconGrey, size: 24),
         const SizedBox(height: 4),
         Text(
           text,

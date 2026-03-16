@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
+import 'package:lokma_app/utils/time_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1790,22 +1791,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         
                         // ═══ KÜCHE (CUISINE) SECTION ═══
                         if (cuisineType.trim().isNotEmpty) ...[
+                          const SizedBox(height: 8),
                           Text('marketplace.cuisine'.tr(),
                             style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: cuisineType.split(RegExp(r'[,;]')).map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).map((tag) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300, width: 0.5),
-                              ),
-                              child: Text(tag,
-                                style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w100)),
-                            )).toList(),
+                          const SizedBox(height: 6),
+                          Text(
+                            cuisineType.split(RegExp(r'[,;]')).map((t) => t.trim()).where((t) => t.isNotEmpty).join('  ·  '),
+                            style: TextStyle(color: subtitleColor, fontSize: 14, fontWeight: FontWeight.w100),
                           ),
                           const SizedBox(height: 20),
                           Divider(color: dividerColor, height: 1),
@@ -2197,6 +2189,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           }
         }
         clean = clean.replaceAll('–', '-').replaceAll('—', '-');
+        // Normalize AM/PM times to 24h format
+        clean = clean.replaceAllMapped(
+          RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false),
+          (match) {
+            final rawH = '${match.group(1)!}${match.group(2) ?? ':00'}';
+            final period = match.group(3)!.toUpperCase();
+            return normalizeTimeString('$rawH $period');
+          },
+        );
         standardizedLines.add(clean);
       }
 
