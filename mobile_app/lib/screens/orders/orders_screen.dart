@@ -1315,7 +1315,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                             const Icon(Icons.photo_camera, color: Colors.white, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              tr('orders.delivery_proof', defaultValue: 'Teslimat Fotoğrafı'),
+                              'orders.delivery_proof'.tr(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
