@@ -768,6 +768,8 @@
     "delivery_from": "Livraison à partir de {time}",
     "pickup_from": "Retrait à partir de {time}",
     "pickup_paused": "Retrait temporairement suspendu",
+    "delivery_resumes_in": "Livraison à nouveau possible dans {minutes} min",
+    "pickup_resumes_in": "Commande à emporter à nouveau possible dans {minutes} min",
     "delivery_from_short": "Livraison dès {time}h",
     "pickup_from_short": "Retrait dès {time}h",
     "elle_kesim": "Abattage Manuel",

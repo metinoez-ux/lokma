@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import {
     collection, getDocs, query, where, orderBy, Timestamp, onSnapshot, limit as fbLimit
 } from 'firebase/firestore';
@@ -8,6 +9,7 @@ import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { checkLimit, type LimitCheckResult } from '@/services/limitService';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -58,12 +60,12 @@ interface StaffOrder {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function getRoleLabel(role: string): string {
-    if (!role) return 'Belirsiz';
-    if (role.includes('admin')) return 'Yönetici';
-    if (role.includes('staff')) return 'Personel';
-    if (role.includes('waiter')) return 'Garson';
-    if (role === 'driver') return 'Sürücü';
+function getRoleLabel(role: string, t: (key: string) => string): string {
+    if (!role) return t('belirsiz_rol');
+    if (role.includes('admin')) return t('yonetici_rol');
+    if (role.includes('staff')) return t('personel_rol');
+    if (role.includes('waiter')) return t('garson_rol');
+    if (role === 'driver') return t('surucu_rol');
     return role;
 }
 
@@ -75,11 +77,11 @@ function getRoleBadgeClass(role: string): string {
     return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
 }
 
-function formatDuration(minutes: number): string {
-    if (minutes < 60) return `${Math.round(minutes)} dk`;
+function formatDurationRaw(minutes: number, minLabel: string, hourLabel: string): string {
+    if (minutes < 60) return `${Math.round(minutes)} ${minLabel}`;
     const h = Math.floor(minutes / 60);
     const m = Math.round(minutes % 60);
-    return m > 0 ? `${h} sa ${m} dk` : `${h} sa`;
+    return m > 0 ? `${h} ${hourLabel} ${m} ${minLabel}` : `${h} ${hourLabel}`;
 }
 
 function isSameDay(d1: Date, d2: Date): boolean {
@@ -103,9 +105,30 @@ function isThisMonth(date: Date): boolean {
 
 // ─── Page Component ─────────────────────────────────────────────────────────
 
+// Generate a secure random password
+function generateSecurePassword(): string {
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghjkmnpqrstuvwxyz';
+    const digits = '23456789';
+    const special = '!@#$%&*';
+    const all = upper + lower + digits + special;
+    // Ensure at least one from each category
+    let pw = '';
+    pw += upper[Math.floor(Math.random() * upper.length)];
+    pw += lower[Math.floor(Math.random() * lower.length)];
+    pw += digits[Math.floor(Math.random() * digits.length)];
+    pw += special[Math.floor(Math.random() * special.length)];
+    for (let i = 4; i < 12; i++) {
+        pw += all[Math.floor(Math.random() * all.length)];
+    }
+    // Shuffle
+    return pw.split('').sort(() => Math.random() - 0.5).join('');
+}
+
 export default function StaffDashboardPage() {
     
   const t = useTranslations('AdminStaffdashboard');
+  const locale = useLocale();
 const { admin, loading: adminLoading } = useAdmin();
 
     // State
@@ -116,6 +139,20 @@ const { admin, loading: adminLoading } = useAdmin();
     const [viewMode, setViewMode] = useState<'active' | 'all'>('active');
     const [expandedStaff, setExpandedStaff] = useState<string | null>(null);
     const [dateRange, setDateRange] = useState<'today' | 'week' | 'month'>('today');
+
+    // Create Staff Modal State
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createName, setCreateName] = useState('');
+    const [createEmail, setCreateEmail] = useState('');
+    const [createPhone, setCreatePhone] = useState('');
+    const [createPassword, setCreatePassword] = useState('');
+    const [createPasswordConfirm, setCreatePasswordConfirm] = useState('');
+    const [createRole, setCreateRole] = useState('kasap_staff');
+
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [personnelQuota, setPersonnelQuota] = useState<LimitCheckResult | null>(null);
 
     // Resolve business ID
     const businessId = useMemo(() => {
@@ -152,7 +189,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         id: docSnap.id,
                         displayName: d.displayName || (d.firstName
                             ? `${d.firstName || ''} ${d.lastName || ''}`.trim()
-                            : d.email?.split('@')[0] || 'İsimsiz'),
+                            : d.email?.split('@')[0] || ''),
                         firstName: d.firstName,
                         lastName: d.lastName,
                         email: d.email,
@@ -190,6 +227,132 @@ const { admin, loading: adminLoading } = useAdmin();
 
         loadStaff();
     }, [businessId, adminLoading]);
+
+    // ─── Personnel Quota Check ───────────────────────────────────────────
+    useEffect(() => {
+        if (!businessId || adminLoading) return;
+        checkLimit(businessId, 'personnel').then(setPersonnelQuota).catch(console.error);
+    }, [businessId, adminLoading, staff.length]);
+
+    // ─── Create Staff Handler ────────────────────────────────────────────
+    const handleCreateStaff = useCallback(async () => {
+        if (!createName) { setCreateError(t('zorunlu_alan')); return; }
+        if (!createEmail && !createPhone) { setCreateError(t('zorunlu_alan')); return; }
+        if (!createPassword || createPassword.length < 6) { setCreateError(t('min_sifre_uzunlugu')); return; }
+        if (createPassword !== createPasswordConfirm) { setCreateError(t('sifreler_uyusmuyor')); return; }
+
+        // Check quota
+        if (personnelQuota && !personnelQuota.allowed && personnelQuota.overageAction === 'block') {
+            setCreateError(t('quota_dolu'));
+            return;
+        }
+
+        setCreating(true);
+        setCreateError('');
+
+        try {
+            const response = await fetch('/api/admin/create-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: createEmail || undefined,
+                    password: createPassword,
+                    displayName: createName,
+                    phone: createPhone || undefined,
+                    role: 'admin',
+                    adminType: createRole,
+                    isDriver: createRole === 'teslimat',
+                    butcherId: businessId,
+                    butcherName: admin?.butcherName || admin?.businessName || '',
+                    isPrimaryAdmin: false,
+                    createdBy: admin?.email || admin?.id,
+                    createdBySource: 'business_admin',
+                    assignerName: admin?.displayName || '',
+                    assignerEmail: admin?.email || '',
+                    assignerPhone: admin?.phone || '',
+                    assignerRole: admin?.adminType || 'admin',
+                    locale: locale || 'de',
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                setCreateError(data.error || t('olusturma_hatasi'));
+                setCreating(false);
+                return;
+            }
+
+            // Success - reset and close
+            setShowCreateModal(false);
+            setCreateName('');
+            setCreateEmail('');
+            setCreatePhone('');
+            setCreatePassword('');
+            setCreatePasswordConfirm('');
+            setCreateRole('kasap_staff');
+
+            setCreateError('');
+
+            // Refresh staff list
+            const adminsRef = collection(db, 'admins');
+            const q = query(adminsRef, where('businessId', '==', businessId));
+            const snapshot = await getDocs(q);
+            const q2Snap = await getDocs(query(adminsRef, where('butcherId', '==', businessId)));
+            const staffMap = new Map<string, StaffMember>();
+            const processDoc = (docSnap: any) => {
+                const d = docSnap.data();
+                if (staffMap.has(docSnap.id)) return;
+                staffMap.set(docSnap.id, {
+                    id: docSnap.id,
+                    displayName: d.displayName || d.firstName ? `${d.firstName || ''} ${d.lastName || ''}`.trim() : d.email?.split('@')[0] || '',
+                    firstName: d.firstName, lastName: d.lastName, email: d.email,
+                    phone: d.phone || d.phoneNumber, phoneNumber: d.phoneNumber,
+                    role: d.role || d.adminType || '', adminType: d.adminType,
+                    isDriver: d.isDriver === true, isActive: d.isActive !== false,
+                    isPrimaryAdmin: d.isPrimaryAdmin === true, photoURL: d.photoURL,
+                    businessId: d.businessId || d.butcherId, businessName: d.businessName || d.butcherName,
+                    fcmToken: d.fcmToken, createdAt: d.createdAt?.toDate?.() || null,
+                    isOnShift: d.isOnShift === true, shiftStatus: d.shiftStatus || 'off',
+                    shiftStartedAt: d.shiftStartedAt, shiftAssignedTables: d.shiftAssignedTables || [],
+                    shiftStartLocation: d.shiftStartLocation, currentShiftId: d.currentShiftId,
+                });
+            };
+            snapshot.docs.forEach(processDoc);
+            q2Snap.docs.forEach(processDoc);
+            setStaff(Array.from(staffMap.values()));
+
+            // Refresh quota
+            checkLimit(businessId, 'personnel').then(setPersonnelQuota).catch(console.error);
+        } catch (error) {
+            console.error('Create staff error:', error);
+            setCreateError(t('olusturma_hatasi'));
+        }
+        setCreating(false);
+    }, [createName, createEmail, createPhone, createPassword, createPasswordConfirm, createRole, businessId, admin, personnelQuota, t]);
+
+    // ─── Available Roles for Staff Creation ────────────────────────────────
+    const availableRoles = useMemo(() => {
+        const adminType = (admin as any)?.adminType || '';
+        if (adminType.includes('kasap')) return [
+            { value: 'kasap_staff', label: t('kasap_personeli') },
+            { value: 'garson', label: t('garson_rolu') },
+            { value: 'teslimat', label: t('teslimat_rolu') },
+        ];
+        if (adminType.includes('restoran')) return [
+            { value: 'restoran_staff', label: t('restoran_personeli') },
+            { value: 'garson', label: t('garson_rolu') },
+            { value: 'teslimat', label: t('teslimat_rolu') },
+        ];
+        if (adminType.includes('market')) return [
+            { value: 'market_staff', label: t('market_personeli') },
+            { value: 'teslimat', label: t('teslimat_rolu') },
+        ];
+        return [
+            { value: 'kasap_staff', label: t('isletme_personeli') },
+            { value: 'garson', label: t('garson_rolu') },
+            { value: 'teslimat', label: t('teslimat_rolu') },
+        ];
+    }, [admin, t]);
 
     // ─── Real-time shift listener ────────────────────────────────────────
     useEffect(() => {
@@ -519,11 +682,34 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                            👷 Personel Durumu
+                            {t('personel_durumu')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
                             {t('i_sletmenize_atanmis_personelin_aktuel_d')}
                         </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {/* Quota Indicator */}
+                        {personnelQuota && (
+                            <div className="text-xs text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-700">
+                                {personnelQuota.limit !== null
+                                    ? `${personnelQuota.currentUsage}/${personnelQuota.limit}`
+                                    : `${personnelQuota.currentUsage} / ${t('quota_sinirsiz')}`
+                                }
+                            </div>
+                        )}
+                        {/* Create Staff Button */}
+                        <button
+                            onClick={() => { setShowCreateModal(true); setCreateError(''); }}
+                            disabled={personnelQuota?.allowed === false && personnelQuota?.overageAction === 'block'}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+                                personnelQuota?.allowed === false && personnelQuota?.overageAction === 'block'
+                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                            }`}
+                        >
+                            + {t('yeni_personel_ekle')}
+                        </button>
                     </div>
                 </div>
 
@@ -535,11 +721,11 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 rounded-xl p-4 border border-emerald-700/30">
                         <div className="text-3xl font-bold text-emerald-400">{stats.onShiftNow}</div>
-                        <div className="text-xs text-emerald-400/60 mt-1">🟢 Vardiyada</div>
+                        <div className="text-xs text-emerald-400/60 mt-1">{t('vardiyada')}</div>
                     </div>
                     <div className="bg-gradient-to-br from-yellow-900/40 to-yellow-950/40 rounded-xl p-4 border border-yellow-700/30">
                         <div className="text-3xl font-bold text-yellow-400">{stats.onBreakNow}</div>
-                        <div className="text-xs text-yellow-400/60 mt-1">⏸️ Molada</div>
+                        <div className="text-xs text-yellow-400/60 mt-1">{t('molada')}</div>
                     </div>
                     <div className="bg-gradient-to-br from-blue-900/40 to-blue-950/40 rounded-xl p-4 border border-blue-700/30">
                         <div className="text-3xl font-bold text-blue-400">{stats.activeDrivers}</div>
@@ -670,7 +856,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     <h3 className="text-white font-semibold truncate">{member.displayName}</h3>
                                                     {/* Role Badge */}
                                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(member.role)}`}>
-                                                        {getRoleLabel(member.role)}
+                                                        {getRoleLabel(member.role, t)}
                                                     </span>
                                                     {/* Driver Badge */}
                                                     {member.isDriver && (
@@ -697,21 +883,21 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     <div>
                                                         <div className="text-emerald-400 font-bold text-sm flex items-center justify-end gap-1">
                                                             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                            Vardiyada
+                                                            {t('vardiyada')}
                                                         </div>
                                                         {member.shiftStartedAt && (
                                                             <ShiftTimer startedAt={member.shiftStartedAt} />
                                                         )}
                                                         {member.shiftAssignedTables && member.shiftAssignedTables.length > 0 && (
                                                             <div className="text-cyan-400/70 text-xs mt-0.5">
-                                                                🪑 Masa: {member.shiftAssignedTables.join(', ')}
+                                                                {t('masa_label')}: {member.shiftAssignedTables.join(', ')}
                                                             </div>
                                                         )}
                                                     </div>
                                                 )}
                                                 {member.activityStatus === 'paused' && (
                                                     <div>
-                                                        <div className="text-yellow-400 font-bold text-sm">⏸️ Mola</div>
+                                                        <div className="text-yellow-400 font-bold text-sm">{t('mola')}</div>
                                                         {member.shiftStartedAt && (
                                                             <ShiftTimer startedAt={member.shiftStartedAt} />
                                                         )}
@@ -719,13 +905,13 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 )}
                                                 {member.activityStatus === 'delivering' && member.activeDelivery && (
                                                     <div className="animate-pulse">
-                                                        <div className="text-amber-400 font-bold text-sm">🛣️ Yolda</div>
+                                                        <div className="text-amber-400 font-bold text-sm">{t('yolda')}</div>
                                                         <div className="text-amber-300/70 text-xs">
                                                             #{member.activeDelivery.orderNumber}
                                                         </div>
                                                         {member.activeDelivery.startedAt && (
                                                             <div className="text-amber-300/50 text-xs">
-                                                                {member.activeDelivery.startedAt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} çıkış
+                                                                {member.activeDelivery.startedAt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} {t('cikis_saati')}
                                                             </div>
                                                         )}
                                                     </div>
@@ -734,7 +920,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     <div>
                                                         <div className="text-emerald-400 font-bold text-sm">{t('aktif')}</div>
                                                         <div className="text-emerald-300/70 text-xs">
-                                                            {member.todayDeliveries.length} teslimat
+                                                            {member.todayDeliveries.length} {t('teslimat_kaydi_yok').split(' ')[0] || 'delivery'}
                                                         </div>
                                                     </div>
                                                 )}
@@ -748,7 +934,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 {/* Tables */}
                                                 {member.tablesServedToday.length > 0 && (
                                                     <div className="mt-1 text-xs text-cyan-400">
-                                                        🪑 Masa: {member.tablesServedToday.join(', ')}
+                                                        {t('masa_label')}: {member.tablesServedToday.join(', ')}
                                                     </div>
                                                 )}
                                             </div>
@@ -763,24 +949,24 @@ const { admin, loading: adminLoading } = useAdmin();
                                         {(member.isDriver || member.totalDeliveries > 0) && (
                                             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-700/50">
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <span className="text-gray-500">📦 Bugün:</span>
+                                                    <span className="text-gray-500">{t('bugun_teslimat')}</span>
                                                     <span className="text-white font-medium">{member.todayDeliveries.length}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <span className="text-gray-500">⏱️ Bugün:</span>
-                                                    <span className="text-white font-medium">{formatDuration(member.todayHours)}</span>
+                                                    <span className="text-gray-500">{t('bugun_calisma')}</span>
+                                                    <span className="text-white font-medium">{formatDurationRaw(member.todayHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <span className="text-gray-500">📅 Hafta:</span>
-                                                    <span className="text-white font-medium">{formatDuration(member.weekHours)}</span>
+                                                    <span className="text-gray-500">{t('hafta_label')}</span>
+                                                    <span className="text-white font-medium">{formatDurationRaw(member.weekHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <span className="text-gray-500">📆 Ay:</span>
-                                                    <span className="text-white font-medium">{formatDuration(member.monthHours)}</span>
+                                                    <span className="text-gray-500">{t('ay_label')}</span>
+                                                    <span className="text-white font-medium">{formatDurationRaw(member.monthHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('toplam')}</span>
-                                                    <span className="text-white font-medium">{member.totalDeliveries} teslimat</span>
+                                                    <span className="text-white font-medium">{member.totalDeliveries}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -793,7 +979,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {member.deliveryOrders.length > 0 ? (
                                                 <div>
                                                     <h4 className="text-sm font-semibold text-gray-300 mb-3">
-                                                        {t('teslimat_gecmisi')}{dateRange === 'today' ? t('bugun') : dateRange === 'week' ? 'Bu Hafta' : 'Bu Ay'})
+                                                        {t('teslimat_gecmisi')}{dateRange === 'today' ? t('bugun') : dateRange === 'week' ? t('bu_hafta') : t('bu_ay')})
                                                     </h4>
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-sm">
@@ -823,20 +1009,20 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                                         : order.status === 'cancelled' ? 'bg-red-500/20 text-red-300'
                                                                                             : 'bg-gray-500/20 text-gray-300'
                                                                                     }`}>
-                                                                                    {order.status === 'delivered' ? '✅ Teslim' :
-                                                                                        order.status === 'onTheWay' ? '🛣️ Yolda' :
-                                                                                            order.status === 'cancelled' ? '❌ İptal' :
+                                                                                    {order.status === 'delivered' ? t('teslim_edildi') :
+                                                                                        order.status === 'onTheWay' ? t('yolda') :
+                                                                                            order.status === 'cancelled' ? t('iptal_edildi') :
                                                                                                 order.status}
                                                                                 </span>
                                                                             </td>
                                                                             <td className="py-2 pr-4 text-gray-400">
-                                                                                {order.claimedAt?.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) || '-'}
+                                                                                {order.claimedAt?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || '-'}
                                                                             </td>
                                                                             <td className="py-2 pr-4 text-gray-400">
-                                                                                {order.startedAt?.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) || '-'}
+                                                                                {order.startedAt?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || '-'}
                                                                             </td>
                                                                             <td className="py-2 pr-4 text-gray-400">
-                                                                                {duration ? formatDuration(duration) : '-'}
+                                                                                {duration ? formatDurationRaw(duration, t('dk_kisaltma'), t('sa_kisaltma')) : '-'}
                                                                             </td>
                                                                             <td className="py-2 text-white font-medium">
                                                                                 {order.total?.toFixed(2)} €
@@ -851,7 +1037,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             ) : (
                                                 <div className="text-center py-6">
                                                     <p className="text-gray-500 text-sm">
-                                                        {dateRange === 'today' ? t('bugun') : dateRange === 'week' ? 'Bu hafta' : 'Bu ay'} {t('teslimat_kaydi_yok')}
+                                                        {dateRange === 'today' ? t('bugun') : dateRange === 'week' ? t('bu_hafta') : t('bu_ay')} {t('teslimat_kaydi_yok')}
                                                     </p>
                                                 </div>
                                             )}
@@ -868,7 +1054,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                 key={i}
                                                                 className="px-3 py-1.5 bg-cyan-800/30 text-cyan-300 rounded-lg text-sm border border-cyan-600/30"
                                                             >
-                                                                Masa {table}
+                                                                {t('masa_label')} {table}
                                                             </span>
                                                         ))}
                                                     </div>
@@ -879,7 +1065,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             <div className="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap items-center gap-4 text-xs text-gray-500">
                                                 <span>🆔 {member.id.slice(0, 8)}...</span>
                                                 {member.createdAt && (
-                                                    <span>{t('kayit')} {member.createdAt.toLocaleDateString('tr-TR')}</span>
+                                                    <span>{t('kayit')} {member.createdAt.toLocaleDateString('de-DE')}</span>
                                                 )}
                                                 <span className={member.isActive ? 'text-emerald-400' : 'text-red-400'}>
                                                     {member.isActive ? t('aktif_hesap') : t('pasif_hesap')}
@@ -895,6 +1081,183 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
                 )}
             </div>
+
+            {/* ═══ Create Staff Modal ═══ */}
+            {showCreateModal && (
+                <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowCreateModal(false)}>
+                    <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-gray-700">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-white">{t('yeni_personel_ekle')}</h2>
+                                <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+                            </div>
+                            {/* Quota Info */}
+                            {personnelQuota && (
+                                <div className={`mt-3 px-3 py-2 rounded-lg text-sm ${
+                                    personnelQuota.allowed
+                                        ? 'bg-emerald-900/30 border border-emerald-700/30 text-emerald-300'
+                                        : 'bg-red-900/30 border border-red-700/30 text-red-300'
+                                }`}>
+                                    {personnelQuota.limit !== null
+                                        ? t('personel_quota').replace('{current}', String(personnelQuota.currentUsage)).replace('{limit}', String(personnelQuota.limit))
+                                        : `${personnelQuota.currentUsage} / ${t('quota_sinirsiz')}`
+                                    }
+                                    {!personnelQuota.allowed && personnelQuota.overageAction === 'block' && (
+                                        <div className="mt-1 text-xs opacity-70">{t('upgrade_mesaji')}</div>
+                                    )}
+                                    {!personnelQuota.allowed && personnelQuota.overageAction === 'overage_fee' && personnelQuota.overageFee > 0 && (
+                                        <div className="mt-1 text-xs text-amber-300">+{personnelQuota.overageFee}EUR</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-4">
+                            {/* Name */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">{t('ad_soyad')} *</label>
+                                <input
+                                    type="text"
+                                    value={createName}
+                                    onChange={(e) => setCreateName(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    placeholder="Max Mustermann"
+                                />
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">{t('eposta_adresi')}</label>
+                                <input
+                                    type="email"
+                                    value={createEmail}
+                                    onChange={(e) => setCreateEmail(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    placeholder="staff@example.com"
+                                />
+                            </div>
+
+                            {/* Phone */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">{t('telefon_numarasi')}</label>
+                                <input
+                                    type="tel"
+                                    value={createPhone}
+                                    onChange={(e) => setCreatePhone(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    placeholder="+49 170 1234567"
+                                />
+                            </div>
+
+                            {/* Password */}
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="text-gray-400 text-xs">{t('sifre_belirle')} *</label>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="text-gray-500 hover:text-gray-300 text-xs transition"
+                                        >
+                                            {showPassword ? t('sifre_gizle') : t('sifre_goster')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const pw = generateSecurePassword();
+                                                setCreatePassword(pw);
+                                                setCreatePasswordConfirm(pw);
+                                                setShowPassword(true);
+                                            }}
+                                            className="px-2.5 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-md text-xs font-medium hover:bg-blue-600/30 transition flex items-center gap-1"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                                            {t('sifre_olustur')}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={createPassword}
+                                            onChange={(e) => setCreatePassword(e.target.value)}
+                                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
+                                            placeholder="******"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-400 text-xs block mb-1">{t('sifre_tekrar')} *</label>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={createPasswordConfirm}
+                                            onChange={(e) => setCreatePasswordConfirm(e.target.value)}
+                                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
+                                            placeholder="******"
+                                        />
+                                    </div>
+                                </div>
+                                {showPassword && createPassword && (
+                                    <p className="text-xs text-amber-400/80 mt-1.5">
+                                        {t('sifre_gonderilecek')}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Role */}
+                            <div>
+                                <label className="text-gray-400 text-xs block mb-1">{t('rol_sec')} *</label>
+                                <select
+                                    value={createRole}
+                                    onChange={(e) => setCreateRole(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                >
+                                    {availableRoles.map(r => (
+                                        <option key={r.value} value={r.value}>{r.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Driver info - auto-detected from role */}
+                            {createRole === 'teslimat' && (
+                                <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-700/30 rounded-lg px-4 py-3">
+                                    <span className="text-emerald-400 text-sm">{t('surucu_otomatik')}</span>
+                                </div>
+                            )}
+
+                            {/* Error */}
+                            {createError && (
+                                <div className="bg-red-900/30 border border-red-700/30 text-red-300 text-sm px-4 py-3 rounded-lg">
+                                    {createError}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 border-t border-gray-700 flex gap-3">
+                            <button
+                                onClick={() => setShowCreateModal(false)}
+                                className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition"
+                            >
+                                {t('iptal')}
+                            </button>
+                            <button
+                                onClick={handleCreateStaff}
+                                disabled={creating || (personnelQuota?.allowed === false && personnelQuota?.overageAction === 'block')}
+                                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
+                                    creating || (personnelQuota?.allowed === false && personnelQuota?.overageAction === 'block')
+                                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                        : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                }`}
+                            >
+                                {creating ? t('olusturuluyor') : t('personel_olustur')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

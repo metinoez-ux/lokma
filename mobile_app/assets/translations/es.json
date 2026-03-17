@@ -768,6 +768,8 @@
     "delivery_from": "Entrega a partir de las {time}",
     "pickup_from": "Recogida a partir de las {time}",
     "pickup_paused": "Recogida pausada temporalmente",
+    "delivery_resumes_in": "Entrega disponible de nuevo en {minutes} min",
+    "pickup_resumes_in": "Pedidos para recoger disponibles en {minutes} min",
     "delivery_from_short": "Entrega {time}h",
     "pickup_from_short": "Recogida {time}h",
     "elle_kesim": "Sacrificio Manual",

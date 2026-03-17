@@ -756,6 +756,8 @@
     "delivery_from": "Teslimat {time}'den itibaren",
     "pickup_from": "Gel-Al {time}'den itibaren",
     "pickup_paused": "Gel-Al geçici olarak durduruldu",
+    "delivery_resumes_in": "Teslimat {minutes} dk. sonra tekrar mümkün",
+    "pickup_resumes_in": "Gel-Al sipariş {minutes} dk. sonra tekrar mümkün",
     "delivery_from_short": "Teslimat {time}'den",
     "pickup_from_short": "Gel-Al {time}'den",
     "courier_not_available": "Kurye şu an hizmet vermiyor",

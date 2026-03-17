@@ -769,6 +769,8 @@
     "delivery_from": "Delivery from {time}",
     "pickup_from": "Pickup from {time}",
     "pickup_paused": "Pickup temporarily paused",
+    "delivery_resumes_in": "Delivery available again in {minutes} min",
+    "pickup_resumes_in": "Pickup orders available again in {minutes} min",
     "delivery_from_short": "Delivery from {time}h",
     "pickup_from_short": "Pickup from {time}h",
     "elle_kesim": "Hand Slaughter",

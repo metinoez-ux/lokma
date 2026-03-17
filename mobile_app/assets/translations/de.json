@@ -756,6 +756,8 @@
     "delivery_from": "Lieferung ab {time}",
     "pickup_from": "Abholung ab {time}",
     "pickup_paused": "Abholung vorübergehend pausiert",
+    "delivery_resumes_in": "Lieferung wieder in {minutes} Min. möglich",
+    "pickup_resumes_in": "Abholbestellung wieder in {minutes} Min. möglich",
     "delivery_from_short": "Lieferung ab {time} Uhr",
     "pickup_from_short": "Abholen ab {time} Uhr",
     "courier_not_available": "Kurier ist momentan nicht verfügbar",

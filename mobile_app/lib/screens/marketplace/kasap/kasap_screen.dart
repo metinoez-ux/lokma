@@ -364,8 +364,42 @@ class _KasapScreenState extends State<KasapScreen> {
             final sectorInfo = BUSINESS_SECTORS[businessType] ?? 
                 {'label': 'Mağaza', 'icon': '🏪', 'color': 0xFF9E9E9E};
             
-              final openingHelper = OpeningHoursHelper(data['openingHours']);
-              final isOpenNow = openingHelper.isOpenAt(DateTime.now());
+              // Check open: openingHours first, then deliveryHours/pickupHours fallback
+              bool isOpenNow = false;
+              if (data['openingHours'] != null) {
+                isOpenNow = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
+              }
+              if (!isOpenNow && data['deliveryHours'] != null) {
+                isOpenNow = OpeningHoursHelper(data['deliveryHours']).isOpenAt(DateTime.now());
+              }
+              if (!isOpenNow && data['pickupHours'] != null) {
+                isOpenNow = OpeningHoursHelper(data['pickupHours']).isOpenAt(DateTime.now());
+              }
+              if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
+                isOpenNow = true;
+              }
+
+              // Pause detection
+              final bool deliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
+              final bool pickupPaused = data['temporaryPickupPaused'] as bool? ?? false;
+              String? pauseText;
+              if (deliveryPaused) {
+                final dpUntil = data['deliveryPauseUntil'];
+                if (dpUntil != null) {
+                  final DateTime dt = dpUntil is Timestamp ? dpUntil.toDate() : (dpUntil is DateTime ? dpUntil : DateTime.now());
+                  final mins = dt.difference(DateTime.now()).inMinutes;
+                  if (mins > 0) pauseText = tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$mins'});
+                }
+                pauseText ??= tr('marketplace.courier_not_available');
+              } else if (pickupPaused) {
+                final ppUntil = data['pickupPauseUntil'];
+                if (ppUntil != null) {
+                  final DateTime dt = ppUntil is Timestamp ? ppUntil.toDate() : (ppUntil is DateTime ? ppUntil : DateTime.now());
+                  final mins = dt.difference(DateTime.now()).inMinutes;
+                  if (mins > 0) pauseText = tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$mins'});
+                }
+                pauseText ??= tr('marketplace.pickup_paused');
+              }
               
               return _BusinessCard(
                 id: doc.id,
@@ -373,14 +407,15 @@ class _KasapScreenState extends State<KasapScreen> {
                 address: addressStr,
                 rating: (data['rating'] ?? 0).toDouble(),
                 imageUrl: data['imageUrl'],
-                logoUrl: data['logoUrl'] as String?,  // 🆕 Lieferando-style logo
-                cuisineType: data['cuisineType'] as String?,  // 🆕 Lieferando-style
+                logoUrl: data['logoUrl'] as String?,
+                cuisineType: data['cuisineType'] as String?,
                 isOpen: (data['isActive'] ?? true) && isOpenNow,
+                pauseText: pauseText,
               businessType: businessType,
               sectorIcon: sectorInfo['icon'] as String,
               sectorLabel: sectorInfo['label'] as String,
               sectorColor: Color(sectorInfo['color'] as int),
-              businessId: doc.id, // 🎯 For promo badge lookup
+              businessId: doc.id,
               onTap: () {
                 // Navigate based on business type
                 if (businessType == 'kasap') {
@@ -406,11 +441,12 @@ class _BusinessCard extends StatelessWidget {
   final String? logoUrl;  // 🆕 Lieferando-style logo (square)
   final String? cuisineType;  // 🆕 Lieferando-style cuisine type
   final bool isOpen;
+  final String? pauseText;
   final String businessType;
   final String sectorIcon;
   final String sectorLabel;
   final Color sectorColor;
-  final String businessId; // 🎯 For promo badge lookup
+  final String businessId;
   final VoidCallback onTap;
 
   const _BusinessCard({
@@ -419,14 +455,15 @@ class _BusinessCard extends StatelessWidget {
     required this.address,
     required this.rating,
     this.imageUrl,
-    this.logoUrl,  // 🆕 Optional
-    this.cuisineType,  // 🆕 Optional
+    this.logoUrl,
+    this.cuisineType,
     required this.isOpen,
+    this.pauseText,
     required this.businessType,
     required this.sectorIcon,
     required this.sectorLabel,
     required this.sectorColor,
-    required this.businessId, // 🎯
+    required this.businessId,
     required this.onTap,
   });
 
@@ -669,16 +706,20 @@ class _BusinessCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isOpen ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                              color: pauseText != null
+                                  ? Colors.orange.withValues(alpha: 0.1)
+                                  : (isOpen ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isOpen ? 'marketplace.open'.tr() : 'marketplace.closed'.tr(),
+                              pauseText ?? (isOpen ? 'marketplace.open'.tr() : 'marketplace.closed'.tr()),
                               style: TextStyle(
-                                color: isOpen ? Colors.green : Colors.red,
-                                fontSize: 12,
+                                color: pauseText != null ? Colors.orange : (isOpen ? Colors.green : Colors.red),
+                                fontSize: pauseText != null ? 10 : 12,
                                 fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

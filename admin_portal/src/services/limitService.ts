@@ -5,11 +5,11 @@
  */
 
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, collection, query, where, getDocs } from 'firebase/firestore';
 import { ButcherSubscriptionPlan } from '@/types';
 import { subscriptionService } from './subscriptionService';
 
-export type LimitType = 'orders' | 'push' | 'table_reservation';
+export type LimitType = 'orders' | 'push' | 'table_reservation' | 'personnel';
 
 export interface LimitCheckResult {
     allowed: boolean;
@@ -91,6 +91,22 @@ export const checkLimit = async (
                 overageAction = limit !== null ? 'overage_fee' : 'none';
                 overageFee = plan.tableReservationOverageFee || 0;
                 break;
+
+            case 'personnel': {
+                // Count active admins for this business
+                const adminsRef = collection(db, 'admins');
+                const q1 = query(adminsRef, where('businessId', '==', businessId), where('isActive', '!=', false));
+                const q2 = query(adminsRef, where('butcherId', '==', businessId), where('isActive', '!=', false));
+                const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+                const uniqueIds = new Set<string>();
+                snap1.docs.forEach(d => uniqueIds.add(d.id));
+                snap2.docs.forEach(d => uniqueIds.add(d.id));
+                currentUsage = uniqueIds.size;
+                limit = plan.personnelLimit ?? null;
+                overageAction = limit !== null ? (plan.personnelOverageFee ? 'overage_fee' : 'block') : 'none';
+                overageFee = plan.personnelOverageFee || 0;
+                break;
+            }
         }
 
         // Limit check

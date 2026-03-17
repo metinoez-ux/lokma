@@ -768,6 +768,8 @@
     "delivery_from": "Consegna dalle {time}",
     "pickup_from": "Ritiro dalle {time}",
     "pickup_paused": "Ritiro temporaneamente sospeso",
+    "delivery_resumes_in": "Consegna nuovamente disponibile tra {minutes} min",
+    "pickup_resumes_in": "Ordini ritiro nuovamente disponibili tra {minutes} min",
     "delivery_from_short": "Consegna {time}h",
     "pickup_from_short": "Ritiro {time}h",
     "elle_kesim": "Macellazione Manuale",

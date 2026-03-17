@@ -217,10 +217,23 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     return businessSectorIds.intersection(_marketSectorTypes).isNotEmpty;
   }
   
-  // 🆕 Check if business is currently open based on openingHours
+  // Check if business is currently open based on openingHours, deliveryHours, pickupHours
   bool _isBusinessOpenNow(Map<String, dynamic> data) {
-    final openingHelper = OpeningHoursHelper(data['openingHours']);
-    return openingHelper.isOpenAt(DateTime.now());
+    final now = DateTime.now();
+    if (data['openingHours'] != null) {
+      if (OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+    }
+    if (data['deliveryHours'] != null) {
+      if (OpeningHoursHelper(data['deliveryHours']).isOpenAt(now)) return true;
+    }
+    if (data['pickupHours'] != null) {
+      if (OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
+    }
+    // If no hours data at all, default to open
+    if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
+      return true;
+    }
+    return false;
   }
 
   String? _currentBusinessIdForDialog;
@@ -363,7 +376,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
     
     // Calculate next opening time
-    final openingHelper = OpeningHoursHelper(businessData['openingHours']);
+    // Use deliveryHours/pickupHours as fallback for next opening calculation
+    OpeningHoursHelper openingHelper;
+    if (businessData['openingHours'] != null) {
+      openingHelper = OpeningHoursHelper(businessData['openingHours']);
+    } else if (businessData['deliveryHours'] != null) {
+      openingHelper = OpeningHoursHelper(businessData['deliveryHours']);
+    } else {
+      openingHelper = OpeningHoursHelper(businessData['pickupHours']);
+    }
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
     String? nextOpenText;
     if (nextOpen != null) {

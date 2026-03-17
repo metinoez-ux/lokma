@@ -144,27 +144,28 @@ export default function PrinterSettingsPage() {
                                 type="text"
                                 value={settings.printServerUrl || ''}
                                 onChange={(e) => save({ ...settings, printServerUrl: e.target.value })}
-                                placeholder="z.B. http://localhost:3000"
+                                placeholder="z.B. http://192.168.x.x:3000"
                                 className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600 font-mono text-sm"
                             />
-                            <button
-                                onClick={() => save({ ...settings, printServerUrl: 'http://localhost:3000' })}
-                                className="px-4 py-3 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-600/30 hover:bg-blue-600/30 transition text-sm whitespace-nowrap"
-                            >
-                                localhost:3000
-                            </button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                            {typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-                                ? '⚠️ Cloud-Modus erkannt! Bitte geben Sie die lokale Server-URL ein (z.B. http://localhost:3000), damit der Drucker erreichbar ist.'
-                                : '✅ Lokal — kein Relay nötig (leer lassen).'
+                        <p className="text-xs text-gray-500 mt-2">
+                            {typeof window !== 'undefined' && (
+                                window.location.hostname === 'localhost' ||
+                                window.location.hostname === '127.0.0.1' ||
+                                window.location.hostname.startsWith('192.168.') ||
+                                window.location.hostname.startsWith('10.') ||
+                                window.location.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)
+                            )
+                                ? '✅ Lokalnetzwerk / Localhost — Das iPad sendet Druckbefehle direkt an diesen Server (Relay leer lassen).'
+                                : '⚠️ Cloud-Modus erkannt! Wenn Sie über das Internet zugreifen, müssen Sie die LOKALE IP-Adresse Ihres Print-Servers (z.B. http://192.168.188.45:3000) angeben, da Tablets nicht "localhost" verwenden können.'
                             }
                         </p>
                         {settings.printServerUrl && (
                             <div className="mt-2 bg-blue-900/20 border border-blue-700/30 rounded-xl p-3">
                                 <p className="text-blue-400 text-xs">
                                     🔄 Print-Befehle werden über <span className="font-mono font-bold">{settings.printServerUrl}</span> weitergeleitet.
-                                    Stellen Sie sicher, dass <span className="font-mono">npm run dev</span> auf diesem Gerät läuft.
+                                    <br />
+                                    <b>Wichtig für Tablets:</b> Verwenden Sie hier NICHT "localhost", sondern die tatsächliche IP (z.B. 192.168.x.x) des PCs, auf dem <code className="font-mono bg-blue-900 px-1 rounded">npm run dev</code> läuft.
                                 </p>
                             </div>
                         )}

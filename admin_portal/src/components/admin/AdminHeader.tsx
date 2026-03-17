@@ -830,7 +830,11 @@ export default function AdminHeader() {
                         <div className="flex items-center gap-4">
                             {/* Business Logo + Name + Address (compact) */}
                             {businessInfo && (
-                                <div className="flex items-center gap-3 shrink-0 mr-2">
+                                <div
+                                    onClick={() => router.push('/admin/orders')}
+                                    className="flex items-center gap-3 shrink-0 mr-2 cursor-pointer hover:bg-white/5 rounded-lg px-2 py-1 -mx-2 -my-1 transition"
+                                    title={t('orders')}
+                                >
                                     <div className="w-9 h-9 bg-white/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
                                         {businessInfo.imageUrl ? (
                                             <img

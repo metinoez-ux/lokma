@@ -2846,6 +2846,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return '~15 $unit';
   }
 
+  String? _getEstimatedDineInTime() {
+    if (_butcherData == null) return null;
+    final dineInMin = _butcherData!['estimatedDineInMinutes'] as int?;
+    final unit = tr('delivery_modes.minutes_short');
+    if (dineInMin != null) return '~$dineInMin $unit';
+    return '~10 $unit';
+  }
+
   /// 😴 3D Pill Tab Switch for Gel Al / Kurye
   Widget _buildLieferandoDeliveryPill() {
     if (!_canDeliver) {
@@ -2957,7 +2965,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           subtitle: _getEstimatedPickupTime(),
           icon: Icons.shopping_bag_outlined,
         ),
-        TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.restaurant),
+        TabItem(
+          title: tr('delivery_modes.dine_in'), 
+          subtitle: _getEstimatedDineInTime(),
+          icon: Icons.restaurant,
+        ),
       ],
     );
   }

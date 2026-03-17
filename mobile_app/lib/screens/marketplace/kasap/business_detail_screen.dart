@@ -437,8 +437,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (data == null) return;
 
         // 🆕 Kapalı işletme kontrolü
-        final openingHelper = OpeningHoursHelper(data['openingHours']);
-        final isOpen = openingHelper.isOpenAt(DateTime.now());
+        // Check if open: openingHours first, then deliveryHours/pickupHours as fallback
+        bool isOpen = false;
+        if (data['openingHours'] != null) {
+          isOpen = OpeningHoursHelper(data['openingHours']).isOpenAt(DateTime.now());
+        }
+        if (!isOpen && data['deliveryHours'] != null) {
+          isOpen = OpeningHoursHelper(data['deliveryHours']).isOpenAt(DateTime.now());
+        }
+        if (!isOpen && data['pickupHours'] != null) {
+          isOpen = OpeningHoursHelper(data['pickupHours']).isOpenAt(DateTime.now());
+        }
+        // If no hours data at all, default to open
+        if (data['openingHours'] == null && data['deliveryHours'] == null && data['pickupHours'] == null) {
+          isOpen = true;
+        }
         final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
         
         if (!isOpen && !_closedDialogShown && !widget.closedAcknowledged) {
@@ -490,7 +503,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final businessName = data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
     
     // Calculate next opening time
-    final openingHelper = OpeningHoursHelper(data?['openingHours']);
+    // Use deliveryHours/pickupHours as fallback for next opening calculation
+    OpeningHoursHelper openingHelper;
+    if (data?['openingHours'] != null) {
+      openingHelper = OpeningHoursHelper(data?['openingHours']);
+    } else if (data?['deliveryHours'] != null) {
+      openingHelper = OpeningHoursHelper(data?['deliveryHours']);
+    } else {
+      openingHelper = OpeningHoursHelper(data?['pickupHours']);
+    }
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
     String? nextOpenText;
     if (nextOpen != null) {
@@ -958,6 +979,22 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     
     // Smart default
     return '~15 $unit';
+  }
+
+  String? _getEstimatedDineInTime() {
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    if (data == null) return null;
+    
+    // Check Firestore fields first (for future when businesses specify this)
+    final dineInMin = data['estimatedDineInMinutes'] as int?;
+    final unit = tr('delivery_modes.minutes_short');
+    
+    if (dineInMin != null) {
+      return '~$dineInMin $unit';
+    }
+    
+    // Smart default for Dine-in
+    return '~10 $unit';
   }
 
   // --- Actions ---
@@ -2306,8 +2343,35 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Preparation - Safe Data Access
     final data = _butcherDoc!.data() as Map<String, dynamic>?;
     final brand = data?['brand'];
-    final openingHelper = OpeningHoursHelper(data?['openingHours']);
+    // Tab-aware opening hours: use deliveryHours/pickupHours/openingHours based on active tab
+    final OpeningHoursHelper openingHelper;
+    if (_deliveryModeIndex == 0 && data?['deliveryHours'] != null) {
+      openingHelper = OpeningHoursHelper(data?['deliveryHours']);
+    } else if (_deliveryModeIndex == 1 && data?['pickupHours'] != null) {
+      openingHelper = OpeningHoursHelper(data?['pickupHours']);
+    } else {
+      openingHelper = OpeningHoursHelper(data?['openingHours']);
+    }
     final isOpen = openingHelper.isOpenAt(DateTime.now());
+
+    // Pause detection
+    final bool isDeliveryPaused = data?['temporaryDeliveryPaused'] as bool? ?? false;
+    final bool isPickupPaused = data?['temporaryPickupPaused'] as bool? ?? false;
+    final bool isPausedForCurrentTab = (_deliveryModeIndex == 0 && isDeliveryPaused) ||
+        (_deliveryModeIndex == 1 && isPickupPaused);
+    // Calculate remaining minutes for pause countdown
+    int? pauseRemainingMinutes;
+    if (isPausedForCurrentTab) {
+      final pauseUntilField = _deliveryModeIndex == 0 ? 'deliveryPauseUntil' : 'pickupPauseUntil';
+      final pauseUntilTs = data?[pauseUntilField];
+      if (pauseUntilTs != null) {
+        final DateTime pauseUntilDt = pauseUntilTs is Timestamp
+            ? pauseUntilTs.toDate()
+            : (pauseUntilTs is DateTime ? pauseUntilTs : DateTime.now());
+        final diff = pauseUntilDt.difference(DateTime.now()).inMinutes;
+        if (diff > 0) pauseRemainingMinutes = diff;
+      }
+    }
     final brandLabel = data?['brandLabel'] as String?;
     final tags = data?['tags'] as List<dynamic>?;
     final hasTunaTag = tags?.any((t) => t.toString().toLowerCase() == 'tuna') ?? false;
@@ -2465,7 +2529,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           if ((data?['hasReservation'] as bool? ?? false) ||
                               (_planFeatures['dineInQR'] == true) ||
                               (_planFeatures['waiterOrder'] == true))
-                            TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.restaurant),
+                            TabItem(
+                              title: tr('delivery_modes.dine_in'), 
+                              subtitle: _getEstimatedDineInTime(),
+                              icon: Icons.restaurant,
+                            ),
                         ],
                         onTabSelected: (index) {
                           setState(() => _deliveryModeIndex = index);
@@ -2730,17 +2798,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  Container(
                                    width: 6, height: 6,
                                    decoration: BoxDecoration(
-                                     color: isOpen ? Colors.green : Colors.red,
+                                     color: isPausedForCurrentTab
+                                         ? Colors.orange
+                                         : (isOpen ? Colors.green : Colors.red),
                                      shape: BoxShape.circle,
                                    ),
                                  ),
                                  const SizedBox(width: 4),
-                                 Text(
-                                   isOpen ? tr('business_status.open') : tr('business_status.closed'),
-                                   style: TextStyle(
-                                     color: isOpen ? Colors.green : Colors.red,
-                                     fontSize: 13,
-                                     fontWeight: FontWeight.w600,
+                                 Flexible(
+                                   child: Text(
+                                     isPausedForCurrentTab
+                                         ? (pauseRemainingMinutes != null
+                                             ? (_deliveryModeIndex == 0
+                                                 ? tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'})
+                                                 : tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$pauseRemainingMinutes'}))
+                                             : (_deliveryModeIndex == 0
+                                                 ? tr('marketplace.courier_not_available')
+                                                 : tr('marketplace.pickup_paused')))
+                                         : (isOpen ? tr('business_status.open') : tr('business_status.closed')),
+                                     style: TextStyle(
+                                       color: isPausedForCurrentTab
+                                           ? Colors.orange
+                                           : (isOpen ? Colors.green : Colors.red),
+                                       fontSize: isPausedForCurrentTab ? 11 : 13,
+                                       fontWeight: FontWeight.w600,
+                                     ),
+                                     maxLines: 1,
+                                     overflow: TextOverflow.ellipsis,
                                    ),
                                  ),
                                ],

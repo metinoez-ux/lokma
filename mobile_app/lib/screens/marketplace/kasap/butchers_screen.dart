@@ -94,7 +94,19 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   }
 
   // Calculate dynamic Open/Closed status
-  bool _isShopOpenNow(dynamic hoursData) {
+  bool _isShopOpenNow(dynamic hoursData, {dynamic deliveryHoursData, dynamic pickupHoursData}) {
+    // Check openingHours first
+    if (hoursData != null && _checkTimeOpen(hoursData)) return true;
+    // Fallback: check deliveryHours
+    if (deliveryHoursData != null && _checkTimeOpen(deliveryHoursData)) return true;
+    // Fallback: check pickupHours
+    if (pickupHoursData != null && _checkTimeOpen(pickupHoursData)) return true;
+    // If no hours data at all, default to open
+    if (hoursData == null && deliveryHoursData == null && pickupHoursData == null) return true;
+    return false;
+  }
+
+  bool _checkTimeOpen(dynamic hoursData) {
     if (hoursData == null) return false;
     
     // Get string for today
@@ -735,6 +747,8 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                       ? (brand?.toString().trim().toLowerCase() == 'tuna' ? 'TUNA' : (brand?.toString().trim().toLowerCase() == 'akdeniz_toros' ? 'AKDENIZ' : null))
                       : null,
                   'hours': data['openingHours'], // Pass raw data (Map or String)
+                  'deliveryHours': data['deliveryHours'],
+                  'pickupHours': data['pickupHours'],
                   'imageUrl': data['imageUrl'],
                   'rating': (data['rating'] is num) ? data['rating'].toDouble() : 0.0,
                   'reviews': (data['reviewCount'] is num) ? data['reviewCount'].toInt() : 0,
@@ -944,12 +958,33 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   
   Widget _buildButcherCard(Map<String, dynamic> butcher, {bool isFavoriteSection = false}) {
     // Dynamic status check
-    final isOpen = _isShopOpenNow(butcher['hours']);
+    final isOpen = _isShopOpenNow(butcher['hours'], deliveryHoursData: butcher['deliveryHours'], pickupHoursData: butcher['pickupHours']);
     final badgeText = butcher['badgeText'] as String?;
+
+    // Pause detection
+    final bool deliveryPaused = butcher['temporaryDeliveryPaused'] as bool? ?? false;
+    final bool pickupPaused = butcher['temporaryPickupPaused'] as bool? ?? false;
+    String? pauseText;
+    if (deliveryPaused) {
+      final dpUntil = butcher['deliveryPauseUntil'];
+      if (dpUntil != null) {
+        final DateTime dt = dpUntil is Timestamp ? dpUntil.toDate() : (dpUntil is DateTime ? dpUntil : DateTime.now());
+        final mins = dt.difference(DateTime.now()).inMinutes;
+        if (mins > 0) pauseText = tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$mins'});
+      }
+      pauseText ??= tr('marketplace.courier_not_available');
+    } else if (pickupPaused) {
+      final ppUntil = butcher['pickupPauseUntil'];
+      if (ppUntil != null) {
+        final DateTime dt = ppUntil is Timestamp ? ppUntil.toDate() : (ppUntil is DateTime ? ppUntil : DateTime.now());
+        final mins = dt.difference(DateTime.now()).inMinutes;
+        if (mins > 0) pauseText = tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$mins'});
+      }
+      pauseText ??= tr('marketplace.pickup_paused');
+    }
     
     // Fallback if needed, but dynamic is preferred
     // final isOpen = butcher['isOpen'] as bool; 
-    
     
     return GestureDetector(
       onTap: () {
@@ -1147,16 +1182,20 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isOpen ? const Color(0xFF2E7D32) : const Color(0xFFFB335B), // Green or Red
+                          color: pauseText != null
+                              ? Colors.orange
+                              : (isOpen ? const Color(0xFF2E7D32) : const Color(0xFFFB335B)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          isOpen ? 'common.open'.tr() : 'common.closed'.tr(),
-                          style: const TextStyle(
+                          pauseText ?? (isOpen ? 'common.open'.tr() : 'common.closed'.tr()),
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: pauseText != null ? 10 : 12,
                             fontWeight: FontWeight.w600,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 10),

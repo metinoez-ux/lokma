@@ -301,6 +301,18 @@ export default function SuperAdminDashboard() {
         }
     }, []);
 
+    // Business admin default: show staff management view when admin data loads
+    useEffect(() => {
+        if (!admin || admin.adminType === 'super' || admin.adminType?.includes('_staff')) return;
+        // Only set default if no URL params were present
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('filter') && !params.get('view')) {
+            setActiveTab('admins');
+            setAdminFilter('all');
+        }
+    }, [admin]);
+
     // 🔐 SECURITY: Reusable function to reload admins with proper business isolation
     // This MUST be used instead of raw getDocs(collection(db, 'admins')) to prevent data leaks
     const reloadAdmins = useCallback(async () => {
@@ -2167,13 +2179,13 @@ export default function SuperAdminDashboard() {
                                                         assignedBy: (user.adminProfile as any)?.createdBy || 'system'
                                                     }] : []),
 
-                                                    // Address & Location
-                                                    address: (user as any).address || '',
-                                                    houseNumber: (user as any).houseNumber || '',
-                                                    addressLine2: (user as any).addressLine2 || '',
-                                                    city: (user as any).city || '',
-                                                    country: (user as any).country || '',
-                                                    postalCode: (user as any).postalCode || '',
+                                                    // Address & Location - fallback to admin profile if user doc missing address
+                                                    address: (user as any).address || (user.adminProfile as any)?.address || '',
+                                                    houseNumber: (user as any).houseNumber || (user.adminProfile as any)?.houseNumber || '',
+                                                    addressLine2: (user as any).addressLine2 || (user.adminProfile as any)?.addressLine2 || '',
+                                                    city: (user as any).city || (user.adminProfile as any)?.city || '',
+                                                    country: (user as any).country || (user.adminProfile as any)?.country || '',
+                                                    postalCode: (user as any).postalCode || (user.adminProfile as any)?.postalCode || '',
                                                     dialCode: parsedDialCode,
                                                     latitude: (user as any).latitude,
                                                     longitude: (user as any).longitude,
@@ -2284,10 +2296,74 @@ export default function SuperAdminDashboard() {
                                                 <div className="flex items-center gap-2">
                                                     {/* Edit Button */}
                                                     <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            loadButchersHelper();
+                                                            // Parse user data and open edit modal
+                                                            let firstName = (user as any).firstName || '';
+                                                            let lastName = (user as any).lastName || '';
+                                                            if (!firstName && !lastName && user.displayName) {
+                                                                const nameParts = user.displayName.trim().split(' ');
+                                                                firstName = nameParts[0] || '';
+                                                                lastName = nameParts.slice(1).join(' ') || '';
+                                                            }
+                                                            let phoneValue = user.phoneNumber || '';
+                                                            let parsedDialCode = (user as any).dialCode || '+49';
+                                                            if (phoneValue.startsWith('+')) {
+                                                                for (const code of ['+49', '+90', '+43', '+41', '+1']) {
+                                                                    if (phoneValue.startsWith(code)) {
+                                                                        parsedDialCode = code;
+                                                                        phoneValue = phoneValue.slice(code.length);
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                            setEditingUserProfile({
+                                                                userId: user.id,
+                                                                firstName,
+                                                                lastName,
+                                                                email: user.email || '',
+                                                                phone: phoneValue,
+                                                                isAdmin: user.isAdmin || false,
+                                                                adminType: user.adminType,
+                                                                adminDocId: user.adminProfile?.id,
+                                                                originalAdminType: user.adminType,
+                                                                butcherId: (user.adminProfile as any)?.butcherId || '',
+                                                                butcherName: (user.adminProfile as any)?.butcherName || '',
+                                                                organizationId: (user.adminProfile as any)?.organizationId || '',
+                                                                organizationName: (user.adminProfile as any)?.organizationName || '',
+                                                                isActive: (user as any).isActive !== false,
+                                                                photoURL: user.photoURL || (user as any).profileImageUrl,
+                                                                isPrimaryAdmin: (user.adminProfile as any)?.isPrimaryAdmin || false,
+                                                                isDriver: (user.adminProfile as any)?.isDriver || false,
+                                                                driverType: (user.adminProfile as any)?.driverType || 'business',
+                                                                assignedTables: (user.adminProfile as any)?.assignedTables || [],
+                                                                roles: (user.adminProfile as any)?.roles || (user.isAdmin && user.adminType ? [{
+                                                                    type: user.adminType,
+                                                                    businessId: (user.adminProfile as any)?.butcherId || undefined,
+                                                                    businessName: (user.adminProfile as any)?.butcherName || undefined,
+                                                                    organizationId: (user.adminProfile as any)?.organizationId || undefined,
+                                                                    organizationName: (user.adminProfile as any)?.organizationName || undefined,
+                                                                    isPrimary: true,
+                                                                    isActive: true,
+                                                                    assignedAt: (user.adminProfile as any)?.createdAt || new Date(),
+                                                                    assignedBy: (user.adminProfile as any)?.createdBy || 'system'
+                                                                }] : []),
+                                                                address: (user as any).address || (user.adminProfile as any)?.address || '',
+                                                                houseNumber: (user as any).houseNumber || (user.adminProfile as any)?.houseNumber || '',
+                                                                addressLine2: (user as any).addressLine2 || (user.adminProfile as any)?.addressLine2 || '',
+                                                                city: (user as any).city || (user.adminProfile as any)?.city || '',
+                                                                country: (user as any).country || (user.adminProfile as any)?.country || '',
+                                                                postalCode: (user as any).postalCode || (user.adminProfile as any)?.postalCode || '',
+                                                                dialCode: parsedDialCode,
+                                                                latitude: (user as any).latitude,
+                                                                longitude: (user as any).longitude,
+                                                            });
+                                                        }}
                                                         className="p-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600 hover:text-white transition"
                                                         title={tNav('duzenle')}
                                                     >
-                                                        ✏️
+                                                        ✏
                                                     </button>
                                                     {/* Archive/Activate Button */}
                                                     <button
@@ -4340,8 +4416,17 @@ export default function SuperAdminDashboard() {
                                                     />
                                                 </div>
 
-                                                {/* City, Zip, Country */}
+                                                {/* PLZ, City, Country */}
                                                 <div className="grid grid-cols-3 gap-4">
+                                                    <div>
+                                                        <label className="block text-gray-400 text-sm mb-1">PLZ</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingUserProfile.postalCode}
+                                                            onChange={(e) => setEditingUserProfile({ ...editingUserProfile, postalCode: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        />
+                                                    </div>
                                                     <div className="relative">
                                                         <label className="block text-gray-400 text-sm mb-1">{tNav('sehir')}</label>
                                                         <input
@@ -4366,24 +4451,15 @@ export default function SuperAdminDashboard() {
                                                                         className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
                                                                         onClick={() => handleCitySelect(suggestion.description, false)}
                                                                     >
-                                                                        <span className="text-blue-400">🏙️</span>
+                                                                        <span className="text-blue-400">&#x1f3d9;&#xfe0f;</span>
                                                                         <span className="truncate">{suggestion.description}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
                                                         )}
                                                         {citySearchLoading && (
-                                                            <div className="absolute right-2 top-8 text-gray-400 text-xs">🔍</div>
+                                                            <div className="absolute right-2 top-8 text-gray-400 text-xs">&#x1f50d;</div>
                                                         )}
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">Posta Kodu</label>
-                                                        <input
-                                                            type="text"
-                                                            value={editingUserProfile.postalCode}
-                                                            onChange={(e) => setEditingUserProfile({ ...editingUserProfile, postalCode: e.target.value })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                        />
                                                     </div>
                                                     <div>
                                                         <label className="block text-gray-400 text-sm mb-1">{tNav('ulke')}</label>
@@ -4784,90 +4860,7 @@ export default function SuperAdminDashboard() {
                                                     </div>
                                                 )}
 
-                                                {/* 🪑 MASA ATAMASI - Garson masa ataması */}
-                                                {editingUserProfile.isAdmin && editingUserProfile.butcherId && (
-                                                    (() => {
-                                                        // Load maxReservationTables on first render for this business
-                                                        const bizId = editingUserProfile.butcherId;
-                                                        if (bizId && maxTablesForBusiness === 0) {
-                                                            getDoc(doc(db, 'businesses', bizId)).then(bizDoc => {
-                                                                if (bizDoc.exists()) {
-                                                                    const maxT = bizDoc.data()?.maxReservationTables as number || 0;
-                                                                    if (maxT > 0) setMaxTablesForBusiness(maxT);
-                                                                }
-                                                            });
-                                                        }
-                                                        if (maxTablesForBusiness <= 0) return null;
-
-                                                        const selectedTables = (editingUserProfile as any).assignedTables || [];
-                                                        const toggleTable = (num: number) => {
-                                                            const current = [...selectedTables];
-                                                            const idx = current.indexOf(num);
-                                                            if (idx >= 0) current.splice(idx, 1);
-                                                            else current.push(num);
-                                                            current.sort((a: number, b: number) => a - b);
-                                                            setEditingUserProfile({ ...editingUserProfile, assignedTables: current } as any);
-                                                        };
-                                                        const selectAll = () => {
-                                                            const all = Array.from({ length: maxTablesForBusiness }, (_, i) => i + 1);
-                                                            setEditingUserProfile({ ...editingUserProfile, assignedTables: all } as any);
-                                                        };
-                                                        const clearAll = () => {
-                                                            setEditingUserProfile({ ...editingUserProfile, assignedTables: [] } as any);
-                                                        };
-
-                                                        return (
-                                                            <div className="mt-4 bg-amber-900/30 border border-amber-700 rounded-lg p-4">
-                                                                <div className="flex items-center justify-between mb-3">
-                                                                    <div>
-                                                                        <p className="text-amber-200 font-medium flex items-center gap-2">
-                                                                            {tNav('masa_atamasi')}
-                                                                        </p>
-                                                                        <p className="text-amber-400 text-xs mt-1">
-                                                                            {tNav('toplam')} {maxTablesForBusiness} {tNav('masa_secili')} {selectedTables.length}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="flex gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={selectAll}
-                                                                            className="px-3 py-1 text-xs bg-amber-700 text-amber-100 rounded hover:bg-amber-600 transition"
-                                                                        >
-                                                                            {tNav('tumunu_sec')}
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={clearAll}
-                                                                            className="px-3 py-1 text-xs bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition"
-                                                                        >
-                                                                            Temizle
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="grid grid-cols-10 gap-1.5 max-h-48 overflow-y-auto">
-                                                                    {Array.from({ length: maxTablesForBusiness }, (_, i) => i + 1).map(num => (
-                                                                        <button
-                                                                            key={num}
-                                                                            type="button"
-                                                                            onClick={() => toggleTable(num)}
-                                                                            className={`w-full aspect-square flex items-center justify-center rounded text-xs font-medium transition-all ${selectedTables.includes(num)
-                                                                                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
-                                                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
-                                                                                }`}
-                                                                        >
-                                                                            {num}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                                {selectedTables.length > 0 && (
-                                                                    <div className="mt-2 text-amber-300/70 text-xs">
-                                                                        Atanan masalar: {selectedTables.join(', ')}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })()
-                                                )}
+                                                {/* Tischzuordnung kaldirildi - artik her vardiya basinda dinamik olarak yapiliyor */}
 
                                                 {/* 🆕 ROLLER BÖLÜMÜ - Çoklu Rol Listesi ve Rol Ekleme */}
                                                 {editingUserProfile.isAdmin && admin?.adminType === 'super' && (
@@ -5123,12 +5116,12 @@ export default function SuperAdminDashboard() {
                                                 email: editingUserProfile.email,
                                                 phoneNumber: (editingUserProfile.dialCode || '+49') + cleanPhone,
                                                 dialCode: editingUserProfile.dialCode || '+49',
-                                                address: editingUserProfile.address,
+                                                address: editingUserProfile.address || null,
                                                 houseNumber: editingUserProfile.houseNumber || null,
                                                 addressLine2: editingUserProfile.addressLine2 || null,
-                                                city: editingUserProfile.city,
-                                                country: editingUserProfile.country,
-                                                postalCode: editingUserProfile.postalCode,
+                                                city: editingUserProfile.city || null,
+                                                country: editingUserProfile.country || null,
+                                                postalCode: editingUserProfile.postalCode || null,
                                                 latitude: editingUserProfile.latitude || null,
                                                 longitude: editingUserProfile.longitude || null,
                                                 photoURL: editingUserProfile.photoURL || null,
@@ -5190,8 +5183,11 @@ export default function SuperAdminDashboard() {
                                                         // 🆕 Organization support for kermes roles
                                                         organizationId: editingUserProfile.organizationId || null,
                                                         organizationName: editingUserProfile.organizationName || null,
-                                                        // 🆕 ÇOKLU ROL DESTEĞİ
-                                                        roles: editingUserProfile.roles || [],
+                                                        // COKLU ROL DESTEGI - Timestamp objelerini serialize et
+                                                        roles: (editingUserProfile.roles || []).map((r: any) => ({
+                                                            ...r,
+                                                            assignedAt: r.assignedAt?.toDate ? r.assignedAt.toDate().toISOString() : (r.assignedAt instanceof Date ? r.assignedAt.toISOString() : r.assignedAt || new Date().toISOString()),
+                                                        })),
                                                         // CRITICAL: Sync photoURL to admin record for header display
                                                         photoURL: editingUserProfile.photoURL || null,
                                                         isActive: true,
@@ -5203,8 +5199,6 @@ export default function SuperAdminDashboard() {
                                                         ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
                                                         // 🚚 Driver type - lokma_fleet or business
                                                         ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
-                                                        // 🪑 Assigned tables for waiter
-                                                        assignedTables: (editingUserProfile as any).assignedTables || [],
                                                     });
                                                 } else {
                                                     // Create new admin record with userId as doc ID
@@ -5222,8 +5216,11 @@ export default function SuperAdminDashboard() {
                                                         // 🆕 Organization support for kermes roles
                                                         organizationId: editingUserProfile.organizationId || null,
                                                         organizationName: editingUserProfile.organizationName || null,
-                                                        // 🆕 ÇOKLU ROL DESTEĞİ
-                                                        roles: editingUserProfile.roles || [],
+                                                        // COKLU ROL DESTEGI - Timestamp objelerini serialize et
+                                                        roles: (editingUserProfile.roles || []).map((r: any) => ({
+                                                            ...r,
+                                                            assignedAt: r.assignedAt?.toDate ? r.assignedAt.toDate().toISOString() : (r.assignedAt instanceof Date ? r.assignedAt.toISOString() : r.assignedAt || new Date().toISOString()),
+                                                        })),
                                                         // CRITICAL: Copy photoURL to admin record for header display
                                                         photoURL: editingUserProfile.photoURL || null,
                                                         role: 'admin',
@@ -5236,8 +5233,6 @@ export default function SuperAdminDashboard() {
                                                         ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
                                                         // 🚚 Driver type - lokma_fleet or business
                                                         ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
-                                                        // 🪑 Assigned tables for waiter
-                                                        assignedTables: (editingUserProfile as any).assignedTables || [],
                                                     });
 
                                                     // 🎉 SEND ADMIN PROMOTION NOTIFICATIONS

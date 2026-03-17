@@ -332,10 +332,38 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     return hasMatch;
   }
 
-  // 🆕 Check if business is currently open based on openingHours
+  // Check if business is currently open based on openingHours, deliveryHours, and pickupHours
   bool _isBusinessOpenNow(Map<String, dynamic> data) {
-    final openingHelper = OpeningHoursHelper(data['openingHours']);
-    return openingHelper.isOpenAt(DateTime.now());
+    final now = DateTime.now();
+    
+    // 1. Check general openingHours first
+    final openingHoursData = data['openingHours'];
+    if (openingHoursData != null) {
+      final openingHelper = OpeningHoursHelper(openingHoursData);
+      if (openingHelper.isOpenAt(now)) return true;
+    }
+    
+    // 2. Fallback: Check deliveryHours (Kurier-Öffnungszeiten)
+    //    These are stored as List<String> arrays like ["Montag: 11:30 - 22:00", ...]
+    final deliveryHoursData = data['deliveryHours'];
+    if (deliveryHoursData != null) {
+      final deliveryHelper = OpeningHoursHelper(deliveryHoursData);
+      if (deliveryHelper.isOpenAt(now)) return true;
+    }
+    
+    // 3. Fallback: Check pickupHours (Abhol-Öffnungszeiten)
+    final pickupHoursData = data['pickupHours'];
+    if (pickupHoursData != null) {
+      final pickupHelper = OpeningHoursHelper(pickupHoursData);
+      if (pickupHelper.isOpenAt(now)) return true;
+    }
+    
+    // 4. If no hours data exists at all, default to open (avoid blocking sales)
+    if (openingHoursData == null && deliveryHoursData == null && pickupHoursData == null) {
+      return true;
+    }
+    
+    return false;
   }
 
   // Filter businesses based on current filters
@@ -1502,9 +1530,18 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     if (mode == 'teslimat') {
       if (temporaryDeliveryPaused) {
+        String pauseMsg = 'marketplace.courier_not_available'.tr();
+        final dpUntil = data['deliveryPauseUntil'];
+        if (dpUntil != null) {
+          final DateTime dt = dpUntil is Timestamp ? dpUntil.toDate() : (dpUntil is DateTime ? dpUntil : DateTime.now());
+          final mins = dt.difference(DateTime.now()).inMinutes;
+          if (mins > 0) {
+            pauseMsg = tr('marketplace.delivery_resumes_in', namedArgs: {'minutes': '$mins'});
+          }
+        }
         return (
           isAvailable: false,
-          reason: 'marketplace.courier_not_available'.tr(),
+          reason: pauseMsg,
           startTime: null,
           deliveryTime: deliveryStartTime,
           pickupTime: pickupStartTime
@@ -1528,9 +1565,18 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       );
     } else if (mode == 'gelal') {
       if (temporaryPickupPaused) {
+        String pauseMsg = tr('marketplace.pickup_paused');
+        final ppUntil = data['pickupPauseUntil'];
+        if (ppUntil != null) {
+          final DateTime dt = ppUntil is Timestamp ? ppUntil.toDate() : (ppUntil is DateTime ? ppUntil : DateTime.now());
+          final mins = dt.difference(DateTime.now()).inMinutes;
+          if (mins > 0) {
+            pauseMsg = tr('marketplace.pickup_resumes_in', namedArgs: {'minutes': '$mins'});
+          }
+        }
         return (
           isAvailable: false,
-          reason: tr('marketplace.pickup_paused'),
+          reason: pauseMsg,
           startTime: null,
           deliveryTime: deliveryStartTime,
           pickupTime: pickupStartTime
@@ -1623,8 +1669,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData) {
     final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
     
-    // Calculate next opening time
-    final openingHelper = OpeningHoursHelper(businessData['openingHours']);
+    // Calculate next opening time - use deliveryHours/pickupHours as fallback
+    OpeningHoursHelper openingHelper;
+    if (businessData['openingHours'] != null) {
+      openingHelper = OpeningHoursHelper(businessData['openingHours']);
+    } else if (businessData['deliveryHours'] != null) {
+      openingHelper = OpeningHoursHelper(businessData['deliveryHours']);
+    } else {
+      openingHelper = OpeningHoursHelper(businessData['pickupHours']);
+    }
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
     String? nextOpenText;
     if (nextOpen != null) {

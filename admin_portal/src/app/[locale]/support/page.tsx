@@ -42,35 +42,35 @@ const supportTexts: Record<string, Record<string, string>> = {
     },
     tr: {
         title: 'Destek Merkezi',
-        subtitle: 'Size nasıl yardımcı olabiliriz?',
+        subtitle: 'Size nasil yardimci olabiliriz?',
         email: 'E-posta',
         phone: 'Telefon',
         whatsapp: 'WhatsApp',
-        whatsappDesc: 'Hızlı destek',
-        faqTitle: 'Sıkça Sorulan Sorular',
+        whatsappDesc: 'Hizli destek',
+        faqTitle: 'Sikca Sorulan Sorular',
         catGeneral: 'Genel',
-        catOrder: 'Sipariş',
-        catPartner: 'Esnaf Ortaklığı',
+        catOrder: 'Siparis',
+        catPartner: 'Esnaf Ortakligi',
         q1: 'LOKMA nedir?',
-        a1: 'LOKMA, yerel esnaf ve müşterileri bir araya getiren dijital bir pazar yeridir. Kasaplar, marketler, çiçekçiler ve daha fazlası tek platformda.',
-        q2: 'LOKMA hangi ülkelerde aktif?',
-        a2: 'Şu anda Almanya, Avusturya ve İsviçre\'de aktif olarak hizmet veriyoruz. Yakında diğer Avrupa ülkelerinde de açılacağız.',
-        q3: 'Uygulama ücretsiz mi?',
-        a3: 'Evet, LOKMA uygulamasını indirmek ve kullanmak tamamen ücretsizdir.',
-        q4: 'Nasıl sipariş verebilirim?',
-        a4: 'Uygulamayı indirin, konumunuzu seçin ve size en yakın işletmeleri keşfedin. Ürünleri sepetinize ekleyin ve güvenli ödeme ile siparişinizi tamamlayın.',
-        q5: 'Teslimat ücreti ne kadar?',
-        a5: 'Teslimat ücreti bölgeye ve işletmeye göre değişir. Sipariş öncesi teslimat ücreti açıkça gösterilir.',
-        q6: 'Siparişimi iptal edebilir miyim?',
-        a6: 'İşletme siparişinizi onaylamadan önce iptal edebilirsiniz. Onaylandıktan sonra iptal için işletme ile iletişime geçmeniz gerekir.',
-        q7: 'Ödeme yöntemleri nelerdir?',
-        a7: 'Kredi/banka kartı, PayPal ve kapıda ödeme seçenekleri mevcuttur. Ödeme yöntemleri işletmeye göre değişebilir.',
-        q8: 'Esnaf olarak nasıl katılabilirim?',
-        a8: '"Partnerimiz Olun" butonuna tıklayarak başvuru formunu doldurun. Ekibimiz 24 saat içinde sizinle iletişime geçecektir.',
-        q9: 'Komisyon oranları nedir?',
-        a9: 'LOKMA, sektörün en düşük komisyon oranlarını sunar. Detaylı bilgi için iletişime geçin.',
-        q10: 'Ödemeler ne zaman yapılır?',
-        a10: 'Ödemeler haftalık olarak banka hesabınıza aktarılır. Anlık ödeme seçeneği de mevcuttur.',
+        a1: 'LOKMA, yerel esnaf ve musterileri bir araya getiren dijital bir pazar yeridir. Kasaplar, marketler, cicekler ve daha fazlasi tek platformda.',
+        q2: 'LOKMA hangi ulkelerde aktif?',
+        a2: 'Su anda Almanya, Avusturya ve Isvicre\'de aktif olarak hizmet veriyoruz. Yakinda diger Avrupa ulkelerinde de acilacagiz.',
+        q3: 'Uygulama ucretsiz mi?',
+        a3: 'Evet, LOKMA uygulamasini indirmek ve kullanmak tamamen ucretsizdir.',
+        q4: 'Nasil siparis verebilirim?',
+        a4: 'Uygulamayi indirin, konumunuzu secin ve size en yakin isletmeleri kesfedin. Urunleri sepetinize ekleyin ve guvenli odeme ile siparisinizi tamamlayin.',
+        q5: 'Teslimat ucreti ne kadar?',
+        a5: 'Teslimat ucreti bolgeye ve isletmeye gore degisir. Siparis oncesi teslimat ucreti acikca gosterilir.',
+        q6: 'Siparisimi iptal edebilir miyim?',
+        a6: 'Isletme siparisinizi onaylamadan once iptal edebilirsiniz. Onaylandiktan sonra iptal icin isletme ile iletisime gecmeniz gerekir.',
+        q7: 'Odeme yontemleri nelerdir?',
+        a7: 'Kredi/banka karti, PayPal ve kapida odeme secenekleri mevcuttur. Odeme yontemleri isletmeye gore degisebilir.',
+        q8: 'Esnaf olarak nasil katilabilirim?',
+        a8: '"Partnerimiz Olun" butonuna tiklayarak basvuru formunu doldurun. Ekibimiz 24 saat icinde sizinle iletisime gececektir.',
+        q9: 'Komisyon oranlari nedir?',
+        a9: 'LOKMA, sektorun en dusuk komisyon oranlarini sunar. Detayli bilgi icin iletisime gecin.',
+        q10: 'Odemeler ne zaman yapilir?',
+        a10: 'Odemeler haftalik olarak banka hesabiniza aktarilir. Anlik odeme secenegi de mevcuttur.',
         backHome: '← Ana Sayfa',
     },
     en: {
@@ -110,33 +110,33 @@ const supportTexts: Record<string, Record<string, string>> = {
         title: 'Centre d\'assistance',
         subtitle: 'Comment pouvons-nous vous aider ?',
         email: 'E-mail',
-        phone: 'Téléphone',
+        phone: 'Telephone',
         whatsapp: 'WhatsApp',
         whatsappDesc: 'Support rapide',
-        faqTitle: 'Questions fréquentes',
-        catGeneral: 'Général',
+        faqTitle: 'Questions frequentes',
+        catGeneral: 'General',
         catOrder: 'Commandes',
         catPartner: 'Partenariats',
         q1: 'Qu\'est-ce que LOKMA ?',
-        a1: 'LOKMA est une place de marché numérique qui connecte les entreprises locales et les clients. Boucheries, supermarchés, fleuristes et plus – tout sur une seule plateforme.',
+        a1: 'LOKMA est une place de marche numerique qui connecte les entreprises locales et les clients. Boucheries, supermarches, fleuristes et plus – tout sur une seule plateforme.',
         q2: 'Dans quels pays LOKMA est-il actif ?',
-        a2: 'Nous sommes actuellement actifs en Allemagne, en Autriche et en Suisse. Nous serons bientôt disponibles dans d\'autres pays européens.',
+        a2: 'Nous sommes actuellement actifs en Allemagne, en Autriche et en Suisse. Nous serons bientot disponibles dans d\'autres pays europeens.',
         q3: 'L\'application est-elle gratuite ?',
-        a3: 'Oui, le téléchargement et l\'utilisation de l\'application LOKMA sont entièrement gratuits.',
+        a3: 'Oui, le telechargement et l\'utilisation de l\'application LOKMA sont entierement gratuits.',
         q4: 'Comment passer commande ?',
-        a4: 'Téléchargez l\'application, sélectionnez votre emplacement et découvrez les commerces les plus proches. Ajoutez des produits à votre panier et finalisez votre commande avec un paiement sécurisé.',
-        q5: 'Quel est le coût de la livraison ?',
-        a5: 'Les frais de livraison varient selon la région et le commerce. Les frais de livraison sont clairement indiqués avant la commande.',
+        a4: 'Telechargez l\'application, selectionnez votre emplacement et decouvrez les commerces les plus proches. Ajoutez des produits a votre panier et finalisez votre commande avec un paiement securise.',
+        q5: 'Quel est le cout de la livraison ?',
+        a5: 'Les frais de livraison varient selon la region et le commerce. Les frais de livraison sont clairement indiques avant la commande.',
         q6: 'Puis-je annuler ma commande ?',
-        a6: 'Vous pouvez annuler votre commande avant que le commerce ne la confirme. Après confirmation, vous devez contacter le commerce pour l\'annulation.',
+        a6: 'Vous pouvez annuler votre commande avant que le commerce ne la confirme. Apres confirmation, vous devez contacter le commerce pour l\'annulation.',
         q7: 'Quels modes de paiement sont disponibles ?',
-        a7: 'Carte de crédit/débit, PayPal et paiement à la livraison sont disponibles. Les modes de paiement peuvent varier selon le commerce.',
+        a7: 'Carte de credit/debit, PayPal et paiement a la livraison sont disponibles. Les modes de paiement peuvent varier selon le commerce.',
         q8: 'Comment devenir partenaire ?',
-        a8: 'Cliquez sur « Devenir partenaire » et remplissez le formulaire d\'inscription. Notre équipe vous contactera dans les 24 heures.',
+        a8: 'Cliquez sur \"Devenir partenaire\" et remplissez le formulaire d\'inscription. Notre equipe vous contactera dans les 24 heures.',
         q9: 'Quels sont les taux de commission ?',
         a9: 'LOKMA offre les taux de commission les plus bas du secteur. Contactez-nous pour plus d\'informations.',
-        q10: 'Quand les paiements sont-ils effectués ?',
-        a10: 'Les paiements sont virés sur votre compte bancaire chaque semaine. Le paiement instantané est également disponible.',
+        q10: 'Quand les paiements sont-ils effectues ?',
+        a10: 'Les paiements sont vires sur votre compte bancaire chaque semaine. Le paiement instantane est egalement disponible.',
         backHome: '← Accueil',
     },
     it: {
@@ -150,14 +150,14 @@ const supportTexts: Record<string, Record<string, string>> = {
         catGeneral: 'Generale',
         catOrder: 'Ordini',
         catPartner: 'Partnership',
-        q1: 'Cos\'è LOKMA?',
-        a1: 'LOKMA è un marketplace digitale che collega imprese locali e clienti. Macellerie, supermercati, fioristi e altro – tutto su un\'unica piattaforma.',
-        q2: 'In quali paesi è attivo LOKMA?',
+        q1: 'Cos\'e LOKMA?',
+        a1: 'LOKMA e un marketplace digitale che collega imprese locali e clienti. Macellerie, supermercati, fioristi e altro – tutto su un\'unica piattaforma.',
+        q2: 'In quali paesi e attivo LOKMA?',
         a2: 'Attualmente siamo attivi in Germania, Austria e Svizzera. Presto saremo disponibili anche in altri paesi europei.',
-        q3: 'L\'app è gratuita?',
-        a3: 'Sì, scaricare e utilizzare l\'app LOKMA è completamente gratuito.',
+        q3: 'L\'app e gratuita?',
+        a3: 'Si, scaricare e utilizzare l\'app LOKMA e completamente gratuito.',
         q4: 'Come posso effettuare un ordine?',
-        a4: 'Scarica l\'app, seleziona la tua posizione e scopri i negozi più vicini. Aggiungi prodotti al carrello e completa l\'ordine con pagamento sicuro.',
+        a4: 'Scarica l\'app, seleziona la tua posizione e scopri i negozi piu vicini. Aggiungi prodotti al carrello e completa l\'ordine con pagamento sicuro.',
         q5: 'Quanto costa la consegna?',
         a5: 'Le spese di consegna variano in base alla regione e al negozio. La tariffa viene mostrata chiaramente prima dell\'ordine.',
         q6: 'Posso annullare il mio ordine?',
@@ -165,44 +165,44 @@ const supportTexts: Record<string, Record<string, string>> = {
         q7: 'Quali metodi di pagamento sono disponibili?',
         a7: 'Carta di credito/debito, PayPal e pagamento alla consegna sono disponibili. I metodi di pagamento possono variare in base al negozio.',
         q8: 'Come posso diventare partner?',
-        a8: 'Clicca su "Diventa partner" e compila il modulo di iscrizione. Il nostro team ti contatterà entro 24 ore.',
+        a8: 'Clicca su "Diventa partner" e compila il modulo di iscrizione. Il nostro team ti contattara entro 24 ore.',
         q9: 'Quali sono le commissioni?',
-        a9: 'LOKMA offre le commissioni più basse del settore. Contattaci per informazioni dettagliate.',
+        a9: 'LOKMA offre le commissioni piu basse del settore. Contattaci per informazioni dettagliate.',
         q10: 'Quando vengono effettuati i pagamenti?',
-        a10: 'I pagamenti vengono trasferiti sul tuo conto bancario settimanalmente. È disponibile anche il pagamento istantaneo.',
+        a10: 'I pagamenti vengono trasferiti sul tuo conto bancario settimanalmente. E disponibile anche il pagamento istantaneo.',
         backHome: '← Home',
     },
     es: {
         title: 'Centro de soporte',
-        subtitle: '¿Cómo podemos ayudarte?',
-        email: 'Correo electrónico',
-        phone: 'Teléfono',
+        subtitle: 'Como podemos ayudarte?',
+        email: 'Correo electronico',
+        phone: 'Telefono',
         whatsapp: 'WhatsApp',
-        whatsappDesc: 'Soporte rápido',
+        whatsappDesc: 'Soporte rapido',
         faqTitle: 'Preguntas frecuentes',
         catGeneral: 'General',
         catOrder: 'Pedidos',
         catPartner: 'Colaboraciones',
-        q1: '¿Qué es LOKMA?',
-        a1: 'LOKMA es un marketplace digital que conecta negocios locales y clientes. Carnicerías, supermercados, floristerías y más – todo en una sola plataforma.',
-        q2: '¿En qué países está activo LOKMA?',
-        a2: 'Actualmente estamos activos en Alemania, Austria y Suiza. Pronto estaremos disponibles en otros países europeos.',
-        q3: '¿La app es gratuita?',
-        a3: 'Sí, descargar y usar la aplicación LOKMA es completamente gratuito.',
-        q4: '¿Cómo puedo hacer un pedido?',
-        a4: 'Descarga la app, selecciona tu ubicación y descubre los comercios más cercanos. Agrega productos al carrito y completa tu pedido con pago seguro.',
-        q5: '¿Cuánto cuesta el envío?',
-        a5: 'Los gastos de envío varían según la región y el comercio. La tarifa se muestra claramente antes de realizar el pedido.',
-        q6: '¿Puedo cancelar mi pedido?',
-        a6: 'Puedes cancelar tu pedido antes de que el comercio lo confirme. Después de la confirmación, debes contactar con el comercio para la cancelación.',
-        q7: '¿Qué métodos de pago están disponibles?',
-        a7: 'Tarjeta de crédito/débito, PayPal y pago contra entrega están disponibles. Los métodos de pago pueden variar según el comercio.',
-        q8: '¿Cómo puedo unirme como vendedor?',
-        a8: 'Haz clic en "Ser socio" y rellena el formulario de solicitud. Nuestro equipo se pondrá en contacto contigo en 24 horas.',
-        q9: '¿Cuáles son las comisiones?',
-        a9: 'LOKMA ofrece las comisiones más bajas del sector. Contáctanos para información detallada.',
-        q10: '¿Cuándo se realizan los pagos?',
-        a10: 'Los pagos se transfieren a tu cuenta bancaria semanalmente. El pago instantáneo también está disponible.',
+        q1: 'Que es LOKMA?',
+        a1: 'LOKMA es un marketplace digital que conecta negocios locales y clientes. Carnicerias, supermercados, floristerias y mas – todo en una sola plataforma.',
+        q2: 'En que paises esta activo LOKMA?',
+        a2: 'Actualmente estamos activos en Alemania, Austria y Suiza. Pronto estaremos disponibles en otros paises europeos.',
+        q3: 'La app es gratuita?',
+        a3: 'Si, descargar y usar la aplicacion LOKMA es completamente gratuito.',
+        q4: 'Como puedo hacer un pedido?',
+        a4: 'Descarga la app, selecciona tu ubicacion y descubre los comercios mas cercanos. Agrega productos al carrito y completa tu pedido con pago seguro.',
+        q5: 'Cuanto cuesta el envio?',
+        a5: 'Los gastos de envio varian segun la region y el comercio. La tarifa se muestra claramente antes de realizar el pedido.',
+        q6: 'Puedo cancelar mi pedido?',
+        a6: 'Puedes cancelar tu pedido antes de que el comercio lo confirme. Despues de la confirmacion, debes contactar con el comercio para la cancelacion.',
+        q7: 'Que metodos de pago estan disponibles?',
+        a7: 'Tarjeta de credito/debito, PayPal y pago contra entrega estan disponibles. Los metodos de pago pueden variar segun el comercio.',
+        q8: 'Como puedo unirme como vendedor?',
+        a8: 'Haz clic en "Ser socio" y rellena el formulario de solicitud. Nuestro equipo se pondra en contacto contigo en 24 horas.',
+        q9: 'Cuales son las comisiones?',
+        a9: 'LOKMA ofrece las comisiones mas bajas del sector. Contactanos para informacion detallada.',
+        q10: 'Cuando se realizan los pagos?',
+        a10: 'Los pagos se transfieren a tu cuenta bancaria semanalmente. El pago instantaneo tambien esta disponible.',
         backHome: '← Inicio',
     },
 };
@@ -241,30 +241,30 @@ export default function SupportPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="min-h-screen bg-white text-gray-900 font-['Plus_Jakarta_Sans',sans-serif]">
             <PublicHeader themeAware={false} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[800px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black mb-4">{tx.title}</h1>
-                    <p className="text-white/60 text-lg mb-12">{tx.subtitle}</p>
+                    <p className="text-gray-500 text-lg mb-12">{tx.subtitle}</p>
 
                     {/* Contact Cards */}
                     <div className="grid md:grid-cols-3 gap-6 mb-16">
-                        <a href="mailto:destek@lokma.shop" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="mailto:destek@lokma.shop" className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">mail</span>
                             <h3 className="font-bold mb-2">{tx.email}</h3>
-                            <p className="text-sm text-white/60">destek@lokma.shop</p>
+                            <p className="text-sm text-gray-500">destek@lokma.shop</p>
                         </a>
-                        <a href="tel:+4917612345678" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="tel:+4917612345678" className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">phone</span>
                             <h3 className="font-bold mb-2">{tx.phone}</h3>
-                            <p className="text-sm text-white/60">+49 176 123 456 78</p>
+                            <p className="text-sm text-gray-500">+49 176 123 456 78</p>
                         </a>
-                        <a href="https://wa.me/4917612345678" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="https://wa.me/4917612345678" className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">chat</span>
                             <h3 className="font-bold mb-2">{tx.whatsapp}</h3>
-                            <p className="text-sm text-white/60">{tx.whatsappDesc}</p>
+                            <p className="text-sm text-gray-500">{tx.whatsappDesc}</p>
                         </a>
                     </div>
 
@@ -276,7 +276,7 @@ export default function SupportPage() {
                             <h3 className="text-lg font-bold text-[#fb335b] mb-4">{section.category}</h3>
                             <div className="space-y-3">
                                 {section.items.map((faq, idx) => (
-                                    <div key={idx} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                                         <button
                                             className="w-full flex items-center justify-between p-5 text-left"
                                             onClick={() => setOpenFaq(openFaq === `${section.category}-${idx}` ? null : `${section.category}-${idx}`)}
@@ -287,7 +287,7 @@ export default function SupportPage() {
                                             </span>
                                         </button>
                                         {openFaq === `${section.category}-${idx}` && (
-                                            <div className="px-5 pb-5 text-white/70">
+                                            <div className="px-5 pb-5 text-gray-600">
                                                 {faq.a}
                                             </div>
                                         )}

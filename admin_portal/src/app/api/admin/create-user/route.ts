@@ -99,8 +99,13 @@ export async function POST(request: NextRequest) {
             // 🚗 Driver fields
             isDriver: bodyIsDriver, driverType: bodyDriverType,
             // Assigner details for welcome email
-            assignerName, assignerEmail, assignerPhone, assignerRole
+            assignerName, assignerEmail, assignerPhone, assignerRole,
+            // Locale for email content
+            locale: requestLocale,
         } = body;
+
+        // Resolve locale (default German for DACH market)
+        const emailLocale = requestLocale || 'de';
 
         // Resolve business ID - prefer new name, fallback to legacy
         const businessId = bodyBusinessId || legacyButcherId;
@@ -300,6 +305,16 @@ export async function POST(request: NextRequest) {
                 };
             }
 
+            // Auto-detect driver roles from adminType (server-side consistency)
+            const DRIVER_ADMIN_TYPES = ['teslimat', 'hali_surucu', 'transfer_surucu'];
+            if (DRIVER_ADMIN_TYPES.includes(adminType || '')) {
+                adminData.isDriver = true;
+                adminData.driverType = bodyDriverType || 'business';
+            } else if (bodyIsDriver) {
+                adminData.isDriver = true;
+                adminData.driverType = bodyDriverType || 'business';
+            }
+
             await db.collection('admins').doc(userRecord.uid).set(adminData);
         }
 
@@ -383,72 +398,269 @@ export async function POST(request: NextRequest) {
 
         if (email) {
             try {
+                // ══════════════════════════════════════════════════════
+                // LOCALIZED EMAIL STRINGS
+                // ══════════════════════════════════════════════════════
+                const emailStrings: Record<string, Record<string, string>> = {
+                    de: {
+                        staffSubject: `${businessDisplayName} - Ihre neue Berechtigung`,
+                        staffGreeting: `Hallo ${firstName}!`,
+                        staffIntro: `Sie wurden als <strong>${roleDisplayName}</strong> zugewiesen.`,
+                        assignedBy: 'Zugewiesen von',
+                        assignerLabelName: 'Name',
+                        assignerLabelRole: 'Rolle',
+                        assignerLabelEmail: 'E-Mail',
+                        assignerLabelPhone: 'Telefon',
+                        detailsTitle: 'Zuweisungsdetails',
+                        businessLabel: 'Unternehmen',
+                        roleLabel: 'Ihre Rolle',
+                        credTitle: 'Ihre Zugangsdaten',
+                        emailLabel: 'E-Mail',
+                        passLabel: 'Passwort',
+                        passWarning: 'Bitte aendern Sie Ihr Passwort umgehend nach dem ersten Login!',
+                        loginBtn: 'Zum Portal',
+                        footer1: 'Diese E-Mail wurde automatisch ueber die LOKMA-Plattform gesendet.',
+                        footer2: 'Alle Rechte vorbehalten.',
+                        customerSubject: 'Willkommen bei LOKMA!',
+                        customerGreeting: `Hallo ${firstName}!`,
+                        customerIntro: 'Willkommen bei LOKMA! Ihr Konto wurde erfolgreich erstellt.',
+                    },
+                    en: {
+                        staffSubject: `${businessDisplayName} - Your New Permission`,
+                        staffGreeting: `Hello ${firstName}!`,
+                        staffIntro: `You have been assigned as <strong>${roleDisplayName}</strong>.`,
+                        assignedBy: 'Assigned by',
+                        assignerLabelName: 'Name',
+                        assignerLabelRole: 'Role',
+                        assignerLabelEmail: 'Email',
+                        assignerLabelPhone: 'Phone',
+                        detailsTitle: 'Assignment Details',
+                        businessLabel: 'Business',
+                        roleLabel: 'Your Role',
+                        credTitle: 'Your Login Credentials',
+                        emailLabel: 'Email',
+                        passLabel: 'Password',
+                        passWarning: 'Please change your password immediately after your first login!',
+                        loginBtn: 'Go to Portal',
+                        footer1: 'This email was sent automatically via the LOKMA platform.',
+                        footer2: 'All rights reserved.',
+                        customerSubject: 'Welcome to LOKMA!',
+                        customerGreeting: `Hello ${firstName}!`,
+                        customerIntro: 'Welcome to LOKMA! Your account has been created successfully.',
+                    },
+                    tr: {
+                        staffSubject: `${businessDisplayName} - Yeni Yetkiniz`,
+                        staffGreeting: `Merhaba ${firstName}!`,
+                        staffIntro: `Sizi <strong>${roleDisplayName}</strong> olarak atadik.`,
+                        assignedBy: 'Sizi Atayan Kisi',
+                        assignerLabelName: 'Isim',
+                        assignerLabelRole: 'Rol',
+                        assignerLabelEmail: 'E-posta',
+                        assignerLabelPhone: 'Telefon',
+                        detailsTitle: 'Atama Detaylari',
+                        businessLabel: 'Isletme',
+                        roleLabel: 'Sizin Rolunuz',
+                        credTitle: 'Giris Bilgileriniz',
+                        emailLabel: 'E-posta',
+                        passLabel: 'Sifre',
+                        passWarning: 'Lutfen ilk girisinizde sifrenizi hemen degistirin!',
+                        loginBtn: 'Panele Giris Yap',
+                        footer1: 'Bu e-posta LOKMA platformu uzerinden otomatik olarak gonderilmistir.',
+                        footer2: 'Tum haklari saklidir.',
+                        customerSubject: 'LOKMA Ailesine Hos Geldiniz!',
+                        customerGreeting: `Merhaba ${firstName}!`,
+                        customerIntro: 'LOKMA ailesine hos geldiniz! Hesabiniz basariyla olusturuldu.',
+                    },
+                };
+
+                const s = emailStrings[emailLocale] || emailStrings.de;
+                const logoUrl = `${baseUrl}/lokma_logo_red_web.png`;
+
                 let emailSubject: string;
                 let emailHtml: string;
 
                 if (isAdminOrStaff) {
-                    // ═══════════════════════════════════════════════════════════════
-                    // ADMIN/STAFF ROLE ASSIGNMENT EMAIL - WITH FULL ASSIGNER DETAILS
-                    // ═══════════════════════════════════════════════════════════════
-                    emailSubject = `${businessDisplayName} - Yeni Yetkiniz!`;
-                    emailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-<div style="background: linear-gradient(135deg, #1e40af, #1e3a8a); padding: 30px; border-radius: 12px; text-align: center;">
-<h1 style="color: white; margin: 0; font-size: 28px;">${businessDisplayName}</h1>
-<p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Yetki Bildirimi</p>
+                    // ══════════════════════════════════════════════════════
+                    // ADMIN/STAFF WELCOME EMAIL - BRANDED DARK THEME
+                    // ══════════════════════════════════════════════════════
+                    emailSubject = s.staffSubject;
+                    emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<meta name="supported-color-schemes" content="dark light">
+<style>
+  :root { color-scheme: dark light; }
+  @media (prefers-color-scheme: light) {
+    .email-body { background-color: #f3f4f6 !important; }
+    .email-card { background-color: #ffffff !important; }
+    .text-primary { color: #1f2937 !important; }
+    .text-secondary { color: #4b5563 !important; }
+    .text-muted { color: #6b7280 !important; }
+    .cred-box { background-color: #f9fafb !important; border-color: #e5e7eb !important; }
+    .warn-box { background-color: #fef2f2 !important; border-color: #fca5a5 !important; }
+    .warn-text { color: #991b1b !important; }
+    .detail-box { background-color: #eff6ff !important; border-color: #93c5fd !important; }
+    .assigner-box { background-color: #fffbeb !important; border-color: #fbbf24 !important; }
+    .footer-text { color: #9ca3af !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;">
+<div class="email-body" style="background-color:#111827;padding:32px 16px;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;">
+
+<!-- Header with Logo -->
+<div style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:28px 32px;border-radius:16px 16px 0 0;text-align:center;">
+  <img src="${logoUrl}" alt="LOKMA" style="height:36px;margin-bottom:8px;" />
+  <p style="color:rgba(255,255,255,0.85);margin:0;font-size:13px;letter-spacing:0.5px;">${businessDisplayName}</p>
 </div>
-<div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-<h2 style="color: #1f2937; margin-top: 0;">Merhaba ${firstName}!</h2>
-<p style="color: #4b5563; line-height: 1.6;">Sizi <strong style="color: #1e40af;">${roleDisplayName}</strong> olarak atadik.</p>
-<div style="background: linear-gradient(135deg, #fef3c7, #fef9c3); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-<p style="margin: 0; color: #92400e; font-weight: bold;">Sizi Atayan Kisi</p>
-<p style="margin: 8px 0 0 0; color: #78350f;"><strong>Isim:</strong> ${assignerName || 'Admin'}</p>
-${assignerRole ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Rol:</strong> ${assignerRoleDisplay}</p>` : ''}
-${assignerEmail ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>E-posta:</strong> ${assignerEmail}</p>` : ''}
-${assignerPhone ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Telefon:</strong> ${assignerPhone}</p>` : ''}
+
+<!-- Main Card -->
+<div class="email-card" style="background-color:#1f2937;padding:32px;border-radius:0 0 16px 16px;">
+  <h2 class="text-primary" style="color:#f9fafb;margin:0 0 8px 0;font-size:22px;">${s.staffGreeting}</h2>
+  <p class="text-secondary" style="color:#d1d5db;line-height:1.6;margin:0 0 24px 0;">${s.staffIntro}</p>
+
+  <!-- Assigner Info -->
+  ${assignerName ? `
+  <div class="assigner-box" style="background-color:rgba(251,191,36,0.08);padding:16px 20px;border-radius:10px;margin:0 0 16px 0;border-left:4px solid #f59e0b;">
+    <p style="margin:0 0 8px 0;color:#fbbf24;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">${s.assignedBy}</p>
+    <p style="margin:0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelName}:</strong> ${assignerName}</p>
+    ${assignerRole ? `<p style="margin:4px 0 0 0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelRole}:</strong> ${assignerRoleDisplay}</p>` : ''}
+    ${assignerEmail ? `<p style="margin:4px 0 0 0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelEmail}:</strong> ${assignerEmail}</p>` : ''}
+    ${assignerPhone ? `<p style="margin:4px 0 0 0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelPhone}:</strong> ${assignerPhone}</p>` : ''}
+  </div>` : ''}
+
+  <!-- Assignment Details -->
+  <div class="detail-box" style="background-color:rgba(59,130,246,0.08);padding:16px 20px;border-radius:10px;margin:0 0 16px 0;border-left:4px solid #3b82f6;">
+    <p style="margin:0 0 8px 0;color:#60a5fa;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">${s.detailsTitle}</p>
+    <p style="margin:0;color:#93c5fd;font-size:14px;">${s.businessLabel}: <strong>${businessDisplayName}</strong></p>
+    <p style="margin:4px 0 0 0;color:#93c5fd;font-size:14px;">${s.roleLabel}: <strong>${roleDisplayName}</strong></p>
+  </div>
+
+  <!-- Credentials -->
+  <div class="cred-box" style="background-color:rgba(255,255,255,0.05);padding:20px;border-radius:10px;margin:0 0 16px 0;border:1px solid rgba(255,255,255,0.1);">
+    <p style="margin:0 0 12px 0;color:#60a5fa;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">${s.credTitle}</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:6px 0;color:#9ca3af;font-size:13px;width:80px;">${s.emailLabel}</td>
+        <td class="text-primary" style="padding:6px 0;color:#f3f4f6;font-size:14px;font-weight:600;">${email}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;color:#9ca3af;font-size:13px;">${s.passLabel}</td>
+        <td style="padding:6px 0;">
+          <code style="background:rgba(239,68,68,0.15);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:700;letter-spacing:1px;">${password}</code>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Password Change Warning -->
+  <div class="warn-box" style="background-color:rgba(239,68,68,0.1);padding:14px 18px;border-radius:10px;margin:0 0 24px 0;border:1px solid rgba(239,68,68,0.3);">
+    <p class="warn-text" style="margin:0;color:#fca5a5;font-size:13px;font-weight:700;text-align:center;">
+      ${s.passWarning}
+    </p>
+  </div>
+
+  <!-- CTA Button -->
+  <div style="text-align:center;">
+    <a href="${baseUrl}/login" style="display:inline-block;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;padding:14px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.3px;">${s.loginBtn}</a>
+  </div>
 </div>
-<div style="background: linear-gradient(135deg, #dbeafe, #eff6ff); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
-<p style="margin: 0; color: #1e3a8a; font-weight: bold;">Atama Detaylari</p>
-<p style="margin: 8px 0 0 0; color: #374151;">Isletme: <strong>${businessDisplayName}</strong></p>
-<p style="margin: 4px 0 0 0; color: #374151;">Sizin Rolunuz: <strong>${roleDisplayName}</strong></p>
+
+<!-- Footer -->
+<div style="text-align:center;margin-top:24px;padding:0 16px;">
+  <p class="footer-text" style="color:#6b7280;font-size:11px;margin:0;line-height:1.6;">
+    ${s.footer1}<br/>
+    ${assignerName ? `${assignerName} &middot; ` : ''}${businessDisplayName}
+  </p>
+  <p class="footer-text" style="color:#4b5563;font-size:10px;margin:8px 0 0 0;">&copy; 2026 LOKMA &middot; ${s.footer2}</p>
 </div>
-<div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
-<p style="margin: 0; color: #1e3a8a; font-weight: bold;">Giris Bilgileriniz</p>
-<p style="margin: 8px 0 0 0; color: #374151;"><strong>E-posta:</strong> ${email}</p>
-<p style="margin: 8px 0 0 0; color: #374151;"><strong>Sifre:</strong> ${password}</p>
-<p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">Guvenliginiz icin ilk giriste sifrenizi degistirmenizi oneririz.</p>
+
 </div>
-<a href="${baseUrl}/login" style="display: inline-block; background: #1e40af; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Panele Giris Yap</a>
 </div>
-<div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
-<p>Bu e-posta ${assignerName} tarafindan LOKMA platformu uzerinden gonderilmistir.</p>
-<p>&copy; 2026 LOKMA - Tum haklari saklidir.</p>
-</div>
-</div>`;
+</body>
+</html>`;
                 } else {
-                    // ═══════════════════════════════════════════════════════════════
-                    // CUSTOMER WELCOME EMAIL
-                    // ═══════════════════════════════════════════════════════════════
-                    emailSubject = 'LOKMA Ailesine Hos Geldiniz!';
-                    emailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-<div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
-<h1 style="color: white; margin: 0; font-size: 28px;">LOKMA</h1>
-<p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Taze Et, Hizli Teslimat</p>
+                    // ══════════════════════════════════════════════════════
+                    // CUSTOMER WELCOME EMAIL - BRANDED DARK THEME
+                    // ══════════════════════════════════════════════════════
+                    emailSubject = s.customerSubject;
+                    emailHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark light">
+<style>
+  :root { color-scheme: dark light; }
+  @media (prefers-color-scheme: light) {
+    .email-body { background-color: #f3f4f6 !important; }
+    .email-card { background-color: #ffffff !important; }
+    .text-primary { color: #1f2937 !important; }
+    .text-secondary { color: #4b5563 !important; }
+    .cred-box { background-color: #f9fafb !important; border-color: #e5e7eb !important; }
+    .warn-box { background-color: #fef2f2 !important; border-color: #fca5a5 !important; }
+    .warn-text { color: #991b1b !important; }
+    .footer-text { color: #9ca3af !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;">
+<div class="email-body" style="background-color:#111827;padding:32px 16px;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;">
+
+<!-- Header with Logo -->
+<div style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:28px 32px;border-radius:16px 16px 0 0;text-align:center;">
+  <img src="${logoUrl}" alt="LOKMA" style="height:36px;margin-bottom:4px;" />
 </div>
-<div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-<h2 style="color: #1f2937; margin-top: 0;">Merhaba ${firstName}!</h2>
-<p style="color: #4b5563; line-height: 1.6;">LOKMA ailesine hos geldiniz! Hesabiniz basariyla olusturuldu.</p>
-<div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
-<p style="margin: 0; color: #374151;"><strong>E-posta:</strong> ${email}</p>
-<p style="margin: 8px 0 0 0; color: #374151;"><strong>Sifre:</strong> ${password}</p>
-<p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">Guvenliginiz icin ilk giriste sifrenizi degistirmenizi oneririz.</p>
+
+<!-- Main Card -->
+<div class="email-card" style="background-color:#1f2937;padding:32px;border-radius:0 0 16px 16px;">
+  <h2 class="text-primary" style="color:#f9fafb;margin:0 0 8px 0;font-size:22px;">${s.customerGreeting}</h2>
+  <p class="text-secondary" style="color:#d1d5db;line-height:1.6;margin:0 0 24px 0;">${s.customerIntro}</p>
+
+  <!-- Credentials -->
+  <div class="cred-box" style="background-color:rgba(255,255,255,0.05);padding:20px;border-radius:10px;margin:0 0 16px 0;border:1px solid rgba(255,255,255,0.1);">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:6px 0;color:#9ca3af;font-size:13px;width:80px;">${s.emailLabel}</td>
+        <td class="text-primary" style="padding:6px 0;color:#f3f4f6;font-size:14px;font-weight:600;">${email}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;color:#9ca3af;font-size:13px;">${s.passLabel}</td>
+        <td style="padding:6px 0;">
+          <code style="background:rgba(239,68,68,0.15);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:700;letter-spacing:1px;">${password}</code>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Password Change Warning -->
+  <div class="warn-box" style="background-color:rgba(239,68,68,0.1);padding:14px 18px;border-radius:10px;margin:0 0 24px 0;border:1px solid rgba(239,68,68,0.3);">
+    <p class="warn-text" style="margin:0;color:#fca5a5;font-size:13px;font-weight:700;text-align:center;">
+      ${s.passWarning}
+    </p>
+  </div>
+
+  <!-- CTA Button -->
+  <div style="text-align:center;">
+    <a href="${baseUrl}/login" style="display:inline-block;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;padding:14px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">${s.loginBtn}</a>
+  </div>
 </div>
-<a href="${baseUrl}/login" style="display: inline-block; background: #dc2626; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Giris Yap</a>
+
+<!-- Footer -->
+<div style="text-align:center;margin-top:24px;">
+  <p class="footer-text" style="color:#6b7280;font-size:11px;margin:0;">${s.footer1}</p>
+  <p class="footer-text" style="color:#4b5563;font-size:10px;margin:8px 0 0 0;">&copy; 2026 LOKMA &middot; ${s.footer2}</p>
 </div>
-<div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
-<p>Bu e-posta LOKMA platformu tarafindan gonderilmistir.</p>
-<p>&copy; 2026 LOKMA - Tum haklari saklidir.</p>
+
 </div>
-</div>`;
+</div>
+</body>
+</html>`;
                 }
 
 

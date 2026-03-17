@@ -36,6 +36,15 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const [langMenuOpen, setLangMenuOpen] = useState(false);
     const [countryMenuOpen, setCountryMenuOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
 
     // Refs for dropdown menus
     const countryRef = useRef<HTMLDivElement>(null);
@@ -124,15 +133,17 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const currentCountryData = countries.find(c => c.code === currentCountry) || countries[0];
     const currentLangData = languages.find(l => l.code === currentLang) || languages[0];
 
-    const headerBg = themeAware ? 'bg-white/80 dark:bg-[#120a0a]/80 border-gray-200 dark:border-white/10' : 'bg-transparent border-transparent';
-    const textColor = themeAware ? 'text-gray-900 dark:text-white' : 'text-white';
-    const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white' : 'bg-[#1a1a1a] border-white/10 text-white';
-    const itemHover = themeAware ? 'hover:bg-gray-100 dark:hover:bg-white/10' : 'hover:bg-white/10';
-    const mutedText = themeAware ? 'text-gray-500 dark:text-white/50' : 'text-white/50';
+    const headerBg = themeAware
+        ? (scrolled ? 'bg-white dark:bg-[#0a0a0f]/80 backdrop-blur-xl border-gray-200 dark:border-white/10 shadow-sm' : 'bg-white dark:bg-[#0a0a0f]/80 border-transparent')
+        : (scrolled ? 'bg-white backdrop-blur-xl border-gray-200 shadow-sm' : 'bg-white border-transparent');
+    const textColor = themeAware ? 'text-gray-900 dark:text-white' : 'text-gray-900';
+    const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white' : 'bg-white border-gray-200 text-gray-900';
+    const itemHover = themeAware ? 'hover:bg-gray-100 dark:hover:bg-white/10' : 'hover:bg-gray-100';
+    const mutedText = themeAware ? 'text-gray-500 dark:text-white/50' : 'text-gray-500';
 
     if (isLoading) {
         return (
-            <header className={`fixed top-0 z-50 w-full ${themeAware ? 'backdrop-blur-xl' : ''} border-b ${headerBg} px-4 md:px-20 lg:px-40 py-4`}>
+            <header className={`fixed top-0 z-50 w-full transition-all duration-300 border-b ${headerBg} px-4 md:px-20 lg:px-40 py-4`}>
                 <div className="max-w-[1200px] mx-auto flex items-center h-9">
                 </div>
             </header>
@@ -140,7 +151,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     }
 
     return (
-        <header className={`fixed top-0 z-50 w-full ${themeAware ? 'backdrop-blur-xl' : ''} border-b ${headerBg} ${textColor} px-4 md:px-20 lg:px-40 py-4`}>
+        <header className={`fixed top-0 z-50 w-full transition-all duration-300 border-b ${headerBg} ${textColor} px-4 md:px-20 lg:px-40 py-4`}>
             <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-3">
@@ -162,77 +173,72 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                     {/* Unified Region & Language Selector */}
                     <div className="relative" ref={countryRef}>
                         <button
-                            className={`flex items-center gap-2 bg-black/5 dark:bg-white/5 ${itemHover} px-3 py-2 rounded-lg transition-all border border-transparent dark:border-white/10`}
+                            className={`flex items-center gap-1.5 ${itemHover} px-2 py-1.5 rounded-lg transition-all`}
                             onClick={() => setCountryMenuOpen(!countryMenuOpen)}
                         >
                             <span className="text-lg">{currentLangData.flag}</span>
-                            <span className="text-sm font-medium hidden sm:block">{currentLangData.name}</span>
+                            <span className="text-sm font-semibold hidden sm:block">{currentLang.toUpperCase()}</span>
                             <span className="material-symbols-outlined text-[16px]">expand_more</span>
                         </button>
                         {countryMenuOpen && (
-                            <div className={`absolute right-0 top-full mt-2 w-80 ${menuBg} border rounded-2xl overflow-hidden z-50 shadow-2xl`}>
-                                {/* Header */}
-                                <div className={`px-5 py-4 border-b ${themeAware ? 'border-gray-200 dark:border-white/10' : 'border-white/10'} bg-gradient-to-r from-[#fb335b]/10 to-transparent`}>
-                                    <h3 className="font-bold text-base">{t('regionLangSettings')}</h3>
-                                    <p className={`text-xs ${mutedText} mt-1`}>{t('selectPreferences')}</p>
+                            <div className={`absolute right-0 top-full mt-2 w-72 ${menuBg} border rounded-xl overflow-hidden z-50 shadow-2xl`}>
+                                {/* Language Section */}
+                                <div className="px-3 pt-3 pb-2">
+                                    <label className={`text-[10px] ${mutedText} uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5 px-1`}>
+                                        <span className="material-symbols-outlined text-[12px]">language</span>
+                                        {t('selectLanguage')}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        {languages.map((lang) => (
+                                            <button
+                                                key={lang.code}
+                                                className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
+                                                    ? 'bg-[#fb335b]/10 text-[#fb335b] font-semibold'
+                                                    : `${itemHover} ${themeAware ? 'text-gray-700 dark:text-gray-200' : 'text-gray-700'}`
+                                                    }`}
+                                                onClick={() => handleLangChange(lang.code)}
+                                            >
+                                                <span className="text-base">{lang.flag}</span>
+                                                <span className="text-[13px]">{lang.name}</span>
+                                                {currentLang === lang.code && (
+                                                    <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px]">check_circle</span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
-                                <div className="p-4">
-                                    {/* Language Section */}
-                                    <div className="mb-5">
-                                        <label className={`text-xs ${mutedText} uppercase tracking-wider font-semibold mb-3 flex items-center gap-2`}>
-                                            <span className="material-symbols-outlined text-[14px]">language</span>
-                                            {t('selectLanguage')}
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {languages.map((lang) => (
-                                                <button
-                                                    key={lang.code}
-                                                    className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
-                                                        ? 'bg-[#fb335b]/20 border border-[#fb335b]/50 text-[#fb335b] dark:text-white'
-                                                        : `bg-transparent ${itemHover} border border-transparent`
-                                                        }`}
-                                                    onClick={() => handleLangChange(lang.code)}
-                                                >
-                                                    <span className="text-base">{lang.flag}</span>
-                                                    <span className={`${themeAware ? 'text-gray-900 dark:text-gray-200' : 'text-gray-200'} font-medium`}>{lang.name}</span>
-                                                    {currentLang === lang.code && (
-                                                        <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px]">check_circle</span>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                {/* Divider */}
+                                <div className={`mx-3 border-t ${themeAware ? 'border-gray-200 dark:border-white/10' : 'border-gray-200'}`} />
 
-                                    {/* Country/Region Section */}
-                                    <div>
-                                        <label className={`text-xs ${mutedText} uppercase tracking-wider font-semibold mb-3 flex items-center gap-2`}>
-                                            <span className="material-symbols-outlined text-[14px]">public</span>
-                                            {t('regionCountry')}
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                                            {countries.map((country) => (
-                                                <button
-                                                    key={country.code}
-                                                    className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
-                                                        ? 'bg-[#fb335b]/20 border border-[#fb335b]/50 text-[#fb335b] dark:text-white'
-                                                        : `bg-transparent ${itemHover} border border-transparent`
-                                                        }`}
-                                                    onClick={() => handleCountryChange(country.code)}
-                                                >
-                                                    <span className="text-base">{country.flag}</span>
-                                                    <span className={`${themeAware ? 'text-gray-900 dark:text-gray-200' : 'text-gray-200'} font-medium truncate`}>{country.name}</span>
-                                                    {currentCountry === country.code && (
-                                                        <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px] flex-shrink-0">check_circle</span>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
+                                {/* Country/Region Section */}
+                                <div className="px-3 pt-2 pb-3">
+                                    <label className={`text-[10px] ${mutedText} uppercase tracking-wider font-bold mb-2 flex items-center gap-1.5 px-1`}>
+                                        <span className="material-symbols-outlined text-[12px]">public</span>
+                                        {t('regionCountry')}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto">
+                                        {countries.map((country) => (
+                                            <button
+                                                key={country.code}
+                                                className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
+                                                    ? 'bg-[#fb335b]/10 text-[#fb335b] font-semibold'
+                                                    : `${itemHover} ${themeAware ? 'text-gray-700 dark:text-gray-200' : 'text-gray-700'}`
+                                                    }`}
+                                                onClick={() => handleCountryChange(country.code)}
+                                            >
+                                                <span className="text-base">{country.flag}</span>
+                                                <span className="text-[13px] truncate">{country.name}</span>
+                                                {currentCountry === country.code && (
+                                                    <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px] flex-shrink-0">check_circle</span>
+                                                )}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
                                 {/* Footer */}
-                                <div className={`px-5 py-3 border-t ${themeAware ? 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5' : 'border-white/10 bg-white/5'}`}>
+                                <div className={`px-3 py-2 border-t ${themeAware ? 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
                                     <p className={`text-xs ${mutedText} text-center`}>
                                         {currentCountryData.flag} {currentCountryData.name} • {currentLangData.name}
                                     </p>
