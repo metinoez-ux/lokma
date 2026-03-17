@@ -71,6 +71,17 @@ const texts: Record<string, Record<string, string>> = {
         a2: 'La plataforma alberga cientos de negocios locales en todas las categorías.',
         a3: 'Nuestra misión: combinar el comercio tradicional con la tecnología moderna para crear un mercado justo y transparente.',
     },
+    nl: {
+        title: 'Pers', contactTitle: 'Perscontact',
+        contactDesc: 'Voor mediavragen, interviewverzoeken en persberichten kunt u contact met ons opnemen.',
+        kitTitle: 'Perspakket',
+        k1: 'Logo en merkrichtlijnen', k1d: 'LOKMA-logo\'s en richtlijnen voor merkgebruik',
+        k2: 'Bedrijfsinformatie', k2d: 'Bedrijfsprofiel en statistieken',
+        download: 'Downloaden (binnenkort)', aboutTitle: 'Over ons',
+        a1: 'LOKMA werd in 2024 opgericht in Duitsland, een digitale marktplaats die lokale handelaren en consumenten verbindt.',
+        a2: 'Het platform herbergt honderden lokale bedrijven in alle categorieen.',
+        a3: 'Onze missie: traditionele handel combineren met moderne technologie voor een eerlijke en transparante marktplaats.',
+    },
 };
 
 export default function PressPage() {

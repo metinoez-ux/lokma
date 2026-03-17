@@ -10,7 +10,8 @@ const texts: Record<string, Record<string, string>> = {
     en: { title: 'KVKK / GDPR Information Notice', updated: 'Last updated: January 2024' },
     fr: { title: 'KVKK / RGPD Avis d\'information', updated: 'Dernière mise à jour : janvier 2024' },
     it: { title: 'KVKK / GDPR Informativa', updated: 'Ultimo aggiornamento: gennaio 2024' },
-    es: { title: 'KVKK / RGPD Aviso informativo', updated: 'Última actualización: enero 2024' },
+    es: { title: 'KVKK / RGPD Aviso informativo', updated: 'Ultima actualizacion: enero 2024' },
+    nl: { title: 'KVKK / AVG Privacyverklaring', updated: 'Laatst bijgewerkt: januari 2024' },
 };
 
 const sections: Record<string, { title: Record<string, string>; content?: Record<string, string>; items?: Record<string, string[]> }[]> = {

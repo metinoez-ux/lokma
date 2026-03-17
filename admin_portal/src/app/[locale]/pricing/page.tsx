@@ -76,6 +76,17 @@ const texts: Record<string, Record<string, string>> = {
         faq1Q: '¿Por qué pagar por la web?', faq1A: 'Podemos ofrecer mejores precios evitando la comisión del 30% de Apple.',
         faq2Q: '¿Puedo cancelar?', faq2A: 'Sí, puedes cancelar tu suscripción en cualquier momento. El tiempo restante sigue siendo utilizable.',
     },
+    nl: {
+        heroTitle: 'Digitaliseer uw bedrijf',
+        heroSub: 'Beheer eenvoudig bestellingen, reserveringen en klanten met MIRA-modules.',
+        yearlyDeal: '2 maanden gratis bij jaarlijkse betaling!',
+        free: 'Gratis', freeTag: 'GOED DOEL - GRATIS',
+        perMonth: '/maand', orYearly: 'of', perYear: '/jaar',
+        startNow: 'Nu starten', monthlyBtn: 'Maandelijks abonneren', yearlyBtn: 'Jaarlijks abonneren (2 maanden gratis)',
+        faqTitle: 'Veelgestelde vragen',
+        faq1Q: 'Waarom betalen via het web?', faq1A: 'We kunnen u betere prijzen bieden door de 30% commissie van Apple te vermijden.',
+        faq2Q: 'Kan ik opzeggen?', faq2A: 'Ja, u kunt uw abonnement op elk moment opzeggen. De resterende tijd blijft bruikbaar.',
+    },
 };
 
 export default function SubscriptionPage() {

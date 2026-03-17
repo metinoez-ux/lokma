@@ -84,6 +84,19 @@ const texts: Record<string, Record<string, string>> = {
         save: 'Guardar preferencias', acceptAll: 'Aceptar todas',
         saved: '¡Tus preferencias han sido guardadas!',
     },
+    nl: {
+        title: 'Cookie-instellingen',
+        desc: 'Op deze pagina kunt u de cookies op onze website beheren. Noodzakelijke cookies zijn vereist voor de websitefunctionaliteit en kunnen niet worden uitgeschakeld.',
+        necessary: 'Noodzakelijke cookies', necessaryDesc: 'Vereist voor websitefunctionaliteit',
+        alwaysActive: 'Altijd actief',
+        necessaryDetail: 'Vereist voor sessiebeheer, winkelwagen en beveiliging.',
+        analytics: 'Analytische cookies', analyticsDesc: 'Gebruiksstatistieken van de website',
+        analyticsDetail: 'Helpen ons de websiteprestaties te meten.',
+        marketing: 'Marketingcookies', marketingDesc: 'Gepersonaliseerde advertenties',
+        marketingDetail: 'Worden gebruikt om u relevante advertenties te tonen.',
+        save: 'Voorkeuren opslaan', acceptAll: 'Alles accepteren',
+        saved: 'Uw cookievoorkeuren zijn opgeslagen!',
+    },
 };
 
 export default function CookiesPage() {

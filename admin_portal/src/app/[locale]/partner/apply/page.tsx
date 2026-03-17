@@ -91,6 +91,20 @@ const texts: Record<string, Record<string, string>> = {
         successTitle: '¡Solicitud recibida!', successDesc: 'Nuestro equipo se pondrá en contacto en 24 horas. ¡Gracias!', backHome: 'Volver al inicio',
         t1: 'Carnicería', t2: 'Supermercado', t3: 'Restaurante', t4: 'Comida rápida', t5: 'Floristería', t6: 'Catering', t7: 'Panadería/Pastelería', t8: 'Otro',
     },
+    nl: {
+        title: 'Partneraanvraag', subtitle: 'Vul het formulier in, ons team neemt contact met u op.',
+        businessName: 'Bedrijfsnaam *', businessNamePh: 'bijv. Slagerij Ozkan',
+        businessType: 'Bedrijfstype *', selectType: 'Selecteren',
+        ownerName: 'Naam eigenaar *', ownerNamePh: 'Uw volledige naam',
+        email: 'E-mail *', phone: 'Telefoon *',
+        city: 'Stad *', cityPh: 'bijv. Berlijn, Keulen, Munchen',
+        address: 'Adres', addressPh: 'Volledig adres (optioneel)',
+        about: 'Over uw bedrijf', aboutPh: 'Korte beschrijving (optioneel)',
+        submit: 'Aanvraag versturen',
+        terms: 'Door uw aanvraag accepteert u de', termsLink: 'Gebruiksvoorwaarden',
+        successTitle: 'Aanvraag ontvangen!', successDesc: 'Ons team neemt binnen 24 uur contact met u op. Bedankt!', backHome: 'Terug naar startpagina',
+        t1: 'Slagerij', t2: 'Supermarkt', t3: 'Restaurant', t4: 'Fastfood', t5: 'Bloemist', t6: 'Catering', t7: 'Bakkerij/Patisserie', t8: 'Overig',
+    },
 };
 
 export default function PartnerApplyPage() {

@@ -97,6 +97,19 @@ const texts: Record<string, Record<string, string>> = {
         home: 'Inicio', newMsg: 'Nuevo mensaje', note: 'Los mensajes se envían directamente a nuestro equipo.',
         back: '← Soporte',
     },
+    nl: {
+        title: 'Feedback', subtitle: 'Neem contact op met het ontwikkelteam',
+        desc: 'Uw ideeen, suggesties of klachten zijn belangrijk voor ons. We lezen elk bericht!',
+        type: 'Berichttype', suggestion: 'Suggestie', complaint: 'Klacht', question: 'Vraag',
+        email: 'E-mail (optioneel)', emailPh: 'Zodat we u kunnen antwoorden',
+        subject: 'Onderwerp', subjectPh: 'Korte beschrijving',
+        message: 'Uw bericht *',
+        phSuggestion: 'Wat is uw idee?', phComplaint: 'Beschrijf het probleem...', phQuestion: 'Schrijf uw vraag hier...',
+        send: 'Verzenden', sending: 'Wordt verzonden...', error: 'Fout bij het verzenden. Probeer het opnieuw.',
+        thanks: 'Bedankt!', thanksSub: 'Uw bericht is succesvol verzonden.',
+        home: 'Startpagina', newMsg: 'Nieuw bericht', note: 'Berichten worden direct doorgestuurd naar ons team.',
+        back: '← Ondersteuning',
+    },
 };
 
 function FeedbackContent() {

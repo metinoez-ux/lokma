@@ -108,19 +108,32 @@ const texts: Record<string, Record<string, string>> = {
         appBadge: 'Pedir en la app', appTitle: 'Descarga la app', appTitle2: 'para pedir',
         appDesc: 'Todos los productos regionales y ofertas especiales en nuestra aplicación.',
     },
+    nl: {
+        badge: 'Regionale specialiteiten', heroTitle: 'Ambachtelijk voedsel',
+        heroSub: 'Traditionele recepten van onze moeders en grootmoeders. Huisgemaakt, natuurlijk, zonder toevoegingen.',
+        whatTitle: 'Wat is Ambachtelijk voedsel?', whatDesc: 'Elke regio heeft zijn eigen unieke smaak. Wij verbinden lokale ambachtelijke producenten met u.',
+        c1: 'Huisgemaakt', c1d: 'Uit de huiskeuken, niet uit de fabriek', c2: 'Natuurlijk', c2d: 'Zonder toevoegingen', c3: 'Beoordeeld', c3d: 'Betrouwbaar beoordelingssysteem',
+        trustTitle: 'Vertrouwenssysteem', trustDesc: 'Kwaliteit en vertrouwen staan voorop.',
+        t1: 'Identiteitsverificatie', t1d: 'Registratie met identiteitsbewijs.', t2: '5-sterren beoordeling', t2d: 'Klantbeoordeling na elke bestelling.',
+        t3: 'Fotoverplichting', t3d: 'Echte productfoto\'s.', t4: 'Tevredenheidsgarantie', t4d: 'Retour of herverzending bij ontevredenheid.',
+        catTitle: 'Productcategorieen',
+        producerQ: 'Maakt u huisgemaakte lekkernijen?', producerDesc: 'Deel uw familierecepten met duizenden mensen!', producerCta: 'Producentenaanvraag',
+        appBadge: 'Bestellen in de app', appTitle: 'Download de', appTitle2: 'app om te bestellen',
+        appDesc: 'Alle regionale producten en speciale aanbiedingen in onze app.',
+    },
 };
 
 const trustIcons = ['verified_user', 'star', 'photo_camera', 'support_agent'];
 
 const categories = [
-    { icon: '🧀', de: 'Käse', tr: 'Peynirler', en: 'Cheese', fr: 'Fromages', it: 'Formaggi', es: 'Quesos' },
-    { icon: '🍇', de: 'Trockenfrüchte', tr: 'Kurutulmuş', en: 'Dried Fruits', fr: 'Fruits secs', it: 'Frutta secca', es: 'Frutas secas' },
-    { icon: '🍅', de: 'Pasten', tr: 'Salçalar', en: 'Sauces', fr: 'Sauces', it: 'Salse', es: 'Salsas' },
-    { icon: '🍯', de: 'Honig & Sirup', tr: 'Bal & Pekmez', en: 'Honey & Syrup', fr: 'Miel & Sirop', it: 'Miele & Sciroppo', es: 'Miel & Jarabe' },
-    { icon: '🫒', de: 'Olivenöl', tr: 'Zeytinyağı', en: 'Olive Oil', fr: 'Huile d\'olive', it: 'Olio d\'oliva', es: 'Aceite de oliva' },
-    { icon: '🌶️', de: 'Gewürze', tr: 'Baharatlar', en: 'Spices', fr: 'Épices', it: 'Spezie', es: 'Especias' },
-    { icon: '🍬', de: 'Süßigkeiten', tr: 'Tatlılar', en: 'Sweets', fr: 'Confiseries', it: 'Dolci', es: 'Dulces' },
-    { icon: '🥖', de: 'Teigwaren', tr: 'Hamur İşi', en: 'Pastries', fr: 'Pâtes', it: 'Pasta', es: 'Masas' },
+    { icon: '🧀', de: 'Käse', tr: 'Peynirler', en: 'Cheese', fr: 'Fromages', it: 'Formaggi', es: 'Quesos', nl: 'Kaas' },
+    { icon: '🍇', de: 'Trockenfrüchte', tr: 'Kurutulmuş', en: 'Dried Fruits', fr: 'Fruits secs', it: 'Frutta secca', es: 'Frutas secas', nl: 'Gedroogd fruit' },
+    { icon: '🍅', de: 'Pasten', tr: 'Salçalar', en: 'Sauces', fr: 'Sauces', it: 'Salse', es: 'Salsas', nl: 'Sauzen' },
+    { icon: '🍯', de: 'Honig & Sirup', tr: 'Bal & Pekmez', en: 'Honey & Syrup', fr: 'Miel & Sirop', it: 'Miele & Sciroppo', es: 'Miel & Jarabe', nl: 'Honing & Siroop' },
+    { icon: '🫒', de: 'Olivenöl', tr: 'Zeytinyağı', en: 'Olive Oil', fr: 'Huile d\'olive', it: 'Olio d\'oliva', es: 'Aceite de oliva', nl: 'Olijfolie' },
+    { icon: '🌶️', de: 'Gewürze', tr: 'Baharatlar', en: 'Spices', fr: 'Épices', it: 'Spezie', es: 'Especias', nl: 'Kruiden' },
+    { icon: '🍬', de: 'Süßigkeiten', tr: 'Tatlılar', en: 'Sweets', fr: 'Confiseries', it: 'Dolci', es: 'Dulces', nl: 'Snoep' },
+    { icon: '🥖', de: 'Teigwaren', tr: 'Hamur İşi', en: 'Pastries', fr: 'Pâtes', it: 'Pasta', es: 'Masas', nl: 'Gebak' },
 ];
 
 export default function ElLezzetleriPage() {

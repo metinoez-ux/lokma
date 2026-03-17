@@ -65,6 +65,16 @@ const texts: Record<string, Record<string, string>> = {
         notFound: '¿No encontraste el puesto adecuado?', notFoundDesc: 'Envía una solicitud abierta — te contactaremos cuando haya una posición adecuada.',
         sendCV: 'Enviar CV', application: 'Solicitud',
     },
+    nl: {
+        title: 'Carriere', subtitle: 'Word lid van de LOKMA-familie! Laten we samen de lokale handel digitaliseren.',
+        b1: 'Flexibel werken', b1d: 'Remote en hybride opties',
+        b2: 'Groei', b2d: 'Carriereontwikkelingsmogelijkheden',
+        b3: 'Diversiteit', b3d: 'Inclusieve werkomgeving',
+        b4: 'Voordelen', b4d: 'Competitief salaris en bonussen',
+        openPositions: 'Openstaande functies',
+        notFound: 'Niet de juiste functie gevonden?', notFoundDesc: 'Stuur een open sollicitatie - we nemen contact met u op zodra er een passende functie vrijkomt.',
+        sendCV: 'CV versturen', application: 'Sollicitatie',
+    },
 };
 
 const openPositions = [

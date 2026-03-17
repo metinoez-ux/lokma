@@ -48,6 +48,13 @@ const texts: Record<string, Record<string, string>> = {
         general: 'Información general', support: 'Atención al cliente', partnership: 'Colaboración',
         merchantQ: '¿Eres comerciante?', merchantDesc: 'Solicita ahora unirte a la plataforma LOKMA.', merchantCta: 'Solicitud de colaboración',
     },
+    nl: {
+        title: 'Contact',
+        hq: 'Hoofdkantoor', workHours: 'Openingstijden',
+        monFri: 'Maandag - Vrijdag: 09:00 - 18:00', sat: 'Zaterdag: 10:00 - 14:00', sun: 'Zondag: Gesloten',
+        general: 'Algemene informatie', support: 'Klantenservice', partnership: 'Partnerschap',
+        merchantQ: 'Bent u een handelaar?', merchantDesc: 'Solliciteer nu om lid te worden van het LOKMA-platform.', merchantCta: 'Partneraanvraag',
+    },
 };
 
 export default function ContactPage() {

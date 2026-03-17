@@ -96,6 +96,20 @@ const texts: Record<string, Record<string, string>> = {
         appDesc: 'Productos frescos, mercado y ofertas especiales en nuestra aplicación.',
         farmerQ: '¿Eres agricultor?', farmerDesc: '¡Inscríbete ahora! ¡Beneficios exclusivos para inscripciones anticipadas!', farmerCta: 'Inscripción anticipada',
     },
+    nl: {
+        badge: 'Binnenkort beschikbaar', heroTitle1: 'Van het veld', heroTitle2: 'naar de tafel',
+        heroSub: 'Zonder tussenpersonen, vers, betaalbaar. Steun lokale boeren en geniet van producten direct van het land.',
+        problemTitle: 'De situatie van boeren in 2026', problemDesc: 'Boeren ontvangen slechts **20-30%** van de eindprijs.',
+        s1: '70%', s1d: 'Gaat naar tussenpersonen', s2: '3-5x', s2d: 'Prijsverhoging', s3: '40%', s3d: 'Voedselverspilling',
+        solTitle: 'De LOKMA-oplossing', solDesc: 'LOKMA verbindt boeren rechtstreeks met consumenten.',
+        f1: 'Directe verkoop', f1d: 'De boer uploadt producten direct.', f2: 'Koelketen logistiek', f2d: 'Verse producten, geoptimaliseerde routes.',
+        f3: 'Eerlijke prijzen', f3d: 'Transparante commissie, 80%+ voor de boer.', f4: 'Kwaliteitsgarantie', f4d: 'Elk product wordt gecontroleerd.',
+        productsTitle: 'Producten binnenkort',
+        p1: 'Fruit', p2: 'Groenten', p3: 'Zuivel', p4: 'Eieren', p5: 'Honing', p6: 'Olijfolie', p7: 'Peulvruchten', p8: 'Graan',
+        appBadge: 'Bestellen in de app', appTitle: 'Download de', appTitle2: 'app om te bestellen',
+        appDesc: 'Verse boerderijproducten en speciale aanbiedingen in onze app.',
+        farmerQ: 'Bent u boer?', farmerDesc: 'Schrijf u nu in! Exclusieve voordelen voor vroege registraties!', farmerCta: 'Vroege registratie',
+    },
 };
 
 const productIcons = ['🍎', '🥬', '🧀', '🥚', '🍯', '🫒', '🫘', '🌾'];

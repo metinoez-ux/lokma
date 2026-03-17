@@ -71,6 +71,17 @@ const texts: Record<string, Record<string, string>> = {
         s6: 'Espera la entrega', s6d: 'Sigue tu pedido en vivo. Entrega hasta tu puerta.',
         cta: '¡Empieza ahora!',
     },
+    nl: {
+        title: 'Hoe werkt het?',
+        subtitle: 'Bestellen met LOKMA is eenvoudig. Winkelen bij lokale handelaren in 6 simpele stappen.',
+        s1: 'Download de app', s1d: 'Download de LOKMA-app gratis uit de App Store of Google Play.',
+        s2: 'Kies uw locatie', s2d: 'Sta locatietoegang toe of voer uw adres handmatig in. Wij vinden de dichtstbijzijnde winkels.',
+        s3: 'Ontdek categorieen', s3d: 'Kies uit categorieen zoals supermarkt, slager, restaurant, bloemist en meer.',
+        s4: 'Producten in winkelwagen', s4d: 'Selecteer uw gewenste producten, stel hoeveelheden in en voeg ze toe aan uw winkelwagen.',
+        s5: 'Veilig betalen', s5d: 'Kies tussen creditcard, PayPal of contante betaling bij bezorging.',
+        s6: 'Wacht op bezorging', s6d: 'Volg uw bestelling live. Bezorging tot aan uw deur.',
+        cta: 'Nu beginnen!',
+    },
 };
 
 const icons = ['download', 'location_on', 'category', 'shopping_cart', 'payment', 'local_shipping'];

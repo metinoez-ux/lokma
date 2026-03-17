@@ -77,6 +77,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Bereit für die Digitalisierung?',
         bottomCtaSub: 'Starten Sie noch heute mit LOKMA und erreichen Sie Tausende neuer Kunden.',
         bottomCtaBtn: 'Kostenlos registrieren',
+        loginLink: 'Bereits Handler? Hier einloggen',
     },
     tr: {
         heroTag: 'İŞLETMELER İÇİN',
@@ -145,8 +146,9 @@ const vendorTexts: Record<string, Record<string, string>> = {
         step3Desc: 'Online ve mağazada satın – hepsi senkronize.',
 
         bottomCta: 'Dijitalleşmeye hazır mısınız?',
-        bottomCtaSub: 'LOKMA ile bugün başlayın ve binlerce yeni müşteriye ulaşın.',
-        bottomCtaBtn: 'Ücretsiz kaydolun',
+        bottomCtaSub: 'LOKMA ile bugun baslayin ve binlerce yeni musteriye ulasin.',
+        bottomCtaBtn: 'Ucretsiz kaydolun',
+        loginLink: 'Zaten uye misiniz? Giris yapin',
     },
     en: {
         heroTag: 'FOR BUSINESSES',
@@ -217,6 +219,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Ready for digitalization?',
         bottomCtaSub: 'Start with LOKMA today and reach thousands of new customers.',
         bottomCtaBtn: 'Register for free',
+        loginLink: 'Already a partner? Log in here',
     },
     fr: {
         heroTag: 'POUR LES ENTREPRISES',
@@ -271,8 +274,9 @@ const vendorTexts: Record<string, Record<string, string>> = {
         step2Title: 'Configuration', step2Desc: 'Nous installons votre système POS et configurons votre boutique en ligne.',
         step3Title: 'C\'est parti', step3Desc: 'Vendez en ligne et en magasin – tout est synchronisé.',
         bottomCta: 'Prêt pour la numérisation ?',
-        bottomCtaSub: 'Commencez avec LOKMA dès aujourd\'hui et atteignez des milliers de nouveaux clients.',
+        bottomCtaSub: 'Commencez avec LOKMA des aujourd\'hui et atteignez des milliers de nouveaux clients.',
         bottomCtaBtn: 'S\'inscrire gratuitement',
+        loginLink: 'Deja partenaire ? Connectez-vous ici',
     },
     it: {
         heroTag: 'PER LE AZIENDE',
@@ -329,6 +333,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Pronto per la digitalizzazione?',
         bottomCtaSub: 'Inizia con LOKMA oggi e raggiungi migliaia di nuovi clienti.',
         bottomCtaBtn: 'Registrati gratis',
+        loginLink: 'Gia partner? Accedi qui',
     },
     es: {
         heroTag: 'PARA EMPRESAS',
@@ -385,6 +390,64 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: '¿Listo para la digitalización?',
         bottomCtaSub: 'Empieza con LOKMA hoy y alcanza a miles de nuevos clientes.',
         bottomCtaBtn: 'Registrarse gratis',
+        loginLink: 'Ya eres socio? Inicia sesion aqui',
+    },
+    nl: {
+        heroTag: 'VOOR BEDRIJVEN',
+        heroTitle: 'Uw complete bedrijf.',
+        heroHighlight: 'Digitaal.',
+        heroSub: 'LOKMA biedt u alles uit een hand: POS-kassasysteem, digitale prijskaartjes, bezorgservice en online winkel – naadloos geintegreerd.',
+        ctaApply: 'Word partner',
+        ctaLearnMore: 'Meer informatie',
+        ctaSub: '\u2713 Geen installatiekosten \u00b7 \u2713 Eerlijke voorwaarden \u00b7 \u2713 Persoonlijke ondersteuning',
+        whyTitle: 'Waarom LOKMA?',
+        whySub: 'De alles-in-een oplossing voor uw bedrijf',
+        why1Title: 'Alles-in-een',
+        why1Desc: 'POS, ESL, bezorging en online winkel – een systeem, een contactpersoon, geen geisoleerde oplossingen.',
+        why2Title: 'Eerlijke voorwaarden',
+        why2Desc: 'Lage commissies vanaf 7% – tot 3x goedkoper dan concurrenten. Meer omzet blijft bij u.',
+        why3Title: 'Realtime synchronisatie',
+        why3Desc: 'Prijswijzigingen aan de kassa worden direct weergegeven op digitale etiketten en in de online winkel.',
+        why4Title: 'Eigen koeiersvloot',
+        why4Desc: 'Betrouwbare bezorging door onze eigen koeriers – of gebruik uw eigen chauffeurs.',
+        why5Title: '24/7 Ondersteuning',
+        why5Desc: 'Persoonlijk contactpersoon en technische ondersteuning – wanneer u het nodig heeft.',
+        why6Title: 'Analyse en Inzichten',
+        why6Desc: 'Gedetailleerde verkoopanalyses, klantgedrag en omzetrapporten in realtime.',
+        posTitle: 'Slim kassasysteem',
+        posSub: 'Professionele POS-terminals voor elke behoefte – van desktop tot handheld.',
+        posF1: 'Touchscreen en geintegreerde printer',
+        posF2: 'Realtime voorraadbeheer',
+        posF3: 'LOKMA online winkel integratie',
+        posF4: 'Kaart- en contactloos betalen',
+        posLink: 'Bekijk alle POS-apparaten',
+        eslTitle: 'Digitale prijskaartjes (ESL)',
+        eslSub: 'Elektronische schapetiketten – prijzen in realtime bijwerken, papierloos en foutloos.',
+        eslF1: 'Automatische prijssynchronisatie',
+        eslF2: 'E-Ink display – jarenlang zonder batterijwissel',
+        eslF3: 'Meerkleurendisplay voor acties',
+        eslF4: 'NFC-geschikt voor klantinteractie',
+        eslLink: 'ESL-systeem ontdekken',
+        deliveryTitle: 'Bezorging en Logistiek',
+        deliverySub: 'Onze koeiersvloot of uw chauffeurs – flexibele bezorgopties voor uw bedrijf.',
+        deliveryF1: 'Realtime GPS-tracking',
+        deliveryF2: 'Automatische route-optimalisatie',
+        deliveryF3: 'Flexibele bezorgtijden',
+        deliveryF4: 'Bewijs van bezorging met foto',
+        deliveryLink: 'Meer over bezorging',
+        statsTitle: 'Overtuigende cijfers',
+        stat1: '500+', stat1Label: 'Partnerbedrijven',
+        stat2: '7%', stat2Label: 'Vanaf commissie',
+        stat3: '<30 Min', stat3Label: '\u00d8 Bezorging',
+        stat4: '99.9%', stat4Label: 'Uptime',
+        stepsTitle: 'Start in 3 stappen',
+        step1Title: 'Registreer', step1Desc: 'Vul het formulier in – we nemen binnen 24 uur contact met u op.',
+        step2Title: 'Installatie', step2Desc: 'Wij installeren uw POS-systeem en richten uw online winkel in.',
+        step3Title: 'Aan de slag', step3Desc: 'Verkoop online en in de winkel – alles gesynchroniseerd.',
+        bottomCta: 'Klaar voor digitalisering?',
+        bottomCtaSub: 'Begin vandaag met LOKMA en bereik duizenden nieuwe klanten.',
+        bottomCtaBtn: 'Gratis registreren',
+        loginLink: 'Al partner? Log hier in',
     },
 };
 
@@ -455,7 +518,7 @@ export default function VendorPage() {
                         <p className="text-gray-400 text-sm font-medium mb-4">{tx.ctaSub}</p>
                         <Link href="/login" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#fb335b] text-sm font-medium transition-colors">
                             <span className="material-symbols-outlined text-[16px]">login</span>
-                            Bereits Handler? Hier einloggen
+                            {tx.loginLink}
                         </Link>
                     </div>
                 </div>
