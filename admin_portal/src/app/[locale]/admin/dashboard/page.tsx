@@ -5248,33 +5248,65 @@ export default function SuperAdminDashboard() {
                                                                 body: JSON.stringify({
                                                                     to: editingUserProfile.email,
                                                                     subject: tNav('lokma_admin_yetkiniz_aktif'),
-                                                                    html: `
-                                                                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                                                                        <div style="background: linear-gradient(135deg, #059669, #047857); padding: 30px; border-radius: 12px; text-align: center;">
-                                                                            <h1 style="color: white; margin: 0; font-size: 28px;">🎖️ LOKMA Admin</h1>
-                                                                            <p style="color: rgba(255,255,255,0.9); margin-top: 8px;">${t('admin_panel_access')}</p>
-                                                                        </div>
-                                                                        
-                                                                        <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
-                                                                            <h2 style="color: #1f2937; margin-top: 0;">${t('congratulations')} ${editingUserProfile.firstName}! </h2>
-                                                                            
-                                                                            <p style="color: #4b5563; line-height: 1.6;">
-                                                                                LOKMA platformunda yönetici yetkiniz aktif edildi.
-                                                                            </p>
-                                                                            
-                                                                            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
-                                                                                <p style="margin: 0; color: #374151;"><strong>👤 İsim:</strong> ${editingUserProfile.firstName} ${editingUserProfile.lastName}</p>
-                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>🎯 {t('roleLabel')}:</strong> ${roleName}</p>
-                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>🏪 {t('businessLabel')}:</strong> ${businessInfo}</p>
-                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>📧 E-posta:</strong> ${editingUserProfile.email}</p>
-                                                                            </div>
-                                                                            
-                                                                            <a href="https://lokma.shop/admin" style="display: inline-block; background: #059669; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">
-                                                                                🚀 Admin Paneline Git
-                                                                            </a>
-                                                                        </div>
-                                                                    </div>
-                                                                `,
+                                                                    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#f9fafb;">
+<div style="background-color:#f9fafb;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);border:1px solid #f3f4f6;">
+
+<!-- Header with Logo -->
+<div style="padding:40px 40px 24px 40px;text-align:center;">
+  <img src="https://lokma.shop/lokma_logo_new_red.png" alt="LOKMA" style="height:32px;margin-bottom:8px;" />
+  <p style="color:#6b7280;margin:0;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600;">${businessInfo}</p>
+</div>
+
+<!-- Main Body -->
+<div style="padding:0 40px 32px 40px;">
+  <h2 style="color:#111827;margin:0 0 12px 0;font-size:24px;font-weight:700;">${t('congratulations')} ${editingUserProfile.firstName}!</h2>
+  <p style="color:#4b5563;line-height:1.6;margin:0 0 24px 0;font-size:16px;">LOKMA platformunda yönetici yetkiniz aktif edildi.</p>
+
+  <div style="background-color:#f9fafb;border-radius:8px;padding:24px;margin-bottom:32px;">
+    <!-- Assignment Details -->
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:0 0 8px 0;color:#6b7280;font-size:13px;width:100px;">👤 İsim:</td>
+        <td style="padding:0 0 8px 0;color:#111827;font-size:14px;font-weight:500;">${editingUserProfile.firstName} ${editingUserProfile.lastName}</td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 8px 0;color:#6b7280;font-size:13px;width:100px;">🎯 Rol:</td>
+        <td style="padding:0 0 8px 0;color:#111827;font-size:14px;font-weight:500;">${roleName}</td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 0 0;color:#6b7280;font-size:13px;width:100px;">📧 E-posta:</td>
+        <td style="padding:0 0 0 0;color:#111827;font-size:14px;font-weight:500;">${editingUserProfile.email}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- CTA Button -->
+  <div style="text-align:center;">
+    <a href="https://lokma.shop/admin" style="display:inline-block;background-color:#dc2626;color:#ffffff;padding:14px 40px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">🚀 Admin Paneline Git</a>
+  </div>
+</div>
+
+</div>
+
+<!-- Footer -->
+<div style="text-align:center;margin-top:24px;padding:0 20px;">
+  <p style="color:#6b7280;font-size:12px;margin:0 0 8px 0;line-height:1.5;">
+    Bu e-posta LOKMA platformu üzerinden otomatik olarak gönderilmiştir.<br/>
+    <strong>${businessInfo}</strong>
+  </p>
+  <p style="color:#9ca3af;font-size:11px;margin:0;">&copy; ${new Date().getFullYear()} LOKMA &middot; Tüm hakları saklıdır.</p>
+</div>
+
+</div>
+</body>
+</html>`,
                                                                 }),
                                                             });
                                                             console.log('✅ Admin promotion email sent');

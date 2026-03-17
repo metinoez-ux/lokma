@@ -1109,7 +1109,10 @@
     "status_delivered_tr": "Livré",
     "status_cancelled_tr": "Annulé",
     "payment_cash": "Espèces",
-    "payment_card": "Carte"
+    "payment_card": "Carte",
+    "courier": "Livreur",
+    "business": "Commerce",
+    "delivery": "Livraison"
   },
   "payments": {
     "step1_payment_collection": "💵 Étape 1 : Collecte de paiement",

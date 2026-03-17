@@ -1117,7 +1117,10 @@
     "status_delivered_tr": "Delivered",
     "status_cancelled_tr": "Cancelled",
     "payment_cash": "Cash",
-    "payment_card": "Card"
+    "payment_card": "Card",
+    "courier": "Courier",
+    "business": "Business",
+    "delivery": "Delivery"
   },
   "payments": {
     "step1_payment_collection": "💵 Step 1: Payment Collection",

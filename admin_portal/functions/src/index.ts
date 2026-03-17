@@ -3333,3 +3333,117 @@ export const cleanupTestData = onRequest(
         }
     }
 );
+
+/**
+ * When a new chat message is created, send a push notification to the recipient
+ */
+export const onNewChatMessage = onDocumentCreated(
+    "meat_orders/{orderId}/messages/{messageId}",
+    async (event) => {
+        const message = event.data?.data();
+        if (!message) return;
+
+        const orderId = event.params.orderId;
+        const senderRole = message.senderRole || "customer";
+        
+        // Fetch order to get tokens and languages
+        const orderSnap = await db.collection("meat_orders").doc(orderId).get();
+        if (!orderSnap.exists) return;
+        const order = orderSnap.data()!;
+
+        const notifSound = await getActiveNotificationSound();
+
+        try {
+            if (senderRole === "courier" || senderRole === "business") {
+                // Send push to customer
+                const customerId = order.userId || order.customerId;
+                let lang = "de";
+                if (customerId) {
+                    lang = await getUserLanguage(customerId);
+                }
+
+                const trans = await getPushTranslations(lang);
+                
+                // Get customer tokens
+                const customerFcmTokens: string[] = [];
+                if (order.fcmToken) customerFcmTokens.push(order.fcmToken);
+                if (order.customerFcmToken) customerFcmTokens.push(order.customerFcmToken);
+                
+                if (customerId) {
+                    const userDoc = await db.collection("users").doc(customerId).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data()!;
+                        if (userData.fcmToken && !customerFcmTokens.includes(userData.fcmToken)) {
+                            customerFcmTokens.push(userData.fcmToken);
+                        }
+                        if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+                            userData.fcmTokens.forEach((t: string) => {
+                                if (t && !customerFcmTokens.includes(t)) customerFcmTokens.push(t);
+                            });
+                        }
+                    }
+                }
+
+                if (customerFcmTokens.length > 0) {
+                    const title = trans.newChatMessageTitle || "💬 Neue Nachricht vom Kurier";
+                    const body = message.text;
+
+                    const pushData = {
+                        notification: { title, body },
+                        data: {
+                            type: "chat_message",
+                            orderId: orderId,
+                        },
+                        ...buildSoundConfig(notifSound),
+                        tokens: customerFcmTokens,
+                    };
+
+                    await messaging.sendEachForMulticast(pushData);
+                    console.log(`[Chat Push] Sent to customer devices for order ${orderId}`);
+                }
+            } else if (senderRole === "customer") {
+                // Send push to courier
+                const courierId = order.courierId || order.assignedCourierId;
+                if (!courierId) {
+                    console.log(`[Chat Push] No courier assigned for order ${orderId}, skipping courier notification`);
+                    return;
+                }
+
+                const courierDoc = await db.collection("admins").doc(courierId).get();
+                if (!courierDoc.exists) return;
+                
+                const courierData = courierDoc.data()!;
+                const courierTokens: string[] = [];
+                if (courierData.fcmToken) courierTokens.push(courierData.fcmToken);
+                if (courierData.fcmTokens && Array.isArray(courierData.fcmTokens)) {
+                    courierTokens.push(...courierData.fcmTokens);
+                }
+
+                if (courierTokens.length > 0) {
+                    // Translate for courier
+                    const courierLang = courierData.language || "tr";
+                    const trans = await getPushTranslations(courierLang);
+                    
+                    const title = trans.newChatMessageCourierTitle || "💬 Yeni Müşteri Mesajı";
+                    const customerName = order.customerName || order.userName || "Müşteri";
+                    const body = `${customerName}: ${message.text}`;
+
+                    const pushData = {
+                        notification: { title, body },
+                        data: {
+                            type: "chat_message",
+                            orderId: orderId,
+                        },
+                        ...buildSoundConfig(notifSound),
+                        tokens: courierTokens,
+                    };
+
+                    await messaging.sendEachForMulticast(pushData);
+                    console.log(`[Chat Push] Sent to courier devices for order ${orderId}`);
+                }
+            }
+        } catch (error) {
+            console.error("[Chat Push] Error sending chat notification:", error);
+        }
+    }
+);

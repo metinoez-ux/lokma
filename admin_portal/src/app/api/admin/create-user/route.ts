@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Dynamic import for firebase-admin to prevent module load crashes
+import { sendEmailWithResend } from '@/lib/resend-email';
 async function getFirebaseAdmin() {
     try {
         const { getApps, cert, initializeApp, applicationDefault } = await import('firebase-admin/app');
@@ -474,7 +473,7 @@ export async function POST(request: NextRequest) {
                 };
 
                 const s = emailStrings[emailLocale] || emailStrings.de;
-                const logoUrl = `${baseUrl}/lokma_logo_red_web.png`;
+                const logoUrl = `${baseUrl}/lokma_logo_new_red.png`;
 
                 let emailSubject: string;
                 let emailHtml: string;
@@ -489,97 +488,75 @@ export async function POST(request: NextRequest) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="dark light">
-<meta name="supported-color-schemes" content="dark light">
-<style>
-  :root { color-scheme: dark light; }
-  @media (prefers-color-scheme: light) {
-    .email-body { background-color: #f3f4f6 !important; }
-    .email-card { background-color: #ffffff !important; }
-    .text-primary { color: #1f2937 !important; }
-    .text-secondary { color: #4b5563 !important; }
-    .text-muted { color: #6b7280 !important; }
-    .cred-box { background-color: #f9fafb !important; border-color: #e5e7eb !important; }
-    .warn-box { background-color: #fef2f2 !important; border-color: #fca5a5 !important; }
-    .warn-text { color: #991b1b !important; }
-    .detail-box { background-color: #eff6ff !important; border-color: #93c5fd !important; }
-    .assigner-box { background-color: #fffbeb !important; border-color: #fbbf24 !important; }
-    .footer-text { color: #9ca3af !important; }
-  }
-</style>
 </head>
-<body style="margin:0;padding:0;">
-<div class="email-body" style="background-color:#111827;padding:32px 16px;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
-<div style="max-width:560px;margin:0 auto;">
+<body style="margin:0;padding:0;background-color:#f9fafb;">
+<div style="background-color:#f9fafb;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);border:1px solid #f3f4f6;">
 
 <!-- Header with Logo -->
-<div style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:28px 32px;border-radius:16px 16px 0 0;text-align:center;">
-  <img src="${logoUrl}" alt="LOKMA" style="height:36px;margin-bottom:8px;" />
-  <p style="color:rgba(255,255,255,0.85);margin:0;font-size:13px;letter-spacing:0.5px;">${businessDisplayName}</p>
+<div style="padding:40px 40px 24px 40px;text-align:center;">
+  <img src="${logoUrl}" alt="LOKMA" style="height:32px;margin-bottom:8px;" />
+  <p style="color:#6b7280;margin:0;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600;">${businessDisplayName}</p>
 </div>
 
-<!-- Main Card -->
-<div class="email-card" style="background-color:#1f2937;padding:32px;border-radius:0 0 16px 16px;">
-  <h2 class="text-primary" style="color:#f9fafb;margin:0 0 8px 0;font-size:22px;">${s.staffGreeting}</h2>
-  <p class="text-secondary" style="color:#d1d5db;line-height:1.6;margin:0 0 24px 0;">${s.staffIntro}</p>
+<!-- Main Body -->
+<div style="padding:0 40px 32px 40px;">
+  <h2 style="color:#111827;margin:0 0 12px 0;font-size:24px;font-weight:700;">${s.staffGreeting}</h2>
+  <p style="color:#4b5563;line-height:1.6;margin:0 0 24px 0;font-size:16px;">${s.staffIntro}</p>
 
-  <!-- Assigner Info -->
-  ${assignerName ? `
-  <div class="assigner-box" style="background-color:rgba(251,191,36,0.08);padding:16px 20px;border-radius:10px;margin:0 0 16px 0;border-left:4px solid #f59e0b;">
-    <p style="margin:0 0 8px 0;color:#fbbf24;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">${s.assignedBy}</p>
-    <p style="margin:0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelName}:</strong> ${assignerName}</p>
-    ${assignerRole ? `<p style="margin:4px 0 0 0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelRole}:</strong> ${assignerRoleDisplay}</p>` : ''}
-    ${assignerEmail ? `<p style="margin:4px 0 0 0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelEmail}:</strong> ${assignerEmail}</p>` : ''}
-    ${assignerPhone ? `<p style="margin:4px 0 0 0;color:#fde68a;font-size:14px;"><strong>${s.assignerLabelPhone}:</strong> ${assignerPhone}</p>` : ''}
-  </div>` : ''}
+  <div style="background-color:#f9fafb;border-radius:8px;padding:24px;margin-bottom:24px;border:1px solid #f3f4f6;">
+    <!-- Assignment Details -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      ${assignerName ? `
+      <tr>
+        <td style="padding:0 0 8px 0;color:#6b7280;font-size:13px;width:120px;">${s.assignedBy}</td>
+        <td style="padding:0 0 8px 0;color:#111827;font-size:14px;font-weight:500;">${assignerName} ${assignerRoleDisplay ? `<span style="color:#9ca3af;font-weight:normal;">(${assignerRoleDisplay})</span>` : ''}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding:0 0 8px 0;color:#6b7280;font-size:13px;width:120px;">${s.roleLabel}</td>
+        <td style="padding:0 0 8px 0;color:#111827;font-size:14px;font-weight:500;">${roleDisplayName}</td>
+      </tr>
+    </table>
 
-  <!-- Assignment Details -->
-  <div class="detail-box" style="background-color:rgba(59,130,246,0.08);padding:16px 20px;border-radius:10px;margin:0 0 16px 0;border-left:4px solid #3b82f6;">
-    <p style="margin:0 0 8px 0;color:#60a5fa;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">${s.detailsTitle}</p>
-    <p style="margin:0;color:#93c5fd;font-size:14px;">${s.businessLabel}: <strong>${businessDisplayName}</strong></p>
-    <p style="margin:4px 0 0 0;color:#93c5fd;font-size:14px;">${s.roleLabel}: <strong>${roleDisplayName}</strong></p>
-  </div>
+    <div style="height:1px;background-color:#e5e7eb;margin:16px 0;"></div>
 
-  <!-- Credentials -->
-  <div class="cred-box" style="background-color:rgba(255,255,255,0.05);padding:20px;border-radius:10px;margin:0 0 16px 0;border:1px solid rgba(255,255,255,0.1);">
-    <p style="margin:0 0 12px 0;color:#60a5fa;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">${s.credTitle}</p>
+    <!-- Credentials -->
+    <p style="margin:0 0 12px 0;color:#111827;font-weight:600;font-size:14px;">${s.credTitle}</p>
     <table style="width:100%;border-collapse:collapse;">
       <tr>
-        <td style="padding:6px 0;color:#9ca3af;font-size:13px;width:80px;">${s.emailLabel}</td>
-        <td class="text-primary" style="padding:6px 0;color:#f3f4f6;font-size:14px;font-weight:600;">${email}</td>
+        <td style="padding:0 0 8px 0;color:#6b7280;font-size:13px;width:120px;">${s.emailLabel}</td>
+        <td style="padding:0 0 8px 0;color:#111827;font-size:15px;font-weight:600;">${email}</td>
       </tr>
       <tr>
-        <td style="padding:6px 0;color:#9ca3af;font-size:13px;">${s.passLabel}</td>
-        <td style="padding:6px 0;">
-          <code style="background:rgba(239,68,68,0.15);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:700;letter-spacing:1px;">${password}</code>
+        <td style="padding:0;color:#6b7280;font-size:13px;">${s.passLabel}</td>
+        <td style="padding:0;">
+          <span style="background-color:#f3f4f6;color:#111827;padding:4px 8px;border-radius:4px;font-size:15px;font-family:monospace;letter-spacing:1px;font-weight:600;">${password}</span>
         </td>
       </tr>
     </table>
   </div>
 
-  <!-- Password Change Warning -->
-  <div class="warn-box" style="background-color:rgba(239,68,68,0.1);padding:14px 18px;border-radius:10px;margin:0 0 24px 0;border:1px solid rgba(239,68,68,0.3);">
-    <p class="warn-text" style="margin:0;color:#fca5a5;font-size:13px;font-weight:700;text-align:center;">
-      ${s.passWarning}
-    </p>
-  </div>
+  <p style="margin:0 0 32px 0;color:#dc2626;font-size:13px;font-weight:500;">
+    ${s.passWarning}
+  </p>
 
   <!-- CTA Button -->
   <div style="text-align:center;">
-    <a href="${baseUrl}/login" style="display:inline-block;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;padding:14px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.3px;">${s.loginBtn}</a>
+    <a href="${baseUrl}/login" style="display:inline-block;background-color:#dc2626;color:#ffffff;padding:14px 40px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">${s.loginBtn}</a>
   </div>
 </div>
 
-<!-- Footer -->
-<div style="text-align:center;margin-top:24px;padding:0 16px;">
-  <p class="footer-text" style="color:#6b7280;font-size:11px;margin:0;line-height:1.6;">
-    ${s.footer1}<br/>
-    ${assignerName ? `${assignerName} &middot; ` : ''}${businessDisplayName}
-  </p>
-  <p class="footer-text" style="color:#4b5563;font-size:10px;margin:8px 0 0 0;">&copy; 2026 LOKMA &middot; ${s.footer2}</p>
 </div>
 
+<!-- Footer -->
+<div style="text-align:center;margin-top:24px;padding:0 20px;">
+  <p style="color:#6b7280;font-size:12px;margin:0 0 8px 0;line-height:1.5;">
+    ${s.footer1}<br/>
+    <strong>${assignerName ? `${assignerName} &middot; ` : ''}${businessDisplayName}</strong>
+  </p>
+  <p style="color:#9ca3af;font-size:11px;margin:0;">&copy; ${new Date().getFullYear()} LOKMA &middot; ${s.footer2}</p>
 </div>
+
 </div>
 </body>
 </html>`;
@@ -593,20 +570,6 @@ export async function POST(request: NextRequest) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="dark light">
-<style>
-  :root { color-scheme: dark light; }
-  @media (prefers-color-scheme: light) {
-    .email-body { background-color: #f3f4f6 !important; }
-    .email-card { background-color: #ffffff !important; }
-    .text-primary { color: #1f2937 !important; }
-    .text-secondary { color: #4b5563 !important; }
-    .cred-box { background-color: #f9fafb !important; border-color: #e5e7eb !important; }
-    .warn-box { background-color: #fef2f2 !important; border-color: #fca5a5 !important; }
-    .warn-text { color: #991b1b !important; }
-    .footer-text { color: #9ca3af !important; }
-  }
-</style>
 </head>
 <body style="margin:0;padding:0;">
 <div class="email-body" style="background-color:#111827;padding:32px 16px;font-family:'Segoe UI',Roboto,Arial,sans-serif;">
@@ -664,22 +627,17 @@ export async function POST(request: NextRequest) {
                 }
 
 
-                const emailResponse = await fetch(`${baseUrl}/api/email/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: email,
-                        subject: emailSubject,
-                        html: emailHtml,
-                    }),
+                const emailResponse = await sendEmailWithResend({
+                    to: email,
+                    subject: emailSubject,
+                    html: emailHtml,
                 });
 
-                if (emailResponse.ok) {
+                if (emailResponse.success) {
                     emailSent = true;
                     console.log(`✅ ${isAdminOrStaff ? 'Role assignment' : 'Welcome'} email sent successfully to:`, email);
                 } else {
-                    const errorData = await emailResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    emailError = errorData.error || `Email API returned ${emailResponse.status}`;
+                    emailError = emailResponse.error || 'Unknown error';
                     console.error('❌ Email send failed:', emailError);
                 }
             } catch (emailErr) {

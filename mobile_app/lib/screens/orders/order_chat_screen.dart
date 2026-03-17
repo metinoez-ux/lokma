@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/chat_service.dart';
+import 'package:flutter/services.dart';
 
 /// Order Chat Screen — WhatsApp-style bubble chat for order communication
 class OrderChatScreen extends StatefulWidget {
@@ -92,6 +93,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
 
     _messageController.clear();
     _focusNode.requestFocus();
+    HapticFeedback.lightImpact();
 
     // Scroll to bottom after a short delay
     Future.delayed(const Duration(milliseconds: 300), () {

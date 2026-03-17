@@ -1109,7 +1109,10 @@
     "status_delivered_tr": "Entregado",
     "status_cancelled_tr": "Cancelado",
     "payment_cash": "Efectivo",
-    "payment_card": "Tarjeta"
+    "payment_card": "Tarjeta",
+    "courier": "Repartidor",
+    "business": "Negocio",
+    "delivery": "Entrega"
   },
   "payments": {
     "step1_payment_collection": "💵 Paso 1: Cobro de pagos",

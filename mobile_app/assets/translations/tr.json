@@ -1123,7 +1123,10 @@
     "status_delivered_tr": "Teslim Edildi",
     "status_cancelled_tr": "İptal",
     "payment_cash": "Nakit",
-    "payment_card": "Kart ile"
+    "payment_card": "Kart ile",
+    "courier": "Kurye",
+    "business": "İşletme",
+    "delivery": "Teslimat"
   },
   "payments": {
     "step1_payment_collection": "💵 Adım 1: Ödeme Tahsili",

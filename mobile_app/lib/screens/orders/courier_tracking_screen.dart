@@ -10,6 +10,8 @@ import 'package:geocoding/geocoding.dart';
 import '../../services/order_service.dart';
 import '../../utils/currency_utils.dart';
 import 'order_chat_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/chat_service.dart';
 
 /// Courier Tracking Screen - Customer views courier location on map
 class CourierTrackingScreen extends StatefulWidget {
@@ -159,38 +161,56 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(tr('orders.courier_tracking')),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _refreshKey++;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.refresh, size: 16, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 4),
-                    Text(tr('orders.refresh'), style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.primary)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: Text(tr('orders.courier_tracking')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.chat_bubble_outline),
+            icon: const Icon(Icons.refresh),
+            tooltip: tr('orders.refresh'),
+            onPressed: () {
+              setState(() {
+                _refreshKey++;
+              });
+              // Simple haptic for refresh
+              // HapticFeedback.lightImpact(); (If we import services)
+            },
+          ),
+          IconButton(
+            icon: StreamBuilder<int>(
+              stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? ''),
+              builder: (context, badgeSnap) {
+                final unreadCount = badgeSnap.data ?? 0;
+                return Stack(
+                  children: [
+                    const Icon(Icons.chat_bubble_outline),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 12,
+                            minHeight: 12,
+                          ),
+                          child: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
             tooltip: tr('orders.send_message'),
             onPressed: () {
               if (_order != null) {
@@ -383,8 +403,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.motorcycle, 
-                                   size: 14, color: Colors.green.shade700),
+                              Icon(Icons.delivery_dining, 
+                                   size: 16, color: Colors.green.shade700),
                               const SizedBox(width: 4),
                               Text(
                                 tr('orders.on_the_way'),
@@ -591,7 +611,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                 border: Border.all(color: Colors.white, width: 2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
+                                    color: Colors.black.withOpacity(0.3),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -627,16 +647,16 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                       border: Border.all(color: Colors.white, width: 2),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.3),
+                                          color: Colors.black.withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
                                       ],
                                     ),
                                     child: const Icon(
-                                      Icons.motorcycle,
+                                      Icons.moped,
                                       color: Colors.white,
-                                      size: 28,
+                                      size: 30,
                                     ),
                                   ),
                                 ),
@@ -662,7 +682,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withOpacity(0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -702,7 +722,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 6,
             offset: const Offset(0, -2),
           ),
@@ -715,10 +735,11 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             color: isDark ? Colors.grey[850] : Colors.grey[50],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildLegendItem(Colors.red.shade600, Icons.motorcycle, tr('orders.courier'), isDark),
+            child: Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: [
+                _buildLegendItem(Colors.red.shade600, Icons.moped, tr('orders.courier'), isDark),
                 _buildLegendItem(_brandColor, Icons.storefront, tr('orders.business'), isDark),
                 _buildLegendItem(Colors.blue.shade700, Icons.home, tr('orders.delivery'), isDark),
               ],

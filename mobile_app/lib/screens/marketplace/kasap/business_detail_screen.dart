@@ -2847,48 +2847,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            ],
 
 
-                            // Reservation badge
-                            if (data?['hasReservation'] == true) ...[
-                              Text('  ·  ', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                              InkWell(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ReservationBookingScreen(
-                                        businessId: widget.businessId,
-                                        businessName: data?['companyName'] ?? data?['name'] ?? '',
-                                      ),
-                                    ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: _getAccent(context),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.table_restaurant_rounded, size: 13, color: Colors.white),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'reservation.table_reservation'.tr(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: -0.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                            // Removed Reservation badge per user request
 
                          ],
                        ),

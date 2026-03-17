@@ -1153,7 +1153,10 @@
     "status_delivered_tr": "Zugestellt",
     "status_cancelled_tr": "Storniert",
     "payment_cash": "Bargeld",
-    "payment_card": "Kartenzahlung"
+    "payment_card": "Kartenzahlung",
+    "courier": "Kurier",
+    "business": "Geschäft",
+    "delivery": "Lieferung"
   },
   "payments": {
     "step1_payment_collection": "💵 Schritt 1: Zahlungseinzug",

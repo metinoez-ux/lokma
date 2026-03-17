@@ -139,6 +139,8 @@ class FCMService {
         return 'lokma_double_ding.caf';     // Marimba Hit — short, serious
       case 'order_delivered':
         return 'lokma_soft_gong.caf';       // Completion — happy, satisfying ✨
+      case 'chat_message':
+        return 'lokma_classic_ding.caf';    // Sound for chat message
       default:
         return 'lokma_order_bell.caf';      // Cascade Chime — premium default
     }
@@ -281,6 +283,10 @@ class FCMService {
         emoji = '✅';
         accentColor = const Color(0xFF66BB6A);
         break;
+      case 'chat_message':
+        emoji = '💬';
+        accentColor = const Color(0xFF9C27B0);
+        break;
       default:
         emoji = '🔔';
         accentColor = const Color(0xFF6C63FF);
@@ -324,6 +330,9 @@ class FCMService {
     if (type == 'new_delivery' && orderId != null) {
       debugPrint('🚚 Navigating to driver deliveries for order: $orderId');
       _navigateToDriverDeliveries(orderId);
+    } else if (type == 'chat_message' && orderId != null) {
+      debugPrint('💬 Navigating to orders for chat: $orderId');
+      _navigateToOrders(orderId: orderId);
     } else {
       debugPrint('📦 Navigating to order: $orderId');
       _navigateToOrders(orderId: orderId);

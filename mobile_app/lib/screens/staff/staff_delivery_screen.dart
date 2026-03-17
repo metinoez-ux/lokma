@@ -12,9 +12,12 @@ import 'package:image_picker/image_picker.dart';
 import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
 import '../../services/location_tracking_service.dart';
+import '../../providers/driver_provider.dart';
 import '../../utils/currency_utils.dart';
 import '../orders/order_chat_screen.dart';
+import '../../services/chat_service.dart';
 import '../shared/tap_to_pay_sheet.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 /// Staff Delivery Screen - Shows pending deliveries for staff to claim
 class StaffDeliveryScreen extends StatefulWidget {
@@ -1400,7 +1403,42 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
             builder: (context, snap) {
               final order = snap.data;
               return IconButton(
-                icon: const Icon(Icons.chat_bubble_outline),
+                icon: StreamBuilder<int>(
+                  stream: ChatService().getUnreadCountStream(widget.orderId, FirebaseAuth.instance.currentUser?.uid ?? ''),
+                  builder: (context, badgeSnap) {
+                    final unreadCount = badgeSnap.data ?? 0;
+                    return Stack(
+                      children: [
+                        const Icon(Icons.chat_bubble_outline),
+                        if (unreadCount > 0)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                '$unreadCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
                 tooltip: 'Müşteriye Mesaj',
                 onPressed: () {
                   if (order != null) {
@@ -1733,6 +1771,95 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           )).toList(),
                         ),
                       ),
+
+                      // Delivery Proof Photo Preview
+                      if (order.deliveryProof?['photoUrl'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  insetPadding: EdgeInsets.zero,
+                                  child: Stack(
+                                    fit: StackFit.loose,
+                                    children: [
+                                      InteractiveViewer(
+                                        panEnabled: true,
+                                        minScale: 0.5,
+                                        maxScale: 4,
+                                        child: CachedNetworkImage(
+                                          imageUrl: order.deliveryProof!['photoUrl'],
+                                          fit: BoxFit.contain,
+                                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.amber)),
+                                          errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white, size: 50),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 40,
+                                        right: 20,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                                          onPressed: () => Navigator.pop(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                height: 180,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5), width: 2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    CachedNetworkImage(
+                                      imageUrl: order.deliveryProof!['photoUrl'],
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.amber)),
+                                      errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.amber),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.bottomCenter,
+                                            end: Alignment.topCenter,
+                                            colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
+                                          ),
+                                        ),
+                                        child: const Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Fotoğrafı Büyüt',
+                                              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -1803,7 +1930,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                               onPressed: _completeDelivery,
                               icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
                               label: const Text(
-                                '✅ TESLİMAT TAMAMLANDI',
+                                'TESLİMAT TAMAMLANDI',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
                               ),
                               style: ElevatedButton.styleFrom(

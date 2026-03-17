@@ -14,6 +14,7 @@ import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
 import 'group_order_history_card.dart';
 import 'order_chat_screen.dart';
+import '../../services/chat_service.dart';
 import 'tip_bottom_sheet.dart';
 import '../../services/app_rating_service.dart';
 import '../../utils/currency_utils.dart';
@@ -212,6 +213,14 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       ),
                     ],
                   ),
+                  children: [
+                    for (final order in completedOrders)
+                      _OrderCard(
+                        order: order,
+                        isDark: isDark,
+                        autoOpen: false,
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -1248,6 +1257,77 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               children: [
+                if (order.status == OrderStatus.delivered && order.deliveryProof != null && order.deliveryProof!['photoUrl'] != null) ...[
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: const EdgeInsets.all(8),
+                          child: Stack(
+                            alignment: Alignment.topRight,
+                            children: [
+                              InteractiveViewer(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    order.deliveryProof!['photoUrl'],
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(Icons.close, color: Colors.white, size: 24),
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: NetworkImage(order.deliveryProof!['photoUrl']),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.black.withOpacity(0.4),
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.photo_camera, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              tr('orders.delivery_proof', defaultValue: 'Teslimat Fotoğrafı'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Kuryeyi Takip Et button - only for onTheWay orders
                 if (order.status == OrderStatus.onTheWay) ...[
                   SizedBox(
@@ -1313,7 +1393,36 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         );
                       },
                       icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                      label: Text('orders.send_message'.tr()),
+                      label: StreamBuilder<int>(
+                        stream: ChatService().getUnreadCountStream(order.id, ref.read(authProvider).user?.uid ?? ''),
+                        builder: (context, snapshot) {
+                          final unreadCount = snapshot.data ?? 0;
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('orders.send_message'.tr()),
+                              if (unreadCount > 0) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$unreadCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.blueGrey,
                         side: BorderSide(color: Colors.blueGrey.withValues(alpha: 0.3)),

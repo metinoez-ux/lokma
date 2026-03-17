@@ -185,13 +185,13 @@ export default function LandingPage() {
           </div>
 
           {/* Right: Hero food image */}
-          <div className="flex-1 relative flex items-end justify-center md:justify-end self-end">
-            <div className="relative w-[340px] h-[340px] md:w-[480px] md:h-[480px] lg:w-[560px] lg:h-[560px]">
+          <div className="flex-1 relative flex items-end justify-center md:justify-end self-end pointer-events-none mt-16 md:mt-24 w-full">
+            <div className="relative w-full max-w-[420px] md:max-w-[480px] lg:max-w-[580px] xl:max-w-[700px] aspect-square origin-bottom scale-[1.15] lg:scale-[1.3] z-10 hover:scale-[1.20] lg:hover:scale-[1.35] transition-transform duration-700">
               <Image
-                src="/transparent_esl_hero_1773747743115.png"
+                src="/herp_pizza_3_transparent.png"
                 alt="LOKMA - Fresh Local Food Delivery"
                 fill
-                className="object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+                className="object-contain drop-shadow-[0_45px_65px_rgba(0,0,0,0.55)] filter brightness-105 contrast-105 saturate-110"
                 priority
               />
             </div>
