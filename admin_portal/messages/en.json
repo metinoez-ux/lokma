@@ -5074,7 +5074,8 @@
                 "type": "Type",
                 "unpaid": "Unpaid",
                 "updateStatus": "Update Status",
-                "waiter": "Waiter"
+                "waiter": "Waiter",
+                "otherStatuses": "Other Statuses"
             },
             "stats": {
                 "pending": "Pending",

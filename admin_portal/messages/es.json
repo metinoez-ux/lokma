@@ -5071,7 +5071,8 @@
                 "type": "Tipo",
                 "unpaid": "No pagado",
                 "updateStatus": "Actualizar Estado",
-                "waiter": "Camarero"
+                "waiter": "Camarero",
+                "otherStatuses": "Otros Estados"
             },
             "stats": {
                 "pending": "Pendiente",

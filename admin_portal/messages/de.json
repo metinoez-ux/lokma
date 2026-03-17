@@ -1983,7 +1983,7 @@
         "bu_rolu_ana_rol_yap": "Machen Sie diese Rolle zur Hauptrolle",
         "bu_rolu_kaldir": "Entfernen Sie diese Rolle",
         "bulunamadi": "\" nicht gefunden",
-        "businessAdmins": "Gesch\u00e4ftsadmin (Chef)",
+        "businessAdmins": "Geschäftsadmin (Chef)",
         "businessLabel": "Betrieb",
         "butonunu_kullanin": "Benutzen Sie die Schaltfläche „",
         "close": "Schließen",
@@ -4457,7 +4457,7 @@
         "bu_rolu_ana_rol_yap": "Machen Sie diese Rolle zur Hauptrolle",
         "bu_rolu_kaldir": "Entfernen Sie diese Rolle",
         "bulunamadi": "nicht gefunden",
-        "businessAdmins": "Gesch\u00e4ftsadmin (Chef)",
+        "businessAdmins": "Geschäftsadmin (Chef)",
         "businessCampaigns": "Betriebskampagnen",
         "businessLabel": "Betrieb",
         "businesses": "Geschäfte",
@@ -4529,7 +4529,7 @@
         "i_sletme": "Geschäft",
         "i_sletme_adi_veya_sehir_ara": "Suchen Sie nach Firmennamen oder Stadt",
         "i_sletme_adi_veya_sehir_yazin_en_az_3_ka": "Schreiben Sie mindestens dreimal den Namen Ihres Unternehmens oder Ihrer Stadt",
-        "i_sletme_admin": "Gesch\u00e4ftsadmin (Chef)",
+        "i_sletme_admin": "Geschäftsadmin (Chef)",
         "i_sletme_ara": "Suche nach Unternehmen",
         "i_sletme_bulunamadi": "Unternehmen nicht gefunden",
         "i_sletme_personel": "Geschäftspersonal",
@@ -4753,7 +4753,7 @@
         "filtrele": "Filtern",
         "konum": "Standort",
         "superAdmin_label": "Super Admin",
-        "isletmeAdminleri": "Gesch\u00e4ftsadmin (Chef)"
+        "isletmeAdminleri": "Geschäftsadmin (Chef)"
     },
     "AdminOrdersCreate": {
         "adim": "Schritt",
@@ -5051,7 +5051,8 @@
                 "type": "Typ",
                 "unpaid": "Unbezahlt",
                 "updateStatus": "Status aktualisieren",
-                "waiter": "Kellner"
+                "waiter": "Kellner",
+                "otherStatuses": "Weitere Status"
             },
             "stats": {
                 "pending": "Ausstehend",
@@ -7702,7 +7703,7 @@
         "konum": "Standort",
         "personel_label": "Personal",
         "superAdmin_label": "Super Admin",
-        "isletmeAdminleri": "Gesch\u00e4ftsadmin (Chef)",
+        "isletmeAdminleri": "Geschäftsadmin (Chef)",
         "adi": "Vorname",
         "soyadi": "Nachname",
         "e_posta": "E-Mail",

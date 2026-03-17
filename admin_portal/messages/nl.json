@@ -2736,7 +2736,10 @@
             "pickup_pause_title": "Pauze Afhalen",
             "delivery_pause_title": "Pauze Bezorging",
             "select_pause_duration": "Selecteer duur",
-            "status_paused": "Gepauzeerd"
+            "status_paused": "Gepauzeerd",
+            "modal": {
+                "otherStatuses": "Andere Statussen"
+            }
         }
     },
     "AdminActivitylogs": {

@@ -188,8 +188,8 @@ export default function LandingPage() {
           <div className="flex-1 relative flex items-end justify-center md:justify-end self-end">
             <div className="relative w-[340px] h-[340px] md:w-[480px] md:h-[480px] lg:w-[560px] lg:h-[560px]">
               <Image
-                src="/hero_pizza.png"
-                alt="LOKMA - Fresh food delivery"
+                src="/transparent_esl_hero_1773747743115.png"
+                alt="LOKMA - Fresh Local Food Delivery"
                 fill
                 className="object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
                 priority

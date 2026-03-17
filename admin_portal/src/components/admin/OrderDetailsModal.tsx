@@ -519,16 +519,35 @@ export default function OrderDetailsModal({
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-5">
-                            <p className="text-gray-300 text-sm">
-                                {t('cancelModal.description')}
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-300 text-sm leading-relaxed">
+                                {t('cancelModal.subtitle') || t('cancelModal.description')}
                             </p>
+
+                            {/* Quick Select Buttons */}
+                            <div className="flex flex-wrap gap-2 pt-1 pb-2">
+                                {['outOfStock', 'customerRequest', 'duplicate', 'noDelivery', 'closed'].map((reasonKey) => (
+                                    <button
+                                        key={reasonKey}
+                                        onClick={() => setCancelReason(t(`cancelModal.reasons.${reasonKey}`))}
+                                        className="bg-gray-700/50 hover:bg-gray-600 border border-gray-600 text-gray-200 px-3 py-2 rounded-lg text-sm transition-colors text-left"
+                                    >
+                                        {t(`cancelModal.reasons.${reasonKey}`)}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <span className="h-px bg-gray-700 flex-1"></span>
+                                <span className="text-gray-400 text-xs font-medium">{t('cancelModal.customReason')}</span>
+                                <span className="h-px bg-gray-700 flex-1"></span>
+                            </div>
 
                             <textarea
                                 value={cancelReason}
                                 onChange={(e) => setCancelReason(e.target.value)}
-                                placeholder={t('cancelModal.reasonPlaceholder')}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none h-32"
+                                placeholder={t('cancelModal.placeholder') || t('cancelModal.reasonPlaceholder')}
+                                className="w-full bg-gray-900 border border-gray-600 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none h-28"
                             />
 
                             <div className="flex gap-3">

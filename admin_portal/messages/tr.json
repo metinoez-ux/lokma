@@ -5072,7 +5072,8 @@
                 "type": "Tip",
                 "unpaid": "Ödenmedi",
                 "updateStatus": "Durumu Güncelle",
-                "waiter": "Garson"
+                "waiter": "Garson",
+                "otherStatuses": "Diğer Durumlar"
             },
             "stats": {
                 "pending": "Bekleyen",

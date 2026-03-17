@@ -1523,7 +1523,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           
           // Build dynamic tabs list
           final List<Tab> tabs = [
-            Tab(text: 'marketplace.hours_general'.tr()),
+            Tab(
+              icon: const Icon(Icons.store, size: 18),
+              text: 'marketplace.hours_general'.tr(),
+            ),
           ];
           final List<Widget> tabViews = [
             _buildGeneralHoursTab(isDark, textColor, subtitleColor, accent),
@@ -1542,7 +1545,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           }
           if (hasPickup) {
             tabs.add(Tab(
-              icon: const Icon(Icons.store, size: 18),
+              icon: const Icon(Icons.shopping_bag_outlined, size: 18),
               text: 'marketplace.hours_pickup'.tr(),
             ));
             tabViews.add(_buildServiceHoursTab(

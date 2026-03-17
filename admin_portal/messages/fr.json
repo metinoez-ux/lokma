@@ -5074,7 +5074,8 @@
                 "type": "Type",
                 "unpaid": "Impayé",
                 "updateStatus": "Mettre à jour le statut",
-                "waiter": "Serveur"
+                "waiter": "Serveur",
+                "otherStatuses": "Autres Statuts"
             },
             "stats": {
                 "pending": "En attente",

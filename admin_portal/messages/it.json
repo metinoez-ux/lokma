@@ -5050,7 +5050,8 @@
                 "type": "Tipo",
                 "unpaid": "Non pagato",
                 "updateStatus": "Aggiorna Stato",
-                "waiter": "Cameriere"
+                "waiter": "Cameriere",
+                "otherStatuses": "Altri Stati"
             },
             "stats": {
                 "pending": "In attesa",

@@ -383,7 +383,7 @@ export default function HardwarePage() {
                             <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                             <div className="relative bg-white/[0.03] border border-white/10 rounded-3xl overflow-hidden">
                                 <Image
-                                    src="/images/hardware/minew_esl_shelf.jpg"
+                                    src="/esl_manav_hero.png"
                                     alt="Elektronik Raf Etiketleri"
                                     width={600}
                                     height={500}
