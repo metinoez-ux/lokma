@@ -107,7 +107,7 @@ export default function CiftcidenPage() {
     const t = (k: string) => tx[k] || k;
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
@@ -120,17 +120,17 @@ export default function CiftcidenPage() {
                         <h1 className="text-4xl md:text-6xl font-black mb-6">
                             <span className="text-green-400">{t('heroTitle1')}</span> {t('heroTitle2')}
                         </h1>
-                        <p className="text-xl text-white/60 max-w-2xl mx-auto leading-relaxed">{t('heroSub')}</p>
+                        <p className="text-xl text-gray-500 dark:text-white/60 max-w-2xl mx-auto leading-relaxed">{t('heroSub')}</p>
                     </div>
 
                     <div className="bg-gradient-to-br from-red-500/10 to-transparent border border-red-500/20 rounded-2xl p-8 mb-12">
                         <h2 className="text-2xl font-bold mb-4 text-red-400">{t('problemTitle')}</h2>
-                        <p className="text-white/70 mb-6 leading-relaxed">{t('problemDesc')}</p>
+                        <p className="text-gray-600 dark:text-white/70 mb-6 leading-relaxed">{t('problemDesc')}</p>
                         <div className="grid md:grid-cols-3 gap-6">
                             {(['s1', 's2', 's3'] as const).map(k => (
-                                <div key={k} className="text-center p-4 bg-white/5 rounded-xl">
+                                <div key={k} className="text-center p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
                                     <div className="text-3xl font-black text-red-400 mb-2">{t(k)}</div>
-                                    <p className="text-sm text-white/60">{t(`${k}d`)}</p>
+                                    <p className="text-sm text-gray-500 dark:text-white/60">{t(`${k}d`)}</p>
                                 </div>
                             ))}
                         </div>
@@ -138,7 +138,7 @@ export default function CiftcidenPage() {
 
                     <div className="bg-gradient-to-br from-green-500/10 to-transparent border border-green-500/20 rounded-2xl p-8 mb-12">
                         <h2 className="text-2xl font-bold mb-4 text-green-400">{t('solTitle')}</h2>
-                        <p className="text-white/70 mb-6 leading-relaxed">{t('solDesc')}</p>
+                        <p className="text-gray-600 dark:text-white/70 mb-6 leading-relaxed">{t('solDesc')}</p>
                         <div className="grid md:grid-cols-2 gap-6">
                             {(['f1', 'f2', 'f3', 'f4'] as const).map((f, i) => (
                                 <div key={f} className="flex items-start gap-4">
@@ -147,7 +147,7 @@ export default function CiftcidenPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-bold mb-1">{t(f)}</h3>
-                                        <p className="text-sm text-white/60">{t(`${f}d`)}</p>
+                                        <p className="text-sm text-gray-500 dark:text-white/60">{t(`${f}d`)}</p>
                                     </div>
                                 </div>
                             ))}
@@ -158,7 +158,7 @@ export default function CiftcidenPage() {
                         <h2 className="text-2xl font-bold mb-6 text-center">{t('productsTitle')}</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {Array.from({ length: 8 }, (_, i) => (
-                                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                                <div key={i} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-4 text-center">
                                     <div className="text-3xl mb-2">{productIcons[i]}</div>
                                     <p className="font-medium text-sm">{t(`p${i + 1}`)}</p>
                                 </div>
@@ -174,7 +174,7 @@ export default function CiftcidenPage() {
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
                             {t('appTitle')} <span className="text-[#fb335b]">LOKMA</span> {t('appTitle2')}
                         </h2>
-                        <p className="text-white/60 mb-8 max-w-xl mx-auto">{t('appDesc')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-8 max-w-xl mx-auto">{t('appDesc')}</p>
                         <div className="flex flex-wrap items-center justify-center gap-4">
                             <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all">
                                 <span className="text-2xl"></span> App Store
@@ -195,7 +195,7 @@ export default function CiftcidenPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         </div>
     );

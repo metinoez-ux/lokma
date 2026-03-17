@@ -129,7 +129,7 @@ export default function ElLezzetleriPage() {
     const t = (k: string) => tx[k] || k;
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
@@ -139,17 +139,17 @@ export default function ElLezzetleriPage() {
                             <span className="material-symbols-outlined text-[18px]">restaurant</span>{t('badge')}
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black mb-6"><span className="text-amber-400">{t('heroTitle')}</span></h1>
-                        <p className="text-xl text-white/60 max-w-2xl mx-auto leading-relaxed">{t('heroSub')}</p>
+                        <p className="text-xl text-gray-500 dark:text-white/60 max-w-2xl mx-auto leading-relaxed">{t('heroSub')}</p>
                     </div>
 
                     <div className="bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-2xl p-8 mb-12">
                         <h2 className="text-2xl font-bold mb-4 text-amber-400">{t('whatTitle')}</h2>
-                        <p className="text-white/70 mb-6 leading-relaxed">{t('whatDesc')}</p>
+                        <p className="text-gray-600 dark:text-white/70 mb-6 leading-relaxed">{t('whatDesc')}</p>
                         <div className="grid md:grid-cols-3 gap-6">
                             {(['c1', 'c2', 'c3'] as const).map(c => (
-                                <div key={c} className="text-center p-4 bg-white/5 rounded-xl">
+                                <div key={c} className="text-center p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
                                     <h3 className="font-bold mb-1">{t(c)}</h3>
-                                    <p className="text-sm text-white/60">{t(`${c}d`)}</p>
+                                    <p className="text-sm text-gray-500 dark:text-white/60">{t(`${c}d`)}</p>
                                 </div>
                             ))}
                         </div>
@@ -157,7 +157,7 @@ export default function ElLezzetleriPage() {
 
                     <div className="bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-2xl p-8 mb-12">
                         <h2 className="text-2xl font-bold mb-4 text-yellow-400">{t('trustTitle')}</h2>
-                        <p className="text-white/70 mb-6 leading-relaxed">{t('trustDesc')}</p>
+                        <p className="text-gray-600 dark:text-white/70 mb-6 leading-relaxed">{t('trustDesc')}</p>
                         <div className="grid md:grid-cols-2 gap-6">
                             {(['t1', 't2', 't3', 't4'] as const).map((tk, i) => (
                                 <div key={tk} className="flex items-start gap-4">
@@ -177,7 +177,7 @@ export default function ElLezzetleriPage() {
                         <h2 className="text-2xl font-bold mb-6 text-center">{t('catTitle')}</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {categories.map(cat => (
-                                <div key={cat.icon} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all cursor-pointer text-center">
+                                <div key={cat.icon} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-4 hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer text-center">
                                     <div className="text-3xl mb-2">{cat.icon}</div>
                                     <h3 className="font-bold text-sm">{cat[locale as keyof typeof cat] || cat.en}</h3>
                                 </div>
@@ -190,7 +190,7 @@ export default function ElLezzetleriPage() {
                             <span className="material-symbols-outlined text-[18px]">smartphone</span>{t('appBadge')}
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">{t('appTitle')} <span className="text-[#fb335b]">LOKMA</span> {t('appTitle2')}</h2>
-                        <p className="text-white/60 mb-8 max-w-xl mx-auto">{t('appDesc')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-8 max-w-xl mx-auto">{t('appDesc')}</p>
                         <div className="flex flex-wrap items-center justify-center gap-4">
                             <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all">App Store</a>
                             <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all">Google Play</a>
@@ -207,7 +207,7 @@ export default function ElLezzetleriPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         </div>
     );

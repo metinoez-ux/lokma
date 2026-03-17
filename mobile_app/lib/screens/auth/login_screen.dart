@@ -879,7 +879,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               suggestion: tr('auth.want_to_register_with_this_number'),
               actionLabel: tr('auth.yeni_musteri'),
               onAction: () => setState(() {
-                _authMode = 1;          // switch to Register mode
+                _authMode = 1;
                 _phoneStatus = _PhoneStatus.idle;
               }),
             ),
@@ -890,7 +890,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               suggestion: tr('auth.want_to_login_with_this_number'),
               actionLabel: tr('auth.giris_yap'),
               onAction: () => setState(() {
-                _authMode = 0;          // switch to Login mode
+                _authMode = 0;
                 _phoneStatus = _PhoneStatus.idle;
               }),
             ),
@@ -914,9 +914,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
 
         ] else ...[
-          Text(
-            tr('auth.6_haneli_dogrulama_kodunu_giri'),
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
+          // Hangi numaraya gonderildi
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 14),
+              children: [
+                TextSpan(text: tr('auth.6_haneli_dogrulama_kodunu_giri')),
+                const TextSpan(text: '\n'),
+                TextSpan(
+                  text: '$_countryCode${_phoneController.text.trim().replaceAll(' ', '').replaceAll('-', '').replaceFirst(RegExp(r'^0'), '')}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -929,11 +944,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             keyboardType: TextInputType.number,
             maxLength: 6,
             textAlign: TextAlign.center,
+            fillColor: Colors.white,
+            iconColor: Colors.black54,
             style: const TextStyle(
               fontSize: 28,
               letterSpacing: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: Colors.black87,
             ),
           ),
 
@@ -942,6 +959,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _buildPrimaryButton(
             label: tr('auth.dogrula_ve_giris_yap'),
             onTap: _handleVerifySmsCode,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Yanlis numara → geri don
+          TextButton(
+            onPressed: () => setState(() {
+              _codeSent = false;
+              _verificationId = null;
+              _smsCodeController.clear();
+              _loginMode = 'phone';
+            }),
+            child: Text(
+              tr('auth.wrong_number_change'),
+              style: const TextStyle(color: Colors.white54, fontSize: 13),
+            ),
           ),
 
           TextButton(
@@ -972,7 +1005,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             message,
@@ -983,21 +1016,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             suggestion,
             style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           GestureDetector(
             onTap: onAction,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 actionLabel,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFFFF0033),
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -1092,6 +1127,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     int? maxLength,
     TextAlign textAlign = TextAlign.start,
     TextStyle? style,
+    Color? fillColor,
+    Color? iconColor,
   }) {
     return TextField(
       controller: controller,
@@ -1099,24 +1136,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: obscureText,
       maxLength: maxLength,
       textAlign: textAlign,
-      style: style ?? TextStyle(color: Colors.white),
+      style: style ?? const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label.isNotEmpty ? label : null,
         hintText: hint,
-        labelStyle: TextStyle(color: Colors.white70),
+        labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-        prefixIcon: Icon(icon, color: Colors.white70),
+        prefixIcon: Icon(icon, color: iconColor ?? Colors.white70),
         suffixIcon: suffixIcon,
         counterText: '',
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.1),
+        fillColor: fillColor ?? Colors.white.withValues(alpha: 0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white, width: 2),
+          borderSide: const BorderSide(color: Colors.white, width: 2),
         ),
       ),
     );

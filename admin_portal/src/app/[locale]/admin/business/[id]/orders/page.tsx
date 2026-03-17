@@ -7,30 +7,17 @@ import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, 
 import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { type Order } from '@/hooks/useOrders';
+import { mapFirestoreOrder } from '@/lib/utils/orderMapper';
+import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 
-interface OrderItem {
+interface MeatOrderItem {
     productId: string;
     productName: string;
     weightKg: number;
     pricePerKg: number;
 }
 
-interface BusinessOrder {
-    id: string;
-    orderNumber: string;
-    customerId: string;
-    customerName: string;
-    customerPhone: string;
-    items: OrderItem[];
-    totalAmount: number;
-    status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
-    fulfillmentType: 'pickup' | 'delivery';
-    paymentMethod?: 'cash' | 'card' | 'online';
-    scheduledDateTime: Date;
-    createdAt: Date;
-    updatedAt?: Date;
-    notes?: string;
-}
 
 interface BusinessInfo {
     id: string;
@@ -39,13 +26,13 @@ interface BusinessInfo {
     phone?: string;
 }
 
-export default function BusinessOrdersPage() {
+export default function OrdersPage() {
     
-  const t = useTranslations('AdminBusinessOrders');
+  const t = useTranslations('AdminOrders');
 const params = useParams();
     const businessId = params.id as string;
 
-    const [orders, setOrders] = useState<BusinessOrder[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [butcher, setBusiness] = useState<BusinessInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [isVendorUser, setIsVendorUser] = useState(false);
@@ -59,17 +46,18 @@ const params = useParams();
     const [amountMax, setAmountMax] = useState('');
 
     // Expanded order for inline detail (replaces modal)
-    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
 
     // Auto-hide completed orders (McDonald's style: hide after 10 min)
     const [showCompletedOrders, setShowCompletedOrders] = useState(false);
 
     // Reject order modal
-    const [rejectingOrder, setRejectingOrder] = useState<BusinessOrder | null>(null);
+    const [rejectingOrder, setRejectingOrder] = useState<Order | null>(null);
     const [rejectReason, setRejectReason] = useState('');
 
     // Edit order modal
-    const [editingOrderItems, setEditingOrderItems] = useState<BusinessOrder | null>(null);
+    const [editingOrderItems, setEditingOrderItems] = useState<Order | null>(null);
 
     // Check if user is vendor admin (for smart back link)
     useEffect(() => {
@@ -114,20 +102,10 @@ const params = useParams();
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    // UOIP: First-6-Digit Fallback Standard for consistent Order ID display
-                    orderNumber: data.orderNumber || doc.id.slice(0, 6).toUpperCase(),
-                    scheduledDateTime: data.scheduledDateTime?.toDate() || new Date(),
-                    createdAt: data.createdAt?.toDate() || new Date(),
-                };
-            }) as BusinessOrder[];
+            const ordersData = snapshot.docs.map(doc => mapFirestoreOrder(doc));
 
             // Sort client-side by createdAt desc
-            ordersData.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            ordersData.sort((a, b) => (b.createdAt?.toDate?.()?.getTime() || 0) - (a.createdAt?.toDate?.()?.getTime() || 0));
 
             setOrders(ordersData);
             setLoading(false);
@@ -145,7 +123,7 @@ const params = useParams();
             // AUTO-HIDE: Hide completed orders older than 10 minutes (unless user wants to see them)
             if (!showCompletedOrders && order.status === 'completed') {
                 const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-                const completedAt = order.updatedAt || order.createdAt;
+                const completedAt = order._raw?.updatedAt?.toDate?.() || order.createdAt?.toDate?.() || new Date(0);
                 if (completedAt < tenMinutesAgo) {
                     return false;
                 }
@@ -178,10 +156,10 @@ const params = useParams();
             }
 
             // Amount range filter
-            if (amountMin && order.totalAmount < parseFloat(amountMin)) {
+            if (amountMin && order.total < parseFloat(amountMin)) {
                 return false;
             }
-            if (amountMax && order.totalAmount > parseFloat(amountMax)) {
+            if (amountMax && order.total > parseFloat(amountMax)) {
                 return false;
             }
 
@@ -195,7 +173,7 @@ const params = useParams();
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
         const hiddenCompleted = orders.filter(o => {
             if (o.status !== 'completed') return false;
-            const completedAt = o.updatedAt || o.createdAt;
+            const completedAt = o._raw?.updatedAt?.toDate?.() || o.createdAt?.toDate?.() || new Date(0);
             return completedAt < tenMinutesAgo;
         }).length;
 
@@ -281,8 +259,22 @@ const params = useParams();
         setRejectReason('');
     };
 
+    const toggleItemChecked = async (orderId: string, itemIdx: number) => {
+        const orderChecks = checkedItems[orderId] || {};
+        const newChecked = !orderChecks[itemIdx];
+        const updated = { ...orderChecks, [itemIdx]: newChecked };
+        setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
+        try {
+            await updateDoc(doc(db, 'meat_orders', orderId), {
+                [`checkedItems.${itemIdx}`]: newChecked,
+            });
+        } catch (e) {
+            console.error('Error updating checkeditems', e);
+        }
+    };
+
     // Update order items (alternative products)
-    const updateOrderItems = async (orderId: string, items: OrderItem[], newTotal: number) => {
+    const updateOrderItems = async (orderId: string, items: MeatOrderItem[], newTotal: number) => {
         const order = orders.find(o => o.id === orderId);
 
         try {
@@ -307,7 +299,7 @@ const params = useParams();
                     order.customerName,
                     order.customerPhone,
                     {
-                        oldTotal: order.totalAmount,
+                        oldTotal: order.total,
                         newTotal,
                         itemCount: items.length
                     }
@@ -563,13 +555,13 @@ const params = useParams();
                                                 <tr className={`hover:bg-gray-700 cursor-pointer ${getRowBgColor()}`}>
                                                     <td
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap"
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                                                        onClick={() => setSelectedOrder(order)}
                                                     >
                                                         <span className="font-mono font-bold text-red-400">{order.orderNumber}</span>
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4"
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                                                        onClick={() => setSelectedOrder(order)}
                                                     >
                                                         <div className="text-sm font-medium text-white">{order.customerName}</div>
                                                         {/* Phone: Only visible during active orders */}
@@ -581,29 +573,29 @@ const params = useParams();
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden md:table-cell"
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                                                        onClick={() => setSelectedOrder(order)}
                                                     >
                                                         {formatDate(order.createdAt)}
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap hidden md:table-cell"
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                                                        onClick={() => setSelectedOrder(order)}
                                                     >
                                                         <div className="text-sm">
-                                                            {order.fulfillmentType === 'pickup' ? (
+                                                            {order.type === 'pickup' ? (
                                                                 <span className="text-blue-400">🏪 Gel Al</span>
                                                             ) : (
                                                                 <span className="text-amber-400">{t('kurye')}</span>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs text-gray-400">{formatDate(order.scheduledDateTime)}</div>
+                                                        <div className="text-xs text-gray-400">{formatDate(order.scheduledAt?.toDate())}</div>
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap"
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                                                        onClick={() => setSelectedOrder(order)}
                                                     >
                                                         <span className="text-sm font-semibold text-green-400">
-                                                            {formatPrice(order.totalAmount)}
+                                                            {formatPrice(order.total)}
                                                         </span>
                                                         <div className="text-xs mt-1">
                                                             {order.paymentMethod === 'card' && <span className="text-blue-400">💳 Kart</span>}
@@ -614,7 +606,7 @@ const params = useParams();
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap"
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
+                                                        onClick={() => setSelectedOrder(order)}
                                                     >
                                                         {getStatusBadge(order.status)}
                                                     </td>
@@ -676,56 +668,7 @@ const params = useParams();
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                {/* Expanded Detail Row */}
-                                                {expandedOrderId === order.id && (
-                                                    <tr className="bg-gray-700/50">
-                                                        <td colSpan={7} className="px-4 py-4">
-                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                {/* Customer Info */}
-                                                                <div className="bg-gray-800 rounded-lg p-4">
-                                                                    <h4 className="text-sm font-medium text-gray-400 mb-2">{t('musteri')}</h4>
-                                                                    <p className="text-white font-medium">{order.customerName}</p>
-                                                                    {/* Phone: Only visible and clickable during active orders */}
-                                                                    {['pending', 'preparing', 'ready'].includes(order.status) ? (
-                                                                        <a href={`tel:${order.customerPhone}`} className="text-blue-400 hover:underline text-sm">{order.customerPhone}</a>
-                                                                    ) : (
-                                                                        <span className="text-gray-500 text-sm">🔒 Teslimattan sonra gizli</span>
-                                                                    )}
-                                                                </div>
-                                                                {/* Delivery Info */}
-                                                                <div className="bg-gray-800 rounded-lg p-4">
-                                                                    <h4 className="text-sm font-medium text-gray-400 mb-2">📦 Teslim</h4>
-                                                                    <p className="text-white">{order.fulfillmentType === 'pickup' ? '🏪 Gel Al' : t('kurye')}</p>
-                                                                    <p className="text-gray-400 text-sm">{formatDate(order.scheduledDateTime)}</p>
-                                                                </div>
-                                                                {/* Order Total */}
-                                                                <div className="bg-gray-800 rounded-lg p-4">
-                                                                    <h4 className="text-sm font-medium text-gray-400 mb-2">💰 Toplam</h4>
-                                                                    <p className="text-2xl font-bold text-green-400">{formatPrice(order.totalAmount)}</p>
-                                                                </div>
-                                                            </div>
-                                                            {/* Items */}
-                                                            <div className="mt-4 bg-gray-800 rounded-lg p-4">
-                                                                <h4 className="text-sm font-medium text-gray-400 mb-3">{t('urunler')}</h4>
-                                                                <div className="space-y-2">
-                                                                    {order.items.map((item: OrderItem, idx: number) => (
-                                                                        <div key={idx} className="flex justify-between items-center text-sm">
-                                                                            <span className="text-white">{item.productName}</span>
-                                                                            <span className="text-gray-400">{item.weightKg} kg × {item.pricePerKg}€</span>
-                                                                            <span className="text-green-400 font-medium">{(item.weightKg * item.pricePerKg).toFixed(2)}€</span>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                            {order.notes && (
-                                                                <div className="mt-4 bg-yellow-900/30 rounded-lg p-4 border border-yellow-600/50">
-                                                                    <h4 className="text-sm font-medium text-yellow-400 mb-1">📝 Not</h4>
-                                                                    <p className="text-yellow-200">{order.notes}</p>
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                )}
+                                                
                                             </React.Fragment>
                                         );
                                     })
@@ -799,6 +742,20 @@ const params = useParams();
                         formatPrice={formatPrice}
                     />
                 )}
+
+                {/* Order Detail Modal */}
+                {selectedOrder && (
+                    <OrderDetailsModal
+                        order={selectedOrder}
+                        onClose={() => setSelectedOrder(null)}
+                        t={t}
+                        businesses={{ [butcher?.id || '']: butcher?.companyName || '' }}
+                        checkedItems={checkedItems[selectedOrder.id] || {}}
+                        dateLocale="tr-TR"
+                        onUpdateOrderStatus={updateOrderStatus}
+                        onToggleItemChecked={toggleItemChecked}
+                    />
+                )}
             </main>
         </div>
     );
@@ -811,15 +768,20 @@ function EditOrderModal({
     onSave,
     formatPrice
 }: {
-    order: BusinessOrder;
+    order: Order;
     onClose: () => void;
-    onSave: (items: OrderItem[], total: number) => void;
+    onSave: (items: MeatOrderItem[], total: number) => void;
     formatPrice: (n: number) => string;
 }) {
-    const t = useTranslations('AdminBusinessOrders');
-    const [items, setItems] = useState<OrderItem[]>(order.items || []);
+    const t = useTranslations('AdminOrders');
+    const [items, setItems] = useState<MeatOrderItem[]>(order.items.map(item => ({
+        productId: item.productId || `new_${Date.now()}`,
+        productName: item.productName || item.name || '',
+        weightKg: item.weightKg || item.quantity || 0,
+        pricePerKg: item.pricePerKg || item.price || 0,
+    })));
 
-    const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
+    const updateItem = (index: number, field: keyof MeatOrderItem, value: string | number) => {
         const newItems = [...items];
         newItems[index] = { ...newItems[index], [field]: value };
         setItems(newItems);

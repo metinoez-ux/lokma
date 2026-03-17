@@ -90,6 +90,20 @@ const texts: Record<string, Record<string, string>> = {
         v4: 'Innovación', v4d: 'Facilitamos el trabajo de nuestros comerciantes con tecnología de vanguardia.',
         cta: 'Conviértase en nuestro socio',
     },
+    nl: {
+        title: 'Over ons',
+        intro: 'LOKMA is een innovatief platform opgericht in Duitsland in 2024 dat lokale handelaren verbindt met de digitale wereld.',
+        missionTitle: 'Onze Missie',
+        mission: 'De kracht van traditionele handel combineren met moderne technologie om een eerlijke, transparante marktplaats te creeren. Ervoor zorgen dat onze handelaren een eerlijke vergoeding krijgen voor hun harde werk.',
+        visionTitle: 'Onze Visie',
+        vision: 'Een duurzaam, gemeenschapsgericht digitaal ecosysteem opbouwen dat lokale handelaren in heel Europa ondersteunt.',
+        valuesTitle: 'Onze Waarden',
+        v1: 'Eerlijkheid', v1d: 'Wij beschermen de inkomsten van handelaren met de laagste commissietarieven in de sector.',
+        v2: 'Transparantie', v2d: 'Geen verborgen kosten, geen ingewikkelde contracten. Alles open en duidelijk.',
+        v3: 'Gemeenschap', v3d: 'Wij brengen de buurtcultuur naar de digitale wereld.',
+        v4: 'Innovatie', v4d: 'Wij vergemakkelijken het werk van onze handelaren met geavanceerde technologie.',
+        cta: 'Word onze partner',
+    },
 };
 
 export default function AboutPage() {
@@ -98,29 +112,29 @@ export default function AboutPage() {
     const t = (k: string) => tx[k] || k;
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[800px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black mb-8">{t('title')}</h1>
 
-                    <div className="space-y-8 text-white/80 text-lg leading-relaxed">
+                    <div className="space-y-8 text-gray-600 dark:text-white/80 text-lg leading-relaxed">
                         <p>
-                            <strong className="text-white">LOKMA</strong> — {t('intro')}
+                            <strong className="text-gray-900 dark:text-white">LOKMA</strong> — {t('intro')}
                         </p>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                            <h2 className="text-2xl font-bold text-white mb-4">{t('missionTitle')}</h2>
+                        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('missionTitle')}</h2>
                             <p>{t('mission')}</p>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                            <h2 className="text-2xl font-bold text-white mb-4">{t('visionTitle')}</h2>
+                        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('visionTitle')}</h2>
                             <p>{t('vision')}</p>
                         </div>
 
-                        <h2 className="text-2xl font-bold text-white mt-12 mb-6">{t('valuesTitle')}</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-12 mb-6">{t('valuesTitle')}</h2>
 
                         <div className="grid md:grid-cols-2 gap-6">
                             {(['v1', 'v2', 'v3', 'v4'] as const).map(v => (
@@ -143,7 +157,7 @@ export default function AboutPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
         </div>
     );
 }

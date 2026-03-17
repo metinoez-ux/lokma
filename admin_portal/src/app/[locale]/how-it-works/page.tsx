@@ -88,21 +88,21 @@ export default function HowItWorksPage() {
     }));
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
                         <h1 className="text-4xl md:text-5xl font-black mb-6">{t('title')}</h1>
-                        <p className="text-xl text-white/60 max-w-2xl mx-auto">{t('subtitle')}</p>
+                        <p className="text-xl text-gray-500 dark:text-white/60 max-w-2xl mx-auto">{t('subtitle')}</p>
                     </div>
 
                     <div className="space-y-8">
                         {steps.map((step, index) => (
                             <div
                                 key={step.number}
-                                className={`flex flex-col md:flex-row items-start gap-8 p-8 rounded-2xl ${index % 2 === 0 ? 'bg-white/5' : 'bg-[#fb335b]/5'} border border-white/10`}
+                                className={`flex flex-col md:flex-row items-start gap-8 p-8 rounded-2xl ${index % 2 === 0 ? 'bg-gray-50 dark:bg-white/5' : 'bg-[#fb335b]/5'} border border-gray-200 dark:border-white/10`}
                             >
                                 <div className="flex-shrink-0">
                                     <div className="w-16 h-16 bg-[#fb335b] rounded-2xl flex items-center justify-center">
@@ -112,7 +112,7 @@ export default function HowItWorksPage() {
                                 <div>
                                     <div className="text-[#fb335b] font-bold text-sm mb-2">{step.number}</div>
                                     <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
-                                    <p className="text-white/60 text-lg">{step.description}</p>
+                                    <p className="text-gray-500 dark:text-white/60 text-lg">{step.description}</p>
                                 </div>
                             </div>
                         ))}
@@ -140,7 +140,7 @@ export default function HowItWorksPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         </div>
     );

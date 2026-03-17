@@ -25,6 +25,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
             case 'fr': localMessages = (await import('../../messages/fr.json')).default; break;
             case 'it': localMessages = (await import('../../messages/it.json')).default; break;
             case 'es': localMessages = (await import('../../messages/es.json')).default; break;
+            case 'nl': localMessages = (await import('../../messages/nl.json')).default; break;
             case 'tr':
             default: localMessages = (await import('../../messages/tr.json')).default; break;
         }

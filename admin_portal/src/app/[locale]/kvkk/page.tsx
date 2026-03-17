@@ -78,18 +78,18 @@ export default function KVKKPage() {
     const titleTx = texts[locale] || texts['en'];
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40 flex-1">
-                <div className="max-w-[800px] mx-auto prose prose-invert">
+                <div className="max-w-[800px] mx-auto prose prose-gray dark:prose-invert">
                     <h1 className="text-4xl md:text-5xl font-black mb-8">{titleTx.title}</h1>
-                    <p className="text-white/60 mb-8">{titleTx.updated}</p>
+                    <p className="text-gray-500 dark:text-white/60 mb-8">{titleTx.updated}</p>
 
-                    <div className="space-y-8 text-white/80">
+                    <div className="space-y-8 text-gray-600 dark:text-white/80">
                         {sections.main.map((section, i) => (
                             <section key={i}>
-                                <h2 className="text-2xl font-bold text-white mb-4">{section.title[locale] || section.title.en}</h2>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{section.title[locale] || section.title.en}</h2>
                                 {section.content && (
                                     <p className="whitespace-pre-line">{section.content[locale] || section.content.en}</p>
                                 )}
@@ -106,7 +106,7 @@ export default function KVKKPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
         </div>
     );
 }

@@ -37,6 +37,8 @@ export interface Order {
   paymentMethod?: string;
   stripePaymentIntentId?: string;
   currency?: string;
+  servedByName?: string;
+  servedAt?: any;
   // Keep raw doc data accessible
   _raw: any;
 }
@@ -108,6 +110,8 @@ function getStartDateForFilter(filter: DateFilter): Date {
 // ORDER STATUS CONSTANTS
 // labelKey = i18n key, use t(labelKey) in consumer components
 // ============================================================
+
+export type OrderStatus = keyof typeof ORDER_STATUSES;
 
 export const ORDER_STATUSES: Record<string, { labelKey: string; color: string }> = {
   pending:   { labelKey: 'status_pending',    color: 'yellow' },

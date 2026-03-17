@@ -137,22 +137,22 @@ function FeedbackContent() {
 
     if (sent) {
         return (
-            <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+            <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
                 <PublicHeader themeAware={true} />
                 <div className="flex-1 flex items-center justify-center p-4 pt-32">
-                    <div className="bg-white/5 border border-white/10 rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+                    <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
                         <div className="text-6xl mb-4">✅</div>
                         <h1 className="text-2xl font-bold mb-2">{t('thanks')}</h1>
-                        <p className="text-white/60 mb-6">{t('thanksSub')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-6">{t('thanksSub')}</p>
                         <div className="space-y-3">
                             <Link href="/" className="block w-full bg-[#fb335b] text-white py-3 rounded-xl font-semibold hover:bg-red-600">{t('home')}</Link>
-                            <button onClick={() => { setSent(false); setMessage(''); setSubject(''); }} className="block w-full bg-white/10 text-white py-3 rounded-xl font-medium hover:bg-white/20">
+                            <button onClick={() => { setSent(false); setMessage(''); setSubject(''); }} className="block w-full bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-white/20">
                                 {t('newMsg')}
                             </button>
                         </div>
                     </div>
                 </div>
-                <PublicFooter />
+                <PublicFooter themeAware={true} />
             </div>
         );
     }
@@ -170,22 +170,22 @@ function FeedbackContent() {
     ];
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40 flex-1">
                 <div className="max-w-2xl mx-auto">
-                    <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm p-6">
+                    <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm p-6">
                         <h1 className="text-2xl font-bold mb-2">{t('subtitle')}</h1>
-                        <p className="text-white/60 mb-6">{t('desc')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-6">{t('desc')}</p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div>
-                                <label className="block text-sm font-medium text-white/80 mb-2">{t('type')}</label>
+                                <label className="block text-sm font-medium text-gray-600 dark:text-white/80 mb-2">{t('type')}</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {typeButtons.map(b => (
                                         <button key={b.key} type="button" onClick={() => setFeedbackType(b.key)}
-                                            className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === b.key ? 'border-[#fb335b] bg-[#fb335b]/20 text-white' : 'border-white/10 hover:border-white/30'}`}>
+                                            className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === b.key ? 'border-[#fb335b] bg-[#fb335b]/20 text-[#fb335b] dark:text-white' : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/30'}`}>
                                             <span className="text-xl">{b.emoji}</span>
                                             <p className="text-sm font-medium mt-1">{t(b.key)}</p>
                                         </button>
@@ -194,21 +194,21 @@ function FeedbackContent() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-white/80 mb-1">{t('email')}</label>
+                                <label className="block text-sm font-medium text-gray-600 dark:text-white/80 mb-1">{t('email')}</label>
                                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('emailPh')}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-white/80 mb-1">{t('subject')}</label>
                                 <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder={t('subjectPh')}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-white/80 mb-1">{t('message')}</label>
                                 <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} placeholder={getPlaceholder()}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent resize-none" required />
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent resize-none" required />
                             </div>
 
                             <button type="submit" disabled={sending || !message.trim()}
@@ -218,11 +218,11 @@ function FeedbackContent() {
                         </form>
                     </div>
 
-                    <p className="text-center text-white/40 text-sm mt-6">{t('note')}</p>
+                    <p className="text-center text-gray-400 dark:text-white/40 text-sm mt-6">{t('note')}</p>
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
         </div>
     );
 }
@@ -230,7 +230,7 @@ function FeedbackContent() {
 export default function FeedbackPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fb335b]" />
             </div>
         }>

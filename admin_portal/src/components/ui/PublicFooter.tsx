@@ -11,6 +11,7 @@ const languages = [
     { code: 'fr', name: 'Français', nativeName: 'Français', flag: '🇫🇷' },
     { code: 'it', name: 'Italiano', nativeName: 'Italiano', flag: '🇮🇹' },
     { code: 'es', name: 'Español', nativeName: 'Español', flag: '🇪🇸' },
+    { code: 'nl', name: 'Nederlands', nativeName: 'Nederlands', flag: '🇳🇱' },
 ];
 
 export default function PublicFooter({ themeAware = false }: { themeAware?: boolean }) {

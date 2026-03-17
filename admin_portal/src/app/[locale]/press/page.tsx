@@ -79,16 +79,16 @@ export default function PressPage() {
     const t = (k: string) => tx[k] || k;
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[800px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black mb-8">{t('title')}</h1>
 
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-12">
+                    <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8 mb-12">
                         <h2 className="text-xl font-bold mb-4">{t('contactTitle')}</h2>
-                        <p className="text-white/60 mb-6">{t('contactDesc')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-6">{t('contactDesc')}</p>
                         <a href="mailto:presse@lokma.shop" className="inline-flex items-center gap-2 bg-[#fb335b] hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all">
                             <span className="material-symbols-outlined">mail</span>presse@lokma.shop
                         </a>
@@ -97,25 +97,25 @@ export default function PressPage() {
                     <h2 className="text-2xl font-bold mb-6">{t('kitTitle')}</h2>
                     <div className="grid md:grid-cols-2 gap-6 mb-12">
                         {(['k1', 'k2'] as const).map(k => (
-                            <div key={k} className="bg-white/5 border border-white/10 rounded-xl p-6">
+                            <div key={k} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6">
                                 <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-4 block">{k === 'k1' ? 'image' : 'description'}</span>
                                 <h3 className="font-bold mb-2">{t(k)}</h3>
-                                <p className="text-sm text-white/60 mb-4">{t(`${k}d`)}</p>
+                                <p className="text-sm text-gray-500 dark:text-white/60 mb-4">{t(`${k}d`)}</p>
                                 <button className="text-[#fb335b] font-bold text-sm">{t('download')}</button>
                             </div>
                         ))}
                     </div>
 
                     <h2 className="text-2xl font-bold mb-6">{t('aboutTitle')}</h2>
-                    <div className="text-white/70 space-y-4">
-                        <p><strong className="text-white">LOKMA</strong> — {t('a1')}</p>
+                    <div className="text-gray-600 dark:text-white/70 space-y-4">
+                        <p><strong className="text-gray-900 dark:text-white">LOKMA</strong> — {t('a1')}</p>
                         <p>{t('a2')}</p>
                         <p>{t('a3')}</p>
                     </div>
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         </div>
     );

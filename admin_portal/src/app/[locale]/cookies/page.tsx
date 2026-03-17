@@ -101,32 +101,32 @@ export default function CookiesPage() {
     };
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40 flex-1">
                 <div className="max-w-[800px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black mb-8">{t('title')}</h1>
-                    <p className="text-white/60 mb-8">{t('desc')}</p>
+                    <p className="text-gray-500 dark:text-white/60 mb-8">{t('desc')}</p>
 
                     <div className="space-y-6 mb-12">
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <h3 className="font-bold text-lg">{t('necessary')}</h3>
-                                    <p className="text-sm text-white/60">{t('necessaryDesc')}</p>
+                                    <p className="text-sm text-gray-500 dark:text-white/60">{t('necessaryDesc')}</p>
                                 </div>
                                 <div className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-bold">{t('alwaysActive')}</div>
                             </div>
-                            <p className="text-sm text-white/50">{t('necessaryDetail')}</p>
+                            <p className="text-sm text-gray-400 dark:text-white/50">{t('necessaryDetail')}</p>
                         </div>
 
                         {(['analytics', 'marketing'] as const).map(key => (
-                            <div key={key} className="bg-white/5 border border-white/10 rounded-xl p-6">
+                            <div key={key} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6">
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
                                         <h3 className="font-bold text-lg">{t(key)}</h3>
-                                        <p className="text-sm text-white/60">{t(`${key}Desc`)}</p>
+                                        <p className="text-sm text-gray-500 dark:text-white/60">{t(`${key}Desc`)}</p>
                                     </div>
                                     <button
                                         onClick={() => setPreferences({ ...preferences, [key]: !preferences[key] })}
@@ -135,7 +135,7 @@ export default function CookiesPage() {
                                         <div className={`w-5 h-5 bg-white rounded-full transition-all ${preferences[key] ? 'ml-6' : 'ml-0.5'}`} />
                                     </button>
                                 </div>
-                                <p className="text-sm text-white/50">{t(`${key}Detail`)}</p>
+                                <p className="text-sm text-gray-400 dark:text-white/50">{t(`${key}Detail`)}</p>
                             </div>
                         ))}
                     </div>
@@ -147,14 +147,14 @@ export default function CookiesPage() {
                         <button onClick={() => {
                             setPreferences({ necessary: true, analytics: true, marketing: true });
                             localStorage.setItem('lokma_cookies', JSON.stringify({ necessary: true, analytics: true, marketing: true }));
-                        }} className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-bold transition-all">
+                        }} className="bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-900 dark:text-white px-8 py-4 rounded-xl font-bold transition-all">
                             {t('acceptAll')}
                         </button>
                     </div>
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
         </div>
     );
 }

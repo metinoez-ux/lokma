@@ -56,7 +56,7 @@ export default function ContactPage() {
     const t = (k: string) => tx[k] || k;
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
@@ -64,10 +64,10 @@ export default function ContactPage() {
                     <h1 className="text-4xl md:text-5xl font-black mb-8">{t('title')}</h1>
 
                     <div className="grid md:grid-cols-2 gap-8 mb-12">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8">
                             <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-4 block">location_on</span>
                             <h3 className="font-bold text-lg mb-2">{t('hq')}</h3>
-                            <p className="text-white/60">
+                            <p className="text-gray-500 dark:text-white/60">
                                 LOKMA GmbH<br />
                                 Musterstraße 123<br />
                                 10115 Berlin<br />
@@ -75,10 +75,10 @@ export default function ContactPage() {
                             </p>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+                        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8">
                             <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-4 block">schedule</span>
                             <h3 className="font-bold text-lg mb-2">{t('workHours')}</h3>
-                            <p className="text-white/60">
+                            <p className="text-gray-500 dark:text-white/60">
                                 {t('monFri')}<br />
                                 {t('sat')}<br />
                                 {t('sun')}
@@ -87,10 +87,10 @@ export default function ContactPage() {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-6 mb-12">
-                        <a href="mailto:info@lokma.shop" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="mailto:info@lokma.shop" className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">mail</span>
                             <h4 className="font-bold mb-1">{t('general')}</h4>
-                            <p className="text-sm text-white/60">info@lokma.shop</p>
+                            <p className="text-sm text-gray-500 dark:text-white/60">info@lokma.shop</p>
                         </a>
                         <a href="mailto:destek@lokma.shop" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">support_agent</span>
@@ -106,7 +106,7 @@ export default function ContactPage() {
 
                     <div className="bg-gradient-to-br from-[#fb335b]/10 to-transparent border border-[#fb335b]/20 rounded-2xl p-8 text-center">
                         <h3 className="text-xl font-bold mb-4">{t('merchantQ')}</h3>
-                        <p className="text-white/60 mb-6">{t('merchantDesc')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-6">{t('merchantDesc')}</p>
                         <Link
                             href="/partner/apply"
                             className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all"
@@ -117,7 +117,7 @@ export default function ContactPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         </div>
     );

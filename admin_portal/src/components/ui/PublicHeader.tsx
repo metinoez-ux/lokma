@@ -29,6 +29,7 @@ const languages = [
     { code: 'fr', name: 'Français', nativeName: 'Français', flag: '🇫🇷' },
     { code: 'it', name: 'Italiano', nativeName: 'Italiano', flag: '🇮🇹' },
     { code: 'es', name: 'Español', nativeName: 'Español', flag: '🇪🇸' },
+    { code: 'nl', name: 'Nederlands', nativeName: 'Nederlands', flag: '🇳🇱' },
 ];
 
 export default function PublicHeader({ themeAware = false }: { themeAware?: boolean }) {
@@ -40,7 +41,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const countryRef = useRef<HTMLDivElement>(null);
     const langRef = useRef<HTMLDivElement>(null);
 
-    // Sync language with next-intl active locale
+    // Sync language with next-intl active locale - URL is the source of truth
     const activeLocale = useLocale();
     const [currentLang, setCurrentLang] = useState(activeLocale);
     const [currentCountry, setCurrentCountry] = useState('DE');
@@ -51,6 +52,11 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
 
     // Get translations
     const t = useTranslations('Landing');
+
+    // Always sync currentLang with the active URL locale
+    useEffect(() => {
+        setCurrentLang(activeLocale);
+    }, [activeLocale]);
 
     // Click outside handler for dropdowns
     useEffect(() => {
@@ -88,11 +94,9 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
             }
         };
 
-        // Check localStorage first
-        const savedLang = localStorage.getItem('lokma_lang');
+        // Check localStorage for country only (language is from URL)
         const savedCountry = localStorage.getItem('lokma_country');
 
-        if (savedLang) setCurrentLang(savedLang);
         if (savedCountry) {
             setCurrentCountry(savedCountry);
             setIsLoading(false);
@@ -142,7 +146,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                 <Link href="/" className="flex items-center gap-3">
                     {/* If themeAware, we might want to swap logo based on theme, but for now we keep the same logo but use filters in dark mode if needed. Actually lokma_logo_wide has white text? Let's check. Assuming lokma_logo_wide has white text, in light mode we might need to filter it. Or keep it as is. Let's use it as is for now. */}
                     <div className={`${themeAware ? 'dark:block' : 'block'}`}>
-                        <Image src="/lokma_logo_wide.png" alt="LOKMA" width={140} height={36} className="object-contain" />
+                        <Image src="/lokma_logo_red_web.png" alt="LOKMA" width={140} height={36} className="object-contain" />
                     </div>
                 </Link>
 

@@ -61,6 +61,7 @@ class UserService {
         customId: customId,
         email: firebaseUser.email ?? '',
         displayName: firebaseUser.displayName,
+        phoneNumber: firebaseUser.phoneNumber,
         createdAt: DateTime.now(),
       );
 
@@ -68,6 +69,7 @@ class UserService {
       return newUser;
     }
   }
+
 
   Future<AppUser?> getUser(String uid) async {
     try {

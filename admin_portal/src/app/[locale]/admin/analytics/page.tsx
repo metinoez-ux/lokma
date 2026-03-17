@@ -291,16 +291,19 @@ export default function UnifiedAnalyticsPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">📊 Platform Analitik</h1>
+                        <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
                         <p className="text-gray-400 text-sm">
-                            {lastUpdate && `Son güncelleme: ${lastUpdate.toLocaleTimeString('tr-TR')}`}
+                            {lastUpdate && `${t('son_guncelleme')}: ${lastUpdate.toLocaleTimeString()}`}
                         </p>
                     </div>
                     <button
                         onClick={() => setLastUpdate(new Date())}
-                        className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium"
+                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-2 text-sm"
                     >
-                        🔄 Yenile
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {t('yenile') || 'Yenile'}
                     </button>
                 </div>
 
@@ -396,7 +399,7 @@ export default function UnifiedAnalyticsPage() {
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-3">
                         <p className="text-purple-400 text-xs font-medium mb-1">{t('siparis_orani')}</p>
-                        <p className="text-white text-sm font-bold">🚚 {analytics.deliveryRate}{t(t('kurye'))} {analytics.dineInRate}% Masa 🏪 {analytics.pickupRate}% Gel Al</p>
+                        <p className="text-white text-sm font-bold">{analytics.deliveryRate}% {t('kurye_label')} | {analytics.dineInRate}% {t('masa_label')} | {analytics.pickupRate}% {t('gel_al_label')}</p>
                     </div>
                 </div>
 

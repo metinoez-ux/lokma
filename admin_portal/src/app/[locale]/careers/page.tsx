@@ -84,22 +84,22 @@ export default function CareersPage() {
     const t = (k: string) => tx[k] || k;
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
                         <h1 className="text-4xl md:text-5xl font-black mb-6">{t('title')}</h1>
-                        <p className="text-xl text-white/60 max-w-2xl mx-auto">{t('subtitle')}</p>
+                        <p className="text-xl text-gray-500 dark:text-white/60 max-w-2xl mx-auto">{t('subtitle')}</p>
                     </div>
 
                     <div className="grid md:grid-cols-4 gap-6 mb-16">
                         {(['b1', 'b2', 'b3', 'b4'] as const).map((b, i) => (
-                            <div key={b} className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
+                            <div key={b} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6 text-center">
                                 <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">{benefitIcons[i]}</span>
                                 <h4 className="font-bold">{t(b)}</h4>
-                                <p className="text-sm text-white/60">{t(`${b}d`)}</p>
+                                <p className="text-sm text-gray-500 dark:text-white/60">{t(`${b}d`)}</p>
                             </div>
                         ))}
                     </div>
@@ -110,14 +110,14 @@ export default function CareersPage() {
                             <a
                                 key={index}
                                 href={`mailto:kariyer@lokma.shop?subject=${encodeURIComponent(job.title + ' ' + t('application'))}`}
-                                className="flex flex-col md:flex-row md:items-center justify-between bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all group"
+                                className="flex flex-col md:flex-row md:items-center justify-between bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all group"
                             >
                                 <div className="mb-4 md:mb-0">
                                     <h3 className="font-bold text-lg group-hover:text-[#fb335b] transition-colors">{job.title}</h3>
-                                    <p className="text-sm text-white/60">{job.department}</p>
+                                    <p className="text-sm text-gray-500 dark:text-white/60">{job.department}</p>
                                 </div>
                                 <div className="flex flex-wrap gap-3">
-                                    <span className="bg-white/10 px-3 py-1 rounded-full text-xs">{job.location}</span>
+                                    <span className="bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full text-xs">{job.location}</span>
                                     <span className="bg-[#fb335b]/20 text-[#fb335b] px-3 py-1 rounded-full text-xs">{job.type}</span>
                                 </div>
                             </a>
@@ -126,7 +126,7 @@ export default function CareersPage() {
 
                     <div className="mt-12 bg-gradient-to-br from-[#fb335b]/10 to-transparent border border-[#fb335b]/20 rounded-2xl p-8 text-center">
                         <h3 className="text-xl font-bold mb-4">{t('notFound')}</h3>
-                        <p className="text-white/60 mb-6">{t('notFoundDesc')}</p>
+                        <p className="text-gray-500 dark:text-white/60 mb-6">{t('notFoundDesc')}</p>
                         <a
                             href={`mailto:kariyer@lokma.shop?subject=${encodeURIComponent(t('sendCV'))}`}
                             className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all"
@@ -137,7 +137,7 @@ export default function CareersPage() {
                 </div>
             </main>
 
-            <PublicFooter />
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
         </div>
     );

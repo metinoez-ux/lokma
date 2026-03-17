@@ -921,6 +921,12 @@ export interface ButcherPartner {
 
     // Çalışma Saatleri (Google Maps 'weekday_text' array: ["Monday: 09:00 - 18:00", ...])
     openingHours?: string[];
+    pickupHours?: string[];
+    deliveryHours?: string[];
+    pickupStartTime?: string;
+    pickupEndTime?: string;
+    deliveryStartTime?: string;
+    deliveryEndTime?: string;
 
     // Google Places Data
     googlePlaceId?: string;

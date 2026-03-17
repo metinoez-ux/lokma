@@ -16,8 +16,32 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 
 
 
-// Dinamik rol listesi - business-types.ts'den getAllRoles() kullanılıyor
-// deprecated: adminTypeLabels - artık hardcoded değil
+// Karakter normalizasyon fonksiyonu (TR/DE ozel karakterler)
+const normalizeForSearch = (text: string): string => {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ä/g, 'a')
+        .replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g')
+        .replace(/ı/g, 'i').replace(/İ/g, 'i')
+        .replace(/ß/g, 'ss')
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim();
+};
+
+// Multi-field + Multi-term business search
+const matchesBusinessSearch = (b: { name: string; city: string; postalCode: string; address?: string; street?: string }, searchQuery: string): boolean => {
+    if (!searchQuery || searchQuery.length < 1) return false;
+    const terms = normalizeForSearch(searchQuery).split(/\s+/).filter(t => t.length > 0);
+    if (terms.length === 0) return false;
+    const searchableText = normalizeForSearch(
+        [b.name, b.city, b.postalCode, b.address || '', b.street || ''].join(' ')
+    );
+    return terms.every(term => searchableText.includes(term));
+};
+
+// Dinamik rol listesi - business-types.ts'den getAllRoles() kullaniliyor
+// deprecated: adminTypeLabels - artik hardcoded degil
 
 interface FirebaseUser {
     id: string;
@@ -198,6 +222,8 @@ export default function SuperAdminDashboard() {
 
     // New user modal states
     const [showNewUserModal, setShowNewUserModal] = useState(false);
+    const [businessSearchQuery, setBusinessSearchQuery] = useState('');
+    const [showBusinessSuggestions, setShowBusinessSuggestions] = useState(false);
     const [newUserData, setNewUserData] = useState({
         firstName: '',
         lastName: '',
@@ -212,7 +238,8 @@ export default function SuperAdminDashboard() {
         postalCode: '',
         role: 'user' as 'user' | 'staff' | 'business_admin' | 'super' | 'driver_lokma' | 'driver_business',
         sector: '' as string,
-        password: ''
+        password: '',
+        businessId: '' as string
     });
     const [creatingUser, setCreatingUser] = useState(false);
 
@@ -2345,7 +2372,7 @@ export default function SuperAdminDashboard() {
                     activeTab === 'admins' && (
                         <div className="bg-gray-800 rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold text-white">Mevcut Adminler</h2>
+                                <h2 className="text-xl font-bold text-white">{tNav('mevcutAdminler')}</h2>
                                 <button
                                     onClick={() => {
                                         // 🔧 CRITICAL FIX: Set the correct state for showNewUserModal
@@ -2406,7 +2433,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Filter Controls */}
                                 <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
-                                    <span className="text-gray-400 text-sm">Filtrele:</span>
+                                    <span className="text-gray-400 text-sm">{tNav('filtrele')}:</span>
                                     <select
                                         value={adminFilter}
                                         onChange={(e) => setAdminFilter(e.target.value as 'all' | 'business' | 'staff' | 'super')}
@@ -2414,10 +2441,10 @@ export default function SuperAdminDashboard() {
                                     >
                                         <option value="all">{tNav('tumu')}</option>
                                         <option value="business">🎫 {t('businessAdmins')}</option>
-                                        <option value="staff">👷 Personel</option>
+                                        <option value="staff">👷 {tNav('personel_label')}</option>
                                         {/* 🔒 SECURITY: Super Admin filter only visible to super admins */}
                                         {admin?.adminType === 'super' && (
-                                            <option value="super">👑 Super Admin</option>
+                                            <option value="super">👑 {tNav('superAdmin_label')}</option>
                                         )}
                                     </select>
                                     <span className="text-gray-400 text-sm ml-auto">
@@ -2441,8 +2468,8 @@ export default function SuperAdminDashboard() {
                                 <thead className="text-gray-400 border-b border-gray-700">
                                     <tr>
                                         <th className="pb-3 py-2">{tNav('kullanici')}</th>
-                                        <th className="pb-3 py-2">Rol</th>
-                                        <th className="pb-3 py-2">Konum</th>
+                                        <th className="pb-3 py-2">{tNav('rol')}</th>
+                                        <th className="pb-3 py-2">{tNav('konum')}</th>
                                         <th className="pb-3 py-2">{tNav('durum')}</th>
                                         <th className="pb-3 py-2">{tNav('i_slemler')}</th>
                                     </tr>
@@ -2695,11 +2722,7 @@ export default function SuperAdminDashboard() {
                                         {assignLocation && (
                                             <div className="mt-2 max-h-40 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
                                                 {butcherList
-                                                    .filter(b =>
-                                                        b.name.toLowerCase().includes(assignLocation.toLowerCase()) ||
-                                                        b.city.toLowerCase().includes(assignLocation.toLowerCase()) ||
-                                                        b.postalCode.includes(assignLocation)
-                                                    )
+                                                    .filter(b => matchesBusinessSearch(b, assignLocation))
                                                     .slice(0, 5)
                                                     .map(b => (
                                                         <button
@@ -2717,11 +2740,7 @@ export default function SuperAdminDashboard() {
                                                         </button>
                                                     ))
                                                 }
-                                                {butcherList.filter(b =>
-                                                    b.name.toLowerCase().includes(assignLocation.toLowerCase()) ||
-                                                    b.city.toLowerCase().includes(assignLocation.toLowerCase()) ||
-                                                    b.postalCode.includes(assignLocation)
-                                                ).length === 0 && (
+                                                {butcherList.filter(b => matchesBusinessSearch(b, assignLocation)).length === 0 && (
                                                         <p className="px-4 py-3 text-gray-400 text-sm">{tNav('i_sletme_bulunamadi')}</p>
                                                     )}
                                             </div>
@@ -2881,11 +2900,8 @@ export default function SuperAdminDashboard() {
                                                         {businessSearchFilter.length >= 3 && (
                                                             <div className="mt-2 max-h-48 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
                                                                 {(() => {
-                                                                    const searchLower = businessSearchFilter.toLowerCase();
                                                                     const filtered = butcherList.filter(b =>
-                                                                        b.name.toLowerCase().includes(searchLower) ||
-                                                                        b.city.toLowerCase().includes(searchLower) ||
-                                                                        b.postalCode?.includes(searchLower)
+                                                                        matchesBusinessSearch(b, businessSearchFilter)
                                                                     ).slice(0, 15);
 
                                                                     if (filtered.length === 0) {
@@ -3381,20 +3397,14 @@ export default function SuperAdminDashboard() {
                                                             title={tNav('i_sletme_secin')}
                                                             size={Math.min(butcherList.filter(b => {
                                                                 if (!businessSearchFilter.trim()) return true;
-                                                                const search = businessSearchFilter.toLowerCase();
-                                                                return b.name.toLowerCase().includes(search) ||
-                                                                    b.city.toLowerCase().includes(search) ||
-                                                                    b.postalCode.toLowerCase().includes(search);
+                                                                return matchesBusinessSearch(b, businessSearchFilter);
                                                             }).length + 1, 6)}
                                                         >
                                                             <option value="">{tNav('i_sletme_secin')}</option>
                                                             {butcherList
                                                                 .filter(b => {
                                                                     if (!businessSearchFilter.trim()) return true;
-                                                                    const search = businessSearchFilter.toLowerCase();
-                                                                    return b.name.toLowerCase().includes(search) ||
-                                                                        b.city.toLowerCase().includes(search) ||
-                                                                        b.postalCode.toLowerCase().includes(search);
+                                                                    return matchesBusinessSearch(b, businessSearchFilter);
                                                                 })
                                                                 .map((b) => (
                                                                     <option key={b.id} value={b.id}>
@@ -3496,7 +3506,7 @@ export default function SuperAdminDashboard() {
                                 {/* Personal Info */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Ad *</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{tNav('adi')} *</label>
                                         <input
                                             type="text"
                                             value={newUserData.firstName}
@@ -3506,7 +3516,7 @@ export default function SuperAdminDashboard() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Soyad *</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{tNav('soyadi')} *</label>
                                         <input
                                             type="text"
                                             value={newUserData.lastName}
@@ -3519,7 +3529,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Contact Info */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">E-posta *</label>
+                                    <label className="block text-gray-400 text-sm mb-1">{tNav('e_posta')} *</label>
                                     <input
                                         type="email"
                                         value={newUserData.email}
@@ -3531,7 +3541,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Phone with Country Code */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">📞 Telefon</label>
+                                    <label className="block text-gray-400 text-sm mb-1">{tNav('telefon')}</label>
                                     <div className="flex gap-2">
                                         <select
                                             value={newUserData.dialCode}
@@ -3556,14 +3566,14 @@ export default function SuperAdminDashboard() {
 
                                 {/* Address Section */}
                                 <div className="border-t border-gray-700 pt-4 mt-2">
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                                        📍 Adres Bilgileri
+                                    <h4 className="text-white font-semibold mb-3">
+                                        {tNav('adres_bilgileri') || 'Adressinformationen'}
                                     </h4>
                                     <div className="space-y-3">
                                         {/* Street with Google Places */}
                                         <div className="grid grid-cols-3 gap-2">
                                             <div className="col-span-2 relative">
-                                                <label className="block text-gray-400 text-xs mb-1">Sokak</label>
+                                                <label className="block text-gray-400 text-xs mb-1">{tNav('sokak') || 'Straße'}</label>
                                                 <input
                                                     type="text"
                                                     id="newUserStreetInput"
@@ -3599,7 +3609,7 @@ export default function SuperAdminDashboard() {
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-xs mb-1">Bina No</label>
+                                                <label className="block text-gray-400 text-xs mb-1">{tNav('bina_no') || 'Hausnr.'}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.houseNumber}
@@ -3652,7 +3662,7 @@ export default function SuperAdminDashboard() {
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-xs mb-1">Posta Kodu</label>
+                                                <label className="block text-gray-400 text-xs mb-1">{tNav('posta_kodu')}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.postalCode}
@@ -3677,7 +3687,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Role Selection */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">Rol *</label>
+                                    <label className="block text-gray-400 text-sm mb-1">{tNav('rol')} *</label>
                                     <select
                                         value={newUserData.role}
                                         onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as any, sector: '' })}
@@ -3687,7 +3697,7 @@ export default function SuperAdminDashboard() {
                                         {admin?.adminType === 'super' && (
                                             <option value="user">{tNav('normal_kullanici')}</option>
                                         )}
-                                        <option value="staff">👷 Personel</option>
+                                        <option value="staff">{tNav('personel')}</option>
                                         <option value="business_admin">{tNav('i_sletme_admin')}</option>
                                         <option value="driver_lokma">{tNav('lokma_filosu_surucusu')}</option>
                                         <option value="driver_business">{tNav('i_sletme_surucusu')}</option>
@@ -3714,7 +3724,7 @@ export default function SuperAdminDashboard() {
                                                 if (admin?.adminType === 'super') {
                                                     return getModuleBusinessTypes().map(bt => (
                                                         <option key={bt.value} value={bt.value}>
-                                                            {bt.icon} {bt.label}
+                                                            {bt.label}
                                                         </option>
                                                     ));
                                                 }
@@ -3727,7 +3737,7 @@ export default function SuperAdminDashboard() {
                                                     .filter(bt => bt.value === sectorMatch || currentAdminType === bt.value)
                                                     .map(bt => (
                                                         <option key={bt.value} value={bt.value}>
-                                                            {bt.icon} {bt.label}
+                                                            {bt.label}
                                                         </option>
                                                     ));
                                             })()}
@@ -3735,16 +3745,91 @@ export default function SuperAdminDashboard() {
                                     </div>
                                 )}
 
+                                {/* İşletme Seçimi - Sadece Super Admin için, eğer role staff veya business_admin ise */}
+                                {admin?.adminType === 'super' && (newUserData.role === 'staff' || newUserData.role === 'business_admin') && (
+                                    <div className="relative">
+                                        <label className="block text-gray-400 text-sm mb-1">{tNav('i_sletme_secin')}</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={businessSearchQuery}
+                                                onChange={(e) => {
+                                                    setBusinessSearchQuery(e.target.value);
+                                                    setShowBusinessSuggestions(true);
+                                                }}
+                                                onFocus={() => setShowBusinessSuggestions(true)}
+                                                onBlur={() => setTimeout(() => setShowBusinessSuggestions(false), 200)}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                placeholder={tNav('i_sletme_secin')}
+                                            />
+                                            {/* Clear selection button */}
+                                            {newUserData.businessId && (
+                                                <button
+                                                    onClick={() => {
+                                                        setNewUserData(prev => ({ ...prev, businessId: '' }));
+                                                        setBusinessSearchQuery('');
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                                    title={tNav('iptal')}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Dropdown suggestions */}
+                                        {showBusinessSuggestions && (
+                                            <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                {butcherList
+                                                    .filter(b => (!newUserData.sector || (b.types && b.types.includes(newUserData.sector))) &&
+                                                                 matchesBusinessSearch(b, businessSearchQuery))
+                                                    .map(b => (
+                                                        <div
+                                                            key={b.id}
+                                                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm"
+                                                            onClick={() => {
+                                                                setNewUserData(prev => ({ ...prev, businessId: b.id }));
+                                                                setBusinessSearchQuery(`${b.name} - ${b.city || ''}`);
+                                                                setShowBusinessSuggestions(false);
+                                                            }}
+                                                        >
+                                                            {b.name} - {b.city || ''}
+                                                        </div>
+                                                    ))}
+                                                {butcherList
+                                                    .filter(b => (!newUserData.sector || (b.types && b.types.includes(newUserData.sector))) &&
+                                                                 matchesBusinessSearch(b, businessSearchQuery)).length === 0 && (
+                                                        <div className="px-3 py-2 text-gray-400 text-sm">Sonuç bulunamadı</div>
+                                                    )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Temporary Password */}
                                 <div>
                                     <label className="block text-gray-400 text-sm mb-1">{tNav('gecici_sifre')}</label>
-                                    <input
-                                        type="text"
-                                        value={newUserData.password}
-                                        onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                        placeholder={tNav('gecici_sifre_en_az_6_karakter')}
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newUserData.password}
+                                            onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                                            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                            placeholder={tNav('gecici_sifre_en_az_6_karakter')}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+                                                let pw = '';
+                                                for (let i = 0; i < 12; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+                                                setNewUserData({ ...newUserData, password: pw });
+                                            }}
+                                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm font-medium whitespace-nowrap"
+                                        >
+                                            {tNav('guclu_sifre_olustur') || 'Generieren'}
+                                        </button>
+                                    </div>
                                     <p className="text-xs text-gray-500 mt-1">{tNav('kullanici_ilk_giriste_sifresini_degistir')}</p>
                                 </div>
                             </div>
@@ -3754,15 +3839,16 @@ export default function SuperAdminDashboard() {
                                 <button
                                     onClick={() => {
                                         setShowNewUserModal(false);
+                                        setBusinessSearchQuery('');
                                         setNewUserData({
                                             firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
                                             address: '', houseNumber: '', addressLine2: '', city: '', country: 'Almanya', postalCode: '',
-                                            role: 'user', sector: '', password: ''
+                                            role: 'user', sector: '', password: '', businessId: ''
                                         });
                                     }}
                                     className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition"
                                 >
-                                    İptal
+                                    {tNav('iptal')}
                                 </button>
                                 <button
                                     onClick={async () => {
@@ -3779,6 +3865,10 @@ export default function SuperAdminDashboard() {
                                             showToast(tNav('lutfen_sektor_secin'), 'error');
                                             return;
                                         }
+                                        if (admin?.adminType === 'super' && (newUserData.role === 'staff' || newUserData.role === 'business_admin') && !newUserData.businessId) {
+                                            showToast('İşletme admini veya personeli eklerken lütfen işletme seçin.', 'error');
+                                            return;
+                                        }
 
                                         setCreatingUser(true);
                                         try {
@@ -3786,12 +3876,16 @@ export default function SuperAdminDashboard() {
                                             // Business admins should auto-use their own business ID when creating staff
                                             const needsBusinessId = newUserData.role === 'staff' || newUserData.role === 'business_admin';
 
+                                            const selectedBusiness = butcherList.find(b => b.id === newUserData.businessId);
+
                                             // Priority order for business ID lookup:
-                                            // 1. businessId (NEW - universal field, sector-agnostic)
-                                            // 2. butcherId (legacy - kasap)
-                                            // 3. restaurantId (legacy - restoran)
-                                            // 4. admin.id (fallback - always exists)
+                                            // 1. Selected business ID (For Super Admins)
+                                            // 2. businessId (NEW - universal field, sector-agnostic)
+                                            // 3. butcherId (legacy - kasap)
+                                            // 4. restaurantId (legacy - restoran)
+                                            // 5. admin.id (fallback - always exists)
                                             const effectiveBusinessId = needsBusinessId ? (
+                                                ((admin?.adminType === 'super' && newUserData.businessId) ? newUserData.businessId : undefined) ||
                                                 admin?.businessId ||    // NEW universal field
                                                 admin?.butcherId ||     // Legacy kasap field
                                                 admin?.restaurantId ||  // Legacy restoran field
@@ -3799,6 +3893,7 @@ export default function SuperAdminDashboard() {
                                             ) : undefined;
 
                                             const effectiveBusinessName = needsBusinessId ? (
+                                                ((admin?.adminType === 'super' && selectedBusiness) ? selectedBusiness.name : undefined) ||
                                                 admin?.businessName ||  // NEW universal field
                                                 admin?.butcherName ||   // Legacy kasap field
                                                 admin?.restaurantName || // Legacy restoran field
@@ -3891,10 +3986,11 @@ export default function SuperAdminDashboard() {
 
                                             showToast(`Kullanıcı başarıyla oluşturuldu: ${newUserData.firstName} ${newUserData.lastName}`, 'success');
                                             setShowNewUserModal(false);
+                                            setBusinessSearchQuery('');
                                             setNewUserData({
                                                 firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
                                                 address: '', houseNumber: '', addressLine2: '', city: '', country: 'Almanya', postalCode: '',
-                                                role: 'user', sector: '', password: ''
+                                                role: 'user', sector: '', password: '', businessId: ''
                                             });
 
                                             // Refresh user list
@@ -4403,11 +4499,8 @@ export default function SuperAdminDashboard() {
                                                                             </div>
                                                                         ) : (
                                                                             (() => {
-                                                                                const searchLower = businessSearchFilter.toLowerCase();
                                                                                 const filteredBusinesses = butcherList.filter(b =>
-                                                                                    b.name.toLowerCase().includes(searchLower) ||
-                                                                                    b.city.toLowerCase().includes(searchLower) ||
-                                                                                    b.postalCode?.includes(searchLower)
+                                                                                    matchesBusinessSearch(b, businessSearchFilter)
                                                                                 ).slice(0, 20);
 
                                                                                 if (filteredBusinesses.length === 0) {

@@ -114,6 +114,18 @@ export default function LoginPage() {
         return '/admin/orders';
     };
 
+    // Helper: request fullscreen mode after login (tablet optimization)
+    const tryFullscreen = () => {
+        try {
+            const el = document.documentElement as any;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().catch(() => {});
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
+            }
+        } catch {}
+    };
+
     // Check if user is already logged in
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -144,6 +156,9 @@ export default function LoginPage() {
     }, [router]);
 
     const handleUserRedirect = async (userId: string, userEmail: string | null, userPhone?: string | null) => {
+        // Trigger fullscreen for tablet optimization
+        tryFullscreen();
+
         // Check if super admin by email whitelist
         if (isSuperAdmin(userEmail)) {
             router.push('/admin/analytics');

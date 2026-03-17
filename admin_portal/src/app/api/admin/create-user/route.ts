@@ -372,7 +372,7 @@ export async function POST(request: NextRequest) {
                         adminType === 'kermes' ? 'Kermes Admin' :
                             adminType === 'market' ? 'Market Admin' :
                                 adminType === 'market_staff' ? 'Market Personel' :
-                                    adminType === 'cicekci' ? 'Çiçekçi Admin' :
+                                    adminType === 'cicekci' ? 'Cicekci Admin' :
                                         adminType === 'super' ? 'Super Admin' :
                                             adminType?.includes('_staff') ? 'Personel' :
                                                 adminType || 'Personel';
@@ -391,96 +391,66 @@ export async function POST(request: NextRequest) {
                     // ADMIN/STAFF ROLE ASSIGNMENT EMAIL - WITH FULL ASSIGNER DETAILS
                     // ═══════════════════════════════════════════════════════════════
                     emailSubject = `${businessDisplayName} - Yeni Yetkiniz!`;
-                    emailHtml = `
-    < div style = "font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;" >
-        <div style="background: linear-gradient(135deg, #1e40af, #1e3a8a); padding: 30px; border-radius: 12px; text-align: center;" >
-            <h1 style="color: white; margin: 0; font-size: 28px;" >${businessDisplayName} </h1>
-                < p style = "color: rgba(255,255,255,0.9); margin-top: 8px;" > Yetki Bildirimi </p>
-                    </div>
-
-                    < div style = "padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;" >
-                        <h2 style="color: #1f2937; margin-top: 0;" > Merhaba ${firstName}!</h2>
-
-                            < p style = "color: #4b5563; line-height: 1.6;" >
-                                Sizi < strong style = "color: #1e40af;" > ${roleDisplayName} </strong> olarak atadık.
-                                    </p>
-
-                                    < !--Atayan Kişi Bilgileri-- >
-                                        <div style="background: linear-gradient(135deg, #fef3c7, #fef9c3); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;" >
-                                            <p style="margin: 0; color: #92400e; font-weight: bold;" >Sizi Atayan Kişi </p>
-                                                < p style = "margin: 8px 0 0 0; color: #78350f;" > <strong>İsim: </strong> ${assignerName || 'Admin'}</p >
-                                                    ${assignerRole ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Rol:</strong> ${assignerRoleDisplay}</p>` : ''}
-                                    ${assignerEmail ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>E-posta:</strong> ${assignerEmail}</p>` : ''}
-                                    ${assignerPhone ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Telefon:</strong> ${assignerPhone}</p>` : ''}
+                    emailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<div style="background: linear-gradient(135deg, #1e40af, #1e3a8a); padding: 30px; border-radius: 12px; text-align: center;">
+<h1 style="color: white; margin: 0; font-size: 28px;">${businessDisplayName}</h1>
+<p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Yetki Bildirimi</p>
 </div>
-
-    < !--Atama Detayları-- >
-        <div style="background: linear-gradient(135deg, #dbeafe, #eff6ff); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;" >
-            <p style="margin: 0; color: #1e3a8a; font-weight: bold;" >Atama Detayları </p>
-                <p style="margin: 8px 0 0 0; color: #374151;" >İşletme: <strong>${businessDisplayName} </strong></p >
-                    <p style="margin: 4px 0 0 0; color: #374151;" >Sizin Rolünüz: <strong>${roleDisplayName} </strong></p >
-                        </div>
-
-                        < !--Giriş Bilgileri-- >
-                            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;" >
-                                <p style="margin: 0; color: #1e3a8a; font-weight: bold;" >Giriş Bilgileriniz </p>
-                                    <p style="margin: 8px 0 0 0; color: #374151;" > <strong>E-posta: </strong> ${email}</p >
-                                        <p style="margin: 8px 0 0 0; color: #374151;" > <strong>Şifre: </strong> ${password}</p >
-                                            <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;" >
-                                        Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.
-                                    </p>
-    </div>
-
-    < a href = "${baseUrl}/login" style = "display: inline-block; background: #1e40af; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;" >
-                                    Panele Giriş Yap
-    </a>
-    </div>
-
-    < div style = "text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;" >
-        <p>Bu e - posta ${assignerName} tarafından LOKMA platformu üzerinden gönderilmiştir.</p>
-            <p>© 2026 LOKMA - Tüm hakları saklıdır.</p>
-                </div>
-                </div>
-                    `;
+<div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
+<h2 style="color: #1f2937; margin-top: 0;">Merhaba ${firstName}!</h2>
+<p style="color: #4b5563; line-height: 1.6;">Sizi <strong style="color: #1e40af;">${roleDisplayName}</strong> olarak atadik.</p>
+<div style="background: linear-gradient(135deg, #fef3c7, #fef9c3); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+<p style="margin: 0; color: #92400e; font-weight: bold;">Sizi Atayan Kisi</p>
+<p style="margin: 8px 0 0 0; color: #78350f;"><strong>Isim:</strong> ${assignerName || 'Admin'}</p>
+${assignerRole ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Rol:</strong> ${assignerRoleDisplay}</p>` : ''}
+${assignerEmail ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>E-posta:</strong> ${assignerEmail}</p>` : ''}
+${assignerPhone ? `<p style="margin: 4px 0 0 0; color: #78350f;"><strong>Telefon:</strong> ${assignerPhone}</p>` : ''}
+</div>
+<div style="background: linear-gradient(135deg, #dbeafe, #eff6ff); padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
+<p style="margin: 0; color: #1e3a8a; font-weight: bold;">Atama Detaylari</p>
+<p style="margin: 8px 0 0 0; color: #374151;">Isletme: <strong>${businessDisplayName}</strong></p>
+<p style="margin: 4px 0 0 0; color: #374151;">Sizin Rolunuz: <strong>${roleDisplayName}</strong></p>
+</div>
+<div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+<p style="margin: 0; color: #1e3a8a; font-weight: bold;">Giris Bilgileriniz</p>
+<p style="margin: 8px 0 0 0; color: #374151;"><strong>E-posta:</strong> ${email}</p>
+<p style="margin: 8px 0 0 0; color: #374151;"><strong>Sifre:</strong> ${password}</p>
+<p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">Guvenliginiz icin ilk giriste sifrenizi degistirmenizi oneririz.</p>
+</div>
+<a href="${baseUrl}/login" style="display: inline-block; background: #1e40af; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Panele Giris Yap</a>
+</div>
+<div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
+<p>Bu e-posta ${assignerName} tarafindan LOKMA platformu uzerinden gonderilmistir.</p>
+<p>&copy; 2026 LOKMA - Tum haklari saklidir.</p>
+</div>
+</div>`;
                 } else {
                     // ═══════════════════════════════════════════════════════════════
                     // CUSTOMER WELCOME EMAIL
                     // ═══════════════════════════════════════════════════════════════
-                    emailSubject = 'LOKMA Ailesine Hoş Geldiniz!';
-                    emailHtml = `
-                < div style = "font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;" >
-                    <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;" >
-                        <h1 style="color: white; margin: 0; font-size: 28px;" >LOKMA </h1>
-                            < p style = "color: rgba(255,255,255,0.9); margin-top: 8px;" > Taze Et, Hızlı Teslimat </p>
-                                </div>
-
-                                < div style = "padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;" >
-                                    <h2 style="color: #1f2937; margin-top: 0;" > Merhaba ${firstName}!</h2>
-
-                                        < p style = "color: #4b5563; line-height: 1.6;" >
-                                            LOKMA ailesine hoş geldiniz! Hesabınız başarıyla oluşturuldu.
-                                </p>
-
-                                                < div style = "background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;" >
-                                                    <p style="margin: 0; color: #374151;" > <strong>E-posta: </strong> ${email}</p >
-                                                        <p style="margin: 8px 0 0 0; color: #374151;" > <strong>Şifre: </strong> ${password}</p >
-                                                            <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;" >
-                                        Güvenliğiniz için ilk girişte şifrenizi değiştirmenizi öneririz.
-                                    </p>
-    </div>
-
-    < a href = "${baseUrl}/login" style = "display: inline-block; background: #dc2626; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;" >
-                                    Giriş Yap
-    </a>
-    </div>
-
-    < div style = "text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;" >
-        <p>Bu e - posta LOKMA platformu tarafından gönderilmiştir.</p>
-            <p>© 2026 LOKMA - Tüm hakları saklıdır.</p>
-                </div>
-                </div>
-                    `;
+                    emailSubject = 'LOKMA Ailesine Hos Geldiniz!';
+                    emailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; border-radius: 12px; text-align: center;">
+<h1 style="color: white; margin: 0; font-size: 28px;">LOKMA</h1>
+<p style="color: rgba(255,255,255,0.9); margin-top: 8px;">Taze Et, Hizli Teslimat</p>
+</div>
+<div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
+<h2 style="color: #1f2937; margin-top: 0;">Merhaba ${firstName}!</h2>
+<p style="color: #4b5563; line-height: 1.6;">LOKMA ailesine hos geldiniz! Hesabiniz basariyla olusturuldu.</p>
+<div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+<p style="margin: 0; color: #374151;"><strong>E-posta:</strong> ${email}</p>
+<p style="margin: 8px 0 0 0; color: #374151;"><strong>Sifre:</strong> ${password}</p>
+<p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">Guvenliginiz icin ilk giriste sifrenizi degistirmenizi oneririz.</p>
+</div>
+<a href="${baseUrl}/login" style="display: inline-block; background: #dc2626; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px;">Giris Yap</a>
+</div>
+<div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 12px;">
+<p>Bu e-posta LOKMA platformu tarafindan gonderilmistir.</p>
+<p>&copy; 2026 LOKMA - Tum haklari saklidir.</p>
+</div>
+</div>`;
                 }
+
 
                 const emailResponse = await fetch(`${baseUrl}/api/email/send`, {
                     method: 'POST',

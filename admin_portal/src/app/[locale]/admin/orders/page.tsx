@@ -5,7 +5,9 @@ import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { ORDER_STATUSES, ORDER_TYPES } from '@/hooks/useOrders';
+import { ORDER_STATUSES, ORDER_TYPES, type Order, type OrderStatus } from '@/hooks/useOrders';
+import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
+import OrderCard from '@/components/admin/OrderCard';
 
 import { useTranslations, useLocale } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
@@ -19,60 +21,8 @@ import {
 const orderStatuses = ORDER_STATUSES;
 const orderTypes = ORDER_TYPES;
 
-type OrderStatus = keyof typeof orderStatuses;
-type OrderType = keyof typeof orderTypes;
 
-interface OrderItem {
-    productId: string;
-    name: string;
-    quantity: number;
-    price: number;
-    unit?: string;
-}
 
-interface Order {
-    id: string;
-    orderNumber?: string;
-    businessId: string;
-    businessName?: string;
-    customerId?: string;
-    customerName?: string;
-    customerPhone?: string;
-    items: OrderItem[];
-    subtotal: number;
-    deliveryFee?: number;
-    total: number;
-    status: OrderStatus;
-    type: OrderType;
-    createdAt: Timestamp;
-    scheduledAt?: Timestamp;
-    eta?: Timestamp;
-    currency?: string;
-    courier?: {
-        id: string;
-        name: string;
-        phone: string;
-    };
-    address?: {
-        street?: string;
-        city?: string;
-        postalCode?: string;
-    };
-    notes?: string;
-    // Dine-in fields
-    tableNumber?: number;
-    waiterName?: string;
-    groupSessionId?: string;
-    isGroupOrder?: boolean;
-    groupParticipantCount?: number;
-    paymentStatus?: string;
-    paymentMethod?: string;
-    stripePaymentIntentId?: string;
-    // Served by waiter
-    servedByName?: string;
-    servedAt?: Timestamp;
-    isScheduledOrder?: boolean;
-}
 
 export default function OrdersPage() {
     const t = useTranslations('AdminPortal.Orders');
@@ -93,14 +43,15 @@ export default function OrdersPage() {
     const [dateFilter, setDateFilter] = useState<string>('all');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    // Cancellation modal state
-    const [showCancelModal, setShowCancelModal] = useState(false);
-    const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
-    const [cancelReason, setCancelReason] = useState('');
-
+    
     // Printer state
     const [printerSettings, setPrinterSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS);
     const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
+
+    // Cancel modal states
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+    const [cancelReason, setCancelReason] = useState('');
     const [showPrinterPanel, setShowPrinterPanel] = useState(false);
     const [testingPrint, setTestingPrint] = useState(false);
     const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
@@ -120,11 +71,7 @@ export default function OrdersPage() {
     const [retryQueueSize, setRetryQueueSize] = useState(0);
     const lastPrintSuccessRef = useRef<string | null>(null);
 
-    // Unavailable items modal state
-    const [showUnavailableModal, setShowUnavailableModal] = useState(false);
-    const [unavailableOrderId, setUnavailableOrderId] = useState<string | null>(null);
-    const [unavailableItems, setUnavailableItems] = useState<{ idx: number; name: string; quantity: number; price: number }[]>([]);
-
+    
     // KDS Checklist state
     const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
 
@@ -156,60 +103,7 @@ export default function OrdersPage() {
         }
     };
 
-    // Get checked count for an order
-    const getCheckedCount = (orderId: string, totalItems: number) => {
-        const orderChecks = checkedItems[orderId] || {};
-        return Object.values(orderChecks).filter(Boolean).length;
-    };
-
-    const allItemsChecked = (orderId: string, totalItems: number) => {
-        if (totalItems === 0) return false;
-        return getCheckedCount(orderId, totalItems) >= totalItems;
-    };
-
-    // Get unchecked (unavailable) items for an order
-    const getUncheckedItems = (orderId: string, items: any[]) => {
-        const orderChecks = checkedItems[orderId] || {};
-        return items
-            .map((item, idx) => ({ idx, name: item.productName || item.name, quantity: item.quantity, price: item.price || 0, checked: !!orderChecks[idx] }))
-            .filter(i => !i.checked);
-    };
-
-    // Get the next logical status action button config
-    const getNextStatusAction = (order: Order) => {
-        const status = order.status;
-        const totalItems = order.items?.length || 0;
-        const checkedCount = getCheckedCount(order.id, totalItems);
-        const allChecked = allItemsChecked(order.id, totalItems);
-        const hasItems = totalItems > 0;
-
-        if (['pending', 'accepted'].includes(status) && status === 'pending') {
-            if (hasItems && checkedCount > 0) {
-                if (allChecked) {
-                    return { label: t('siparisi_onayla'), action: 'accepted' as OrderStatus, style: 'bg-blue-600 hover:bg-blue-700', hasUnavailable: false };
-                } else {
-                    return { label: t('eksik_urunlerle_onayla'), action: 'accepted' as OrderStatus, style: 'bg-yellow-600 hover:bg-yellow-700', hasUnavailable: true };
-                }
-            }
-            return null; // No action yet — need to check some items first
-        }
-
-        if (status === 'accepted') {
-            return { label: t('hazirlamaya_basla'), action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: false };
-        }
-
-        if (status === 'preparing') {
-            return { label: t('siparis_hazir'), action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
-        }
-
-        // For dine-in ready orders, mark as delivered (= completed)
-        if (status === 'ready' && order.type === 'dine_in') {
-            return { label: t('action_served'), action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
-        }
-
-        return null; // No action for ready (non-dine-in), onTheWay, delivered, cancelled
-    };
-
+    
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
         name.toLowerCase().includes(businessSearch.toLowerCase())
@@ -817,9 +711,30 @@ export default function OrdersPage() {
     // Helper: determine if an order is a future pre-order (scheduled >30 min from now)
     const isPreOrder = (order: Order): boolean => {
         if (!order.scheduledAt) return false;
-        const scheduledTime = order.scheduledAt.toDate().getTime();
-        const thirtyMinFromNow = Date.now() + 30 * 60 * 1000;
-        return scheduledTime > thirtyMinFromNow;
+        try {
+            const scheduledTime = typeof order.scheduledAt.toDate === 'function'
+                ? order.scheduledAt.toDate().getTime()
+                : new Date(order.scheduledAt as any).getTime();
+
+            if (isNaN(scheduledTime)) return false;
+
+            // Ignore pre-orders created more than 2 days ago to prevent old orders from sticking at the top
+            if (order.createdAt) {
+                const createdTime = typeof order.createdAt.toDate === 'function'
+                    ? order.createdAt.toDate().getTime()
+                    : new Date(order.createdAt as any).getTime();
+                if (!isNaN(createdTime)) {
+                    const daysOld = (Date.now() - createdTime) / (1000 * 60 * 60 * 24);
+                    if (daysOld > 2) return false;
+                }
+            }
+
+            const thirtyMinFromNow = Date.now() + 30 * 60 * 1000;
+            return scheduledTime > thirtyMinFromNow;
+        } catch (err) {
+            console.error("Error parsing scheduledAt for order", order.id, err);
+            return false;
+        }
     };
 
     // Group orders by status for kanban view (using canonical statuses)
@@ -1058,30 +973,24 @@ export default function OrdersPage() {
         }
     };
 
-    // Handle cancellation with reason
-    const handleCancelConfirm = async () => {
-        if (!cancelOrderId || !cancelReason.trim()) {
-            showToast(t('lutfen_iptal_sebebi_girin'), 'error');
-            return;
-        }
-        await updateOrderStatus(cancelOrderId, 'cancelled', cancelReason.trim());
-        setShowCancelModal(false);
-        setCancelOrderId(null);
-        setCancelReason('');
-    };
-
+    
 
 
     // Format date
-    const formatDate = (timestamp: Timestamp | undefined) => {
+    const formatDate = (timestamp: any) => {
         if (!timestamp) return '-';
-        const date = timestamp.toDate();
-        return date.toLocaleString(dateLocale, {
-            day: '2-digit',
-            month: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            const date = typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp);
+            if (isNaN(date.getTime())) return '-';
+            return date.toLocaleString(dateLocale, {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return '-';
+        }
     };
 
     // Use global formatCurrency
@@ -1238,42 +1147,43 @@ export default function OrdersPage() {
                         </div>
                     </div>
 
-                    {/* Printer Toggle + Pause Pills + Quick Stats */}
-                    <div className="flex items-center gap-3 shrink-0">
-                        {/* Printer Toggle with Health Status */}
-                        <button
-                            onClick={() => setShowPrinterPanel(!showPrinterPanel)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 ${
-                                !printerSettings.enabled || !printerSettings.printerIp
-                                    ? 'bg-gray-700 border border-gray-600 text-gray-400'
-                                    : printerHealth.status === 'online'
-                                    ? 'bg-green-600/20 border border-green-500/50 text-green-400'
-                                    : printerHealth.status === 'offline'
-                                    ? 'bg-red-600/20 border border-red-500/50 text-red-400 animate-pulse'
-                                    : printerHealth.status === 'checking'
-                                    ? 'bg-yellow-600/20 border border-yellow-500/50 text-yellow-400'
-                                    : 'bg-gray-700 border border-gray-600 text-gray-400'
-                            }`}
-                            title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
-                        >
-                            {/* Health Status Dot */}
-                            <span className={`w-2 h-2 rounded-full inline-block ${
-                                !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-500' :
-                                printerHealth.status === 'online' ? 'bg-green-400' :
-                                printerHealth.status === 'offline' ? 'bg-red-500 animate-ping' :
-                                printerHealth.status === 'checking' ? 'bg-yellow-400 animate-pulse' :
-                                'bg-gray-500'
-                            }`} />
-                            🖨️ {!printerSettings.enabled ? 'Drucker' : printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Aktiv'}
-                            {/* Retry Queue Badge */}
-                            {retryQueueSize > 0 && (
-                                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                                    {retryQueueSize}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
+                    {/* Printer Toggle + Pause Pills */}
+                    <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
+                        {/* Printer Toggle Pill (Hidden for non-super admins temporarily) */}
+                        {admin?.adminType === 'super' && (
+                            <button
+                                onClick={() => setShowPrinterPanel(!showPrinterPanel)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${
+                                    !printerSettings.enabled || !printerSettings.printerIp
+                                        ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300 hover:from-gray-500 hover:to-gray-600'
+                                        : printerHealth.status === 'online'
+                                        ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500'
+                                        : printerHealth.status === 'offline'
+                                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white ring-2 ring-red-400/50 animate-pulse'
+                                        : printerHealth.status === 'checking'
+                                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-400 hover:to-yellow-500'
+                                        : 'bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300'
+                                }`}
+                                title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
+                            >
+                                {/* Health Status Dot */}
+                                <span className={`w-2 h-2 rounded-full inline-block shadow-sm ${
+                                    !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-400' :
+                                    printerHealth.status === 'online' ? 'bg-green-200' :
+                                    printerHealth.status === 'offline' ? 'bg-red-200 animate-ping' :
+                                    printerHealth.status === 'checking' ? 'bg-yellow-200 animate-pulse' :
+                                    'bg-gray-400'
+                                }`} />
+                                <span>🖨️ {!printerSettings.enabled ? 'Drucker' : printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Aktiv'}</span>
+                                {/* Retry Queue Badge */}
+                                {retryQueueSize > 0 && (
+                                    <span className="ml-1 bg-red-800 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center shadow-inner">
+                                        {retryQueueSize}
+                                    </span>
+                                )}
+                            </button>
+                        )}
+
                         {/* ─── Pause Pill Buttons (only when business selected) ─── */}
                         {businessFilter !== 'all' && (
                             <div className="flex items-center gap-2">
@@ -1705,653 +1615,22 @@ export default function OrdersPage() {
 
             {/* Order Detail Modal */}
             {selectedOrder && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">
-                                📦 {t('modal.order')} #{selectedOrder.orderNumber || selectedOrder.id.slice(0, 6).toUpperCase()}
-                            </h2>
-                            <button
-                                onClick={() => setSelectedOrder(null)}
-                                className="text-gray-400 hover:text-white"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            {/* Status */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('modal.status')}</span>
-                                <span className={`px-3 py-1 rounded-full text-sm bg-${orderStatuses[selectedOrder.status].color}-600/20 text-${orderStatuses[selectedOrder.status].color}-400`}>
-                                    {t(orderStatuses[selectedOrder.status]?.labelKey || 'status_pending')}
-                                </span>
-                            </div>
-
-                            {/* Business */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('modal.business')}</span>
-                                <Link href={`/admin/butchers/${selectedOrder.businessId}`} className="text-blue-400 hover:underline">
-                                    {businesses[selectedOrder.businessId] || selectedOrder.businessId}
-                                </Link>
-                            </div>
-
-                            {/* Type */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('modal.type')}</span>
-                                <span className="text-white">
-                                    {t(orderTypes[selectedOrder.type]?.labelKey || 'type_pickup')}
-                                </span>
-                            </div>
-
-                            {/* Scheduled Pickup Time (Pre-order indicator) */}
-                            {selectedOrder.scheduledAt && (() => {
-                                const d = selectedOrder.scheduledAt!.toDate();
-                                const isFuture = d.getTime() > Date.now() + 30 * 60 * 1000;
-                                return (
-                                    <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
-                                        <span className={isFuture ? 'text-purple-300 font-medium' : 'text-gray-400'}>
-                                            {isFuture ? `🕐 ${t('scheduledPickup')}` : t('pickupTime')}
-                                        </span>
-                                        <span className={isFuture ? 'text-purple-200 font-bold' : 'text-white'}>
-                                            {d.toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                );
-                            })()}
-
-                            {/* Dine-in Info */}
-                            {selectedOrder.type === 'dine_in' && (
-                                <div className="bg-amber-600/10 border border-amber-500/30 rounded-xl p-4 space-y-3">
-                                    <h4 className="text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ {t('modal.dineInDetail')}</h4>
-                                    {selectedOrder.tableNumber && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-gray-400">{t('modal.table')}</span>
-                                            <span className="text-white font-bold text-lg">#{selectedOrder.tableNumber}</span>
-                                        </div>
-                                    )}
-                                    {selectedOrder.waiterName && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-gray-400">{t('modal.waiter')}</span>
-                                            <span className="text-white">{selectedOrder.waiterName}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-400">{t('modal.payment')}</span>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'paid'
-                                            ? 'bg-green-600/20 text-green-400'
-                                            : 'bg-red-600/20 text-red-400'
-                                            }`}>
-                                            {selectedOrder.paymentStatus === 'paid'
-                                                ? `✅ ${t('modal.paid')}${selectedOrder.paymentMethod === 'card' ? ` (${t('modal.card')})` : selectedOrder.paymentMethod === 'cash' ? ` (${t('modal.cash')})` : ''}`
-                                                : `⏳ ${t('modal.unpaid')}`}
-                                        </span>
-                                    </div>
-                                    {selectedOrder.servedByName && (
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-gray-400">{t('modal.servedBy')}</span>
-                                            <span className="text-teal-400 font-medium">🍽️ {selectedOrder.servedByName}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Customer */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('modal.customer')}</span>
-                                <div className="text-right">
-                                    <p className="text-white">{selectedOrder.customerName || t('modal.guest')}</p>
-                                    {selectedOrder.customerPhone && (
-                                        <a href={`tel:${selectedOrder.customerPhone}`} className="text-blue-400 text-sm">
-                                            {selectedOrder.customerPhone}
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Address */}
-                            {selectedOrder.address && (
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">{t('modal.address')}</span>
-                                    <div className="text-right text-white text-sm">
-                                        <p>{selectedOrder.address.street}</p>
-                                        <p>{selectedOrder.address.postalCode} {selectedOrder.address.city}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Items */}
-                            <div className="border-t border-gray-700 pt-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-white font-medium">{t('modal.products')}</h4>
-                                    {selectedOrder.items?.length > 0 && (
-                                        <span className={`text-xs px-2 py-0.5 rounded-full ${allItemsChecked(selectedOrder.id, selectedOrder.items.length)
-                                            ? 'bg-green-600/30 text-green-400'
-                                            : 'bg-gray-700 text-gray-400'
-                                            }`}>
-                                            ✓ {getCheckedCount(selectedOrder.id, selectedOrder.items.length)}/{selectedOrder.items.length}
-                                        </span>
-                                    )}
-                                </div>
-                                {/* Group Order Kitchen Summary */}
-                                {selectedOrder.isGroupOrder && selectedOrder.items?.length > 0 && (
-                                    <div className="mb-4">
-                                        <h5 className="text-amber-400 font-medium text-sm mb-2">👨‍🍳 {t('modal.kitchenSummary')}</h5>
-                                        <div className="bg-gray-800 rounded-lg p-3 space-y-1 text-sm text-gray-200">
-                                            {Object.values(
-                                                selectedOrder.items.reduce((acc: any, item: any) => {
-                                                    const opts = (item.selectedOptions || []).map((o: any) => o.optionName || o.name).join(', ');
-                                                    const key = `${item.productId}-${opts}`;
-                                                    if (!acc[key]) {
-                                                        acc[key] = { name: item.productName || item.name, quantity: 0, opts: item.selectedOptions };
-                                                    }
-                                                    acc[key].quantity += (item.quantity || 1);
-                                                    return acc;
-                                                }, {})
-                                            ).map((aggr: any, idx: number) => (
-                                                <div key={idx}>
-                                                    <span className="font-bold text-white">{aggr.quantity}x</span> {aggr.name}
-                                                    {aggr.opts && aggr.opts.length > 0 && (
-                                                        <span className="text-gray-400 ml-2 text-xs">({aggr.opts.map((o: any) => o.optionName || o.name).join(', ')})</span>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {selectedOrder.isGroupOrder && (
-                                    <h5 className="text-teal-400 font-medium text-sm mt-4 mb-2">🍽️ {t('modal.participantBreakdown')}</h5>
-                                )}
-
-                                <div className="space-y-4">
-                                    {/* Render items (grouped by participant if group order, otherwise flat) */}
-                                    {(() => {
-                                        const renderItem = (item: any, originalIdx: number) => {
-                                            const isChecked = checkedItems[selectedOrder.id]?.[originalIdx] || false;
-                                            const posNum = item.positionNumber || (originalIdx + 1);
-                                            return (
-                                                <div key={originalIdx} className={`rounded-lg px-2 py-1.5 transition-all mb-1 ${isChecked ? 'bg-green-600/10' : 'hover:bg-gray-700/50'}`}>
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <button
-                                                            onClick={() => toggleItemChecked(selectedOrder.id, originalIdx)}
-                                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${isChecked
-                                                                ? 'bg-green-500 border-green-500 text-white'
-                                                                : 'border-gray-500 hover:border-green-400'
-                                                                }`}
-                                                        >
-                                                            {isChecked && <span className="text-xs">✓</span>}
-                                                        </button>
-                                                        <span className="bg-amber-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
-                                                        {/* 🥤 Free Drink Badge */}
-                                                        {item.isFreeDrink && (
-                                                            <span className="bg-emerald-500 text-white text-[10px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 tracking-wide">{t('free')}</span>
-                                                        )}
-                                                        <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : item.isFreeDrink ? 'text-emerald-300' : 'text-gray-300'}`}>
-                                                            {item.quantity}x {item.productName || item.name}
-                                                        </span>
-                                                        <span className={`${isChecked ? 'text-green-400 opacity-70' : item.isFreeDrink ? 'text-emerald-400' : 'text-white'}`}>
-                                                            {item.isFreeDrink ? (
-                                                                <span className="flex items-center gap-1">
-                                                                    <span className="line-through text-gray-500 text-xs">{formatCurrency(item.originalPrice || item.unitPrice || 0, selectedOrder?.currency)}</span>
-                                                                    <span className="text-emerald-400 font-bold">0,00 €</span>
-                                                                </span>
-                                                            ) : (
-                                                                formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)), selectedOrder?.currency)
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                    {/* Show selected options */}
-                                                    {item.selectedOptions && item.selectedOptions.length > 0 && (
-                                                        <div className="pl-14 space-y-0.5 mt-0.5">
-                                                            {item.selectedOptions.map((opt: any, optIdx: number) => (
-                                                                <div key={optIdx} className="flex justify-between text-xs">
-                                                                    <span className={`${isChecked ? 'text-green-300/50 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
-                                                                    {(opt.priceModifier || opt.price) ? (
-                                                                        <span className={`${isChecked ? 'text-green-400/50' : 'text-purple-400'}`}>+{formatCurrency(opt.priceModifier || opt.price, selectedOrder?.currency)}</span>
-                                                                    ) : null}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                    {/* Show item note */}
-                                                    {item.itemNote && (
-                                                        <div className="pl-14 mt-0.5">
-                                                            <span className="text-xs text-amber-300">📝 {item.itemNote}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        };
-
-                                        if (selectedOrder.isGroupOrder) {
-                                            // Group by participantName
-                                            const groupedByParticipant: Record<string, { item: any, index: number }[]> = {};
-                                            selectedOrder.items?.forEach((item: any, idx: number) => {
-                                                const pName = item.participantName || t('modal.guest');
-                                                if (!groupedByParticipant[pName]) groupedByParticipant[pName] = [];
-                                                groupedByParticipant[pName].push({ item, index: idx });
-                                            });
-
-                                            return Object.entries(groupedByParticipant).map(([pName, items]) => (
-                                                <div key={pName} className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-2">
-                                                    <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-gray-700/50 rounded-lg">
-                                                        <span className="text-purple-400 text-xs">👤</span>
-                                                        <span className="text-white text-sm font-medium">{pName}</span>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        {items.map(info => renderItem(info.item, info.index))}
-                                                    </div>
-                                                </div>
-                                            ));
-                                        }
-
-                                        // Regular order
-                                        return (
-                                            <div className="space-y-1">
-                                                {selectedOrder.items?.map((item: any, idx: number) => renderItem(item, idx))}
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                                {/* Step-by-step status transition button */}
-                                {(() => {
-                                    const action = getNextStatusAction(selectedOrder);
-                                    if (!action) return null;
-
-                                    const handleClick = () => {
-                                        if (action.hasUnavailable) {
-                                            // Show unavailable items confirmation modal
-                                            const unchecked = getUncheckedItems(selectedOrder.id, selectedOrder.items || []);
-                                            setUnavailableItems(unchecked);
-                                            setUnavailableOrderId(selectedOrder.id);
-                                            setShowUnavailableModal(true);
-                                        } else {
-                                            updateOrderStatus(selectedOrder.id, action.action);
-                                        }
-                                    };
-
-                                    return (
-                                        <button
-                                            onClick={handleClick}
-                                            className={`w-full mt-3 px-4 py-3 text-white rounded-lg transition flex items-center justify-center gap-2 font-medium ${action.style} ${action.hasUnavailable ? '' : 'animate-pulse'}`}
-                                        >
-                                            {action.label}
-                                        </button>
-                                    );
-                                })()}
-                            </div>
-
-                            {/* Totals */}
-                            <div className="border-t border-gray-700 pt-4 space-y-2">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">{t('modal.subtotal')}</span>
-                                    <span className="text-white">{formatCurrency(selectedOrder.subtotal || 0, selectedOrder.currency)}</span>
-                                </div>
-                                {(selectedOrder.deliveryFee ?? 0) > 0 && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-400">{t('modal.deliveryFee')}</span>
-                                        <span className="text-white">{formatCurrency(selectedOrder.deliveryFee || 0, selectedOrder.currency)}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-lg font-bold">
-                                    <span className="text-white">{t('modal.total')}</span>
-                                    <span className="text-green-400">{formatCurrency(selectedOrder.total || 0, selectedOrder.currency)}</span>
-                                </div>
-                            </div>
-
-                            {/* Notes */}
-                            {selectedOrder.notes && (
-                                <div className="border-t border-gray-700 pt-4">
-                                    <h4 className="text-yellow-400 font-medium text-sm mb-1 flex items-center gap-1">📝 {t('modal.notes')}</h4>
-                                    <p className="text-white bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">{selectedOrder.notes}</p>
-                                </div>
-                            )}
-
-                            {/* Status Actions */}
-                            <div className="border-t border-gray-700 pt-4">
-                                <h4 className="text-white font-medium mb-3">{t('modal.updateStatus')}</h4>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {Object.entries(orderStatuses).map(([key, value]) => (
-                                        <button
-                                            key={key}
-                                            onClick={() => handleStatusChange(selectedOrder.id, key as OrderStatus)}
-                                            disabled={selectedOrder.status === key}
-                                            className={`px-3 py-2 rounded-lg text-sm flex items-center gap-2 ${selectedOrder.status === key
-                                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                                : 'bg-gray-700 text-white hover:bg-gray-600'
-                                                }`}
-                                        >
-                                            <span>{t(value.labelKey)}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Print Action */}
-                            <div className="border-t border-gray-700 pt-4">
-                                <button
-                                    onClick={() => printerSettings.enabled && printerSettings.printerIp ? handlePrintOrder(selectedOrder) : setShowPrinterPanel(true)}
-                                    disabled={printingOrderId === selectedOrder.id}
-                                    className={`w-full px-4 py-3 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 ${
-                                        !printerSettings.enabled || !printerSettings.printerIp
-                                            ? 'bg-gray-700 border border-gray-600 text-gray-400 hover:bg-gray-600'
-                                            : 'bg-amber-600/20 border border-amber-500/50 text-amber-400 hover:bg-amber-600/30'
-                                    }`}
-                                >
-                                    {!printerSettings.enabled || !printerSettings.printerIp
-                                        ? '🖨️ Drucker einrichten'
-                                        : printingOrderId === selectedOrder.id ? '⏳ Druckt...' : '🖨️ Bon drucken'}
-                                </button>
-                            </div>
-
-
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Cancellation Reason Modal */}
-            {showCancelModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">
-                                ❌ {t('cancelModal.title')}
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    setShowCancelModal(false);
-                                    setCancelOrderId(null);
-                                    setCancelReason('');
-                                }}
-                                className="text-gray-400 hover:text-white"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            <p className="text-gray-400 text-sm">
-                                {t('cancelModal.subtitle')}
-                            </p>
-
-                            {/* Quick Reason Buttons */}
-                            <div className="grid grid-cols-1 gap-2">
-                                {[
-                                    t('cancelModal.reasons.outOfStock'),
-                                    t('cancelModal.reasons.closed'),
-                                    t('cancelModal.reasons.noDelivery'),
-                                    t('cancelModal.reasons.duplicate'),
-                                    t('cancelModal.reasons.customerRequest'),
-                                ].map((reason) => (
-                                    <button
-                                        key={reason}
-                                        onClick={() => setCancelReason(reason)}
-                                        className={`px-4 py-2 rounded-lg text-left text-sm ${cancelReason === reason
-                                            ? 'bg-red-600 text-white'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                            }`}
-                                    >
-                                        {reason}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Custom Reason Input */}
-                            <div>
-                                <label className="text-gray-400 text-sm block mb-2">
-                                    {t('cancelModal.customReason')}
-                                </label>
-                                <textarea
-                                    value={cancelReason}
-                                    onChange={(e) => setCancelReason(e.target.value)}
-                                    placeholder={t('cancelModal.placeholder')}
-                                    rows={3}
-                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
-                                />
-                            </div>
-
-                            {/* Warning */}
-                            <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">
-                                <p className="text-yellow-400 text-sm">
-                                    ⚠️ {t('cancelModal.warning')}
-                                </p>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        setShowCancelModal(false);
-                                        setCancelOrderId(null);
-                                        setCancelReason('');
-                                    }}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
-                                >
-                                    {t('cancelModal.cancel')}
-                                </button>
-                                <button
-                                    onClick={handleCancelConfirm}
-                                    disabled={!cancelReason.trim()}
-                                    className={`flex-1 px-4 py-3 rounded-lg transition flex items-center justify-center gap-2 ${cancelReason.trim()
-                                        ? 'bg-red-600 text-white hover:bg-red-700'
-                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        }`}
-                                >
-                                    ❌ {t('cancelModal.confirm')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Unavailable Items Confirmation Modal */}
-            {showUnavailableModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">
-                                ⚠️ {t('missingModal.title')}
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    setShowUnavailableModal(false);
-                                    setUnavailableOrderId(null);
-                                    setUnavailableItems([]);
-                                }}
-                                className="text-gray-400 hover:text-white"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            {(() => {
-                                const order = unavailableOrderId ? orders.find(o => o.id === unavailableOrderId) : null;
-                                const refundTotal = unavailableItems.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
-                                const isCardPaid = order?.paymentMethod === 'card' && order?.paymentStatus === 'paid';
-
-                                return (
-                                    <>
-                                        <p className="text-gray-400 text-sm">
-                                            {t('missingModal.subtitle')}
-                                        </p>
-
-                                        {/* Unavailable items list */}
-                                        <div className="space-y-2">
-                                            {unavailableItems.map((item, idx) => (
-                                                <div key={idx} className="flex items-center gap-3 bg-red-600/10 border border-red-500/30 rounded-lg px-3 py-2">
-                                                    <span className="text-red-400 font-bold">❌</span>
-                                                    <span className="text-white flex-1">{item.quantity}x {item.name}</span>
-                                                    <span className="text-gray-400 text-sm">{formatCurrency(((item.price || 0) * item.quantity), order?.currency)}</span>
-                                                    <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">{t('missingModal.unavailable')}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        {/* Refund info for card payments */}
-                                        {isCardPaid && refundTotal > 0 && (
-                                            <div className="bg-blue-600/20 border border-blue-500/50 rounded-lg p-3">
-                                                <p className="text-blue-400 text-sm">
-                                                    💳 {t('missingModal.cardPaid')} <strong className="text-blue-300">{formatCurrency(refundTotal, order.currency)}</strong> {t('missingModal.partialRefund')}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </>
-                                );
-                            })()}
-
-                            {/* Warning */}
-                            <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">
-                                <p className="text-yellow-400 text-sm">
-                                    ⚠️ {t('missingModal.warning')}
-                                </p>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        setShowUnavailableModal(false);
-                                        setUnavailableOrderId(null);
-                                        setUnavailableItems([]);
-                                    }}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
-                                >
-                                    {t('missingModal.cancel')}
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        if (unavailableOrderId) {
-                                            await updateOrderStatus(unavailableOrderId, 'accepted', undefined, unavailableItems);
-                                        }
-                                        setShowUnavailableModal(false);
-                                        setUnavailableOrderId(null);
-                                        setUnavailableItems([]);
-                                    }}
-                                    className="flex-1 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center justify-center gap-2"
-                                >
-                                    ⚠️ {t('missingModal.confirm')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <OrderDetailsModal
+                    order={selectedOrder}
+                    onClose={() => setSelectedOrder(null)}
+                    t={t}
+                    businesses={businesses}
+                    checkedItems={checkedItems[selectedOrder.id] || {}}
+                    dateLocale={dateLocale}
+                    onUpdateOrderStatus={updateOrderStatus}
+                    onToggleItemChecked={toggleItemChecked}
+                    printerSettings={printerSettings}
+                    printingOrderId={printingOrderId}
+                    onPrint={handlePrintOrder}
+                    onShowPrinterPanel={() => setShowPrinterPanel(true)}
+                />
             )}
         </div>
     );
 }
 
-// Order Card Component
-function OrderCard({
-    order,
-    businesses,
-    checkedItems,
-    onClick,
-    t,
-    isPreOrder = false,
-}: {
-    order: Order;
-    businesses: Record<string, string>;
-    checkedItems: Record<string, Record<number, boolean>>;
-    onClick: () => void;
-    t: any;
-    isPreOrder?: boolean;
-}) {
-    const locale = useLocale();
-    const dateLocale = locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'en' ? 'en-US' : locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : locale === 'nl' ? 'nl-NL' : 'de-DE';
-    const statusInfo = orderStatuses[order.status];
-    const typeInfo = orderTypes[order.type];
-    const itemCount = order.items?.length || 0;
-    const checked = checkedItems[order.id] || {};
-    const checkedCount = Object.values(checked).filter(Boolean).length;
-
-    // Format scheduled time for pre-orders
-    const formatScheduledTime = () => {
-        if (!order.scheduledAt) return '';
-        const d = order.scheduledAt.toDate();
-        const now = new Date();
-        const isToday = d.toDateString() === now.toDateString();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const isTomorrow = d.toDateString() === tomorrow.toDateString();
-
-        const time = d.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' });
-        if (isToday) return `${t('today')} ${time}`;
-        if (isTomorrow) return `${t('tomorrow')} ${time}`;
-        return d.toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
-    };
-
-    return (
-        <button
-            onClick={onClick}
-            className={`w-full text-left rounded-xl p-3 transition ${isPreOrder
-                ? 'bg-purple-900/20 hover:bg-purple-900/30 border-l-3 border-purple-500'
-                : 'bg-gray-700 hover:bg-gray-600'
-                }`}
-        >
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium text-sm">
-                    #{order.orderNumber || order.id.slice(0, 6).toUpperCase()}
-                </span>
-                <div className="flex items-center gap-1">
-                    <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-400`}>
-                        {t(typeInfo?.labelKey || 'type_pickup')}
-                    </span>
-                </div>
-            </div>
-            <p className="text-gray-400 text-xs mb-1">
-                {businesses[order.businessId] || t('modal.business')}
-            </p>
-            {/* Pre-order scheduled time badge */}
-            {isPreOrder && order.scheduledAt && (
-                <div className="mb-1.5">
-                    <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
-                        🕐 {formatScheduledTime()}
-                    </span>
-                </div>
-            )}
-            {/* Dine-in table badge + source */}
-            {order.type === 'dine_in' && (
-                <div className="mb-1 space-y-0.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 text-xs font-medium">
-                            🍽️ {t('kanban.table')} {order.tableNumber ? `#${order.tableNumber}` : ''}
-                        </span>
-                        {order.isGroupOrder && (
-                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
-                                👥 {t('kanban.group')}{order.groupParticipantCount ? ` (${order.groupParticipantCount} ${t('kanban.person')})` : ''}
-                            </span>
-                        )}
-                        {order.paymentStatus === 'paid' && (
-                            <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
-                        )}
-                    </div>
-                    <p className="text-gray-400 text-xs pl-0.5">
-                        {order.waiterName ? `👤 ${order.waiterName}` : `📱 ${t('kanban.customerApp')}`}
-                    </p>
-                    {order.servedByName && (order.status === 'served' || order.status === 'delivered' || order.status === 'completed') && (
-                        <p className="text-teal-400 text-xs pl-0.5">
-                            🍽️ {order.servedByName} {t('kanban.servedBy')}
-                        </p>
-                    )}
-                </div>
-            )}
-            <div className="flex items-center justify-between">
-                <span className="text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
-                <div className="flex items-center gap-2">
-                    {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-400' : 'bg-gray-600 text-gray-400'}`}>
-                            ✓{checkedCount}/{itemCount}
-                        </span>
-                    )}
-                    <span className="text-gray-500 text-xs">
-                        {order.createdAt?.toDate().toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                </div>
-            </div>
-        </button>
-    );
-}
