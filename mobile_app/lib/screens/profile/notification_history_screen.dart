@@ -1601,6 +1601,79 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                               ),
                             ),
                           ),
+
+                        // Delivery Proof Photo (Fetches from Firestore if delivered)
+                        if (stepStatus == 'delivered' && isCompleted)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 42, top: 4, bottom: 8),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: FutureBuilder<DocumentSnapshot>(
+                                future: FirebaseFirestore.instance.collection('meat_orders').doc(group.orderId).get(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                                  final deliveryProof = data['deliveryProof'] as Map<String, dynamic>?;
+                                  final proofUrl = deliveryProof?['photoUrl'] as String?;
+                                  
+                                  if (proofUrl == null || proofUrl.isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  
+                                  return GestureDetector(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          insetPadding: const EdgeInsets.all(8),
+                                          child: Stack(
+                                            alignment: Alignment.topRight,
+                                            children: [
+                                              InteractiveViewer(
+                                                child: ClipRRect(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  child: Image.network(
+                                                    proofUrl,
+                                                    fit: BoxFit.contain,
+                                                  ),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                                                style: IconButton.styleFrom(
+                                                  backgroundColor: Colors.black54,
+                                                ),
+                                                onPressed: () => Navigator.pop(context),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        proofUrl,
+                                        height: 80,
+                                        width: 80,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Container(
+                                          height: 80,
+                                          width: 80,
+                                          color: Colors.grey[800],
+                                          child: const Icon(Icons.broken_image, color: Colors.grey),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+
                         // Connecting line between steps
                         if (!isLast || showScheduled)
                           Row(
