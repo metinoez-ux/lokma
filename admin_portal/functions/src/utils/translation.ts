@@ -89,6 +89,9 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "business": "Geschäft",
             "delivery": "Lieferung",
             "table": "Tisch",
+            "refundCardMessage": "Ihre Zahlung wird automatisch auf Ihre Karte zuruckerstattet.",
+            "refundGeneralMessage": "Ihre Zahlung wird erstattet.",
+            "cancelApology": "Wir entschuldigen uns fur die Unannehmlichkeiten.",
         },
         tr: {
             "orderPrefix": "Sipariş",
@@ -128,6 +131,9 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "business": "İşletme",
             "delivery": "Teslimat",
             "table": "Masa",
+            "refundCardMessage": "Odemeniz otomatik olarak kartiniza iade edilecektir.",
+            "refundGeneralMessage": "Odemeniz iade edilecektir.",
+            "cancelApology": "Yasanan aksaklik icin ozur dileriz.",
         },
         en: {
             "orderPrefix": "Order",
@@ -167,6 +173,9 @@ function getFallbackTranslations(lang: string = 'de'): Record<string, string> {
             "business": "Business",
             "delivery": "Delivery",
             "table": "Table",
+            "refundCardMessage": "Your payment will be automatically refunded to your card.",
+            "refundGeneralMessage": "Your payment will be refunded.",
+            "cancelApology": "We apologize for the inconvenience.",
         },
     };
 

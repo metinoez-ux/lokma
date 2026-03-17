@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get order from Firestore
-        const orderDoc = await getDoc(doc(db, 'kermes_orders', orderId));
+        const orderDoc = await getDoc(doc(db, 'meat_orders', orderId));
         if (!orderDoc.exists()) {
             return NextResponse.json(
                 { error: 'Order not found' },
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 {
                     error: 'Order cannot be cancelled',
-                    message: 'Siparişiniz hazırlanmaya başladığı için iptal edilemiyor.',
+                    message: 'Order cannot be cancelled because preparation has already started.',
                     status: orderData.status
                 },
                 { status: 400 }
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         // Check if payment was made
         if (!orderData.isPaid || orderData.paymentMethod !== 'card') {
             // No payment to refund, just cancel the order
-            await updateDoc(doc(db, 'kermes_orders', orderId), {
+            await updateDoc(doc(db, 'meat_orders', orderId), {
                 status: 'cancelled',
                 cancelledAt: new Date().toISOString(),
                 cancellationReason: reason || 'customer_request',
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
                 success: true,
                 refunded: false,
-                message: 'Sipariş başarıyla iptal edildi.',
+                message: 'Order cancelled successfully.',
             });
         }
 
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         console.log(`[Refund] Created refund: ${refund.id}, status: ${refund.status}`);
 
         // Update order status
-        await updateDoc(doc(db, 'kermes_orders', orderId), {
+        await updateDoc(doc(db, 'meat_orders', orderId), {
             status: 'cancelled',
             cancelledAt: new Date().toISOString(),
             cancellationReason: reason || 'customer_request',
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
             refundId: refund.id,
             refundStatus: refund.status,
             refundAmount: refund.amount / 100,
-            message: 'Sipariş iptal edildi ve ödemeniz iade edildi. İade 2-3 iş günü içinde hesabınıza yansıyacaktır.',
+            message: 'Order cancelled and payment refunded. Refund will appear in your account within 2-3 business days.',
         });
 
     } catch (error: any) {

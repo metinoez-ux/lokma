@@ -40,10 +40,10 @@ async function getActiveNotificationSound(): Promise<string> {
 function buildSoundConfig(soundName: string) {
     return {
         apns: {
-            payload: { aps: { sound: "default" } },
+            payload: { aps: { sound: soundName || "default" } },
         },
         android: {
-            notification: { sound: "default", channelId: "lokma_orders" },
+            notification: { sound: soundName || "default", channelId: "lokma_orders" },
         },
     };
 }
@@ -1044,14 +1044,14 @@ export const onOrderStatusChange = onDocumentUpdated(
                 // If payment was made (paid/completed), mention refund
                 if (paymentStatus === "paid" || paymentStatus === "completed") {
                     if (paymentMethod === "card" || paymentMethod === "stripe") {
-                        cancelMsg += ". 💳 Ihre Zahlung wird automatisch auf Ihre Karte zurückerstattet.";
+                        cancelMsg += `. ${trans.refundCardMessage || "Your payment will be automatically refunded to your card."}`;
                     } else {
-                        cancelMsg += ". Ihre Zahlung wird erstattet.";
+                        cancelMsg += `. ${trans.refundGeneralMessage || "Your payment will be refunded."}`;
                     }
                 }
 
                 // Add apology
-                cancelMsg += " Wir entschuldigen uns für die Unannehmlichkeiten. 🙏";
+                cancelMsg += ` ${trans.cancelApology || "We apologize for the inconvenience."} 🙏`;
                 body = cancelMsg;
                 break;
             default:

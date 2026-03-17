@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
             refundId: refund.id,
             refundStatus: refund.status,
             refundAmount: refund.amount / 100,
-            message: `${formatCurrency(refund.amount / 100, orderData.currency)} kısmi iade başarıyla işlendi.`,
+            message: `${formatCurrency(refund.amount / 100, orderData.currency)} partial refund processed successfully.`,
         });
 
     } catch (error: any) {
