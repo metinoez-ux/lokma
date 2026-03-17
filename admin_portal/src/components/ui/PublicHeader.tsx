@@ -194,12 +194,12 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                                                 key={lang.code}
                                                 className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
                                                     ? 'bg-[#fb335b]/10 text-[#fb335b] font-semibold'
-                                                    : `${itemHover} ${themeAware ? 'text-gray-700 dark:text-gray-200' : 'text-gray-700'}`
+                                                    : `${itemHover} ${themeAware ? 'text-gray-900 dark:text-gray-200' : 'text-gray-900'} font-medium`
                                                     }`}
                                                 onClick={() => handleLangChange(lang.code)}
                                             >
                                                 <span className="text-base">{lang.flag}</span>
-                                                <span className="text-[13px]">{lang.name}</span>
+                                                <span className="text-sm">{lang.name}</span>
                                                 {currentLang === lang.code && (
                                                     <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px]">check_circle</span>
                                                 )}
@@ -223,12 +223,12 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                                                 key={country.code}
                                                 className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
                                                     ? 'bg-[#fb335b]/10 text-[#fb335b] font-semibold'
-                                                    : `${itemHover} ${themeAware ? 'text-gray-700 dark:text-gray-200' : 'text-gray-700'}`
+                                                    : `${itemHover} ${themeAware ? 'text-gray-900 dark:text-gray-200' : 'text-gray-900'} font-medium`
                                                     }`}
                                                 onClick={() => handleCountryChange(country.code)}
                                             >
                                                 <span className="text-base">{country.flag}</span>
-                                                <span className="text-[13px] truncate">{country.name}</span>
+                                                <span className="text-sm truncate">{country.name}</span>
                                                 {currentCountry === country.code && (
                                                     <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px] flex-shrink-0">check_circle</span>
                                                 )}
