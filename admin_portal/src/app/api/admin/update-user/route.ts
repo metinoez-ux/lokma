@@ -74,8 +74,11 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        // Frontend sends fields inside `updateData` wrapper; unwrap if present
+        const source = body.updateData || body;
+        const userId = body.userId || source.userId;
+
         const {
-            userId,
             email,
             password,
             firstName,
@@ -100,14 +103,15 @@ export async function POST(request: NextRequest) {
             organizationName,
             butcherId,
             butcherName,
-            updatedBy,
-            deactivatedBy,
-            deactivatedAt,
-            deactivationReason,
             isPrimaryAdmin,
             isDriver,
             driverType
-        } = body;
+        } = source;
+
+        const updatedBy = body.adminEmail || source.updatedBy || 'system';
+        const deactivatedBy = source.deactivatedBy;
+        const deactivatedAt = source.deactivatedAt;
+        const deactivationReason = source.deactivationReason;
 
         if (!userId) {
             return NextResponse.json(
