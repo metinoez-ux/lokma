@@ -179,8 +179,8 @@ export default function AdminHeader() {
             printerHealthRef.current = newState;
             setPrinterHealth(newState);
 
-            // Transition: online -> offline
-            if (prev.status === 'online' && newState.status === 'offline') {
+            // Transition: online/checking -> offline
+            if (prev.status !== 'offline' && newState.status === 'offline') {
                 const bName = businessInfo?.companyName || 'LOKMA Marketplace';
                 sendPrinterAlert({
                     type: 'offline',
@@ -206,7 +206,7 @@ export default function AdminHeader() {
         };
 
         runHealthCheck();
-        healthIntervalRef.current = setInterval(runHealthCheck, 30000);
+        healthIntervalRef.current = setInterval(runHealthCheck, 15000);
 
         return () => {
             if (healthIntervalRef.current) clearInterval(healthIntervalRef.current);

@@ -5108,147 +5108,75 @@ export default function SuperAdminDashboard() {
                                                 }
                                             }
 
-                                            // Prepare update data
-                                            const updateData: Record<string, unknown> = {
-                                                firstName: editingUserProfile.firstName,
-                                                lastName: editingUserProfile.lastName,
-                                                displayName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`.trim() || null,
-                                                email: editingUserProfile.email,
-                                                phoneNumber: (editingUserProfile.dialCode || '+49') + cleanPhone,
-                                                dialCode: editingUserProfile.dialCode || '+49',
-                                                address: editingUserProfile.address || null,
-                                                houseNumber: editingUserProfile.houseNumber || null,
-                                                addressLine2: editingUserProfile.addressLine2 || null,
-                                                city: editingUserProfile.city || null,
-                                                country: editingUserProfile.country || null,
-                                                postalCode: editingUserProfile.postalCode || null,
-                                                latitude: editingUserProfile.latitude || null,
-                                                longitude: editingUserProfile.longitude || null,
-                                                photoURL: editingUserProfile.photoURL || null,
-                                                // ** CRITICAL: Save role info to users collection **
-                                                isAdmin: editingUserProfile.isAdmin,
-                                                adminType: editingUserProfile.isAdmin ? editingUserProfile.adminType : null,
-                                                // ** NEW: Save activation status **
-                                                isActive: editingUserProfile.isActive !== false, // Default true if undefined
-                                                updatedAt: new Date(),
-                                                updatedBy: admin?.email || 'admin'
-                                            };
-
-                                            // 📝 DEACTIVATION AUDIT: Track who/when/why if user is being deactivated
-                                            if (editingUserProfile.isActive === false) {
-                                                updateData.deactivatedBy = admin?.email || admin?.displayName || 'system';
-                                                updateData.deactivatedAt = new Date();
-                                                updateData.deactivationReason = tNav('admin_tarafindan_devre_disi_birakildi');
-                                            } else {
-                                                // If reactivating, clear deactivation fields
-                                                updateData.deactivatedBy = null;
-                                                updateData.deactivatedAt = null;
-                                                updateData.deactivationReason = null;
-                                            }
-
-                                            await setDoc(userRef, updateData, { merge: true });
-                                            console.log('✅ users collection SAVED with isAdmin:', editingUserProfile.isAdmin, 'adminType:', editingUserProfile.adminType, 'isActive:', editingUserProfile.isActive);
-
-                                            // Handle admin role changes - ONLY super admin can change roles
-                                            const roleChanged = editingUserProfile.adminType !== editingUserProfile.originalAdminType ||
-                                                editingUserProfile.isAdmin !== !!editingUserProfile.originalAdminType;
-
-                                            if (roleChanged) {
-                                                // Authorization check: Only super admin can change roles
-                                                if (admin?.adminType !== 'super') {
-                                                    showToast(tNav('rol_degistirme_yetkisi_sadece_super_admi'), 'error');
-                                                    setSavingProfile(false);
-                                                    return;
-                                                }
-                                            }
-
-                                            if (editingUserProfile.isAdmin && editingUserProfile.adminType) {
-                                                // Use existing admin doc ID if available, otherwise use userId
-                                                const adminDocId = editingUserProfile.adminDocId || editingUserProfile.userId;
-                                                const adminRef = doc(db, 'admins', adminDocId);
-                                                const existingAdminDoc = await getDoc(adminRef);
-
-                                                if (existingAdminDoc.exists()) {
-                                                    // Update existing admin - use BOTH adminType and type for compatibility
-                                                    await updateDoc(adminRef, {
-                                                        adminType: editingUserProfile.adminType,
-                                                        type: editingUserProfile.adminType, // For backward compatibility
-                                                        displayName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`,
+                                            // Call the new centralized API endpoint
+                                            const response = await fetch('/api/admin/update-user', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                    userId: editingUserProfile.userId,
+                                                    adminDocId: editingUserProfile.adminDocId,
+                                                    adminEmail: admin?.email || 'admin',
+                                                    currentAdminType: admin?.adminType,
+                                                    updateData: {
                                                         firstName: editingUserProfile.firstName,
                                                         lastName: editingUserProfile.lastName,
+                                                        displayName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`.trim() || null,
                                                         email: editingUserProfile.email,
-                                                        phoneNumber: editingUserProfile.phone,
-                                                        butcherId: editingUserProfile.butcherId || null, // Required for business isolation
+                                                        phoneNumber: (editingUserProfile.dialCode || '+49') + cleanPhone,
+                                                        dialCode: editingUserProfile.dialCode || '+49',
+                                                        address: editingUserProfile.address || null,
+                                                        houseNumber: editingUserProfile.houseNumber || null,
+                                                        addressLine2: editingUserProfile.addressLine2 || null,
+                                                        city: editingUserProfile.city || null,
+                                                        country: editingUserProfile.country || null,
+                                                        postalCode: editingUserProfile.postalCode || null,
+                                                        latitude: editingUserProfile.latitude || null,
+                                                        longitude: editingUserProfile.longitude || null,
+                                                        photoURL: editingUserProfile.photoURL || null,
+                                                        isAdmin: editingUserProfile.isAdmin,
+                                                        adminType: editingUserProfile.isAdmin ? editingUserProfile.adminType : null,
+                                                        isActive: editingUserProfile.isActive !== false,
+                                                        butcherId: editingUserProfile.butcherId || null,
                                                         butcherName: editingUserProfile.butcherName || null,
-                                                        // 🆕 Organization support for kermes roles
                                                         organizationId: editingUserProfile.organizationId || null,
                                                         organizationName: editingUserProfile.organizationName || null,
-                                                        // COKLU ROL DESTEGI - Timestamp objelerini serialize et
-                                                        roles: (editingUserProfile.roles || []).map((r: any) => ({
-                                                            ...r,
-                                                            assignedAt: r.assignedAt?.toDate ? r.assignedAt.toDate().toISOString() : (r.assignedAt instanceof Date ? r.assignedAt.toISOString() : r.assignedAt || new Date().toISOString()),
-                                                        })),
-                                                        // CRITICAL: Sync photoURL to admin record for header display
-                                                        photoURL: editingUserProfile.photoURL || null,
-                                                        isActive: true,
-                                                        updatedAt: new Date(),
-                                                        updatedBy: admin?.email || 'system',
-                                                        // 🟣 Primary Admin flag - only Super Admin can set
-                                                        ...(admin?.adminType === 'super' ? { isPrimaryAdmin: (editingUserProfile as any).isPrimaryAdmin || false } : {}),
-                                                        // 🚗 Driver flag - only Super Admin can set
-                                                        ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
-                                                        // 🚚 Driver type - lokma_fleet or business
-                                                        ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
-                                                    });
-                                                } else {
-                                                    // Create new admin record with userId as doc ID
-                                                    await setDoc(doc(db, 'admins', editingUserProfile.userId), {
-                                                        firebaseUid: editingUserProfile.userId,
-                                                        displayName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`,
-                                                        firstName: editingUserProfile.firstName,
-                                                        lastName: editingUserProfile.lastName,
-                                                        email: editingUserProfile.email,
-                                                        phoneNumber: editingUserProfile.phone,
-                                                        adminType: editingUserProfile.adminType,
-                                                        type: editingUserProfile.adminType, // For backward compatibility
-                                                        butcherId: editingUserProfile.butcherId || null, // Required for business isolation
-                                                        butcherName: editingUserProfile.butcherName || null,
-                                                        // 🆕 Organization support for kermes roles
-                                                        organizationId: editingUserProfile.organizationId || null,
-                                                        organizationName: editingUserProfile.organizationName || null,
-                                                        // COKLU ROL DESTEGI - Timestamp objelerini serialize et
-                                                        roles: (editingUserProfile.roles || []).map((r: any) => ({
-                                                            ...r,
-                                                            assignedAt: r.assignedAt?.toDate ? r.assignedAt.toDate().toISOString() : (r.assignedAt instanceof Date ? r.assignedAt.toISOString() : r.assignedAt || new Date().toISOString()),
-                                                        })),
-                                                        // CRITICAL: Copy photoURL to admin record for header display
-                                                        photoURL: editingUserProfile.photoURL || null,
-                                                        role: 'admin',
-                                                        isActive: true,
-                                                        createdAt: new Date(),
-                                                        createdBy: admin?.email || 'system',
-                                                        // 🟣 Primary Admin flag - only Super Admin can set
-                                                        ...(admin?.adminType === 'super' ? { isPrimaryAdmin: (editingUserProfile as any).isPrimaryAdmin || false } : {}),
-                                                        // 🚗 Driver flag - only Super Admin can set
-                                                        ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
-                                                        // 🚚 Driver type - lokma_fleet or business
-                                                        ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
-                                                    });
+                                                        roles: editingUserProfile.roles,
+                                                        isPrimaryAdmin: (editingUserProfile as any).isPrimaryAdmin || false,
+                                                        isDriver: (editingUserProfile as any).isDriver || false,
+                                                        driverType: (editingUserProfile as any).driverType || 'business'
+                                                    },
+                                                    originalAdminType: editingUserProfile.originalAdminType
+                                                })
+                                            });
 
-                                                    // 🎉 SEND ADMIN PROMOTION NOTIFICATIONS
-                                                    const roleName = getRoleLabel(editingUserProfile.adminType) || editingUserProfile.adminType;
-                                                    const businessInfo = editingUserProfile.butcherName || tNav('tum_i_sletmeler');
+                                            let data;
+                                            try {
+                                                data = await response.json();
+                                            } catch (e) {
+                                                throw new Error('Geçersiz API yanıtı alındı');
+                                            }
 
-                                                    // Send Email notification
-                                                    if (editingUserProfile.email) {
-                                                        try {
-                                                            await fetch('/api/email/send', {
-                                                                method: 'POST',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({
-                                                                    to: editingUserProfile.email,
-                                                                    subject: tNav('lokma_admin_yetkiniz_aktif'),
-                                                                    html: `<!DOCTYPE html>
+                                            if (!response.ok) {
+                                                throw new Error(data.error || 'API Güncelleme Hatası');
+                                            }
+
+                                            // If the backend handled role promotions, handle notifications here on the client side
+                                            if (data.roleChangedToAdmin) {
+                                                const roleName = getRoleLabel(editingUserProfile.adminType || '') || editingUserProfile.adminType;
+                                                const businessInfo = editingUserProfile.butcherName || tNav('tum_i_sletmeler');
+                                                
+                                                // Send Email notification
+                                                if (editingUserProfile.email) {
+                                                    try {
+                                                        await fetch('/api/email/send', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                to: editingUserProfile.email,
+                                                                subject: tNav('lokma_admin_yetkiniz_aktif'),
+                                                                html: `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -5266,7 +5194,7 @@ export default function SuperAdminDashboard() {
 
 <!-- Main Body -->
 <div style="padding:0 40px 32px 40px;">
-  <h2 style="color:#111827;margin:0 0 12px 0;font-size:24px;font-weight:700;">${t('congratulations')} ${editingUserProfile.firstName}!</h2>
+  <h2 style="color:#111827;margin:0 0 12px 0;font-size:24px;font-weight:700;">${tNav('tebrikler')} ${editingUserProfile.firstName}!</h2>
   <p style="color:#4b5563;line-height:1.6;margin:0 0 24px 0;font-size:16px;">LOKMA platformunda yönetici yetkiniz aktif edildi.</p>
 
   <div style="background-color:#f9fafb;border-radius:8px;padding:24px;margin-bottom:32px;">
@@ -5306,75 +5234,33 @@ export default function SuperAdminDashboard() {
 
 </div>
 </body>
-</html>`,
-                                                                }),
-                                                            });
-                                                            console.log('✅ Admin promotion email sent');
-                                                        } catch (e) {
-                                                            console.log('❌ Admin promotion email failed:', e);
-                                                        }
-                                                    }
-
-                                                    // Send SMS notification
-                                                    if (editingUserProfile.phone) {
-                                                        try {
-                                                            await fetch('/api/sms/send', {
-                                                                method: 'POST',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({
-                                                                    to: editingUserProfile.phone,
-                                                                    message: `LOKMA - Tebrikler ${editingUserProfile.firstName}! ${roleName} olarak atandiniz. Admin Panel: https://lokma.shop/admin`,
-                                                                }),
-                                                            });
-                                                            console.log('✅ Admin promotion SMS sent');
-                                                        } catch (e) {
-                                                            console.log('❌ Admin promotion SMS failed:', e);
-                                                        }
-                                                    }
-                                                }
-                                            } else if (!editingUserProfile.isAdmin) {
-                                                // User should not be admin - deactivate admin record if exists
-                                                // Check BOTH adminDocId and userId since admin records can use either
-                                                const possibleAdminIds = [
-                                                    editingUserProfile.adminDocId,
-                                                    editingUserProfile.userId
-                                                ].filter(Boolean) as string[];
-
-                                                for (const adminId of possibleAdminIds) {
-                                                    try {
-                                                        const adminRef = doc(db, 'admins', adminId);
-                                                        const existingAdminDoc = await getDoc(adminRef);
-                                                        if (existingAdminDoc.exists()) {
-                                                            await updateDoc(adminRef, {
-                                                                isActive: false,
-                                                                adminType: null,
-                                                                butcherId: null,
-                                                                butcherName: null,
-                                                                updatedAt: new Date(),
-                                                                updatedBy: admin?.email || 'system',
-                                                                // 📝 DEACTIVATION AUDIT TRAIL
-                                                                deactivatedBy: admin?.email || admin?.displayName || 'system',
-                                                                deactivatedAt: new Date(),
-                                                                deactivationReason: tNav('admin_rolu_kaldirildi_kullaniciya_indirg'),
-                                                            });
-                                                            console.log(`✅ Admin record deactivated: ${adminId}`);
-                                                            break; // Found and deactivated, no need to check more
-                                                        }
+</html>`
+                                                            })
+                                                        });
+                                                        console.log('✅ Admin promotion email sent via new API flow');
                                                     } catch (e) {
-                                                        console.log(`❌ Error checking admin ${adminId}:`, e);
+                                                        console.error('❌ Admin promotion email failed:', e);
                                                     }
                                                 }
 
-                                                // Also clear butcherId and butcherName from users collection
-                                                const userRef = doc(db, 'users', editingUserProfile.userId);
-                                                await updateDoc(userRef, {
-                                                    butcherId: null,
-                                                    butcherName: null,
-                                                    adminType: null,
-                                                    isAdmin: false,
-                                                });
-                                                console.log('✅ User demoted: business assignment cleared');
+                                                // Send SMS notification
+                                                if (editingUserProfile.phone) {
+                                                    try {
+                                                        await fetch('/api/sms/send', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                to: editingUserProfile.phone,
+                                                                message: `LOKMA - Tebrikler ${editingUserProfile.firstName}! ${roleName} olarak atandiniz. Admin Panel: https://lokma.shop/admin`,
+                                                            }),
+                                                        });
+                                                        console.log('✅ Admin promotion SMS sent via new API flow');
+                                                    } catch (e) {
+                                                        console.error('❌ Admin promotion SMS failed:', e);
+                                                    }
+                                                }
                                             }
+
 
                                             showToast(tNav('kullanici_profili_guncellendi'), 'success');
                                             setEditingUserProfile(null);

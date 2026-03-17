@@ -1,0 +1,264 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+async function getFirebaseAdmin() {
+    try {
+        const { getApps, cert, initializeApp, applicationDefault } = await import('firebase-admin/app');
+        const { getAuth } = await import('firebase-admin/auth');
+        const { getFirestore } = await import('firebase-admin/firestore');
+
+        let app;
+        const apps = getApps();
+
+        if (apps.length === 0) {
+            const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+            let initialized = false;
+
+            if (serviceAccount) {
+                try {
+                    const account = JSON.parse(serviceAccount);
+                    if (account.private_key) {
+                        account.private_key = account.private_key.replace(/\\n/g, '\n');
+                    }
+                    app = initializeApp({
+                        credential: cert(account),
+                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                    });
+                    initialized = true;
+                } catch (parseError) {
+                    console.warn('Explicit key parsing failed, falling back to ADC', parseError);
+                }
+            }
+
+            if (!initialized) {
+                app = initializeApp({
+                    credential: applicationDefault(),
+                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'aylar-a45af',
+                });
+            }
+        } else {
+            app = apps[0];
+        }
+
+        if (!app) {
+            throw new Error('Firebase Admin app could not be initialized.');
+        }
+
+        return { auth: getAuth(app), db: getFirestore(app) };
+    } catch (error) {
+        console.error('Firebase Admin import/init failed:', error);
+        throw error;
+    }
+}
+
+export async function POST(request: NextRequest) {
+    let body: any;
+    try {
+        body = await request.json();
+    } catch (parseError) {
+        return NextResponse.json(
+            { error: 'Geçersiz istek gövdesi', debug: String(parseError) },
+            { status: 400 }
+        );
+    }
+
+    let auth: any, db: any;
+    try {
+        const admin = await getFirebaseAdmin();
+        auth = admin.auth;
+        db = admin.db;
+    } catch (initError: any) {
+        return NextResponse.json(
+            { error: `Sunucu Hatası: ${initError.message || String(initError)}`, debug: String(initError) },
+            { status: 500 }
+        );
+    }
+
+    try {
+        const {
+            userId,
+            email,
+            password,
+            firstName,
+            lastName,
+            displayName,
+            phoneNumber,
+            dialCode,
+            address,
+            houseNumber,
+            addressLine2,
+            city,
+            country,
+            postalCode,
+            latitude,
+            longitude,
+            photoURL,
+            isActive,
+            isAdmin,
+            adminType,
+            roles,
+            organizationId,
+            organizationName,
+            butcherId,
+            butcherName,
+            updatedBy,
+            deactivatedBy,
+            deactivatedAt,
+            deactivationReason,
+            isPrimaryAdmin,
+            isDriver,
+            driverType
+        } = body;
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: 'User ID is required' },
+                { status: 400 }
+            );
+        }
+
+        // 1. Update Firebase Auth User
+        const authUpdatePayload: any = {};
+        if (email) authUpdatePayload.email = email;
+        if (password && password.trim() !== '') authUpdatePayload.password = password;
+        if (displayName) authUpdatePayload.displayName = displayName;
+        if (phoneNumber) {
+            const cleanedPhone = phoneNumber.replace(/[^0-9+]/g, '');
+            authUpdatePayload.phoneNumber = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
+        }
+        
+        if (Object.keys(authUpdatePayload).length > 0) {
+            try {
+                await auth.updateUser(userId, authUpdatePayload);
+            } catch (authError: any) {
+                console.error('Failed to update auth user:', authError);
+                return NextResponse.json(
+                    { error: `Kimlik doğrulama güncellenirken hata oluştu: ${authError.message}` },
+                    { status: 400 }
+                );
+            }
+        }
+
+        const updatedAt = new Date();
+
+        // 2. Update Firestore `users` Document
+        const userUpdateData: any = {
+            firstName: firstName !== undefined ? firstName : null,
+            lastName: lastName !== undefined ? lastName : null,
+            displayName: displayName !== undefined ? displayName : null,
+            email: email !== undefined ? email : null,
+            phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
+            dialCode: dialCode !== undefined ? dialCode : '+49',
+            address: address !== undefined ? address : null,
+            houseNumber: houseNumber !== undefined ? houseNumber : null,
+            addressLine2: addressLine2 !== undefined ? addressLine2 : null,
+            city: city !== undefined ? city : null,
+            country: country !== undefined ? country : null,
+            postalCode: postalCode !== undefined ? postalCode : null,
+            latitude: latitude !== undefined ? latitude : null,
+            longitude: longitude !== undefined ? longitude : null,
+            photoURL: photoURL !== undefined ? photoURL : null,
+            isAdmin: isAdmin !== undefined ? isAdmin : false,
+            adminType: isAdmin ? (adminType !== undefined ? adminType : null) : null,
+            isActive: isActive !== false, // default true
+            updatedAt,
+            updatedBy: updatedBy || 'system'
+        };
+
+        if (isActive === false) {
+            userUpdateData.deactivatedBy = deactivatedBy || 'system';
+            userUpdateData.deactivatedAt = deactivatedAt ? new Date(deactivatedAt) : updatedAt;
+            userUpdateData.deactivationReason = deactivationReason || null;
+        } else {
+            userUpdateData.deactivatedBy = null;
+            userUpdateData.deactivatedAt = null;
+            userUpdateData.deactivationReason = null;
+        }
+
+        await db.collection('users').doc(userId).set(userUpdateData, { merge: true });
+
+        // 3. Update Firestore `admins` Document if the user is an admin
+        let roleChangedToAdmin = false;
+
+        if (isAdmin && adminType) {
+            const adminRef = db.collection('admins').doc(userId);
+            const adminDoc = await adminRef.get();
+            
+            const adminUpdateData: any = {
+                adminType: adminType,
+                type: adminType, // For backward compatibility
+                displayName: displayName !== undefined ? displayName : null,
+                firstName: firstName !== undefined ? firstName : null,
+                lastName: lastName !== undefined ? lastName : null,
+                email: email !== undefined ? email : null,
+                phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
+                butcherId: butcherId !== undefined ? butcherId : null,
+                butcherName: butcherName !== undefined ? butcherName : null,
+                organizationId: organizationId !== undefined ? organizationId : null,
+                organizationName: organizationName !== undefined ? organizationName : null,
+                photoURL: photoURL !== undefined ? photoURL : null,
+                isActive: isActive !== false,
+                updatedAt,
+                updatedBy: updatedBy || 'system'
+            };
+
+            if (roles !== undefined) {
+                 adminUpdateData.roles = roles;
+            }
+
+            if (isPrimaryAdmin !== undefined) {
+                adminUpdateData.isPrimaryAdmin = isPrimaryAdmin;
+            }
+
+            if (isDriver !== undefined) {
+                adminUpdateData.isDriver = isDriver;
+            }
+
+            if (driverType !== undefined) {
+                adminUpdateData.driverType = driverType;
+            }
+
+            if (adminDoc.exists) {
+                // Check if the admin was previously inactive or had a different type
+                const prevData = adminDoc.data();
+                if (prevData && (prevData.isActive === false || prevData.adminType !== adminType)) {
+                    roleChangedToAdmin = true;
+                }
+                await adminRef.update(adminUpdateData);
+            } else {
+                // New admin doc = user was promoted
+                roleChangedToAdmin = true;
+                adminUpdateData.createdAt = updatedAt;
+                adminUpdateData.createdBy = updatedBy || 'system';
+                adminUpdateData.firebaseUid = userId;
+                adminUpdateData.role = 'admin';
+                await adminRef.set(adminUpdateData);
+            }
+        } else if (!isAdmin) {
+             const adminRef = db.collection('admins').doc(userId);
+             const adminDoc = await adminRef.get();
+             if (adminDoc.exists) {
+                 await adminRef.update({
+                     isActive: false,
+                     updatedAt,
+                     updatedBy: updatedBy || 'system',
+                     deactivationReason: 'Admin role removed'
+                 });
+             }
+        }
+
+
+        return NextResponse.json({
+            success: true,
+            message: 'User profile updated successfully',
+            roleChangedToAdmin
+        });
+
+    } catch (error: unknown) {
+        console.error('Update user error:', error);
+        const errMessage = error instanceof Error ? error.message : String(error);
+        return NextResponse.json(
+            { error: errMessage },
+            { status: 500 }
+        );
+    }
+}

@@ -147,6 +147,13 @@ export default function PrinterSettingsPage() {
                                 placeholder="z.B. http://192.168.x.x:3000"
                                 className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600 font-mono text-sm"
                             />
+                            <button
+                                onClick={() => save({ ...settings, printServerUrl: 'http://localhost:3000' })}
+                                className="px-4 py-3 bg-gray-800 text-gray-300 rounded-xl border border-gray-600 hover:bg-gray-700 hover:text-white transition whitespace-nowrap text-sm font-medium"
+                                title="Localhost 3000 einfügen"
+                            >
+                                localhost:3000
+                            </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
                             {typeof window !== 'undefined' && (

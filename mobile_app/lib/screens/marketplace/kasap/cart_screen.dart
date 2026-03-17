@@ -812,6 +812,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final orderNumber = orderRef.id.substring(0, 6).toUpperCase();
       await orderRef.update({'orderNumber': orderNumber});
 
+      // CRITICAL FIX (BUG-1): Clear cart immediately after order is persisted.
+      // Previously clearCart() was only called via the dialog's OK button callback,
+      // meaning if the user navigated away or the app was backgrounded, old items
+      // would be restored from SharedPreferences on next launch.
+      final cartNotifier = ref.read(cartProvider.notifier);
+      cartNotifier.clearCart();
+
       // Apply coupon usage tracking
       if (_appliedCoupon?.isValid == true && _appliedCoupon!.couponId != null) {
         await _couponService.applyCoupon(
@@ -882,9 +889,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       // context.go('/restoran') in OrderConfirmationDialog to avoid
       // rebuilding checkout page with an empty cart (causing black screen).
       if (mounted) {
-        // Capture ref before showing dialog so we can use it in the callback
-        final cartNotifier = ref.read(cartProvider.notifier);
-        
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -896,13 +900,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             isDineIn: _isDineIn,
             isScheduledOrder: _scheduledDeliverySlot != null && !_isPickUp && !_isDineIn,
             scheduledDate: _scheduledDeliverySlot,
-            onDismiss: () {
-              // DO NOT clear cart here — it will be cleared AFTER navigation
-              // in the dialog's onPressed handler via post-frame callback
-            },
+            onDismiss: () {},
             onClearCart: () {
-              // Called AFTER context.go('/restoran') to safely clear cart
-              cartNotifier.clearCart();
+              // Safety net: cart already cleared above after order save,
+              // but call again in case of race conditions
+              ref.read(cartProvider.notifier).clearCart();
             },
           ),
         );

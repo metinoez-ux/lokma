@@ -319,8 +319,8 @@ export default function OrdersPage() {
             printerHealthRef.current = newState;
             setPrinterHealth(newState);
 
-            // ─── Transition: online → offline ───
-            if (prev.status === 'online' && newState.status === 'offline') {
+            // ─── Transition: online/checking → offline ───
+            if (prev.status !== 'offline' && newState.status === 'offline') {
                 // Play alarm
                 try {
                     if (!alarmAudioRef.current) {
@@ -397,7 +397,7 @@ export default function OrdersPage() {
         // Initial check
         runHealthCheck();
         // Start interval
-        healthIntervalRef.current = setInterval(runHealthCheck, 30000);
+        healthIntervalRef.current = setInterval(runHealthCheck, 15000);
 
         return () => {
             if (healthIntervalRef.current) clearInterval(healthIntervalRef.current);

@@ -1735,7 +1735,8 @@
     "notification_reminder": "Bildirimleri açmayı unutma!",
     "ok_button": "Tamam",
     "today": "Bugün",
-    "tomorrow": "Yarın"
+    "tomorrow": "Yarın",
+    "time_suffix": ""
   },
   "notifications": {
     "order_placed": "Sipariş Verildi",

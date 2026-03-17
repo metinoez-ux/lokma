@@ -1708,7 +1708,8 @@
     "notification_reminder": "Non dimenticare di attivare le notifiche!",
     "ok_button": "OK",
     "today": "Oggi",
-    "tomorrow": "Domani"
+    "tomorrow": "Domani",
+    "time_suffix": ""
   },
   "notifications": {
     "order_placed": "Ordine Effettuato",

@@ -1738,7 +1738,8 @@
     "notification_reminder": "Vergiss nicht, Benachrichtigungen zu aktivieren!",
     "ok_button": "OK",
     "today": "Heute",
-    "tomorrow": "Morgen"
+    "tomorrow": "Morgen",
+    "time_suffix": "Uhr"
   },
   "notifications": {
     "order_placed": "Bestellung aufgegeben",

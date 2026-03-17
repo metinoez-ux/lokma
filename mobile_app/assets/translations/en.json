@@ -1725,7 +1725,8 @@
     "notification_reminder": "Don't forget to enable notifications!",
     "ok_button": "OK",
     "today": "Today",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "time_suffix": ""
   },
   "notifications": {
     "order_placed": "Order Placed",

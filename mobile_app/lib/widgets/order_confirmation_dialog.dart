@@ -234,7 +234,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                   style: TextStyle(color: accentColor, fontSize: 22, fontWeight: FontWeight.w700),
                 ),
                 Text(
-                  ' Uhr',
+                  ' ${'order_confirmation.time_suffix'.tr()}',
                   style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
