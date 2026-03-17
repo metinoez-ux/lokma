@@ -42,39 +42,20 @@ import { useSectors } from "@/hooks/useSectors";
 import { subscriptionService } from "@/services/subscriptionService";
 
 import { Star, History } from "lucide-react";
+import OrderCard from "@/components/admin/OrderCard";
+import { type Order } from "@/hooks/useOrders";
+import OrderDetailsModal from "@/components/admin/OrderDetailsModal";
+import { mapFirestoreOrder } from '@/lib/utils/orderMapper';
 import ReservationsPanel from "./ReservationsPanel";
 import ReservationCapacityConfig from "@/components/ReservationCapacityConfig";
 
-// Local interface for meat orders
-interface MeatOrder {
-  id: string;
-  businessId: string;
-  butcherId?: string;
-  orderNumber?: string;
-  customerName?: string;
-  customerPhone?: string;
-  totalPrice?: number;
-  totalAmount?: number;
-  total?: number;
-  status:
-  | "pending"
-  | "accepted"
-  | "preparing"
-  | "ready"
-  | "onTheWay"
-  | "served"
-  | "delivered"
-  | "completed"
-  | "cancelled";
-  createdAt?: { toDate: () => Date } | any;
-  currency?: string;
-}
+
 
 /** 
  * Normalize order status from Firestore - handles legacy values.
  * Mirrors the mobile app's _parseOrderStatus logic in order_service.dart
  */
-function normalizeOrderStatus(rawStatus: string | undefined): MeatOrder['status'] {
+function normalizeOrderStatus(rawStatus: string | undefined): Order['status'] {
   const s = (rawStatus || 'pending').toString();
   switch (s) {
     case 'completed':
@@ -99,7 +80,7 @@ function normalizeOrderStatus(rawStatus: string | undefined): MeatOrder['status'
     case 'served':
     case 'delivered':
     case 'cancelled':
-      return s as MeatOrder['status'];
+      return s as Order['status'];
     default:
       console.warn('[ORDER STATUS] Unknown status:', s, '- defaulting to pending');
       return 'pending';
@@ -221,7 +202,7 @@ export default function BusinessDetailsPage() {
   const dynamicSectorTypes = getActiveSectors();
   const [loading, setLoading] = useState(true); // Data loading state
   const [business, setBusiness] = useState<ButcherPartner | null>(null);
-  const [orders, setOrders] = useState<MeatOrder[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [orderDateFilter, setOrderDateFilter] = useState<string>('all');
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<string>('all');
@@ -241,6 +222,7 @@ export default function BusinessDetailsPage() {
   const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
   const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler" | "teslimat">("bilgiler");
   const [saatlerSubTab, setSaatlerSubTab] = useState<"genel" | "kurye" | "gelal">("genel");
+  const [overviewHoursTab, setOverviewHoursTab] = useState<"genel" | "kurye" | "gelal">("genel");
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
   //  Tedarik Sipariş Yönetimi (Procurement)
@@ -256,6 +238,8 @@ export default function BusinessDetailsPage() {
     taxId: '', paymentTerms: '', deliveryDays: '', minOrderValue: '', notes: '', isActive: true
   });
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [orderForm, setOrderForm] = useState<any>({
     supplierId: '', supplierName: '', status: 'draft',
@@ -947,18 +931,7 @@ export default function BusinessDetailsPage() {
           const d = doc.data();
           return d.butcherId === businessId || d.businessId === businessId;
         })
-        .map((doc) => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            ...d,
-            status: d.status || 'pending',
-            totalPrice: d.totalPrice || d.totalAmount || d.total || 0,
-            customerName: d.customerName || d.userDisplayName || d.userName || '',
-            customerPhone: d.customerPhone || d.userPhone || '',
-            orderNumber: d.orderNumber || doc.id.slice(0, 6).toUpperCase(),
-          } as MeatOrder;
-        })
+        .map((doc) => mapFirestoreOrder(doc))
         .sort((a, b) => {
           const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
           const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
@@ -1608,6 +1581,40 @@ export default function BusinessDetailsPage() {
   };
 
   // Handle Add Product
+  
+  // Update order status
+  const updateOrderStatus = async (orderId: string, newStatus: string, reason?: string) => {
+    try {
+      const updateData: Record<string, unknown> = {
+        status: newStatus,
+        updatedAt: new Date(),
+      };
+      if (reason) {
+        updateData.rejectionReason = reason;
+      }
+      await updateDoc(doc(db, 'meat_orders', orderId), updateData);
+      
+      // We don't have the full order payload here easily to log activity, 
+      // but status updates will be reflected in real-time.
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    }
+  };
+
+  const toggleItemChecked = async (orderId: string, itemIdx: number) => {
+    const orderChecks = checkedItems[orderId] || {};
+    const newChecked = !orderChecks[itemIdx];
+    const updated = { ...orderChecks, [itemIdx]: newChecked };
+    setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
+    try {
+      await updateDoc(doc(db, 'meat_orders', orderId), {
+        [`checkedItems.${itemIdx}`]: newChecked,
+      });
+    } catch (e) {
+      console.error('Error updating checkeditems', e);
+    }
+  };
+
   const handleAddProduct = async () => {
     if (!businessId) return;
     setAddingProduct(true);
@@ -2773,7 +2780,7 @@ export default function BusinessDetailsPage() {
                     className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                   >
                     <option value="all">{t('filter_alle_status')}</option>
-                    <option value="pending">{t('pending')}</option>
+                    <option value="pending">{t('order_pending')}</option>
                     <option value="accepted">{t('filter_bestaetigt')}</option>
                     <option value="preparing">{t('filter_in_zubereitung')}</option>
                     <option value="ready">{t('filter_bereit')}</option>
@@ -2813,7 +2820,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <span className="text-yellow-400 font-semibold text-sm">
-                      {t('pending')} ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
+                      {t('order_pending')} ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
                     </span>
                   </div>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -2841,7 +2848,7 @@ export default function BusinessDetailsPage() {
                           </div>
                         )}
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2870,7 +2877,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2896,7 +2903,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2922,7 +2929,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2948,7 +2955,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.totalPrice || 0, business?.currency)}</span>
+                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2970,7 +2977,7 @@ export default function BusinessDetailsPage() {
                   <p className="text-green-400 text-2xl font-bold">
                     {formatCurrency(orders
                       .filter(o => o.status !== 'cancelled')
-                      .reduce((sum, o) => sum + (o.totalPrice || 0), 0), business?.currency)}
+                      .reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
                   </p>
                   <p className="text-gray-400 text-sm">{t('toplam_ciro')}</p>
                 </div>
@@ -2985,7 +2992,7 @@ export default function BusinessDetailsPage() {
                     {formatCurrency(orders.length > 0
                       ? (
                         orders.reduce(
-                          (sum, o) => sum + (o.totalPrice || 0),
+                          (sum, o) => sum + (o.total || 0),
                           0,
                         ) / orders.length
                       )
@@ -3040,7 +3047,8 @@ export default function BusinessDetailsPage() {
                     <div className="flex justify-between items-center mb-2">
                       <p className="text-gray-400 text-sm">{t('calismaSaatleri2')}</p>
                       {(() => {
-                        const status = checkShopStatus(business?.openingHours || "");
+                        const activeHours = overviewHoursTab === 'gelal' ? business?.pickupHours : (overviewHoursTab === 'kurye' ? business?.deliveryHours : business?.openingHours);
+                        const status = checkShopStatus(activeHours || "");
                         return (
                           <span
                             className={`text-xs px-2 py-0.5 rounded font-medium ${status.isOpen
@@ -3053,8 +3061,69 @@ export default function BusinessDetailsPage() {
                         );
                       })()}
                     </div>
+                    {/* Tabs for Opening Hours */}
                     {(() => {
-                      const hoursData = business?.openingHours;
+                      const hasPickup = (business?.pickupHours && business.pickupHours.length > 0) || business?.pickupStartTime;
+                      const hasDelivery = (business?.deliveryHours && business.deliveryHours.length > 0) || business?.deliveryStartTime;
+                      return (hasPickup || hasDelivery) ? (
+                      <div className="flex w-full bg-gray-900/50 rounded-lg p-1 mb-3">
+                        <button
+                          onClick={() => setOverviewHoursTab('genel')}
+                          className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'genel' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-300'}`}
+                        >
+                          Genel
+                        </button>
+                        {hasPickup && (
+                          <button
+                            onClick={() => setOverviewHoursTab('gelal')}
+                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'gelal' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-300'}`}
+                          >
+                            Gel-Al
+                          </button>
+                        )}
+                        {hasDelivery && (
+                          <button
+                            onClick={() => setOverviewHoursTab('kurye')}
+                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'kurye' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-300'}`}
+                          >
+                            Kurye
+                          </button>
+                        )}
+                      </div>
+                      ) : null;
+                    })()}
+                    {(() => {
+                      const activeHours = overviewHoursTab === 'gelal' ? business?.pickupHours : (overviewHoursTab === 'kurye' ? business?.deliveryHours : business?.openingHours);
+                      const hoursData = activeHours || (overviewHoursTab === 'genel' ? business?.openingHours : null);
+
+                      // For Gel-Al / Kurye tabs: if no per-day hours, show simple start-end time
+                      if (overviewHoursTab === 'gelal' && (!business?.pickupHours || business.pickupHours.length === 0)) {
+                        const start = business?.pickupStartTime || '';
+                        const end = business?.pickupEndTime || '';
+                        if (start || end) {
+                          return (
+                            <div className="text-xs text-gray-300 bg-gray-800/50 rounded-lg p-3 space-y-1">
+                              <div className="flex justify-between"><span className="text-gray-400">{t('gelAlBaslangic')}:</span><span>{start || '-'}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-400">{t('gelAlBitis')}:</span><span>{end || '-'}</span></div>
+                              <p className="text-gray-500 italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
+                            </div>
+                          );
+                        }
+                      }
+                      if (overviewHoursTab === 'kurye' && (!business?.deliveryHours || business.deliveryHours.length === 0)) {
+                        const start = business?.deliveryStartTime || '';
+                        const end = business?.deliveryEndTime || '';
+                        if (start || end) {
+                          return (
+                            <div className="text-xs text-gray-300 bg-gray-800/50 rounded-lg p-3 space-y-1">
+                              <div className="flex justify-between"><span className="text-gray-400">{t('kuryeBaslangic')}:</span><span>{start || '-'}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-400">{t('kuryeBitis')}:</span><span>{end || '-'}</span></div>
+                              <p className="text-gray-500 italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
+                            </div>
+                          );
+                        }
+                      }
+
                       const hoursList = Array.isArray(hoursData)
                         ? hoursData
                         : (hoursData || "").split("\n");
@@ -3323,50 +3392,18 @@ export default function BusinessDetailsPage() {
                   <p>{t('henuzSiparisYok')}</p>
                 </div>
               ) : (
-                <table className="w-full text-left">
-                  <thead className="bg-gray-750 text-gray-400 text-sm">
-                    <tr>
-                      <th className="px-4 py-3">{t('siparisNo')}</th>
-                      <th className="px-4 py-3">{t('musteri')}</th>
-                      <th className="px-4 py-3">{t('tutar')}</th>
-                      <th className="px-4 py-3">{t('durum')}</th>
-                      <th className="px-4 py-3">{t('tarih')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-white">
-                    {orders.slice(0, 10).map((order) => (
-                      <tr
-                        key={order.id}
-                        className="border-t border-gray-700 hover:bg-gray-750"
-                      >
-                        <td className="px-4 py-3 font-mono text-sm text-blue-400">
-                          {order.orderNumber || order.id.slice(0, 8)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <p>{order.customerName || "N/A"}</p>
-                          <p className="text-xs text-gray-400">
-                            {order.customerPhone}
-                          </p>
-                        </td>
-                        <td className="px-4 py-3">
-                          {formatCurrency(order.totalPrice || 0, order.currency)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`px-2 py-1 rounded text-xs ${orderStatusLabels[order.status]?.color || "bg-gray-700"}`}
-                          >
-                            {orderStatusLabels[order.status]?.label || order.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-400 text-sm">
-                          {order.createdAt
-                            ?.toDate?.()
-                            ?.toLocaleDateString("de-DE") || "N/A"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="space-y-3 p-4">
+                  {orders.slice(0, 10).map((order) => (
+                    <OrderCard
+                      key={order.id}
+                      order={order}
+                      businesses={{ [business?.id || '']: business?.companyName || '' }}
+                      checkedItems={{}}
+                      t={t}
+                      onClick={() => setSelectedOrder(order)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           )
@@ -8370,7 +8407,21 @@ export default function BusinessDetailsPage() {
                 </div>
               </div>
             </div>
-          </div>
+          
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          t={t}
+          businesses={{ [business?.id || '']: business?.companyName || '' }}
+          checkedItems={checkedItems[selectedOrder.id] || {}}
+          dateLocale="tr-TR"
+          onUpdateOrderStatus={updateOrderStatus}
+          onToggleItemChecked={toggleItemChecked}
+        />
+      )}
+</div>
         )
       }
 
