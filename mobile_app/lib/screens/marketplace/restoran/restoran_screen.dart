@@ -1185,6 +1185,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   void _autoSetSliderToNearestBusiness() {
     if (_userLat == null || _userLng == null || _allBusinesses.isEmpty) return;
 
+    // Teslimat modunda slider gizli, deliveryRadius zaten filtreliyor
+    // maxDistance'i yuksek tutarak ekstra filtrelemeyi engelle
+    if (_deliveryMode == 'teslimat') {
+      if (mounted) {
+        setState(() {
+          _sliderAutoSet = true;
+          _maxDistance = 200.0; // Effectively disabled -- deliveryRadius handles it
+        });
+      }
+      debugPrint('🎯 Auto-set: teslimat mode, maxDistance=200 (deliveryRadius handles filtering)');
+      return;
+    }
+
     double nearestKm = double.infinity;
 
     for (final doc in _allBusinesses) {
