@@ -25,6 +25,7 @@ interface SponsoredAd {
   bannerImageUrl: string;
   title: string;
   subtitle?: string;
+  productPrice?: number | null;
   productKeywords: string[];
   targetCategories: string[];
   targetRadius: number;
@@ -66,6 +67,7 @@ const DEFAULT_FORM = {
   targetRadius: 10,
   targetBusinessTypes: 'market',
   targetCountries: ['DE'] as string[],
+  productPrice: '' as string | number,
   pricingModel: 'fixed_daily',
   bidAmount: 5,
   dailyBudget: 50,
@@ -111,6 +113,7 @@ export default function SponsoredAdsPage() {
         endDate: d.data().endDate?.toDate?.() || new Date(),
         createdAt: d.data().createdAt?.toDate?.(),
         productKeywords: d.data().productKeywords || [],
+        productPrice: d.data().productPrice || null,
         targetCategories: d.data().targetCategories || [],
         targetBusinessTypes: d.data().targetBusinessTypes || ['market'],
         targetCountries: d.data().targetCountries || ['DE'],
@@ -139,6 +142,7 @@ export default function SponsoredAdsPage() {
       advertiserName: ad.advertiserName,
       title: ad.title,
       subtitle: ad.subtitle || '',
+      productPrice: ad.productPrice ?? '',
       productKeywords: ad.productKeywords.join(', '),
       targetCategories: (ad.targetCategories || []).join(', '),
       targetRadius: ad.targetRadius,
@@ -160,7 +164,7 @@ export default function SponsoredAdsPage() {
   };
 
   const handleSave = async () => {
-    if (!form.advertiserName || !form.title) return;
+    if (!form.advertiserName) return;
     setSaving(true);
     try {
       let bannerImageUrl = bannerPreview;
@@ -188,6 +192,7 @@ export default function SponsoredAdsPage() {
         bannerImageUrl,
         title: form.title,
         subtitle: form.subtitle || null,
+        productPrice: form.productPrice !== '' ? Number(form.productPrice) : null,
         productKeywords: form.productKeywords
           .split(',')
           .map((k) => k.trim())
@@ -542,6 +547,21 @@ export default function SponsoredAdsPage() {
                 </div>
               </div>
 
+              {/* Product Price (optional) */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Produkt Preis (EUR) -- optional</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.productPrice}
+                  onChange={(e) => setForm((f) => ({ ...f, productPrice: e.target.value }))}
+                  placeholder="z.B. 3.99"
+                  className="w-full max-w-[200px] px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                />
+                <p className="text-[10px] text-gray-500 mt-1">Leer lassen, wenn kein Preis angezeigt werden soll</p>
+              </div>
+
               {/* Keywords & Categories */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -698,7 +718,7 @@ export default function SponsoredAdsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleSave}
-                  disabled={saving || !form.advertiserName || !form.title}
+                  disabled={saving || !form.advertiserName}
                   className="flex-1 py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-medium rounded-lg text-sm disabled:opacity-50 transition"
                 >
                   {saving ? t('saving') : editingId ? t('save') : t('create')}

@@ -169,7 +169,8 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                 ),
               ),
             ),
-            // Alt bilgi satiri
+            // Alt bilgi satiri -- sadece icerik varsa goster
+            if (widget.ad.title.isNotEmpty || (widget.ad.subtitle != null && widget.ad.subtitle!.isNotEmpty) || widget.ad.productPrice != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
@@ -178,6 +179,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (widget.ad.title.isNotEmpty)
                         Text(
                           widget.ad.title,
                           style: TextStyle(
@@ -188,13 +190,14 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (widget.ad.subtitle != null) ...[
+                        if (widget.ad.subtitle != null && widget.ad.subtitle!.isNotEmpty) ...[
                           const SizedBox(height: 1),
                           Text(
                             widget.ad.subtitle!,
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 11,
+                              fontWeight: FontWeight.w300,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -203,6 +206,17 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                       ],
                     ),
                   ),
+                  if (widget.ad.productPrice != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '${widget.ad.productPrice!.toStringAsFixed(2)} \u20AC',
+                      style: TextStyle(
+                        color: const Color(0xFFFB335B),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 8),
                   // CTA arrow
                   Container(

@@ -10,6 +10,7 @@ class SponsoredAd {
   final String bannerImageUrl;
   final String title;
   final String? subtitle;
+  final double? productPrice;
   final List<String> productKeywords;
   final List<String>? targetProductIds;
   final List<String>? targetCategories;
@@ -36,6 +37,7 @@ class SponsoredAd {
     required this.bannerImageUrl,
     required this.title,
     this.subtitle,
+    this.productPrice,
     required this.productKeywords,
     this.targetProductIds,
     this.targetCategories,
@@ -65,6 +67,7 @@ class SponsoredAd {
       bannerImageUrl: data['bannerImageUrl'] ?? '',
       title: data['title'] ?? '',
       subtitle: data['subtitle'],
+      productPrice: (data['productPrice'] as num?)?.toDouble(),
       productKeywords: List<String>.from(data['productKeywords'] ?? []),
       targetProductIds: data['targetProductIds'] != null
           ? List<String>.from(data['targetProductIds'])
