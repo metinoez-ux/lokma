@@ -2660,6 +2660,49 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               if (hasKasap) ...[
                 if (hasKermes) const Divider(height: 32),
                 ...cart.items.asMap().entries.map((entry) => _buildLieferandoCartItem(entry.value, entry.key + 1)),
+                // + Urun Ekle button
+                if (cart.butcherId != null && cart.butcherId!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        final mode = _isDineIn ? 'masa' : (_isPickUp ? 'gelal' : 'teslimat');
+                        context.push('/kasap/${cart.butcherId}?mode=$mode');
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: (_accentColor).withValues(alpha: 0.4),
+                            width: 1.5,
+                            strokeAlign: BorderSide.strokeAlignInside,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_rounded,
+                              color: _accentColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'marketplace.add_product'.tr(),
+                              style: TextStyle(
+                                color: _accentColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 SizedBox(height: 16),
               ],
               // 🎯 Promo Preview Banner (CUST-4) — show discount before placing order
@@ -2691,7 +2734,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${_promoPreviewResult!.appliedPromotions.length} Aktionen angewendet',
+                              'marketplace.promo_applied'.tr(namedArgs: {'count': '${_promoPreviewResult!.appliedPromotions.length}'}),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -2702,11 +2745,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             Text(
                               [
                                 if (_promoPreviewResult!.discount > 0)
-                                  '-${_promoPreviewResult!.discount.toStringAsFixed(2)}€ Rabatt',
+                                  'marketplace.promo_discount'.tr(namedArgs: {'amount': '${_promoPreviewResult!.discount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}'}),
                                 if (_promoPreviewResult!.freeDelivery)
-                                  'Kostenlose Lieferung',
+                                  'marketplace.promo_free_delivery'.tr(),
                                 if (_promoPreviewResult!.cashbackAmount > 0)
-                                  '+${_promoPreviewResult!.cashbackAmount.toStringAsFixed(2)}€ Cashback',
+                                  'marketplace.promo_cashback'.tr(namedArgs: {'amount': '${_promoPreviewResult!.cashbackAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}'}),
                               ].join(' · '),
                               style: const TextStyle(
                                 color: Colors.white70,
@@ -3159,43 +3202,33 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
     }
     
-    // Show collapsed ❄️ inline pill (after dismissal)
-    return GestureDetector(
-      onTap: _showColdChainInfoSheet,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [const Color(0xFF0D3B66), const Color(0xFF1A5276)]
-                : [const Color(0xFF4FC3F7), const Color(0xFF0288D1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('\u2744\uFE0F', style: TextStyle(fontSize: 13)),
-            const SizedBox(width: 6),
-            const Text(
-              'Kuhlkette',
+    // Show collapsed inline pill (after dismissal)
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF0D3B66).withOpacity(0.6)
+            : const Color(0xFF4FC3F7).withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('\u2744\uFE0F', style: TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              'marketplace.cold_chain_label'.tr(),
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
+                color: isDark ? const Color(0xFF81D4FA) : const Color(0xFF0277BD),
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.info_outline_rounded,
-              color: Colors.white.withValues(alpha: 0.7),
-              size: 13,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -3235,13 +3268,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 children: [
                   TextSpan(
-                    text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  const TextSpan(text: ' hinzufügen, Mindestbest. '),
-                  TextSpan(
-                    text: '${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                    text: 'marketplace.min_order_add_text'.tr(namedArgs: {
+                      'amount': remaining.toStringAsFixed(2).replaceAll('.', ','),
+                      'currency': CurrencyUtils.getCurrencySymbol(),
+                      'minOrder': minOrder.toStringAsFixed(0),
+                    }),
                   ),
                 ],
               ),
@@ -4673,11 +4704,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               Text(
                 'cart.delivery_fee'.tr(),
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
               ),
               Text(
                 '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
               ),
             ],
           ),
@@ -9539,21 +9570,28 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     const SizedBox(height: 16),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        children: [
-                          Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
-                          GestureDetector(
-                            onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
-                            child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: Colors.grey[800], fontSize: 10, height: 1.4, fontWeight: FontWeight.w500)),
-                          ),
-                          Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
-                          GestureDetector(
-                            onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
-                            child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: Colors.grey[800], fontSize: 10, height: 1.4, fontWeight: FontWeight.w500)),
-                          ),
-                          Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
-                        ],
+                      child: Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          final linkColor = isDark ? Colors.white : Colors.grey[800]!;
+                          final textColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+                          return Wrap(
+                            alignment: WrapAlignment.center,
+                            children: [
+                              Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4)),
+                              GestureDetector(
+                                onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
+                                child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: linkColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w500, decoration: TextDecoration.underline, decorationColor: linkColor)),
+                              ),
+                              Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4)),
+                              GestureDetector(
+                                onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
+                                child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: linkColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w500, decoration: TextDecoration.underline, decorationColor: linkColor)),
+                              ),
+                              Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4)),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     // Extra spacing at bottom for safe scrolling

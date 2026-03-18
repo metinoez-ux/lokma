@@ -426,37 +426,42 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (widget.currentPosition != null)
-                      Row(
-                        children: [
-                          _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
-                          const SizedBox(width: 12),
-                          _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
-                        ],
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          final lat = widget.event.latitude;
+                          final lng = widget.event.longitude;
+                          final label = Uri.encodeComponent(widget.event.title);
+                          // Apple Maps with driving directions
+                          final url = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
+                          launchUrl(url, mode: LaunchMode.externalApplication);
+                        },
+                        child: Row(
+                          children: [
+                            _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
+                            const SizedBox(width: 12),
+                            _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
+                          ],
+                        ),
                       )
                     else 
                       const SizedBox(),
 
                     if (widget.event.hasDelivery)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: (isDark ? Colors.green.withValues(alpha: 0.2) : const Color(0xFFECFDF5)),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.local_shipping, size: 14, color: Colors.green),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
-                              style: TextStyle(
-                                color: isDark ? Colors.green[400] : const Color(0xFF059669),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.two_wheeler, size: 16, color: isDark ? Colors.green[400] : const Color(0xFF059669)),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
+                            style: TextStyle(
+                              color: isDark ? Colors.green[400] : const Color(0xFF059669),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                   ],
                 ),
@@ -856,7 +861,25 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                        (legacyFeatureMap[featureId] ?? false);
       
       if (isActive) {
-        tags.add(_buildDynamicColorTag(feature.icon, feature.label, feature.colorValue, isDark));
+        // Parking tag navigates to parking screen
+        if (featureId == 'parking') {
+          tags.add(
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => KermesParkingScreen(event: widget.event),
+                  ),
+                );
+              },
+              child: _buildDynamicColorTag(feature.icon, feature.label, feature.colorValue, isDark),
+            ),
+          );
+        } else {
+          tags.add(_buildDynamicColorTag(feature.icon, feature.label, feature.colorValue, isDark));
+        }
       }
     }
     
@@ -878,7 +901,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border),
       ),
       child: Row(

@@ -29,6 +29,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
   late TabController _tabController;
   int _selectedIndex = 0;
+  String _businessFilter = 'all'; // 'all', 'tuna', 'kermes', 'kasap'
 
   @override
   void initState() {
@@ -350,32 +351,128 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
       );
     }
 
-    return FutureBuilder<List<DocumentSnapshot>>(
-      future: _fetchBusinessDocs(favoriteIds),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
-        }
+    return Column(
+      children: [
+        // Filter chips row
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('all', 'Hepsi', Icons.apps, isDark),
+                const SizedBox(width: 8),
+                _buildFilterChip('tuna', 'Tuna Isletmeleri', Icons.verified, isDark),
+                const SizedBox(width: 8),
+                _buildFilterChip('kermes', 'Kermesler', Icons.festival, isDark),
+              ],
+            ),
+          ),
+        ),
+        // Business list
+        Expanded(
+          child: FutureBuilder<List<DocumentSnapshot>>(
+            future: _fetchBusinessDocs(favoriteIds),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
+              }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState(
-            icon: Icons.store_outlined,
-            title: tr('common.i_sletme_bulunamadi'),
-            subtitle: tr('common.favori_isletmeleriniz_yuklenem'),
-            isDark: isDark,
-          );
-        }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return _buildEmptyState(
+                  icon: Icons.store_outlined,
+                  title: tr('common.i_sletme_bulunamadi'),
+                  subtitle: tr('common.favori_isletmeleriniz_yuklenem'),
+                  isDark: isDark,
+                );
+              }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: snapshot.data!.length,
-          itemBuilder: (context, index) {
-            final doc = snapshot.data![index];
-            final data = doc.data() as Map<String, dynamic>;
-            return _buildBusinessCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
-          },
-        );
-      },
+              // Apply filter
+              final filtered = snapshot.data!.where((doc) {
+                if (_businessFilter == 'all') return true;
+                final data = doc.data() as Map<String, dynamic>;
+                if (_businessFilter == 'tuna') {
+                  return data['isTuna'] == true ||
+                         data['isTunaPartner'] == true ||
+                         data['isTunaApproved'] == true ||
+                         data['brand']?.toString().toLowerCase() == 'tuna' ||
+                         (data['name']?.toString().toLowerCase().contains('tuna') ?? false) ||
+                         (data['companyName']?.toString().toLowerCase().contains('tuna') ?? false);
+                }
+                if (_businessFilter == 'kermes') {
+                  return data['businessType'] == 'kermes' ||
+                         data['isKermes'] == true;
+                }
+                return true;
+              }).toList();
+
+              if (filtered.isEmpty) {
+                return _buildEmptyState(
+                  icon: Icons.filter_list_off,
+                  title: 'Sonuc bulunamadi',
+                  subtitle: 'Bu filtreye uygun favori isletmeniz yok.',
+                  isDark: isDark,
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final doc = filtered[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  return _buildBusinessCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip(String filterKey, String label, IconData icon, bool isDark) {
+    final isSelected = _businessFilter == filterKey;
+    return GestureDetector(
+      onTap: () => setState(() => _businessFilter = filterKey),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? lokmaRed
+              : (isDark ? const Color(0xFF262626) : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? lokmaRed
+                : (isDark ? const Color(0xFF3A3A3A) : Colors.grey[300]!),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

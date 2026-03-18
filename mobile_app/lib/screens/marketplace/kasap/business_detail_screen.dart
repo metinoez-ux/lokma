@@ -88,6 +88,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   bool _pillInitialized = false;
   final GlobalKey _chipRowKey = GlobalKey();
 
+  // Minimum order banner state
+  bool _minOrderReached = false;
+  bool _showMinOrderSuccess = false;
+  Timer? _minOrderSuccessTimer;
+
   /// Select a category and scroll to its section
   void _selectCategory(String category) {
     if (_selectedCategory == category) return;
@@ -306,6 +311,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   void dispose() {
     _businessSubscription?.cancel();
     _chipScrollController.dispose();
+    _minOrderSuccessTimer?.cancel();
     super.dispose();
   }
   // 🔄 Real-time subscription for categories
@@ -1772,7 +1778,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('common.address'.tr(),
-                                        style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w100)),
+                                        style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
                                       const SizedBox(height: 3),
                                       Text(fullAddress,
                                         style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w100, height: 1.4)),
@@ -1845,8 +1851,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ],
                         
                         // ═══ BUSINESS HOURS ═══
+                        const SizedBox(height: 5),
                         Text('marketplace.business_hours'.tr(),
-                          style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
+                          style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
                         // ═══ CLOSING SOON INDICATOR ═══
                         Builder(builder: (context) {
                           final closingSoonText = _getClosingSoonText();
@@ -1902,7 +1909,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           Divider(color: dividerColor, height: 1),
                           const SizedBox(height: 16),
                           Text('marketplace.impressum'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
+                            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 12),
                           _buildImpressumSection(data, textColor, subtitleColor),
                         ],
@@ -2324,20 +2331,22 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
   Widget _buildOpenStatusHeader(bool isOpenNow) {
+    final accent = _getAccent(context);
+    final bgColor = isOpenNow ? Colors.green : accent;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: isOpenNow ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+        color: bgColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(isOpenNow ? Icons.check_circle_outline : Icons.cancel_outlined, color: isOpenNow ? Colors.green : Colors.red, size: 20),
+          Icon(isOpenNow ? Icons.check_circle_outline : Icons.cancel_outlined, color: Colors.white, size: 20),
           const SizedBox(width: 8),
           Text(isOpenNow ? 'marketplace.filter_open_now_title'.tr() : 'marketplace.currently_closed'.tr(),
-            style: TextStyle(color: isOpenNow ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
         ],
       ),
     );
@@ -3164,7 +3173,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
                             return Container(
                               width: double.infinity,
-                              color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF2EEE9),
+                              color: isDark ? const Color(0xFF2C2C2C).withValues(alpha: 0.6) : const Color(0xFFF2EEE9),
                               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                               child: Row(
                                 children: [
@@ -3172,7 +3181,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     child: Text(
                                       catName,
                                       style: TextStyle(
-                                        color: isDark ? textPrimary : const Color(0xFF3E3E40),
+                                        color: accent,
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
                                         letterSpacing: -0.5,
@@ -3265,7 +3274,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   Widget _buildCartBar() {
      final cart = ref.watch(cartProvider);
      
-     if (cart.isEmpty) return const SizedBox.shrink();
+     if (cart.isEmpty) {
+       // Reset min order state when cart is empty
+       if (_minOrderReached) {
+         _minOrderReached = false;
+         _showMinOrderSuccess = false;
+         _minOrderSuccessTimer?.cancel();
+       }
+       return const SizedBox.shrink();
+     }
      
      final isDark = Theme.of(context).brightness == Brightness.dark;
      final accent = _getAccent(context);
@@ -3279,39 +3296,91 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final isDeliveryMode = _deliveryModeIndex == 0 && !_isMasaMode;
      final itemCount = cart.items.fold<int>(0, (sum, item) => sum + (item.quantity is int ? item.quantity.toInt() : item.quantity.round()));
 
+     // Track min order reached transition
+     if (minOrder > 0 && isDeliveryMode) {
+       if (remaining <= 0 && !_minOrderReached) {
+         // Just reached the minimum!
+         _minOrderReached = true;
+         _showMinOrderSuccess = true;
+         HapticFeedback.mediumImpact();
+         _minOrderSuccessTimer?.cancel();
+         _minOrderSuccessTimer = Timer(const Duration(seconds: 2), () {
+           if (mounted) setState(() => _showMinOrderSuccess = false);
+         });
+       } else if (remaining > 0 && _minOrderReached) {
+         // Dropped below minimum again
+         _minOrderReached = false;
+         _showMinOrderSuccess = false;
+         _minOrderSuccessTimer?.cancel();
+       }
+     }
+
+     // Should we show the banner?
+     final showBanner = minOrder > 0 && isDeliveryMode && (remaining > 0 || _showMinOrderSuccess);
+     final isSuccess = remaining <= 0 && _showMinOrderSuccess;
+
      return Column(
        mainAxisSize: MainAxisSize.min,
        children: [
-         // Minimum order value banner (Lieferando-style) — only in delivery mode
-         if (minOrder > 0 && remaining > 0 && isDeliveryMode)
-           Container(
-             width: double.infinity,
-             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-             color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF5F5F5),
+         // Minimum order banner (stacked wallet style - sits behind/above cart pill)
+         if (showBanner)
+           AnimatedContainer(
+             duration: const Duration(milliseconds: 300),
+             curve: Curves.easeOut,
+             margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+             decoration: BoxDecoration(
+               color: isSuccess
+                   ? (isDark ? const Color(0xFF1B5E20) : const Color(0xFFE8F5E9))
+                   : (isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0)),
+               borderRadius: const BorderRadius.only(
+                 topLeft: Radius.circular(16),
+                 topRight: Radius.circular(16),
+               ),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withValues(alpha: 0.08),
+                   blurRadius: 4,
+                   offset: const Offset(0, -1),
+                 ),
+               ],
+             ),
              child: Row(
+               mainAxisAlignment: MainAxisAlignment.center,
                children: [
-                 Icon(Icons.pedal_bike, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                 Icon(
+                   isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
+                   size: 16,
+                   color: isSuccess
+                       ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
+                       : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                 ),
                  const SizedBox(width: 8),
-                 Expanded(
+                 Flexible(
                    child: Text(
-                     'checkout.min_order_remaining'.tr(namedArgs: {
-                       'amount': remaining.toStringAsFixed(2),
-                       'currency': currency,
-                     }),
+                     isSuccess
+                         ? 'checkout.min_order_success'.tr()
+                         : 'checkout.min_order_remaining'.tr(namedArgs: {
+                             'amount': remaining.toStringAsFixed(2),
+                             'currency': currency,
+                           }),
                      style: TextStyle(
                        fontSize: 13,
                        fontWeight: FontWeight.w500,
-                       color: isDark ? Colors.grey[300] : Colors.grey[700],
+                       color: isSuccess
+                           ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
+                           : (isDark ? Colors.grey[300] : Colors.grey[700]),
                      ),
+                     textAlign: TextAlign.center,
                    ),
                  ),
                ],
              ),
            ),
-         // ── Lieferando-Style Single Pill Cart Button ──
+         // Cart Button Pill (overlaps banner bottom for stacked wallet effect)
          Padding(
            padding: EdgeInsets.only(
-             left: 16, right: 16, top: 12,
+             left: 16, right: 16, top: showBanner ? 0 : 12,
              bottom: MediaQuery.of(context).padding.bottom + 12,
            ),
            child: Material(
@@ -3869,6 +3938,34 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               product.outOfStock ? 'Stokta Yok' : tr('marketplace.unavailable'),
                               style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                             ),
+                          ),
+                        ),
+                      // Product Favorite Heart (top right, when available)
+                      if (isAvailable)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: Consumer(
+                            builder: (context, ref, _) {
+                              final favs = ref.watch(productFavoritesProvider);
+                              final isFav = favs.contains(product.sku);
+                              return GestureDetector(
+                                onTap: () => ref.read(productFavoritesProvider.notifier).toggleFavorite(product.sku),
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.35),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isFav ? Icons.favorite : Icons.favorite_border,
+                                    color: isFav ? Colors.redAccent : Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       // 🏷️ Cart quantity badge (top left) — shows gram/piece count

@@ -682,14 +682,31 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
+                                        // Open/closed indicator dot
+                                        Container(
+                                          width: 6 * scaleFactor,
+                                          height: 6 * scaleFactor,
+                                          margin: EdgeInsets.only(right: 3 * scaleFactor),
+                                          decoration: BoxDecoration(
+                                            color: openGreen,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: openGreen.withValues(alpha: 0.5),
+                                                blurRadius: 3,
+                                                spreadRadius: 0.5,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                         // Name
                                         Flexible(
                                           child: Text(
                                             business.name.length > 12
-                                                ? '${business.name.substring(0, 11)}…'
+                                                ? '${business.name.substring(0, 11)}...'
                                                 : business.name,
                                             style: TextStyle(
-                                              fontSize: 9 * scaleFactor,
+                                              fontSize: 10.5 * scaleFactor,
                                               fontWeight: FontWeight.w600,
                                               color: closingSoon
                                                   ? const Color(0xFFE65100)
@@ -719,7 +736,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                             child: Text(
                                               '${business.distanceKm!.toStringAsFixed(1)}km',
                                               style: TextStyle(
-                                                fontSize: 8 * scaleFactor,
+                                                fontSize: 9.5 * scaleFactor,
                                                 fontWeight: FontWeight.w700,
                                                 color: lokmaPink,
                                               ),

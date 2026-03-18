@@ -38,6 +38,7 @@ class _ProductCustomizationSheetState
   final Map<String, Set<String>> _selections = {};
   double _quantity = 1;
   final _noteController = TextEditingController();
+  String? _recipientName;
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _ProductCustomizationSheetState
       // Editing: restore previous selections
       _quantity = existing.quantity;
       if (existing.note != null) _noteController.text = existing.note!;
+      _recipientName = existing.recipientName;
       // Build selections from existing cart item
       for (final group in widget.product.optionGroups) {
         _selections[group.id] = {};
@@ -138,9 +140,10 @@ class _ProductCustomizationSheetState
 
   void _addToCart() {
   final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
+  final recipientText = _recipientName?.trim().isNotEmpty == true ? _recipientName!.trim() : null;
   final cartNotifier = ref.read(cartProvider.notifier);
   
-  // If editing, remove the old variant first (options may have changed → different uniqueKey)
+  // If editing, remove the old variant first (options may have changed -> different uniqueKey)
   if (widget.existingItem != null) {
     cartNotifier.removeFromCart(widget.existingItem!.uniqueKey);
   }
@@ -152,6 +155,7 @@ class _ProductCustomizationSheetState
     widget.businessName,
     selectedOptions: _selectedOptions,
     note: noteText,
+    recipientName: recipientText,
   );
   Navigator.pop(context);
   HapticFeedback.heavyImpact();
@@ -211,28 +215,37 @@ class _ProductCustomizationSheetState
                     ..._buildVisibleOptionGroups(isDark, textPrimary, textSecondary, accent, divider),
                   ],
 
-                  // ── Note Field (optional, only after all required options selected) ──
+                  // -- Note Chip (tappable, opens full note bottom sheet) --
                   if (_allRequiredGroupsSelected) ...[
-                    TextField(
-                      controller: _noteController,
-                      maxLength: 40,
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: tr('marketplace.add_note_hint'),
-                        hintStyle: TextStyle(color: textSecondary, fontSize: 13),
-                        prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
-                        filled: true,
-                        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
-                        border: OutlineInputBorder(
+                    GestureDetector(
+                      onTap: () => _showNoteSheet(isDark),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
                         ),
-                        counterText: '',
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        isDense: true,
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_note_rounded, color: accent, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _buildNotePreview(),
+                                style: TextStyle(
+                                  color: (_noteController.text.trim().isNotEmpty || (_recipientName?.trim().isNotEmpty ?? false))
+                                      ? textPrimary
+                                      : textSecondary,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (_noteController.text.trim().isNotEmpty || (_recipientName?.trim().isNotEmpty ?? false))
+                              Icon(Icons.check_circle, color: accent, size: 16),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -545,7 +558,254 @@ class _ProductCustomizationSheetState
     );
   }
 
-  // ── Quantity button helper ──
+  // -- Note preview text for the chip --
+  String _buildNotePreview() {
+    final hasRecipient = _recipientName?.trim().isNotEmpty ?? false;
+    final hasNote = _noteController.text.trim().isNotEmpty;
+    if (hasRecipient && hasNote) {
+      return '${_recipientName!.trim()} · ${_noteController.text.trim()}';
+    } else if (hasRecipient) {
+      return _recipientName!.trim();
+    } else if (hasNote) {
+      return _noteController.text.trim();
+    }
+    return tr('marketplace.add_note_hint');
+  }
+
+  // -- Note bottom sheet (same as cart) --
+  void _showNoteSheet(bool isDark) {
+    final recipientController = TextEditingController(text: _recipientName ?? '');
+    final noteSheetController = TextEditingController(text: _noteController.text);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Title
+                  Text(
+                    'cart.your_note'.tr(),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // FIELD 1: Kimin icin?
+                  Text(
+                    'cart.note_recipient_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'cart.note_recipient_hint_desc'.tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A28) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: recipientController,
+                      maxLength: 40,
+                      maxLines: 1,
+                      autofocus: false,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'cart.note_recipient_placeholder'.tr(),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          size: 20,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // FIELD 2: Yemek Notu
+                  Text(
+                    'cart.note_food_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'cart.note_allergy_disclaimer'.tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Character counter
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${noteSheetController.text.length}/160',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Text input
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 80),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A28) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: TextField(
+                      controller: noteSheetController,
+                      maxLength: 160,
+                      maxLines: 3,
+                      minLines: 2,
+                      autofocus: false,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'cart.note_placeholder'.tr(),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(16),
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Action buttons
+                  Row(
+                    children: [
+                      // Cancel
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(ctx),
+                          child: Container(
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: Text(
+                              'common.cancel'.tr(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Save
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _noteController.text = noteSheetController.text.trim();
+                              _recipientName = recipientController.text.trim().isNotEmpty
+                                  ? recipientController.text.trim()
+                                  : null;
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          child: Container(
+                            height: 50,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: (noteSheetController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
+                                  ? const Color(0xFF3E3E40)
+                                  : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Text(
+                              'common.save'.tr(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: (noteSheetController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
+                                    ? Colors.white
+                                    : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // -- Quantity button helper --
   Widget _qtyButton({required IconData icon, required Color color, required VoidCallback onTap}) {
     return Material(
       color: Colors.transparent,

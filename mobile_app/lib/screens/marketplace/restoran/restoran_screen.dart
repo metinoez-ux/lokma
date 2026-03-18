@@ -2296,6 +2296,46 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
                     ),
 
+                    // Grup Siparis badge (BOTTOM RIGHT) - only for dine-in enabled businesses
+                    if (data['dineInEnabled'] == true)
+                      Positioned(
+                        right: 12,
+                        bottom: 12,
+                        child: Opacity(
+                          opacity: isAvailable ? 1.0 : 0.7,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.groups_rounded, color: Colors.white, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  tr('marketplace.group_order_badge'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
                   ],
                 ),
 

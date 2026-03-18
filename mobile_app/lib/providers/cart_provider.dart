@@ -161,21 +161,22 @@ class CartNotifier extends Notifier<CartState> {
     String currentButcherName, {
     List<SelectedOption> selectedOptions = const [],
     String? note,
+    String? recipientName,
   }) {
     if (quantity <= 0) return;
 
-    // Different business → clear and start fresh
+    // Different business -> clear and start fresh
     if (state.butcherId != null && state.butcherId != currentButcherId) {
       state = CartState(
         butcherId: currentButcherId,
         butcherName: currentButcherName,
-        items: [CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note)],
+        items: [CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note, recipientName: recipientName)],
       );
       _persist();
       return;
     }
 
-    final newItem = CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note);
+    final newItem = CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note, recipientName: recipientName);
     final existingIndex = state.items.indexWhere((item) => item.uniqueKey == newItem.uniqueKey);
 
     if (existingIndex >= 0) {

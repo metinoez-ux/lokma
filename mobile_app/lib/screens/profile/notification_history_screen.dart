@@ -77,6 +77,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   @override
   void dispose() {
     _swipeHintController.dispose();
+    // Clear any lingering snackbars so they don't appear on other screens
+    ScaffoldMessenger.of(context).clearSnackBars();
     super.dispose();
   }
 
@@ -220,8 +222,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   static final _statusMeta = <String, Map<String, dynamic>>{
     'pending':   {'labelKey': 'notifications.order_placed',    'icon': '', 'color': 0xFFFF9800, 'iconData': Icons.receipt_long_rounded},
     'accepted':  {'labelKey': 'notifications.confirmed',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
-    'preparing': {'labelKey': 'notifications.preparing',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service, 'assetIcon': 'assets/icons/food_preparing.png'},
-    'ready':     {'labelKey': 'notifications.ready',           'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.inventory_2_rounded, 'assetIcon': 'assets/icons/food_ready.png'},
+    'preparing': {'labelKey': 'notifications.preparing',       'icon': '', 'color': 0xFFFF9800, 'iconData': Icons.outdoor_grill_rounded},
+    'ready':     {'labelKey': 'notifications.ready',           'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.takeout_dining_rounded},
     'onTheWay':       {'labelKey': 'notifications.on_the_way',       'icon': '', 'color': 0xFF00BCD4, 'iconData': Icons.delivery_dining},
     'readyForPickup': {'labelKey': 'notifications.ready_for_pickup', 'icon': '', 'color': 0xFF007AFF, 'iconData': Icons.storefront_rounded},
     'delivered': {'labelKey': 'notifications.delivered',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
@@ -748,12 +750,15 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         onDismissed: () async {
                           await _trashReservationGroup(item);
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
                               SnackBar(
                                 content: Text('notifications.notification_trashed'.tr()),
+                                duration: const Duration(seconds: 3),
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFF4CAF50),
+                                  textColor: const Color(0xFFFB335B),
                                   onPressed: () => _undoTrashReservationGroup(item),
                                 ),
                                 behavior: SnackBarBehavior.floating,
@@ -798,12 +803,15 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         onDismissed: () async {
                           await _trashOrderGroup(item);
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
                               SnackBar(
                                 content: Text('notifications.notification_trashed'.tr()),
+                                duration: const Duration(seconds: 3),
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFF4CAF50),
+                                  textColor: const Color(0xFFFB335B),
                                   onPressed: () => _undoTrashOrderGroup(item),
                                 ),
                                 behavior: SnackBarBehavior.floating,
@@ -842,12 +850,15 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         onDismissed: () async {
                           await _trashGenericNotification(docId);
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            ScaffoldMessenger.of(context)
+                              ..clearSnackBars()
+                              ..showSnackBar(
                               SnackBar(
                                 content: Text('notifications.notification_trashed'.tr()),
+                                duration: const Duration(seconds: 3),
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFF4CAF50),
+                                  textColor: const Color(0xFFFB335B),
                                   onPressed: () => _undoTrashGeneric(docId),
                                 ),
                                 behavior: SnackBarBehavior.floating,
