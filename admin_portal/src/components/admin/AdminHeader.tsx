@@ -114,6 +114,11 @@ export default function AdminHeader() {
             } else {
                 setOldestPendingTime(null);
             }
+        }, (error) => {
+            // Firestore composite index hatasi sayfayi cokertmesin
+            console.error('[AdminHeader] Pending orders listener error:', error);
+            setPendingOrderCount(0);
+            setOldestPendingTime(null);
         });
         return () => unsub();
     }, [admin, businessId]);
