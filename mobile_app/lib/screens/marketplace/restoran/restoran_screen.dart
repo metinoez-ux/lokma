@@ -2149,6 +2149,39 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       }(),
                     ],
 
+                    // 🆕 Overlay for table reservation warning
+                    if (_deliveryMode == 'masada' && (data['hasReservation'] as bool? ?? false))
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          color: Colors.black.withValues(alpha: 0.65),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.info_outline, color: Colors.white, size: 14),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  tr('marketplace.business_approval_required'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+
                     // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
                     if (logoUrl != null && logoUrl.isNotEmpty)
                       Positioned(

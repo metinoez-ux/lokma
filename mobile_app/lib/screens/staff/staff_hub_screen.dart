@@ -5,11 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/driver_provider.dart';
 import '../../services/table_session_service.dart';
 import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
+import '../../services/staff_role_service.dart';
 import '../../utils/currency_utils.dart';
 
 /// Unified Staff Hub — Personel Girişi
@@ -2614,7 +2616,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   Widget _orderStatCard(String label, int count, IconData icon, Color color, bool isDark, {bool dominant = false}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: dominant ? 14 : 10, horizontal: 6),
+        padding: EdgeInsets.symmetric(vertical: dominant ? 14 : 10, horizontal: 6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: dominant ? 0.12 : 0.06),
           borderRadius: BorderRadius.circular(14),
@@ -2768,6 +2770,124 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     }
   }
 
+  // ── Unsettled Cash Card ──
+  Widget _buildUnsettledCashCard(bool isDark) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox();
+
+    final lastSettlement = StaffRoleService().lastCashSettlement ?? DateTime(2024);
+
+    return StreamBuilder<List<LokmaOrder>>(
+      stream: OrderService().getMyCompletedDeliveriesSince(uid, lastSettlement),
+      builder: (context, courierSnap) {
+        return StreamBuilder<List<LokmaOrder>>(
+          stream: OrderService().getStaffServedOrdersSince(uid, lastSettlement),
+          builder: (context, waiterSnap) {
+            final courierOrders = courierSnap.data ?? [];
+            final waiterOrders = waiterSnap.data ?? [];
+
+            final Map<String, LokmaOrder> allMap = {};
+            for (final o in courierOrders) allMap[o.id] = o;
+            for (final o in waiterOrders) allMap[o.id] = o;
+
+            double unsettledCash = 0;
+            int cashOrderCount = 0;
+            for (final o in allMap.values) {
+              if (o.paymentMethod == 'cash' || o.paymentMethod == 'nakit') {
+                unsettledCash += o.totalAmount;
+                cashOrderCount++;
+              }
+            }
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade700, Colors.green.shade900],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'staff.cash_to_business'.tr(),
+                          style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          CurrencyUtils.formatAmount(unsettledCash),
+                          style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          lastSettlement.year == 2024
+                              ? 'staff.cash_all_time'.tr(args: [cashOrderCount.toString()])
+                              : 'staff.cash_since_last'.tr(args: [DateFormat('dd.MM.yyyy HH:mm').format(lastSettlement)]),
+                          style: const TextStyle(color: Colors.white60, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: unsettledCash > 0
+                        ? () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text('staff.cash_reset_title'.tr()),
+                                content: Text('staff.cash_reset_confirm'.tr(args: [CurrencyUtils.formatAmount(unsettledCash)])),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('common.cancel'.tr())),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text('common.confirm'.tr(), style: const TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true && mounted) {
+                              await StaffRoleService().settleCash(unsettledCash);
+                              setState(() {}); // refresh UI
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('staff.cash_reset_success'.tr())),
+                              );
+                            }
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.green.shade800,
+                      disabledBackgroundColor: Colors.white30,
+                      disabledForegroundColor: Colors.white54,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text('staff.cash_handover'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   // ── Tab 2: Wallet (Cash + Tips tracking) ──
   Widget _buildWalletTab(bool isDark) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -2857,6 +2977,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Unsettled Cash Card
+                  _buildUnsettledCashCard(isDark),
+
                   // Date filter pills
                   Row(
                     children: [
@@ -4261,11 +4384,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   // Items summary
                                   ...items.take(3).map((item) {
                                     final name = item['name']?.toString() ?? item['productName']?.toString() ?? '?';
-                                    final qty = item['quantity'] ?? 1;
+                                    final qtyRaw = item['quantity'] ?? 1;
+                                    final qtyStr = (qtyRaw is num && qtyRaw % 1 == 0) ? qtyRaw.toInt().toString() : qtyRaw.toString();
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 2),
                                       child: Text(
-                                        '${qty}x $name',
+                                        '${qtyStr}x $name',
                                         style: TextStyle(fontSize: 13, color: isDark ? Colors.grey[300] : Colors.grey[700]),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,

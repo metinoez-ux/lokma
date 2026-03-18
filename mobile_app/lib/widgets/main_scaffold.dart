@@ -17,12 +17,12 @@ class MainScaffold extends ConsumerStatefulWidget {
   
   const MainScaffold({super.key, required this.child});
 
-  static List<_NavItemData> get _items => [
-    _NavItemData(icon: Icons.restaurant_menu, label: 'navigation.food'.tr(), path: '/restoran'),
-    _NavItemData(icon: Icons.storefront_rounded, label: 'navigation.market'.tr(), path: '/market'),
-    _NavItemData(icon: null, label: 'navigation.kermes'.tr(), path: '/kermesler', isKermes: true),
-    _NavItemData(icon: Icons.shopping_bag_rounded, label: 'navigation.cart'.tr(), path: '/cart', isCart: true),
-    _NavItemData(icon: Icons.person_rounded, label: 'navigation.profile'.tr(), path: '/profile'),
+  static List<NavItemData> get items => [
+    NavItemData(icon: Icons.restaurant_menu, label: 'navigation.food'.tr(), path: '/restoran'),
+    NavItemData(icon: Icons.storefront_rounded, label: 'navigation.market'.tr(), path: '/market'),
+    NavItemData(icon: null, label: 'navigation.kermes'.tr(), path: '/kermesler', isKermes: true),
+    NavItemData(icon: Icons.shopping_bag_rounded, label: 'navigation.cart'.tr(), path: '/cart', isCart: true),
+    NavItemData(icon: Icons.person_rounded, label: 'navigation.profile'.tr(), path: '/profile'),
   ];
   
   @override
@@ -426,18 +426,18 @@ class GlassBottomBar extends StatelessWidget {
   }
 }
 
-class _NavItemData {
+class NavItemData {
   final IconData? icon;
   final String label;
   final String path;
   final bool isKermes;
   final bool isCart;
 
-  const _NavItemData({
+  const NavItemData({
     required this.label, 
     required this.path, 
     this.icon,
     this.isKermes = false,
     this.isCart = false,
   });
-}
+} 

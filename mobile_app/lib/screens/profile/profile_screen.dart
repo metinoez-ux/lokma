@@ -172,7 +172,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            // Second row: Reservations and Notifications
+                            // Second row: Reservations, Notifications, Personel Girisi
                             IntrinsicHeight(
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -189,110 +189,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       () =>
                                           context.push('/notification-settings')),
                                   const SizedBox(width: 12),
-                                  const Expanded(
-                                      child:
-                                          SizedBox()), // Placeholder for grid alignment
+                                  if (staffSnapshot.data == true ||
+                                      ref.watch(driverProvider).isDriver)
+                                    _buildQuickAccessChip(
+                                        Icons.badge,
+                                        'profile.staff_login'.tr(),
+                                        () => context.push('/staff-hub'))
+                                  else
+                                    const Expanded(child: SizedBox()),
                                 ],
                               ),
                             ),
-                            // Teslimat Paneli removed - consolidated into Teslimatlarım
                           ],
-                        );
-                      },
-                    ),
-                    // Driver Panel - for couriers assigned to multiple businesses
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final driverState = ref.watch(driverProvider);
-                        final isDriver = driverState.isDriver;
-
-                        // Show unified Staff Hub button if driver OR reservation staff
-                        return FutureBuilder<bool>(
-                          future: _checkStaffReservationAccess(),
-                          builder: (context, snapshot) {
-                            final hasReservation = snapshot.data == true;
-
-                            // If neither driver nor reservation staff, hide
-                            if (!isDriver && !hasReservation) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return Column(
-                              children: [
-                                const SizedBox(height: 12),
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    context.push('/staff-hub');
-                                  },
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14, horizontal: 16),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).brightness == Brightness.dark
-                                          ? const Color(0xFF2A2A2A)
-                                          : Colors.grey[50],
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                          color: Theme.of(context).brightness == Brightness.dark
-                                              ? Colors.grey[700]!
-                                              : Colors.grey[300]!,
-                                          width: 1),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context).brightness == Brightness.dark
-                                                ? Colors.grey[800]
-                                                : Colors.grey[100],
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Icon(Icons.badge,
-                                              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[700],
-                                              size: 22),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'profile.staff_login'.tr(),
-                                                style: TextStyle(
-                                                  color: Theme.of(context).colorScheme.onSurface,
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              Text(
-                                                [
-                                                  if (isDriver) 'profile.delivery'.tr(),
-                                                  if (hasReservation)
-                                                    'profile.reservation'.tr(),
-                                                ].join(' • '),
-                                                style: TextStyle(
-                                                  color: Colors.grey[500],
-                                                  fontSize: 11,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Icon(Icons.arrow_forward_ios,
-                                            size: 16,
-                                            color: Colors.grey[400]),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
                         );
                       },
                     ),

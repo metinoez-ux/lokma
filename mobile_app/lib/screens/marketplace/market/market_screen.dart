@@ -909,6 +909,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             // Collapsing Header - Pinned (konum + arama her zaman görünür)
             SliverAppBar(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,

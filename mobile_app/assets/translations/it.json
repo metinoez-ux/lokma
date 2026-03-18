@@ -995,7 +995,7 @@
     "rating_saved_thanks": "La tua recensione è stata salvata. Grazie! 🎉",
     "make_rating": "Valuta",
     "rate_business": "Valuta Negozio",
-    "write_comment": "Scrivi una Recensione",
+    "write_comment": "Scrivi un commento",
     "your_table_card_number": "Numero della tua carta del tavolo",
     "order_error_e": "Errore dell'ordine: $e",
     "how_would_you_like_to_order": "Come vorresti ordinare?",
@@ -1112,7 +1112,20 @@
     "payment_card": "Carta",
     "courier": "Corriere",
     "business": "Negozio",
-    "delivery": "Consegna"
+    "delivery": "Consegna",
+    "rate_business_title": "Valuta il ristorante",
+    "how_was_food": "Com'era il cibo? {}",
+    "help_improve_service": "Aiuta tutti a ricevere un servizio migliore.",
+    "courier_experience": "Esperienza corriere",
+    "pickup_experience": "Esperienza ritiro",
+    "experience_bad": "Pessima",
+    "experience_ok": "Discreta",
+    "experience_great": "Ottima",
+    "optional_length": "Opzionale - {}/255",
+    "comment_hint_completed": "Il cibo era delizioso? Era imballato bene? Facci sapere...",
+    "comment_hint_not_completed": "Potrai lasciare un commento quando l'ordine sarà completato...",
+    "submit_rating": "Invia",
+    "after_order_completed": "A ordine completato"
   },
   "payments": {
     "step1_payment_collection": "💵 Fase 1: Incasso pagamento",
@@ -1323,7 +1336,14 @@
     "payment_not_collected": "⚠️ Pagamento non riscosso",
     "yes_on_my_way": "Sì, sono in arrivo",
     "address_wrong_unreachable": "Indirizzo errato / Cliente irraggiungibile",
-    "card_payment_received": "✅ Pagamento con carta ricevuto!"
+    "card_payment_received": "✅ Pagamento con carta ricevuto!",
+    "cash_to_business": "Cash for Business",
+    "cash_all_time": "All time ({} transactions)",
+    "cash_since_last": "Since last reset: {}",
+    "cash_reset_title": "Reset Cash",
+    "cash_reset_confirm": "Do you confirm handing over a total of {} cash to the business?",
+    "cash_reset_success": "Cash successfully reset and handed over to the business.",
+    "cash_handover": "Handover"
   },
   "wallet": {
     "lokma_wallet": "Portafoglio LOKMA",

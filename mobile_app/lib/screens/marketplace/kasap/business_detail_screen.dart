@@ -1379,7 +1379,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                        children: [
                          _buildBrandIconElement(Icons.verified, 'Halal-Schlachtung', Colors.green),
                          _buildBrandIconElement(Icons.bolt, 'Ohne Betäubung', Colors.amber),
-                         _buildBrandIconElement(Icons.clean_hands, 'Kuru Yolum', Colors.amber),
+                         _buildBrandIconElement(Icons.clean_hands, 'marketplace.kuru_yolum'.tr(), Colors.amber),
                        ],
                      ),
                      SizedBox(height: 32),
@@ -1409,7 +1409,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              children: [
                                Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
                                const SizedBox(width: 8),
-                               Text('Was ist Kuru Yolum?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
+                               Text('marketplace.what_is_kuru_yolum'.tr(), style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
                              ],
                            ),
                            const SizedBox(height: 8),
@@ -2163,33 +2163,50 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       lines = standardizedLines;
 
       bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      
+      final bool isOpenNow = OpeningHoursHelper(hours).isOpenAt(now);
+
       if (!structureMatch) {
-        return ListView(
-          padding: EdgeInsets.zero,
-          children: lines.map((line) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Text(line, style: TextStyle(color: textColor, fontSize: 14)),
-          )).toList(),
+        return Column(
+          children: [
+            _buildOpenStatusHeader(isOpenNow),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: lines.map((line) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Text(line, style: TextStyle(color: textColor, fontSize: 14)),
+                )).toList(),
+              ),
+            ),
+          ],
         );
       }
 
-      return ListView(
-        padding: EdgeInsets.zero,
-        children: List.generate(7, (i) {
-          final dayNameTr = dayNamesTr[i];
-          final dayNameDisplay = dayNamesDisplay[i];
-          final isToday = todayIndex == i;
-          
-          final line = lines.firstWhere(
-            (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
-            orElse: () => '$dayNameTr: Kapalı'
-          );
-          
-          String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
-          if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
+      return Column(
+        children: [
+          _buildOpenStatusHeader(isOpenNow),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: List.generate(7, (i) {
+                final dayNameTr = dayNamesTr[i];
+                final dayNameDisplay = dayNamesDisplay[i];
+                final isToday = todayIndex == i;
+                
+                final line = lines.firstWhere(
+                  (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+                  orElse: () => '$dayNameTr: Kapalı'
+                );
+                
+                String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+                if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
 
-          return _buildDayRow(dayNameDisplay, content, isToday, isDark, textColor, subtitleColor, accent);
-        }),
+                return _buildDayRow(dayNameDisplay, content, isToday, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+              }),
+            ),
+          ),
+        ],
       );
     } catch (e) {
       debugPrint('Error building general hours tab: $e');
@@ -2242,23 +2259,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       }
 
       final bool structureMatch = standardizedLines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      final bool isOpenNow = OpeningHoursHelper(perDayHours).isOpenAt(now);
+
       if (structureMatch) {
-        return ListView(
-          padding: EdgeInsets.zero,
-          children: List.generate(7, (i) {
-            final dayNameTr = dayNamesTr[i];
-            final line = standardizedLines.firstWhere(
-              (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
-              orElse: () => '$dayNameTr: Kapalı',
-            );
-            String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
-            final isClosed = content.isEmpty ||
-                content.toLowerCase().contains('kapalı') ||
-                content.toLowerCase().contains('geschlossen') ||
-                content.toLowerCase().contains('closed');
-            if (isClosed) content = 'common.closed'.tr();
-            return _buildDayRow(dayNamesDisplay[i], content, todayIndex == i, isDark, textColor, subtitleColor, accent);
-          }),
+        return Column(
+          children: [
+            _buildOpenStatusHeader(isOpenNow),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: List.generate(7, (i) {
+                  final dayNameTr = dayNamesTr[i];
+                  final line = standardizedLines.firstWhere(
+                    (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+                    orElse: () => '$dayNameTr: Kapalı',
+                  );
+                  String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+                  final isClosed = content.isEmpty ||
+                      content.toLowerCase().contains('kapalı') ||
+                      content.toLowerCase().contains('geschlossen') ||
+                      content.toLowerCase().contains('closed');
+                  if (isClosed) content = 'common.closed'.tr();
+                  return _buildDayRow(dayNamesDisplay[i], content, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+                }),
+              ),
+            ),
+          ],
         );
       }
     }
@@ -2280,36 +2306,76 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     final hoursText = '$startTime - $endTime';
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: List.generate(7, (i) {
-        return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i, isDark, textColor, subtitleColor, accent);
-      }),
+    final isOpenNow = OpeningHoursHelper(null).isOpenWithinTime(startTime, endTime, now);
+    
+    return Column(
+      children: [
+        _buildOpenStatusHeader(isOpenNow),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: List.generate(7, (i) {
+              return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i, isDark, textColor, subtitleColor, accent, isOpenNow: isOpenNow);
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOpenStatusHeader(bool isOpenNow) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: isOpenNow ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(isOpenNow ? Icons.check_circle_outline : Icons.cancel_outlined, color: isOpenNow ? Colors.green : Colors.red, size: 20),
+          const SizedBox(width: 8),
+          Text(isOpenNow ? 'marketplace.filter_open_now_title'.tr() : 'marketplace.currently_closed'.tr(),
+            style: TextStyle(color: isOpenNow ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+        ],
+      ),
     );
   }
 
   // ═══ SINGLE DAY ROW — Lieferando style ═══
-  Widget _buildDayRow(String dayName, String hours, bool isToday, bool isDark, Color textColor, Color subtitleColor, Color accent) {
+  Widget _buildDayRow(String dayName, String hours, bool isToday, bool isDark, Color textColor, Color subtitleColor, Color accent, {bool? isOpenNow}) {
     final isClosed = hours == 'common.closed'.tr() || hours.toLowerCase().contains('kapalı') || hours.toLowerCase().contains('geschlossen') || hours.toLowerCase().contains('closed');
     
-    final dayColor = isToday ? accent : (isDark ? Colors.grey[300]! : Colors.black87);
-    final hoursColor = isToday ? accent : (isClosed ? (isDark ? Colors.grey[500]! : Colors.grey) : textColor);
+    Color todayColor;
+    if (isOpenNow != null) {
+      todayColor = isOpenNow ? Colors.green : Colors.red;
+    } else {
+      todayColor = accent;
+    }
+    
+    final dayColor = isToday ? todayColor : (isDark ? Colors.grey[300]! : Colors.black87);
+    final hoursColor = isToday ? todayColor : (isClosed ? (isDark ? Colors.grey[500]! : Colors.grey) : textColor);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 2),
+      decoration: isToday ? BoxDecoration(
+        color: todayColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(6),
+      ) : null,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(dayName, style: TextStyle(
             color: dayColor,
             fontSize: 15,
-            fontWeight: isToday ? FontWeight.w300 : FontWeight.w100,
+            fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
           )),
           Text(hours, style: TextStyle(
             color: hoursColor,
             fontSize: 15,
-            fontWeight: isToday ? FontWeight.w300 : FontWeight.w100,
+            fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
           )),
         ],
       ),

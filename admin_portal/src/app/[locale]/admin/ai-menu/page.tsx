@@ -732,7 +732,7 @@ function AIMenuPageContent() {
                         </div>
                         <div className="text-center space-y-2">
                             <h2 className="text-2xl font-bold text-white">Menü Analiz Ediliyor...</h2>
-                            <p className="text-gray-400">{AI_MODELS.find(m => m.id === selectedModel)?.name || 'AI'} menünüzü okuyor ve yapılandırıyor</p>
+                            <p className="text-gray-400">{aiModels.find(m => m.id === selectedModel)?.name || 'AI'} menünüzü okuyor ve yapılandırıyor</p>
                             <p className="text-gray-500 text-sm">{t('islem_surebilir')}</p>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-500">

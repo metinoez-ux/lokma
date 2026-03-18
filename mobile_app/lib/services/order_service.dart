@@ -86,6 +86,7 @@ class LokmaOrder {
   final DateTime? deliveredAt;
   final Map<String, dynamic>? deliveryProof; // {type, gps, photoUrl, completedAt}
   final List<Map<String, dynamic>> unavailableItems; // [{positionNumber, productName, quantity}]
+  final String? servedById;
   final String? servedByName;
   final String? tableSessionId;
   final dynamic tableNumber; // Can be int or String from Firestore
@@ -127,6 +128,7 @@ class LokmaOrder {
     this.deliveredAt,
     this.deliveryProof,
     this.unavailableItems = const [],
+    this.servedById,
     this.servedByName,
     this.tableSessionId,
     this.tableNumber,
@@ -196,6 +198,7 @@ class LokmaOrder {
       unavailableItems: (data['unavailableItems'] as List<dynamic>?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))
           .toList() ?? [],
+      servedById: data['servedById'],
       servedByName: data['servedByName'],
       tableSessionId: data['tableSessionId'] ?? data['groupSessionId'],
       tableNumber: data['tableNumber'],
@@ -327,7 +330,7 @@ class OrderService {
     required String butcherName,
     required String waiterId,
     required String waiterName,
-    required int tableNumber,
+    required dynamic tableNumber,
     required String tableSessionId,
     required List<OrderItem> items,
     required double totalAmount,
@@ -982,6 +985,48 @@ class OrderService {
               })
               .toList()
             ..sort((a, b) => (b.deliveredAt ?? DateTime.now()).compareTo(a.deliveredAt ?? DateTime.now()));
+        });
+  }
+
+  /// Get courier's completed deliveries since a given date
+  /// Used by wallet feature for date-range filtered cash/tip tracking
+  Stream<List<LokmaOrder>> getMyCompletedDeliveriesSince(String courierId, DateTime since) {
+    return _db
+        .collection(_collection)
+        .where('courierId', isEqualTo: courierId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => LokmaOrder.fromFirestore(doc))
+              .where((order) {
+                final statusStr = order.status.toString().split('.').last;
+                if (statusStr != 'delivered') return false;
+                if (order.deliveredAt == null) return false;
+                return order.deliveredAt!.isAfter(since);
+              })
+              .toList()
+            ..sort((a, b) => (b.deliveredAt ?? DateTime.now()).compareTo(a.deliveredAt ?? DateTime.now()));
+        });
+  }
+
+  /// Get orders served by this staff member (waiter/garson) since a given date
+  /// Covers dine-in and pickup orders where servedById matches the uid
+  Stream<List<LokmaOrder>> getStaffServedOrdersSince(String staffId, DateTime since) {
+    return _db
+        .collection(_collection)
+        .where('servedById', isEqualTo: staffId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => LokmaOrder.fromFirestore(doc))
+              .where((order) {
+                final statusStr = order.status.toString().split('.').last;
+                if (statusStr != 'delivered' && statusStr != 'completed') return false;
+                final ts = order.deliveredAt ?? order.updatedAt;
+                return ts.isAfter(since);
+              })
+              .toList()
+            ..sort((a, b) => (b.deliveredAt ?? b.updatedAt).compareTo(a.deliveredAt ?? a.updatedAt));
         });
   }
 }

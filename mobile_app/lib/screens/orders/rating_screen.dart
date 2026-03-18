@@ -146,7 +146,7 @@ class _RatingScreenState extends State<RatingScreen> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         title: Text(
-          'Değerlendirme Yap',
+          tr('orders.rate_business_title'),
           style: TextStyle(
             color: colorScheme.onSurface,
             fontSize: 16,
@@ -176,7 +176,7 @@ class _RatingScreenState extends State<RatingScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'İşletmeyi Puanla',
+                          tr('orders.rate_business_title'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -185,10 +185,19 @@ class _RatingScreenState extends State<RatingScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Yemek nasıldı? ${widget.businessName}',
+                          tr('orders.how_was_food', args: [widget.businessName]),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tr('orders.help_improve_service'),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade500,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -222,8 +231,6 @@ class _RatingScreenState extends State<RatingScreen> {
                     ),
                   ),
                   
-                  Divider(height: 1, color: isDark ? Colors.grey.shade700 : const Color(0xFFE0E0E0)),
-                  
                   // Section 2: Pickup or Delivery Experience
                   Container(
                     width: double.infinity,
@@ -232,7 +239,7 @@ class _RatingScreenState extends State<RatingScreen> {
                     child: Column(
                       children: [
                         Text(
-                          widget.isDelivery ? 'Kurye Deneyimi' : 'Gel Al Deneyimi',
+                          widget.isDelivery ? tr('orders.courier_experience') : tr('orders.pickup_experience'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -247,7 +254,7 @@ class _RatingScreenState extends State<RatingScreen> {
                             // Bad - Red
                             _buildEmojiButton(
                               emoji: '😞',
-                              label: 'Kötü',
+                              label: tr('orders.experience_bad'),
                               isSelected: _experienceRating == 1,
                               color: Colors.red,
                               onTap: () {
@@ -262,7 +269,7 @@ class _RatingScreenState extends State<RatingScreen> {
                             // OK - Orange
                             _buildEmojiButton(
                               emoji: '😐',
-                              label: 'İdare Eder',
+                              label: tr('orders.experience_ok'),
                               isSelected: _experienceRating == 2,
                               color: Colors.amber,
                               onTap: () {
@@ -277,7 +284,7 @@ class _RatingScreenState extends State<RatingScreen> {
                             // Great - Green
                             _buildEmojiButton(
                               emoji: '😊',
-                              label: 'Harika',
+                              label: tr('orders.experience_great'),
                               isSelected: _experienceRating == 3,
                               color: Colors.green,
                               onTap: () {
@@ -295,8 +302,6 @@ class _RatingScreenState extends State<RatingScreen> {
                     ),
                   ),
                   
-                  Divider(height: 1, color: isDark ? Colors.grey.shade700 : const Color(0xFFE0E0E0)),
-                  
                   // Section 3: Comment
                   Container(
                     width: double.infinity,
@@ -309,7 +314,7 @@ class _RatingScreenState extends State<RatingScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Yorum Yazın',
+                              tr('orders.write_comment'),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -317,7 +322,7 @@ class _RatingScreenState extends State<RatingScreen> {
                               ),
                             ),
                             Text(
-                              'İsteğe bağlı - ${_commentController.text.length}/255',
+                              tr('orders.optional_length', args: ['${_commentController.text.length}']),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade500,
@@ -332,14 +337,14 @@ class _RatingScreenState extends State<RatingScreen> {
                             absorbing: !_isOrderCompleted,
                             child: TextField(
                               controller: _commentController,
-                              maxLines: 3,
+                              maxLines: 5,
                               maxLength: 255,
                               onChanged: (_) => setState(() {}),
                               style: TextStyle(color: colorScheme.onSurface),
                               decoration: InputDecoration(
                                 hintText: _isOrderCompleted 
-                                    ? 'Yemek lezzetli miydi? İyi paketlendi mi? Bize bildirin...'
-                                    : 'Sipariş tamamlandıktan sonra yorum yapabilirsiniz...',
+                                    ? tr('orders.comment_hint_completed')
+                                    : tr('orders.comment_hint_not_completed'),
                                 hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 14),
                                 counterText: '',
                                 filled: true,
@@ -400,7 +405,7 @@ class _RatingScreenState extends State<RatingScreen> {
                           ),
                         )
                       : Text(
-                          _isOrderCompleted ? 'Gönder' : 'Sipariş Tamamlandıktan Sonra',
+                          _isOrderCompleted ? tr('orders.submit_rating') : tr('orders.after_order_completed'),
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                 ),

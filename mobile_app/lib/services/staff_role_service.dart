@@ -15,11 +15,13 @@ class StaffRoleService {
   String? _businessId;
   String? _staffName;
   String? _role;
+  DateTime? _lastCashSettlement;
   
   bool get isStaff => _isStaff;
   String? get businessId => _businessId;
   String? get staffName => _staffName;
   String? get role => _role;
+  DateTime? get lastCashSettlement => _lastCashSettlement;
 
   /// Check if current user is a staff member
   Future<bool> checkStaffStatus() async {
@@ -39,6 +41,7 @@ class StaffRoleService {
         _businessId = data['businessId'];
         _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
         _role = data['role'] ?? 'admin';
+        _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
         
         // Register FCM token for delivery notifications
         await _registerFcmToken(user.uid);
@@ -78,6 +81,7 @@ class StaffRoleService {
     _businessId = null;
     _staffName = null;
     _role = null;
+    _lastCashSettlement = null;
   }
 
   /// Listen to auth changes and update status
@@ -89,5 +93,31 @@ class StaffRoleService {
         _resetStatus();
       }
     });
+  }
+
+  /// Settle unremitted cash with the business
+  Future<void> settleCash(double amount) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _businessId == null) return;
+    
+    final now = FieldValue.serverTimestamp();
+    
+    // Log the settlement request
+    await _db.collection('cash_settlements').add({
+      'staffId': user.uid,
+      'staffName': _staffName ?? 'Personel',
+      'businessId': _businessId,
+      'amount': amount,
+      'settledAt': now,
+    });
+    
+    // Update the staff document's lastCashSettlement timestamp to reset their counter
+    await _db.collection('admins').doc(user.uid).update({
+      'lastCashSettlement': now,
+    });
+    
+    // Update local state optimistically
+    _lastCashSettlement = DateTime.now();
+    debugPrint('[StaffRole] Cash settled for amount: $amount');
   }
 }

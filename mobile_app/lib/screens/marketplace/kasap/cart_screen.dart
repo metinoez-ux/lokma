@@ -5457,7 +5457,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 32),
           // "Menüye Dön" butonu
           SizedBox(
-            width: 220,
             height: 48,
             child: FilledButton.icon(
               onPressed: () {
@@ -5470,12 +5469,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               },
               icon: const Icon(Icons.arrow_back_rounded, size: 20),
               label: Text(
-                'Zurück zum Menü',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                'marketplace.back_to_menu'.tr(defaultValue: 'Zurück zum Menü'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                maxLines: 1,
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: _accentColor,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),

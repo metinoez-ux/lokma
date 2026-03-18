@@ -611,7 +611,18 @@ export default function AdminHeader() {
                                 </div>
                             </div>
 
-{/* 8. Service */}
+                            {/* 7. Ameise (Importer) */}
+                            <Link
+                                href="/admin/ameise"
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/ameise')
+                                    ? 'bg-white/15 text-white'
+                                    : 'text-red-100 hover:text-white hover:bg-white/10'
+                                    }`}
+                            >
+                                Ameise
+                            </Link>
+
+                            {/* 8. Service */}
                             <div className="relative group">
                                 <Link
                                     href="/admin/activity-logs"

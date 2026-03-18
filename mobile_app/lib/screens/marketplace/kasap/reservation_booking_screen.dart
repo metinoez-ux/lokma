@@ -5,14 +5,18 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:lokma_app/utils/time_utils.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lokma_app/providers/cart_provider.dart';
+import 'package:lokma_app/providers/kermes_cart_provider.dart';
+import 'package:lokma_app/widgets/main_scaffold.dart';
 
 /// OpenTable-style Reservation Booking Screen
 /// - Checks availability against maxReservationTables per time slot
 /// - Respects business opening hours
 /// - Creates reservation in pending state
 /// - Writes to: businesses/{businessId}/reservations
-class ReservationBookingScreen extends StatefulWidget {
+class ReservationBookingScreen extends ConsumerStatefulWidget {
   final String businessId;
   final String businessName;
 
@@ -23,10 +27,10 @@ class ReservationBookingScreen extends StatefulWidget {
   });
 
   @override
-  State<ReservationBookingScreen> createState() => _ReservationBookingScreenState();
+  ConsumerState<ReservationBookingScreen> createState() => _ReservationBookingScreenState();
 }
 
-class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
+class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScreen> {
   // --- State ---
   int _partySize = 2;
   DateTime _selectedDate = DateTime.now();
@@ -443,6 +447,10 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cartState = ref.watch(cartProvider);
+    final kermesCartState = ref.watch(kermesCartProvider);
+    final cartItemCount = cartState.items.length + kermesCartState.items.length;
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -472,6 +480,18 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
           ],
         ),
         centerTitle: true,
+      ),
+      bottomNavigationBar: GlassBottomBar(
+        currentIndex: 0, // 'Yemek' is index 0
+        cartItemCount: cartItemCount,
+        onTap: (index) {
+          HapticFeedback.lightImpact();
+          // Because ReservationBookingScreen is pushed inside a navigation stack
+          // we should pop until first route and use go_router for navigation
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          context.go(MainScaffold.items[index].path);
+        },
+        items: MainScaffold.items,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

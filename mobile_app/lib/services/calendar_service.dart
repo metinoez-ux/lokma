@@ -289,23 +289,23 @@ class CalendarService {
 
     // Header line
     if (orderNumber != null) {
-      buf.writeln('🧾 ${'calendar.order_label'.tr()} #$orderNumber');
+      buf.writeln('${'calendar.order_label'.tr()} #$orderNumber');
     }
-    buf.writeln('🏪 $businessName');
+    buf.writeln(businessName);
     buf.writeln('');
 
     // Delivery method
     if (deliveryMethod == 'pickup') {
-      buf.writeln('📦 ${'calendar.pickup_mode'.tr()}');
+      buf.writeln('${'calendar.pickup_mode'.tr()}');
     } else if (deliveryMethod == 'dineIn') {
-      buf.writeln('🍽️ ${'calendar.dine_in_mode'.tr()}');
+      buf.writeln('${'calendar.dine_in_mode'.tr()}');
     } else {
-      buf.writeln('🚴 ${'calendar.delivery_mode'.tr()}');
+      buf.writeln('${'calendar.delivery_mode'.tr()}');
     }
 
     // Scheduled time
     final timeStr = '${deliveryTime.hour.toString().padLeft(2, '0')}:${deliveryTime.minute.toString().padLeft(2, '0')}';
-    buf.writeln('⏰ $timeStr ${'calendar.oclock'.tr()}');
+    buf.writeln('$timeStr ${'calendar.oclock'.tr()}');
     buf.writeln('');
 
     // Order items
@@ -313,16 +313,19 @@ class CalendarService {
       buf.writeln('── ${'calendar.items_label'.tr()} ──');
       for (final item in items) {
         final name = item['productName'] ?? '';
-        final qty = item['quantity'] ?? 1;
+        final qtyRaw = item['quantity'] ?? 1;
+        final String qtyStr = (qtyRaw is num && qtyRaw % 1 == 0) 
+            ? qtyRaw.toInt().toString() 
+            : qtyRaw.toString();
         final price = (item['totalPrice'] as num?)?.toDouble() ?? 0.0;
-        buf.writeln('• ${qty}x $name — ${price.toStringAsFixed(2).replaceAll('.', ',')} €');
+        buf.writeln('• ${qtyStr}x $name — ${price.toStringAsFixed(2).replaceAll('.', ',')} €');
       }
       buf.writeln('');
     }
 
     // Grand total
     if (grandTotal != null) {
-      buf.writeln('💰 ${'calendar.total_label'.tr()}: ${grandTotal.toStringAsFixed(2).replaceAll('.', ',')} €');
+      buf.writeln('${'calendar.total_label'.tr()}: ${grandTotal.toStringAsFixed(2).replaceAll('.', ',')} €');
     }
 
     return showCalendarPickerAndSave(

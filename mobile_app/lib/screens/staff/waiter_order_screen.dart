@@ -31,7 +31,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
   // State
   String? _businessId;
   String? _businessName;
-  int? _selectedTable;
+  Set<int> _selectedTables = {};
   TableSession? _activeSession;
   String _selectedCategory = 'Tümü';
   String _menuSearchQuery = '';
@@ -60,7 +60,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         final existingSession = await _sessionService.getActiveSession(_businessId!, widget.tableNumber!);
         if (existingSession != null && mounted) {
           setState(() {
-            _selectedTable = widget.tableNumber;
+            _selectedTables = {widget.tableNumber!};
             _activeSession = existingSession;
             _currentStep = _WaiterStep.browseMenu;
             _isLoading = false;
@@ -192,7 +192,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       
       if (mounted) {
         setState(() {
-          _selectedTable = tableNumber;
+          _selectedTables = {tableNumber};
           _activeSession = session;
           _currentStep = _WaiterStep.browseMenu;
           _isLoading = false;
@@ -233,7 +233,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
 
       if (mounted) {
         setState(() {
-          _selectedTable = tableNumber;
+          _selectedTables = {tableNumber};
           _activeSession = session;
           _currentStep = _WaiterStep.browseMenu;
           _isLoading = false;
@@ -525,7 +525,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                               onPressed: () {
                                 Navigator.pop(ctx);
                                 setState(() {
-                                  _selectedTable = tableNumber;
+                                  _selectedTables = {tableNumber};
                                   _activeSession = session;
                                   _currentStep = _WaiterStep.browseMenu;
                                 });
@@ -589,7 +589,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Masa $_selectedTable için PIN:',
+              'Masa ${_selectedTables.join(', ')} için PIN:',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
@@ -698,7 +698,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         butcherName: _businessName ?? '',
         waiterId: user.uid,
         waiterName: waiterName,
-        tableNumber: _selectedTable!,
+        tableNumber: _selectedTables.join(', '),
         tableSessionId: _activeSession!.id,
         items: items,
         totalAmount: _cartTotal,
@@ -720,7 +720,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('Masa $_selectedTable siparişi mutfağa gönderildi!'),
+                Text('Masa ${_selectedTables.join(', ')} siparişi mutfağa gönderildi!'),
               ],
             ),
             backgroundColor: Colors.green.shade700,
@@ -752,7 +752,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         title: Text(
           _currentStep == _WaiterStep.selectTable
               ? 'Masa Seçin'
-              : 'Masa $_selectedTable',
+              : 'Masa ${_selectedTables.join(', ')}',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: scaffoldBg,
@@ -893,41 +893,74 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                       }
                     }
                     
-                    return GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 1,
+                    return Expanded(
+                      child: GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 1,
+                        ),
+                        itemCount: 20,
+                        itemBuilder: (context, index) {
+                          final tableNum = index + 1;
+                          final hasOrders = activeTableNums.contains(tableNum);
+                          final hasReservation = reservedTableNums.contains(tableNum);
+                          final isSelected = _selectedTables.contains(tableNum);
+                          // Find session for this table (if any)
+                          final session = hasOrders
+                              ? activeSessions.firstWhere((s) => s.tableNumber == tableNum)
+                              : null;
+                          
+                          return _buildTableButton(
+                            tableNum: tableNum,
+                            cardBg: cardBg,
+                            hasOrders: hasOrders,
+                            hasReservation: hasReservation,
+                            isSelected: isSelected,
+                            brandColor: brandColor,
+                            session: session,
+                          );
+                        },
                       ),
-                      itemCount: 20,
-                      itemBuilder: (context, index) {
-                        final tableNum = index + 1;
-                        final hasOrders = activeTableNums.contains(tableNum);
-                        final hasReservation = reservedTableNums.contains(tableNum);
-                        // Find session for this table (if any)
-                        final session = hasOrders
-                            ? activeSessions.firstWhere((s) => s.tableNumber == tableNum)
-                            : null;
-                        
-                        return _buildTableButton(
-                          tableNum: tableNum,
-                          cardBg: cardBg,
-                          hasOrders: hasOrders,
-                          hasReservation: hasReservation,
-                          brandColor: brandColor,
-                          session: session,
-                        );
-                      },
                     );
                   },
                 );
               },
             ),
-          ),
+          // Multi-table selection continue button
+          if (_selectedTables.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    _startMultiTableSession();
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: brandColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: Text(
+                    '${_selectedTables.length} Masa ile Devam Et',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _startMultiTableSession() async {
+    if (_selectedTables.isEmpty || _businessId == null) return;
+    // Just use the first selected table for creating/getting the session
+    final primaryTable = _selectedTables.first;
+    _selectTable(primaryTable);
   }
 
   Widget _legendDot(Color color, String label) {
@@ -957,6 +990,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     required Color cardBg,
     required bool hasOrders,
     required bool hasReservation,
+    required bool isSelected,
     required Color brandColor,
     TableSession? session,
   }) {
@@ -966,7 +1000,12 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     Color textColor;
     Color iconColor;
     
-    if (hasOrders) {
+    if (isSelected) {
+      bgColor = brandColor.withValues(alpha: 0.2);
+      borderColor = brandColor;
+      textColor = brandColor;
+      iconColor = brandColor;
+    } else if (hasOrders) {
       bgColor = brandColor.withValues(alpha: 0.1);
       borderColor = brandColor;
       textColor = brandColor;
@@ -986,16 +1025,40 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     return Material(
       color: bgColor,
       borderRadius: BorderRadius.circular(16),
-      elevation: hasOrders ? 2 : 1,
+      elevation: hasOrders || isSelected ? 2 : 1,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _selectTable(tableNum),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          if (_selectedTables.isEmpty) {
+            _selectedTables = {tableNum};
+            _selectTable(tableNum);
+          } else {
+            setState(() {
+              if (_selectedTables.contains(tableNum)) {
+                _selectedTables.remove(tableNum);
+              } else {
+                _selectedTables.add(tableNum);
+              }
+            });
+          }
+        },
+        onLongPress: () {
+          HapticFeedback.heavyImpact();
+          setState(() {
+            if (_selectedTables.contains(tableNum)) {
+              _selectedTables.remove(tableNum);
+            } else {
+              _selectedTables.add(tableNum);
+            }
+          });
+        },
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: borderColor,
-              width: hasOrders ? 2 : 1,
+              width: hasOrders || isSelected ? 2 : 1,
             ),
           ),
           child: Stack(

@@ -21,11 +21,26 @@ async function deleteCollection(db: Firestore, colName: string, batchSize = 400)
     return deleted;
 }
 
+async function deleteCollectionGroup(db: Firestore, colName: string, batchSize = 400) {
+    let deleted = 0;
+    let hasMore = true;
+    while (hasMore) {
+        const snap = await db.collectionGroup(colName).limit(batchSize).get();
+        if (snap.empty) { hasMore = false; break; }
+        const batch = db.batch();
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        deleted += snap.size;
+        if (snap.size < batchSize) hasMore = false;
+    }
+    return deleted;
+}
+
 // Valid cleanup categories
 const VALID_CATEGORIES = new Set([
     'auth', 'users', 'admins', 'orders', 'ratings',
     'finance', 'notifications', 'referrals', 'reservations',
-    'activity_logs', 'legal_reports',
+    'activity_logs', 'legal_reports', 'businesses', 'shifts'
 ]);
 
 export async function POST(req: NextRequest) {
@@ -52,6 +67,7 @@ export async function POST(req: NextRequest) {
 
     // Parse selected categories from request body
     let selectedCategories: Set<string>;
+    let businessDateFilter: string = 'all';
     try {
         const body = await req.json();
         const cats: string[] = body.categories || [];
@@ -59,6 +75,9 @@ export async function POST(req: NextRequest) {
         selectedCategories = new Set(cats.filter(c => VALID_CATEGORIES.has(c)));
         if (selectedCategories.size === 0) {
             return NextResponse.json({ error: 'Mindestens eine Kategorie muss ausgewählt werden' }, { status: 400 });
+        }
+        if (body.businessDateFilter) {
+            businessDateFilter = body.businessDateFilter;
         }
     } catch {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
@@ -70,7 +89,7 @@ export async function POST(req: NextRequest) {
         notificationsDeleted: 0, scheduledNotificationsDeleted: 0,
         sponsoredConversionsDeleted: 0, referralsDeleted: 0,
         groupOrdersDeleted: 0, reservationsDeleted: 0,
-        activityLogsDeleted: 0, legalReportsDeleted: 0, businessesReset: 0,
+        activityLogsDeleted: 0, legalReportsDeleted: 0, businessesReset: 0, businessesDeleted: 0,
         errors: [] as string[],
         cleanedCategories: Array.from(selectedCategories),
     };
@@ -219,6 +238,65 @@ export async function POST(req: NextRequest) {
             stats.legalReportsDeleted = await deleteCollection(adminDb, 'legal_reports');
         }
 
+        // ── Businesses category (date filtered) ──
+        if (selectedCategories.has('businesses')) {
+            let cutoffDate: Date | null = null;
+            const now = new Date();
+            if (businessDateFilter === 'today') {
+                cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            } else if (businessDateFilter === 'yesterday') {
+                const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                yesterday.setDate(yesterday.getDate() - 1);
+                cutoffDate = yesterday;
+            } else if (businessDateFilter === '7days') {
+                cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if (businessDateFilter === '30days') {
+                cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+            // cutoffDate === null means 'all'
+
+            let bizQuery: any = adminDb.collection('businesses');
+            if (cutoffDate) {
+                bizQuery = bizQuery.where('createdAt', '>=', cutoffDate);
+            }
+            const bizSnap = await bizQuery.get();
+
+            for (const bizDoc of bizSnap.docs) {
+                try {
+                    // Sub-collection: categories
+                    const catsSnap = await bizDoc.ref.collection('categories').get();
+                    if (!catsSnap.empty) {
+                        const chunks = [];
+                        for (let i = 0; i < catsSnap.docs.length; i += 400) {
+                            chunks.push(catsSnap.docs.slice(i, i + 400));
+                        }
+                        for (const chunk of chunks) {
+                            const batch = adminDb.batch();
+                            chunk.forEach((d: any) => batch.delete(d.ref));
+                            await batch.commit();
+                        }
+                    }
+                    // Sub-collection: products
+                    const prodsSnap = await bizDoc.ref.collection('products').get();
+                    if (!prodsSnap.empty) {
+                        const chunks = [];
+                        for (let i = 0; i < prodsSnap.docs.length; i += 400) {
+                            chunks.push(prodsSnap.docs.slice(i, i + 400));
+                        }
+                        for (const chunk of chunks) {
+                            const batch = adminDb.batch();
+                            chunk.forEach((d: any) => batch.delete(d.ref));
+                            await batch.commit();
+                        }
+                    }
+                    await bizDoc.ref.delete();
+                    stats.businessesDeleted++;
+                } catch (e: any) {
+                    stats.errors.push(`biz/${bizDoc.id}: ${e.message}`);
+                }
+            }
+        }
+
         // ── Clean FCM tokens if auth or users selected ──
         if (selectedCategories.has('auth') || selectedCategories.has('users')) {
             const baSnap = await adminDb.collection('butcher_admins').limit(500).get();
@@ -226,6 +304,24 @@ export async function POST(req: NextRequest) {
                 const batch = adminDb.batch();
                 baSnap.docs.forEach(doc => batch.update(doc.ref, { fcmTokens: [], webFcmTokens: [] }));
                 await batch.commit();
+            }
+        }
+
+        }
+
+        // ── Shifts (Business Hours) category ──
+        if (selectedCategories.has('shifts')) {
+            const bizSnap = await adminDb.collection('businesses').get();
+            if (!bizSnap.empty) {
+                const batch = adminDb.batch();
+                bizSnap.docs.forEach(doc => {
+                    batch.update(doc.ref, {
+                        pickupHours: FieldValue.delete(),
+                        deliveryHours: FieldValue.delete(),
+                    });
+                });
+                await batch.commit();
+                stats.shiftsDeleted = bizSnap.size;
             }
         }
 
