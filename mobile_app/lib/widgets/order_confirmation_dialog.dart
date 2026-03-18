@@ -247,9 +247,11 @@ class OrderConfirmationDialog extends StatelessWidget {
         children: [
           Icon(Icons.delivery_dining, color: subtextColor, size: 22),
           const SizedBox(width: 8),
-          Text(
-            'order_confirmation.estimated_time'.tr(),
-            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              'order_confirmation.estimated_time'.tr(),
+              style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       );
