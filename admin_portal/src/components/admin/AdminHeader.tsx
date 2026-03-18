@@ -98,24 +98,29 @@ export default function AdminHeader() {
         const bId = businessId;
         if (!isSuperAdmin && !bId) return;
 
+        // Composite index gerektirmeyen basit sorgu
         const constraints = isSuperAdmin
-            ? [where('status', '==', 'pending'), orderBy('createdAt', 'asc'), limit(50)]
-            : [where('businessId', '==', bId), where('status', '==', 'pending'), orderBy('createdAt', 'asc'), limit(50)];
+            ? [where('status', '==', 'pending'), limit(50)]
+            : [where('businessId', '==', bId), where('status', '==', 'pending'), limit(50)];
 
         const q = query(collection(db, 'meat_orders'), ...constraints);
         const unsub = onSnapshot(q, (snap) => {
             setPendingOrderCount(snap.size);
             if (snap.size > 0) {
-                const oldest = snap.docs[0].data();
-                const ts = oldest.createdAt;
-                if (ts instanceof Timestamp) setOldestPendingTime(ts.toDate());
-                else if (ts?.seconds) setOldestPendingTime(new Date(ts.seconds * 1000));
-                else setOldestPendingTime(new Date());
+                // En eski pending siparisi client-side bul
+                let oldestDate: Date | null = null;
+                snap.docs.forEach(doc => {
+                    const ts = doc.data().createdAt;
+                    let d: Date | null = null;
+                    if (ts instanceof Timestamp) d = ts.toDate();
+                    else if (ts?.seconds) d = new Date(ts.seconds * 1000);
+                    if (d && (!oldestDate || d < oldestDate)) oldestDate = d;
+                });
+                setOldestPendingTime(oldestDate || new Date());
             } else {
                 setOldestPendingTime(null);
             }
         }, (error) => {
-            // Firestore composite index hatasi sayfayi cokertmesin
             console.error('[AdminHeader] Pending orders listener error:', error);
             setPendingOrderCount(0);
             setOldestPendingTime(null);
