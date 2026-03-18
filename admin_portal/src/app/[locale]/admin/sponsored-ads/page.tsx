@@ -506,24 +506,38 @@ export default function SponsoredAdsPage() {
                 </div>
               </div>
 
-              {/* Title & Subtitle */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Headline & Subtitle with char limits */}
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('adTitle')} *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-gray-400">{t('adTitle')} * (Reklam Satiri)</label>
+                    <span className={`text-[10px] font-mono ${form.title.length > 35 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                      {form.title.length}/40
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={40}
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                    placeholder="z.B. YAYLA Basmati Reis - Jetzt im Angebot!"
+                    className="w-full px-3 py-2.5 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('adSubtitle')}</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-gray-400">{t('adSubtitle')} (Alt Yazi)</label>
+                    <span className={`text-[10px] font-mono ${(form.subtitle?.length || 0) > 80 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                      {form.subtitle?.length || 0}/90
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={90}
                     value={form.subtitle}
                     onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                    placeholder="z.B. Premium Qualitaet aus der Tuerkei. In ueber 500 Maerkten erhaeltlich."
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-xs font-light text-gray-300"
                   />
                 </div>
               </div>
