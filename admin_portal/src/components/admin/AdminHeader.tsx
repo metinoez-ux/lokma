@@ -471,7 +471,7 @@ export default function AdminHeader() {
                             <div className="relative group">
                                 <Link
                                     href="/admin/business"
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes') || isActiveNav('/admin/benutzerverwaltung') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/drivers/tips')
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes') || isActiveNav('/admin/benutzerverwaltung') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/drivers/tips') || isActiveNav('/admin/sponsored-ads')
                                         ? 'bg-white/15 text-white'
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
@@ -500,6 +500,9 @@ export default function AdminHeader() {
                                         </Link>
                                         <Link href="/admin/staff-shifts" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             Arbeitszeiten
+                                        </Link>
+                                        <Link href="/admin/sponsored-ads" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            Sponsored Ads
                                         </Link>
                                     </div>
                                 </div>

@@ -1780,5 +1780,13 @@
     "minutes_ago": "il y a {}min",
     "hours_ago": "il y a {}h",
     "days_ago": "il y a {}j"
+  },
+  "sponsored_ads": {
+    "sponsored": "Sponsorisé",
+    "buy_from_nearby": "Acheter dans les marchés à proximité",
+    "searching_nearby": "Recherche de marchés à proximité...",
+    "no_nearby_market": "Aucun marché à proximité ne vend ce produit",
+    "go_to_store": "Aller au Magasin",
+    "add_to_cart": "Ajouter au Panier"
   }
 }

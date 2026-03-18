@@ -1808,5 +1808,13 @@
     "minutes_ago": "{}dk once",
     "hours_ago": "{} saat once",
     "days_ago": "{} gun once"
+  },
+  "sponsored_ads": {
+    "sponsored": "Reklam",
+    "buy_from_nearby": "Yakindaki marketlerden satin al",
+    "searching_nearby": "Yakin marketler araniyor...",
+    "no_nearby_market": "Yakinizda bu urunu satan market bulunamadi",
+    "go_to_store": "Magazaya Git",
+    "add_to_cart": "Sepete Ekle"
   }
 }

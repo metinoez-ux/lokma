@@ -1797,5 +1797,13 @@
     "minutes_ago": "{}min ago",
     "hours_ago": "{}h ago",
     "days_ago": "{}d ago"
+  },
+  "sponsored_ads": {
+    "sponsored": "Sponsored",
+    "buy_from_nearby": "Buy from nearby markets",
+    "searching_nearby": "Searching nearby markets...",
+    "no_nearby_market": "No nearby market found selling this product",
+    "go_to_store": "Go to Store",
+    "add_to_cart": "Add to Cart"
   }
 }

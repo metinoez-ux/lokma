@@ -1811,5 +1811,13 @@
     "minutes_ago": "vor {}min",
     "hours_ago": "vor {} Std.",
     "days_ago": "vor {} Tagen"
+  },
+  "sponsored_ads": {
+    "sponsored": "Gesponsert",
+    "buy_from_nearby": "Von nahegelegenen Märkten kaufen",
+    "searching_nearby": "Nahegelegene Märkte werden gesucht...",
+    "no_nearby_market": "Kein Markt in Ihrer Nähe gefunden, der dieses Produkt verkauft",
+    "go_to_store": "Zum Geschäft",
+    "add_to_cart": "In den Warenkorb"
   }
 }

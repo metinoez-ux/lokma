@@ -14,6 +14,8 @@ import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
+import 'package:lokma_app/widgets/sponsored_banner_card.dart';
+import 'package:lokma_app/services/sponsored_ad_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../utils/currency_utils.dart';
 
@@ -83,6 +85,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   // Sorting option
   String _sortOption = 'nearest'; // nearest, rating, tuna, az, za
   
+  // Sponsored ads
+  List<SponsoredAd> _sponsoredAds = [];
+  
   // 🆕 Hızlı Filtreler (Lieferando tarzı)
   bool _filterDiscounts = false;      // İndirimli ürünler
   bool _filterCash = false;           // Nakit ödeme kabul
@@ -98,6 +103,18 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     super.initState();
     // Location now comes from cached userLocationProvider - no API call here!
     _loadSectorsAndBusinesses();
+    _loadSponsoredAds();
+  }
+  
+  /// Sponsored reklamlari yukle
+  Future<void> _loadSponsoredAds() async {
+    final ads = await SponsoredAdService().getActiveSponsoredAds(
+      userLat: _userLat,
+      userLng: _userLng,
+    );
+    if (mounted) {
+      setState(() => _sponsoredAds = ads);
+    }
   }
   
   Future<void> _loadSectorsAndBusinesses() async {
@@ -1536,14 +1553,41 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       );
     }
 
+    // Sponsored ads: ilk pozisyona bir reklam, sonra her 6 kartta bir
+    // Build mixed list: ads + business cards
+    final List<Widget> items = [];
+    int adIndex = 0;
+    
+    // Ilk sirada bir sponsored ad (varsa)
+    if (_sponsoredAds.isNotEmpty) {
+      items.add(SponsoredBannerCard(
+        ad: _sponsoredAds[adIndex % _sponsoredAds.length],
+        userLat: _userLat,
+        userLng: _userLng,
+      ));
+      adIndex++;
+    }
+    
+    for (int i = 0; i < markets.length; i++) {
+      final doc = markets[i];
+      final data = doc.data() as Map<String, dynamic>;
+      items.add(_buildMarketCard(doc.id, data));
+      
+      // Her 6 kartta bir sponsored ad ekle
+      if ((i + 1) % 6 == 0 && _sponsoredAds.isNotEmpty) {
+        items.add(SponsoredBannerCard(
+          ad: _sponsoredAds[adIndex % _sponsoredAds.length],
+          userLat: _userLat,
+          userLng: _userLng,
+        ));
+        adIndex++;
+      }
+    }
+    
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final doc = markets[index];
-          final data = doc.data() as Map<String, dynamic>;
-          return _buildMarketCard(doc.id, data);
-        },
-        childCount: markets.length,
+        (context, index) => items[index],
+        childCount: items.length,
       ),
     );
   }
