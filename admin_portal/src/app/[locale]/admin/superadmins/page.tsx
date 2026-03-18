@@ -68,6 +68,14 @@ export default function SuperAdminsPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const CONFIRM_PHRASE = 'OK';
 
+    /* Demo-Daten */
+    type DemoPhase = 'idle' | 'seeding' | 'seeded' | 'cleaning' | 'cleaned' | 'error';
+    const [demoPhase, setDemoPhase] = useState<DemoPhase>('idle');
+    const [demoBusinesses, setDemoBusinesses] = useState<any[]>([]);
+    const [demoErrors, setDemoErrors] = useState<string[]>([]);
+    const [demoCleanupStats, setDemoCleanupStats] = useState<any>(null);
+    const [demoErrorMsg, setDemoErrorMsg] = useState('');
+
     /* ── Load super admins ── */
     useEffect(() => {
         if (!admin) return;
@@ -190,6 +198,53 @@ export default function SuperAdminsPage() {
         } catch (e: any) {
             setErrorMsg(e.message);
             setPhase('error');
+        }
+    };
+
+    /* ── Demo Seed ── */
+    const handleDemoSeed = async () => {
+        setDemoPhase('seeding');
+        setDemoErrorMsg('');
+        setDemoBusinesses([]);
+        setDemoErrors([]);
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error('Keine Authentifizierung');
+            const res = await fetch('/api/demo-data/seed', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Seed fehlgeschlagen');
+            setDemoBusinesses(data.businesses || []);
+            setDemoErrors(data.errors || []);
+            setDemoPhase('seeded');
+        } catch (e: any) {
+            setDemoErrorMsg(e.message);
+            setDemoPhase('error');
+        }
+    };
+
+    /* ── Demo Cleanup ── */
+    const handleDemoCleanup = async () => {
+        setDemoPhase('cleaning');
+        setDemoErrorMsg('');
+        setDemoCleanupStats(null);
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error('Keine Authentifizierung');
+            const res = await fetch('/api/demo-data/cleanup', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Cleanup fehlgeschlagen');
+            setDemoCleanupStats(data.stats);
+            setDemoBusinesses([]);
+            setDemoPhase('cleaned');
+        } catch (e: any) {
+            setDemoErrorMsg(e.message);
+            setDemoPhase('error');
         }
     };
 
@@ -398,6 +453,148 @@ export default function SuperAdminsPage() {
                                     </code>
                                 </div>
                             )}
+                        </div>
+                    )}
+                </section>
+
+                {/* ── Demo-Daten (Presentation) ── */}
+                <section className="bg-gray-800 rounded-xl border border-blue-900/40 p-6">
+                    <div className="mb-4">
+                        <h2 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">Demo-Betriebe (Presentation)</h2>
+                        <p className="text-xs text-gray-400 mt-1">
+                            PLZ 41836 Hückelhoven etrafindaki ~20-30 gercek isletmeyi Google Places'ten alarak demo olarak sisteme ekler.
+                            Her isletme icin gercekci menu otomatik olusturulur.
+                        </p>
+                    </div>
+
+                    {/* Idle */}
+                    {demoPhase === 'idle' && (
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleDemoSeed}
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Demo-Betriebe erstellen
+                            </button>
+                            <button
+                                onClick={handleDemoCleanup}
+                                className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors"
+                            >
+                                Demo-Betriebe löschen
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Seeding in progress */}
+                    {demoPhase === 'seeding' && (
+                        <div className="flex items-center gap-3 text-blue-400 text-sm">
+                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-blue-400" />
+                            <div>
+                                <p className="font-medium">Google Places'ten isletmeler aliniyor...</p>
+                                <p className="text-xs text-gray-400 mt-0.5">Bu islem 1-2 dakika surebilir. Lutfen bekleyin.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Cleaning in progress */}
+                    {demoPhase === 'cleaning' && (
+                        <div className="flex items-center gap-3 text-yellow-400 text-sm">
+                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-yellow-400" />
+                            Demo-Betriebe werden gelöscht...
+                        </div>
+                    )}
+
+                    {/* Seeded - show results */}
+                    {demoPhase === 'seeded' && (
+                        <div className="space-y-4">
+                            <p className="text-green-400 font-medium text-sm">
+                                {demoBusinesses.length} Demo-Betriebe erfolgreich erstellt!
+                            </p>
+
+                            {/* Stats grid */}
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { label: 'Betriebe', value: demoBusinesses.length },
+                                    { label: 'Kategorien', value: demoBusinesses.reduce((s: number, b: any) => s + (b.categories || 0), 0) },
+                                    { label: 'Produkte', value: demoBusinesses.reduce((s: number, b: any) => s + (b.products || 0), 0) },
+                                ].map(item => (
+                                    <div key={item.label} className="bg-gray-900 rounded-lg p-2.5 text-center">
+                                        <div className="text-lg font-bold text-white">{item.value}</div>
+                                        <div className="text-[10px] text-gray-400 mt-0.5">{item.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Business list */}
+                            <div className="max-h-60 overflow-y-auto space-y-1.5">
+                                {demoBusinesses.map((b: any) => (
+                                    <div key={b.id} className="flex items-center gap-2 text-xs bg-gray-900/60 rounded-lg px-3 py-2">
+                                        <span className="text-gray-500 font-mono text-[10px] w-16 shrink-0">{b.type}</span>
+                                        <span className="text-white font-medium truncate flex-1">{b.name}</span>
+                                        <span className="text-gray-400 shrink-0">{b.postalCode} {b.city}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {demoErrors.length > 0 && (
+                                <div className="bg-yellow-950/30 rounded-lg p-3 text-xs text-yellow-400 space-y-1">
+                                    <p className="font-medium">{demoErrors.length} Fehler:</p>
+                                    {demoErrors.slice(0, 5).map((e, i) => <div key={i}>{e}</div>)}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleDemoCleanup}
+                                    className="px-4 py-2 bg-red-700 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                                >
+                                    Alle Demo-Betriebe löschen
+                                </button>
+                                <button
+                                    onClick={() => setDemoPhase('idle')}
+                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
+                                >
+                                    Schließen
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Cleaned */}
+                    {demoPhase === 'cleaned' && demoCleanupStats && (
+                        <div className="space-y-4">
+                            <p className="text-green-400 font-medium text-sm">Demo-Betriebe wurden gelöscht.</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { label: 'Betriebe', value: demoCleanupStats.businessesDeleted },
+                                    { label: 'Kategorien', value: demoCleanupStats.categoriesDeleted },
+                                    { label: 'Produkte', value: demoCleanupStats.productsDeleted },
+                                ].map(item => (
+                                    <div key={item.label} className="bg-gray-900 rounded-lg p-2.5 text-center">
+                                        <div className="text-lg font-bold text-white">{item.value}</div>
+                                        <div className="text-[10px] text-gray-400 mt-0.5">{item.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => { setDemoPhase('idle'); setDemoCleanupStats(null); }}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
+                            >
+                                Schließen
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Error */}
+                    {demoPhase === 'error' && (
+                        <div className="space-y-3">
+                            <p className="text-red-400 text-sm">{demoErrorMsg}</p>
+                            <button
+                                onClick={() => setDemoPhase('idle')}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
+                            >
+                                Erneut versuchen
+                            </button>
                         </div>
                     )}
                 </section>
