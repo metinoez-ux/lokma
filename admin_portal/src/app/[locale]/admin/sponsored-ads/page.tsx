@@ -29,6 +29,7 @@ interface SponsoredAd {
   targetCategories: string[];
   targetRadius: number;
   targetBusinessTypes: string[];
+  targetCountries: string[];
   pricingModel: string;
   bidAmount: number;
   dailyBudget: number;
@@ -44,6 +45,18 @@ interface SponsoredAd {
   createdAt?: Date;
 }
 
+const AVAILABLE_COUNTRIES = [
+  { code: 'DE', label: 'Deutschland', flag: '\uD83C\uDDE9\uD83C\uDDEA' },
+  { code: 'AT', label: '\u00D6sterreich', flag: '\uD83C\uDDE6\uD83C\uDDF9' },
+  { code: 'NL', label: 'Niederlande', flag: '\uD83C\uDDF3\uD83C\uDDF1' },
+  { code: 'BE', label: 'Belgien', flag: '\uD83C\uDDE7\uD83C\uDDEA' },
+  { code: 'FR', label: 'Frankreich', flag: '\uD83C\uDDEB\uD83C\uDDF7' },
+  { code: 'IT', label: 'Italien', flag: '\uD83C\uDDEE\uD83C\uDDF9' },
+  { code: 'ES', label: 'Spanien', flag: '\uD83C\uDDEA\uD83C\uDDF8' },
+  { code: 'TR', label: 'T\u00FCrkiye', flag: '\uD83C\uDDF9\uD83C\uDDF7' },
+  { code: 'CH', label: 'Schweiz', flag: '\uD83C\uDDE8\uD83C\uDDED' },
+];
+
 const DEFAULT_FORM = {
   advertiserName: '',
   title: '',
@@ -52,6 +65,7 @@ const DEFAULT_FORM = {
   targetCategories: '',
   targetRadius: 10,
   targetBusinessTypes: 'market',
+  targetCountries: ['DE'] as string[],
   pricingModel: 'fixed_daily',
   bidAmount: 5,
   dailyBudget: 50,
@@ -99,6 +113,7 @@ export default function SponsoredAdsPage() {
         productKeywords: d.data().productKeywords || [],
         targetCategories: d.data().targetCategories || [],
         targetBusinessTypes: d.data().targetBusinessTypes || ['market'],
+        targetCountries: d.data().targetCountries || ['DE'],
       })) as SponsoredAd[];
       setAds(list);
     } catch (e) {
@@ -128,6 +143,7 @@ export default function SponsoredAdsPage() {
       targetCategories: (ad.targetCategories || []).join(', '),
       targetRadius: ad.targetRadius,
       targetBusinessTypes: ad.targetBusinessTypes.join(', '),
+      targetCountries: ad.targetCountries || ['DE'],
       pricingModel: ad.pricingModel,
       bidAmount: ad.bidAmount,
       dailyBudget: ad.dailyBudget,
@@ -185,6 +201,7 @@ export default function SponsoredAdsPage() {
           .split(',')
           .map((k) => k.trim())
           .filter(Boolean),
+        targetCountries: form.targetCountries,
         pricingModel: form.pricingModel,
         bidAmount: Number(form.bidAmount),
         dailyBudget: Number(form.dailyBudget),
@@ -532,6 +549,43 @@ export default function SponsoredAdsPage() {
                     placeholder="market, bakkal, kasap"
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
                   />
+                </div>
+              </div>
+
+              {/* Target Countries */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-2">Ziellaender</label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const allCodes = AVAILABLE_COUNTRIES.map(c => c.code);
+                      const allSelected = allCodes.every(c => form.targetCountries.includes(c));
+                      setForm(f => ({ ...f, targetCountries: allSelected ? ['DE'] : allCodes }));
+                    }}
+                    className={`px-3 py-1.5 text-xs rounded-lg border transition ${AVAILABLE_COUNTRIES.every(c => form.targetCountries.includes(c.code)) ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400'}`}
+                  >
+                    Ganz Europa
+                  </button>
+                  {AVAILABLE_COUNTRIES.map((country) => (
+                    <button
+                      key={country.code}
+                      type="button"
+                      onClick={() => {
+                        setForm(f => {
+                          const has = f.targetCountries.includes(country.code);
+                          const next = has
+                            ? f.targetCountries.filter(c => c !== country.code)
+                            : [...f.targetCountries, country.code];
+                          return { ...f, targetCountries: next.length === 0 ? ['DE'] : next };
+                        });
+                      }}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg border transition ${form.targetCountries.includes(country.code) ? 'bg-blue-600/30 border-blue-500/50 text-blue-300' : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-400'}`}
+                    >
+                      <span>{country.flag}</span>
+                      <span>{country.code}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
