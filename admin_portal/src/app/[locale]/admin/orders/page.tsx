@@ -291,8 +291,9 @@ export default function OrdersPage() {
 
     // ─── Printer Health Heartbeat (every 30s) ───────────────────
     useEffect(() => {
-        if (!printerSettings.enabled || !printerSettings.printerIp) {
-            // Reset health state if printer is not configured
+        if (!printerSettings.enabled || !printerSettings.printerIp || admin?.adminType === 'super') {
+            // Reset health state if printer is not configured or user is super admin
+            // Super admins browse remotely and cannot reach local printer IPs
             setPrinterHealth(DEFAULT_HEALTH_STATE);
             printerHealthRef.current = DEFAULT_HEALTH_STATE;
             return;
@@ -403,7 +404,7 @@ export default function OrdersPage() {
             if (healthIntervalRef.current) clearInterval(healthIntervalRef.current);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [printerSettings.enabled, printerSettings.printerIp, printerSettings.printerPort]);
+    }, [printerSettings.enabled, printerSettings.printerIp, printerSettings.printerPort, admin?.adminType]);
 
     // Stop alarm function
     const stopAlarm = useCallback(() => {
@@ -417,7 +418,7 @@ export default function OrdersPage() {
 
     // ─── Screen Wake Lock ────────────────────────────────────────
     useEffect(() => {
-        if (!printerSettings.enabled) return;
+        if (!printerSettings.enabled || admin?.adminType === 'super') return;
 
         let cancelled = false;
 
@@ -525,7 +526,7 @@ export default function OrdersPage() {
     // --- Auto-print scheduled orders 15 min before ---
     useEffect(() => {
         const interval = setInterval(() => {
-            if (!printerSettings.enabled || !printerSettings.printerIp) return;
+            if (!printerSettings.enabled || !printerSettings.printerIp || admin?.adminType === 'super') return;
             const now = new Date();
 
             orders.forEach((order) => {
