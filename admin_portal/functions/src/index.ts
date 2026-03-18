@@ -339,6 +339,10 @@ export const onNewOrder = onDocumentCreated(
                 if (isPreOrder && pickupTimeStr) {
                     notificationData.isPreOrder = true;
                     notificationData.pickupTimeStr = pickupTimeStr;
+                    // Store raw timestamp so mobile can re-localize the date label
+                    if (pickupDate) {
+                        notificationData.scheduledTimestamp = admin.firestore.Timestamp.fromDate(pickupDate);
+                    }
                 }
 
                 await db.collection("users").doc(customerId).collection("notifications").add(notificationData);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 // Route segment config
 export const maxDuration = 300; // 5 minutes for large AI processing
@@ -11,8 +12,9 @@ export const dynamic = 'force-dynamic';
 // ═══════════════════════════════════════════════════════════════════
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
-const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+const DEFAULT_MODEL = 'claude-opus-4-6';
 
 const SYSTEM_PROMPT = `Du bist ein Experte für digitale Restaurant-Menüs. Analysiere das hochgeladene Menü und extrahiere ALLE Produkte mit Kategorien.
 
@@ -151,11 +153,63 @@ async function callGemini(
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// OpenAI API call (GPT-4o, GPT-4 Turbo)
+// ═══════════════════════════════════════════════════════════════════
+async function callOpenAI(
+    fileList: { data: string; mimeType: string }[],
+    textContent?: string,
+    modelId?: string
+): Promise<string> {
+    const selectedModel = modelId || 'gpt-4o';
+    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+    const content: OpenAI.ChatCompletionContentPart[] = [];
+
+    // Add images
+    for (const f of fileList) {
+        content.push({
+            type: 'image_url',
+            image_url: {
+                url: `data:${f.mimeType};base64,${f.data}`,
+                detail: 'high',
+            },
+        });
+    }
+
+    // Add text instruction
+    if (fileList.length > 0) {
+        const instruction = fileList.length > 1
+            ? `Es wurden ${fileList.length} Dateien hochgeladen. Bitte analysiere ALLE Dateien zusammen und erstelle eine einheitliche Menü-Struktur.`
+            : 'Bitte analysiere dieses Menü und extrahiere alle Produkte.';
+        content.push({ type: 'text', text: instruction });
+    } else if (textContent) {
+        content.push({ type: 'text', text: `Hier sind die Menü-Daten als Text:\n\n${textContent}` });
+    }
+
+    console.log(`[AI Menu] Calling OpenAI ${selectedModel}...`);
+    const response = await openai.chat.completions.create({
+        model: selectedModel,
+        max_tokens: 8192,
+        messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content },
+        ],
+    });
+
+    console.log('[AI Menu] OpenAI response received');
+    const text = response.choices[0]?.message?.content;
+    if (!text) {
+        throw new Error('OpenAI yanıtında metin bulunamadı.');
+    }
+    return text;
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // POST handler — Claude primary, Gemini fallback
 // ═══════════════════════════════════════════════════════════════════
 export async function POST(request: NextRequest) {
     try {
-        if (!ANTHROPIC_API_KEY && !GEMINI_API_KEY) {
+        if (!ANTHROPIC_API_KEY && !GEMINI_API_KEY && !OPENAI_API_KEY) {
             return NextResponse.json(
                 { error: 'AI API anahtarı sunucuda yapılandırılmamış.' },
                 { status: 500 }
@@ -184,8 +238,28 @@ export async function POST(request: NextRequest) {
         let responseText: string;
         let provider = 'unknown';
         const isGeminiModel = model?.startsWith('gemini-');
+        const isOpenAIModel = model?.startsWith('gpt-') || model?.startsWith('o');
 
-        if (isGeminiModel && GEMINI_API_KEY) {
+        if (isOpenAIModel && OPENAI_API_KEY) {
+            // User explicitly selected an OpenAI model
+            try {
+                responseText = await callOpenAI(fileList, textContent, model);
+                provider = 'openai';
+            } catch (openaiErr: any) {
+                console.error('[AI Menu] OpenAI failed:', openaiErr.message);
+                if (ANTHROPIC_API_KEY) {
+                    console.log('[AI Menu] Falling back to Claude...');
+                    responseText = await callClaude(fileList, textContent);
+                    provider = 'claude-fallback';
+                } else if (GEMINI_API_KEY) {
+                    console.log('[AI Menu] Falling back to Gemini...');
+                    responseText = await callGemini(fileList, textContent);
+                    provider = 'gemini-fallback';
+                } else {
+                    throw openaiErr;
+                }
+            }
+        } else if (isGeminiModel && GEMINI_API_KEY) {
             // User explicitly selected a Gemini model
             try {
                 responseText = await callGemini(fileList, textContent, model);
@@ -204,14 +278,24 @@ export async function POST(request: NextRequest) {
                 provider = 'claude';
             } catch (claudeErr: any) {
                 console.error('[AI Menu] Claude failed:', claudeErr.message);
-                if (!GEMINI_API_KEY) throw claudeErr;
-                console.log('[AI Menu] Falling back to Gemini...');
-                responseText = await callGemini(fileList, textContent);
-                provider = 'gemini-fallback';
+                if (GEMINI_API_KEY) {
+                    console.log('[AI Menu] Falling back to Gemini...');
+                    responseText = await callGemini(fileList, textContent);
+                    provider = 'gemini-fallback';
+                } else if (OPENAI_API_KEY) {
+                    console.log('[AI Menu] Falling back to OpenAI...');
+                    responseText = await callOpenAI(fileList, textContent);
+                    provider = 'openai-fallback';
+                } else {
+                    throw claudeErr;
+                }
             }
-        } else {
+        } else if (GEMINI_API_KEY) {
             responseText = await callGemini(fileList, textContent);
             provider = 'gemini';
+        } else {
+            responseText = await callOpenAI(fileList, textContent);
+            provider = 'openai';
         }
 
         console.log(`[AI Menu] Response from ${provider}, length: ${responseText.length}`);

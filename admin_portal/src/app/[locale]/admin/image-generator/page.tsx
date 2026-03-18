@@ -67,22 +67,22 @@ export default function ImageGeneratorPage() {
     const isSuperAdmin = admin?.adminType === 'super';
 
     const categories: Category[] = [
-        { id: 'kasap', name: t('metzger'), icon: '🥩', basePrompt: 'Professional food photography, Turkish butcher shop, fresh quality meat, warm atmospheric lighting, high-end culinary presentation, 8k resolution' },
-        { id: 'market', name: t('market'), icon: '🛒', basePrompt: 'Modern supermarket, fresh organic products, vibrant colors, clean professional shelves, commercial photography, 8k resolution' },
-        { id: 'pizzaci', name: t('pizzeria'), icon: '🍕', basePrompt: 'Gourmet Italian pizza, wood fired oven, melted cheese, fresh ingredients, rustic restaurant setting, food advertisement photography, 8k resolution' },
-        { id: 'donerci', name: t('doner'), icon: '🥙', basePrompt: 'Traditional Turkish doner kebab, juicy sliced meat, authentic restaurant interior, warm golden lighting, professional food photography, 8k resolution' },
-        { id: 'restoran', name: t('restoran'), icon: '🍽️', basePrompt: 'Upscale modern restaurant, elegant plating, soft ambient lighting, luxury dining experience, Michelin-style food photography, 8k resolution' },
-        { id: 'hamburger', name: t('hamburger'), icon: '🍔', basePrompt: 'Gourmet craft burger, melting cheese, crispy bacon, dark moody background, high contrast food advertisement photography, 8k resolution' },
-        { id: 'tatli', name: t('dessert'), icon: '🍰', basePrompt: 'Elegant Turkish dessert, baklava kunefe, golden syrup, beautiful plating, pastry shop display, warm bakery lighting, 8k resolution' },
-        { id: 'icecek', name: t('getraenke'), icon: '🥤', basePrompt: 'Refreshing beverage, professional drink photography, ice droplets, colorful garnish, studio lighting, commercial advertising, 8k resolution' },
+        { id: 'kasap', name: t('metzger'), icon: '', basePrompt: 'Professional food photography, Turkish butcher shop, fresh quality meat, warm atmospheric lighting, high-end culinary presentation, 8k resolution' },
+        { id: 'market', name: t('market'), icon: '', basePrompt: 'Modern supermarket, fresh organic products, vibrant colors, clean professional shelves, commercial photography, 8k resolution' },
+        { id: 'pizzaci', name: t('pizzeria'), icon: '', basePrompt: 'Gourmet Italian pizza, wood fired oven, melted cheese, fresh ingredients, rustic restaurant setting, food advertisement photography, 8k resolution' },
+        { id: 'donerci', name: t('doner'), icon: '', basePrompt: 'Traditional Turkish doner kebab, juicy sliced meat, authentic restaurant interior, warm golden lighting, professional food photography, 8k resolution' },
+        { id: 'restoran', name: t('restoran'), icon: '', basePrompt: 'Upscale modern restaurant, elegant plating, soft ambient lighting, luxury dining experience, Michelin-style food photography, 8k resolution' },
+        { id: 'hamburger', name: t('hamburger'), icon: '', basePrompt: 'Gourmet craft burger, melting cheese, crispy bacon, dark moody background, high contrast food advertisement photography, 8k resolution' },
+        { id: 'tatli', name: t('dessert'), icon: '', basePrompt: 'Elegant Turkish dessert, baklava kunefe, golden syrup, beautiful plating, pastry shop display, warm bakery lighting, 8k resolution' },
+        { id: 'icecek', name: t('getraenke'), icon: '', basePrompt: 'Refreshing beverage, professional drink photography, ice droplets, colorful garnish, studio lighting, commercial advertising, 8k resolution' },
     ];
 
     const outputFormats: OutputFormat[] = [
-        { id: '1:1', name: t('quadrat'), label: '1:1', aspectRatio: '1:1', icon: '⬜' },
-        { id: '3:4', name: t('portraet'), label: '3:4', aspectRatio: '3:4', icon: '📱' },
-        { id: '4:3', name: t('klassisch'), label: '4:3', aspectRatio: '4:3', icon: '🖼️' },
-        { id: '16:9', name: t('breitbild'), label: '16:9', aspectRatio: '16:9', icon: '🖥️' },
-        { id: '9:16', name: t('story'), label: '9:16', aspectRatio: '9:16', icon: '📲' },
+        { id: '1:1', name: t('quadrat'), label: '1:1', aspectRatio: '1:1', icon: '' },
+        { id: '3:4', name: t('portraet'), label: '3:4', aspectRatio: '3:4', icon: '' },
+        { id: '4:3', name: t('klassisch'), label: '4:3', aspectRatio: '4:3', icon: '' },
+        { id: '16:9', name: t('breitbild'), label: '16:9', aspectRatio: '16:9', icon: '' },
+        { id: '9:16', name: t('story'), label: '9:16', aspectRatio: '9:16', icon: '' },
     ];
 
     // ── State ────────────────────────────────────────────────────────────
@@ -357,10 +357,7 @@ export default function ImageGeneratorPage() {
                 {/* ═══ Header ═══ */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-black flex items-center gap-3">
-                            <span className="bg-gradient-to-br from-violet-600 to-pink-500 p-3 rounded-2xl text-white shadow-lg shadow-violet-500/30">
-                                🎨
-                            </span>
+                        <h1 className="text-3xl font-black">
                             {t('ai_gorsel_uretici')}
                         </h1>
                         <p className="text-gray-400 mt-2 text-sm">
@@ -378,8 +375,8 @@ export default function ImageGeneratorPage() {
                 {/* ═══ Generator Panel (Super Admin only can generate, all can browse) ═══ */}
                 {isSuperAdmin && (
                     <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 mb-8">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <span className="text-violet-400">✦</span> {t('yeni_gorsel_uret')}
+                        <h2 className="text-lg font-bold mb-4">
+                            {t('yeni_gorsel_uret')}
                         </h2>
 
                         {/* Category Pills */}
@@ -393,7 +390,6 @@ export default function ImageGeneratorPage() {
                                         : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600'
                                         }`}
                                 >
-                                    <span className="text-lg">{cat.icon}</span>
                                     {cat.name}
                                 </button>
                             ))}
@@ -401,7 +397,7 @@ export default function ImageGeneratorPage() {
 
                         {/* Output Format / Aspect Ratio */}
                         <div className="flex flex-wrap items-center gap-2 mb-5">
-                            <span className="text-xs text-gray-500 font-bold mr-1">📐 Format:</span>
+                            <span className="text-xs text-gray-500 font-bold mr-1">Format:</span>
                             {outputFormats.map((fmt) => (
                                 <button
                                     key={fmt.id}
@@ -411,7 +407,6 @@ export default function ImageGeneratorPage() {
                                         : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:border-gray-600'
                                         }`}
                                 >
-                                    <span>{fmt.icon}</span>
                                     {fmt.name}
                                     <span className="text-[10px] opacity-70">({fmt.label})</span>
                                 </button>
@@ -424,7 +419,7 @@ export default function ImageGeneratorPage() {
                                 onClick={() => setShowAdvanced(!showAdvanced)}
                                 className="flex items-center gap-2 text-xs text-gray-400 hover:text-violet-400 font-bold transition-colors"
                             >
-                                <span className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`}>▶</span>
+                                <span className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`}>&#8250;</span>
                                 {t('gelismis_ayarlar')}
                                 {(backgroundPrompt.trim() || negativePrompt.trim()) && (
                                     <span className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
@@ -436,7 +431,7 @@ export default function ImageGeneratorPage() {
                                     {/* Background Prompt */}
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
-                                            <span className="text-emerald-400">🧠</span> {t('arka_plan_promptlari')}
+                                            {t('arka_plan_promptlari')}
                                             <span className="text-[10px] text-gray-600 font-normal">{t('her_uretimde_eklenir')}</span>
                                         </label>
                                         <textarea
@@ -451,7 +446,7 @@ export default function ImageGeneratorPage() {
                                     {/* Negative Prompt */}
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
-                                            <span className="text-red-400">🚫</span> {t('negative_prompts')}
+                                            {t('negative_prompts')}
                                             <span className="text-[10px] text-gray-600 font-normal">{t('uretilmemesi_gerekenler')}</span>
                                         </label>
                                         <textarea
@@ -533,7 +528,7 @@ export default function ImageGeneratorPage() {
                                 )}
                                 {negativePrompt.trim() && (
                                     <p className="text-xs text-gray-500">
-                                        <span className="text-red-400 font-bold">🚫 {t('negativ')}:</span>{' '}
+                                        <span className="text-red-400 font-bold">{t('negativ')}:</span>{' '}
                                         {negativePrompt.trim().substring(0, 100)}{negativePrompt.trim().length > 100 ? '...' : ''}
                                     </p>
                                 )}
@@ -547,8 +542,8 @@ export default function ImageGeneratorPage() {
                     {/* Gallery Header + Filter + Upload */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <span className="text-pink-400">◈</span> {t('gorsel_kutuphanesi')}
+                            <h2 className="text-xl font-bold">
+                                {t('gorsel_kutuphanesi')}
                                 {!isSuperAdmin && (
                                     <span className="text-xs bg-blue-900/40 text-blue-300 px-2.5 py-1 rounded-full border border-blue-700/50 ml-2">
                                         {t('gorselleri_isletmenizde_kullanabilirsini')}
@@ -578,7 +573,7 @@ export default function ImageGeneratorPage() {
                                                 {t('hochladen')}...
                                             </>
                                         ) : (
-                                            <>📤 {t('bild_hochladen')}</>
+                                            <>{t('bild_hochladen')}</>
                                         )}
                                     </button>
                                 </>
@@ -664,7 +659,7 @@ export default function ImageGeneratorPage() {
                                                 : 'bg-white/10 backdrop-blur-xl text-white hover:bg-white/20'
                                                 }`}
                                         >
-                                            {copiedId === image.id ? t('kopyalandi') : `📋 ${t('url_kopieren')}`}
+                                            {copiedId === image.id ? t('kopyalandi') : t('url_kopieren')}
                                         </button>
 
                                         {/* Delete (Super Admin only) */}
@@ -693,7 +688,6 @@ export default function ImageGeneratorPage() {
                                 {/* Category badge */}
                                 <div className="absolute top-3 left-3">
                                     <span className="px-2.5 py-1 bg-black/60 backdrop-blur-xl rounded-lg text-xs font-bold text-white border border-white/10">
-                                        {categories.find((c) => c.id === image.category)?.icon}{' '}
                                         {categories.find((c) => c.id === image.category)?.name}
                                     </span>
                                 </div>
@@ -725,7 +719,7 @@ export default function ImageGeneratorPage() {
                         {filteredGallery.length === 0 && !isGenerating && (
                             <div className="col-span-full py-24 flex flex-col items-center text-center">
                                 <div className="bg-gray-900 p-8 rounded-3xl mb-6 text-gray-700 border border-gray-800">
-                                    <span className="text-6xl">🖼️</span>
+                                    <span className="text-4xl text-gray-600">Keine Bilder</span>
                                 </div>
                                 <h3 className="text-xl font-black text-white">{t('kutuphane_bos')}</h3>
                                 <p className="text-gray-500 mt-2 text-sm max-w-xs">
@@ -758,7 +752,6 @@ export default function ImageGeneratorPage() {
                             <div>
                                 <h3 className="text-lg font-bold text-white">{previewImage.keyword}</h3>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    {categories.find((c) => c.id === previewImage.category)?.icon}{' '}
                                     {categories.find((c) => c.id === previewImage.category)?.name} •{' '}
                                     {previewImage.createdAt?.toDate?.().toLocaleDateString(locale)} •{' '}
                                     {previewImage.createdByName}
@@ -772,7 +765,7 @@ export default function ImageGeneratorPage() {
                                         : 'bg-violet-600 text-white hover:bg-violet-500'
                                         }`}
                                 >
-                                    {copiedId === previewImage.id ? t('kopyalandi') : `📋 ${t('url_kopieren')}`}
+                                    {copiedId === previewImage.id ? t('kopyalandi') : t('url_kopieren')}
                                 </button>
                                 <button
                                     onClick={() => setPreviewImage(null)}

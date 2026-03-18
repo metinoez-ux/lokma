@@ -25,3 +25,22 @@
 
 - [x] Dark Mode Desteği - Kermes ve KermesCard
 - [x] Theme Selection UI (Profil sayfası)
+
+---
+
+## LOKMA Firma Einstellungen - Dinamik Veri Merkezi (PLANLANACAK)
+
+**Kaynak:** `/admin/settings/company` sayfasindaki veriler (Firestore: `companySettings`)
+
+Bu veriler bir kez girilecek, degistigi anda asagidaki tum yerlere dinamik olarak yansiyacak:
+
+- [ ] **Impressum** - lokma.shop web sayfasi (firma adi, adres, vergi no, handelsregister, geschaeftsfuehrer)
+- [ ] **Support/Kontakt sayfasi** - telefon, email, adres verileri
+- [ ] **Email Footer / Signature** - Resend API uzerinden gonderilen tum emaillerdeki firma bilgileri
+- [ ] **AGB** - sirket adi, adres, vergi bilgileri
+- [ ] **Lexware hesap olusturma** - fatura adresi, IBAN, vergi bilgileri
+- [ ] **Mobile App** - iletisim verileri, destek bilgileri
+
+> **Tarih:** 18 Mart 2026
+> **Durum:** Planlanacak - ayri oturumda implement edilecek
+> **Not:** Veriler normalde aylarca degismez, ancak degistigi anda her yerde guncel olmali

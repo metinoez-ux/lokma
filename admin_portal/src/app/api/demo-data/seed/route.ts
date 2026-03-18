@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import {
-    DEMO_CENTER,
-    DEMO_RADIUS,
     DEMO_SEARCH_QUERIES,
     MENU_TEMPLATES,
     detectBusinessType,
@@ -32,9 +30,33 @@ function normalizeGoogleHoursLine(line: string): string {
 }
 
 /**
+ * PLZ -> geo koordinatlari almak icin Google Geocoding API
+ */
+async function geocodePLZ(plz: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
+    try {
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(plz + ' Deutschland')}&key=${apiKey}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status === 'OK' && data.results?.[0]) {
+            const loc = data.results[0].geometry.location;
+            return { lat: loc.lat, lng: loc.lng };
+        }
+    } catch {}
+    return null;
+}
+
+/**
  * POST /api/demo-data/seed
- * Google Places ile PLZ 41836 etrafindaki 20-30 isletmeyi bulur ve Firestore'a ekler.
- * Super admin yetkisi gerektirir.
+ * 
+ * mode=search: Google Places'ten isletmeleri arar, listeyi dondurur (Firestore'a kaydetmez)
+ * mode=save: Secilen isletmeleri (placeIds) Firestore'a kaydeder
+ * 
+ * Body params:
+ *   mode: 'search' | 'save'
+ *   postalCode: string (default: '41836')
+ *   maxResults: number (default: 20, max: 50)
+ *   placeIds: string[] (mode=save icin, kaydetilecek place_id'ler)
+ *   places: Place[] (mode=save icin, kaydetilecek place detaylari)
  */
 export async function POST(req: NextRequest) {
     const { auth: adminAuth, db: adminDb } = getFirebaseAdmin();
@@ -61,173 +83,255 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Missing Google API Key' }, { status: 500 });
     }
 
-    // 2. Onceki demo isletmeleri kontrol et
-    const existingDemos = await adminDb.collection('businesses').where('isDemo', '==', true).get();
-    if (!existingDemos.empty) {
-        return NextResponse.json({
-            error: `Bereits ${existingDemos.size} Demo-Betriebe vorhanden. Bitte zuerst löschen.`,
-            existingCount: existingDemos.size,
-        }, { status: 409 });
+    let body: any;
+    try {
+        body = await req.json();
+    } catch {
+        body = {};
     }
 
-    const allPlaceIds = new Set<string>();
-    const results: any[] = [];
-    const errors: string[] = [];
+    const mode = body.mode || 'search';
+    const postalCode = body.postalCode || '41836';
+    const maxResults = Math.min(Math.max(body.maxResults || 20, 1), 50);
 
-    // 3. Her sorgu icin Google Places'ten arama yap
-    for (const sq of DEMO_SEARCH_QUERIES) {
+    // Zaten kayitli isletmelerin googlePlaceId'lerini al
+    const existingSnap = await adminDb.collection('businesses')
+        .where('googlePlaceId', '!=', null).get();
+    const existingPlaceIds = new Set<string>();
+    existingSnap.docs.forEach(d => {
+        const gpi = d.data().googlePlaceId;
+        if (gpi) existingPlaceIds.add(gpi);
+    });
+
+    // ==========================================
+    // MODE: SEARCH -- Sadece bul ve listele
+    // ==========================================
+    if (mode === 'search') {
+        // PLZ'den koordinat al
+        const center = await geocodePLZ(postalCode, apiKey);
+        if (!center) {
+            return NextResponse.json({ error: `PLZ ${postalCode} konnte nicht geocodiert werden` }, { status: 400 });
+        }
+
+        const allPlaceIds = new Set<string>();
+        const foundPlaces: any[] = [];
+        const errors: string[] = [];
+        const radius = 5000;
+
+        // Arama sorgulari -- PLZ=41836 yerine dinamik sehir adi
+        // Once PLZ'nin sehir adini geocode'dan cikarmaya calisiyoruz
+        let cityName = postalCode;
         try {
-            // nearbysearch degil, textsearch kullaniyoruz, daha iyi sonuc veriyor
-            const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(sq.query)}&location=${DEMO_CENTER.lat},${DEMO_CENTER.lng}&radius=${DEMO_RADIUS}&type=${sq.googleType}&language=de&key=${apiKey}`;
+            const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(postalCode + ' Deutschland')}&key=${apiKey}`;
+            const geoRes = await fetch(geoUrl);
+            const geoData = await geoRes.json();
+            if (geoData.status === 'OK' && geoData.results?.[0]) {
+                const comps = geoData.results[0].address_components;
+                const locality = comps?.find((c: any) => c.types.includes('locality'));
+                if (locality) cityName = locality.long_name;
+            }
+        } catch {}
 
-            const searchRes = await fetch(searchUrl);
-            const searchData = await searchRes.json();
+        // Dinamik arama sorgulari olustur (Huckelhoven yerine sehir adi)
+        const searchQueries = DEMO_SEARCH_QUERIES.map(sq => ({
+            ...sq,
+            query: sq.query.replace(/Hückelhoven/gi, cityName),
+        }));
 
-            if (searchData.status !== 'OK' || !searchData.results) continue;
+        for (const sq of searchQueries) {
+            if (foundPlaces.length >= maxResults) break;
 
-            // En fazla 4 sonuc al (toplam 30-40 civarinda olacak, sonra limitliyoruz)
-            const places = searchData.results.slice(0, 4);
+            try {
+                const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(sq.query)}&location=${center.lat},${center.lng}&radius=${radius}&type=${sq.googleType}&language=de&key=${apiKey}`;
+                const searchRes = await fetch(searchUrl);
+                const searchData = await searchRes.json();
+                if (searchData.status !== 'OK' || !searchData.results) continue;
 
-            for (const place of places) {
-                if (allPlaceIds.has(place.place_id)) continue; // Tekrar kontrolu
-                if (results.length >= 30) break; // Max 30 isletme
+                const perQuery = Math.max(2, Math.ceil(maxResults / searchQueries.length));
+                const places = searchData.results.slice(0, perQuery);
 
-                allPlaceIds.add(place.place_id);
+                for (const place of places) {
+                    if (allPlaceIds.has(place.place_id)) continue;
+                    if (foundPlaces.length >= maxResults) break;
+                    allPlaceIds.add(place.place_id);
 
-                try {
-                    // Place Details aliyoruz
-                    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&key=${apiKey}&fields=name,photos,opening_hours,formatted_phone_number,website,rating,user_ratings_total,address_components,geometry&language=de`;
-                    const detailsRes = await fetch(detailsUrl);
-                    const detailsData = await detailsRes.json();
+                    // Temel bilgiler (details API'yi aramadan)
+                    const businessType = detectBusinessType(place.name, place.types || []);
+                    const alreadyAdded = existingPlaceIds.has(place.place_id);
 
-                    if (detailsData.status !== 'OK' || !detailsData.result) continue;
+                    foundPlaces.push({
+                        placeId: place.place_id,
+                        name: place.name,
+                        address: place.formatted_address || '',
+                        type: businessType,
+                        rating: place.rating || null,
+                        userRatingsTotal: place.user_ratings_total || null,
+                        alreadyAdded,
+                        lat: place.geometry?.location?.lat,
+                        lng: place.geometry?.location?.lng,
+                    });
+                }
+            } catch (e: any) {
+                errors.push(`Search error for "${sq.query}": ${e.message}`);
+            }
+        }
 
-                    const d = detailsData.result;
+        return NextResponse.json({
+            success: true,
+            mode: 'search',
+            postalCode,
+            cityName,
+            center,
+            places: foundPlaces,
+            existingCount: existingPlaceIds.size,
+            errors,
+        });
+    }
 
-                    // Adres parse
-                    const getComp = (type: string) => d.address_components?.find((c: any) => c.types.includes(type))?.long_name || '';
-                    const street = `${getComp('route')} ${getComp('street_number')}`.trim();
-                    const postalCode = getComp('postal_code');
-                    const city = getComp('locality') || getComp('postal_town') || 'Hückelhoven';
-                    const country = d.address_components?.find((c: any) => c.types.includes('country'))?.short_name || 'DE';
+    // ==========================================
+    // MODE: SAVE -- Secilen isletmeleri kaydet
+    // ==========================================
+    if (mode === 'save') {
+        const selectedPlaceIds: string[] = body.placeIds || [];
+        if (selectedPlaceIds.length === 0) {
+            return NextResponse.json({ error: 'Keine Betriebe ausgewählt' }, { status: 400 });
+        }
 
-                    // Isletme turu tespiti
-                    const businessType = detectBusinessType(d.name || place.name, place.types || []);
-                    const cuisineTypes = detectCuisineTypes(d.name || place.name);
+        // Zaten eklenenleri cikar
+        const toSave = selectedPlaceIds.filter(pid => !existingPlaceIds.has(pid));
+        if (toSave.length === 0) {
+            return NextResponse.json({ error: 'Alle ausgewählten Betriebe sind bereits vorhanden' }, { status: 409 });
+        }
 
-                    // Kapak resmi
-                    let coverImageUrl = '';
-                    if (d.photos && d.photos.length > 0) {
-                        const photoRef = d.photos[0].photo_reference;
-                        coverImageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${photoRef}&key=${apiKey}`;
-                    }
+        const results: any[] = [];
+        const errors: string[] = [];
 
-                    // Acilis saatleri
-                    let openingHours: string[] = [];
-                    if (d.opening_hours?.weekday_text) {
-                        openingHours = d.opening_hours.weekday_text.map((line: string) => normalizeGoogleHoursLine(line));
-                    }
+        for (const placeId of toSave) {
+            try {
+                // Place Details
+                const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${apiKey}&fields=name,photos,opening_hours,formatted_phone_number,website,rating,user_ratings_total,address_components,geometry&language=de`;
+                const detailsRes = await fetch(detailsUrl);
+                const detailsData = await detailsRes.json();
+                if (detailsData.status !== 'OK' || !detailsData.result) {
+                    errors.push(`Details error for ${placeId}: ${detailsData.status}`);
+                    continue;
+                }
 
-                    // Default settings
-                    const defaults = getDefaultBusinessSettings(businessType);
+                const d = detailsData.result;
+                const getComp = (type: string) => d.address_components?.find((c: any) => c.types.includes(type))?.long_name || '';
+                const street = `${getComp('route')} ${getComp('street_number')}`.trim();
+                const plzFromGoogle = getComp('postal_code');
+                const city = getComp('locality') || getComp('postal_town') || '';
+                const country = d.address_components?.find((c: any) => c.types.includes('country'))?.short_name || 'DE';
 
-                    // Firestore'a kaydet
-                    const businessRef = adminDb.collection('businesses').doc();
-                    const businessData = {
-                        companyName: d.name || place.name,
-                        businessType,
-                        types: [businessType],
-                        street,
-                        postalCode,
-                        city,
-                        country,
-                        lat: d.geometry?.location?.lat || place.geometry?.location?.lat || 0,
-                        lng: d.geometry?.location?.lng || place.geometry?.location?.lng || 0,
-                        phone: d.formatted_phone_number || '',
-                        email: '',
-                        website: d.website || '',
-                        coverImageUrl,
-                        openingHours,
-                        cuisineTypes,
-                        googlePlaceId: place.place_id,
-                        googleRating: d.rating || null,
-                        googleReviewCount: d.user_ratings_total || null,
-                        ...defaults,
+                const businessType = detectBusinessType(d.name || '', d.types || []);
+                const cuisineTypes = detectCuisineTypes(d.name || '');
+
+                let coverImageUrl = '';
+                if (d.photos && d.photos.length > 0) {
+                    const photoRef = d.photos[0].photo_reference;
+                    coverImageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${photoRef}&key=${apiKey}`;
+                }
+
+                let openingHours: string[] = [];
+                if (d.opening_hours?.weekday_text) {
+                    openingHours = d.opening_hours.weekday_text.map((line: string) => normalizeGoogleHoursLine(line));
+                }
+
+                const defaults = getDefaultBusinessSettings(businessType);
+
+                const businessRef = adminDb.collection('businesses').doc();
+                const businessData = {
+                    companyName: d.name || '',
+                    businessType,
+                    types: [businessType],
+                    street,
+                    postalCode: plzFromGoogle,
+                    city,
+                    country,
+                    lat: d.geometry?.location?.lat || 0,
+                    lng: d.geometry?.location?.lng || 0,
+                    phone: d.formatted_phone_number || '',
+                    email: '',
+                    website: d.website || '',
+                    coverImageUrl,
+                    openingHours,
+                    cuisineTypes,
+                    googlePlaceId: placeId,
+                    googleRating: d.rating || null,
+                    googleReviewCount: d.user_ratings_total || null,
+                    ...defaults,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                };
+
+                await businessRef.set(businessData);
+
+                // Menu olustur
+                const menuTemplate = MENU_TEMPLATES[businessType] || MENU_TEMPLATES['restoran'];
+                let catCount = 0;
+                let prodCount = 0;
+
+                for (let i = 0; i < menuTemplate.length; i++) {
+                    const cat = menuTemplate[i];
+                    const catRef = businessRef.collection('categories').doc();
+                    await catRef.set({
+                        name: { de: cat.name, tr: cat.name },
+                        icon: cat.icon,
+                        isActive: true,
+                        order: i,
                         createdAt: new Date(),
                         updatedAt: new Date(),
-                    };
+                    });
+                    catCount++;
 
-                    await businessRef.set(businessData);
-
-                    // Menu olustur (categories + products sub-collections)
-                    const menuTemplate = MENU_TEMPLATES[businessType] || MENU_TEMPLATES['restoran'];
-                    let catCount = 0;
-                    let prodCount = 0;
-
-                    for (let i = 0; i < menuTemplate.length; i++) {
-                        const cat = menuTemplate[i];
-                        const catRef = businessRef.collection('categories').doc();
-                        await catRef.set({
-                            name: { de: cat.name, tr: cat.name },
-                            icon: cat.icon,
+                    for (const prod of cat.products) {
+                        const prodRef = businessRef.collection('products').doc();
+                        await prodRef.set({
+                            name: { de: prod.name, tr: prod.name },
+                            price: prod.price,
+                            sellingPrice: prod.price,
+                            description: prod.description ? { de: prod.description, tr: prod.description } : { de: '', tr: '' },
+                            category: cat.name,
+                            categories: [cat.name],
+                            unit: prod.unit || 'stueck',
+                            defaultUnit: prod.unit || 'stueck',
                             isActive: true,
-                            order: i,
+                            isAvailable: true,
+                            isCustom: true,
+                            outOfStock: false,
                             createdAt: new Date(),
                             updatedAt: new Date(),
                         });
-                        catCount++;
-
-                        // Urunler
-                        for (const prod of cat.products) {
-                            const prodRef = businessRef.collection('products').doc();
-                            await prodRef.set({
-                                name: { de: prod.name, tr: prod.name },
-                                price: prod.price,
-                                sellingPrice: prod.price,
-                                description: prod.description ? { de: prod.description, tr: prod.description } : { de: '', tr: '' },
-                                category: cat.name,
-                                categories: [cat.name],
-                                unit: prod.unit || 'stueck',
-                                defaultUnit: prod.unit || 'stueck',
-                                isActive: true,
-                                isAvailable: true,
-                                isCustom: true,
-                                outOfStock: false,
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                            });
-                            prodCount++;
-                        }
+                        prodCount++;
                     }
-
-                    results.push({
-                        id: businessRef.id,
-                        name: businessData.companyName,
-                        type: businessType,
-                        city,
-                        street,
-                        postalCode,
-                        categories: catCount,
-                        products: prodCount,
-                        coverImageUrl: coverImageUrl ? true : false,
-                    });
-
-                } catch (placeErr: any) {
-                    errors.push(`Details error for ${place.name}: ${placeErr.message}`);
                 }
+
+                results.push({
+                    id: businessRef.id,
+                    name: businessData.companyName,
+                    type: businessType,
+                    city,
+                    street,
+                    postalCode: plzFromGoogle,
+                    categories: catCount,
+                    products: prodCount,
+                    coverImageUrl: coverImageUrl ? true : false,
+                });
+            } catch (placeErr: any) {
+                errors.push(`Save error for ${placeId}: ${placeErr.message}`);
             }
-
-            if (results.length >= 30) break;
-
-        } catch (searchErr: any) {
-            errors.push(`Search error for "${sq.query}": ${searchErr.message}`);
         }
+
+        return NextResponse.json({
+            success: true,
+            mode: 'save',
+            created: results.length,
+            skipped: selectedPlaceIds.length - toSave.length,
+            businesses: results,
+            errors,
+        });
     }
 
-    return NextResponse.json({
-        success: true,
-        created: results.length,
-        businesses: results,
-        errors,
-    });
+    return NextResponse.json({ error: 'Invalid mode. Use "search" or "save".' }, { status: 400 });
 }

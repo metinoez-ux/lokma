@@ -263,7 +263,9 @@ export const getRoleConfig = (roleValue: string): RoleConfig | undefined => {
 };
 
 /** Rol değerinden label getir - KONSOLİDE: eski rolleri de destekler */
-export const getRoleLabel = (roleValue: string): string => {
+export const getRoleLabel = (roleValue: string | undefined | null): string => {
+    if (!roleValue || typeof roleValue !== 'string') return String(roleValue || 'Admin');
+
     // Önce genel rollerde ara
     const config = getRoleConfig(roleValue);
     if (config) return config.label;
@@ -271,19 +273,22 @@ export const getRoleLabel = (roleValue: string): string => {
     // Eski işletme rolleri için geriye uyumluluk
     // kasap, restoran, market, pastane, vb. = İşletme Admin
     // kasap_staff, restoran_staff, vb. = İşletme Personel
-    if (roleValue.endsWith('_staff')) return 'İşletme Personel';
-    if (Object.keys(BUSINESS_TYPES).includes(roleValue)) return 'İşletme Admin';
+    if (typeof roleValue === 'string' && roleValue?.endsWith?.('_staff')) return 'İşletme Personel';
+    if (Object.keys(BUSINESS_TYPES).includes(roleValue as string)) return 'İşletme Admin';
 
-    return roleValue;
+    return String(roleValue);
 };
 
 /** Rol değerinden ikon getir */
-export const getRoleIcon = (roleValue: string): string => {
+export const getRoleIcon = (roleValue: string | undefined | null): string => {
+    if (!roleValue || typeof roleValue !== 'string') return '👤';
     return getRoleConfig(roleValue)?.icon || '👤';
 };
 
 /** Rol admin mi kontrol et */
-export const isAdminRole = (roleValue: string): boolean => {
+export const isAdminRole = (roleValue: string | undefined | null): boolean => {
+    if (!roleValue || typeof roleValue !== 'string') return false;
+
     // Super admin
     if (roleValue === 'super') return true;
     // Yeni genel admin
@@ -291,7 +296,7 @@ export const isAdminRole = (roleValue: string): boolean => {
     // Kermes admin
     if (roleValue === 'kermes') return true;
     // Staff roller admin değil
-    if (roleValue.endsWith('_staff')) return false;
+    if (typeof roleValue === 'string' && roleValue?.endsWith?.('_staff')) return false;
     // Eski sektör admin'leri (kasap, market, restoran vb.)
-    return Object.keys(BUSINESS_TYPES).includes(roleValue);
+    return Object.keys(BUSINESS_TYPES).includes(roleValue as string);
 };

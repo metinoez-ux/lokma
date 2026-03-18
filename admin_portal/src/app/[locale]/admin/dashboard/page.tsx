@@ -849,11 +849,11 @@ export default function SuperAdminDashboard() {
                 adminsMap.set(adminDoc.id, adminData);
                 // Also map by email
                 if (data.email) {
-                    adminsMap.set(data.email.toLowerCase(), adminData);
+                    adminsMap.set(String(data.email).toLowerCase(), adminData);
                 }
                 // Also map by phone number (with normalization)
                 if (data.phoneNumber) {
-                    const normalized = data.phoneNumber.replace(/\s+/g, '').replace(/[()-]/g, '');
+                    const normalized = String(data.phoneNumber).replace(/\s+/g, '').replace(/[()-]/g, '');
                     adminsMap.set(normalized, adminData);
                     // Also try without country code
                     if (normalized.startsWith('+49')) {
@@ -861,7 +861,7 @@ export default function SuperAdminDashboard() {
                     }
                 }
                 // 🟣 Check if butcherName matches search term
-                if (data.butcherName && data.butcherName.toLowerCase().includes(searchLower)) {
+                if (data.butcherName && String(data.butcherName).toLowerCase().includes(searchLower)) {
                     // Get the user ID (prefer firebaseUid, then doc id)
                     const userId = data.firebaseUid || adminDoc.id;
                     if (userId && !allDocs.has(userId)) {
@@ -894,11 +894,11 @@ export default function SuperAdminDashboard() {
                 let adminData = adminsMap.get(d.id);
                 // If not found, try by email
                 if (!adminData && userData.email) {
-                    adminData = adminsMap.get(userData.email.toLowerCase());
+                    adminData = adminsMap.get(String(userData.email).toLowerCase());
                 }
                 // If not found, try by phone number
                 if (!adminData && userData.phoneNumber) {
-                    const normalized = userData.phoneNumber.replace(/\s+/g, '').replace(/[()-]/g, '');
+                    const normalized = String(userData.phoneNumber).replace(/\s+/g, '').replace(/[()-]/g, '');
                     adminData = adminsMap.get(normalized);
                     if (!adminData && normalized.startsWith('+49')) {
                         adminData = adminsMap.get('0' + normalized.slice(3));
@@ -1006,11 +1006,11 @@ export default function SuperAdminDashboard() {
                 adminsByUid.set(adminDoc.id, adminData);
                 // Map by email if available
                 if (data.email) {
-                    adminsByEmail.set(data.email.toLowerCase(), adminData);
+                    adminsByEmail.set(String(data.email).toLowerCase(), adminData);
                 }
                 // Map by phone number if available (normalize format)
                 if (data.phoneNumber) {
-                    const normalizedPhone = data.phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+                    const normalizedPhone = String(data.phoneNumber).replace(/\s+/g, '').replace(/[^\d+]/g, '');
                     adminsByPhone.set(normalizedPhone, adminData);
                     // Also try without + prefix
                     if (normalizedPhone.startsWith('+')) {
@@ -1019,10 +1019,10 @@ export default function SuperAdminDashboard() {
                 }
                 // Map by displayName or name for fallback matching
                 if (data.displayName) {
-                    adminsByName.set(data.displayName.toLowerCase().trim(), adminData);
+                    adminsByName.set(String(data.displayName).toLowerCase().trim(), adminData);
                 }
                 if (data.name) {
-                    adminsByName.set(data.name.toLowerCase().trim(), adminData);
+                    adminsByName.set(String(data.name).toLowerCase().trim(), adminData);
                 }
                 // Also try firstName + lastName combination
                 if (data.firstName && data.lastName) {
@@ -1041,7 +1041,7 @@ export default function SuperAdminDashboard() {
                         // Collect all possible UIDs for super admins
                         if (data.firebaseUid) superAdminUids.add(data.firebaseUid);
                         superAdminUids.add(doc.id);
-                        if (data.email) superAdminUids.add(data.email.toLowerCase());
+                        if (data.email) superAdminUids.add(String(data.email).toLowerCase());
                     }
                 });
             }
@@ -1170,11 +1170,11 @@ export default function SuperAdminDashboard() {
                     let adminData = adminsByUid.get(d.id);
                     // If not found, try by user email
                     if (!adminData && userData.email) {
-                        adminData = adminsByEmail.get(userData.email.toLowerCase());
+                        adminData = adminsByEmail.get(String(userData.email).toLowerCase());
                     }
                     // If still not found, try by phone number
                     if (!adminData && userData.phoneNumber) {
-                        const normalizedPhone = userData.phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+                        const normalizedPhone = String(userData.phoneNumber).replace(/\s+/g, '').replace(/[^\d+]/g, '');
                         adminData = adminsByPhone.get(normalizedPhone);
                         // Also try without + prefix
                         if (!adminData && normalizedPhone.startsWith('+')) {
@@ -1183,7 +1183,7 @@ export default function SuperAdminDashboard() {
                     }
                     // If still not found, try by name (fallback)
                     if (!adminData) {
-                        const userDisplayName = userData.displayName?.toLowerCase().trim();
+                        const userDisplayName = userData.displayName ? String(userData.displayName).toLowerCase().trim() : undefined;
                         const userFullName = userData.firstName && userData.lastName
                             ? `${userData.firstName} ${userData.lastName}`.toLowerCase().trim()
                             : null;
@@ -1208,6 +1208,10 @@ export default function SuperAdminDashboard() {
                     return {
                         id: d.id,
                         ...userData,
+                        // Defensive defaults for required fields
+                        email: userData.email || '',
+                        displayName: userData.displayName || userData.firstName ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim() : '',
+                        phoneNumber: userData.phoneNumber || '',
                         // CRITICAL FIX: Only mark as admin if admin record exists AND is active
                         isAdmin: !!adminData && adminData.isActive !== false,
                         adminType: (adminData && adminData.isActive !== false) ? (adminData.adminType || adminData.type) : undefined,
@@ -2095,8 +2099,8 @@ export default function SuperAdminDashboard() {
                                         const name = (user.displayName || '').toLowerCase();
                                         const firstName = ((user as any).firstName || '').toLowerCase();
                                         const lastName = ((user as any).lastName || '').toLowerCase();
-                                        const email = (user.email || '').toLowerCase();
-                                        const phone = ((user as any).phoneNumber || '');
+                                        const email = String(user.email || '').toLowerCase();
+                                        const phone = String((user as any).phoneNumber || '');
                                         const phoneDigits = phone.replace(/\D/g, ''); // Normalize phone for digit comparison
                                         const businessName = ((user.adminProfile as any)?.butcherName || '').toLowerCase();
                                         const roleLabel = (getRoleLabel(user.adminType as string) || '').toLowerCase();
@@ -2207,7 +2211,7 @@ export default function SuperAdminDashboard() {
                                                 ) : (
                                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0 ${(user as any).isActive !== false ? 'bg-gray-600 group-hover:bg-gray-500' : 'bg-red-900/30 text-red-200'
                                                         }`}>
-                                                        {(user as any).firstName?.charAt(0)?.toUpperCase() || user.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || '?'}
+                                                        {String((user as any).firstName || '').charAt(0).toUpperCase() || String(user.displayName || '').charAt(0).toUpperCase() || String(user.email || '').charAt(0).toUpperCase() || '?'}
                                                     </div>
                                                 )}
                                                 <div className="flex-1 min-w-0">
@@ -2527,9 +2531,9 @@ export default function SuperAdminDashboard() {
                                         {admins.filter(a => {
                                             // Filter by search
                                             const matchesSearch = !searchQuery ||
-                                                a.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                a.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                a.phone?.includes(searchQuery);
+                                                String(a.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                String(a.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                String(a.phone || '').includes(searchQuery);
                                             // Filter by type
                                             const matchesFilter = adminFilter === 'all' ||
                                                 (adminFilter === 'super' && a.adminType === 'super') ||
@@ -2554,14 +2558,14 @@ export default function SuperAdminDashboard() {
                                     {admins.filter(a => {
                                         // Filter by search
                                         const matchesSearch = !searchQuery ||
-                                            a.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            a.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            a.phone?.includes(searchQuery);
+                                            String(a.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            String(a.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            String(a.phone || '').includes(searchQuery);
                                         // Filter by type
                                         const matchesFilter = adminFilter === 'all' ||
                                             (adminFilter === 'super' && a.adminType === 'super') ||
-                                            (adminFilter === 'staff' && a.adminType?.includes('_staff')) ||
-                                            (adminFilter === 'business' && a.adminType !== 'super' && !a.adminType?.includes('_staff'));
+                                            (adminFilter === 'staff' && String(a.adminType || '').includes('_staff')) ||
+                                            (adminFilter === 'business' && a.adminType !== 'super' && !String(a.adminType || '').includes('_staff'));
                                         // Filter by status (active/archived)
                                         const matchesStatus = adminStatusFilter === 'active'
                                             ? a.isActive !== false
@@ -2577,13 +2581,13 @@ export default function SuperAdminDashboard() {
                                         )}
                                     {admins.filter(a => {
                                         const matchesSearch = !searchQuery ||
-                                            a.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            a.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                            a.phone?.includes(searchQuery);
+                                            String(a.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            String(a.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            String(a.phone || '').includes(searchQuery);
                                         const matchesFilter = adminFilter === 'all' ||
                                             (adminFilter === 'super' && a.adminType === 'super') ||
-                                            (adminFilter === 'staff' && a.adminType?.includes('_staff')) ||
-                                            (adminFilter === 'business' && a.adminType !== 'super' && !a.adminType?.includes('_staff'));
+                                            (adminFilter === 'staff' && String(a.adminType || '').includes('_staff')) ||
+                                            (adminFilter === 'business' && a.adminType !== 'super' && !String(a.adminType || '').includes('_staff'));
                                         // Filter by status (active/archived)
                                         const matchesStatus = adminStatusFilter === 'active'
                                             ? a.isActive !== false
@@ -2608,7 +2612,7 @@ export default function SuperAdminDashboard() {
                                                     <span className="px-2 py-1 rounded text-xs bg-red-600 text-white">
                                                         👑 Super Admin
                                                     </span>
-                                                ) : a.adminType?.includes('_staff') ? (
+                                                ) : String(a.adminType || '').includes('_staff') ? (
                                                     <span className="px-2 py-1 rounded text-xs bg-green-600 text-white">
                                                         {getRoleIcon(a.adminType)} {getRoleLabel(a.adminType) || a.adminType}
                                                     </span>
@@ -4120,7 +4124,7 @@ export default function SuperAdminDashboard() {
                                             />
                                         ) : (
                                             <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center text-2xl font-bold text-gray-500 border-2 border-gray-600 shadow-inner">
-                                                {editingUserProfile.firstName?.charAt(0)?.toUpperCase() || editingUserProfile.email?.charAt(0)?.toUpperCase() || '?'}
+                                                {String(editingUserProfile.firstName || '').charAt(0).toUpperCase() || String(editingUserProfile.email || '').charAt(0).toUpperCase() || '?'}
                                             </div>
                                         )}
                                         {/* Upload Overlay */}
@@ -4683,10 +4687,10 @@ export default function SuperAdminDashboard() {
                                                                             (() => {
                                                                                 const searchLower = organizationSearchFilter.toLowerCase();
                                                                                 const filteredOrgs = organizationList.filter(o =>
-                                                                                    o.name.toLowerCase().includes(searchLower) ||
-                                                                                    o.city.toLowerCase().includes(searchLower) ||
-                                                                                    o.shortName?.toLowerCase().includes(searchLower) ||
-                                                                                    o.postalCode?.includes(searchLower)
+                                                                                    String(o.name || '').toLowerCase().includes(searchLower) ||
+                                                                                    String(o.city || '').toLowerCase().includes(searchLower) ||
+                                                                                    String(o.shortName || '').toLowerCase().includes(searchLower) ||
+                                                                                    String(o.postalCode || '').includes(searchLower)
                                                                                 ).slice(0, 20);
 
                                                                                 if (filteredOrgs.length === 0) {
@@ -5422,9 +5426,9 @@ export default function SuperAdminDashboard() {
                                                         const searchLower = newRoleBusinessSearch.toLowerCase().trim();
                                                         const filtered = searchLower
                                                             ? butcherList.filter(b =>
-                                                                b.name?.toLowerCase().includes(searchLower) ||
-                                                                b.city?.toLowerCase().includes(searchLower) ||
-                                                                b.postalCode?.toLowerCase().includes(searchLower)
+                                                                String(b.name || '').toLowerCase().includes(searchLower) ||
+                                                                String(b.city || '').toLowerCase().includes(searchLower) ||
+                                                                String(b.postalCode || '').toLowerCase().includes(searchLower)
                                                             )
                                                             : butcherList;
                                                         const results = filtered.slice(0, 30);
@@ -5525,10 +5529,10 @@ export default function SuperAdminDashboard() {
                                                         const searchLower = newRoleOrgSearch.toLowerCase().trim();
                                                         const filtered = searchLower
                                                             ? organizationList.filter(o =>
-                                                                o.name?.toLowerCase().includes(searchLower) ||
-                                                                o.shortName?.toLowerCase().includes(searchLower) ||
-                                                                o.city?.toLowerCase().includes(searchLower) ||
-                                                                o.postalCode?.includes(searchLower)
+                                                                String(o.name || '').toLowerCase().includes(searchLower) ||
+                                                                String(o.shortName || '').toLowerCase().includes(searchLower) ||
+                                                                String(o.city || '').toLowerCase().includes(searchLower) ||
+                                                                String(o.postalCode || '').includes(searchLower)
                                                             )
                                                             : organizationList;
                                                         const results = filtered.slice(0, 30);

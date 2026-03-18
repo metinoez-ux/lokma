@@ -1,78 +1,134 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { db } from '@/lib/firebase';
+import { collection, getCountFromServer } from 'firebase/firestore';
 
-const SIDEBAR_ITEMS = [
-    { href: '/admin/customers',    label: 'Kunden' },
-    { href: '/admin/partners',     label: 'Lokma-Partner' },
-    { href: '/admin/drivers',      label: 'Fahrer' },
-    { href: '/admin/volunteers',   label: 'Kermes-Partner' },
-    { href: '/admin/dashboard',    label: 'Alle Benutzer' },
-    { href: '/admin/drivers/tips', label: 'Trinkgeld' },
-    { href: '/admin/staff-shifts', label: 'Schichten' },
-    { href: '/admin/superadmins',  label: 'Super Admins' },
-];
+interface SectionCard {
+    href: string;
+    labelKey: string;
+    fallbackLabel: string;
+    description: string;
+    countCollection?: string;
+}
 
-const SETTINGS_ITEMS = [
-    { href: '/admin/settings',         label: 'Einstellungen' },
-    { href: '/admin/settings/company', label: 'Firmeneinstellungen' },
-    { href: '/admin/ui-translations',  label: 'UiTranslations' },
-    { href: '/admin/image-generator',  label: 'Bildgenerator' },
-    { href: '/admin/ai-menu',          label: 'KI-Menü' },
+const USER_SECTIONS: SectionCard[] = [
+    {
+        href: '/admin/customers',
+        labelKey: 'customers',
+        fallbackLabel: 'Kunden',
+        description: 'Registrierte Endkunden verwalten',
+        countCollection: 'users',
+    },
+    {
+        href: '/admin/partners',
+        labelKey: 'partners',
+        fallbackLabel: 'Lokma-Partner',
+        description: 'Restaurants und Geschaefte',
+        countCollection: 'businesses',
+    },
+    {
+        href: '/admin/drivers',
+        labelKey: 'drivers',
+        fallbackLabel: 'Fahrer',
+        description: 'Kuriere und Lieferfahrer',
+    },
+    {
+        href: '/admin/volunteers',
+        labelKey: 'volunteers',
+        fallbackLabel: 'Kermes-Partner',
+        description: 'Community-Veranstaltungen',
+    },
+    {
+        href: '/admin/dashboard',
+        labelKey: 'allUsers',
+        fallbackLabel: 'Alle Benutzer',
+        description: 'Gesamtuebersicht aller Nutzer',
+    },
+    {
+        href: '/admin/staff-shifts',
+        labelKey: 'shifts',
+        fallbackLabel: 'Arbeitszeiten',
+        description: 'Arbeitszeiten und Einsatzplaene',
+    },
+    {
+        href: '/admin/superadmins',
+        labelKey: 'superAdmins',
+        fallbackLabel: 'Super Admins',
+        description: 'Plattform-Administratoren',
+    },
+    {
+        href: '/admin/drivers/tips',
+        labelKey: 'tips',
+        fallbackLabel: 'Trinkgeld',
+        description: 'Trinkgeld-Uebersicht der Fahrer',
+    },
 ];
 
 export default function BenutzerverwaltungPage() {
-    const pathname = usePathname();
+    const t = useTranslations('AdminNav');
+    const [counts, setCounts] = useState<Record<string, number>>({});
+
+    useEffect(() => {
+        const loadCounts = async () => {
+            const results: Record<string, number> = {};
+            for (const section of USER_SECTIONS) {
+                if (section.countCollection) {
+                    try {
+                        const ref = collection(db, section.countCollection);
+                        const snap = await getCountFromServer(ref);
+                        results[section.countCollection] = snap.data().count;
+                    } catch {
+                        // skip
+                    }
+                }
+            }
+            setCounts(results);
+        };
+        loadCounts();
+    }, []);
 
     return (
-        <div className="flex min-h-[calc(100vh-88px)] bg-gray-950">
-            {/* Left Sidebar */}
-            <aside className="w-56 shrink-0 bg-gray-900 border-r border-gray-800 py-6">
-                <div className="px-4 mb-3">
-                    <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Benutzer</p>
+        <div className="min-h-screen bg-gray-900 text-white">
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl font-bold mb-1">Benutzerverwaltung</h1>
+                    <p className="text-gray-400 text-sm">
+                        Benutzer, Partner und Teams verwalten
+                    </p>
                 </div>
-                <nav className="space-y-0.5 px-2 mb-6">
-                    {SIDEBAR_ITEMS.map(item => {
-                        const active = pathname?.includes(item.href);
+
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {USER_SECTIONS.map(section => {
+                        const count = section.countCollection ? counts[section.countCollection] : undefined;
                         return (
                             <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`block px-3 py-2 rounded-lg text-sm transition-all ${
-                                    active
-                                        ? 'bg-red-900/40 text-white'
-                                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                                }`}
+                                key={section.href}
+                                href={section.href}
+                                className="group bg-gray-800 border border-gray-700 rounded-xl p-5 hover:border-red-500/50 hover:bg-gray-800/80 transition-all"
                             >
-                                {item.label}
+                                <div className="flex items-start justify-between mb-3">
+                                    <h3 className="text-white font-semibold text-sm group-hover:text-red-400 transition-colors">
+                                        {t(section.labelKey) || section.fallbackLabel}
+                                    </h3>
+                                    {count !== undefined && (
+                                        <span className="bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
+                                            {count.toLocaleString('de-DE')}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-gray-500 text-xs leading-relaxed">
+                                    {section.description}
+                                </p>
                             </Link>
                         );
                     })}
-                </nav>
-
-                <div className="border-t border-gray-800 mx-3 mb-4" />
-
-                <div className="px-4 mb-3">
-                    <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Einstellungen</p>
                 </div>
-                <nav className="space-y-0.5 px-2">
-                    {SETTINGS_ITEMS.map(item => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className="block px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
-            </aside>
-
-            {/* Right — empty until user picks a section */}
-            <main className="flex-1 flex items-center justify-center">
-                <p className="text-gray-700 text-sm">Bitte wählen Sie einen Bereich aus.</p>
-            </main>
+            </div>
         </div>
     );
 }

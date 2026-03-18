@@ -1173,7 +1173,25 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
       orElse: () => effectiveStatuses.first,
     );
     final isPreOrder = pendingData['isPreOrder'] == true;
-    final pickupTimeStr = pendingData['pickupTimeStr'] as String?;
+    // Re-localize the scheduled delivery label using the app's current locale
+    // instead of the server-stored pre-formatted string (which may be in a different language)
+    String? pickupTimeStr = pendingData['pickupTimeStr'] as String?;
+    final scheduledTs = pendingData['scheduledTimestamp'];
+    if (scheduledTs != null && scheduledTs is Timestamp) {
+      final scheduledDate = scheduledTs.toDate();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final tomorrow = today.add(const Duration(days: 1));
+      final schedDay = DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
+      final timeStr = '${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}';
+      if (schedDay == today) {
+        pickupTimeStr = '${'common.today'.tr()} $timeStr';
+      } else if (schedDay == tomorrow) {
+        pickupTimeStr = '${'common.tomorrow'.tr()} $timeStr';
+      } else {
+        pickupTimeStr = '${scheduledDate.day.toString().padLeft(2, '0')}.${scheduledDate.month.toString().padLeft(2, '0')} $timeStr';
+      }
+    }
 
     // Determine if cancelled/rejected (use different pipeline)
     final isCancelled = latestStatus == 'cancelled' || latestStatus == 'rejected';

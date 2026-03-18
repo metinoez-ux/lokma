@@ -12,7 +12,7 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8">{admin?.adminType === 'super' ? t('platform_ayarlari') : t('settings') || 'Ayarlar'}</h1>
+                <h1 className="text-3xl font-bold mb-8">{admin?.adminType === 'super' ? 'IoT Einstellungen' : t('settings') || 'Ayarlar'}</h1>
 
                 {/* 📋 AYARLAR MENÜSÜ - Only for non-super admins */}
                 {admin?.adminType !== 'super' && (
@@ -142,106 +142,55 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                {/* 🔧 SUPER ADMIN AYARLARI */}
+                {/* SUPER ADMIN - IoT Einstellungen */}
                 {admin?.adminType === 'super' && (
-                    <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 mb-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-3xl">🔧</span>
-                            <div>
-                                <h2 className="text-xl font-bold">{t('platform_yonetimi') || 'Platform Yönetimi'}</h2>
-                                <p className="text-gray-400 text-sm">{t('platform_genelindeki_ayarlari_buradan_yo') || 'Platform genelindeki ayarları buradan yönetin'}</p>
-                            </div>
-                        </div>
+                    <div className="mb-8">
+                        <h2 className="text-lg font-semibold text-white mb-1">IoT Einstellungen</h2>
+                        <p className="text-gray-500 text-sm mb-6">IoT-Gateway, API, Drucker und Benachrichtigungen</p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* IoT Gateway */}
+                        <div className="space-y-2">
                             <Link
                                 href="/admin/settings/iot"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-purple-600 hover:bg-purple-950/20 transition-all group"
+                                className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-purple-900/50 flex items-center justify-center text-2xl group-hover:bg-purple-800/50 transition">
-                                    🔔
-                                </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-purple-300 transition">{t('akilli_bildirimler_iot_gateway')}</h3>
-                                    <p className="text-xs text-gray-500">{t('alexa_led_tarayici_sesi_ayarlari') || 'Alexa, LED, tarayıcı sesi ayarları'}</p>
+                                    <h3 className="text-sm font-medium text-white">IoT-Gateway</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Alexa, LED, Browser-Sound Einstellungen</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-purple-400 transition text-xl">→</span>
+                                <span className="text-gray-600 group-hover:text-gray-400 transition">&#8250;</span>
                             </Link>
 
-                            {/* Sponsored Products */}
-                            <Link
-                                href="/admin/settings/sponsored"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-amber-600 hover:bg-amber-950/20 transition-all group"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-amber-900/50 flex items-center justify-center text-2xl group-hover:bg-amber-800/50 transition">
-                                    ⭐
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white group-hover:text-amber-300 transition">{t('one_cikan_urunler_sponsored')}</h3>
-                                    <p className="text-xs text-gray-500">{t('ucretler_limitler_ve_platform_ayarlari') || 'Ücretler, limitler ve platform ayarları'}</p>
-                                </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition text-xl">→</span>
-                            </Link>
-
-                            {/* 🥤 Gratis İçecek */}
-                            <Link
-                                href="/admin/settings/free-drink"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-emerald-600 hover:bg-emerald-950/20 transition-all group"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-emerald-900/50 flex items-center justify-center text-2xl group-hover:bg-emerald-800/50 transition">
-                                    🥤
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white group-hover:text-emerald-300 transition">{t('gratis_icecek') || 'Gratis İçecek'}</h3>
-                                    <p className="text-xs text-gray-500">{t('gratis_icecek_settings_desc') || 'Bedava içecek promosyonu ayarları'}</p>
-                                </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-emerald-400 transition text-xl">→</span>
-                            </Link>
-
-                            {/* API Schlüssel */}
                             <Link
                                 href="/admin/settings/api-keys"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-orange-600 hover:bg-orange-950/20 transition-all group"
+                                className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-orange-900/50 flex items-center justify-center text-2xl group-hover:bg-orange-800/50 transition">
-                                    🔑
-                                </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-orange-300 transition">API-Schlüssel</h3>
-                                    <p className="text-xs text-gray-500">Verschlüsselte API-Schlüsselverwaltung</p>
+                                    <h3 className="text-sm font-medium text-white">API-Schluessel</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Verschluesselte API-Schluesselverwaltung</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-orange-400 transition text-xl">→</span>
+                                <span className="text-gray-600 group-hover:text-gray-400 transition">&#8250;</span>
                             </Link>
 
-                            {/* 🔔 Bildirim Sesi */}
                             <Link
                                 href="/admin/settings/notification-sound"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-rose-600 hover:bg-rose-950/20 transition-all group"
+                                className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-rose-900/50 flex items-center justify-center text-2xl group-hover:bg-rose-800/50 transition">
-                                    🔔
-                                </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-rose-300 transition">{t('bildirim_sesi') || 'Bildirim Sesi'}</h3>
-                                    <p className="text-xs text-gray-500">{t('bildirim_sesi_desc') || 'Push notification ses ayarları'}</p>
+                                    <h3 className="text-sm font-medium text-white">Benachrichtigungston</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">Push-Benachrichtigungston konfigurieren</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-rose-400 transition text-xl">→</span>
+                                <span className="text-gray-600 group-hover:text-gray-400 transition">&#8250;</span>
                             </Link>
 
-                            {/* 🖨️ Bon Yazıcı */}
                             <Link
                                 href="/admin/settings/printer"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-cyan-600 hover:bg-cyan-950/20 transition-all group"
+                                className="flex items-center justify-between p-4 bg-gray-800 rounded-lg hover:bg-gray-750 transition-colors group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-cyan-900/50 flex items-center justify-center text-2xl group-hover:bg-cyan-800/50 transition">
-                                    🖨️
-                                </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-cyan-300 transition">Bon-Drucker</h3>
-                                    <p className="text-xs text-gray-500">IP-Adresse, Port und Druckerverbindung</p>
+                                    <h3 className="text-sm font-medium text-white">Bon-Drucker</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">IP-Adresse, Port und Druckerverbindung</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-cyan-400 transition text-xl">→</span>
+                                <span className="text-gray-600 group-hover:text-gray-400 transition">&#8250;</span>
                             </Link>
                         </div>
                     </div>

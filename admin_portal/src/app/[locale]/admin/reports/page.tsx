@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, where, onSnapshot, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, where, onSnapshot, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
@@ -136,6 +136,19 @@ export default function ReportsPage() {
         } catch (error) {
             console.error('Error updating report:', error);
             showToast(t('updateError'), 'error');
+        }
+    };
+
+    // Delete report (Super Admin only)
+    const handleDeleteReport = async (reportId: string) => {
+        if (!confirm('Meldung endgueltig loschen?')) return;
+        try {
+            await deleteDoc(doc(db, 'legal_reports', reportId));
+            showToast('Meldung geloscht', 'success');
+            setSelectedReport(null);
+        } catch (error) {
+            console.error('Error deleting report:', error);
+            showToast('Loschen fehlgeschlagen', 'error');
         }
     };
 
@@ -382,6 +395,18 @@ export default function ReportsPage() {
                                     </button>
                                 )}
                             </div>
+
+                            {/* Delete (Super Admin) */}
+                            {admin?.adminType === 'super' && (
+                                <div className="mt-4 pt-3 border-t border-gray-700">
+                                    <button
+                                        onClick={() => handleDeleteReport(selectedReport.id)}
+                                        className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-sm rounded-xl transition-colors"
+                                    >
+                                        Meldung loschen
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

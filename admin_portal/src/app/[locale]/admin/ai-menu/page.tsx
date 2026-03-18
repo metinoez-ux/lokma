@@ -104,16 +104,34 @@ function AIMenuPageContent() {
     const [saveComplete, setSaveComplete] = useState(false);
 
     // AI Model selection
-    const [selectedModel, setSelectedModel] = useState('claude-sonnet-4-20250514');
-    const AI_MODELS = [
-        { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', provider: 'claude', group: 'Anthropic Claude' },
-        { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'claude', group: 'Anthropic Claude' },
-        { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'claude', group: 'Anthropic Claude' },
-        { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', provider: 'claude', group: 'Anthropic Claude' },
+    const [selectedModel, setSelectedModel] = useState('claude-opus-4-6');
+    const [aiModels, setAiModels] = useState([
+        { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', provider: 'claude', group: 'Anthropic Claude' },
+        { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'claude', group: 'Anthropic Claude' },
+        { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', provider: 'claude', group: 'Anthropic Claude' },
+        { id: 'gpt-5.4', name: 'GPT-5.4', provider: 'openai', group: 'OpenAI' },
+        { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', provider: 'openai', group: 'OpenAI' },
+        { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai', group: 'OpenAI' },
+        { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', provider: 'gemini', group: 'Google Gemini' },
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', provider: 'gemini', group: 'Google Gemini' },
         { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'gemini', group: 'Google Gemini' },
-        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'gemini', group: 'Google Gemini' },
-        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', provider: 'gemini', group: 'Google Gemini' },
-    ];
+    ]);
+
+    // Fetch latest models from provider APIs (auto-updates weekly)
+    useEffect(() => {
+        fetch('/api/ai-menu/models')
+            .then(res => res.json())
+            .then(data => {
+                if (data.models && data.models.length > 0) {
+                    setAiModels(data.models);
+                    // If current selected model is not in the new list, select the first one
+                    if (!data.models.some((m: any) => m.id === selectedModel)) {
+                        setSelectedModel(data.models[0].id);
+                    }
+                }
+            })
+            .catch(() => { /* keep fallback */ });
+    }, []);
 
     // Business selector
     const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -679,9 +697,9 @@ function AIMenuPageContent() {
                                 className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white text-sm font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none"
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                             >
-                                {['Anthropic Claude', 'Google Gemini'].map(group => (
+                                {[...new Set(aiModels.map(m => m.group))].map(group => (
                                     <optgroup key={group} label={group}>
-                                        {AI_MODELS.filter(m => m.group === group).map(m => (
+                                        {aiModels.filter(m => m.group === group).map(m => (
                                             <option key={m.id} value={m.id}>{m.name}</option>
                                         ))}
                                     </optgroup>
@@ -696,7 +714,7 @@ function AIMenuPageContent() {
                             className="w-full py-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold text-lg rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
                         >
                             <span className="text-2xl">🤖</span>
-                            {AI_MODELS.find(m => m.id === selectedModel)?.name || 'AI'} ile Menüyü Analiz Et
+                            {aiModels.find(m => m.id === selectedModel)?.name || 'AI'} ile Menuyu Analiz Et
                         </button>
                     </div>
                 )}
