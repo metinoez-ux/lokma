@@ -99,8 +99,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
 
   int _getSelectedIndex(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < MainScaffold._items.length; i++) {
-      if (currentPath == MainScaffold._items[i].path) return i;
+    for (int i = 0; i < MainScaffold.items.length; i++) {
+      if (currentPath == MainScaffold.items[i].path) return i;
     }
     return 0;
   }
@@ -160,9 +160,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
             cartItemCount: cartItemCount,
             onTap: (index) {
               HapticFeedback.lightImpact();
-              context.go(MainScaffold._items[index].path);
+              context.go(MainScaffold.items[index].path);
             },
-            items: MainScaffold._items,
+            items: MainScaffold.items,
           ),
     );
   }
@@ -238,7 +238,7 @@ class GlassBottomBar extends StatelessWidget {
   final int currentIndex;
   final int cartItemCount;
   final ValueChanged<int> onTap;
-  final List<_NavItemData> items;
+  final List<NavItemData> items;
 
   const GlassBottomBar({
     super.key,
@@ -343,7 +343,7 @@ class GlassBottomBar extends StatelessWidget {
     );
   }
 
-  Widget _buildItemContent(_NavItemData item, bool isActive, BuildContext context, bool isDark) {
+  Widget _buildItemContent(NavItemData item, bool isActive, BuildContext context, bool isDark) {
     const activeColor = Color(0xFFFB335B);
     final inactiveColor = isDark 
         ? Colors.white.withValues(alpha: 0.55) 

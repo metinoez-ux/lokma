@@ -40,6 +40,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   // Loading state
   bool _isSubmitting = false;
   
+  // Bagis/yuvarlama
+  double _donationAmount = 0.0;
+  
   // Renkler
   static const Color lokmaPink = Color(0xFFFB335B);
   Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
@@ -127,7 +130,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         }
       }
       final double pfandTotal = pfandCount * pfandAmount;
-      final double totalAmount = cartState.totalAmount + pfandTotal;
+      final double totalAmount = cartState.totalAmount + pfandTotal + _donationAmount;
       
       // Sipariş öğelerini oluştur
       final orderItems = cartState.items.map((item) => KermesOrderItem(
@@ -178,6 +181,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         address: null,
         items: orderItems,
         totalAmount: totalAmount,
+        donationAmount: _donationAmount,
         paymentMethod: _paymentMethod,
         isPaid: _paymentMethod == PaymentMethodType.card,
         status: KermesOrderStatus.pending,
@@ -1130,29 +1134,238 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ),
           const SizedBox(height: 16),
           
-          // Nakit
+          // Nakit - her zaman gosterilir
           _buildOptionCard(
             icon: Icons.payments_outlined,
             iconColor: Colors.green,
             title: 'Nakit',
-            subtitle: 'Teslimatta ödeme yapın',
+            subtitle: 'Teslimatta nakit odeme yapin',
             isSelected: _paymentMethod == PaymentMethodType.cash,
             onTap: () => setState(() => _paymentMethod = PaymentMethodType.cash),
           ),
           const SizedBox(height: 12),
           
-          // Kart
+          // Kapida Kart (Tap to Pay) - her zaman gosterilir
           _buildOptionCard(
-            icon: Icons.credit_card,
-            iconColor: Colors.blue,
-            title: 'Kart ile Ödeme',
-            subtitle: 'Şimdi ödeyin',
-            badge: 'YAKIN',
-            badgeColor: Colors.amber,
-            isSelected: _paymentMethod == PaymentMethodType.card,
-            isDisabled: true, // Geçici olarak kapalı
-            onTap: null,
+            icon: Icons.contactless,
+            iconColor: Colors.orange,
+            title: 'Kapida Kart',
+            subtitle: 'Tap to Pay ile teslimatta odeyin',
+            isSelected: _paymentMethod == PaymentMethodType.tapToPay,
+            onTap: () => setState(() => _paymentMethod = PaymentMethodType.tapToPay),
           ),
+          
+          // Kart (Online) - sadece Gel Al ve Masada'da gosterilir, kurye'de gizlenir
+          if (_deliveryType != DeliveryType.kurye) ...[
+            const SizedBox(height: 12),
+            _buildOptionCard(
+              icon: Icons.credit_card,
+              iconColor: Colors.blue,
+              title: 'Kart ile Odeme',
+              subtitle: 'Simdi odeyin',
+              badge: 'YAKIN',
+              badgeColor: Colors.amber,
+              isSelected: _paymentMethod == PaymentMethodType.card,
+              isDisabled: true, // Gecici olarak kapali
+              onTap: null,
+            ),
+          ],
+          
+          // Bagis / Yuvarlama section
+          const SizedBox(height: 28),
+          _buildDonationSection(grandTotal),
+        ],
+      ),
+    );
+  }
+  
+  /// Hesabi yuvarlama helper
+  double _roundUpTo(double value, double multiple) {
+    return (value / multiple).ceil() * multiple;
+  }
+  
+  /// Dr. Hep Sahin bagis/yuvarlama UI
+  Widget _buildDonationSection(double baseTotal) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = CurrencyUtils.getCurrencySymbol();
+    
+    final roundHalf = _roundUpTo(baseTotal, 0.50);
+    final round1 = _roundUpTo(baseTotal, 1.00);
+    final round5 = _roundUpTo(baseTotal, 5.00);
+    final round10 = _roundUpTo(baseTotal, 10.00);
+    
+    final rawOptions = <Map<String, dynamic>>[
+      {'label': '+${(roundHalf - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((roundHalf - baseTotal).toStringAsFixed(2))},
+      {'label': '+${(round1 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round1 - baseTotal).toStringAsFixed(2))},
+      {'label': '+${(round5 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round5 - baseTotal).toStringAsFixed(2))},
+      {'label': '+${(round10 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round10 - baseTotal).toStringAsFixed(2))},
+    ];
+    
+    // Sifir ve tekrar eden degerleri kaldir
+    final seen = <double>{};
+    final options = <Map<String, dynamic>>[];
+    for (final o in rawOptions) {
+      final d = o['donation'] as double;
+      if (d > 0 && seen.add(d)) options.add(o);
+    }
+    
+    if (options.isEmpty) return const SizedBox.shrink();
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg(isDark),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.green.withValues(alpha: 0.3) : Colors.green.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.volunteer_activism, color: Colors.green[600], size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Hayir icin Yuvarlama',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => Container(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(width: 36, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white24 : Colors.black12, borderRadius: BorderRadius.circular(2))),
+                          const SizedBox(height: 20),
+                          Icon(Icons.volunteer_activism, size: 40, color: Colors.green[600]),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Dr. Hep Sahin Vakfi',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'Hesabinizi yuvarlayarak Dr. Hep Sahin Vakfi\'na bagista bulunabilirsiniz. Tum bagislar ihtiyac sahiplerine ulastirilmaktadir.',
+                            style: TextStyle(fontSize: 14, color: isDark ? Colors.grey[400] : Colors.grey[600], height: 1.5),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text('Anladim', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: Icon(Icons.info_outline, size: 20, color: Colors.grey[400]),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Bagis yapmak isterseniz bir tutar secin',
+            style: TextStyle(color: Colors.grey[500], fontSize: 13),
+          ),
+          const SizedBox(height: 14),
+          // Bagis chipleri
+          Row(
+            children: [
+              for (int i = 0; i < options.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        final newDonation = options[i]['donation'] as double;
+                        _donationAmount = _donationAmount == newDonation ? 0.0 : newDonation;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _donationAmount == (options[i]['donation'] as double)
+                            ? Colors.green
+                            : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _donationAmount == (options[i]['donation'] as double)
+                              ? Colors.green
+                              : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          options[i]['label'] as String,
+                          style: TextStyle(
+                            color: _donationAmount == (options[i]['donation'] as double) ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          // Bagis secildiginde onay mesaji
+          if (_donationAmount > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.7, end: 1.0),
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.elasticOut,
+                  builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+                  child: const Icon(Icons.favorite, size: 16, color: Color(0xFFF41C54)),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${baseTotal.toStringAsFixed(2)} $currency -> ${(baseTotal + _donationAmount).toStringAsFixed(2)} $currency  (+${_donationAmount.toStringAsFixed(2)} $currency bagis)',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[300] : const Color(0xFF3E3E3E),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

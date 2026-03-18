@@ -2051,7 +2051,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                color: const Color(0xFF1C1C1E),
+                                color: const Color(0xFF2A2A28),
                                 child: const Center(
                                   child: SizedBox(
                                     width: 24,
@@ -2064,7 +2064,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 ),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                color: const Color(0xFF1C1C1E),
+                                color: const Color(0xFF2A2A28),
                                 child: const Center(
                                   child: Icon(Icons.restaurant,
                                       color: lokmaPink, size: 48),
@@ -2118,7 +2118,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           right: 0,
                           child: Container(
                             padding: EdgeInsets.symmetric(vertical: timeInfo != null ? 5 : 6),
-                            color: const Color(0xFF2C2C2E),
+                            color: const Color(0xFF2A2A28),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -3571,7 +3571,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            color: isDark ? const Color(0xFF2A2A28) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
@@ -3716,7 +3716,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF2A2A28) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -3913,7 +3913,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF2A2A28) : Colors.white,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Padding(
@@ -3985,7 +3985,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                     filled: true,
                     fillColor:
-                        isDark ? const Color(0xFF2A2A2A) : Colors.grey[50],
+                        isDark ? const Color(0xFF2A2A28) : Colors.grey[50],
                     prefixIcon:
                         Icon(Icons.person_outline, color: Colors.grey[400]),
                   ),
@@ -4043,7 +4043,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                     filled: true,
                     fillColor:
-                        isDark ? const Color(0xFF2A2A2A) : Colors.grey[50],
+                        isDark ? const Color(0xFF2A2A28) : Colors.grey[50],
                   ),
                   onChanged: (_) {
                     if (pinError != null) {
@@ -4245,7 +4245,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF2A2A28) : Colors.white,
       isScrollControlled: true,
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
@@ -4381,7 +4381,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF2A2A28) : Colors.white,
         builder: (ctx) => SafeArea(
             child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
@@ -4420,7 +4420,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                  color: isDark ? const Color(0xFF2A2A28) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                       color: lokmaPink.withValues(alpha: 0.3), width: 2),

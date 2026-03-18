@@ -310,7 +310,7 @@
     "verdiginiz_siparisler_burada_l": "Vos commandes seront listées ici.",
     "i_sletme": "Commerce",
     "dun": "Hier",
-    "beklemede": "Beklemede",
+    "beklemede": "En attente",
     "onaylandi": "Confirmé",
     "i_ptal_edildi": "Annulé",
     "siparisi_goruntule": "Voir la Commande",
@@ -427,7 +427,7 @@
     "menuyu_ac": "Ouvrir le Menu",
     "giris_yapmalisiniz": "Vous devez vous connecter",
     "menuden_siparis_verin_veya_nga": "Commandez depuis le menu ou\nconnectez-vous avec le PIN du serveur",
-    "beklemede": "Beklemede"
+    "beklemede": "En attente"
   },
   "delivery_modes": {
     "delivery": "Livraison",

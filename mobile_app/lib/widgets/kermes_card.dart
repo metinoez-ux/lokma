@@ -168,10 +168,10 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: isDark ? cardDark : cardLight,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.12),
@@ -186,8 +186,8 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
           ),
         ],
         border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-          width: 1.5,
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+          width: 0.5,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -342,7 +342,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
 
           // --- CONTENT SECTION ---
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -489,6 +489,13 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     ],
                   ),
                 ),
+
+                // --- SPONSORED PRODUCTS (Reklam Altyapisi) ---
+                if (widget.event.sponsoredMenuItems.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: _buildSponsoredProductsSection(isDark),
+                  ),
 
                 const SizedBox(height: 16),
 
@@ -906,6 +913,179 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
           ),
         ),
       ],
+    );
+  }
+
+  // --- SPONSORED PRODUCTS SECTION (Reklam Altyapisi) ---
+  // Lieferando/Wolt "Gesponsert" tarzi horizontal kaydirmali reklam alani
+  // Ileride Firestore'dan sponsoredProductIds ile doldurulacak
+  Widget _buildSponsoredProductsSection(bool isDark) {
+    final sponsoredItems = <KermesMenuItem>[];
+    for (final idx in widget.event.sponsoredMenuItems) {
+      if (idx >= 0 && idx < widget.event.menu.length) {
+        sponsoredItems.add(widget.event.menu[idx]);
+      }
+    }
+    if (sponsoredItems.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2A2520) : const Color(0xFFDBE0A9),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'One Cikanlar',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[800]!.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Reklam',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Horizontal Product Cards
+          SizedBox(
+            height: 170,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: sponsoredItems.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                return _buildSponsoredProductCard(sponsoredItems[index], isDark);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSponsoredProductCard(KermesMenuItem item, bool isDark) {
+    final hasImage = item.allImages.isNotEmpty;
+    final imageUrl = hasImage ? item.allImages.first : null;
+
+    return Container(
+      width: 130,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            child: hasImage && imageUrl != null && imageUrl.startsWith('http')
+                ? CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: 130,
+                    height: 85,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      width: 130,
+                      height: 85,
+                      color: isDark ? Colors.grey[800] : Colors.grey[100],
+                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      width: 130,
+                      height: 85,
+                      color: isDark ? Colors.grey[800] : Colors.grey[100],
+                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                    ),
+                  )
+                : Container(
+                    width: 130,
+                    height: 85,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF2C3E50), const Color(0xFF34495E)]
+                            : [const Color(0xFFF8F4EF), const Color(0xFFF0E8DD)],
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.restaurant_menu,
+                      color: isDark ? Colors.grey[600] : Colors.grey[400],
+                      size: 28,
+                    ),
+                  ),
+          ),
+          // Product Info
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                      height: 1.2,
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: isDark ? Colors.grey[600] : Colors.grey[400],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -64,7 +64,11 @@ class KermesEvent {
   
   // Yetkili Kişi
   final String? contactName; // Admin Portal'dan gelen yetkili adı
-  final String? headerImage; // Admin Portal'dan seçilen başlık görseli
+  final String? headerImage; // Admin Portal'dan seçilen baslik gorseli
+  
+  // Sponsorlu Urun Reklam Altyapisi
+  final List<int> sponsoredMenuItems; // Menudan one cikarilacak urun indeksleri
+  final List<String> sponsoredProductIds; // Firestore urun ID'leri (ileride reklam sistemi icin)
   
   // Legacy - keep for backwards compatibility
   @Deprecated('Use hasOutdoor instead')
@@ -119,6 +123,9 @@ class KermesEvent {
     this.contactName,
     this.headerImage,
     this.generalParkingNote,
+    // Sponsorlu urunler
+    this.sponsoredMenuItems = const [],
+    this.sponsoredProductIds = const [],
     // Pfand sistemi
     this.hasPfandSystem = false,
     this.pfandAmount = 0.25,
@@ -433,6 +440,7 @@ final List<KermesEvent> mockKermesEvents = [
       'assets/kermes_flyers/huckelhoven_tuna.jpg',
       'assets/kermes_flyers/koln_mintika.jpg',
     ],
+    sponsoredMenuItems: [0, 3], // Adana Kebap + Baklava
   ),
   KermesEvent(
     id: '2',
@@ -534,10 +542,11 @@ final List<KermesEvent> mockKermesEvents = [
     ],
     parking: [
       KermesParkingInfo(
-        address: 'Cami önü park alanı',
-        description: 'Geniş ücretsiz otopark',
+        address: 'Cami onu park alani',
+        description: 'Genis ucretsiz otopark',
       ),
     ],
+    sponsoredMenuItems: [0, 1], // Lahmacun + Doner
     weatherForecast: [
       KermesWeather(date: DateTime.now().add(const Duration(days: 5)), icon: Icons.wb_sunny, description: 'Güneşli', temp: 25, windSpeed: 10, rainProbability: 0),
       KermesWeather(date: DateTime.now().add(const Duration(days: 6)), icon: Icons.wb_sunny, description: 'Güneşli', temp: 26, windSpeed: 8, rainProbability: 0),

@@ -331,4 +331,24 @@ class OpeningHoursHelper {
     
     return grouped;
   }
+
+  bool isOpenWithinTime(String startTime, String endTime, DateTime time) {
+    try {
+      final parsedStart = _parseTime(startTime);
+      final parsedEnd = _parseTime(endTime);
+      
+      if (parsedStart == null || parsedEnd == null) return true;
+      
+      final start = DateTime(time.year, time.month, time.day, parsedStart.hour, parsedStart.minute);
+      var end = DateTime(time.year, time.month, time.day, parsedEnd.hour, parsedEnd.minute);
+      
+      if (end.isBefore(start) || end.isAtSameMomentAs(start)) {
+         end = end.add(const Duration(days: 1));
+      }
+      
+      return (time.isAtSameMomentAs(start) || time.isAfter(start)) && time.isBefore(end);
+    } catch (e) {
+      return true; 
+    }
+  }
 }

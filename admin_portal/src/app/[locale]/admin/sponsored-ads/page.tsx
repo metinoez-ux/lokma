@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { db, storage } from '@/lib/firebase';
+import { getLocalizedText } from '@/lib/utils';
 import {
   collection,
   query,
@@ -18,6 +19,18 @@ import {
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 /* -- Types -- */
+interface MasterProductItem {
+  id: string;
+  name: any; // localized or string
+  imageUrl?: string;
+  images?: string[];
+  sellingPrice?: number;
+  appSellingPrice?: number;
+  inStorePrice?: number;
+  defaultPrice?: number;
+  category?: string;
+}
+
 interface SponsoredAd {
   id: string;
   advertiserName: string;
@@ -26,6 +39,12 @@ interface SponsoredAd {
   title: string;
   subtitle?: string;
   productPrice?: number | null;
+  selectedProductId?: string;
+  selectedProductName?: string;
+  selectedProductImage?: string;
+  originalPrice?: number | null;
+  discountPrice?: number | null;
+  discountPercent?: number | null;
   productKeywords: string[];
   targetCategories: string[];
   targetRadius: number;
@@ -70,6 +89,10 @@ const DEFAULT_FORM = {
   targetBusinessTypes: 'market',
   targetCountries: ['DE'] as string[],
   productPrice: '' as string | number,
+  selectedProductId: '',
+  selectedProductImage: '',
+  originalPrice: '' as string | number,
+  discountPrice: '' as string | number,
   pricingModel: 'fixed_daily',
   bidAmount: 5,
   dailyBudget: 50,
@@ -97,11 +120,32 @@ export default function SponsoredAdsPage() {
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Product picker state
+  const [masterProducts, setMasterProducts] = useState<MasterProductItem[]>([]);
+  const [productSearch, setProductSearch] = useState('');
+  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [selectedProductName, setSelectedProductName] = useState('');
+
   /* -- Load ads -- */
   useEffect(() => {
     if (!admin) return;
     loadAds();
+    loadMasterProducts();
   }, [admin]);
+
+  const loadMasterProducts = async () => {
+    try {
+      const snap = await getDocs(collection(db, 'master_products'));
+      const list: MasterProductItem[] = snap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      })) as MasterProductItem[];
+      list.sort((a, b) => getLocalizedText(a.name).localeCompare(getLocalizedText(b.name)));
+      setMasterProducts(list);
+    } catch (e) {
+      console.error('Error loading master products:', e);
+    }
+  };
 
   const loadAds = async () => {
     setLoadingAds(true);
@@ -116,6 +160,12 @@ export default function SponsoredAdsPage() {
         createdAt: d.data().createdAt?.toDate?.(),
         productKeywords: d.data().productKeywords || [],
         productPrice: d.data().productPrice || null,
+        selectedProductId: d.data().selectedProductId || '',
+        selectedProductName: d.data().selectedProductName || '',
+        selectedProductImage: d.data().selectedProductImage || '',
+        originalPrice: d.data().originalPrice ?? null,
+        discountPrice: d.data().discountPrice ?? null,
+        discountPercent: d.data().discountPercent ?? null,
         targetCategories: d.data().targetCategories || [],
         targetBusinessTypes: d.data().targetBusinessTypes || ['market'],
         targetCountries: d.data().targetCountries || ['DE'],
@@ -135,6 +185,9 @@ export default function SponsoredAdsPage() {
     setBannerPreview('');
     setLogoFile(null);
     setLogoPreview('');
+    setSelectedProductName('');
+    setProductSearch('');
+    setShowProductPicker(false);
     setShowForm(true);
   };
 
@@ -145,6 +198,10 @@ export default function SponsoredAdsPage() {
       title: ad.title,
       subtitle: ad.subtitle || '',
       productPrice: ad.productPrice ?? '',
+      selectedProductId: ad.selectedProductId || '',
+      selectedProductImage: ad.selectedProductImage || '',
+      originalPrice: ad.originalPrice ?? '',
+      discountPrice: ad.discountPrice ?? '',
       productKeywords: ad.productKeywords.join(', '),
       targetCategories: (ad.targetCategories || []).join(', '),
       targetRadius: ad.targetRadius,
@@ -159,10 +216,13 @@ export default function SponsoredAdsPage() {
       startDate: ad.startDate.toISOString().split('T')[0],
       endDate: ad.endDate.toISOString().split('T')[0],
     });
+    setSelectedProductName(ad.selectedProductName || '');
     setBannerPreview(ad.bannerImageUrl);
     setLogoPreview(ad.advertiserLogo || '');
     setBannerFile(null);
     setLogoFile(null);
+    setProductSearch('');
+    setShowProductPicker(false);
     setShowForm(true);
   };
 
@@ -189,6 +249,14 @@ export default function SponsoredAdsPage() {
         advertiserLogo = await getDownloadURL(imgRef);
       }
 
+      // Compute discount percent
+      const origP = form.originalPrice !== '' ? Number(form.originalPrice) : null;
+      const discP = form.discountPrice !== '' ? Number(form.discountPrice) : null;
+      let discountPercent: number | null = null;
+      if (origP && discP && discP < origP) {
+        discountPercent = Math.round(((origP - discP) / origP) * 100);
+      }
+
       const data = {
         advertiserName: form.advertiserName,
         advertiserLogo: advertiserLogo || null,
@@ -196,6 +264,12 @@ export default function SponsoredAdsPage() {
         title: form.title,
         subtitle: form.subtitle || null,
         productPrice: form.productPrice !== '' ? Number(form.productPrice) : null,
+        selectedProductId: form.selectedProductId || null,
+        selectedProductName: selectedProductName || null,
+        selectedProductImage: form.selectedProductImage || null,
+        originalPrice: origP,
+        discountPrice: discP,
+        discountPercent,
         productKeywords: form.productKeywords
           .split(',')
           .map((k) => k.trim())
@@ -364,12 +438,18 @@ export default function SponsoredAdsPage() {
                     <div className="flex items-start gap-4">
                       {/* Banner preview */}
                       {ad.bannerImageUrl && (
-                        <div className="shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-gray-700">
+                        <div className="relative shrink-0 w-32 h-20 rounded-lg overflow-hidden bg-gray-700">
                           <img
                             src={ad.bannerImageUrl}
                             alt={ad.title}
                             className="w-full h-full object-cover"
                           />
+                          {/* Discount badge on card */}
+                          {ad.discountPercent && ad.discountPercent > 0 && (
+                            <div className="absolute top-1 right-1 bg-red-600 text-white text-[9px] font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-lg">
+                              %{ad.discountPercent}
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -382,6 +462,20 @@ export default function SponsoredAdsPage() {
                           </span>
                         </div>
                         <div className="text-xs text-gray-400">{ad.advertiserName}</div>
+                        {/* Product + pricing row */}
+                        {ad.selectedProductName && (
+                          <div className="flex items-center gap-2 mt-0.5 text-xs">
+                            <span className="text-gray-300">{ad.selectedProductName}</span>
+                            {ad.originalPrice && ad.discountPrice && ad.discountPrice < ad.originalPrice ? (
+                              <>
+                                <span className="text-gray-500 line-through">{ad.originalPrice.toFixed(2)} EUR</span>
+                                <span className="text-green-400 font-semibold">{ad.discountPrice.toFixed(2)} EUR</span>
+                              </>
+                            ) : ad.originalPrice ? (
+                              <span className="text-gray-400">{ad.originalPrice.toFixed(2)} EUR</span>
+                            ) : null}
+                          </div>
+                        )}
                         <div className="text-xs text-gray-500 mt-1">
                           {ad.startDate.toLocaleDateString()} - {ad.endDate.toLocaleDateString()}
                         </div>
@@ -551,19 +645,189 @@ export default function SponsoredAdsPage() {
                 </div>
               </div>
 
-              {/* Product Price (optional) */}
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Produkt Preis (EUR) -- optional</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.productPrice}
-                  onChange={(e) => setForm((f) => ({ ...f, productPrice: e.target.value }))}
-                  placeholder="z.B. 3.99"
-                  className="w-full max-w-[200px] px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
-                />
-                <p className="text-[10px] text-gray-500 mt-1">Leer lassen, wenn kein Preis angezeigt werden soll</p>
+              {/* Product Selection + Pricing */}
+              <div className="space-y-3 border border-gray-700 rounded-xl p-4">
+                <label className="block text-xs text-gray-400 font-semibold">Urun Verknuepfung (optional)</label>
+
+                {/* Selected product preview */}
+                {form.selectedProductId && selectedProductName ? (
+                  <div className="flex items-center gap-3 bg-gray-700/50 rounded-lg p-3">
+                    <div className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-600">
+                      {form.selectedProductImage ? (
+                        <img src={form.selectedProductImage} alt={selectedProductName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">📦</div>
+                      )}
+                      {/* Discount badge overlay */}
+                      {(() => {
+                        const origP = form.originalPrice !== '' ? Number(form.originalPrice) : null;
+                        const discP = form.discountPrice !== '' ? Number(form.discountPrice) : null;
+                        if (origP && discP && discP < origP) {
+                          const pct = Math.round(((origP - discP) / origP) * 100);
+                          return (
+                            <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg" style={{ transform: 'translate(25%, -25%)' }}>
+                              %{pct}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">{selectedProductName}</div>
+                      {/* Price display */}
+                      <div className="flex items-center gap-2 mt-1">
+                        {(() => {
+                          const origP = form.originalPrice !== '' ? Number(form.originalPrice) : null;
+                          const discP = form.discountPrice !== '' ? Number(form.discountPrice) : null;
+                          if (origP && discP && discP < origP) {
+                            return (
+                              <>
+                                <span className="text-gray-400 line-through text-xs">{Number(origP).toFixed(2)} EUR</span>
+                                <span className="text-green-400 font-bold text-sm">{Number(discP).toFixed(2)} EUR</span>
+                              </>
+                            );
+                          } else if (origP) {
+                            return <span className="text-white text-sm font-medium">{Number(origP).toFixed(2)} EUR</span>;
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(f => ({ ...f, selectedProductId: '', selectedProductImage: '', originalPrice: '', discountPrice: '' }));
+                        setSelectedProductName('');
+                      }}
+                      className="shrink-0 text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-900/20 rounded-lg transition"
+                    >
+                      Entfernen
+                    </button>
+                  </div>
+                ) : (
+                  /* Product picker button + dropdown */
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => { setShowProductPicker(!showProductPicker); setProductSearch(''); }}
+                      className="w-full px-3 py-2.5 bg-gray-700 text-gray-300 rounded-lg border border-dashed border-gray-500 hover:border-gray-400 text-sm text-left transition"
+                    >
+                      Urun auswaehlen...
+                    </button>
+
+                    {showProductPicker && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded-xl shadow-2xl z-20 max-h-72 overflow-hidden flex flex-col">
+                        <div className="p-2 border-b border-gray-600">
+                          <input
+                            type="text"
+                            value={productSearch}
+                            onChange={(e) => setProductSearch(e.target.value)}
+                            placeholder="Urun suchen..."
+                            autoFocus
+                            className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                          />
+                        </div>
+                        <div className="overflow-y-auto flex-1">
+                          {masterProducts
+                            .filter(p => {
+                              if (!productSearch.trim()) return true;
+                              const search = productSearch.toLowerCase();
+                              const name = getLocalizedText(p.name).toLowerCase();
+                              return name.includes(search);
+                            })
+                            .slice(0, 30)
+                            .map(p => {
+                              const img = p.imageUrl || (p.images || [])[0] || '';
+                              const pName = getLocalizedText(p.name);
+                              const pPrice = p.sellingPrice || p.appSellingPrice || p.inStorePrice || p.defaultPrice || 0;
+                              return (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setForm(f => ({
+                                      ...f,
+                                      selectedProductId: p.id,
+                                      selectedProductImage: img,
+                                      originalPrice: pPrice > 0 ? pPrice : '',
+                                    }));
+                                    setSelectedProductName(pName);
+                                    setShowProductPicker(false);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-600/50 text-left transition"
+                                >
+                                  <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-800">
+                                    {img ? (
+                                      <img src={img} alt={pName} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-gray-500 text-lg">📦</div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm text-white truncate">{pName}</div>
+                                    {pPrice > 0 && <div className="text-[10px] text-gray-400">{pPrice.toFixed(2)} EUR</div>}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          {masterProducts.filter(p => {
+                            if (!productSearch.trim()) return true;
+                            const name = getLocalizedText(p.name).toLowerCase();
+                            return name.includes(productSearch.toLowerCase());
+                          }).length === 0 && (
+                            <div className="px-3 py-4 text-center text-gray-400 text-sm">Kein Produkt gefunden</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Price fields -- show when product is selected */}
+                {form.selectedProductId && (
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-1">Originalpreis (EUR)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={form.originalPrice}
+                        onChange={(e) => setForm(f => ({ ...f, originalPrice: e.target.value }))}
+                        placeholder="z.B. 6.99"
+                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 mb-1">Aktionspreis (EUR) -- optional</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={form.discountPrice}
+                        onChange={(e) => setForm(f => ({ ...f, discountPrice: e.target.value }))}
+                        placeholder="z.B. 4.99"
+                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                      />
+                    </div>
+                    {/* Auto-calculated discount info */}
+                    {(() => {
+                      const origP = form.originalPrice !== '' ? Number(form.originalPrice) : null;
+                      const discP = form.discountPrice !== '' ? Number(form.discountPrice) : null;
+                      if (origP && discP && discP < origP) {
+                        const pct = Math.round(((origP - discP) / origP) * 100);
+                        return (
+                          <div className="col-span-2 flex items-center gap-2 text-xs">
+                            <span className="bg-red-600 text-white px-2 py-0.5 rounded-full font-bold">%{pct} Rabatt</span>
+                            <span className="text-gray-400">Originalpreis: <span className="line-through">{origP.toFixed(2)} EUR</span> &rarr; <span className="text-green-400 font-semibold">{discP.toFixed(2)} EUR</span></span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Keywords & Categories */}

@@ -2829,7 +2829,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          CurrencyUtils.formatAmount(unsettledCash),
+                          CurrencyUtils.formatCurrency(unsettledCash),
                           style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
@@ -2849,7 +2849,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: Text('staff.cash_reset_title'.tr()),
-                                content: Text('staff.cash_reset_confirm'.tr(args: [CurrencyUtils.formatAmount(unsettledCash)])),
+                                content: Text('staff.cash_reset_confirm'.tr(args: [CurrencyUtils.formatCurrency(unsettledCash)])),
                                 actions: [
                                   TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('common.cancel'.tr())),
                                   ElevatedButton(

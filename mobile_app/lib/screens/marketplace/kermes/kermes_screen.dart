@@ -8,9 +8,9 @@ class KermesScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC),
+      backgroundColor: isDark ? const Color(0xFF1C1B18) : const Color(0xFFE8E8EC),
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF2A2A28) : Colors.white,
         title: Row(
           children: [
             const Text('🎪 ', style: TextStyle(fontSize: 24)),

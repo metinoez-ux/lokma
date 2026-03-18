@@ -178,25 +178,25 @@ class LokmaApp extends ConsumerWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: const Color(0xFF1C1B18),
         colorScheme: ColorScheme.dark(
           primary: const Color(0xFFFB335B), // LOKMA Brand Color
           secondary: const Color(0xFFFFB347),
-          surface: const Color(0xFF1E1E1E),
+          surface: const Color(0xFF2A2A28),
           error: Colors.redAccent,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E1E1E),
+          backgroundColor: Color(0xFF1C1B18),
           foregroundColor: Colors.white,
           elevation: 0,
           systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         cardTheme: const CardThemeData(
-          color: Color(0xFF1E1E1E),
+          color: Color(0xFF2A2A28),
           elevation: 2,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFF1E1E1E),
+          backgroundColor: Color(0xFF1C1B18),
           selectedItemColor: Color(0xFFFB335B), // LOKMA Brand Color
           unselectedItemColor: Colors.grey,
         ),

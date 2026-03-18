@@ -87,6 +87,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
             'tip': tipAmount,
             'tipGivenAt': FieldValue.serverTimestamp(),
             'tipGivenBy': userId,
+            'tipType': 'post_delivery',
           });
 
       if (mounted) {

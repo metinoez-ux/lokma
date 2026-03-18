@@ -60,7 +60,7 @@ class TapToPaySheet extends StatefulWidget {
 class _TapToPaySheetState extends State<TapToPaySheet>
     with TickerProviderStateMixin {
   _PayState _state = _PayState.idle;
-  String _statusText = 'Başlatılıyor...';
+  String _statusText = '';
   String? _errorText;
   late AnimationController _ringController;
   late AnimationController _checkController;
@@ -93,7 +93,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
   Future<void> _startPayment() async {
     setState(() {
       _state = _PayState.processing;
-      _statusText = 'Hazırlanıyor...';
+      _statusText = tr('common.preparing');
     });
 
     final result = await TapToPayService.collectPayment(
@@ -113,7 +113,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
       _ringController.stop();
       setState(() {
         _state = _PayState.success;
-        _statusText = 'Ödeme alındı!';
+        _statusText = tr('payments.card_payment_received');
       });
       _checkController.forward();
       await Future.delayed(const Duration(seconds: 2));
@@ -124,8 +124,8 @@ class _TapToPaySheetState extends State<TapToPaySheet>
       HapticFeedback.vibrate();
       setState(() {
         _state = _PayState.error;
-        _errorText = result.error ?? 'Bir hata oluştu';
-        _statusText = 'İşlem başarısız';
+        _errorText = result.error ?? tr('common.error_occurred');
+        _statusText = tr('common.operation_failed');
       });
     }
   }
@@ -154,7 +154,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
 
           // Label
           Text(
-            widget.label ?? 'Temassız Ödeme',
+            widget.label ?? tr('payments.card'),
             style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 8),
@@ -230,7 +230,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: _startPayment,
-              child: const Text('Tekrar Dene', style: TextStyle(fontWeight: FontWeight.w600)),
+              child: Text(tr('common.try_again'), style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
         ],
       ),

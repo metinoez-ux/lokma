@@ -33,7 +33,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
   String? _businessName;
   Set<int> _selectedTables = {};
   TableSession? _activeSession;
-  String _selectedCategory = 'Tümü';
+  String _selectedCategory = '';
   String _menuSearchQuery = '';
   final Map<String, _CartItem> _cart = {}; // productId -> cart item
   bool _isLoading = false;
@@ -142,17 +142,17 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           children: [
             Icon(Icons.table_restaurant, color: const Color(0xFFFB335B)),
             const SizedBox(width: 8),
-            Text('Masa $tableNumber'),
+            Text(tr('staff.table_number', args: ['$tableNumber'])),
           ],
         ),
         content: Text(
-          'Masa $tableNumber için yeni sipariş oturumu başlatmak istiyor musunuz?',
+          tr('staff.new_table_session', args: ['$tableNumber']),
           style: const TextStyle(fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('İptal', style: TextStyle(color: Colors.grey[600])),
+            child: Text(tr('common.cancel'), style: TextStyle(color: Colors.grey[600])),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -297,7 +297,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Masa $tableNumber',
+                                tr('staff.table_number', args: ['$tableNumber']),
                                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                               ),
                               Text(
@@ -324,7 +324,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                               children: [
                                 Icon(Icons.receipt_long, size: 48, color: Colors.grey[300]),
                                 const SizedBox(height: 12),
-                                Text('Henüz sipariş yok', style: TextStyle(color: Colors.grey[500])),
+                                Text(tr('orders.no_orders_yet'), style: TextStyle(color: Colors.grey[500])),
                               ],
                             ),
                           );
@@ -359,7 +359,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          allPaid ? 'Hesap Ödendi ✓' : 'Hesap Açık',
+                                          allPaid ? tr('staff.all_orders_paid') : tr('staff.account_open'),
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
@@ -391,10 +391,10 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                               final isPaid = order.paymentStatus == 'paid';
                               // Status badge config
                               final statusConfig = <OrderStatus, Map<String, dynamic>>{
-                                OrderStatus.pending: {'label': '⏳ Beklemede', 'color': Colors.yellow.shade700, 'bg': Colors.yellow.shade50},
-                                OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.amber.shade700, 'bg': Colors.amber.shade50},
-                                OrderStatus.ready: {'label': '📦 Hazır', 'color': Colors.green.shade700, 'bg': Colors.green.shade50},
-                                OrderStatus.served: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
+                                OrderStatus.pending: {'label': tr('orders.status_pending'), 'color': Colors.yellow.shade700, 'bg': Colors.yellow.shade50},
+                                OrderStatus.preparing: {'label': tr('orders.status_preparing'), 'color': Colors.amber.shade700, 'bg': Colors.amber.shade50},
+                                OrderStatus.ready: {'label': tr('orders.status_ready'), 'color': Colors.green.shade700, 'bg': Colors.green.shade50},
+                                OrderStatus.served: {'label': tr('orders.status_served'), 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
                               };
                               final sc = statusConfig[order.status];
                               
@@ -461,7 +461,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                           width: double.infinity,
                                           child: FilledButton.icon(
                                             icon: const Icon(Icons.restaurant, size: 16),
-                                            label: const Text('Servis Edildi', style: TextStyle(fontWeight: FontWeight.w600)),
+                                             label: Text(tr('staff.served'), style: const TextStyle(fontWeight: FontWeight.w600)),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: Colors.teal.shade600,
                                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -589,7 +589,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Masa ${_selectedTables.join(', ')} için PIN:',
+              tr('staff.table_pin', args: ['${_selectedTables.join(', ')}']),
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
@@ -612,7 +612,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Bu kodu müşteriye verin.\nMüşteri bu kodla siparişlerini takip edebilir.',
+              tr('staff.give_pin_to_customer'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
@@ -720,7 +720,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('Masa ${_selectedTables.join(', ')} siparişi mutfağa gönderildi!'),
+                Text(tr('staff.order_sent_kitchen', args: ['${_selectedTables.join(', ')}'])),
               ],
             ),
             backgroundColor: Colors.green.shade700,
@@ -751,8 +751,8 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       appBar: AppBar(
         title: Text(
           _currentStep == _WaiterStep.selectTable
-              ? 'Masa Seçin'
-              : 'Masa ${_selectedTables.join(', ')}',
+              ? tr('staff.select_table')
+              : tr('staff.table_number', args: ['${_selectedTables.join(', ')}']),
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: scaffoldBg,
@@ -762,7 +762,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           if (_activeSession != null)
             IconButton(
               icon: const Icon(Icons.receipt_long),
-              tooltip: 'Masa Hesabı',
+              tooltip: tr('staff.table_bill'),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -781,7 +781,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           if (_activeSession != null)
             IconButton(
               icon: const Icon(Icons.lock_outline),
-              tooltip: 'PIN Göster',
+              tooltip: tr('staff.table_pin_code'),
               onPressed: () => _showPinDialog(_activeSession!.pin),
             ),
         ],
@@ -927,7 +927,8 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   },
                 );
               },
-            ),
+            ), // closes StreamBuilder
+          ), // closes Expanded
           // Multi-table selection continue button
           if (_selectedTables.isNotEmpty)
             Padding(
@@ -1462,7 +1463,7 @@ class _TableBillView extends StatelessWidget {
     return Scaffold(
       backgroundColor: scaffoldBg,
       appBar: AppBar(
-        title: Text('Masa ${session.tableNumber} Hesabı'),
+        title: Text(tr('staff.table_bill_for', args: ['${session.tableNumber}'])),
         backgroundColor: scaffoldBg,
         surfaceTintColor: scaffoldBg,
         centerTitle: true,
@@ -1483,7 +1484,7 @@ class _TableBillView extends StatelessWidget {
                 children: [
                   Icon(Icons.receipt_long, size: 64, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  Text('Henüz sipariş yok', style: TextStyle(fontSize: 16, color: Colors.grey[500])),
+                   Text(tr('orders.no_orders_yet'), style: TextStyle(fontSize: 16, color: Colors.grey[500])),
                 ],
               ),
             );
@@ -1522,8 +1523,8 @@ class _TableBillView extends StatelessWidget {
                           ),
                           Text(
                             allPaid
-                                ? 'Tüm siparişler ödendi ✓'
-                                : 'PIN: ${session.pin} • ${orders.length} sipariş',
+                                ? tr('staff.all_orders_paid')
+                                : 'PIN: ${session.pin} • ${orders.length} ${tr('orders.order_generic')}',
                             style: TextStyle(fontSize: 12, color: allPaid ? Colors.green.shade600 : Colors.amber.shade600),
                           ),
                         ],
@@ -1589,8 +1590,8 @@ class _TableBillView extends StatelessWidget {
                                     const SizedBox(width: 3),
                                     Text(
                                       order.paymentStatus == 'paid'
-                                          ? (order.paymentMethod == 'card' ? 'Kart ✓' : order.paymentMethod == 'cash' ? 'Nakit ✓' : 'Online ✓')
-                                          : 'Ödenmedi',
+                                          ? (order.paymentMethod == 'card' ? '${tr('orders.payment_card')} \u2713' : order.paymentMethod == 'cash' ? '${tr('orders.payment_cash')} \u2713' : 'Online \u2713')
+                                          : tr('common.unpaid'),
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
@@ -1653,7 +1654,7 @@ class _TableBillView extends StatelessWidget {
                             child: _paymentButton(
                               context,
                               icon: Icons.money,
-                              label: 'Nakit',
+                              label: tr('orders.payment_cash'),
                               color: Colors.green.shade700,
                               onTap: () => _closeWithPayment(context, orders, 'cash'),
                             ),
@@ -1663,7 +1664,7 @@ class _TableBillView extends StatelessWidget {
                             child: _paymentButton(
                               context,
                               icon: Icons.credit_card,
-                              label: 'Kart',
+                              label: tr('orders.payment_card'),
                               color: Colors.blue.shade700,
                               onTap: () => _closeWithPayment(context, orders, 'card'),
                             ),
@@ -1742,7 +1743,7 @@ class _TableBillView extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle, color: Colors.white),
               const SizedBox(width: 8),
-              Text('Masa ${session.tableNumber} hesabı kapatıldı!'),
+               Text(tr('staff.table_closed', args: ['${session.tableNumber}'])),
             ],
           ),
           backgroundColor: Colors.green.shade700,
@@ -1760,22 +1761,22 @@ class _TableBillView extends StatelessWidget {
     switch (status) {
       case OrderStatus.pending:
         color = Colors.amber;
-        label = 'Beklemede';
+        label = tr('orders.status_pending');
       case OrderStatus.accepted:
         color = Colors.blue;
-        label = 'Onaylandı';
+        label = tr('orders.status_accepted');
       case OrderStatus.preparing:
         color = Colors.amber;
-        label = 'Hazırlanıyor';
+        label = tr('orders.status_preparing');
       case OrderStatus.ready:
         color = Colors.green;
-        label = 'Hazır';
+        label = tr('orders.status_ready');
       case OrderStatus.delivered:
         color = Colors.teal;
-        label = 'Teslim';
+        label = tr('orders.status_delivered');
       case OrderStatus.cancelled:
         color = Colors.red;
-        label = 'İptal';
+        label = tr('orders.status_cancelled');
       default:
         color = Colors.grey;
         label = status.name;

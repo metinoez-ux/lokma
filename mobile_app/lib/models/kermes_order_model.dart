@@ -56,6 +56,7 @@ class KermesOrder {
   final String? address;
   final List<KermesOrderItem> items;
   final double totalAmount;
+  final double donationAmount; // Bagis/yuvarlama tutari
   final PaymentMethodType paymentMethod;
   final bool isPaid;
   final KermesOrderStatus status;
@@ -76,6 +77,7 @@ class KermesOrder {
     this.address,
     required this.items,
     required this.totalAmount,
+    this.donationAmount = 0.0,
     required this.paymentMethod,
     required this.isPaid,
     required this.status,
@@ -99,6 +101,7 @@ class KermesOrder {
       'address': address,
       'items': items.map((item) => item.toMap()).toList(),
       'totalAmount': totalAmount,
+      'donationAmount': donationAmount,
       'paymentMethod': paymentMethod.name,
       'isPaid': isPaid,
       'status': status.name,
@@ -129,6 +132,7 @@ class KermesOrder {
               .toList() ??
           [],
       totalAmount: (map['totalAmount'] ?? 0).toDouble(),
+      donationAmount: (map['donationAmount'] ?? 0).toDouble(),
       paymentMethod: PaymentMethodType.values.firstWhere(
         (e) => e.name == map['paymentMethod'],
         orElse: () => PaymentMethodType.cash,
@@ -167,7 +171,9 @@ class KermesOrder {
       case PaymentMethodType.cash:
         return 'Nakit';
       case PaymentMethodType.card:
-        return 'Kredi Kartı';
+        return 'Kredi Karti';
+      case PaymentMethodType.tapToPay:
+        return 'Kapida Kart';
     }
   }
 

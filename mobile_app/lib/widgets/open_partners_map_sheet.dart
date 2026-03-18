@@ -49,6 +49,9 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
   /// Currently selected business for the info card
   _OpenBusiness? _selectedBusiness;
 
+  /// Current map zoom level for dynamic label scaling
+  double _currentZoom = 13;
+
   static const Color openGreen = Color(0xFF2E7D32);
   static const Color lokmaPink = Color(0xFFFB335B);
 
@@ -65,6 +68,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
     _extractOpenBusinesses();
+    _currentZoom = _calculateZoom();
   }
 
   @override
@@ -436,6 +440,11 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                     options: MapOptions(
                       initialCenter: center,
                       initialZoom: zoom,
+                      onPositionChanged: (camera, hasGesture) {
+                        if (camera.zoom != _currentZoom) {
+                          setState(() => _currentZoom = camera.zoom);
+                        }
+                      },
                       onTap: (_, __) {
                         // Dismiss info card on map tap
                         if (_selectedBusiness != null) {
@@ -552,10 +561,15 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                               business.minutesUntilClose != null &&
                                   business.minutesUntilClose! <= 30;
 
+                          // Scale factor: at zoom 13 = 1.0, at zoom 18 = ~1.8
+                          final scaleFactor = (1.0 + (_currentZoom - 13) * 0.16).clamp(0.8, 2.0);
+                          final markerWidth = (130 * scaleFactor).clamp(100.0, 260.0);
+                          final markerHeight = (72 * scaleFactor).clamp(60.0, 144.0);
+
                           return Marker(
                             point: LatLng(business.lat, business.lng),
-                            width: 130,
-                            height: 72,
+                            width: markerWidth,
+                            height: markerHeight,
                             child: GestureDetector(
                               onTap: () => _onMarkerTap(business),
                               child: Column(
@@ -599,8 +613,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                         ),
                                         // Core dot
                                         Container(
-                                          width: isSelected ? 26 : 22,
-                                          height: isSelected ? 26 : 22,
+                                          width: (isSelected ? 26 : 22) * scaleFactor,
+                                          height: (isSelected ? 26 : 22) * scaleFactor,
                                           decoration: BoxDecoration(
                                             color: isSelected
                                                 ? lokmaPink
@@ -625,7 +639,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                                 ? Icons.shopping_cart
                                                 : Icons.restaurant,
                                             color: Colors.white,
-                                            size: isSelected ? 13 : 11,
+                                            size: (isSelected ? 13 : 11) * scaleFactor,
                                           ),
                                         ),
                                       ],
@@ -675,7 +689,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                                 ? '${business.name.substring(0, 11)}…'
                                                 : business.name,
                                             style: TextStyle(
-                                              fontSize: 9,
+                                              fontSize: 9 * scaleFactor,
                                               fontWeight: FontWeight.w600,
                                               color: closingSoon
                                                   ? const Color(0xFFE65100)
@@ -705,7 +719,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                             child: Text(
                                               '${business.distanceKm!.toStringAsFixed(1)}km',
                                               style: TextStyle(
-                                                fontSize: 8,
+                                                fontSize: 8 * scaleFactor,
                                                 fontWeight: FontWeight.w700,
                                                 color: lokmaPink,
                                               ),

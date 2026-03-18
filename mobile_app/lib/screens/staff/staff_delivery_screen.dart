@@ -97,9 +97,8 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(tr('staff.break_continues')),
-          content: const Text(
-            'Teslimat \u00FCstlenmek i\u00E7in molan\u0131z sonland\u0131r\u0131lacak.\n\n'
-            'Devam etmek istiyor musunuz?',
+          content: Text(
+            tr('staff.break_end_for_delivery_prompt'),
           ),
           actions: [
             TextButton(
@@ -109,7 +108,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
-              child: const Text('Molayı Bitir ve Üstlen', style: TextStyle(color: Colors.white)),
+              child: Text(tr('staff.end_break_and_take'), style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -136,9 +135,9 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(tr('driver.take_delivery')),
         content: Text(
-          'Bu siparişi üstlenmek istediğinize emin misiniz?\n\n'
-          '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
-          '💰 ${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+          '${tr('driver.confirm_take_delivery')}\n\n'
+          '${order.deliveryAddress ?? tr('common.no_address')}\n'
+          '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
         ),
         actions: [
           TextButton(
@@ -148,7 +147,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
-            child: const Text('Üstlen', style: TextStyle(color: Colors.white)),
+            child: Text(tr('driver.take_delivery_btn'), style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -173,8 +172,8 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
         SnackBar(
           content: Text(
             breakEnded
-                ? '☕ Molanız durduruldu. Teslimatınızı teslim edebilirsiniz!'
-                : '✅ Teslimat üstlenildi! Konum takibi başladı.',
+                ? tr('driver.break_stopped_delivery_ready')
+                : tr('driver.delivery_claimed_tracking_started'),
           ),
           backgroundColor: Colors.green,
         ),
@@ -226,7 +225,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                                    size: 80, color: Colors.grey[400]),
                               const SizedBox(height: 16),
                               Text(
-                                'Bekleyen teslimat yok',
+                                tr('driver.no_pending_deliveries'),
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: Colors.grey[600],
@@ -349,7 +348,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             ),
             subtitle: cashTotal > 0 
               ? Text(
-                  'Kasaya teslim edilecek nakit',
+                  tr('staff.cash_to_register'),
                   style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                 )
               : null,
@@ -482,10 +481,10 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             ? Colors.amber 
             : Colors.grey;
     final statusText = isReady 
-        ? '✅ HAZIR' 
+        ? tr('orders.status_ready') 
         : isPreparing 
-            ? '🍳 Hazırlanıyor' 
-            : '⏳ Bekliyor';
+            ? tr('orders.status_preparing') 
+            : tr('orders.status_pending');
     
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -566,7 +565,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    order.deliveryAddress ?? 'Adres belirtilmemiş',
+                    order.deliveryAddress ?? tr('common.no_address'),
                     style: TextStyle(color: Colors.grey[700]),
                   ),
                 ),
@@ -614,10 +613,10 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 ),
                 label: Text(
                   isReady 
-                      ? '🚗 BEN ÜSTLENDİM' 
+                      ? tr('driver.i_claimed') 
                       : isPreparing 
-                          ? '👨‍🍳 Hazırlanıyor - Bekleyin'
-                          : '⏳ Sipariş bekleniyor',
+                          ? tr('driver.preparing_wait')
+                          : tr('driver.order_pending'),
                   style: TextStyle(
                     color: isReady ? Colors.white : Colors.grey[600],
                     fontWeight: FontWeight.w600,

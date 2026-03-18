@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../orders/courier_tracking_screen.dart';
 import '../../services/order_service.dart';
@@ -22,18 +23,61 @@ class NotificationHistoryScreen extends ConsumerStatefulWidget {
   ConsumerState<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
 }
 
-class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryScreen> {
+class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryScreen>
+    with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isEditMode = false;
   final Set<String> _selectedIds = {}; // orderId or generic docId
   String _activeFilter = 'all'; // 'all', 'orders', 'promotions'
   bool _sortNewestFirst = true; // true = newest first, false = oldest first
 
+  // Swipe tutorial hint
+  bool _showSwipeHint = false;
+  late AnimationController _swipeHintController;
+  late Animation<double> _swipeHintOffset;
+
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('tr', timeago.TrMessages());
     _markAllAsRead();
+
+    _swipeHintController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    // Slide left 80px, hold briefly, then slide back
+    _swipeHintOffset = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: -80).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 35),
+      TweenSequenceItem(tween: ConstantTween(-80), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: -80, end: 0).chain(CurveTween(curve: Curves.easeInOut)), weight: 35),
+    ]).animate(_swipeHintController);
+
+    _checkSwipeHintNeeded();
+  }
+
+  Future<void> _checkSwipeHintNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getBool('notification_swipe_hint_seen') ?? false;
+    if (!seen && mounted) {
+      setState(() => _showSwipeHint = true);
+      // Small delay so list renders first
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (mounted) {
+        _swipeHintController.forward().then((_) {
+          if (mounted) {
+            setState(() => _showSwipeHint = false);
+            prefs.setBool('notification_swipe_hint_seen', true);
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _swipeHintController.dispose();
+    super.dispose();
   }
 
   // ── Trash helpers ─────────────────────────────────────────────────────
@@ -656,11 +700,25 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                     )
                   : Stack(
                     children: [
-                      ListView.separated(
+                      Builder(
+                        builder: (context) {
+                          // Find first dismissible card index (non-active, non-pinned)
+                          int swipeHintIdx = -1;
+                          if (_showSwipeHint) {
+                            for (int i = 0; i < filtered.length; i++) {
+                              final fi = filtered[i];
+                              if (fi is _OrderGroup && _isActiveOrder(fi)) continue;
+                              if (fi is _ReservationGroup && (fi.statuses.last['status'] as String? ?? '') == 'pending') continue;
+                              swipeHintIdx = i;
+                              break;
+                            }
+                          }
+                          return ListView.separated(
                         padding: EdgeInsets.only(left: 16, right: 16, top: 4, bottom: _isEditMode ? 80 : 12),
                         itemCount: filtered.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
+                  final bool isHintTarget = _showSwipeHint && index == swipeHintIdx && swipeHintIdx >= 0;
                   final item = filtered[index];
                   if (item is _ReservationGroup) {
                     final card = _ReservationCard(
@@ -685,6 +743,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       child: _buildDismissible(
                         key: Key('reservation_${item.reservationId}'),
                         isDark: isDark,
+                        applySwipeHint: isHintTarget,
+                        swipeHintOffset: _swipeHintOffset,
                         onDismissed: () async {
                           await _trashReservationGroup(item);
                           if (mounted) {
@@ -733,6 +793,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       child: _buildDismissible(
                         key: Key('order_${item.orderId}'),
                         isDark: isDark,
+                        applySwipeHint: isHintTarget,
+                        swipeHintOffset: _swipeHintOffset,
                         onDismissed: () async {
                           await _trashOrderGroup(item);
                           if (mounted) {
@@ -775,6 +837,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       child: _buildDismissible(
                         key: Key('generic_$docId'),
                         isDark: isDark,
+                        applySwipeHint: isHintTarget,
+                        swipeHintOffset: _swipeHintOffset,
                         onDismissed: () async {
                           await _trashGenericNotification(docId);
                           if (mounted) {
@@ -797,7 +861,9 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                     );
                   }
                 },
-              ),
+              );
+                        },
+                      ),
               // ── Floating bottom bar for edit mode ──
               if (_isEditMode && _selectedIds.isNotEmpty)
                 Positioned(
@@ -851,39 +917,86 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   }
 
 
-  // ── Swipe-to-trash widget ─────────────────────────────────────────────
+  // Track whether dismiss threshold was crossed (to avoid repeated haptics)
+  bool _dismissThresholdReached = false;
+
+  // Swipe-to-trash widget with haptic feedback
   Widget _buildDismissible({
     required Key key,
     required bool isDark,
     required Future<void> Function() onDismissed,
     required Widget child,
+    bool applySwipeHint = false,
+    Animation<double>? swipeHintOffset,
   }) {
+    final trashBg = Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFB335B).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.delete_outline_rounded, color: Color(0xFFFB335B), size: 24),
+          const SizedBox(height: 2),
+          Text(
+            'notifications.trash'.tr(),
+            style: const TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+
+    // Haptic-aware dismiss handler
+    Future<bool> hapticConfirmDismiss(DismissDirection _) async {
+      HapticFeedback.heavyImpact();
+      await onDismissed();
+      _dismissThresholdReached = false;
+      return false; // handled via Firestore, stream will update UI
+    }
+
+    void hapticOnUpdate(DismissUpdateDetails details) {
+      if (details.reached && !_dismissThresholdReached) {
+        _dismissThresholdReached = true;
+        HapticFeedback.selectionClick();
+      } else if (!details.reached && _dismissThresholdReached) {
+        _dismissThresholdReached = false;
+      }
+    }
+
+    // Tutorial hint: animate the first card to nudge left and reveal trash icon
+    if (applySwipeHint && swipeHintOffset != null) {
+      return Stack(
+        children: [
+          Positioned.fill(child: trashBg),
+          AnimatedBuilder(
+            animation: swipeHintOffset,
+            builder: (context, _) {
+              return Transform.translate(
+                offset: Offset(swipeHintOffset.value, 0),
+                child: Dismissible(
+                  key: key,
+                  direction: DismissDirection.endToStart,
+                  onUpdate: hapticOnUpdate,
+                  confirmDismiss: hapticConfirmDismiss,
+                  background: trashBg,
+                  child: child,
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    }
+
     return Dismissible(
       key: key,
       direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        await onDismissed();
-        return false; // handled via Firestore, stream will update UI
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFB335B).withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.delete_outline_rounded, color: Color(0xFFFB335B), size: 24),
-            const SizedBox(height: 2),
-            Text(
-              'notifications.trash'.tr(),
-              style: const TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
+      onUpdate: hapticOnUpdate,
+      confirmDismiss: hapticConfirmDismiss,
+      background: trashBg,
       child: child,
     );
   }
@@ -1732,7 +1845,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                 // "Siparişi Göster" — always visible
                 Expanded(
                   child: SizedBox(
-                    height: 36,
+                    height: 40,
                     child: TextButton.icon(
                       onPressed: () {
                           final pendingEntry = group.statuses.firstWhere(
@@ -1744,15 +1857,13 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                         },
                       icon: const Icon(Icons.receipt_long_rounded, size: 14),
                       label: Text(
-                        'common.siparisi_goruntule'.tr(),
+                        'orders.view_order'.tr(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : const Color(0xFF6B6B6D),
+                        backgroundColor: const Color(0xFFFB335B).withValues(alpha: isDark ? 0.85 : 1.0),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

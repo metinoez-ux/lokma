@@ -323,7 +323,7 @@
     "verdiginiz_siparisler_burada_l": "Ihre Bestellungen werden hier aufgelistet.",
     "i_sletme": "Betrieb",
     "dun": "Gestern",
-    "beklemede": "Beklemede",
+    "beklemede": "Ausstehend",
     "onaylandi": "Bestätigt",
     "i_ptal_edildi": "Storniert",
     "siparisi_goruntule": "Bestellung ansehen",
@@ -331,6 +331,9 @@
     "favori_i_sletme_yok": "Keine Lieblingsbetriebe",
     "begendiginiz_isletmeleri_kalp": "Fügen Sie Ihre Lieblingsbetriebe mit dem Herz zu den Favoriten hinzu!",
     "i_sletme_bulunamadi": "Betrieb nicht gefunden",
+    "favori_siparis_yok": "Keine Lieblingsbestellungen",
+    "siparislerinizi_bookmark_ile_f": "Markieren Sie Ihre Bestellungen als Favoriten!",
+    "urun_kucuk": "Artikel",
     "favori_isletmeleriniz_yuklenem": "Ihre Lieblingsbetriebe konnten nicht geladen werden.",
     "favori_urun_yok": "Keine Lieblingsprodukte",
     "begendiginiz_urunleri_kalp_ile": "Fügen Sie Ihre Lieblingsprodukte mit dem Herz zu den Favoriten hinzu!",
@@ -434,7 +437,7 @@
     "menuyu_ac": "Menü öffnen",
     "giris_yapmalisiniz": "Sie müssen sich anmelden",
     "menuden_siparis_verin_veya_nga": "Bestellen Sie aus dem Menü oder\nverbinden Sie sich mit der Kellner-PIN",
-    "beklemede": "Beklemede"
+    "beklemede": "Ausstehend"
   },
   "delivery_modes": {
     "delivery": "Lieferung",
@@ -1169,7 +1172,13 @@
     "comment_hint_completed": "War das Essen lecker? Gut verpackt? Lassen Sie es uns wissen...",
     "comment_hint_not_completed": "Sie können einen Kommentar hinterlassen, wenn die Bestellung abgeschlossen ist...",
     "submit_rating": "Senden",
-    "after_order_completed": "Nach Abschluss der Bestellung"
+    "after_order_completed": "Nach Abschluss der Bestellung",
+    "favorite_name_title": "Favoriten-Name",
+    "favorite_name_hint": "z.B. Familienbestellung, Sportverein...",
+    "favorite_saved": "Favorit gespeichert",
+    "favorite_removed": "Aus Favoriten entfernt",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
   },
   "payments": {
     "step1_payment_collection": "💵 Schritt 1: Zahlungseinzug",

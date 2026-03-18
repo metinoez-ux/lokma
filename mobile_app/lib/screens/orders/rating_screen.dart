@@ -126,7 +126,7 @@ class _RatingScreenState extends State<RatingScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
+          SnackBar(content: Text('${tr('common.error')}: $e')),
         );
       }
     } finally {

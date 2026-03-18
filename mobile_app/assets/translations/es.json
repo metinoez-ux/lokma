@@ -310,7 +310,7 @@
     "verdiginiz_siparisler_burada_l": "Sus pedidos se listarán aquí.",
     "i_sletme": "Negocio",
     "dun": "Ayer",
-    "beklemede": "Beklemede",
+    "beklemede": "Pendiente",
     "onaylandi": "Confirmado",
     "i_ptal_edildi": "Cancelado",
     "siparisi_goruntule": "Ver Pedido",
@@ -427,7 +427,7 @@
     "menuyu_ac": "Abrir Menú",
     "giris_yapmalisiniz": "Debe iniciar sesión",
     "menuden_siparis_verin_veya_nga": "Pida del menú o\nconéctese con PIN del camarero",
-    "beklemede": "Beklemede"
+    "beklemede": "Pendiente"
   },
   "delivery_modes": {
     "delivery": "A domicilio",

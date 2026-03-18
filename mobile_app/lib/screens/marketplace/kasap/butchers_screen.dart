@@ -20,7 +20,7 @@ class ButchersScreen extends ConsumerStatefulWidget {
 
 class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   // Dark theme colors
-  static const Color darkBg = Color(0xFF121212);
+  static const Color darkBg = Color(0xFF1C1B18);
   static const Color accent = Color(0xFFFB335B);
   
   bool _isPickup = true; // Gel Al vs Kurye
@@ -408,7 +408,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              const Color(0xFF141414), // Pure dark neutral
+                              const Color(0xFF1C1B18), // Pure dark neutral
                               const Color(0xFF202020), // Slightly lighter neutral
                             ],
                           ),
@@ -555,7 +555,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1C1C1E),
+                        color: const Color(0xFF2A2A28),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                       ),
@@ -618,55 +618,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             ),
                           ),
                           
-                          const SizedBox(height: 16),
-                          
-                          // Row 3: Mesafe Slider
-                          if (!_isPickup)
-                            Row(
-                              children: [
-                                Icon(Icons.near_me, color: accent, size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Entfernung:',
-                                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: SliderTheme(
-                                    data: SliderTheme.of(context).copyWith(
-                                      activeTrackColor: accent,
-                                      inactiveTrackColor: Colors.grey[700],
-                                      thumbColor: accent,
-                                      overlayColor: accent.withValues(alpha: 0.2),
-                                      trackHeight: 4,
-                                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                                    ),
-                                    child: Slider(
-                                      value: _maxDistance,
-                                      min: 5,
-                                      max: 100,
-                                      divisions: 19,
-                                      onChanged: (val) => setState(() => _maxDistance = val),
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: accent,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${_maxDistance.toInt()} km',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          // Distance slider removed - distance filtering handled via sorting
                         ],
                       ),
                     ),
@@ -915,7 +867,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                        
                        // Render Butcher
                        return Padding(
-                         padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 16),
                          child: _buildButcherCard(item),
                        );
                      },
@@ -994,7 +946,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E), // Darker card bg
+          color: const Color(0xFF2A2A28), // Darker card bg
           borderRadius: BorderRadius.circular(20),
           border: isFavoriteSection 
             ? Border.all(color: accent.withValues(alpha: 0.3), width: 1)
@@ -1391,7 +1343,7 @@ class _ButcherBannerCarouselState extends State<_ButcherBannerCarousel> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF2C2C2C), Color(0xFF1E1E1E)],
+                  colors: [Color(0xFF2A2A28), Color(0xFF1C1B18)],
                 ),
               ),
             ),

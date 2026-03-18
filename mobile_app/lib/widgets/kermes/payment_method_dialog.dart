@@ -4,8 +4,9 @@ import '../../utils/currency_utils.dart';
 
 /// Ödeme yöntemi enum
 enum PaymentMethodType {
-  cash,   // Nakit
-  card,   // Kredi Kartı (Stripe)
+  cash,      // Nakit
+  card,      // Kredi Karti (Stripe)
+  tapToPay,  // Kapida Kart (Tap to Pay)
 }
 
 /// Ödeme yöntemi seçim dialog'u

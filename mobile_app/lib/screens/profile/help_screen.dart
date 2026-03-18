@@ -35,23 +35,18 @@ class HelpScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
-                    'assets/images/lokma_logo.png',
-                    height: 80,
-                    width: 80,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 80,
-                      width: 80,
-                      decoration: BoxDecoration(
-                        color: lokmaRed,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Center(
-                        child: Text('🍕', style: TextStyle(fontSize: 36)),
-                      ),
+                Image.asset(
+                  isDark
+                      ? 'assets/images/logo_lokma_white.png'
+                      : 'assets/images/logo_lokma_red.png',
+                  height: 40,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Text(
+                    'LOKMA',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : lokmaRed,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),

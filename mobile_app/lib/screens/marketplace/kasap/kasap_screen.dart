@@ -47,7 +47,7 @@ class _KasapScreenState extends State<KasapScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
-    final cardBgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final cardBgColor = isDark ? const Color(0xFF2A2A28) : Colors.white;
     final textPrimary = Theme.of(context).colorScheme.onSurface;
     
     return Scaffold(
@@ -96,7 +96,7 @@ class _KasapScreenState extends State<KasapScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A2A28) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -475,7 +475,7 @@ class _BusinessCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1E1E1E)
+              ? const Color(0xFF2A2A28)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
@@ -492,7 +492,7 @@ class _BusinessCard extends StatelessWidget {
                     height: 230,
                     width: double.infinity,
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF2A2A2A)
+                        ? const Color(0xFF2A2A28)
                         : Colors.grey.shade100,
                     child: imageUrl != null && imageUrl!.isNotEmpty
                         ? Image.network(

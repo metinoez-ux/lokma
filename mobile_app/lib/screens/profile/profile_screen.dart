@@ -256,10 +256,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF2A2520)
-                          : const Color(0xFFF5F0E8),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFB335B), Color(0xFFE91E63)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFB335B).withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -267,9 +276,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? const Color(0xFF3A3530)
-                                : const Color(0xFFEDE5D8),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
@@ -283,8 +290,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             children: [
                               Text(
                                 'profile.invite_friend'.tr(),
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -293,7 +300,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               Text(
                                 'profile.invite_reward'.tr(),
                                 style: TextStyle(
-                                  color: Colors.grey[500],
+                                  color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 12,
                                 ),
                               ),
@@ -301,7 +308,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         Icon(Icons.share_rounded,
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], size: 22),
+                            color: Colors.white.withValues(alpha: 0.9), size: 22),
                       ],
                     ),
                   ),

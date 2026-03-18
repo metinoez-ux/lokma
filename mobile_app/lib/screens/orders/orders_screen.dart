@@ -285,17 +285,144 @@ class _OrderCard extends ConsumerStatefulWidget {
 class _OrderCardState extends ConsumerState<_OrderCard> {
   String? _businessImageUrl;
   bool? _isTuna;
+  bool _isFavorite = false;
+  String? _favoriteName;
 
   @override
   void initState() {
     super.initState();
     _loadBusinessInfo();
+    _checkFavoriteStatus();
     // Auto-open order detail when navigated from push notification
     if (widget.autoOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showOrderDetails();
       });
     }
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    final uid = ref.read(authProvider).user?.uid;
+    if (uid == null) return;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users').doc(uid)
+          .collection('favoriteOrders').doc(widget.order.id)
+          .get();
+      if (doc.exists && mounted) {
+        setState(() {
+          _isFavorite = true;
+          _favoriteName = doc.data()?['favoriteName'] as String?;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFavorite() async {
+    final uid = ref.read(authProvider).user?.uid;
+    if (uid == null) return;
+    final docRef = FirebaseFirestore.instance
+        .collection('users').doc(uid)
+        .collection('favoriteOrders').doc(widget.order.id);
+
+    if (_isFavorite) {
+      // Remove from favorites
+      await docRef.delete();
+      if (mounted) {
+        setState(() {
+          _isFavorite = false;
+          _favoriteName = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('orders.favorite_removed'.tr()), duration: const Duration(seconds: 2)),
+        );
+      }
+    } else {
+      // Show naming dialog
+      final name = await _showFavoriteNameDialog();
+      if (name == null) return; // cancelled
+      final order = widget.order;
+      await docRef.set({
+        'favoriteName': name,
+        'orderId': order.id,
+        'businessId': order.butcherId,
+        'businessName': order.butcherName,
+        'totalAmount': order.totalAmount,
+        'itemCount': order.items.length,
+        'createdAt': FieldValue.serverTimestamp(),
+        'orderCreatedAt': Timestamp.fromDate(order.createdAt),
+        'items': order.items.map((item) => {
+          'productId': item.sku,
+          'productName': item.name,
+          'quantity': item.quantity,
+          'unitPrice': item.price,
+          'unit': item.unit,
+          'imageUrl': item.imageUrl,
+          'itemNote': item.itemNote,
+          'selectedOptions': item.selectedOptions,
+        }).toList(),
+      });
+      if (mounted) {
+        setState(() {
+          _isFavorite = true;
+          _favoriteName = name;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('orders.favorite_saved'.tr()), duration: const Duration(seconds: 2)),
+        );
+      }
+    }
+  }
+
+  Future<String?> _showFavoriteNameDialog() {
+    final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'orders.favorite_name_title'.tr(),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          decoration: InputDecoration(
+            hintText: 'orders.favorite_name_hint'.tr(),
+            hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400], fontSize: 14),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('orders.cancel'.tr(), style: TextStyle(color: Colors.grey[500])),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isEmpty) return;
+              Navigator.pop(ctx, text);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFB335B),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('orders.save'.tr()),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadBusinessInfo() async {
@@ -869,41 +996,16 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       ),
                       const SizedBox(height: 6),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Icon(Icons.payment, size: 16, color: Colors.grey[600]),
-                              const SizedBox(width: 8),
-                              Text(
-                                order.paymentMethod == 'cash' ? 'orders.pay_cash'.tr() 
-                                    : order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' ? 'Kapida Kart' 
-                                    : order.paymentMethod == 'card_nfc' ? 'Kapida Kart (NFC)' 
-                                    : order.paymentMethod == 'card' ? 'orders.pay_card'.tr() 
-                                    : 'orders.pay_online'.tr(),
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
-                              ),
-                            ],
-                          ),
-                          Builder(
-                            builder: (context) {
-                              final now = DateTime.now();
-                              final diff = now.difference(order.updatedAt);
-                              String relativeTime;
-                              if (diff.inMinutes < 1) {
-                                relativeTime = 'notifications.just_now'.tr();
-                              } else if (diff.inMinutes < 60) {
-                                relativeTime = 'notifications.minutes_ago'.tr(args: ['${diff.inMinutes}']);
-                              } else if (diff.inHours < 24) {
-                                relativeTime = 'notifications.hours_ago'.tr(args: ['${diff.inHours}']);
-                              } else {
-                                relativeTime = 'notifications.days_ago'.tr(args: ['${diff.inDays}']);
-                              }
-                              return Text(
-                                '${'notifications.last_action_label'.tr()}: $relativeTime',
-                                style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                              );
-                            },
+                          Icon(Icons.payment, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            order.paymentMethod == 'cash' ? 'orders.pay_cash'.tr() 
+                                : order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' ? 'orders.pay_card_on_delivery'.tr() 
+                                : order.paymentMethod == 'card_nfc' ? 'orders.pay_card_nfc'.tr() 
+                                : order.paymentMethod == 'card' ? 'orders.pay_card'.tr() 
+                                : 'orders.pay_online'.tr(),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
                           ),
                         ],
                       ),
@@ -1113,21 +1215,50 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     ],
                   ),
                 ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _getStatusText(order.status),
-                    style: TextStyle(
-                      color: _getStatusColor(order.status),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                // Status badge + bookmark
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(order.status).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _getStatusText(order.status),
+                        style: TextStyle(
+                          color: _getStatusColor(order.status),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    // Bookmark icon
+                    GestureDetector(
+                      onTap: _toggleFavorite,
+                      child: Icon(
+                        _isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                        color: _isFavorite ? const Color(0xFFFB335B) : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                        size: 24,
+                      ),
+                    ),
+                    if (_isFavorite && _favoriteName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          _favoriteName!,
+                          style: TextStyle(
+                            color: const Color(0xFFFB335B),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -1212,8 +1343,9 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
             ),
           ],
           
-          // 💝 Tip Button — for delivered orders (check tip via Firestore)
-          if (order.status == OrderStatus.delivered) ...[
+          // Bahsis Birak -- only for delivered + online card payments (not cash/nfc/kapidakart)
+          if (order.status == OrderStatus.delivered &&
+              (order.paymentMethod == 'card' || order.paymentMethod == 'online')) ...[
             StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance.collection('meat_orders').doc(order.id).snapshots(),
               builder: (context, tipSnap) {
@@ -1224,7 +1356,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 44,
+                    height: 40,
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final courierName = tipData?['courierName'] as String? ?? 'Kurye';
@@ -1238,12 +1370,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           AppRatingService.onOrderDelivered(context);
                         }
                       },
-                      icon: const Text('💝', style: TextStyle(fontSize: 18)),
+                      icon: const Text('💝', style: TextStyle(fontSize: 16)),
                       label: Text('orders.leave_tip'.tr()),
                       style: OutlinedButton.styleFrom(
                          foregroundColor: isDark ? Colors.teal[300] : Colors.teal[700],
                          side: BorderSide(color: isDark ? Colors.teal[300]! : Colors.teal[700]!),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                       ),
                     ),
                   ),

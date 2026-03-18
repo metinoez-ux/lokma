@@ -1090,7 +1090,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          children: [
                            Row(
                              children: [
-                               Text('$rating', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 42, fontWeight: FontWeight.w600)),
+                               Text('$rating', style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 42, fontWeight: FontWeight.w600)),
                                const SizedBox(width: 8),
                                Column(
                                  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1105,7 +1105,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          ],
                        ),
                        Spacer(),
-                       Icon(FontAwesomeIcons.google, color: Theme.of(context).colorScheme.surface, size: 28),
+                       Icon(FontAwesomeIcons.google, color: const Color(0xFFE0E0E0), size: 28),
                     ],
                   ),
                 ),
@@ -1118,7 +1118,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Yorumlar', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text('marketplace.reviews'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 16, fontWeight: FontWeight.w600)),
                       PopupMenuButton<String>(
                         initialValue: selectedSort,
                         color: const Color(0xFF2C2C2C),
@@ -1158,14 +1158,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     backgroundImage: NetworkImage(review['profile_photo_url'] ?? ''),
                                     backgroundColor: Colors.grey[800],
                                     radius: 16,
-                                    child: review['profile_photo_url'] == null ? Icon(Icons.person, color: Theme.of(context).colorScheme.surface) : null,
+                                    child: review['profile_photo_url'] == null ? const Icon(Icons.person, color: Color(0xFFE0E0E0)) : null,
                                   ),
                                   SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(review['author_name'] ?? 'common.guest'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600)),
+                                        Text(review['author_name'] ?? 'common.guest'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600)),
                                         const SizedBox(height: 2),
                                         Text(review['relative_time_description'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
                                       ],
@@ -1350,12 +1350,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       margin: EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                     ),
-                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600))),
+                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
                     SizedBox(height: 16),
                     Text(
                       'Europas vertrauenswürdigste Halal-Fleischmarke',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -1385,7 +1385,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      SizedBox(height: 32),
                      
                      // Standards List
-                     Text('Lieferstandards', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
+                     Text('marketplace.supply_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
                      _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
@@ -1422,7 +1422,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      ),
                      
                      SizedBox(height: 24),
-                     Text('Produktionsstandards', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
+                     Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
                      _buildCheckItem('Ohne E621', 'Kein Glutamat/Geschmacksverstärker'),
@@ -1468,7 +1468,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600, fontSize: 15)),
+                Text(title, style: const TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600, fontSize: 15)),
                 Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),

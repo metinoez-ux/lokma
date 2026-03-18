@@ -310,7 +310,7 @@
     "verdiginiz_siparisler_burada_l": "I tuoi ordini verranno elencati qui.",
     "i_sletme": "Negozio",
     "dun": "Ieri",
-    "beklemede": "Beklemede",
+    "beklemede": "In attesa",
     "onaylandi": "Confermato",
     "i_ptal_edildi": "Annullato",
     "siparisi_goruntule": "Visualizza Ordine",
@@ -427,7 +427,7 @@
     "menuyu_ac": "Apri Menu",
     "giris_yapmalisiniz": "Devi accedere",
     "menuden_siparis_verin_veya_nga": "Ordina dal menu o\nconnettiti con il PIN del cameriere",
-    "beklemede": "Beklemede"
+    "beklemede": "In attesa"
   },
   "delivery_modes": {
     "delivery": "Consegna",

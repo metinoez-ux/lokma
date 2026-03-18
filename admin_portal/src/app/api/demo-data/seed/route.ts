@@ -90,9 +90,10 @@ export async function POST(req: NextRequest) {
         body = {};
     }
 
-    const mode = body.mode || 'search';
+    // Frontend dryRun=true -> search, dryRun=false -> save
+    const mode = body.mode || (body.dryRun === false ? 'save' : 'search');
     const postalCode = body.postalCode || '41836';
-    const maxResults = Math.min(Math.max(body.maxResults || 20, 1), 50);
+    const maxResults = Math.min(Math.max(body.maxResults || body.maxBusinesses || 20, 1), 50);
 
     // Zaten kayitli isletmelerin googlePlaceId'lerini al
     const existingSnap = await adminDb.collection('businesses')
@@ -163,7 +164,7 @@ export async function POST(req: NextRequest) {
                         placeId: place.place_id,
                         name: place.name,
                         address: place.formatted_address || '',
-                        type: businessType,
+                        businessType,
                         rating: place.rating || null,
                         userRatingsTotal: place.user_ratings_total || null,
                         alreadyAdded,
@@ -182,7 +183,7 @@ export async function POST(req: NextRequest) {
             postalCode,
             cityName,
             center,
-            places: foundPlaces,
+            foundPlaces,
             existingCount: existingPlaceIds.size,
             errors,
         });
@@ -192,7 +193,7 @@ export async function POST(req: NextRequest) {
     // MODE: SAVE -- Secilen isletmeleri kaydet
     // ==========================================
     if (mode === 'save') {
-        const selectedPlaceIds: string[] = body.placeIds || [];
+        const selectedPlaceIds: string[] = body.placeIds || body.selectedPlaceIds || [];
         if (selectedPlaceIds.length === 0) {
             return NextResponse.json({ error: 'Keine Betriebe ausgewählt' }, { status: 400 });
         }

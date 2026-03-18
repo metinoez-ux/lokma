@@ -312,7 +312,7 @@
     "verdiginiz_siparisler_burada_l": "Your orders will be listed here.",
     "i_sletme": "Business",
     "dun": "Yesterday",
-    "beklemede": "Beklemede",
+    "beklemede": "Pending",
     "onaylandi": "Confirmed",
     "i_ptal_edildi": "Cancelled",
     "siparisi_goruntule": "View Order",
@@ -320,6 +320,9 @@
     "favori_i_sletme_yok": "No Favorite Businesses",
     "begendiginiz_isletmeleri_kalp": "Add your favorite businesses to favorites with the heart icon!",
     "i_sletme_bulunamadi": "Business Not Found",
+    "favori_siparis_yok": "No Favorite Orders",
+    "siparislerinizi_bookmark_ile_f": "Bookmark your orders to add them to favorites!",
+    "urun_kucuk": "items",
     "favori_isletmeleriniz_yuklenem": "Your favorite businesses could not be loaded.",
     "favori_urun_yok": "No Favorite Products",
     "begendiginiz_urunleri_kalp_ile": "Add your favorite products to favorites with the heart icon!",
@@ -428,7 +431,7 @@
     "menuyu_ac": "Open Menu",
     "giris_yapmalisiniz": "You must sign in",
     "menuden_siparis_verin_veya_nga": "Order from the menu or\nconnect with waiter PIN",
-    "beklemede": "Beklemede"
+    "beklemede": "Pending"
   },
   "delivery_modes": {
     "delivery": "Delivery",
@@ -1133,7 +1136,13 @@
     "comment_hint_completed": "Was the food delicious? Was it packed well? Let us know...",
     "comment_hint_not_completed": "You can leave a comment after the order is completed...",
     "submit_rating": "Submit",
-    "after_order_completed": "After Order Completed"
+    "after_order_completed": "After Order Completed",
+    "favorite_name_title": "Favorite Order Name",
+    "favorite_name_hint": "e.g. Family Order, Sports Club...",
+    "favorite_saved": "Favorite saved",
+    "favorite_removed": "Removed from favorites",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "payments": {
     "step1_payment_collection": "💵 Step 1: Payment Collection",

@@ -115,7 +115,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     );
   }
 
-  // --- TAB 3: ORDERS ---
+  // --- TAB 3: FAVORITE ORDERS ---
   Widget _buildOrderHistory(bool isDark) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -134,10 +134,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('meat_orders')
-          .where('userId', isEqualTo: user.uid)
+          .collection('users').doc(user.uid)
+          .collection('favoriteOrders')
           .orderBy('createdAt', descending: true)
-          .limit(20)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -146,9 +145,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return _buildEmptyState(
-            icon: Icons.receipt_long_rounded,
-            title: tr('common.henuz_siparis_yok'),
-            subtitle: tr('common.verdiginiz_siparisler_burada_l'),
+            icon: Icons.bookmark_border_rounded,
+            title: tr('common.favori_siparis_yok'),
+            subtitle: tr('common.siparislerinizi_bookmark_ile_f'),
             isDark: isDark,
           );
         }
@@ -159,82 +158,19 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           itemBuilder: (context, index) {
             final doc = snapshot.data!.docs[index];
             final data = doc.data() as Map<String, dynamic>;
-            return _buildOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
+            return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
           },
         );
       },
     );
   }
 
-  Widget _buildOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final businessName = data['butcherName'] ?? tr('common.i_sletme');
-    final businessId = data['butcherId'] ?? '';
-    final status = data['status'] ?? 'pending';
-    final createdAt = data['createdAt'] as Timestamp?;
+  Widget _buildFavoriteOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
+    final favoriteName = data['favoriteName'] ?? '';
+    final businessName = data['businessName'] ?? tr('common.i_sletme');
+    final businessId = data['businessId'] ?? '';
     final totalAmount = (data['totalAmount'] ?? 0).toDouble();
-    final items = data['items'] as List<dynamic>? ?? [];
-    final userId = data['userId'] ?? '';
-    
-    String formattedDate = '';
-    if (createdAt != null) {
-      final date = createdAt.toDate();
-      final now = DateTime.now();
-      final diff = now.difference(date);
-      
-      if (diff.inDays == 0) {
-        formattedDate = '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-      } else if (diff.inDays == 1) {
-        formattedDate = tr('common.dun');
-      } else {
-        formattedDate = '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)}';
-      }
-    }
-
-    String statusText = '';
-    Color statusColor = lokmaRed;
-    
-    switch (status) {
-      case 'pending':
-        statusText = tr('common.beklemede');
-        statusColor = Colors.amber;
-        break;
-      case 'accepted':
-      case 'confirmed':
-        statusText = tr('common.onaylandi');
-        statusColor = Colors.blue;
-        break;
-      case 'preparing':
-        statusText = 'Hazırlanıyor';
-        statusColor = Colors.purple;
-        break;
-      case 'ready':
-        statusText = 'Hazır';
-        statusColor = Colors.green;
-        break;
-      case 'onTheWay':
-        statusText = 'Yolda';
-        statusColor = Colors.teal;
-        break;
-      case 'delivered':
-        statusText = 'Teslim Edildi';
-        statusColor = Colors.green;
-        break;
-      case 'cancelled':
-        statusText = tr('common.i_ptal_edildi');
-        statusColor = Colors.red;
-        break;
-      case 'payment_failed':
-      case 'failed':
-        statusText = 'Ödeme Başarısız';
-        statusColor = Colors.red;
-        break;
-      case 'refunded':
-        statusText = 'İade Edildi';
-        statusColor = Colors.orange;
-        break;
-      default:
-        statusText = status;
-    }
+    final itemCount = data['itemCount'] ?? 0;
 
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('businesses').doc(businessId).get(),
@@ -245,7 +181,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         if (businessSnapshot.hasData && businessSnapshot.data != null && businessSnapshot.data!.exists) {
           final businessData = businessSnapshot.data!.data() as Map<String, dynamic>?;
           imageUrl = businessData?['imageUrl'] ?? businessData?['logoUrl'];
-          // Check all possible TUNA indicators
           isTuna = businessData?['isTuna'] == true || 
                    businessData?['isTunaPartner'] == true ||
                    businessData?['isTunaApproved'] == true ||
@@ -254,270 +189,144 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                    (businessData?['companyName']?.toString().toLowerCase().contains('tuna') ?? false);
         }
 
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: surfaceCard,
-            borderRadius: BorderRadius.circular(12),
-            border: isDark ? null : Border.all(color: borderSubtle),
-            boxShadow: isDark ? null : [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with business info
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Business image with TUNA badge
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: imageUrl != null && imageUrl.isNotEmpty
-                              ? Image.network(
-                                  imageUrl,
-                                  width: 90,
-                                  height: 64,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    width: 90,
-                                    height: 64,
-                                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                                    child: Icon(Icons.restaurant, color: textSubtle, size: 28),
-                                  ),
-                                )
-                              : Container(
-                                  width: 90,
+        return GestureDetector(
+          onTap: () {
+            if (businessId.isNotEmpty) {
+              context.push('/kasap/$businessId');
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: surfaceCard,
+              borderRadius: BorderRadius.circular(12),
+              border: isDark ? null : Border.all(color: borderSubtle),
+              boxShadow: isDark ? null : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Business image with TUNA badge
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                width: 64,
+                                height: 64,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 64,
                                   height: 64,
                                   color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                                  child: Icon(Icons.restaurant, color: textSubtle, size: 28),
+                                  child: Icon(Icons.restaurant, color: textSubtle, size: 24),
                                 ),
+                              )
+                            : Container(
+                                width: 64,
+                                height: 64,
+                                color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                                child: Icon(Icons.restaurant, color: textSubtle, size: 24),
+                              ),
+                      ),
+                      if (isTuna)
+                        Positioned(
+                          bottom: 2,
+                          left: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFB335B),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: const Text(
+                              'TUNA',
+                              style: TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.w600),
+                            ),
+                          ),
                         ),
-                        // TUNA badge
-                        if (isTuna)
-                          Positioned(
-                            bottom: 4,
-                            left: 4,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFB335B),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'TUNA',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(width: 12),
-                    // Business info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Order number
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  // Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Favorite name (bold, primary)
+                        if (favoriteName.isNotEmpty)
                           Text(
-                            'Sipariş No: ${orderId.substring(0, 6).toUpperCase()}',
-                            style: TextStyle(
-                              color: textSubtle,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Business name
-                          Text(
-                            businessName,
+                            favoriteName,
                             style: TextStyle(
                               color: textPrimary,
                               fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (favoriteName.isNotEmpty) const SizedBox(height: 2),
+                        // Business name (subtitle)
+                        Text(
+                          businessName,
+                          style: TextStyle(color: textSubtle, fontSize: 13),
+                        ),
+                        const SizedBox(height: 4),
+                        // Item count + total
+                        Text(
+                          '$itemCount ${tr('common.urun_kucuk')} - ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
+                          style: TextStyle(color: textSubtle, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        // "Siparisi Goruntule" button
+                        GestureDetector(
+                          onTap: () {
+                            if (businessId.isNotEmpty) {
+                              context.push('/kasap/$businessId');
+                            }
+                          },
+                          child: Text(
+                            tr('common.siparisi_goruntule'),
+                            style: TextStyle(
+                              color: textPrimary,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          // Status and date
-                          Text(
-                            '$statusText • $formattedDate',
-                            style: TextStyle(color: textSubtle, fontSize: 13),
-                          ),
-                          const SizedBox(height: 4),
-                          // tr('common.siparisi_goruntule') link
-                          GestureDetector(
-                            onTap: () {
-                              if (businessId.isNotEmpty) {
-                                context.push('/kasap/$businessId');
-                              }
-                            },
-                            child: Text(
-                              tr('common.siparisi_goruntule'),
-                              style: TextStyle(
-                                color: textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Items and price
-                          Text(
-                            '${items.length} ürün • ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
-                            style: TextStyle(color: textSubtle, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Status badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        statusText,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  // Bookmark icon (filled = remove)
+                  GestureDetector(
+                    onTap: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user == null) return;
+                      await FirebaseFirestore.instance
+                          .collection('users').doc(user.uid)
+                          .collection('favoriteOrders').doc(orderId)
+                          .delete();
+                    },
+                    child: const Icon(
+                      Icons.bookmark,
+                      color: Color(0xFFFB335B),
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
-              
-              // Buttons row - Lieferando style thin pills
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  children: [
-                    // Puan Ver button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 40,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => RatingScreen(
-                                orderId: orderId,
-                                businessId: businessId,
-                                businessName: businessName,
-                                userId: userId,
-                                orderStatus: status,
-                              ),
-
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade200,
-                          foregroundColor: isDark ? Colors.white : Colors.black,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: EdgeInsets.zero,
-                        ),
-                        child: Text(
-                          'Puan Ver',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Tekrar Sipariş Ver button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 40,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Reorder: reconstruct cart from raw Firestore order data
-                          final cartNotifier = ref.read(cartProvider.notifier);
-                          cartNotifier.clearCart();
-
-                          for (final rawItem in items) {
-                            final itemMap = rawItem as Map<String, dynamic>;
-                            final product = ButcherProduct(
-                              butcherId: businessId,
-                              id: itemMap['productId'] ?? '',
-                              sku: itemMap['productId'] ?? '',
-                              masterId: '',
-                              name: itemMap['productName'] ?? itemMap['name'] ?? '',
-                              description: '',
-                              category: '',
-                              price: (itemMap['unitPrice'] ?? itemMap['price'] ?? 0).toDouble(),
-                              unitType: itemMap['unit'] ?? 'adet',
-                              imageUrl: itemMap['imageUrl'] as String?,
-                              minQuantity: (itemMap['unit'] ?? 'adet') == 'kg' ? 0.5 : 1.0,
-                              stepQuantity: (itemMap['unit'] ?? 'adet') == 'kg' ? 0.5 : 1.0,
-                            );
-
-                            final selectedOpts = (itemMap['selectedOptions'] as List<dynamic>?)
-                                ?.map((o) => SelectedOption.fromMap(o as Map<String, dynamic>))
-                                .toList() ?? [];
-
-                            cartNotifier.addToCart(
-                              product,
-                              (itemMap['quantity'] ?? 1).toDouble(),
-                              businessId,
-                              businessName,
-                              selectedOptions: selectedOpts,
-                              note: itemMap['itemNote'] as String?,
-                            );
-                          }
-
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const CartScreen()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF1A1A1A),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          padding: EdgeInsets.zero,
-                        ),
-                        child: Text(
-                          tr('common.tekrar_siparis_ver'),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
