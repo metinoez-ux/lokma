@@ -307,8 +307,6 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        }
-
         // ── Shifts (Business Hours) category ──
         if (selectedCategories.has('shifts')) {
             const bizSnap = await adminDb.collection('businesses').get();

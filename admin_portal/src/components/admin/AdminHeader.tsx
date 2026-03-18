@@ -717,7 +717,7 @@ export default function AdminHeader() {
                                             {admin.displayName || 'Super Admin'}
                                         </p>
                                         <p className="text-gray-400 text-xs truncate">
-                                            {admin.email || admin.phoneNumber || ''}
+                                            {admin.email || admin.phone || ''}
                                         </p>
                                     </Link>
 
@@ -1156,7 +1156,7 @@ export default function AdminHeader() {
                                                 {admin.displayName || 'Admin'}
                                             </p>
                                             <p className="text-gray-400 text-xs truncate">
-                                                {admin.email || admin.phoneNumber || ''}
+                                                {admin.email || admin.phone || ''}
                                             </p>
                                         </Link>
                                         {/* Language Selection */}

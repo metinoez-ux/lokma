@@ -306,7 +306,7 @@ export default function SponsoredAdsPage() {
           conversions: 0,
           spentAmount: 0,
           createdAt: Timestamp.now(),
-          createdBy: admin?.uid || '',
+          createdBy: admin?.id || '',
         });
       }
 
