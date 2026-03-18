@@ -29,6 +29,7 @@ interface SponsoredAd {
   productKeywords: string[];
   targetCategories: string[];
   targetRadius: number;
+  targetCity?: string;
   targetBusinessTypes: string[];
   targetCountries: string[];
   pricingModel: string;
@@ -64,7 +65,8 @@ const DEFAULT_FORM = {
   subtitle: '',
   productKeywords: '',
   targetCategories: '',
-  targetRadius: 10,
+  targetRadius: 0,
+  targetCity: '',
   targetBusinessTypes: 'market',
   targetCountries: ['DE'] as string[],
   productPrice: '' as string | number,
@@ -146,6 +148,7 @@ export default function SponsoredAdsPage() {
       productKeywords: ad.productKeywords.join(', '),
       targetCategories: (ad.targetCategories || []).join(', '),
       targetRadius: ad.targetRadius,
+      targetCity: (ad as any).targetCity || '',
       targetBusinessTypes: ad.targetBusinessTypes.join(', '),
       targetCountries: ad.targetCountries || ['DE'],
       pricingModel: ad.pricingModel,
@@ -202,6 +205,7 @@ export default function SponsoredAdsPage() {
           .map((k) => k.trim())
           .filter(Boolean),
         targetRadius: Number(form.targetRadius),
+        targetCity: form.targetCity || null,
         targetBusinessTypes: form.targetBusinessTypes
           .split(',')
           .map((k) => k.trim())
@@ -586,45 +590,94 @@ export default function SponsoredAdsPage() {
                 </div>
               </div>
 
-              {/* Target Countries */}
-              <div>
-                <label className="block text-xs text-gray-400 mb-2">Ziellaender</label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const allCodes = AVAILABLE_COUNTRIES.map(c => c.code);
-                      const allSelected = allCodes.every(c => form.targetCountries.includes(c));
-                      setForm(f => ({ ...f, targetCountries: allSelected ? ['DE'] : allCodes }));
-                    }}
-                    className={`px-3 py-1.5 text-xs rounded-lg border transition ${AVAILABLE_COUNTRIES.every(c => form.targetCountries.includes(c.code)) ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400'}`}
-                  >
-                    Ganz Europa
-                  </button>
-                  {AVAILABLE_COUNTRIES.map((country) => (
+              {/* Hedefleme: Ulkeler + Opsiyonel Bolge */}
+              <div className="space-y-3">
+                <label className="block text-xs text-gray-400 mb-2">Hedefleme</label>
+
+                {/* Ulke secimi */}
+                <div>
+                  <p className="text-[10px] text-gray-500 mb-1.5">Hangi ulkelerde goesterilecek?</p>
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      key={country.code}
                       type="button"
                       onClick={() => {
-                        setForm(f => {
-                          const has = f.targetCountries.includes(country.code);
-                          const next = has
-                            ? f.targetCountries.filter(c => c !== country.code)
-                            : [...f.targetCountries, country.code];
-                          return { ...f, targetCountries: next.length === 0 ? ['DE'] : next };
-                        });
+                        const allCodes = AVAILABLE_COUNTRIES.map(c => c.code);
+                        const allSelected = allCodes.every(c => form.targetCountries.includes(c));
+                        setForm(f => ({ ...f, targetCountries: allSelected ? ['DE'] : allCodes }));
                       }}
-                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg border transition ${form.targetCountries.includes(country.code) ? 'bg-blue-600/30 border-blue-500/50 text-blue-300' : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-400'}`}
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition ${AVAILABLE_COUNTRIES.every(c => form.targetCountries.includes(c.code)) ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400'}`}
                     >
-                      <span>{country.flag}</span>
-                      <span>{country.code}</span>
+                      Ganz Europa
                     </button>
-                  ))}
+                    {AVAILABLE_COUNTRIES.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => {
+                          setForm(f => {
+                            const has = f.targetCountries.includes(country.code);
+                            const next = has
+                              ? f.targetCountries.filter(c => c !== country.code)
+                              : [...f.targetCountries, country.code];
+                            return { ...f, targetCountries: next.length === 0 ? ['DE'] : next };
+                          });
+                        }}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg border transition ${form.targetCountries.includes(country.code) ? 'bg-blue-600/30 border-blue-500/50 text-blue-300' : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-400'}`}
+                      >
+                        <span>{country.flag}</span>
+                        <span>{country.code}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Opsiyonel bolge daraltma */}
+                <div className="border border-gray-700 rounded-lg p-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.targetRadius > 0}
+                      onChange={(e) => {
+                        if (!e.target.checked) {
+                          setForm(f => ({ ...f, targetRadius: 0, targetCity: '' }));
+                        } else {
+                          setForm(f => ({ ...f, targetRadius: 25 }));
+                        }
+                      }}
+                      className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-pink-500 focus:ring-pink-500"
+                    />
+                    <span className="text-xs text-gray-300">Regionale Eingrenzung (optional)</span>
+                  </label>
+                  {form.targetRadius > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-1">Stadt / Region</label>
+                        <input
+                          type="text"
+                          value={form.targetCity || ''}
+                          onChange={(e) => setForm(f => ({ ...f, targetCity: e.target.value }))}
+                          placeholder="z.B. Duesseldorf, Koeln..."
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-1">Umkreis (km)</label>
+                        <input
+                          type="number"
+                          value={form.targetRadius}
+                          onChange={(e) => setForm(f => ({ ...f, targetRadius: Number(e.target.value) }))}
+                          placeholder="25"
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                        />
+                      </div>
+                      <p className="col-span-2 text-[10px] text-gray-500 -mt-1">Reklam sadece bu sehir/bolge cevresindeki kullanicilara gosterilir</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Pricing */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">{t('pricingModel')}</label>
                   <select
@@ -645,15 +698,6 @@ export default function SponsoredAdsPage() {
                     step="0.01"
                     value={form.bidAmount}
                     onChange={(e) => setForm((f) => ({ ...f, bidAmount: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('targetRadius')} (km)</label>
-                  <input
-                    type="number"
-                    value={form.targetRadius}
-                    onChange={(e) => setForm((f) => ({ ...f, targetRadius: Number(e.target.value) }))}
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
                   />
                 </div>
