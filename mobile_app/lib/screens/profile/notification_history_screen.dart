@@ -1620,73 +1620,28 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             ),
                           ),
 
-                        // Delivery Proof Photo (Fetches from Firestore if delivered)
+                        // Delivery Proof Photo + Type (Fetches from Firestore if delivered)
                         if (stepStatus == 'delivered' && isCompleted)
                           Padding(
                             padding: const EdgeInsets.only(left: 42, top: 4, bottom: 8),
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: FutureBuilder<DocumentSnapshot>(
-                                future: FirebaseFirestore.instance.collection('meat_orders').doc(group.orderId).get(),
+                                future: FirebaseFirestore.instance.collection('orders').doc(group.orderId).get(),
                                 builder: (context, snapshot) {
                                   if (!snapshot.hasData || !snapshot.data!.exists) {
-                                    return const SizedBox.shrink();
+                                    // Fallback: try meat_orders
+                                    return FutureBuilder<DocumentSnapshot>(
+                                      future: FirebaseFirestore.instance.collection('meat_orders').doc(group.orderId).get(),
+                                      builder: (context, meatSnap) {
+                                        if (!meatSnap.hasData || !meatSnap.data!.exists) return const SizedBox.shrink();
+                                        final data = meatSnap.data!.data() as Map<String, dynamic>? ?? {};
+                                        return _buildDeliveryProofWidget(data, context);
+                                      },
+                                    );
                                   }
                                   final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-                                  final deliveryProof = data['deliveryProof'] as Map<String, dynamic>?;
-                                  final proofUrl = deliveryProof?['photoUrl'] as String?;
-                                  
-                                  if (proofUrl == null || proofUrl.isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  
-                                  return GestureDetector(
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (_) => Dialog(
-                                          backgroundColor: Colors.transparent,
-                                          insetPadding: const EdgeInsets.all(8),
-                                          child: Stack(
-                                            alignment: Alignment.topRight,
-                                            children: [
-                                              InteractiveViewer(
-                                                child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(12),
-                                                  child: Image.network(
-                                                    proofUrl,
-                                                    fit: BoxFit.contain,
-                                                  ),
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                                                style: IconButton.styleFrom(
-                                                  backgroundColor: Colors.black54,
-                                                ),
-                                                onPressed: () => Navigator.pop(context),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        proofUrl,
-                                        height: 80,
-                                        width: 80,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => Container(
-                                          height: 80,
-                                          width: 80,
-                                          color: Colors.grey[800],
-                                          child: const Icon(Icons.broken_image, color: Colors.grey),
-                                        ),
-                                      ),
-                                    ),
-                                  );
+                                  return _buildDeliveryProofWidget(data, context);
                                 },
                               ),
                             ),
@@ -1940,6 +1895,120 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
           );
         },
       ),
+    );
+  }
+
+  // ── Delivery Proof Widget (type label + photo) ────────────────────────
+  Widget _buildDeliveryProofWidget(Map<String, dynamic> data, BuildContext context) {
+    final deliveryProof = data['deliveryProof'] as Map<String, dynamic>?;
+    if (deliveryProof == null) return const SizedBox.shrink();
+
+    final proofUrl = deliveryProof['photoUrl'] as String?;
+    final deliveryType = deliveryProof['type'] as String?;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Determine label and icon based on delivery type
+    String typeLabel;
+    IconData typeIcon;
+    switch (deliveryType) {
+      case 'personal_handoff':
+        typeLabel = 'orders.delivery_personal'.tr();
+        typeIcon = Icons.person;
+        break;
+      case 'handed_to_other':
+        typeLabel = 'orders.delivery_other'.tr();
+        typeIcon = Icons.people;
+        break;
+      case 'left_at_door':
+        typeLabel = 'orders.delivery_door'.tr();
+        typeIcon = Icons.door_front_door;
+        break;
+      default:
+        typeLabel = 'orders.delivery_success'.tr();
+        typeIcon = Icons.check_circle;
+        break;
+    }
+
+    // If no photo and no type, nothing to show
+    if ((proofUrl == null || proofUrl.isEmpty) && deliveryType == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Delivery type label
+        if (deliveryType != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(typeIcon, size: 13, color: const Color(0xFF4CAF50)),
+                  const SizedBox(width: 4),
+                  Text(
+                    typeLabel,
+                    style: TextStyle(
+                      color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        // Proof photo
+        if (proofUrl != null && proofUrl.isNotEmpty)
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (_) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: const EdgeInsets.all(8),
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      InteractiveViewer(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(proofUrl, fit: BoxFit.contain),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                        style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                proofUrl,
+                height: 80,
+                width: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 80,
+                  width: 80,
+                  color: isDark ? Colors.grey[800] : Colors.grey[300],
+                  child: const Icon(Icons.broken_image, color: Colors.grey),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
