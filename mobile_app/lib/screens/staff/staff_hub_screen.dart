@@ -40,6 +40,19 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   List<String> _tableSections = []; // section names
   final Set<String> _expandedShiftDays = {}; // tracks expanded days in shift history
 
+  // ── Bottom Navbar ──
+  int _selectedNavIndex = 0;
+  String _walletFilter = 'today'; // today, yesterday, week, month
+  String _walletPaymentFilter = 'all'; // all, nakit, kart, online
+
+  // ── Role-based Access ──
+  bool _isBusinessAdmin = false; // owner or admin role
+  int _activeCourierCount = 0;
+  bool _courierOnBreak = false;
+  DateTime? _courierBreakUntil;
+  String _courierBreakCountdown = '';
+  StreamSubscription? _courierCountSub;
+
   // ── Service Pause System ──
   bool _deliveryPaused = false;
   bool _pickupPaused = false;
@@ -79,6 +92,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     _shiftTimer?.cancel();
     _pauseCountdownTimer?.cancel();
     _businessPauseSub?.cancel();
+    _courierCountSub?.cancel();
     super.dispose();
   }
 
@@ -1612,10 +1626,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       _staffName = data['staffName'] ?? data['name'] ?? user.displayName ?? '';
       _isDriver = data['isDriver'] == true;
 
+      // ── Role-based access check ──
+      final userRole = (data['role'] as String?) ?? 'staff';
+      final adminType = (data['adminType'] as String?) ?? '';
+      _isBusinessAdmin = userRole == 'admin' && !adminType.endsWith('_staff');
+      debugPrint('[StaffHub] userRole=$userRole, isBusinessAdmin=$_isBusinessAdmin');
+
       // Check assignedBusinesses array
       final assigned = data['assignedBusinesses'] as List<dynamic>?;
       if (assigned != null && assigned.isNotEmpty) {
-        _isDriver = true;
+        // isDriver sadece Firestore isDriver field ile belirlenir (satir 1627)
         _assignedBusinessCount = assigned.length;
 
         // Check each assigned business for reservation support
@@ -1768,6 +1788,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       if (_businessId != null) {
         _loadActiveTableSessionCount();
         _listenToPauseState();
+        _listenToActiveCourierCount();
       }
     } catch (e) {
       debugPrint('[StaffHub] Error: $e');
@@ -1804,6 +1825,246 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     });
   }
 
+  // ── Active Courier Count Listener ──
+  void _listenToActiveCourierCount() {
+    if (_businessId == null) return;
+    _courierCountSub?.cancel();
+    _courierCountSub = FirebaseFirestore.instance
+        .collection('shifts')
+        .where('businessId', isEqualTo: _businessId)
+        .where('status', isEqualTo: 'active')
+        .where('isDeliveryDriver', isEqualTo: true)
+        .snapshots()
+        .listen((snap) {
+      if (mounted) {
+        setState(() => _activeCourierCount = snap.docs.length);
+        debugPrint('[StaffHub] Active courier count: $_activeCourierCount');
+      }
+    });
+  }
+
+  // ── Courier Mola (Break) System ──
+  void _showMolaSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Mola Ver',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _activeCourierCount <= 1
+                  ? 'Tek kuryesiniz - mola boyunca teslimat duraklar'
+                  : 'Mola suresini secin',
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _handleCourierMola(15);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange.withValues(alpha: 0.15),
+                      foregroundColor: Colors.orange[800],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('15 dk', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _handleCourierMola(30);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange.withValues(alpha: 0.15),
+                      foregroundColor: Colors.orange[800],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text('30 dk', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleCourierMola(int minutes) async {
+    if (_businessId == null) return;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final breakUntil = DateTime.now().add(Duration(minutes: minutes));
+
+    setState(() {
+      _courierOnBreak = true;
+      _courierBreakUntil = breakUntil;
+    });
+
+    // Log the break
+    try {
+      await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(_businessId)
+          .collection('deliveryPauseLogs')
+          .add({
+        'action': 'courier_break',
+        'duration': '${minutes}min',
+        'breakUntil': Timestamp.fromDate(breakUntil),
+        'staffName': _staffName,
+        'staffUid': uid,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // If single courier, pause delivery for the business
+      if (_activeCourierCount <= 1) {
+        await _handleServicePause('delivery', minutes);
+        debugPrint('[StaffHub] Single courier break - pausing delivery for ${minutes}min');
+      }
+
+      HapticFeedback.heavyImpact();
+    } catch (e) {
+      debugPrint('[StaffHub] Mola error: $e');
+    }
+  }
+
+  void _handleCourierMolaEnd() {
+    setState(() {
+      _courierOnBreak = false;
+      _courierBreakUntil = null;
+      _courierBreakCountdown = '';
+    });
+
+    // If single courier was pausing delivery, resume it
+    if (_activeCourierCount <= 1 && _deliveryPaused) {
+      _handleServiceResume('delivery');
+    }
+
+    // Log end
+    if (_businessId != null) {
+      FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(_businessId)
+          .collection('deliveryPauseLogs')
+          .add({
+        'action': 'courier_break_end',
+        'staffName': _staffName,
+        'staffUid': FirebaseAuth.instance.currentUser?.uid,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
+
+    HapticFeedback.mediumImpact();
+  }
+
+  Widget _buildMolaButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Update countdown
+    if (_courierOnBreak && _courierBreakUntil != null) {
+      final diff = _courierBreakUntil!.difference(DateTime.now()).inSeconds;
+      if (diff <= 0) {
+        // Break expired - auto end
+        WidgetsBinding.instance.addPostFrameCallback((_) => _handleCourierMolaEnd());
+      } else {
+        final m = diff ~/ 60;
+        final s = diff % 60;
+        _courierBreakCountdown = '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (_courierOnBreak) {
+          _handleCourierMolaEnd();
+        } else {
+          _showMolaSheet();
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _courierOnBreak
+                ? [Colors.orange.shade600, Colors.orange.shade700]
+                : [Colors.teal.shade500, Colors.teal.shade600],
+          ),
+          borderRadius: BorderRadius.circular(50),
+          boxShadow: [
+            BoxShadow(
+              color: (_courierOnBreak ? Colors.orange : Colors.teal).withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _courierOnBreak ? Icons.coffee : Icons.free_breakfast_outlined,
+              color: Colors.white, size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _courierOnBreak ? 'Molada' : 'Mola Ver',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            if (_courierOnBreak && _courierBreakCountdown.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _courierBreakCountdown,
+                  style: const TextStyle(
+                    color: Colors.white, fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   String _formatElapsed(Duration d) {
     final h = d.inHours.toString().padLeft(2, '0');
     final m = (d.inMinutes % 60).toString().padLeft(2, '0');
@@ -1828,7 +2089,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _staffName.isNotEmpty ? _staffName : 'Personel Girişi',
+              _staffName.isNotEmpty ? _staffName : 'Personel Girisi',
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
             ),
             if (_businessName.isNotEmpty)
@@ -1844,36 +2105,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         centerTitle: false,
         elevation: 0,
         actions: [
-          if (_shiftLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                width: 20, height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else if (!_shiftService.isOnShift)
-            // ▶ START button
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilledButton.icon(
-                onPressed: _businessId != null ? _handleStartShift : null,
-                icon: const Icon(Icons.play_arrow, size: 20),
-                label: const Text('BAŞLA', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  minimumSize: Size.zero,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            )
-          else ...[
-            // Timer display
+          // Timer display (compact, shift indicator only)
+          if (_shiftService.isOnShift)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              margin: const EdgeInsets.symmetric(vertical: 10),
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               decoration: BoxDecoration(
                 color: _shiftService.shiftStatus == 'paused'
                     ? Colors.amber.withValues(alpha: 0.15)
@@ -1912,358 +2148,1239 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 4),
-            // Pause/Resume button
-            if (_shiftService.shiftStatus == 'paused')
-              IconButton(
-                onPressed: _handleResumeShift,
-                icon: const Icon(Icons.play_arrow, color: Color(0xFF4CAF50)),
-                tooltip: 'Devam Et',
-                visualDensity: VisualDensity.compact,
-              )
-            else
-              IconButton(
-                onPressed: _handlePauseShift,
-                icon: const Icon(Icons.pause, color: Colors.amber),
-                tooltip: 'Mola',
-                visualDensity: VisualDensity.compact,
-              ),
-            // Stop button
-            IconButton(
-              onPressed: _handleEndShift,
-              icon: const Icon(Icons.stop_circle, color: Colors.red),
-              tooltip: 'Vardiyayı Bitir',
-              visualDensity: VisualDensity.compact,
-            ),
-            const SizedBox(width: 4),
-          ],
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : (!_isDriver && !_hasReservation)
               ? _buildNoAccess()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Business name header
-                      // Business name moved to AppBar subtitle
+              : IndexedStack(
+                  index: _selectedNavIndex > 3 ? 0 : _selectedNavIndex,
+                  children: [
+                    _buildSaatlerimTab(isDark, driverState),
+                    _buildKuryeTab(isDark, driverState),
+                    _buildWalletTab(isDark),
+                    _buildMasaTab(isDark),
+                  ],
+                ),
+      bottomNavigationBar: (!_isLoading && (_isDriver || _hasReservation))
+          ? _buildStaffBottomNav(isDark)
+          : null,
+    );
+  }
 
-                      // ─── Compact Date + Shift Info Row ───
-                      if (_shiftService.isOnShift) ...[
-                        Builder(builder: (_) {
-                          final now = DateTime.now();
-                          const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-                            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-                          const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-                          final dateStr = '${now.day} ${months[now.month - 1]} ${now.year}, ${days[now.weekday - 1]}';
-                          final isPaused = _shiftService.shiftStatus == 'paused';
-                          final accentColor = isPaused ? Colors.amber : const Color(0xFF4CAF50);
+  // ── Bottom Navigation Bar ──
+  Widget _buildStaffBottomNav(bool isDark) {
+    final isOnShift = _shiftService.isOnShift;
+    final isPaused = _shiftService.shiftStatus == 'paused';
 
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Date row
-                                Row(
-                                  children: [
-                                    Icon(
-                                      isPaused ? Icons.pause_circle : Icons.calendar_today,
-                                      size: 16,
-                                      color: accentColor,
+    // Determine shift icon and color
+    IconData shiftIcon;
+    Color shiftColor;
+    if (_shiftLoading) {
+      shiftIcon = Icons.hourglass_empty;
+      shiftColor = Colors.grey;
+    } else if (!isOnShift) {
+      shiftIcon = Icons.play_arrow;
+      shiftColor = const Color(0xFF4CAF50);
+    } else if (isPaused) {
+      shiftIcon = Icons.play_arrow;
+      shiftColor = Colors.amber;
+    } else {
+      shiftIcon = Icons.pause;
+      shiftColor = Colors.amber;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.schedule, 'Saatlerim', isDark),
+              _navItem(1, Icons.delivery_dining, 'Kurye', isDark),
+              _navItem(2, Icons.account_balance_wallet_outlined, 'Tahsilat', isDark),
+              _navItem(3, Icons.table_restaurant, 'Masa', isDark),
+              // Shift action button (special - not a tab)
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  if (_shiftLoading) return;
+                  if (!isOnShift) {
+                    if (_businessId != null) _handleStartShift();
+                  } else if (isPaused) {
+                    _handleResumeShift();
+                  } else {
+                    _handlePauseShift();
+                  }
+                },
+                onLongPress: () {
+                  if (isOnShift) {
+                    HapticFeedback.heavyImpact();
+                    _handleEndShift();
+                  }
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isOnShift
+                            ? shiftColor.withValues(alpha: 0.15)
+                            : const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isOnShift
+                              ? shiftColor.withValues(alpha: 0.4)
+                              : const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: _shiftLoading
+                          ? const SizedBox(
+                              width: 18, height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(shiftIcon, size: 22, color: shiftColor),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isOnShift ? (isPaused ? 'Devam' : 'Mola') : 'Basla',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: shiftColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(int index, IconData icon, String label, bool isDark) {
+    final isSelected = _selectedNavIndex == index;
+    final color = isSelected
+        ? const Color(0xFFFE0032)
+        : (isDark ? Colors.grey[500]! : Colors.grey[600]!);
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() => _selectedNavIndex = index);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 60,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Tab 0: Saatlerim (Shift history + info) ──
+  Widget _buildSaatlerimTab(bool isDark, DriverState driverState) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Date + shift info card
+          if (_shiftService.isOnShift)
+            _buildShiftInfoCard(isDark),
+          if (_shiftService.isOnShift)
+            const SizedBox(height: 16),
+
+          // Feature card for shift history
+          if (_businessId != null)
+            _buildFeatureCard(
+              icon: Icons.schedule,
+              title: 'Calisma Saatlerim',
+              subtitle: _hasShiftTracking ? 'Vardiya gecmisi' : 'Paketinizde aktif degil',
+              color: _hasShiftTracking ? Colors.indigo.shade700 : Colors.grey,
+              gradient: _hasShiftTracking
+                  ? [Colors.indigo.shade400, Colors.indigo.shade700]
+                  : [Colors.grey.shade400, Colors.grey.shade600],
+              disabled: !_hasShiftTracking,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (_hasShiftTracking) {
+                  _showShiftHistorySheet();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr('staff.feature_not_active_in_plan')),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              },
+            ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  // ── Tab 1: Kurye (Deliveries + Pause/Mola + Reservations) ──
+  Widget _buildKuryeTab(bool isDark, DriverState driverState) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final businessIds = driverState.driverInfo?.assignedBusinesses ?? [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- Shift time stats bar (calisma / mola) ---
+          if (_shiftService.isOnShift) ...[ 
+            _buildShiftStatsBar(isDark),
+            const SizedBox(height: 14),
+          ],
+
+          // --- Dominant order status cards ---
+          if (_isDriver && businessIds.isNotEmpty)
+            StreamBuilder<List<LokmaOrder>>(
+              stream: OrderService().getDriverDeliveriesStream(businessIds, courierId: userId),
+              builder: (context, snapshot) {
+                final orders = snapshot.data ?? [];
+                final pending = orders.where((o) => o.status == OrderStatus.pending).toList();
+                final preparing = orders.where((o) => o.status == OrderStatus.preparing).toList();
+                final ready = orders.where((o) => o.status == OrderStatus.ready).toList();
+                final onWay = orders.where((o) => o.status == OrderStatus.onTheWay || o.status == OrderStatus.accepted).toList();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Status count row
+                    Row(
+                      children: [
+                        _orderStatCard('Bekleyen', pending.length, Icons.hourglass_bottom, Colors.amber, isDark),
+                        const SizedBox(width: 8),
+                        _orderStatCard('Hazirlanan', preparing.length, Icons.local_fire_department, Colors.orange, isDark),
+                        const SizedBox(width: 8),
+                        _orderStatCard('Hazir', ready.length, Icons.check_circle, Colors.green, isDark, dominant: true),
+                        const SizedBox(width: 8),
+                        _orderStatCard('Yolda', onWay.length, Icons.local_shipping, Colors.blue, isDark),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Ready orders list (tappable, with distance info)
+                    if (ready.isNotEmpty) ...[
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/driver-deliveries');
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.green.withValues(alpha: 0.25)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.check_circle, size: 18, color: Colors.green[700]),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Teslim Edilecek Siparisler',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.green[800]),
+                                  ),
+                                  const Spacer(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        dateStr,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: accentColor,
-                                        ),
-                                      ),
+                                    child: Text(
+                                      '${ready.length}',
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
                                     ),
-                                    if (isPaused)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: const Text(
-                                          'Mola',
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                // Roles + Total Time row
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    // Roles
-                                    Expanded(
-                                      child: Wrap(
-                                        spacing: 6,
-                                        runSpacing: 4,
-                                        children: [
-                                          if (_shiftService.isDeliveryDriver)
-                                            _buildRoleBadge('Kurye', Icons.local_shipping, accentColor),
-                                          if (_shiftService.currentTables.isNotEmpty)
-                                            _buildRoleBadge('Masa', Icons.table_restaurant, accentColor),
-                                          if (_shiftService.isOtherRole)
-                                            _buildRoleBadge('Diğer Görevler', Icons.work_outline, accentColor),
-                                          if (!_shiftService.isDeliveryDriver && _shiftService.currentTables.isEmpty && !_shiftService.isOtherRole)
-                                            _buildRoleBadge('Personel', Icons.person, accentColor),
-                                        ],
-                                      ),
-                                    ),
-                                    // Total Time
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Bugün Toplam',
-                                          style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w600),
-                                        ),
-                                        Text(
-                                          _formatElapsed(Duration(minutes: _pastShiftMinutes) + _shiftElapsed),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: accentColor,
-                                            fontFeatures: const [FontFeature.tabularFigures()],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                // Tables + Reservations row
-                                if (_shiftService.currentTables.isNotEmpty || (_hasReservation && _businessId != null)) ...[
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      if (_shiftService.currentTables.isNotEmpty) ...[
-                                        Icon(Icons.table_restaurant, size: 13, color: Colors.grey[500]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${_shiftService.currentTables.length} masa',
-                                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                                        ),
-                                      ],
-                                      if (_shiftService.currentTables.isNotEmpty && _hasReservation)
-                                        const SizedBox(width: 12),
-                                      if (_hasReservation && _businessId != null)
-                                        StreamBuilder<QuerySnapshot>(
-                                          stream: FirebaseFirestore.instance
-                                              .collection('businesses')
-                                              .doc(_businessId)
-                                              .collection('reservations')
-                                              .where('date', isEqualTo: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}')
-                                              .where('status', whereIn: ['confirmed', 'pending'])
-                                              .snapshots(),
-                                          builder: (_, snap) {
-                                            final count = snap.data?.docs.length ?? 0;
-                                            if (count == 0) return const SizedBox.shrink();
-                                            return Row(
-                                              children: [
-                                                Icon(Icons.event_seat, size: 13, color: Colors.amber[700]),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  '$count rezervasyon',
-                                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.amber[700]),
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                    ],
                                   ),
                                 ],
-                              ],
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 16),
-
-                        // ─── Service Pause Pills ───
-                        if (_businessId != null)
-                          _buildPausePills(),
-
-                        const SizedBox(height: 24),
-                      ],
-
-                      // Section title
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 12),
-                        child: Text(
-                          'Görevler',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
+                              ),
+                              const SizedBox(height: 10),
+                              ...ready.map((o) => _buildReadyOrderRow(o, isDark)),
+                            ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 14),
+                    ],
+                  ],
+                );
+              },
+            ),
 
-                      // ─── Deliveries Card (enriched with live counts) ───
-                      if (_isDriver)
-                        _buildEnrichedDeliveryCard(
-                          businessIds: driverState.driverInfo?.assignedBusinesses ?? [],
+          // Service Pause Pills (Admin/Owner only)
+          if (_businessId != null && _isBusinessAdmin)
+            _buildPausePills(),
+
+          // Courier Mola Button (Driver only, not admin)
+          if (_businessId != null && _isDriver && !_isBusinessAdmin)
+            _buildMolaButton(),
+
+          if ((_isBusinessAdmin || _isDriver) && _businessId != null)
+            const SizedBox(height: 16),
+
+          // Deliveries navigation card
+          if (_isDriver)
+            _buildEnrichedDeliveryCard(
+              businessIds: businessIds,
+            ),
+
+          if (_isDriver) const SizedBox(height: 12),
+
+          // Reservations Card
+          if (_hasReservation)
+            _buildFeatureCard(
+              icon: Icons.restaurant,
+              title: 'Rezervasyonlar',
+              subtitle: _pendingReservations > 0
+                  ? '$_pendingReservations bekleyen'
+                  : 'Tum rezervasyonlar',
+              color: Colors.green.shade700,
+              gradient: [Colors.green.shade400, Colors.green.shade700],
+              badgeCount: _pendingReservations,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/staff-reservations');
+              },
+            ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  /// Shift time stats bar: active work time + pause time
+  Widget _buildShiftStatsBar(bool isDark) {
+    final isPaused = _shiftService.shiftStatus == 'paused';
+    final totalElapsed = Duration(minutes: _pastShiftMinutes) + _shiftElapsed;
+    
+    // Estimate pause from current shift's pauseLog via stream
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _shiftService.shiftStream,
+      builder: (context, snap) {
+        int pauseMins = 0;
+        if (snap.hasData && snap.data!.exists) {
+          final data = snap.data!.data() as Map<String, dynamic>?;
+          final pauseLog = (data?['pauseLog'] as List<dynamic>?) ?? [];
+          for (final entry in pauseLog) {
+            final e = entry as Map<String, dynamic>;
+            final pAt = (e['pausedAt'] as Timestamp?)?.toDate();
+            final rAt = (e['resumedAt'] as Timestamp?)?.toDate();
+            if (pAt != null) {
+              final end = rAt ?? DateTime.now();
+              pauseMins += end.difference(pAt).inMinutes;
+            }
+          }
+        }
+        final activeMins = totalElapsed.inMinutes - pauseMins;
+        
+        return Row(
+          children: [
+            // Active work
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.work_history, size: 18, color: const Color(0xFF4CAF50)),
+                    const SizedBox(width: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Calisma', style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500)),
+                        Text(
+                          '${activeMins > 0 ? activeMins : 0} dk',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF4CAF50)),
                         ),
-
-                      if (_isDriver) const SizedBox(height: 12),
-
-
-
-                      // ─── Reservations Card ───
-                      if (_hasReservation)
-                        _buildFeatureCard(
-                          icon: Icons.restaurant,
-                          title: 'Rezervasyonlar',
-                          subtitle: _pendingReservations > 0
-                              ? '$_pendingReservations bekleyen'
-                              : 'Tüm rezervasyonlar',
-                          color: Colors.green.shade700,
-                          gradient: [Colors.green.shade400, Colors.green.shade700],
-                          badgeCount: _pendingReservations,
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            context.push('/staff-reservations');
-                          },
-                        ),
-
-                      if (_hasReservation) const SizedBox(height: 12),
-
-                      // "Sipariş Al" removed — empty table taps handle order creation directly
-
-                      // ─── Çalışma Saatlerim ───
-                      if (_businessId != null)
-                        _buildFeatureCard(
-                          icon: Icons.schedule,
-                          title: 'Çalışma Saatlerim',
-                          subtitle: _hasShiftTracking ? 'Vardiya geçmişi' : 'Paketinizde aktif değil',
-                          color: _hasShiftTracking ? Colors.indigo.shade700 : Colors.grey,
-                          gradient: _hasShiftTracking
-                              ? [Colors.indigo.shade400, Colors.indigo.shade700]
-                              : [Colors.grey.shade400, Colors.grey.shade600],
-                          disabled: !_hasShiftTracking,
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            if (_hasShiftTracking) {
-                              _showShiftHistorySheet();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(tr('staff.feature_not_active_in_plan')),
-                                  duration: Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-
-                      if (_businessId != null) const SizedBox(height: 12),
-
-                      // ─── Masa Durumu Dashboard ───
-                      if (_businessId != null) ...[
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 4),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Masa Durumu',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Live order status chips
-                        if (_hasTables && _businessId != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4, bottom: 6),
-                            child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('meat_orders')
-                                  .where('butcherId', isEqualTo: _businessId)
-                                  .where('status', whereIn: ['pending', 'preparing', 'ready', 'served'])
-                                  .snapshots(),
-                              builder: (context, snapshot) {
-                                final docs = snapshot.data?.docs ?? [];
-                                final tableOrders = docs.where((doc) {
-                                  final data = doc.data() as Map<String, dynamic>;
-                                  final method = data['deliveryMethod']?.toString() ?? data['orderType']?.toString() ?? '';
-                                  return method != 'delivery';
-                                }).toList();
-
-                                int pending = 0, preparing = 0, ready = 0, served = 0;
-                                for (final doc in tableOrders) {
-                                  final data = doc.data() as Map<String, dynamic>;
-                                  final status = data['status']?.toString() ?? '';
-                                  switch (status) {
-                                    case 'pending': pending++; break;
-                                    case 'preparing': preparing++; break;
-                                    case 'ready': ready++; break;
-                                    case 'served': served++; break;
-                                  }
-                                }
-
-                                final total = pending + preparing + ready + served;
-                                if (total == 0) return const SizedBox.shrink();
-
-                                return Wrap(
-                                  spacing: 6,
-                                  runSpacing: 4,
-                                  children: [
-                                    _statusChip('⏳ $pending', Colors.amber, pending > 0),
-                                    _statusChip('🔥 $preparing', Colors.amber, preparing > 0),
-                                    _statusChip('✅ $ready', Colors.green, ready > 0),
-                                    _statusChip('🍽️ $served', Colors.teal, served > 0),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        // Legend row
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 12),
-                          child: Wrap(
-                            spacing: 10,
-                            runSpacing: 4,
-                            children: [
-                              _tableLegend(const Color(0xFFFB335B), 'Siparişli'),
-                              _tableLegend(Colors.blue, 'Servis Edildi'),
-                              _tableLegend(Colors.green, 'Ödendi'),
-                              _tableLegend(Colors.amber, 'Rezerveli'),
-                              _tableLegend(Colors.grey.shade400, 'Boş'),
-                            ],
-                          ),
-                        ),
-                        // Table grid
-                        _buildTableDashboard(isDark),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Pause time
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.coffee, size: 18, color: Colors.amber[700]),
+                    const SizedBox(width: 6),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Mola', style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500)),
+                        Text(
+                          '$pauseMins dk',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.amber[700]),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Status indicator
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              decoration: BoxDecoration(
+                color: isPaused
+                    ? Colors.amber.withValues(alpha: 0.12)
+                    : const Color(0xFF4CAF50).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isPaused
+                      ? Colors.amber.withValues(alpha: 0.3)
+                      : const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    isPaused ? Icons.pause_circle : Icons.play_circle,
+                    size: 20,
+                    color: isPaused ? Colors.amber : const Color(0xFF4CAF50),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isPaused ? 'Mola' : 'Aktif',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isPaused ? Colors.amber : const Color(0xFF4CAF50),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-                      const SizedBox(height: 32),
+  /// Order status stat card
+  Widget _orderStatCard(String label, int count, IconData icon, Color color, bool isDark, {bool dominant = false}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: dominant ? 14 : 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: dominant ? 0.12 : 0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: color.withValues(alpha: dominant ? 0.4 : 0.15),
+            width: dominant ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: dominant ? 28 : 22, color: color),
+            const SizedBox(height: 4),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: dominant ? 22 : 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(fontSize: 9, color: Colors.grey[500], fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Ready order row with GPS distance estimation
+  Widget _buildReadyOrderRow(LokmaOrder order, bool isDark) {
+    // We use FutureBuilder to get current position and compute distance
+    return FutureBuilder<Position?>(
+      future: _safeGetPosition(),
+      builder: (context, posSnap) {
+        // Business location from order's claimLocation
+        final bizLat = order.claimLocation?['lat'];
+        final bizLng = order.claimLocation?['lng'];
+        
+        // Customer location
+        final custLat = order.deliveryPinLat;
+        final custLng = order.deliveryPinLng;
+
+        String distanceInfo = '';
+        if (posSnap.hasData && posSnap.data != null && bizLat != null && bizLng != null) {
+          final pos = posSnap.data!;
+          final toBizMeters = Geolocator.distanceBetween(pos.latitude, pos.longitude, bizLat, bizLng);
+          
+          if (custLat != null && custLng != null) {
+            final bizToCustMeters = Geolocator.distanceBetween(bizLat, bizLng, custLat, custLng);
+            
+            if (toBizMeters <= 500) {
+              // Courier is at the business - only show customer distance
+              final custKm = (bizToCustMeters / 1000).toStringAsFixed(1);
+              final custMin = (bizToCustMeters / 500).round(); // ~30km/h avg speed
+              distanceInfo = '$custKm km ~ $custMin dk';
+            } else {
+              // Courier is away - show business + customer distance
+              final bizKm = (toBizMeters / 1000).toStringAsFixed(1);
+              final bizMin = (toBizMeters / 500).round();
+              final custKm = (bizToCustMeters / 1000).toStringAsFixed(1);
+              final custMin = (bizToCustMeters / 500).round();
+              final totalKm = ((toBizMeters + bizToCustMeters) / 1000).toStringAsFixed(1);
+              final totalMin = bizMin + custMin;
+              distanceInfo = '${bizKm}km(isletme) + ${custKm}km(musteri) = ${totalKm}km ~ ${totalMin}dk';
+            }
+          } else if (order.deliveryAddress != null) {
+            // No precise pin but has address
+            if (toBizMeters <= 500) {
+              distanceInfo = 'Isletmede';
+            } else {
+              final bizKm = (toBizMeters / 1000).toStringAsFixed(1);
+              distanceInfo = 'Isletmeye: ${bizKm}km';
+            }
+          }
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              // Order number
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '#${order.orderNumber ?? order.id.substring(0, 6)}',
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    Text(
+                      order.butcherName,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (distanceInfo.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          distanceInfo,
+                          style: TextStyle(fontSize: 10, color: Colors.blue[600], fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Amount
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${order.totalAmount.toStringAsFixed(2)} ${order.currency}',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  if (order.paymentMethod != null)
+                    Text(
+                      order.paymentMethod == 'cash' || order.paymentMethod == 'nakit' ? 'Nakit' : 'Kart',
+                      style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 6),
+              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Safely get current position without throwing
+  Future<Position?> _safeGetPosition() async {
+    try {
+      final perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+        return null;
+      }
+      return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium)
+          .timeout(const Duration(seconds: 3), onTimeout: () => throw 'timeout');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ── Tab 2: Wallet (Cash + Tips tracking) ──
+  Widget _buildWalletTab(bool isDark) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const Center(child: Text('Giris yapiniz'));
+    }
+
+    // Calculate date range based on filter
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    DateTime since;
+    switch (_walletFilter) {
+      case 'yesterday':
+        since = today.subtract(const Duration(days: 1));
+        break;
+      case 'week':
+        since = today.subtract(const Duration(days: 7));
+        break;
+      case 'month':
+        since = DateTime(now.year, now.month, 1);
+        break;
+      default: // today
+        since = today;
+    }
+
+    // Combine courier deliveries + waiter-served orders
+    return StreamBuilder<List<LokmaOrder>>(
+      stream: OrderService().getMyCompletedDeliveriesSince(uid, since),
+      builder: (context, courierSnap) {
+        return StreamBuilder<List<LokmaOrder>>(
+          stream: OrderService().getStaffServedOrdersSince(uid, since),
+          builder: (context, waiterSnap) {
+            final courierOrders = courierSnap.data ?? [];
+            final waiterOrders = waiterSnap.data ?? [];
+
+            // Merge and deduplicate (an order might have both courierId and servedById)
+            final Map<String, LokmaOrder> allMap = {};
+            for (final o in courierOrders) {
+              allMap[o.id] = o;
+            }
+            for (final o in waiterOrders) {
+              allMap[o.id] = o;
+            }
+            final allOrders = allMap.values.toList()
+              ..sort((a, b) => (b.deliveredAt ?? b.updatedAt).compareTo(a.deliveredAt ?? a.updatedAt));
+
+            // Apply payment filter
+            final orders = _walletPaymentFilter == 'all'
+                ? allOrders
+                : allOrders.where((o) {
+                    final pm = o.paymentMethod ?? '';
+                    switch (_walletPaymentFilter) {
+                      case 'nakit':
+                        return pm == 'cash' || pm == 'nakit';
+                      case 'kart':
+                        return pm == 'card' || pm == 'kart' || pm == 'tap_to_pay';
+                      case 'online':
+                        return pm == 'online' || pm == 'stripe' || pm == 'online_card';
+                      default:
+                        return true;
+                    }
+                  }).toList();
+
+            // Calculate totals
+            double totalCash = 0;
+            double totalTips = 0;
+            int cashCount = 0;
+            final Map<String, Map<String, double>> bizSummary = {};
+
+            for (final o in orders) {
+              final isCash = o.paymentMethod == 'cash' || o.paymentMethod == 'nakit';
+              if (isCash) {
+                totalCash += o.totalAmount;
+                cashCount++;
+              }
+              if (o.tipAmount > 0) {
+                totalTips += o.tipAmount;
+              }
+              final biz = o.butcherName;
+              bizSummary.putIfAbsent(biz, () => {'cash': 0, 'tips': 0});
+              if (isCash) bizSummary[biz]!['cash'] = (bizSummary[biz]!['cash'] ?? 0) + o.totalAmount;
+              bizSummary[biz]!['tips'] = (bizSummary[biz]!['tips'] ?? 0) + o.tipAmount;
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date filter pills
+                  Row(
+                    children: [
+                      _walletFilterPill('Bugun', 'today'),
+                      const SizedBox(width: 6),
+                      _walletFilterPill('Dun', 'yesterday'),
+                      const SizedBox(width: 6),
+                      _walletFilterPill('7 Gun', 'week'),
+                      const SizedBox(width: 6),
+                      _walletFilterPill('Bu Ay', 'month'),
                     ],
                   ),
+                  const SizedBox(height: 10),
+
+                  // Payment method filter
+                  Row(
+                    children: [
+                      _paymentFilterPill('Hepsi', 'all'),
+                      const SizedBox(width: 6),
+                      _paymentFilterPill('Nakit', 'nakit'),
+                      const SizedBox(width: 6),
+                      _paymentFilterPill('Kart', 'kart'),
+                      const SizedBox(width: 6),
+                      _paymentFilterPill('Online', 'online'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Summary cards row
+                  Row(
+                    children: [
+                      Expanded(child: _walletSummaryCard(
+                        'Nakit Tahsilat', totalCash, Icons.payments, Colors.green, isDark,
+                      )),
+                      const SizedBox(width: 10),
+                      Expanded(child: _walletSummaryCard(
+                        'Bahsis', totalTips, Icons.volunteer_activism, Colors.orange, isDark,
+                      )),
+                      const SizedBox(width: 10),
+                      Expanded(child: _walletSummaryCard(
+                        'Islem', orders.length.toDouble(), Icons.receipt_long, Colors.blue, isDark,
+                        isCount: true,
+                      )),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Business summary
+                  if (bizSummary.isNotEmpty) ...[
+                    Text(
+                      'Isletme Bazinda',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    ...bizSummary.entries.map((e) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: (isDark ? Colors.grey[800] : Colors.grey[200])!),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w500))),
+                          Text(
+                            '${e.value['cash']!.toStringAsFixed(2)} (nakit)',
+                            style: TextStyle(fontSize: 12, color: Colors.green[600]),
+                          ),
+                          if ((e.value['tips'] ?? 0) > 0) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '${e.value['tips']!.toStringAsFixed(2)} (bahsis)',
+                              style: TextStyle(fontSize: 12, color: Colors.orange[600]),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )),
+                  ],
+
+                  // Individual orders with type labels
+                  if (orders.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Islemler',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    ...orders.map((o) {
+                      final ts = o.deliveredAt ?? o.updatedAt;
+                      final time = '${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}';
+                      final date = '${ts.day.toString().padLeft(2, '0')}.${ts.month.toString().padLeft(2, '0')}';
+                      
+                      // Determine type label
+                      String typeLabel;
+                      Color typeColor;
+                      IconData typeIcon;
+                      if (o.courierId == uid && o.orderType == OrderType.delivery) {
+                        typeLabel = 'Kurye';
+                        typeColor = Colors.blue;
+                        typeIcon = Icons.two_wheeler;
+                      } else if (o.orderType == OrderType.dineIn || o.tableNumber != null) {
+                        final tbl = o.tableNumber != null ? ' #${o.tableNumber}' : '';
+                        typeLabel = 'Masa$tbl';
+                        typeColor = Colors.purple;
+                        typeIcon = Icons.table_restaurant;
+                      } else {
+                        typeLabel = 'Gel Al';
+                        typeColor = Colors.teal;
+                        typeIcon = Icons.shopping_bag;
+                      }
+
+                      final isCash = o.paymentMethod == 'cash' || o.paymentMethod == 'nakit';
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: (isDark ? Colors.grey[800] : Colors.grey[200])!),
+                        ),
+                        child: Row(
+                          children: [
+                            // Type badge
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: typeColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(typeIcon, size: 16, color: typeColor),
+                                  Text(typeLabel, style: TextStyle(fontSize: 7, fontWeight: FontWeight.w600, color: typeColor)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            // Order info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text('#${o.orderNumber ?? o.id.substring(0, 6)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: isCash ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          isCash ? 'Nakit' : 'Kart',
+                                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: isCash ? Colors.green : Colors.grey),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(o.butcherName, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                                  Text('$date  $time', style: TextStyle(fontSize: 10, color: Colors.grey[400], fontFeatures: const [FontFeature.tabularFigures()])),
+                                ],
+                              ),
+                            ),
+                            // Amount + tip
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${o.totalAmount.toStringAsFixed(2)} ${o.currency}',
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                ),
+                                if (o.tipAmount > 0)
+                                  Text(
+                                    '+${o.tipAmount.toStringAsFixed(2)} bahsis',
+                                    style: TextStyle(fontSize: 11, color: Colors.orange[600]),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+
+                  if (orders.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 60),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.account_balance_wallet_outlined, size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 12),
+                            Text('Henuz tahsilat yok', style: TextStyle(color: Colors.grey[500])),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 32),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _walletFilterPill(String label, String value) {
+    final isActive = _walletFilter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _walletFilter = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFFFE0032) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? const Color(0xFFFE0032) : Colors.grey[400]!,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : Colors.grey[600],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _paymentFilterPill(String label, String value) {
+    final isActive = _walletPaymentFilter == value;
+    final color = isActive
+        ? (value == 'nakit' ? Colors.green : value == 'kart' ? Colors.blue : value == 'online' ? Colors.purple : const Color(0xFFFE0032))
+        : Colors.grey[400]!;
+    return GestureDetector(
+      onTap: () => setState(() => _walletPaymentFilter = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive ? color.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isActive ? color : Colors.grey[300]!),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isActive ? color : Colors.grey[500],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _walletSummaryCard(String title, double value, IconData icon, Color color, bool isDark, {bool isCount = false}) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 22, color: color),
+          const SizedBox(height: 6),
+          Text(
+            isCount ? value.toInt().toString() : value.toStringAsFixed(2),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color),
+          ),
+          Text(title, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+        ],
+      ),
+    );
+  }
+
+  // ── Tab 3: Masa (Table Dashboard) ──
+  Widget _buildMasaTab(bool isDark) {
+    if (_businessId == null || !_hasTables) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.table_restaurant, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 12),
+            Text('Masa yonetimi aktif degil', style: TextStyle(color: Colors.grey[500])),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 4),
+            child: Text(
+              'Masa Durumu',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          // Live order status chips
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 6),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('meat_orders')
+                  .where('butcherId', isEqualTo: _businessId)
+                  .where('status', whereIn: ['pending', 'preparing', 'ready', 'served'])
+                  .snapshots(),
+              builder: (context, snapshot) {
+                final docs = snapshot.data?.docs ?? [];
+                final tableOrders = docs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final method = data['deliveryMethod']?.toString() ?? data['orderType']?.toString() ?? '';
+                  return method != 'delivery';
+                }).toList();
+
+                int pending = 0, preparing = 0, ready = 0, served = 0;
+                for (final doc in tableOrders) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final status = data['status']?.toString() ?? '';
+                  switch (status) {
+                    case 'pending': pending++; break;
+                    case 'preparing': preparing++; break;
+                    case 'ready': ready++; break;
+                    case 'served': served++; break;
+                  }
+                }
+
+                final total = pending + preparing + ready + served;
+                if (total == 0) return const SizedBox.shrink();
+
+                return Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    _statusChip('$pending bekleyen', Colors.amber, pending > 0),
+                    _statusChip('$preparing hazirlaniyor', Colors.amber, preparing > 0),
+                    _statusChip('$ready hazir', Colors.green, ready > 0),
+                    _statusChip('$served servis', Colors.teal, served > 0),
+                  ],
+                );
+              },
+            ),
+          ),
+          // Legend row
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 4,
+              children: [
+                _tableLegend(const Color(0xFFFB335B), 'Siparisli'),
+                _tableLegend(Colors.blue, 'Servis Edildi'),
+                _tableLegend(Colors.green, 'Odendi'),
+                _tableLegend(Colors.amber, 'Rezerveli'),
+                _tableLegend(Colors.grey.shade400, 'Bos'),
+              ],
+            ),
+          ),
+          // Table grid
+          _buildTableDashboard(isDark),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  // ── Shared: Shift Info Card ──
+  Widget _buildShiftInfoCard(bool isDark) {
+    final now = DateTime.now();
+    const months = ['Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
+      'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik'];
+    const days = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    final dateStr = '${now.day} ${months[now.month - 1]} ${now.year}, ${days[now.weekday - 1]}';
+    final isPaused = _shiftService.shiftStatus == 'paused';
+    final accentColor = isPaused ? Colors.amber : const Color(0xFF4CAF50);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isPaused ? Icons.pause_circle : Icons.calendar_today,
+                size: 16,
+                color: accentColor,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  dateStr,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: accentColor,
+                  ),
                 ),
+              ),
+              if (isPaused)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Mola',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    if (_shiftService.isDeliveryDriver)
+                      _buildRoleBadge('Kurye', Icons.local_shipping, accentColor),
+                    if (_shiftService.currentTables.isNotEmpty)
+                      _buildRoleBadge('Masa', Icons.table_restaurant, accentColor),
+                    if (_shiftService.isOtherRole)
+                      _buildRoleBadge('Diger Gorevler', Icons.work_outline, accentColor),
+                    if (!_shiftService.isDeliveryDriver && _shiftService.currentTables.isEmpty && !_shiftService.isOtherRole)
+                      _buildRoleBadge('Personel', Icons.person, accentColor),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Bugun Toplam',
+                    style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    _formatElapsed(Duration(minutes: _pastShiftMinutes) + _shiftElapsed),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (_shiftService.currentTables.isNotEmpty || (_hasReservation && _businessId != null)) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                if (_shiftService.currentTables.isNotEmpty) ...[
+                  Icon(Icons.table_restaurant, size: 13, color: Colors.grey[500]),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_shiftService.currentTables.length} masa',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
+                ],
+                if (_shiftService.currentTables.isNotEmpty && _hasReservation)
+                  const SizedBox(width: 12),
+                if (_hasReservation && _businessId != null)
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('businesses')
+                        .doc(_businessId)
+                        .collection('reservations')
+                        .where('date', isEqualTo: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}')
+                        .where('status', whereIn: ['confirmed', 'pending'])
+                        .snapshots(),
+                    builder: (_, snap) {
+                      final count = snap.data?.docs.length ?? 0;
+                      if (count == 0) return const SizedBox.shrink();
+                      return Row(
+                        children: [
+                          Icon(Icons.event_seat, size: 13, color: Colors.amber[700]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$count rezervasyon',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.amber[700]),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 

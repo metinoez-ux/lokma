@@ -38,7 +38,7 @@ class StaffRoleService {
         _isStaff = true;
         _businessId = data['businessId'];
         _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
-        _role = data['role'] ?? 'staff';
+        _role = data['role'] ?? 'admin';
         
         // Register FCM token for delivery notifications
         await _registerFcmToken(user.uid);

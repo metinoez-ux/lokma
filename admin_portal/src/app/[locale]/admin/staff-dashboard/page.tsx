@@ -262,6 +262,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     role: 'admin',
                     adminType: createRole,
                     isDriver: createRole === 'teslimat',
+                    driverType: createRole === 'teslimat' ? 'business' : undefined,
                     butcherId: businessId,
                     butcherName: admin?.butcherName || admin?.businessName || '',
                     isPrimaryAdmin: false,

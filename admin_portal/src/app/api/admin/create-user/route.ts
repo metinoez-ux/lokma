@@ -305,7 +305,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Auto-detect driver roles from adminType (server-side consistency)
-            const DRIVER_ADMIN_TYPES = ['teslimat', 'hali_surucu', 'transfer_surucu'];
+            const DRIVER_ADMIN_TYPES = ['teslimat'];
             if (DRIVER_ADMIN_TYPES.includes(adminType || '')) {
                 adminData.isDriver = true;
                 adminData.driverType = bodyDriverType || 'business';
