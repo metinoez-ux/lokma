@@ -98,7 +98,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
         builder: (ctx) => AlertDialog(
           title: Text(tr('staff.break_continues')),
           content: const Text(
-            'Teslimat üstlenmek için molanız sonlandırılacak.\n\n'
+            'Teslimat \u00FCstlenmek i\u00E7in molan\u0131z sonland\u0131r\u0131lacak.\n\n'
             'Devam etmek istiyor musunuz?',
           ),
           actions: [
