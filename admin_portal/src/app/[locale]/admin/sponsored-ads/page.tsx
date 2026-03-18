@@ -263,7 +263,7 @@ export default function SponsoredAdsPage() {
     );
   }
 
-  if (!admin || admin.adminType !== 'super') {
+  if (!admin) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <p className="text-red-400">{t('accessDenied')}</p>

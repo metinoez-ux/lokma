@@ -770,6 +770,7 @@ export default function AdminHeader() {
                                                 <Link href="/admin/benutzerverwaltung" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('benutzerverwaltung')}</Link>
                                                 <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('sectors')}</Link>
                                                 <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('kermes')}</Link>
+                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">Sponsored Ads</Link>
                                             </div>
                                         )}
                                     </div>
@@ -992,6 +993,17 @@ export default function AdminHeader() {
                                     </Link>
                                 ))}
 
+                                {/* Sponsored Ads for Regular Admin */}
+                                <Link
+                                    href="/admin/sponsored-ads"
+                                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/sponsored-ads')
+                                        ? 'bg-white/15 text-white'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                                        }`}
+                                >
+                                    Sponsored Ads
+                                </Link>
+
                                 {/* Personel Dropdown for Regular Admin */}
                                 <div className="relative group">
                                     <button
@@ -1192,6 +1204,7 @@ export default function AdminHeader() {
                                     <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('productsCategories')}</Link>
                                     <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('promotions')}</Link>
                                     <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('reports')}</Link>
+                                    <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">Sponsored Ads</Link>
 
                                     {/* Personel section */}
                                     <div className="border-t border-gray-700 mt-1 pt-1">
