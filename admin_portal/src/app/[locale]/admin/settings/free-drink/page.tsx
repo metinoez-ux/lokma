@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { db } from '@/lib/firebase';
 import {
     doc, getDoc, setDoc, serverTimestamp,
@@ -24,11 +25,8 @@ export default function FreeDrinkSettingsPage() {
     const t = useTranslations('AdminSettings');
     const { admin } = useAdmin();
 
-    // Resolve business ID (works across all business types)
-    const businessId = (admin as any)?.businessId
-        || (admin as any)?.butcherId
-        || (admin as any)?.restaurantId
-        || null;
+    // Resolve business ID via shared hook
+    const businessId = useAdminBusinessId();
 
     // Form State
     const [freeDrinkEnabled, setFreeDrinkEnabled] = useState(false);

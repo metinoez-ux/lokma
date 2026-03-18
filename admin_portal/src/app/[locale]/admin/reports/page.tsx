@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, orderBy, where, onSnapshot, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useTranslations } from 'next-intl';
 
 // Report statuses
@@ -47,6 +48,7 @@ interface LegalReport {
 
 export default function ReportsPage() {
     const { admin, loading: adminLoading } = useAdmin();
+    const adminBusinessId = useAdminBusinessId();
     const t = useTranslations('AdminReports');
     const [reports, setReports] = useState<LegalReport[]>([]);
     const [loading, setLoading] = useState(true);
@@ -75,17 +77,13 @@ export default function ReportsPage() {
             );
         } else {
             // Business admins see only their business reports
-            const businessId = (admin as any).butcherId
-                || (admin as any).restaurantId
-                || (admin as any).marketId
-                || (admin as any).businessId;
-            if (!businessId) {
+            if (!adminBusinessId) {
                 setLoading(false);
                 return;
             }
             q = query(
                 collection(db, 'legal_reports'),
-                where('businessId', '==', businessId),
+                where('businessId', '==', adminBusinessId),
                 orderBy('createdAt', 'desc')
             );
         }

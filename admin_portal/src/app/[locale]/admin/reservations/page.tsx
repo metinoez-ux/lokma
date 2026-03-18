@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, collectionGroup, getDocs, getDoc, doc, updateDoc, query, orderBy, where, onSnapshot, Timestamp, deleteField } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useTranslations } from 'next-intl';
 import TableManagementPanel from '@/components/TableManagementPanel';
 
@@ -37,6 +38,7 @@ export default function ReservationsPage() {
     
   const t = useTranslations('AdminReservations');
 const { admin, loading: adminLoading } = useAdmin();
+    const adminBusinessId = useAdminBusinessId();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [businessCountries, setBusinessCountries] = useState<Record<string, string>>({});
@@ -112,16 +114,10 @@ const { admin, loading: adminLoading } = useAdmin();
 
     // Auto-set business filter for non-super admins
     useEffect(() => {
-        if (admin && admin.adminType !== 'super') {
-            const businessId = (admin as any).butcherId
-                || (admin as any).restaurantId
-                || (admin as any).marketId
-                || (admin as any).businessId;
-            if (businessId) {
-                setBusinessFilter(businessId);
-            }
+        if (admin && admin.adminType !== 'super' && adminBusinessId) {
+            setBusinessFilter(adminBusinessId);
         }
-    }, [admin]);
+    }, [admin, adminBusinessId]);
 
     // Real-time reservations subscription
     useEffect(() => {
@@ -130,7 +126,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
         // Determine which businesses to query
         const targetBusinessId = admin.adminType !== 'super'
-            ? ((admin as any).butcherId || (admin as any).restaurantId || (admin as any).marketId || (admin as any).businessId)
+            ? adminBusinessId
             : (businessFilter !== 'all' ? businessFilter : null);
 
         // Build date range
@@ -572,7 +568,7 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Table Management Panel */}
             {showTableManagement && (() => {
                 const ownerBizId = admin?.adminType !== 'super'
-                    ? ((admin as any)?.butcherId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.businessId)
+                    ? adminBusinessId
                     : (businessFilter !== 'all' ? businessFilter : null);
                 if (!ownerBizId) return null;
                 return (

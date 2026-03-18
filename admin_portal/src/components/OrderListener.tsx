@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useFcmToken } from '@/hooks/useFcmToken';
 import { useTranslations } from 'next-intl';
 
@@ -33,13 +34,8 @@ const { admin } = useAdmin();
     // Register FCM web push token for background notifications
     useFcmToken(admin?.id);
 
-    // Resolve the business ID from whichever field the admin has
-    const businessId = admin?.butcherId
-        || admin?.businessId
-        || (admin as any)?.restaurantId
-        || (admin as any)?.marketId
-        || (admin as any)?.kermesId
-        || null;
+    // Resolve the business ID via shared hook
+    const businessId = useAdminBusinessId();
 
     // Get smart notification settings (with sensible defaults)
     const settings = admin?.smartNotifications || {};

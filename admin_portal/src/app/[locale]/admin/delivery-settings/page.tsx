@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { subscriptionService } from '@/services/subscriptionService';
 import { useTranslations } from 'next-intl';
 
@@ -65,14 +66,8 @@ const { admin, loading: adminLoading } = useAdmin();
         lokmaCourier: 0,
     });
 
-    // Resolve business ID
-    const businessId = admin
-        ? (admin as any).butcherId
-        || (admin as any).restaurantId
-        || (admin as any).marketId
-        || (admin as any).kermesId
-        || (admin as any).businessId
-        : null;
+    // Resolve business ID via shared hook
+    const businessId = useAdminBusinessId();
 
     // Load business data + plan info
     useEffect(() => {

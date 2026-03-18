@@ -773,6 +773,7 @@ export interface Admin {
     firstName?: string;
     lastName?: string;
     phone?: string;
+    photoURL?: string;       // Profile avatar URL
     role: AdminRole;
     adminType: AdminType;
     parentAdminId?: string; // For sub-admins
@@ -790,6 +791,8 @@ export interface Admin {
     butcherName?: string;    // @deprecated - use businessName instead
     restaurantId?: string;   // @deprecated - use businessId instead
     restaurantName?: string; // @deprecated - use businessName instead
+    marketId?: string;       // @deprecated - use businessId instead
+    kermesId?: string;       // @deprecated - use businessId instead
 
     location?: string;
     permissions: string[];  // Legacy — kept for backward compat

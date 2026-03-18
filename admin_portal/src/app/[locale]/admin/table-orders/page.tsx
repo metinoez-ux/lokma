@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, doc, updateDoc, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
@@ -64,6 +65,7 @@ export default function TableOrdersPage() {
 
     const t = useTranslations('AdminTableorders');
     const { admin, loading: adminLoading } = useAdmin();
+    const adminBusinessId = useAdminBusinessId();
     const [sessions, setSessions] = useState<TableGroupSession[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
@@ -114,16 +116,10 @@ export default function TableOrdersPage() {
 
     // Auto-set business filter for non-super admins
     useEffect(() => {
-        if (admin && admin.adminType !== 'super') {
-            const businessId = (admin as any).butcherId
-                || (admin as any).restaurantId
-                || (admin as any).marketId
-                || (admin as any).businessId;
-            if (businessId) {
-                setBusinessFilter(businessId);
-            }
+        if (admin && admin.adminType !== 'super' && adminBusinessId) {
+            setBusinessFilter(adminBusinessId);
         }
-    }, [admin]);
+    }, [admin, adminBusinessId]);
 
     // Real-time sessions subscription
     useEffect(() => {
@@ -131,7 +127,7 @@ export default function TableOrdersPage() {
         setLoading(true);
 
         const targetBusinessId = admin.adminType !== 'super'
-            ? ((admin as any).butcherId || (admin as any).restaurantId || (admin as any).marketId || (admin as any).businessId)
+            ? adminBusinessId
             : (businessFilter !== 'all' ? businessFilter : null);
 
         // Build query constraints

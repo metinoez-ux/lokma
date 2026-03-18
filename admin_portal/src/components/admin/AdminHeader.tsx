@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname, Link } from '@/i18n/routing';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { auth, db } from '@/lib/firebase';
 import { collection, getDocs, query, where, limit, doc, getDoc, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
 import { AdminType } from '@/types';
@@ -91,7 +92,7 @@ export default function AdminHeader() {
     }, [oldestPendingTime]);
 
     // Real-time pending orders listener
-    const businessId = admin?.butcherId || admin?.businessId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.kermesId || null;
+    const businessId = useAdminBusinessId();
     useEffect(() => {
         if (!admin) return;
         const isSuperAdmin = admin.adminType === 'super';
@@ -402,9 +403,9 @@ export default function AdminHeader() {
                                 className="flex items-center gap-1.5 hover:bg-white/10 rounded-lg px-2 py-1 transition"
                             >
                                 <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
-                                    {(admin as any).photoURL ? (
+                                    {admin.photoURL ? (
                                         <img
-                                            src={(admin as any).photoURL}
+                                            src={admin.photoURL}
                                             alt={admin.displayName || t('profile')}
                                             className="w-full h-full object-cover"
                                         />
@@ -639,7 +640,8 @@ export default function AdminHeader() {
                                 <button
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                                         isActiveNav('/admin/settings') ||
-                                        isActiveNav('/admin/ui-translations') || isActiveNav('/admin/image-generator')
+                                        isActiveNav('/admin/ui-translations') || isActiveNav('/admin/image-generator') ||
+                                        isActiveNav('/admin/ameise')
                                             ? 'bg-white/15 text-white'
                                             : 'text-red-100 hover:text-white hover:bg-white/10'
                                     }`}
@@ -651,7 +653,7 @@ export default function AdminHeader() {
                                     <div className="py-1">
                                         <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">Einstellungen</p>
                                         <Link href="/admin/settings" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
-                                            {t('settings')}
+                                            IOT Einstellungen
                                         </Link>
                                         <Link href="/admin/settings/company" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
                                             {t('companySettings')}
@@ -662,15 +664,18 @@ export default function AdminHeader() {
                                         <Link href="/admin/image-generator" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
                                             {t('imageGen')}
                                         </Link>
+                                        <Link href="/admin/ameise" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
+                                            Ameise
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
                             <div className="relative group ml-2">
                                 <button className="flex items-center gap-1.5 hover:bg-white/10 rounded-lg px-2 py-1 transition">
                                     <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10 shadow-sm">
-                                        {(admin as any).photoURL ? (
+                                        {admin.photoURL ? (
                                             <img
-                                                src={(admin as any).photoURL}
+                                                src={admin.photoURL}
                                                 alt={admin.displayName || t('profile')}
                                                 className="w-full h-full object-cover"
                                             />
@@ -698,7 +703,7 @@ export default function AdminHeader() {
                                             {admin.displayName || 'Super Admin'}
                                         </p>
                                         <p className="text-gray-400 text-xs truncate">
-                                            {admin.email || (admin as any).phoneNumber || ''}
+                                            {admin.email || admin.phoneNumber || ''}
                                         </p>
                                     </Link>
 
@@ -839,10 +844,11 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'platform' && (
                                             <div className="bg-gray-800/50 py-1">
-                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('settings')}</Link>
+                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">IOT Einstellungen</Link>
                                                 <Link href="/admin/settings/company" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('companySettings')}</Link>
                                                 <Link href="/admin/ui-translations" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('uiTranslations')}</Link>
                                                 <Link href="/admin/image-generator" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('imageGen')}</Link>
+                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">Ameise</Link>
                                             </div>
                                         )}
                                     </div>
@@ -1096,9 +1102,9 @@ export default function AdminHeader() {
                                 <div className="relative group">
                                     <button className="flex items-center gap-1.5 hover:bg-white/5 rounded-lg px-2 py-1 transition">
                                         <div className="w-7 h-7 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
-                                            {(admin as any).photoURL ? (
+                                            {admin.photoURL ? (
                                                 <img
-                                                    src={(admin as any).photoURL}
+                                                    src={admin.photoURL}
                                                     alt={admin.displayName || t('profile')}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -1124,7 +1130,7 @@ export default function AdminHeader() {
                                                 {admin.displayName || 'Admin'}
                                             </p>
                                             <p className="text-gray-400 text-xs truncate">
-                                                {admin.email || (admin as any).phoneNumber || ''}
+                                                {admin.email || admin.phoneNumber || ''}
                                             </p>
                                         </Link>
                                         {/* Language Selection */}

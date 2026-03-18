@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, where, onSnapshot, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 import { useOrdersStandalone, Order } from '@/hooks/useOrders';
@@ -32,6 +33,7 @@ export default function StatisticsPage() {
 
     const t = useTranslations('AdminStatistics');
     const { admin, loading: adminLoading } = useAdmin();
+    const adminBusinessId = useAdminBusinessId();
     // Orders from unified hook (single Firestore listener)
     const { orders, loading: ordersLoading } = useOrdersStandalone({ initialDateFilter: 'all' });
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
@@ -68,18 +70,10 @@ export default function StatisticsPage() {
 
     // Auto-set business filter for non-super admins
     useEffect(() => {
-        if (admin && admin.adminType !== 'super') {
-            const businessId = (admin as any).butcherId
-                || (admin as any).restaurantId
-                || (admin as any).marketId
-                || (admin as any).kermesId
-                || (admin as any).businessId;
-
-            if (businessId) {
-                setBusinessFilter(businessId);
-            }
+        if (admin && admin.adminType !== 'super' && adminBusinessId) {
+            setBusinessFilter(adminBusinessId);
         }
-    }, [admin]);
+    }, [admin, adminBusinessId]);
 
     // Calculate date range based on filter
     const getDateRange = (filter: string, customStart?: string, customEnd?: string) => {
@@ -160,7 +154,7 @@ export default function StatisticsPage() {
 
     // Staff admin: Load delivery pause logs & order performance stats
     const staffBusinessId = admin?.adminType !== 'super'
-        ? ((admin as any)?.butcherId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.kermesId || (admin as any)?.businessId)
+        ? adminBusinessId
         : null;
 
     useEffect(() => {

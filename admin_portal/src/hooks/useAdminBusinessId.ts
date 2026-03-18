@@ -18,9 +18,9 @@ export function useAdminBusinessId(): string | null {
   return (
     admin.businessId ||
     admin.butcherId ||
-    (admin as any)?.restaurantId ||
-    (admin as any)?.marketId ||
-    (admin as any)?.kermesId ||
+    admin.restaurantId ||
+    admin.marketId ||
+    admin.kermesId ||
     null
   );
 }

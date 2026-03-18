@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { checkLimit, type LimitCheckResult } from '@/services/limitService';
@@ -154,15 +155,8 @@ const { admin, loading: adminLoading } = useAdmin();
     const [showPassword, setShowPassword] = useState(false);
     const [personnelQuota, setPersonnelQuota] = useState<LimitCheckResult | null>(null);
 
-    // Resolve business ID
-    const businessId = useMemo(() => {
-        if (!admin) return null;
-        return (admin as any).butcherId
-            || (admin as any).restaurantId
-            || (admin as any).marketId
-            || (admin as any).kermesId
-            || (admin as any).businessId;
-    }, [admin]);
+    // Resolve business ID via shared hook
+    const businessId = useAdminBusinessId();
 
     // ─── Load Staff ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -323,7 +317,9 @@ const { admin, loading: adminLoading } = useAdmin();
             setStaff(Array.from(staffMap.values()));
 
             // Refresh quota
-            checkLimit(businessId, 'personnel').then(setPersonnelQuota).catch(console.error);
+            if (businessId) {
+                checkLimit(businessId, 'personnel').then(setPersonnelQuota).catch(console.error);
+            }
         } catch (error) {
             console.error('Create staff error:', error);
             setCreateError(t('olusturma_hatasi'));
@@ -333,7 +329,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     // ─── Available Roles for Staff Creation ────────────────────────────────
     const availableRoles = useMemo(() => {
-        const adminType = (admin as any)?.adminType || '';
+        const adminType = admin?.adminType || '';
         if (adminType.includes('kasap')) return [
             { value: 'kasap_staff', label: t('kasap_personeli') },
             { value: 'garson', label: t('garson_rolu') },

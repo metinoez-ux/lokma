@@ -5,6 +5,7 @@ import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { ORDER_STATUSES, ORDER_TYPES, type Order, type OrderStatus } from '@/hooks/useOrders';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 import OrderCard from '@/components/admin/OrderCard';
@@ -30,6 +31,7 @@ export default function OrdersPage() {
     // Map next-intl locale codes to BCP-47 locale tags for date/time formatting
     const dateLocale = locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'en' ? 'en-US' : locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : locale === 'nl' ? 'nl-NL' : 'de-DE';
     const { admin, loading: adminLoading } = useAdmin();
+    const adminBusinessId = useAdminBusinessId();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
@@ -139,21 +141,11 @@ export default function OrdersPage() {
     }, []);
 
     // Auto-set business filter for non-super admins (they can only see their own orders)
-    // Check all possible business ID fields based on admin type
     useEffect(() => {
-        if (admin && admin.adminType !== 'super') {
-            // Check for any business ID field - admins can only see their own business
-            const businessId = (admin as any).butcherId
-                || (admin as any).restaurantId
-                || (admin as any).marketId
-                || (admin as any).kermesId
-                || (admin as any).businessId;
-
-            if (businessId) {
-                setBusinessFilter(businessId);
-            }
+        if (admin && admin.adminType !== 'super' && adminBusinessId) {
+            setBusinessFilter(adminBusinessId);
         }
-    }, [admin]);
+    }, [admin, adminBusinessId]);
 
     // ─── Pause System: Firestore Listener ───
     useEffect(() => {
