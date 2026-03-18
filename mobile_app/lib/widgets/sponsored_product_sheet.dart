@@ -427,7 +427,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    CurrencyUtils.formatPrice(market.price!),
+                    CurrencyUtils.formatCurrency(market.price!),
                     style: const TextStyle(
                       color: Color(0xFF4CAF50),
                       fontSize: 15,
