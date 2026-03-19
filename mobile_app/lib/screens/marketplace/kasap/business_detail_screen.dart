@@ -2900,6 +2900,48 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            // Separator
                            Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
 
+                           // Masa Rezervasyon (2nd position, right after rating)
+                           if (data?["hasReservation"] as bool? ?? false) ...[
+                             GestureDetector(
+                               onTap: () {
+                                 HapticFeedback.selectionClick();
+                                 final butcherName = data?["companyName"] ?? data?["name"] ?? "";
+                                 Navigator.of(context).push(
+                                   MaterialPageRoute(
+                                     builder: (_) => ReservationBookingScreen(
+                                       businessId: widget.businessId,
+                                       businessName: butcherName,
+                                     ),
+                                   ),
+                                 );
+                               },
+                               child: Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   SvgPicture.asset(
+                                     "assets/images/icon_masa_rezervasyon.svg",
+                                     width: 16,
+                                     height: 16,
+                                     colorFilter: ColorFilter.mode(
+                                       Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                       BlendMode.srcIn,
+                                     ),
+                                   ),
+                                   const SizedBox(width: 4),
+                                   Text(
+                                     "Masa Rezervasyon",
+                                     style: TextStyle(
+                                       fontSize: 13,
+                                       fontWeight: FontWeight.w500,
+                                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                     ),
+                                   ),
+                                 ],
+                               ),
+                             ),
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                           ],
+
                            // Business / Cuisine Type
                            if ((data?['cuisineType']?.toString() ?? '').isNotEmpty) ...[
                              Text(
@@ -2998,58 +3040,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                ),
                              ),
                            ],
-
-                           // Table Reservation Icon (tappable → Rezervasyon)
-                           if (data?["hasReservation"] as bool? ?? false) ...[
-                             Text("·", style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                             GestureDetector(
-                               onTap: () {
-                                 HapticFeedback.selectionClick();
-                                 final butcherName = data?["companyName"] ?? data?["name"] ?? "";
-                                 Navigator.of(context).push(
-                                   MaterialPageRoute(
-                                     builder: (_) => ReservationBookingScreen(
-                                       businessId: widget.businessId,
-                                       businessName: butcherName,
-                                     ),
-                                   ),
-                                 );
-                               },
-                               child: Container(
-                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                                 decoration: BoxDecoration(
-                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.07),
-                                   borderRadius: BorderRadius.circular(20),
-                                 ),
-                                 child: Row(
-                                   mainAxisSize: MainAxisSize.min,
-                                   children: [
-                                     SvgPicture.asset(
-                                       "assets/images/icon_masa_rezervasyon.svg",
-                                       width: 18,
-                                       height: 18,
-                                       colorFilter: ColorFilter.mode(
-                                         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                         BlendMode.srcIn,
-                                       ),
-                                     ),
-                                     const SizedBox(width: 4),
-                                     Text(
-                                       "Rezervasyon",
-                                       style: TextStyle(
-                                         fontSize: 12,
-                                         fontWeight: FontWeight.w500,
-                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                               ),
-                             ),
-                           ],
-
-
-                            // Removed Reservation badge per user request
 
                          ],
                        ),
