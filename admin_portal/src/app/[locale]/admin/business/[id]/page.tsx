@@ -2134,6 +2134,9 @@ export default function BusinessDetailsPage() {
         customerId: formData.customerId || "",
         brand: formData.brand || null,
         brandLabelActive: formData.brandLabelActive !== false,
+        // 🔴 TUNA senkronizasyon: brand'den türet — mobile badge'i doğru syncler
+        isTunaPartner: formData.brand === 'tuna',
+        brandLabel: formData.brand || null,  // legacy field - mobile da okuyor
         // 🔴 TUNA/Toros ürünleri satışı (Filtreleme için)
         sellsTunaProducts: formData.sellsTunaProducts ?? false,
         sellsTorosProducts: formData.sellsTorosProducts ?? false,
