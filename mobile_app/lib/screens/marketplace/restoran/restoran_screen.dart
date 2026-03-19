@@ -932,8 +932,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           unreadCount > 0
                               ? Icons.notifications_rounded
                               : Icons.notifications_outlined,
-                          color: lokmaPink,
-                          size: 20,
+                          color: unreadCount > 0
+                              ? lokmaPink
+                              : (isDark ? Colors.white70 : Colors.grey[800]),
+                          size: 24,
                         ),
                       ),
                       // Badge - red to match other badges
