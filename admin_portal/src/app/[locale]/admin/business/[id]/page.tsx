@@ -424,6 +424,8 @@ export default function BusinessDetailsPage() {
     freeDrinkEnabled: true,
     freeDrinkProducts: [] as string[],
     freeDrinkMinimumOrder: 0,  // 0 = her siparişte aktif, >0 = min. sipariş tutarında aktif
+    // 🆕 Group Order Link
+    groupOrderLinkEnabled: false,
   });
 
   // Google Places search states
