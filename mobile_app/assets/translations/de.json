@@ -382,7 +382,18 @@
     "please": "Bitte",
     "warning": "Warnung",
     "info": "Info",
-    "attention": "Achtung"
+    "attention": "Achtung",
+    "bilgi": "Info",
+    "favorilerden_kaldir": "Aus Favoriten entfernen",
+    "isletme_artik_aktif_degil": "Dieses Geschäft ist möglicherweise nicht mehr aktiv oder geschlossen.",
+    "isletme_bulunamadi": "Geschäft nicht gefunden",
+    "no_address": "Keine Adresse angegeben",
+    "operation_failed": "Vorgang fehlgeschlagen",
+    "silinmis": "Gelöscht",
+    "try_again": "Nochmal versuchen",
+    "unpaid": "Nicht bezahlt",
+    "urun_artik_mevcut_degil": "Dieses Produkt ist nicht mehr verfügbar. Es wurde möglicherweise vom Geschäft entfernt.",
+    "urun_isletme_bilgisi_eksik": "Geschäftsinformation für dieses Produkt fehlt."
   },
   "customer": {
     "tumu": "Alle",
@@ -560,7 +571,13 @@
     "earnings_monthly_sub": "Am 1. jeden Monats automatische Auszahlung",
     "earnings_manual": "Manuell",
     "earnings_manual_sub": "Auszahlung auf Anfrage",
-    "earnings_payout_saved": "✅ Auszahlungseinstellungen aktualisiert"
+    "earnings_payout_saved": "✅ Auszahlungseinstellungen aktualisiert",
+    "break_stopped_delivery_ready": "Pause beendet. Sie können Ihre Lieferung übergeben!",
+    "delivery_claimed_tracking_started": "Lieferung übernommen! Standortverfolgung gestartet.",
+    "i_claimed": "ICH HABE ÜBERNOMMEN",
+    "order_pending": "Bestellung ausstehend",
+    "preparing_wait": "Wird zubereitet – bitte warten",
+    "take_delivery_btn": "Übernehmen"
   },
   "home": {
     "courier_on_the_way": "Kurier ist unterwegs",
@@ -1190,7 +1207,9 @@
     "favorite_saved": "Favorit gespeichert",
     "favorite_removed": "Aus Favoriten entfernt",
     "cancel": "Abbrechen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "pay_card_nfc": "Kartenzahlung vor Ort (NFC)",
+    "pay_card_on_delivery": "Kartenzahlung vor Ort"
   },
   "payments": {
     "step1_payment_collection": "💵 Schritt 1: Zahlungseinzug",
@@ -1309,7 +1328,8 @@
     "theme_light": "Tag",
     "theme_dark": "Nacht",
     "delete_address": "Adresse löschen",
-    "street_city_required": "Straße und Stadt sind erforderlich"
+    "street_city_required": "Straße und Stadt sind erforderlich",
+    "favorilerim": "Meine Favoriten"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Suchen Sie ein Restaurant?",
@@ -1410,7 +1430,39 @@
     "payment_not_collected": "⚠️ Zahlung nicht eingezogen",
     "yes_on_my_way": "Ja, ich bin unterwegs",
     "address_wrong_unreachable": "Adresse falsch / Kunde nicht erreichbar",
-    "card_payment_received": "✅ Kartenzahlung erhalten!"
+    "card_payment_received": "✅ Kartenzahlung erhalten!",
+    "reservations_title": "Reservierungen",
+    "confirm": "Bestätigen",
+    "reject": "Ablehnen",
+    "cancel_reservation": "Stornieren",
+    "no_business_assigned": "Geschäft nicht gefunden",
+    "must_be_assigned": "Sie müssen einem Geschäft zugewiesen sein",
+    "no_reservations": "Keine Reservierung gefunden",
+    "no_reservations_date_range": "Keine Reservierung im gewählten Zeitraum",
+    "no_reservations_filter": "Keine Reservierung mit diesen Filtern",
+    "table_card_select_title": "Tischkartennummer auswählen",
+    "table_card_select_desc": "Wählen Sie die Tischkarte für den Kunden",
+    "table_card_selected": "Ausgewählt",
+    "table_card_empty": "Frei",
+    "table_card_full": "Belegt",
+    "select_number": "Nummer auswählen",
+    "confirm_tables": "Bestätigen ({count} Tisch)",
+    "reservation_rejected": "Reservierung abgelehnt.",
+    "reservation_cancelled": "Reservierung storniert.",
+    "person_count": "{count} Person(en)",
+    "filter_today": "Heute",
+    "filter_tomorrow": "Morgen",
+    "filter_this_week": "Diese Woche",
+    "filter_all": "Alle",
+    "status_waiting": "Wartend",
+    "status_confirmed_short": "Bestätigt",
+    "status_rejected_short": "Abgelehnt",
+    "status_cancelled_short": "Storniert",
+    "guest": "Gast",
+    "confirm_reject_title": "Ablehnen",
+    "confirm_cancel_title": "Stornieren",
+    "confirm_reject_msg": "Möchten Sie diese Reservierung wirklich ablehnen?",
+    "confirm_cancel_msg": "Möchten Sie diese Reservierung wirklich stornieren?"
   },
   "wallet": {
     "lokma_wallet": "LOKMA Wallet",

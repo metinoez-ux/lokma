@@ -413,7 +413,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text('common.operation_failed'.tr()),
             backgroundColor: Colors.red,
           ),
         );

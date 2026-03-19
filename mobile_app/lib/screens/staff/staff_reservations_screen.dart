@@ -217,12 +217,12 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 const SizedBox(height: 16),
                 // Title
                 const Text(
-                  '🃏 Masa Kart Numarası Seçin',
+                  '🃏 ${'staff.table_card_select_title'.tr()}',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Müşteriye verilecek masa kartını seçin',
+                  'staff.table_card_select_desc'.tr(),
                   style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 6),
@@ -230,11 +230,11 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _legendDot(Colors.green, 'Seçili'),
+                    _legendDot(Colors.green, 'staff.table_card_selected'.tr()),
                     const SizedBox(width: 16),
-                    _legendDot(Colors.grey[300]!, 'Boş'),
+                    _legendDot(Colors.grey[300]!, 'staff.table_card_empty'.tr()),
                     const SizedBox(width: 16),
-                    _legendDot(Colors.red[200]!, 'Dolu'),
+                    _legendDot(Colors.red[200]!, 'staff.table_card_full'.tr()),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -338,8 +338,8 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                         icon: const Icon(Icons.check_circle, size: 18),
                         label: Text(
                           selected.isEmpty
-                              ? 'Numara Seçin'
-                              : 'Onayla (${selected.length} masa)',
+                              ? 'staff.select_number'.tr()
+                              : 'staff.confirm_tables'.tr(namedArgs: {'count': selected.length.toString()}),
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -397,9 +397,9 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
             .doc(reservationId)
             .update({
           'status': 'confirmed',
-          'confirmedBy': _staffName ?? 'Personel',
+          'confirmedBy': _staffName ?? 'staff.staff'.tr(),
           'tableCardNumbers': cardNumbers,
-          'tableCardAssignedBy': _staffName ?? 'Personel',
+          'tableCardAssignedBy': _staffName ?? 'staff.staff'.tr(),
           'tableCardAssignedAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
@@ -407,11 +407,11 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
         if (mounted) {
           HapticFeedback.mediumImpact();
           final cardStr = cardNumbers.isNotEmpty
-              ? ' (Masa ${cardNumbers.join(", ")})'
+              ? ' (${'staff.table_numbers'.tr(namedArgs: {'numbers': cardNumbers.join(", ")})})'  
               : '';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✅ Rezervasyon onaylandı!$cardStr'),
+              content: Text('✅ ${'staff.reservation_confirmed'.tr()}$cardStr'),
               backgroundColor: Colors.green,
             ),
           );
@@ -434,11 +434,11 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(newStatus == 'rejected' ? '❌ Reddet' : '🚫 İptal Et'),
+        title: Text(newStatus == 'rejected' ? '❌ ${'staff.confirm_reject_title'.tr()}' : '🚫 ${'staff.confirm_cancel_title'.tr()}'),
         content: Text(
           newStatus == 'rejected'
-              ? 'Bu rezervasyonu reddetmek istediğinize emin misiniz?'
-              : 'Bu rezervasyonu iptal etmek istediğinize emin misiniz?',
+              ? 'staff.confirm_reject_msg'.tr()
+              : 'staff.confirm_cancel_msg'.tr(),
         ),
         actions: [
           TextButton(
@@ -451,7 +451,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
               backgroundColor: Colors.red,
             ),
             child: Text(
-              newStatus == 'rejected' ? 'Reddet' : 'İptal Et',
+              newStatus == 'rejected' ? 'staff.reject'.tr() : 'staff.cancel_reservation'.tr(),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -464,7 +464,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
     try {
       final updateData = <String, dynamic>{
         'status': newStatus,
-        'confirmedBy': _staffName ?? 'Personel',
+        'confirmedBy': _staffName ?? 'staff.staff'.tr(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
       // Clear card numbers if cancelling
@@ -487,8 +487,8 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
           SnackBar(
             content: Text(
               newStatus == 'rejected'
-                  ? '❌ Rezervasyon reddedildi.'
-                  : '🚫 Rezervasyon iptal edildi.',
+                  ? '❌ ${'staff.reservation_rejected'.tr()}'
+                  : '🚫 ${'staff.reservation_cancelled'.tr()}',
             ),
             backgroundColor: Colors.red,
           ),
@@ -529,7 +529,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Rezervasyonlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
+            Text('staff.reservations_title'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
             if (_businessName != null)
               Text(
                 _businessName!,
@@ -564,12 +564,12 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
           Icon(Icons.store_outlined, size: 64, color: isDark ? Colors.white24 : Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
-            'İşletme bulunamadı',
+            'staff.no_business_assigned'.tr(),
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : Colors.black87),
           ),
           const SizedBox(height: 6),
           Text(
-            'Bir işletmeye atanmış olmanız gerekiyor',
+            'staff.must_be_assigned'.tr(),
             style: TextStyle(fontSize: 14, color: isDark ? Colors.white38 : Colors.grey.shade500),
           ),
         ],
@@ -594,10 +594,10 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip('Bugün', 'today', _dateFilter, (v) => setState(() => _dateFilter = v)),
-                _buildFilterChip('Yarın', 'tomorrow', _dateFilter, (v) => setState(() => _dateFilter = v)),
-                _buildFilterChip('Bu Hafta', 'week', _dateFilter, (v) => setState(() => _dateFilter = v)),
-                _buildFilterChip('Tümü', 'all', _dateFilter, (v) => setState(() => _dateFilter = v)),
+                _buildFilterChip('staff.filter_today'.tr(), 'today', _dateFilter, (v) => setState(() => _dateFilter = v)),
+                _buildFilterChip('staff.filter_tomorrow'.tr(), 'tomorrow', _dateFilter, (v) => setState(() => _dateFilter = v)),
+                _buildFilterChip('staff.filter_this_week'.tr(), 'week', _dateFilter, (v) => setState(() => _dateFilter = v)),
+                _buildFilterChip('staff.filter_all'.tr(), 'all', _dateFilter, (v) => setState(() => _dateFilter = v)),
               ],
             ),
           ),
@@ -607,10 +607,10 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip('Tümü', 'all', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
-                _buildFilterChip('Bekleyen', 'pending', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
-                _buildFilterChip('Onaylı', 'confirmed', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
-                _buildFilterChip('Red', 'rejected', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
+                _buildFilterChip('staff.filter_all'.tr(), 'all', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
+                _buildFilterChip('staff.status_waiting'.tr(), 'pending', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
+                _buildFilterChip('staff.status_confirmed_short'.tr(), 'confirmed', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
+                _buildFilterChip('staff.status_rejected_short'.tr(), 'rejected', _statusFilter, (v) => setState(() => _statusFilter = v), isStatus: true),
               ],
             ),
           ),
@@ -703,7 +703,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
               children: [
                 Icon(Icons.filter_list_off_outlined, size: 48, color: isDark ? Colors.white24 : Colors.grey.shade300),
                 const SizedBox(height: 12),
-                Text('Bu filtrelerle rezervasyon yok', style: TextStyle(fontSize: 14, color: isDark ? Colors.white38 : Colors.grey.shade500)),
+                Text('staff.no_reservations_filter'.tr(), style: TextStyle(fontSize: 14, color: isDark ? Colors.white38 : Colors.grey.shade500)),
               ],
             ),
           );
@@ -734,7 +734,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
 
   Widget _buildReservationCard(String id, Map<String, dynamic> data, bool isDark) {
     final status = data['status'] ?? 'pending';
-    final customerName = data['customerName'] ?? 'Misafir';
+    final customerName = data['customerName'] ?? 'staff.guest'.tr();
     final customerPhone = data['customerPhone'] as String?;
     final partySize = data['partySize'] ?? 1;
     final timeSlot = data['timeSlot'] ?? '';
@@ -761,19 +761,19 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
     switch (status) {
       case 'confirmed':
         statusDotColor = const Color(0xFF34C759);
-        statusText = 'Onaylı';
+        statusText = 'staff.status_confirmed_short'.tr();
         break;
       case 'rejected':
         statusDotColor = const Color(0xFFFF3B30);
-        statusText = 'Reddedildi';
+        statusText = 'staff.status_rejected_short'.tr();
         break;
       case 'cancelled':
         statusDotColor = Colors.grey;
-        statusText = 'İptal';
+        statusText = 'staff.status_cancelled_short'.tr();
         break;
       default:
         statusDotColor = const Color(0xFFFF9500);
-        statusText = 'Beklemede';
+        statusText = 'reservation.status_pending'.tr();
     }
 
     // Card colors
@@ -843,14 +843,14 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 Text('  ·  ', style: TextStyle(color: textSecondary, fontSize: 14)),
                 Icon(Icons.people_outline, size: 15, color: textSecondary),
                 const SizedBox(width: 4),
-                Text('$partySize kişi', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary)),
+                Text('staff.person_count'.tr(namedArgs: {'count': partySize.toString()}), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary)),
                 // Table numbers inline
                 if (status == 'confirmed' && tableCardNumbers.isNotEmpty) ...[
                   Text('  ·  ', style: TextStyle(color: textSecondary, fontSize: 14)),
                   Icon(Icons.table_restaurant_outlined, size: 15, color: textSecondary),
                   const SizedBox(width: 4),
                   Text(
-                    'Masa ${tableCardNumbers.join(', ')}',
+                    'staff.table_numbers'.tr(namedArgs: {'numbers': tableCardNumbers.join(', ')}),
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
                   ),
                 ],
@@ -899,7 +899,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                           side: BorderSide(color: const Color(0xFFFF3B30).withValues(alpha: 0.4)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: const Text('Reddet', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        child: Text('staff.reject'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                       ),
                     ),
                   ),
@@ -914,7 +914,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 child: TextButton(
                   onPressed: () => _updateStatus(id, 'cancelled'),
                   child: Text(
-                    'İptal Et',
+                    'staff.cancel_reservation'.tr(),
                     style: TextStyle(color: textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),

@@ -164,7 +164,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('common.operation_failed'.tr()), backgroundColor: Colors.red),
         );
       }
     } finally {

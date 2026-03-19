@@ -4311,27 +4311,27 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             switch (status) {
                               case 'pending':
                                 statusColor = Colors.amber;
-                                statusText = 'Bekleyen';
+                                statusText = 'reservation.status_pending'.tr();
                                 break;
                               case 'accepted':
                                 statusColor = Colors.blue;
-                                statusText = 'Onaylandı';
+                                statusText = 'orders.status_accepted'.tr();
                                 break;
                               case 'preparing':
                                 statusColor = Colors.purple;
-                                statusText = 'Hazırlanıyor';
+                                statusText = 'orders.status_preparing'.tr();
                                 break;
                               case 'ready':
                                 statusColor = Colors.green;
-                                statusText = 'Hazır';
+                                statusText = 'orders.status_ready'.tr();
                                 break;
                               case 'served':
                                 statusColor = Colors.amber;
-                                statusText = 'Servis Edildi';
+                                statusText = 'orders.status_served'.tr();
                                 break;
                               case 'delivered':
                                 statusColor = Colors.amber;
-                                statusText = 'Teslim Edildi';
+                                statusText = 'orders.status_delivered'.tr();
                                 break;
                               default:
                                 statusColor = Colors.grey;
@@ -4679,7 +4679,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}&tableNumber=$tableNum');
                     },
                     icon: const Icon(Icons.receipt_long, size: 20),
-                    label: const Text('Sipariş Başlat', style: TextStyle(fontWeight: FontWeight.w600)),
+                    label: Text('staff.start_order'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                     style: FilledButton.styleFrom(
                       backgroundColor: brandColor,
                       foregroundColor: Colors.white,

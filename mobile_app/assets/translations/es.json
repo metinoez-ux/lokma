@@ -80,7 +80,13 @@
     "want_to_register_with_this_number": "Este número no está en nuestro sistema. ¿Desea crear una nueva cuenta con este número?",
     "phone_already_registered": "Este número ya está registrado",
     "want_to_login_with_this_number": "Este número está registrado en nuestro sistema. ¿Desea iniciar sesión?",
-    "yeni_hesap_icin_sms_kodu_gonderilecek": "Se enviará el código SMS para la nueva cuenta"
+    "yeni_hesap_icin_sms_kodu_gonderilecek": "Se enviará el código SMS para la nueva cuenta",
+    "logging_in_with_number": "Iniciando sesión con {phone}...",
+    "phone_check_failed": "No se pudo verificar el número. Por favor verifique su conexión a internet.",
+    "please_wait": "Por favor espere...",
+    "registering_with_number": "Creando tu cuenta con {phone}...",
+    "sms_code_sent_to": "Código SMS enviado a {phone}",
+    "verifying_code": "Verificando código..."
   },
   "business_details": {
     "all": "Todo",
@@ -372,7 +378,21 @@
     "attention": "Atención",
     "address": "Dirección",
     "butcher": "Carnicería",
-    "category": "Categoría"
+    "category": "Categoría",
+    "bilgi": "Info",
+    "favorilerden_kaldir": "Eliminar de favoritos",
+    "isletme_artik_aktif_degil": "Este negocio puede ya no estar activo o haber cerrado.",
+    "isletme_bulunamadi": "Negocio no encontrado",
+    "no_address": "No se especificó dirección",
+    "operation_failed": "Operación fallida",
+    "silinmis": "Eliminado",
+    "try_again": "Intentar de nuevo",
+    "unpaid": "Sin pagar",
+    "urun_artik_mevcut_degil": "Este producto ya no está disponible. Es posible que haya sido eliminado por el negocio.",
+    "urun_isletme_bilgisi_eksik": "Falta información del negocio para este producto.",
+    "favori_siparis_yok": "No hay pedido favorito",
+    "siparislerinizi_bookmark_ile_f": "¡Agrega tus pedidos a favoritos con el marcador!",
+    "urun_kucuk": "artículo"
   },
   "customer": {
     "tumu": "Todos",
@@ -550,7 +570,13 @@
     "earnings_monthly_sub": "Pago automático el 1 de cada mes",
     "earnings_manual": "Manual",
     "earnings_manual_sub": "Pago bajo solicitud",
-    "earnings_payout_saved": "✅ Configuración de pagos actualizada"
+    "earnings_payout_saved": "✅ Configuración de pagos actualizada",
+    "break_stopped_delivery_ready": "¡Pausa finalizada. Puedes entregar tu pedido!",
+    "delivery_claimed_tracking_started": "¡Entrega tomada! Seguimiento de ubicación iniciado.",
+    "i_claimed": "YO LO TOMÉ",
+    "order_pending": "Pedido pendiente",
+    "preparing_wait": "En preparación – por favor espere",
+    "take_delivery_btn": "Tomar"
   },
   "home": {
     "courier_on_the_way": "Mensajero en camino",
@@ -932,7 +958,15 @@
     "impressum_tax_id": "NIF",
     "impressum_vat_id": "NIF-IVA",
     "impressum_email": "Correo electrónico",
-    "open_maps": "Abrir Mapa"
+    "open_maps": "Abrir Mapa",
+    "back_to_menu": "Volver al menú",
+    "closes_in_minutes": "Cierra en {minutes} min.",
+    "go_to_market": "Ir al mercado",
+    "go_to_restaurant": "Ir al restaurante",
+    "hours_unknown": "Horarios desconocidos",
+    "mode_delivery": "Entrega",
+    "mode_dine_in": "En el local",
+    "mode_pickup": "Recogida"
   },
   "navigation": {
     "food": "Comida",
@@ -1136,7 +1170,15 @@
     "comment_hint_completed": "¿Estaba deliciosa la comida? ¿Bien empaquetada? Cuéntanos...",
     "comment_hint_not_completed": "Puedes dejar un comentario cuando el pedido esté completado...",
     "submit_rating": "Enviar",
-    "after_order_completed": "Tras completar el pedido"
+    "after_order_completed": "Tras completar el pedido",
+    "pay_card_nfc": "Tarjeta en puerta (NFC)",
+    "pay_card_on_delivery": "Tarjeta en puerta",
+    "cancel": "Cancelar",
+    "favorite_name_hint": "Ej. Pedido familiar, Club deportivo...",
+    "favorite_name_title": "Nombre del pedido favorito",
+    "favorite_removed": "Eliminado de favoritos",
+    "favorite_saved": "Favorito guardado",
+    "save": "Guardar"
   },
   "payments": {
     "step1_payment_collection": "💵 Paso 1: Cobro de pagos",
@@ -1255,7 +1297,8 @@
     "faq_what_is_lokma": "¿Qué Es LOKMA?",
     "faq_what_is_lokma_answer": "LOKMA es una plataforma donde puede pedir en línea a carnicerías, restaurantes y mercados locales. Le entregamos carne fresca, comida casera y productos del mercado en su puerta.",
     "delete_address": "Eliminar dirección",
-    "street_city_required": "Calle y ciudad son obligatorios"
+    "street_city_required": "Calle y ciudad son obligatorios",
+    "favorilerim": "Mis favoritos"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "¿Busca un restaurante?",
@@ -1356,7 +1399,39 @@
     "cash_reset_title": "Reset Cash",
     "cash_reset_confirm": "Do you confirm handing over a total of {} cash to the business?",
     "cash_reset_success": "Cash successfully reset and handed over to the business.",
-    "cash_handover": "Handover"
+    "cash_handover": "Handover",
+    "reservations_title": "Reservas",
+    "confirm": "Confirmar",
+    "reject": "Rechazar",
+    "cancel_reservation": "Cancelar",
+    "no_business_assigned": "Negocio no encontrado",
+    "must_be_assigned": "Debe estar asignado a un negocio",
+    "no_reservations": "No se encontraron reservas",
+    "no_reservations_date_range": "No hay reservas en el rango de fechas seleccionado",
+    "no_reservations_filter": "No hay reservas con estos filtros",
+    "table_card_select_title": "Seleccionar número de tarjeta de mesa",
+    "table_card_select_desc": "Seleccione la tarjeta de mesa para dar al cliente",
+    "table_card_selected": "Seleccionado",
+    "table_card_empty": "Libre",
+    "table_card_full": "Ocupado",
+    "select_number": "Seleccionar número",
+    "confirm_tables": "Confirmar ({count} mesa)",
+    "reservation_rejected": "Reserva rechazada.",
+    "reservation_cancelled": "Reserva cancelada.",
+    "person_count": "{count} persona(s)",
+    "filter_today": "Hoy",
+    "filter_tomorrow": "Mañana",
+    "filter_this_week": "Esta semana",
+    "filter_all": "Todos",
+    "status_waiting": "En espera",
+    "status_confirmed_short": "Confirmado",
+    "status_rejected_short": "Rechazado",
+    "status_cancelled_short": "Cancelado",
+    "guest": "Invitado",
+    "confirm_reject_title": "Rechazar",
+    "confirm_cancel_title": "Cancelar",
+    "confirm_reject_msg": "¿Está seguro de que quiere rechazar esta reserva?",
+    "confirm_cancel_msg": "¿Está seguro de que quiere cancelar esta reserva?"
   },
   "wallet": {
     "lokma_wallet": "Billetera LOKMA",
@@ -1689,7 +1764,19 @@
     "delivery_address_label": "Dirección de entrega:",
     "pin_moved_far_warning": "El pin se ha movido bastante lejos. Comprueba si es el lugar correcto para {}",
     "confirm": "Confirmar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "delivery_time_label": "¿Cuándo quieres tu entrega?",
+    "find_my_location": "Encontrar mi ubicación",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "or_search": "o buscar dirección",
+    "payment_methods": "Métodos de pago",
+    "phone": "Teléfono",
+    "save": "Guardar",
+    "select_on_map": "Seleccionar en el mapa",
+    "select_payment": "Seleccionar método de pago",
+    "select_payment_method": "Elige el método de pago",
+    "your_details": "Tu información"
   },
   "coupon": {
     "enter_code": "Ingrese un código de cupón",
@@ -1725,7 +1812,11 @@
     "slot_full_label": "COMPLETO",
     "slots_remaining": "{} restante(s)",
     "notes_label": "Notas",
-    "notes_hint": "Escriba sus solicitudes especiales (ej. cumpleanos, silla alta...)"
+    "notes_hint": "Escriba sus solicitudes especiales (ej. cumpleanos, silla alta...)",
+    "status_cancelled": "Cancelada",
+    "status_confirmed": "Confirmada",
+    "status_pending": "Pendiente",
+    "status_rejected": "Rechazada"
   },
   "order_confirmation": {
     "title": "¡Pedido recibido!",
@@ -1742,7 +1833,10 @@
     "ok_button": "OK",
     "today": "Hoy",
     "tomorrow": "Mañana",
-    "time_suffix": ""
+    "time_suffix": "",
+    "bon_appetit": "¡Buen provecho! 😋",
+    "thanks_kermes": "¡Gracias por su interés en nuestro evento! 🎪",
+    "thanks_market": "¡Gracias por tu compra! 🛒"
   },
   "notifications": {
     "order_placed": "Pedido Realizado",
@@ -1812,7 +1906,8 @@
     "just_now": "ahora mismo",
     "minutes_ago": "hace {}min",
     "hours_ago": "hace {}h",
-    "days_ago": "hace {}d"
+    "days_ago": "hace {}d",
+    "filter_reservations": "Reservas"
   },
   "sponsored_ads": {
     "sponsored": "Patrocinado",

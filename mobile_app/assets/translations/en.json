@@ -81,7 +81,13 @@
     "want_to_register_with_this_number": "This number is not registered in our system. Would you like to create a new account with this number?",
     "phone_already_registered": "This number is already registered",
     "want_to_login_with_this_number": "This number is registered in our system. Would you like to log in?",
-    "yeni_hesap_icin_sms_kodu_gonderilecek": "SMS code will be sent for the new account"
+    "yeni_hesap_icin_sms_kodu_gonderilecek": "SMS code will be sent for the new account",
+    "logging_in_with_number": "Logging in with {phone}...",
+    "phone_check_failed": "Number could not be verified. Please check your internet connection.",
+    "please_wait": "Please wait...",
+    "registering_with_number": "Creating your account with {phone}...",
+    "sms_code_sent_to": "SMS code sent to {phone}",
+    "verifying_code": "Verifying code..."
   },
   "business_details": {
     "all": "All",
@@ -376,7 +382,18 @@
     "attention": "Attention",
     "address": "Address",
     "butcher": "Butcher",
-    "category": "Category"
+    "category": "Category",
+    "bilgi": "Info",
+    "favorilerden_kaldir": "Remove from Favorites",
+    "isletme_artik_aktif_degil": "This business may no longer be active or may have closed.",
+    "isletme_bulunamadi": "Business Not Found",
+    "no_address": "No address specified",
+    "operation_failed": "Operation failed",
+    "silinmis": "Deleted",
+    "try_again": "Try Again",
+    "unpaid": "Unpaid",
+    "urun_artik_mevcut_degil": "This product is no longer available. It may have been removed by the business.",
+    "urun_isletme_bilgisi_eksik": "Business information for this product is missing."
   },
   "customer": {
     "tumu": "All",
@@ -554,7 +571,13 @@
     "earnings_monthly_sub": "Automatic payment on the 1st of each month",
     "earnings_manual": "Manual",
     "earnings_manual_sub": "Payment on my request",
-    "earnings_payout_saved": "✅ Payout settings updated"
+    "earnings_payout_saved": "✅ Payout settings updated",
+    "break_stopped_delivery_ready": "Break ended. You can deliver your order!",
+    "delivery_claimed_tracking_started": "Delivery claimed! Location tracking started.",
+    "i_claimed": "I CLAIMED",
+    "order_pending": "Order pending",
+    "preparing_wait": "Being prepared – please wait",
+    "take_delivery_btn": "Claim"
   },
   "home": {
     "courier_on_the_way": "Courier on the way",
@@ -1154,7 +1177,9 @@
     "favorite_saved": "Favorite saved",
     "favorite_removed": "Removed from favorites",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "pay_card_nfc": "Card at Door (NFC)",
+    "pay_card_on_delivery": "Card at Door"
   },
   "payments": {
     "step1_payment_collection": "💵 Step 1: Payment Collection",
@@ -1273,7 +1298,8 @@
     "faq_what_is_lokma": "What Is LOKMA?",
     "faq_what_is_lokma_answer": "LOKMA is a platform where you can order online from local butchers, restaurants and markets. We deliver fresh meat, home-cooked meals and market products to your door.",
     "delete_address": "Delete Address",
-    "street_city_required": "Street and city are required"
+    "street_city_required": "Street and city are required",
+    "favorilerim": "My Favorites"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Looking for a restaurant?",
@@ -1374,7 +1400,39 @@
     "payment_not_collected": "⚠️ Payment Not Collected",
     "yes_on_my_way": "Yes, On My Way",
     "address_wrong_unreachable": "Address incorrect / Customer unreachable",
-    "card_payment_received": "✅ Card payment received!"
+    "card_payment_received": "✅ Card payment received!",
+    "reservations_title": "Reservations",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "cancel_reservation": "Cancel",
+    "no_business_assigned": "Business not found",
+    "must_be_assigned": "You must be assigned to a business",
+    "no_reservations": "No reservation found",
+    "no_reservations_date_range": "No reservations in selected date range",
+    "no_reservations_filter": "No reservations with these filters",
+    "table_card_select_title": "Select Table Card Number",
+    "table_card_select_desc": "Select the table card to give to the customer",
+    "table_card_selected": "Selected",
+    "table_card_empty": "Empty",
+    "table_card_full": "Occupied",
+    "select_number": "Select Number",
+    "confirm_tables": "Confirm ({count} table)",
+    "reservation_rejected": "Reservation rejected.",
+    "reservation_cancelled": "Reservation cancelled.",
+    "person_count": "{count} person(s)",
+    "filter_today": "Today",
+    "filter_tomorrow": "Tomorrow",
+    "filter_this_week": "This Week",
+    "filter_all": "All",
+    "status_waiting": "Waiting",
+    "status_confirmed_short": "Confirmed",
+    "status_rejected_short": "Rejected",
+    "status_cancelled_short": "Cancelled",
+    "guest": "Guest",
+    "confirm_reject_title": "Reject",
+    "confirm_cancel_title": "Cancel",
+    "confirm_reject_msg": "Are you sure you want to reject this reservation?",
+    "confirm_cancel_msg": "Are you sure you want to cancel this reservation?"
   },
   "wallet": {
     "lokma_wallet": "LOKMA Wallet",
@@ -1715,7 +1773,10 @@
     "try_different_location": "Try Different Location",
     "go_back": "Go Back",
     "delivery_address_label": "Delivery address:",
-    "pin_moved_far_warning": "The pin has moved quite far. Check if it's the right spot for {}"
+    "pin_moved_far_warning": "The pin has moved quite far. Check if it's the right spot for {}",
+    "find_my_location": "Find My Location",
+    "or_search": "or search address",
+    "select_on_map": "Select on Map"
   },
   "coupon": {
     "enter_code": "Please enter a coupon code",
@@ -1751,7 +1812,11 @@
     "slot_full_label": "FULL",
     "slots_remaining": "{} left",
     "notes_label": "Notes",
-    "notes_hint": "Write your special requests (e.g. birthday, high chair...)"
+    "notes_hint": "Write your special requests (e.g. birthday, high chair...)",
+    "status_cancelled": "Cancelled",
+    "status_confirmed": "Confirmed",
+    "status_pending": "Pending",
+    "status_rejected": "Rejected"
   },
   "order_confirmation": {
     "title": "Order Received!",
@@ -1841,7 +1906,8 @@
     "just_now": "just now",
     "minutes_ago": "{}min ago",
     "hours_ago": "{}h ago",
-    "days_ago": "{}d ago"
+    "days_ago": "{}d ago",
+    "filter_reservations": "Reservations"
   },
   "sponsored_ads": {
     "sponsored": "Sponsored",
