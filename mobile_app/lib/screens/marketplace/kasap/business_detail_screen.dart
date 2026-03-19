@@ -26,6 +26,7 @@ import 'product_customization_sheet.dart';
 import 'reservation_booking_screen.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import '../../../utils/currency_utils.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
@@ -2921,16 +2922,52 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                            ],
 
-                           // Table Reservation Icon
-                           if (data?['hasReservation'] as bool? ?? false) ...[
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                             Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 Icon(Icons.table_restaurant, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 16),
-                                 const SizedBox(width: 2),
-                                 Icon(Icons.access_time_filled, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 14),
-                               ],
+                           // Table Reservation Icon (tappable → Rezervasyon)
+                           if (data?["hasReservation"] as bool? ?? false) ...[
+                             Text("·", style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             GestureDetector(
+                               onTap: () {
+                                 HapticFeedback.selectionClick();
+                                 final butcherName = data?["companyName"] ?? data?["name"] ?? "";
+                                 Navigator.of(context).push(
+                                   MaterialPageRoute(
+                                     builder: (_) => ReservationBookingScreen(
+                                       businessId: widget.businessId,
+                                       businessName: butcherName,
+                                     ),
+                                   ),
+                                 );
+                               },
+                               child: Container(
+                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                 decoration: BoxDecoration(
+                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.07),
+                                   borderRadius: BorderRadius.circular(20),
+                                 ),
+                                 child: Row(
+                                   mainAxisSize: MainAxisSize.min,
+                                   children: [
+                                     SvgPicture.asset(
+                                       "assets/images/icon_masa_rezervasyon.svg",
+                                       width: 18,
+                                       height: 18,
+                                       colorFilter: ColorFilter.mode(
+                                         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                         BlendMode.srcIn,
+                                       ),
+                                     ),
+                                     const SizedBox(width: 4),
+                                     Text(
+                                       "Rezervasyon",
+                                       style: TextStyle(
+                                         fontSize: 12,
+                                         fontWeight: FontWeight.w500,
+                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                       ),
+                                     ),
+                                   ],
+                                 ),
+                               ),
                              ),
                            ],
 
