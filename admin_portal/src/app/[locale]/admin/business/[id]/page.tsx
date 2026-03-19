@@ -3746,13 +3746,13 @@ export default function BusinessDetailsPage() {
                        {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
                      </button>
                    )}
-                   {/* Zertifikate tab: Düzenle / İptal / Kaydet */}
-                   {settingsSubTab === 'isletme' && isletmeInternalTab === 'zertifikalar' && (
+                   {/* Tüm isletme tab'ları: Düzenle / İptal / Kaydet */}
+                   {settingsSubTab === 'isletme' && (
                      <>
                        {!isEditing ? (
                          <button
                            onClick={() => setIsEditing(true)}
-                           className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-medium transition"
+                           className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-medium transition flex items-center gap-2"
                          >
                            ✏️ {t('duzenle') || 'Düzenle'}
                          </button>
@@ -3774,16 +3774,6 @@ export default function BusinessDetailsPage() {
                          </>
                        )}
                      </>
-                   )}
-                   {/* İşletme Bilgileri tab: Kaydet — her zaman görünür */}
-                   {settingsSubTab === 'isletme' && isletmeInternalTab !== 'zertifikalar' && (
-                     <button
-                       onClick={handleSave}
-                       disabled={saving}
-                       className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium transition"
-                     >
-                       {saving ? "..." : t('kaydet')}
-                     </button>
                    )}
                 </div>
               </div>
