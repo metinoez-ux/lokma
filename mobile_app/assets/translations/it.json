@@ -765,7 +765,7 @@
     "closed_but_preorder": "Questa attività è chiusa, ma accetta pre-ordini. Puoi consultare il menu e ordinare — sarà preparato nella fascia oraria desiderata dopo l'apertura.",
     "cold_chain_full_desc": "I nostri prodotti a base di carne vengono consegnati in scatole appositamente protette senza interrompere la catena del freddo alla massima velocità.\n\nI vostri prodotti restano freddi e freschi durante la consegna.",
     "cold_chain_short_desc": "I nostri prodotti a base di carne vengono consegnati in scatole protette senza interrompere la catena del freddo.",
-    "courier_not_available": "Il corriere non è attualmente disponibile",
+    "courier_not_available": "Nessuna consegna disponibile al momento",
     "create_group_error": "Errore nella creazione del gruppo: {error}",
     "currently_closed": "Attualmente chiuso",
     "opens_today": "Apre oggi alle {time}",

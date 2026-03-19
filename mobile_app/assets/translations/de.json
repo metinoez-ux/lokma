@@ -769,7 +769,7 @@
     "pickup_resumes_in": "Abholbestellung wieder in {minutes} Min. möglich",
     "delivery_from_short": "Lieferung ab {time} Uhr",
     "pickup_from_short": "Abholen ab {time} Uhr",
-    "courier_not_available": "Kurier ist momentan nicht verfügbar",
+    "courier_not_available": "Zurzeit keine Lieferung möglich",
     "closed_but_preorder": "Dieses Geschäft ist zurzeit geschlossen, nimmt aber Vorbestellungen an. Sie können das Menü durchstöbern und bestellen — Ihre Bestellung wird nach Öffnung zum gewünschten Zeitfenster zubereitet.",
     "closed_but_browse": "Zurzeit geschlossen, aber Sie können das Menü durchstöbern.",
     "no_business_in_category": "Kein Geschäft in dieser Kategorie gefunden",

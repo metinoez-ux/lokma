@@ -765,7 +765,7 @@
     "closed_but_preorder": "Este negocio está cerrado, pero acepta pedidos anticipados. Puede ver el menú y hacer un pedido — se preparará en la franja horaria deseada una vez que abra.",
     "cold_chain_full_desc": "Nuestros productos cárnicos se entregan en cajas especialmente protegidas sin romper la cadena de frío a máxima velocidad.\n\nSus productos se mantienen fríos y frescos durante la entrega.",
     "cold_chain_short_desc": "Nuestros productos cárnicos se entregan en cajas protegidas sin romper la cadena de frío.",
-    "courier_not_available": "El servicio de mensajería no está disponible",
+    "courier_not_available": "No hay entrega disponible en este momento",
     "create_group_error": "Error al crear el grupo: {error}",
     "currently_closed": "Actualmente cerrado",
     "opens_today": "Abre hoy a las {time}",
