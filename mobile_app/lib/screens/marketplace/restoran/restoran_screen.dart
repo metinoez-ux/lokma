@@ -1320,27 +1320,20 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       padding: const EdgeInsets.only(left: 16, right: 16, top: 6),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: lokmaPink.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.near_me, color: lokmaPink, size: 14),
-                const SizedBox(width: 4),
-                Text(
-                  nearestLabel,
-                  style: const TextStyle(
-                    color: lokmaPink,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.near_me, color: lokmaPink, size: 14),
+              const SizedBox(width: 4),
+              Text(
+                nearestLabel,
+                style: const TextStyle(
+                  color: lokmaPink,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1352,9 +1345,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 overlayColor: lokmaPink.withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3),
-                activeTickMarkColor: Colors.white.withValues(alpha: 0.8),
-                inactiveTickMarkColor: isDark ? Colors.grey[400] : Colors.grey[600],
+                tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
+                activeTickMarkColor: Colors.transparent,
+                inactiveTickMarkColor: Colors.transparent,
               ),
               child: Slider(
                 value: _currentStepIndex.toDouble(),
