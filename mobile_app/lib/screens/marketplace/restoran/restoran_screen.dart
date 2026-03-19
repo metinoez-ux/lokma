@@ -2373,8 +2373,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     BlendMode.srcIn,
                                   ),
                                 ),
-                                const Text(
-                                  'Online Masa Rezervasyonu',
+                                Text(
+                                  'marketplace.online_table_reservation_badge'.tr(),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,

@@ -3231,7 +3231,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     child: Text(
                                       catName,
                                       style: TextStyle(
-                                        color: accent,
+                                        color: isDark ? accent : textPrimary,
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
                                         letterSpacing: -0.5,

@@ -361,7 +361,28 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
       builder: (ctx) => AlertDialog(
         backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: const Icon(Icons.schedule_send, color: Colors.amber, size: 56),
+        icon: SizedBox(
+          width: 64,
+          height: 64,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(Icons.table_restaurant, color: const Color(0xFFFB335B), size: 52),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.access_time, color: Color(0xFFFB335B), size: 22),
+                ),
+              ),
+            ],
+          ),
+        ),
         title: Text('reservation.request_received'.tr(), style: TextStyle(color: textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -390,13 +411,13 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.1),
+                color: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.amber, size: 18),
+                  Icon(Icons.info_outline, color: textSecondary, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

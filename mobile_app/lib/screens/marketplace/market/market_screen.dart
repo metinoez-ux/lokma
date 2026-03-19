@@ -107,6 +107,127 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     _loadSponsoredAds();
   }
   
+  /// TUNA brand info bottom sheet (same as business_detail_screen)
+  void _showTunaBrandInfo() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Red Brand Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFB335B),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40, height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                    ),
+                    Image.asset('assets/images/tuna_logo.png', height: 60,
+                        errorBuilder: (_, __, ___) => const Text('TUNA',
+                            style: TextStyle(fontFamily: 'Cursive', fontSize: 40,
+                                color: Colors.white, fontWeight: FontWeight.w600))),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Europas vertrauenswürdigste Halal-Fleischmarke',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(24),
+                  children: [
+                    Text(
+                      'Unsere Reise begann 1987 als kleine Metzgerei in Köln und hat sich heute zu einer der modernsten integrierten Halal-Fleischproduktionsstätten Europas entwickelt.',
+                      style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildBrandIconElement(Icons.verified, 'marketplace.helal_kesim'.tr(), Colors.green),
+                        _buildBrandIconElement(Icons.bolt, 'marketplace.soksuz_kesim'.tr(), Colors.amber),
+                        _buildBrandIconElement(Icons.clean_hands, 'marketplace.kuru_yolum'.tr(), Colors.amber),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Text('marketplace.supply_standards'.tr(),
+                        style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 16),
+                    _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
+                    _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
+                    _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
+                    _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandIconElement(IconData icon, String label, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12), textAlign: TextAlign.center),
+      ],
+    );
+  }
+
+  Widget _buildCheckItem(String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_circle, color: Colors.green, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 2),
+                Text(desc, style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Sponsored reklamlari yukle
   Future<void> _loadSponsoredAds() async {
     final ads = await SponsoredAdService().getActiveSponsoredAds(
@@ -1856,39 +1977,45 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 
-                // 🆕 TUNA brand badge (dynamic offset)
+                // 🆕 TUNA brand badge (dynamic offset) - tıklanabilir
                 if (isTunaPartner)
                   Positioned(
                     left: 12,
                     top: bannerTopOffset,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFA01E22),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.verified, color: Colors.white, size: 14),
-                          SizedBox(width: 4),
-                          Text(
-                            'TUNA',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        _showTunaBrandInfo();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFA01E22),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.verified, color: Colors.white, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'TUNA',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1954,7 +2081,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                   ),
                                 ),
                                 const Text(
-                                  'Online Masa Rezervasyonu',
+                                  'marketplace.online_table_reservation_badge'.tr(),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,

@@ -28,7 +28,7 @@ class MyReservationsScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Masa Rezervasyonlarım',
+          'profile.my_table_reservations'.tr(),
           style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
@@ -36,7 +36,7 @@ class MyReservationsScreen extends StatelessWidget {
       body: user == null
           ? Center(
               child: Text(
-                'Lütfen giriş yapın',
+                'profile.please_login'.tr(),
                 style: TextStyle(color: textSecondary, fontSize: 16),
               ),
             )
@@ -62,7 +62,7 @@ class MyReservationsScreen extends StatelessWidget {
                           Icon(Icons.error_outline, color: Colors.red[400], size: 48),
                           const SizedBox(height: 16),
                           Text(
-                            'Rezervasyonlar yüklenirken hata oluştu',
+                            'profile.error_loading_reservations'.tr(),
                             style: TextStyle(color: textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
                             textAlign: TextAlign.center,
                           ),
@@ -88,12 +88,12 @@ class MyReservationsScreen extends StatelessWidget {
                         Icon(Icons.restaurant_outlined, color: Colors.grey[400], size: 64),
                         const SizedBox(height: 16),
                         Text(
-                          'Henüz rezervasyonunuz yok',
+                          'profile.no_reservations_yet'.tr(),
                           style: TextStyle(color: textSecondary, fontSize: 16),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'İşletme detay sayfasından masa rezervasyonu yapabilirsiniz',
+                          'profile.can_make_reservation_from_business_page'.tr(),
                           style: TextStyle(color: textSecondary, fontSize: 13),
                           textAlign: TextAlign.center,
                         ),
@@ -127,7 +127,7 @@ class MyReservationsScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Text(
-                          'Aktif Rezervasyonlar',
+                          'profile.active_reservations'.tr(),
                           style: TextStyle(
                             color: textPrimary,
                             fontSize: 16,
@@ -143,7 +143,7 @@ class MyReservationsScreen extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 12),
                         child: Text(
-                          'Geçmiş Rezervasyonlar',
+                          'profile.past_reservations'.tr(),
                           style: TextStyle(
                             color: textSecondary,
                             fontSize: 14,
@@ -417,7 +417,7 @@ class MyReservationsScreen extends StatelessWidget {
                 );
               }
             },
-            child: const Text('Evet, İptal Et', style: TextStyle(color: Colors.red)),
+            child: const Text('Evet', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -428,7 +428,7 @@ class MyReservationsScreen extends StatelessWidget {
     switch (status) {
       case 'confirmed':
         return _StatusInfo(
-          label: 'Onaylandı ✓',
+          label: 'reservation.status_confirmed'.tr(),
           color: Colors.green[700]!,
           bgColor: Colors.green[50]!,
           borderColor: Colors.green,
@@ -436,7 +436,7 @@ class MyReservationsScreen extends StatelessWidget {
         );
       case 'rejected':
         return _StatusInfo(
-          label: 'Reddedildi ✗',
+          label: 'reservation.status_rejected'.tr(),
           color: Colors.red[700]!,
           bgColor: Colors.red[50]!,
           borderColor: Colors.red,
@@ -444,7 +444,7 @@ class MyReservationsScreen extends StatelessWidget {
         );
       case 'cancelled':
         return _StatusInfo(
-          label: 'İptal',
+          label: 'reservation.status_cancelled'.tr(),
           color: Colors.grey[700]!,
           bgColor: Colors.grey[100]!,
           borderColor: Colors.grey,
@@ -453,7 +453,7 @@ class MyReservationsScreen extends StatelessWidget {
       case 'pending':
       default:
         return _StatusInfo(
-          label: 'Onay Bekleniyor',
+          label: 'reservation.status_pending'.tr(),
           color: Colors.amber[800]!,
           bgColor: Colors.amber[50]!,
           borderColor: Colors.amber,
