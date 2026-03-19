@@ -1321,6 +1321,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
+                      // Bell icon - white outline style for contrast
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -1333,10 +1334,13 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           unreadCount > 0
                               ? Icons.notifications_rounded
                               : Icons.notifications_outlined,
-                          color: lokmaPink,
-                          size: 20,
+                          color: unreadCount > 0
+                              ? lokmaPink
+                              : (isDark ? Colors.white70 : Colors.grey[800]),
+                          size: 24,
                         ),
                       ),
+                      // Badge - red to match other badges
                       if (unreadCount > 0)
                         Positioned(
                           top: -2,
@@ -1353,21 +1357,13 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 color: Theme.of(context).scaffoldBackgroundColor,
                                 width: 1.5,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
                             child: Text(
-                              unreadCount > 99 ? '99+' : '$unreadCount',
+                              unreadCount > 9 ? '9+' : unreadCount.toString(),
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -1378,9 +1374,9 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             ),
           ),
 
-          const SizedBox(width: 2),
+          const SizedBox(width: 4),
 
-          // Favoriler
+          // Favoriler (kalp butonu)
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -1388,44 +1384,67 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    _favoriteKermesIds.isNotEmpty ? Icons.favorite : Icons.favorite_border,
-                    color: lokmaPink,
-                    size: 24,
-                  ),
-                  if (_favoriteKermesIds.isNotEmpty)
-                    Positioned(
-                      top: -2,
-                      right: -4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              child: Builder(
+                builder: (context) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  int favCount = _favoriteKermesIds.length;
+                  
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Heart icon
+                      Container(
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            width: 1.5,
-                          ),
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.grey.shade100,
+                          shape: BoxShape.circle,
                         ),
-                        child: Text(
-                          '${_favoriteKermesIds.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Icon(
+                          favCount > 0
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: favCount > 0
+                              ? lokmaPink
+                              : (isDark ? Colors.white70 : Colors.grey[800]),
+                          size: 24,
                         ),
                       ),
-                    ),
-                ],
+                      // Badge
+                      if (favCount > 0)
+                        Positioned(
+                          top: -2,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              favCount > 9 ? '9+' : favCount.toString(),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
+          const SizedBox(width: 14),
         ],
       ),
     );

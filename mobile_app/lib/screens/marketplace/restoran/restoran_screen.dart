@@ -440,8 +440,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         return false;
       }
 
-      // Distance filter - only if user location is available AND slider is not at max
-      if (_userLat != null && _userLng != null && _maxDistance < 200) {
+      // Distance filter
+      if (_userLat != null && _userLng != null) {
         // Try to get lat/lng from multiple possible locations in Firebase data
         double? lat;
         double? lng;
@@ -476,11 +476,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final distanceMeters =
               Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
           final distanceKm = distanceMeters / 1000;
-          debugPrint(
-              '📍 ${data['companyName']}: lat=$lat, lng=$lng, distance=${distanceKm.toStringAsFixed(1)}km, maxDist=$_maxDistance');
-          if (distanceKm > _maxDistance) return false;
-
-          // Check against merchant's custom delivery radius
+          
           if (_deliveryMode == 'teslimat') {
             final double deliveryRadius =
                 (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
@@ -489,11 +485,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   '🛑 ${data['companyName']} out of delivery radius: ${distanceKm.toStringAsFixed(1)}km > ${deliveryRadius}km');
               return false;
             }
+          } else {
+            if (_maxDistance < 200 && distanceKm > _maxDistance) return false;
           }
         } else {
           // No lat/lng - HIDE this business when distance filter is active
-          debugPrint('⚠️ ${data['companyName']}: No lat/lng found - HIDING');
-          return false;
+          if (_deliveryMode == 'teslimat' || _maxDistance < 200) {
+            debugPrint('⚠️ ${data['companyName']}: No lat/lng found - HIDING');
+            return false;
+          }
         }
       }
 
@@ -768,9 +768,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             if (!_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
                   child: Text(
-                    tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                    _deliveryMode == 'masa' 
+                        ? tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'})
+                        : tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -1443,7 +1445,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       }
 
       // Apply distance filter
-      if (_userLat != null && _userLng != null && _maxDistance < 200) {
+      if (_userLat != null && _userLng != null) {
         double? lat;
         double? lng;
 
@@ -1475,12 +1477,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final distanceMeters =
               Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
           final distanceKm = distanceMeters / 1000;
-          if (distanceKm > _maxDistance) continue;
 
           if (_deliveryMode == 'teslimat') {
             final double deliveryRadius =
                 (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
             if (distanceKm > deliveryRadius) continue;
+          } else {
+            if (_maxDistance < 200 && distanceKm > _maxDistance) continue;
+          }
+        } else {
+          if (_deliveryMode == 'teslimat' || _maxDistance < 200) {
+            continue;
           }
         }
       }
@@ -2570,8 +2577,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                               ?.toDouble() ??
                                           0.0;
                                   final minOrderAmount =
-                                      (data['minOrderAmount'] as num?)
-                                              ?.toDouble() ??
+                                      (data['minDeliveryOrder'] as num?)?.toDouble() ??
+                                      (data['minOrderAmount'] as num?)?.toDouble() ??
                                           10.0;
                                   // ignore: unused_local_variable
                                   final freeDeliveryThreshold =

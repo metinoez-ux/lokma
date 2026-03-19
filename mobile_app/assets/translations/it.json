@@ -89,6 +89,7 @@
     "verifying_code": "Verifica codice..."
   },
   "business_details": {
+    "about_us": "Chi siamo",
     "all": "Tutto",
     "all_products": "Tutti i prodotti",
     "products_count": "{count} Prodotti",
@@ -727,6 +728,8 @@
     "allergen_molluscs": "Molluschi",
     "ingredients_tags_de": "Ingredienti/Tag",
     "see_menu": "Vedi il menu",
+    "browse_products": "Vedi i prodotti",
+    "browse_products_and_order": "Vedi i prodotti \u0026 ordina",
     "open_menu": "Apri il menu",
     "required_field": "Obbligatorio",
     "add_to_cart": "Aggiungi",
@@ -839,6 +842,7 @@
     "filter_all": "Tutti",
     "business_count": "{} attività",
     "order_at_partners": "Ordina da {count} partner",
+    "reserve_table_at_partners": "Prenota un tavolo in {count} partner",
     "quick_filters_section": "Filtri Rapidi",
     "show_businesses": "Mostra {} Attività",
     "filter_cancel": "Annulla",

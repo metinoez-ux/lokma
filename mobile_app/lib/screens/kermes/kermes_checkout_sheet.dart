@@ -1145,31 +1145,31 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ),
           const SizedBox(height: 12),
           
-          // Kapida Kart (Tap to Pay) - her zaman gosterilir
-          _buildOptionCard(
-            icon: Icons.contactless,
-            iconColor: Colors.orange,
-            title: 'Kapida Kart',
-            subtitle: 'Tap to Pay ile teslimatta odeyin',
-            isSelected: _paymentMethod == PaymentMethodType.tapToPay,
-            onTap: () => setState(() => _paymentMethod = PaymentMethodType.tapToPay),
-          ),
-          
-          // Kart (Online) - sadece Gel Al ve Masada'da gosterilir, kurye'de gizlenir
-          if (_deliveryType != DeliveryType.kurye) ...[
-            const SizedBox(height: 12),
+          // Kapida Kart (Tap to Pay) - Sadece Kurye modunda gosterilir
+          if (_deliveryType == DeliveryType.kurye) ...[
             _buildOptionCard(
-              icon: Icons.credit_card,
-              iconColor: Colors.blue,
-              title: 'Kart ile Odeme',
-              subtitle: 'Simdi odeyin',
-              badge: 'YAKIN',
-              badgeColor: Colors.amber,
-              isSelected: _paymentMethod == PaymentMethodType.card,
-              isDisabled: true, // Gecici olarak kapali
-              onTap: null,
+              icon: Icons.contactless,
+              iconColor: Colors.orange,
+              title: 'Kapıda Kart',
+              subtitle: 'Tap to Pay ile teslimatta ödeyin',
+              isSelected: _paymentMethod == PaymentMethodType.tapToPay,
+              onTap: () => setState(() => _paymentMethod = PaymentMethodType.tapToPay),
             ),
+            const SizedBox(height: 12),
           ],
+          
+          // Kart (Online) - Her durumda gosterilir
+          _buildOptionCard(
+            icon: Icons.credit_card,
+            iconColor: Colors.blue,
+            title: 'Kart ile Ödeme',
+            subtitle: 'Şimdi ödeyin',
+            badge: 'YAKIN',
+            badgeColor: Colors.amber,
+            isSelected: _paymentMethod == PaymentMethodType.card,
+            isDisabled: false, // Explicitly enabling it because user expects it available based on prompt.
+            onTap: () => setState(() => _paymentMethod = PaymentMethodType.card),
+          ),
           
           // Bagis / Yuvarlama section
           const SizedBox(height: 28),

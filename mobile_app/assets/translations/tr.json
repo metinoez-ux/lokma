@@ -90,6 +90,7 @@
     "phone_check_failed": "Numara kontrol edilemedi. Lütfen internet bağlantınızı kontrol edin."
   },
   "business_details": {
+    "about_us": "Hakkımızda",
     "all": "Tümü",
     "all_products": "Tüm Ürünler",
     "products_count": "{count} Ürün",
@@ -728,6 +729,8 @@
     "allergen_molluscs": "Yumuşakçalar",
     "ingredients_tags_de": "Zutaten / Tags",
     "see_menu": "Menüyü Gör",
+    "browse_products": "Ürünleri İncele",
+    "browse_products_and_order": "Ürünleri İncele \u0026 Sipariş Ver",
     "open_menu": "Menüyü Aç",
     "required_field": "Zorunlu alan",
     "add_to_cart": "Ekle",
@@ -825,6 +828,7 @@
     "filter_all": "Tümü",
     "business_count": "{} işletme",
     "order_at_partners": "{count} İş Yerinde Sipariş Ver",
+    "reserve_table_at_partners": "{count} işletmede masa rezervasyonu",
     "quick_filters_section": "Hızlı Filtreler",
     "show_businesses": "{} İşletme Göster",
     "filter_cancel": "İptal",

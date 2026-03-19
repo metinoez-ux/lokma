@@ -90,6 +90,7 @@
     "phone_check_failed": "Nummer konnte nicht überprüft werden. Bitte überprüfe deine Internetverbindung."
   },
   "business_details": {
+    "about_us": "Über uns",
     "all": "Alle",
     "all_products": "Alle Produkte",
     "products_count": "{count} Produkte",
@@ -728,6 +729,8 @@
     "allergen_molluscs": "Weichtiere",
     "ingredients_tags_de": "Zutaten / Tags",
     "see_menu": "Menü ansehen",
+    "browse_products": "Produkte ansehen",
+    "browse_products_and_order": "Produkte ansehen \u0026 bestellen",
     "open_menu": "Menü öffnen",
     "required_field": "Erforderlich",
     "add_to_cart": "Hinzufügen",
@@ -825,6 +828,7 @@
     "filter_all": "Alle",
     "business_count": "{} Geschäfte",
     "order_at_partners": "Bei {count} Partnern bestellen",
+    "reserve_table_at_partners": "Bei {count} Partnern einen Tisch reservieren",
     "quick_filters_section": "Schnellfilter",
     "show_businesses": "{} Geschäfte anzeigen",
     "filter_cancel": "Abbrechen",

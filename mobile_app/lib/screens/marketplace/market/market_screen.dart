@@ -703,7 +703,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   ),
                   child: Text(
-                    preOrderEnabled ? tr('marketplace.see_menu_and_order') : tr('marketplace.see_menu'),
+                    preOrderEnabled ? tr('marketplace.browse_products_and_order') : tr('marketplace.browse_products'),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                 ),
@@ -785,7 +785,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       
       // Distance filter
       debugPrint('🔍 Distance check: _userLat=$_userLat, _userLng=$_userLng, _maxDistance=$_maxDistance');
-      if (_userLat != null && _userLng != null && _maxDistance < 200) {
+      if (_userLat != null && _userLng != null) {
         double? lat;
         double? lng;
         
@@ -803,8 +803,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         if (lat == null || lng == null) {
           final placeDetails = data['placeDetails'] as Map<String, dynamic>?;
           if (placeDetails != null) {
-            if (placeDetails['lat'] is num) lat = (placeDetails['lat'] as num).toDouble();
-            if (placeDetails['lng'] is num) lng = (placeDetails['lng'] as num).toDouble();
+            if (placeDetails['lat'] is num) {
+              lat = (placeDetails['lat'] as num).toDouble();
+            }
+            if (placeDetails['lng'] is num) {
+              lng = (placeDetails['lng'] as num).toDouble();
+            }
           }
         }
         
@@ -812,22 +816,22 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           final distanceMeters = Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
           final distanceKm = distanceMeters / 1000;
           debugPrint('📏 ${data['companyName']}: lat=$lat, lng=$lng, dist=${distanceKm.toStringAsFixed(1)}km, max=$_maxDistance');
-          if (distanceKm > _maxDistance) {
-            debugPrint('❌ ${data['companyName']} filtered out: ${distanceKm.toStringAsFixed(1)}km > $_maxDistance');
-            return false;
-          }
-
+          
           if (_deliveryMode == 'teslimat') {
             final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
             if (distanceKm > deliveryRadius) {
               debugPrint('🛑 ${data['companyName']} out of delivery radius: ${distanceKm.toStringAsFixed(1)}km > ${deliveryRadius}km');
               return false;
             }
+          } else {
+            if (_maxDistance < 200 && distanceKm > _maxDistance) return false;
           }
         } else {
-          // No lat/lng - HIDE this business when distance filter is active
-          debugPrint('⚠️ ${data['companyName']}: No lat/lng found, HIDING');
-          return false;
+          // No lat/lng
+          if (_deliveryMode == 'teslimat' || _maxDistance < 200) {
+            debugPrint('⚠️ ${data['companyName']}: No lat/lng found, HIDING');
+            return false;
+          }
         }
       } else {
         debugPrint('⏭️ Distance filter skipped: userLat=$_userLat, maxDist=$_maxDistance');
@@ -987,7 +991,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       }
       
       // Distance filter
-      if (_userLat != null && _userLng != null && _maxDistance < 200) {
+      if (_userLat != null && _userLng != null) {
         double? lat;
         double? lng;
         
@@ -1005,11 +1009,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         if (lat != null && lng != null) {
           final distanceMeters = Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
           final distanceKm = distanceMeters / 1000;
-          if (distanceKm > _maxDistance) continue;
 
           if (_deliveryMode == 'teslimat') {
             final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
             if (distanceKm > deliveryRadius) continue;
+          } else {
+            if (_maxDistance < 200 && distanceKm > _maxDistance) continue;
+          }
+        } else {
+          if (_deliveryMode == 'teslimat' || _maxDistance < 200) {
+            continue;
           }
         }
       }
@@ -2266,8 +2275,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                           ?.toDouble() ??
                                       0.0;
                               final minOrderAmount =
-                                  (data['minOrderAmount'] as num?)
-                                          ?.toDouble() ??
+                                  (data['minDeliveryOrder'] as num?)?.toDouble() ??
+                                  (data['minOrderAmount'] as num?)?.toDouble() ??
                                       10.0;
                               // ignore: unused_local_variable
                               final freeDeliveryThreshold =

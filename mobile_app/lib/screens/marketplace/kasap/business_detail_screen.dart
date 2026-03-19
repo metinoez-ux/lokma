@@ -876,8 +876,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                   child: Text(
                     preOrderEnabled
-                        ? 'marketplace.see_menu_and_order'.tr()
-                        : 'marketplace.see_menu'.tr(),
+                        ? 'marketplace.browse_products_and_order'.tr()
+                        : 'marketplace.browse_products'.tr(),
                   ),
                 ),
 
@@ -1009,7 +1009,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // --- Actions ---
 
   void _callStore() async {
-    final phone = _butcherDoc?['shopPhone'] as String?;
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    final phone = data?['shopPhone']?.toString();
     if (phone != null && phone.isNotEmpty) {
       final uri = Uri.parse('tel:$phone');
       if (await canLaunchUrl(uri)) await launchUrl(uri);
@@ -1502,22 +1503,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       isScrollControlled: true,
       builder: (ctx) {
         try {
+          final data = _butcherDoc?.data() as Map<String, dynamic>?;
+          
           // Extract address
-          final address = _butcherDoc?['address'];
+          final address = data?['address'];
           final street = address is Map ? (address['street'] ?? '') : '';
           final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
           final city = address is Map ? (address['city'] ?? '') : '';
           final hasAddress = street.toString().trim().isNotEmpty;
           final fullAddress = hasAddress ? '$street\n$postalCode $city' : 'marketplace.no_address_info'.tr();
           
-          final phone = _butcherDoc?['shopPhone']?.toString() ?? '';
+          final phone = data?['shopPhone']?.toString() ?? '';
           final hasPhone = phone.trim().isNotEmpty;
           
           // Cuisine type
-          final cuisineType = _butcherDoc?['cuisineType']?.toString() ?? '';
+          final cuisineType = data?['cuisineType']?.toString() ?? '';
           
           // ══ Determine which service tabs to show ══
-          final data = _butcherDoc?.data() as Map<String, dynamic>?;
           final hasDelivery = data?['supportsDelivery'] == true || data?['hasDelivery'] == true;
           final deliveryStart = data?['deliveryStartTime']?.toString() ?? '';
           final deliveryEnd = data?['deliveryEndTime']?.toString() ?? '';
@@ -1589,13 +1591,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       children: [
                         // ═══ Business Name ═══
                         Text(
-                          _butcherDoc?['companyName'] ?? 'marketplace.business_info'.tr(),
+                          data?['companyName'] ?? 'marketplace.business_info'.tr(),
                           style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w200),
                         ),
                         const SizedBox(height: 6),
                         
                         // Brand Badge — pill style matching business card
-                        if (_butcherDoc?['brandLabelActive'] == true)
+                        if (data?['brandLabelActive'] == true)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: InkWell(
@@ -1620,7 +1622,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     children: [
                                       const Icon(Icons.verified, color: Colors.white, size: 14),
                                       const SizedBox(width: 5),
-                                      Text(_getBrandLabel(_butcherDoc?['brand']).toUpperCase(),
+                                      Text(_getBrandLabel(data?['brand']).toUpperCase(),
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 13,
@@ -1634,7 +1636,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                           ),
                         
-                        if (_butcherDoc?['brandLabelActive'] != true)
+                        if (data?['brandLabelActive'] != true)
                           const SizedBox(height: 10),
 
                         // ═══ MAP SECTION — "So findest du uns" ═══
@@ -2818,16 +2820,30 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            // Info Button (compact Lieferando style)
                            Material(
                              color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
-                             borderRadius: BorderRadius.circular(8),
+                             borderRadius: BorderRadius.circular(16),
                              child: InkWell(
                                onTap: _showInfoSheet,
-                               borderRadius: BorderRadius.circular(8),
+                               borderRadius: BorderRadius.circular(16),
                                child: Padding(
-                                 padding: const EdgeInsets.all(8),
-                                 child: Icon(
-                                   Icons.info_outline,
-                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                   size: 20,
+                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                 child: Row(
+                                   mainAxisSize: MainAxisSize.min,
+                                   children: [
+                                     Icon(
+                                       Icons.info_outline,
+                                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                       size: 16,
+                                     ),
+                                     const SizedBox(width: 4),
+                                     Text(
+                                       'business_details.about_us'.tr(),
+                                       style: TextStyle(
+                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                         fontSize: 13,
+                                         fontWeight: FontWeight.w600,
+                                       ),
+                                     ),
+                                   ],
                                  ),
                                ),
                              ),
@@ -2867,6 +2883,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            
                            // Separator
                            Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+
+                           // Business / Cuisine Type
+                           if ((data?['cuisineType']?.toString() ?? '').isNotEmpty) ...[
+                             Text(
+                               data!['cuisineType'].toString(),
+                               style: TextStyle(
+                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                 fontSize: 13,
+                               ),
+                             ),
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                           ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
+                             Text(
+                               'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
+                               style: TextStyle(
+                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                 fontSize: 13,
+                               ),
+                             ),
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                           ],
                            
                            // Open/Closed Status
                            InkWell(
@@ -2910,6 +2947,30 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                            ),
                            
+                           // Delivery Fee
+                           if ((data?['deliveryFee'] as num?)?.toDouble() != null) ...[
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Icon(Icons.delivery_dining, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                                 const SizedBox(width: 3),
+                                 Text(
+                                   (data!['deliveryFee'] as num).toDouble() == 0
+                                       ? tr('marketplace.free_delivery_label')
+                                       : '${(data!['deliveryFee'] as num).toDouble().toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
+                                   style: TextStyle(
+                                     color: (data!['deliveryFee'] as num).toDouble() == 0
+                                         ? const Color(0xFF4CAF50)
+                                         : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                     fontSize: 13,
+                                     fontWeight: (data!['deliveryFee'] as num).toDouble() == 0 ? FontWeight.w600 : FontWeight.w400,
+                                   ),
+                                 ),
+                               ],
+                             ),
+                           ],
+
                            // Min Order (if applicable)
                            if ((data?['minDeliveryOrder'] ?? 0) > 0) ...[
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
@@ -3340,7 +3401,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
      // Min order value from business data
      final butcherData = _butcherDoc?.data() as Map<String, dynamic>?;
-     final minOrder = (butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 0.0;
+     final minOrder = (butcherData?['minDeliveryOrder'] as num?)?.toDouble() ?? (butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 0.0;
      final cartTotal = cart.totalAmount;
      final remaining = minOrder - cartTotal;
      final isDeliveryMode = _deliveryModeIndex == 0 && !_isMasaMode;
@@ -3396,8 +3457,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                    Flexible(
                      child: Text(
                        isSuccess
-                           ? 'checkout.min_order_success'.tr()
-                           : 'checkout.min_order_remaining'.tr(namedArgs: {
+                           ? 'marketplace.min_order_success'.tr()
+                           : 'marketplace.min_order_remaining'.tr(namedArgs: {
                                'amount': remaining.toStringAsFixed(2),
                                'currency': currency,
                              }),
@@ -3898,14 +3959,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Default quantity step (in native unit: kg for weight items, pieces for count)
     final stepQty = isByWeight ? (product.stepQuantity > 0 ? product.stepQuantity : 0.5) : 1.0;
     final defaultQty = isByWeight ? (product.minQuantity > 0 ? product.minQuantity : 0.5) : 1.0;
-    final unitLabel = isByWeight ? 'gram' : 'Adet';
 
     // When NOT in cart: use local _selections as quantity picker
     // When IN cart: display the cart quantity
     final selectedQty = _selections[product.sku] ?? defaultQty;
     final displayQty = inCart ? totalQtyInCart : selectedQty;
-    // Convert kg to grams for display
-    final displayQtyGrams = isByWeight ? (displayQty * 1000).toInt() : displayQty.toInt();
+    final unitLabel = isByWeight ? (displayQty >= 1.0 ? 'kg' : 'gram') : 'Adet';
+    // Convert kg to grams/kg for display
+    final displayQtyText = isByWeight 
+        ? (displayQty >= 1.0 
+            ? '${displayQty.toStringAsFixed(displayQty == displayQty.roundToDouble() ? 0 : 1)}'
+            : '${(displayQty * 1000).toInt()}')
+        : '${displayQty.toInt()}';
 
     // Calculate total price for cart display
     final totalPrice = totalQtyInCart * product.effectiveAppPrice;
@@ -4121,16 +4186,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // ⊖ Minus button — individual bordered square
+                          // Minus button
                           GestureDetector(
                             onTap: () {
                               if (inCart) {
-                                // IN CART: directly remove from cart
                                 if (productCartItems.isNotEmpty) {
                                   ref.read(cartProvider.notifier).removeFromCart(productCartItems.first.uniqueKey);
                                 }
                               } else {
-                                // NOT IN CART: decrease local selection
                                 final current = _selections[product.sku] ?? defaultQty;
                                 if (current > defaultQty) {
                                   setState(() => _selections[product.sku] = current - stepQty);
@@ -4138,8 +4201,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               }
                             },
                             child: Container(
-                              width: 38,
-                              height: 38,
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
                                 color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
                                 borderRadius: BorderRadius.circular(10),
@@ -4153,38 +4216,42 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 '—',
                                 style: TextStyle(
                                   color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withValues(alpha: 0.3),
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ),
-                          // Quantity display — centered
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '$displayQtyGrams',
-                                style: TextStyle(
-                                  color: textPrimary,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
+                          // Quantity display
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    displayQtyText,
+                                    style: TextStyle(
+                                      color: textPrimary,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                unitLabel,
-                                style: TextStyle(
-                                  color: textSecondary,
-                                  fontSize: 9,
+                                Text(
+                                  unitLabel,
+                                  style: TextStyle(
+                                    color: textSecondary,
+                                    fontSize: 9,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          // ⊕ Plus button — individual bordered square
+                          // Plus button
                           GestureDetector(
                             onTap: isAvailable ? () {
                               if (inCart) {
-                                // IN CART: directly add more to cart
                                 if (product.optionGroups.isNotEmpty) {
                                   _showProductBottomSheet(product);
                                 } else {
@@ -4200,14 +4267,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   setState(() {});
                                 }
                               } else {
-                                // NOT IN CART: increase local selection
                                 final current = _selections[product.sku] ?? defaultQty;
                                 setState(() => _selections[product.sku] = current + stepQty);
                               }
                             } : null,
                             child: Container(
-                              width: 38,
-                              height: 38,
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
                                 color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
                                 borderRadius: BorderRadius.circular(10),
@@ -4221,7 +4287,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 '+',
                                 style: TextStyle(
                                   color: accent,
-                                  fontSize: 20,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -4272,26 +4338,36 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               ),
                             ],
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                inCart ? Icons.check_circle_outline : Icons.shopping_cart_outlined,
-                                color: Colors.white,
-                                size: 15,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                inCart 
-                                  ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
-                                  : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
-                                style: const TextStyle(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  inCart ? Icons.check_circle_outline : Icons.shopping_cart_outlined,
                                   color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  size: 14,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      inCart 
+                                        ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
+                                        : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

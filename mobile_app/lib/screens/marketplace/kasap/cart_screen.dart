@@ -2823,7 +2823,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 // UNIFIED Lieferando Footer (combines banner and button)
                 Builder(
                   builder: (context) {
-                    final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
+                    final minOrder = (_butcherData?['minDeliveryOrder'] as num?)?.toDouble() ?? (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
                     final isDelivery = !_isPickUp && !_isDineIn;
                     final isUnderMin = isDelivery && (grandTotal < minOrder);
                     final remaining = minOrder - grandTotal;
@@ -3442,7 +3442,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     // Quantity display text
     final qtyText = isKg 
-        ? '${(quantity * 1000).toInt()}g'
+        ? (quantity >= 1.0 
+            ? '${quantity.toStringAsFixed(quantity == quantity.roundToDouble() ? 0 : 1)} kg'
+            : '${(quantity * 1000).toInt()}g')
         : '${quantity.toInt()}';
     
     return Column(
@@ -3576,13 +3578,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         GestureDetector(
                           onTap: () => _showNoteDialog(item),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                             decoration: BoxDecoration(
                               color: isDark ? Colors.grey[900] : Colors.grey[50],
                               border: Border.all(
                                 color: isDark ? Colors.grey[700]! : const Color(0xFFEFEEEA),
                               ),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -3592,15 +3594,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       (item.recipientName != null && item.recipientName!.isNotEmpty)
                                       ? Icons.edit_note
                                       : Icons.note_add_outlined,
-                                  size: 14,
+                                  size: 12,
                                   color: isDark ? Colors.grey[500] : const Color(0xFF3E3E3E),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 3),
                                 Flexible(
                                   child: Text(
                                     _buildNoteDisplayText(item),
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.w400,
                                       color: (item.note != null && item.note!.isNotEmpty) ||
                                               (item.recipientName != null && item.recipientName!.isNotEmpty)
@@ -9492,9 +9494,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
 
                       final isDeliveryMode = !parent._isPickUp && !parent._isDineIn;
                       final options = <({String key, String label, IconData icon})>[
-                        if (allowCard && !isDeliveryMode) (key: 'card', label: 'checkout.card'.tr(), icon: Icons.credit_card),
+                        if (allowCard) (key: 'card', label: 'checkout.card'.tr(), icon: Icons.credit_card),
                         if (allowCash) (key: 'cash', label: 'checkout.cash'.tr(), icon: Icons.payments_outlined),
-                        if (allowCardOnDelivery) (key: 'cardOnDelivery', label: 'checkout.card_on_delivery'.tr(), icon: Icons.contactless),
+                        if (allowCardOnDelivery && isDeliveryMode) (key: 'cardOnDelivery', label: 'checkout.card_on_delivery'.tr(), icon: Icons.contactless),
                         if (allowKlarna) (key: 'klarna', label: 'Klarna', icon: Icons.schedule_outlined),
                       ];
 
