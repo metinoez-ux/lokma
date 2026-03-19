@@ -3744,8 +3744,37 @@ export default function BusinessDetailsPage() {
                        {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
                      </button>
                    )}
-                   {/* Kaydet — her zaman görünür */}
-                   {settingsSubTab === 'isletme' && (
+                   {/* Zertifikate tab: Düzenle / İptal / Kaydet */}
+                   {settingsSubTab === 'isletme' && isletmeInternalTab === 'zertifikalar' && (
+                     <>
+                       {!isEditing ? (
+                         <button
+                           onClick={() => setIsEditing(true)}
+                           className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-medium transition"
+                         >
+                           ✏️ {t('duzenle') || 'Düzenle'}
+                         </button>
+                       ) : (
+                         <>
+                           <button
+                             onClick={() => setIsEditing(false)}
+                             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition text-sm"
+                           >
+                             {t('iptal1') || 'İptal'}
+                           </button>
+                           <button
+                             onClick={handleSave}
+                             disabled={saving}
+                             className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium transition"
+                           >
+                             {saving ? '...' : t('kaydet')}
+                           </button>
+                         </>
+                       )}
+                     </>
+                   )}
+                   {/* İşletme Bilgileri tab: Kaydet — her zaman görünür */}
+                   {settingsSubTab === 'isletme' && isletmeInternalTab !== 'zertifikalar' && (
                      <button
                        onClick={handleSave}
                        disabled={saving}
