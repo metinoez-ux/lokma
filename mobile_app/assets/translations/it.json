@@ -1172,6 +1172,8 @@
     "my_account": "Il Mio Account",
     "my_orders": "I Miei Ordini",
     "favorites": "Preferiti",
+    "product_added_to_favorites": "Prodotto aggiunto ai preferiti",
+    "product_removed_from_favorites": "Prodotto rimosso dai preferiti",
     "my_addresses": "I Miei Indirizzi",
     "my_reservations": "Prenota\nTavolo",
     "notification_settings": "Notifiche",

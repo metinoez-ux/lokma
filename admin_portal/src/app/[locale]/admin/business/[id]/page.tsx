@@ -604,9 +604,10 @@ export default function BusinessDetailsPage() {
     loadCampaigns();
   }, [settingsSubTab, businessId]);
 
-  // 🔒 Reusable overlay for plan-gated modules — always visible (teaser) but locked if not in plan
+  // Reusable overlay for plan-gated modules -- always visible (teaser) but locked if not in plan
+  // Super Admin bypass: Super admins can always access all features regardless of plan
   const LockedModuleOverlay = ({ featureKey, children }: { featureKey: string; children: React.ReactNode }) => {
-    const isAvailable = planFeatures[featureKey];
+    const isAvailable = planFeatures[featureKey] || admin?.adminType === 'super';
     if (isAvailable) return <>{children}</>;
     return (
       <div className="relative">
@@ -2589,9 +2590,9 @@ export default function BusinessDetailsPage() {
             </button>
             <button
               onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"} ${!planFeatures.reservations ? 'opacity-60' : ''}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
             >
-              {!planFeatures.reservations && '🔒 '}{t('masaRezervasyonlari')}
+              {!planFeatures.reservations && admin?.adminType !== 'super' && '🔒 '}{t('masaRezervasyonlari')}
             </button>
 
             {/* Ayarlar Dropdown */}
@@ -2618,7 +2619,7 @@ export default function BusinessDetailsPage() {
                     { key: "promosyon", label: t('promosyon_label'), action: "tab", featureKey: "promotions" },
                     { key: "marketing", label: t('marketing_boost'), action: "tab", featureKey: "marketing" },
                   ] as { key: string; label: string; action: string; featureKey?: string }[]).map((item) => {
-                    const isGated = item.featureKey && !planFeatures[item.featureKey];
+                    const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
                     return (
                       <button
                         key={item.key}
@@ -3671,7 +3672,7 @@ export default function BusinessDetailsPage() {
                 </h3>
                 <div className="flex items-center gap-3">
                   {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
-                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && planFeatures.delivery && (
+                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || admin?.adminType === 'super') && (
                     <button
                       onClick={async () => {
                         const newValue = !formData.temporaryDeliveryPaused;
@@ -3702,7 +3703,7 @@ export default function BusinessDetailsPage() {
                       🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
                     </button>
                   )}
-                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && planFeatures.pickup && (
+                  {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && (planFeatures.pickup || admin?.adminType === 'super') && (
                     <button
                       onClick={async () => {
                         const newValue = !formData.temporaryPickupPaused;
@@ -4401,9 +4402,9 @@ export default function BusinessDetailsPage() {
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
                           ? "bg-amber-600 text-white"
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                          } ${!planFeatures.sponsoredProducts ? 'opacity-60' : ''}`}
+                          } ${!planFeatures.sponsoredProducts && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
                       >
-                        {!planFeatures.sponsoredProducts && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
+                        {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
                       </button>
                     </div>
 
@@ -6774,7 +6775,7 @@ export default function BusinessDetailsPage() {
                   <LockedModuleOverlay featureKey="promotions">
                     {(() => {
                       // Promosyon sekmesi açılınca direkt promotions sayfasına git — only if feature available
-                      if (planFeatures.promotions && typeof window !== 'undefined') {
+                      if ((planFeatures.promotions || admin?.adminType === 'super') && typeof window !== 'undefined') {
                         window.location.href = `/${params.locale}/admin/promotions?businessId=${businessId}`;
                       }
                       return (
@@ -7637,7 +7638,7 @@ export default function BusinessDetailsPage() {
               </div>
 
               {/* ── Table QR Codes — Compact Table Layout ── */}
-              {planFeatures.dineInQR && formData.tables.length > 0 && (
+              {(planFeatures.dineInQR || admin?.adminType === 'super') && formData.tables.length > 0 && (
                 <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -7723,7 +7724,7 @@ export default function BusinessDetailsPage() {
               )}
 
               {/* ── Garson Sipariş Card ── */}
-              {planFeatures.waiterOrder && (
+              {(planFeatures.waiterOrder || admin?.adminType === 'super') && (
                 <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-teal-600/20 flex items-center justify-center">

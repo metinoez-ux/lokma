@@ -11,6 +11,7 @@ class OrderConfirmationDialog extends StatelessWidget {
   final bool isDineIn;
   final bool isScheduledOrder;
   final DateTime? scheduledDate;
+  final String? businessType;
   final VoidCallback? onDismiss;
   final VoidCallback? onClearCart;
 
@@ -22,6 +23,7 @@ class OrderConfirmationDialog extends StatelessWidget {
     this.isPickUp = true,
     this.isDineIn = false,
     this.isScheduledOrder = false,
+    this.businessType,
     this.scheduledDate,
     this.onDismiss,
     this.onClearCart,
@@ -109,9 +111,9 @@ class OrderConfirmationDialog extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Bon Appetit 😋
+              // Segment-aware farewell message
               Text(
-                'order_confirmation.bon_appetit'.tr(),
+                _getSegmentMessage(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: accentColor,
@@ -301,5 +303,23 @@ class OrderConfirmationDialog extends StatelessWidget {
   String _formatScheduledClock() {
     final date = scheduledDate!;
     return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// Segment-aware farewell message
+  String _getSegmentMessage() {
+    final type = (businessType ?? '').toLowerCase();
+    
+    // Market segment types
+    const marketTypes = {'kasap', 'market', 'balik', 'sarkuteri', 'kuruyemis',
+      'ciftci', 'petshop', 'kozmetik', 'eticaret'};
+    
+    if (type == 'kermes') {
+      return 'order_confirmation.thanks_kermes'.tr();
+    } else if (marketTypes.contains(type)) {
+      return 'order_confirmation.thanks_market'.tr();
+    } else {
+      // Default: yemek/restoran/kahve etc.
+      return 'order_confirmation.bon_appetit'.tr();
+    }
   }
 }

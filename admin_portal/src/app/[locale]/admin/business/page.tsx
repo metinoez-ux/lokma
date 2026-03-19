@@ -5,6 +5,7 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, query, orderBy,
 import { db } from '@/lib/firebase';
 import { normalizeTurkish } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -124,7 +125,29 @@ interface Business {
 export default function BusinessesPage() {
     const t = useTranslations('AdminBusiness');
     const { admin, loading: adminLoading } = useAdmin();
+    const router = useRouter();
     const { getActiveSectors, getBusinessTypesList: getDynamicTypesList, loading: sectorsLoading } = useSectors();
+
+    // RBAC Guard: Only super admins can access the platform-level business management page
+    if (!adminLoading && admin && admin.adminType !== 'super') {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+                <div className="bg-gray-800 border border-red-500/30 rounded-2xl p-8 max-w-md text-center">
+                    <div className="text-5xl mb-4">&#128274;</div>
+                    <h2 className="text-xl font-bold text-white mb-2">Zugriff verweigert</h2>
+                    <p className="text-gray-400 mb-6">
+                        Diese Seite ist nur fur Super-Administratoren zugänglich.
+                    </p>
+                    <button
+                        onClick={() => router.push('/admin/settings')}
+                        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                    >
+                        Zu den Einstellungen
+                    </button>
+                </div>
+            </div>
+        );
+    }
     // Only show ACTIVE sectors in the UI, EXCLUDE kermes since it's now a separate module
     const businessTypes = getActiveSectors()
         .filter(s => s.id !== 'kermes') // Kermes is now accessed via Admin Header → 🎪 Kermes
@@ -270,6 +293,23 @@ export default function BusinessesPage() {
 
     // Load all businesses
     const loadBusinesses = useCallback(async () => {
+        // Defense-in-depth: Non-super admins should not load all businesses
+        if (admin && admin.adminType !== 'super') {
+            // If regular admin has a butcherId, only load that specific business
+            if (admin.butcherId) {
+                try {
+                    const { getDoc, doc: docRef } = await import('firebase/firestore');
+                    const bizDoc = await getDoc(docRef(db, 'businesses', admin.butcherId));
+                    if (bizDoc.exists()) {
+                        setBusinesses([{ id: bizDoc.id, ...bizDoc.data() } as Business]);
+                    }
+                } catch (error) {
+                    console.error('Error loading business:', error);
+                }
+            }
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         try {
             const q = query(collection(db, 'businesses'), orderBy('createdAt', 'desc'));
@@ -285,7 +325,7 @@ export default function BusinessesPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [admin]);
 
     // 🆕 KERMES İÇİN - Organizations yükle
     const loadOrganizations = useCallback(async () => {

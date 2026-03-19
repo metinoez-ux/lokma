@@ -36,7 +36,12 @@ const List<String> BUSINESS_TYPE_KEYS = [
 
 /// Get localized business type label
 String getBusinessTypeLabel(String typeKey) {
-  return tr('marketplace.business_type_$typeKey');
+  if (typeKey.isEmpty || typeKey == 'other') return '';
+  final key = 'marketplace.business_type_$typeKey';
+  final translated = tr(key);
+  // If translation returns the key itself, it means no translation was found
+  if (translated == key) return '';
+  return translated;
 }
 
 /// Yemek/Restoran Keşif Ekranı - LOKMA
@@ -1195,6 +1200,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         });
       }
       debugPrint('🎯 Auto-set: teslimat mode, maxDistance=200 (deliveryRadius handles filtering)');
+      return;
+    }
+
+    // Gel Al mode defaults to 5km
+    if (_deliveryMode == 'gelal') {
+      if (mounted) {
+        setState(() {
+          _sliderAutoSet = true;
+          _currentStepIndex = 4; // 5 km is at index 4 (1,2,3,4,5)
+          _maxDistance = 5.0;
+        });
+      }
+      debugPrint('🎯 Auto-set: gelal mode, maxDistance defaulting to 5.0km');
       return;
     }
 

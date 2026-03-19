@@ -103,16 +103,24 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
         if (!form.code.trim()) return;
         setSaving(true);
         try {
+            // Filter out undefined values -- Firestore rejects undefined
+            const cleanData: Record<string, any> = {};
+            for (const [key, value] of Object.entries(form)) {
+                if (value !== undefined) cleanData[key] = value;
+            }
+
             if (editing) {
-                await updateDoc(doc(db, 'coupons', editing.id), { ...form });
+                await updateDoc(doc(db, 'coupons', editing.id), cleanData);
                 setCoupons(coupons.map(c => c.id === editing.id ? { ...c, ...form } : c));
             } else {
-                const ref = await addDoc(collection(db, 'coupons'), { ...form, createdAt: new Date() });
+                cleanData.createdAt = new Date();
+                const ref = await addDoc(collection(db, 'coupons'), cleanData);
                 setCoupons([{ id: ref.id, ...form }, ...coupons]);
             }
             setShowModal(false);
         } catch (e) {
             console.error('Coupon save error:', e);
+            alert('Fehler beim Speichern: ' + (e as any)?.message);
         }
         setSaving(false);
     };
@@ -140,7 +148,7 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
         <div>
             <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h2 className="text-white font-bold text-lg">🎫 Gutscheine</h2>
+                    <h2 className="text-white font-bold text-lg">Gutscheine</h2>
                     <p className="text-gray-400 text-sm mt-0.5">{coupons.length} Gutscheine · {coupons.filter(c => c.isActive).length} aktiv</p>
                 </div>
                 <button onClick={openAdd} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition">
@@ -156,7 +164,7 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
 
             {filtered.length === 0 ? (
                 <div className="bg-gray-800 rounded-xl p-12 text-center">
-                    <span className="text-5xl">🎫</span>
+                    <span className="text-4xl text-gray-600">--</span>
                     <h3 className="text-lg font-medium text-white mt-4">{searchQ ? 'Kein passender Gutschein' : 'Noch keine Gutscheine'}</h3>
                     {!searchQ && <button onClick={openAdd} className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition">+ Ersten Gutschein erstellen</button>}
                 </div>
@@ -184,16 +192,16 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                                                 <span className="text-xs bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full">Neuk.</span>
                                             )}
                                         </div>
-                                        {coupon.validUntil && <p className="text-xs text-gray-500 mt-1">📅 {coupon.validFrom} → {coupon.validUntil}</p>}
+                                        {coupon.validUntil && <p className="text-xs text-gray-500 mt-1">{coupon.validFrom} - {coupon.validUntil}</p>}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <span className={`text-xs px-2 py-1 rounded-full ${coupon.isActive ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
                                         {coupon.isActive ? 'Aktiv' : 'Inaktiv'}
                                     </span>
-                                    <button onClick={() => toggleActive(coupon)} className={`p-1.5 rounded-lg text-sm transition text-white ${coupon.isActive ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 hover:bg-gray-500'}`}>{coupon.isActive ? '✅' : '⏸️'}</button>
-                                    <button onClick={() => openEdit(coupon)} className="p-1.5 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-white text-sm">✏️</button>
-                                    <button onClick={() => setConfirmDelete(coupon)} className="p-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm">🗑️</button>
+                                    <button onClick={() => toggleActive(coupon)} className={`px-2 py-1 rounded-lg text-xs transition text-white ${coupon.isActive ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-600 hover:bg-gray-500'}`}>{coupon.isActive ? 'An' : 'Aus'}</button>
+                                    <button onClick={() => openEdit(coupon)} className="px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-xs">Bearbeiten</button>
+                                    <button onClick={() => setConfirmDelete(coupon)} className="px-2 py-1 bg-red-700/60 hover:bg-red-600 rounded-lg text-white text-xs">Loschen</button>
                                 </div>
                             </div>
                         </div>
@@ -219,7 +227,7 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
                                 </div>
                                 <button onClick={() => setForm({ ...form, code: generateCode() })}
                                     className="self-end px-3 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition text-sm">
-                                    🎲 Generieren
+                                    Generieren
                                 </button>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -287,7 +295,7 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
 
                         <div className="flex gap-3 mt-6">
                             <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition">Abbrechen</button>
-                            <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 transition disabled:opacity-50">
+                            <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition disabled:opacity-50">
                                 {saving ? 'Wird gespeichert...' : 'Speichern'}
                             </button>
                         </div>
@@ -298,8 +306,7 @@ export default function CouponsTab({ businessId, isSuperAdmin, businesses, coupo
             {confirmDelete && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 max-w-sm w-full text-center">
-                        <span className="text-4xl">🗑️</span>
-                        <h3 className="text-white font-bold mt-3">Gutschein löschen</h3>
+                        <h3 className="text-white font-bold text-lg">Gutschein loschen</h3>
                         <p className="text-gray-400 text-sm mt-2">Sind Sie sicher, dass Sie den Gutschein "{confirmDelete.code}" endgültig löschen möchten?</p>
                         <div className="flex gap-3 mt-5">
                             <button onClick={() => setConfirmDelete(null)} className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Abbrechen</button>

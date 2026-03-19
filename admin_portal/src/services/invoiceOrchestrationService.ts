@@ -1,7 +1,7 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { stripe, createStripeInvoice, finalizeAndSendInvoice } from '@/lib/stripe';
-import { createInvoice, createCommissionInvoice, createSubscriptionInvoice } from './invoiceCreationService';
+import { createInvoice, createCommissionInvoice, createSubscriptionInvoice, createDynamicSubscriptionInvoice } from './invoiceCreationService';
 import { generateInvoicePDF } from './invoicePDFService';
 import { generateXRechnungXML } from './eRechnungService';
 import { MerchantInvoice, InvoiceParty, TaxRate } from '@/types';
@@ -177,16 +177,18 @@ export async function sendCustomerInvoiceEmail(
 export async function generateMonthlySubscriptionInvoices(): Promise<{
     generated: number;
     failed: number;
+    skipped: number;
     details: string[];
 }> {
     const results = {
         generated: 0,
         failed: 0,
+        skipped: 0,
         details: [] as string[]
     };
 
     try {
-        // Aktif aboneliği olan tüm işletmeleri al
+        // Aktif aboneligi olan tum isletmeleri al
         const businessesQuery = query(
             collection(db, 'businesses'),
             where('subscription.status', '==', 'active')
@@ -208,28 +210,126 @@ export async function generateMonthlySubscriptionInvoices(): Promise<{
                 const planDoc = await getDoc(doc(db, 'plans', planId));
                 const plan = planDoc.data();
 
-                if (!plan || plan.monthlyPrice === 0) {
-                    results.details.push(`${businessId}: Ücretsiz plan, fatura oluşturulmadı`);
+                if (!plan) {
+                    results.details.push(`${businessId}: Plan bulunamadi (${planId})`);
+                    results.skipped++;
                     continue;
                 }
 
-                // Abonelik faturası oluştur
-                const invoice = await createSubscriptionInvoice(
+                // Aktif ek modulleri tespit et
+                const addons = {
+                    etaTracking: business.subscription?.addons?.etaTracking === true
+                        || business.features?.liveCourierTracking === true,
+                    whatsappPack: business.subscription?.addons?.whatsappPack === true
+                        || business.features?.whatsappNotifications === true
+                };
+
+                // Kullanim bazli verileri hesapla (ay ici Firestore sorgulari)
+                const usage: {
+                    sponsoredConversions?: number;
+                    sponsoredFeePerConversion?: number;
+                    tableReservationOverageCount?: number;
+                    tableReservationOverageFee?: number;
+                    orderOverageCount?: number;
+                    orderOverageFee?: number;
+                    personnelOverageCount?: number;
+                    personnelOverageFee?: number;
+                } = {};
+
+                // Siparis asim hesaplama
+                const orderLimit = plan.orderLimit || null;
+                if (orderLimit) {
+                    const ordersQuery = query(
+                        collection(db, 'meat_orders'),
+                        where('businessId', '==', businessId),
+                        where('status', '==', 'delivered'),
+                        where('deliveredAt', '>=', Timestamp.fromDate(periodStart)),
+                        where('deliveredAt', '<=', Timestamp.fromDate(periodEnd))
+                    );
+                    const ordersSnapshot = await getDocs(ordersQuery);
+                    const totalOrders = ordersSnapshot.size;
+
+                    if (totalOrders > orderLimit) {
+                        usage.orderOverageCount = totalOrders - orderLimit;
+                        usage.orderOverageFee = plan.orderOverageFee || 0.50;
+                    }
+                }
+
+                // Sponsored Products hesaplama
+                if (plan.sponsoredFeePerConversion && plan.sponsoredFeePerConversion > 0) {
+                    const sponsoredQuery = query(
+                        collection(db, 'sponsored_conversions'),
+                        where('businessId', '==', businessId),
+                        where('convertedAt', '>=', Timestamp.fromDate(periodStart)),
+                        where('convertedAt', '<=', Timestamp.fromDate(periodEnd))
+                    );
+                    const sponsoredSnap = await getDocs(sponsoredQuery);
+                    if (sponsoredSnap.size > 0) {
+                        usage.sponsoredConversions = sponsoredSnap.size;
+                        usage.sponsoredFeePerConversion = plan.sponsoredFeePerConversion;
+                    }
+                }
+
+                // Masa Rezervasyon asim hesaplama
+                const tableLimit = plan.tableReservationLimit || null;
+                if (tableLimit && plan.tableReservationOverageFee) {
+                    const resQuery = query(
+                        collection(db, 'reservations'),
+                        where('businessId', '==', businessId),
+                        where('reservedAt', '>=', Timestamp.fromDate(periodStart)),
+                        where('reservedAt', '<=', Timestamp.fromDate(periodEnd))
+                    );
+                    const resSnap = await getDocs(resQuery);
+                    if (resSnap.size > tableLimit) {
+                        usage.tableReservationOverageCount = resSnap.size - tableLimit;
+                        usage.tableReservationOverageFee = plan.tableReservationOverageFee;
+                    }
+                }
+
+                // Personel asim hesaplama
+                const personnelLimit = plan.personnelLimit || null;
+                if (personnelLimit && plan.personnelOverageFee) {
+                    const currentPersonnel = business.staffCount || 1;
+                    if (currentPersonnel > personnelLimit) {
+                        usage.personnelOverageCount = currentPersonnel - personnelLimit;
+                        usage.personnelOverageFee = plan.personnelOverageFee;
+                    }
+                }
+
+                // Free plan + hic kullanim yoksa fatura olusturma
+                const hasUsage = Object.values(usage).some(v => v && v > 0);
+                const hasAddons = addons.etaTracking || addons.whatsappPack;
+
+                if (plan.monthlyPrice === 0 && !hasUsage && !hasAddons) {
+                    results.details.push(`${businessId}: Free plan, kullanim yok - fatura olusturulmadi`);
+                    results.skipped++;
+                    continue;
+                }
+
+                // Dinamik fatura olustur
+                const invoice = await createDynamicSubscriptionInvoice({
                     businessId,
-                    plan.name || 'Abonnement',
-                    plan.monthlyPrice / 1.19, // Net fiyat (KDV hariç)
                     periodStart,
-                    periodEnd
-                );
+                    periodEnd,
+                    plan: {
+                        name: plan.name || 'Abonnement',
+                        monthlyFee: plan.monthlyPrice || plan.monthlyFee || 0
+                    },
+                    addons,
+                    usage
+                });
 
                 // Stripe'a senkronize et
                 await syncInvoiceToStripe(invoice);
 
-                // E-posta gönder
+                // E-posta gonder
                 await sendInvoiceEmailToBusiness(invoice);
 
+                const itemCount = invoice.lineItems.length;
                 results.generated++;
-                results.details.push(`${businessId}: Fatura ${invoice.invoiceNumber} oluşturuldu`);
+                results.details.push(
+                    `${businessId}: Fatura ${invoice.invoiceNumber} olusturuldu (${itemCount} kalem, ${invoice.grossTotal.toFixed(2)} EUR)`
+                );
 
             } catch (error) {
                 results.failed++;
@@ -238,7 +338,7 @@ export async function generateMonthlySubscriptionInvoices(): Promise<{
         }
 
     } catch (error) {
-        console.error('Aylık faturalama hatası:', error);
+        console.error('Aylik faturalama hatasi:', error);
     }
 
     return results;

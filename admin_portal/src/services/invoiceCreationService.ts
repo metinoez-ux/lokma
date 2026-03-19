@@ -314,16 +314,16 @@ export async function createCommissionInvoice(
 export async function createSubscriptionInvoice(
     businessId: string,
     planName: string,
-    monthlyFee: number, // Net aylık ücret
+    monthlyFee: number, // Net aylik ucret
     periodStart: Date,
     periodEnd: Date
 ): Promise<MerchantInvoice> {
-    // İşletme bilgilerini al
+    // Isletme bilgilerini al
     const businessDoc = await getDoc(doc(db, 'businesses', businessId));
     const businessData = businessDoc.data();
 
     const buyer: InvoiceParty = {
-        name: businessData?.companyName || businessData?.brand || 'İşletme',
+        name: businessData?.companyName || businessData?.brand || 'Isletme',
         address: businessData?.address?.street || '',
         city: businessData?.address?.city || '',
         postalCode: businessData?.address?.postalCode || '',
@@ -348,6 +348,179 @@ export async function createSubscriptionInvoice(
         }],
         periodStart,
         periodEnd
+    });
+}
+
+// =============================================================================
+// DYNAMISCHE ABONNEMENT-RECHNUNG (Plan + Extras + Uberschreitung)
+// =============================================================================
+
+/**
+ * Isletmenin aktif planina gore dinamik fatura kalemleri olusturur.
+ *
+ * Mantik:
+ *   1) monthlyFee > 0 ise ana plan satiri eklenir
+ *   2) Aktif ek moduller (ETA, WhatsApp vb.) ayri satirlar olarak eklenir
+ *   3) Kullanim bazli kalemler:
+ *      - Sponsored Products (siparis basina ucret)
+ *      - Masa Rezervasyon asim ucreti
+ *      - Siparis limiti asim ucreti
+ *      - Personel limiti asim ucreti
+ */
+
+export interface DynamicSubscriptionParams {
+    businessId: string;
+    periodStart: Date;
+    periodEnd: Date;
+    plan: {
+        name: string;
+        monthlyFee: number; // Brut aylik ucret (KDV dahil)
+    };
+    // Aktif ek moduller
+    addons?: {
+        etaTracking?: boolean;
+        whatsappPack?: boolean;
+    };
+    // Kullanim bazli kalemler (ay icinde birikenleri gonder)
+    usage?: {
+        // Sponsored Products
+        sponsoredConversions?: number;    // Toplam sponsored siparis
+        sponsoredFeePerConversion?: number; // EUR/siparis (plan bazli)
+        // Masa Rezervasyon
+        tableReservationOverageCount?: number; // Limit ustu rezervasyon sayisi
+        tableReservationOverageFee?: number;   // EUR/rezervasyon
+        // Siparis asim
+        orderOverageCount?: number;       // Limit ustu siparis sayisi
+        orderOverageFee?: number;         // EUR/siparis
+        // Personel asim
+        personnelOverageCount?: number;   // Limit ustu personel sayisi
+        personnelOverageFee?: number;     // EUR/personel
+    };
+}
+
+export async function createDynamicSubscriptionInvoice(
+    params: DynamicSubscriptionParams
+): Promise<MerchantInvoice> {
+    const { businessId, periodStart, periodEnd, plan, addons, usage } = params;
+
+    // Isletme bilgilerini al
+    const businessDoc = await getDoc(doc(db, 'businesses', businessId));
+    const businessData = businessDoc.data();
+
+    const buyer: InvoiceParty = {
+        name: businessData?.companyName || businessData?.brand || 'Isletme',
+        address: businessData?.address?.street || '',
+        city: businessData?.address?.city || '',
+        postalCode: businessData?.address?.postalCode || '',
+        country: 'Deutschland',
+        taxId: businessData?.taxInfo?.steuernummer,
+        vatId: businessData?.taxInfo?.ustIdNr,
+        email: businessData?.email
+    };
+
+    const monthName = periodStart.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    const lineItems: { description: string; quantity: number; unit: string; unitPrice: number; taxRate: TaxRate }[] = [];
+
+    // ─── 1. ANA PLAN UCRETI ──────────────────────────────────────────────
+    if (plan.monthlyFee > 0) {
+        const netFee = plan.monthlyFee / 1.19; // Brut -> Net
+        lineItems.push({
+            description: `LOKMA ${plan.name} - ${monthName}`,
+            quantity: 1,
+            unit: 'Monat',
+            unitPrice: Math.round(netFee * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    // ─── 2. EK MODULLER ──────────────────────────────────────────────────
+    if (addons?.etaTracking) {
+        const netEta = 15 / 1.19; // 15 EUR brut
+        lineItems.push({
+            description: `ETA Canli Kurye Takibi - ${monthName}`,
+            quantity: 1,
+            unit: 'Monat',
+            unitPrice: Math.round(netEta * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    if (addons?.whatsappPack) {
+        const netWa = 29 / 1.19; // 29 EUR brut
+        lineItems.push({
+            description: `WhatsApp Bildirim Paketi - ${monthName}`,
+            quantity: 1,
+            unit: 'Monat',
+            unitPrice: Math.round(netWa * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    // ─── 3. KULLANIM BAZLI KALEMLER ──────────────────────────────────────
+
+    // Sponsored Products
+    if (usage?.sponsoredConversions && usage.sponsoredConversions > 0 && usage.sponsoredFeePerConversion) {
+        const netPerConversion = usage.sponsoredFeePerConversion / 1.19;
+        lineItems.push({
+            description: `Sponsored Products - ${usage.sponsoredConversions} Bestellungen`,
+            quantity: usage.sponsoredConversions,
+            unit: 'Bestellung',
+            unitPrice: Math.round(netPerConversion * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    // Masa Rezervasyon asim
+    if (usage?.tableReservationOverageCount && usage.tableReservationOverageCount > 0 && usage.tableReservationOverageFee) {
+        const netPerRes = usage.tableReservationOverageFee / 1.19;
+        lineItems.push({
+            description: `Tischreservierung Uberschreitung - ${usage.tableReservationOverageCount} Reservierungen`,
+            quantity: usage.tableReservationOverageCount,
+            unit: 'Reservierung',
+            unitPrice: Math.round(netPerRes * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    // Siparis asim
+    if (usage?.orderOverageCount && usage.orderOverageCount > 0 && usage.orderOverageFee) {
+        const netPerOrder = usage.orderOverageFee / 1.19;
+        lineItems.push({
+            description: `Bestellungen Uberschreitung - ${usage.orderOverageCount} Bestellungen`,
+            quantity: usage.orderOverageCount,
+            unit: 'Bestellung',
+            unitPrice: Math.round(netPerOrder * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    // Personel asim
+    if (usage?.personnelOverageCount && usage.personnelOverageCount > 0 && usage.personnelOverageFee) {
+        const netPerPersonnel = usage.personnelOverageFee / 1.19;
+        lineItems.push({
+            description: `Zusatzpersonal - ${usage.personnelOverageCount} Mitarbeiter`,
+            quantity: usage.personnelOverageCount,
+            unit: 'Mitarbeiter',
+            unitPrice: Math.round(netPerPersonnel * 100) / 100,
+            taxRate: 19
+        });
+    }
+
+    // Hic kalem yoksa (tamamen free, modul yok, asim yok)
+    if (lineItems.length === 0) {
+        throw new Error(`Keine fakturierbaren Positionen fur Betrieb ${businessId} im Zeitraum ${monthName}`);
+    }
+
+    return createInvoice({
+        type: 'subscription',
+        businessId,
+        buyer,
+        lineItems,
+        periodStart,
+        periodEnd,
+        notes: plan.monthlyFee === 0
+            ? 'Kostenloser Tarif - Abrechnung nur fur Zusatzmodule und Uberschreitungen'
+            : undefined
     });
 }
 

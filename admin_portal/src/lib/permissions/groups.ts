@@ -338,6 +338,7 @@ export function getDefaultGroupForAdminType(adminType: string): string {
     'super':           'ceo',
 
     // ═══ Business Owners ═══
+    'isletme_admin':   'owner',    // Universal business admin
     'kasap':           'owner',
     'restoran':        'owner',
     'market':          'owner',
@@ -347,6 +348,7 @@ export function getDefaultGroupForAdminType(adminType: string): string {
     'hali_yikama':     'owner',
 
     // ═══ Staff / Personel ═══
+    'isletme_staff':   'cashier',  // Universal business staff
     'kasap_staff':     'cashier',
     'restoran_staff':  'cashier',
     'market_staff':    'cashier',

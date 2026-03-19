@@ -466,8 +466,8 @@ export default function AdminHeader() {
                             >
                                 {t('analytics')}
                             </Link>
-
-                            {/* Business Nav */}
+                            {/* Business Nav - Super Admin Only */}
+                            {admin?.adminType === 'super' && (
                             <div className="relative group">
                                 <Link
                                     href="/admin/business"
@@ -507,6 +507,7 @@ export default function AdminHeader() {
                                     </div>
                                 </div>
                             </div>
+                            )}
 
                             {/* 2. Bestellungen */}
                             <Link
@@ -769,7 +770,8 @@ export default function AdminHeader() {
                                     {/* 1. Analytik */}
                                     <Link href="/admin/analytics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('analytics')}</Link>
 
-                                    {/* 2. Lokma Partner */}
+                                    {/* 2. Lokma Partner - Super Admin Only */}
+                                    {admin?.adminType === 'super' && (
                                     <div>
                                         <button onClick={() => toggleSection('business')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">
                                             Lokma Partner
@@ -785,6 +787,7 @@ export default function AdminHeader() {
                                             </div>
                                         )}
                                     </div>
+                                    )}
 
                                     {/* 2. Bestellungen */}
                                     <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('orders')}</Link>

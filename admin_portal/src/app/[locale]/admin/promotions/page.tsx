@@ -719,7 +719,7 @@ function PromotionsPageContent() {
     if (loading || adminLoading) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
@@ -727,14 +727,13 @@ function PromotionsPageContent() {
     return (
         <div className="min-h-screen bg-gray-900">
             {/* Header */}
-            <header className="bg-gradient-to-r from-orange-700 to-orange-600 text-white shadow-lg">
+            <header className="bg-gradient-to-r from-blue-800 to-blue-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <span className="text-3xl">🎯</span>
                             <div>
                                 <h1 className="text-xl font-bold">{t('title')}</h1>
-                                <p className="text-orange-200 text-sm">
+                                <p className="text-blue-200 text-sm">
                                     {activePromoCount} {t('activeCampaigns')}
                                     {campaignLimit !== null && (
                                         <span className="ml-1 opacity-80">/ {campaignLimit} {t('rights')} ({businessPlanName})</span>
@@ -792,20 +791,19 @@ function PromotionsPageContent() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex gap-0 overflow-x-auto">
                         {([
-                            { key: 'kampanya', label: t('tabCampaign'), icon: '🎯', desc: t('tabCampDesc') },
-                            { key: 'kuponlar', label: t('tabCoupons'), icon: '🎫', desc: t('tabCouponsDesc') },
-                            ...(isSuperAdmin ? [{ key: 'sablonlar', label: t('tabTemplates'), icon: '📋', desc: t('tabTemplatesDesc') }] : []),
-                            ...(isRestaurantSegment(businessType) ? [{ key: 'bedava_icecek', label: t('tabFreeDrink'), icon: '🥤', desc: t('tabFreeDrinkDesc') }] : []),
+                            { key: 'kampanya', label: t('tabCampaign'), icon: '', desc: t('tabCampDesc') },
+                            { key: 'kuponlar', label: t('tabCoupons'), icon: '', desc: t('tabCouponsDesc') },
+                            ...(isSuperAdmin ? [{ key: 'sablonlar', label: t('tabTemplates'), icon: '', desc: t('tabTemplatesDesc') }] : []),
+                            ...(isRestaurantSegment(businessType) ? [{ key: 'bedava_icecek', label: t('tabFreeDrink'), icon: '', desc: t('tabFreeDrinkDesc') }] : []),
                         ] as { key: string; label: string; icon: string; desc: string }[]).map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => setMainTab(tab.key as any)}
                                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${mainTab === tab.key
-                                    ? 'border-orange-500 text-orange-400'
+                                    ? 'border-blue-500 text-blue-400'
                                     : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
                                     }`}
                             >
-                                <span>{tab.icon}</span>
                                 <span>{tab.label}</span>
                             </button>
                         ))}

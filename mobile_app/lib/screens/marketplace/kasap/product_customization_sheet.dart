@@ -8,6 +8,7 @@ import '../../../models/product_option.dart';
 import '../../../providers/cart_provider.dart';
 import '../../../utils/i18n_utils.dart';
 import '../../../utils/currency_utils.dart';
+import '../../../providers/product_favorites_provider.dart';
 
 /// Lieferando-style product customization bottom sheet.
 ///
@@ -376,14 +377,53 @@ class _ProductCustomizationSheetState
           ),
         if (product.imageUrl?.isNotEmpty == true) const SizedBox(height: 14),
 
-        // Name
-        Text(
-          I18nUtils.getLocalizedText(context, product.nameData),
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: textPrimary,
-          ),
+        // Name + Favorite Heart
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                I18nUtils.getLocalizedText(context, product.nameData),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Consumer(
+              builder: (context, ref, _) {
+                final favs = ref.watch(productFavoritesProvider);
+                final isFav = favs.contains(product.sku);
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
+                      product.sku,
+                      businessId: widget.businessId,
+                      productName: product.name,
+                      imageUrl: product.imageUrl ?? '',
+                      price: product.effectiveAppPrice,
+                    );
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[100],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      color: isFav ? Colors.redAccent : textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 4),
 
@@ -411,7 +451,7 @@ class _ProductCustomizationSheetState
         ],
 
         // Produktinfo link
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
         GestureDetector(
           onTap: () => _showProduktinfo(product),
           child: Text(
@@ -425,6 +465,7 @@ class _ProductCustomizationSheetState
             ),
           ),
         ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -641,8 +682,12 @@ class _ProductCustomizationSheetState
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A28) : const Color(0xFFF5F0E8),
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 1,
+                      ),
                     ),
                     child: TextField(
                       controller: recipientController,
@@ -710,8 +755,12 @@ class _ProductCustomizationSheetState
                   Container(
                     constraints: const BoxConstraints(minHeight: 80),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2A2A28) : const Color(0xFFF5F0E8),
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 1,
+                      ),
                     ),
                     child: TextField(
                       controller: noteSheetController,

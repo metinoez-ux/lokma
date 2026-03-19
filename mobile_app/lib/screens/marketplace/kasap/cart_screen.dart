@@ -897,6 +897,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             pickupDate: pickupDateTime,
             businessHours: _hoursHelper?.getHoursStringForDate(pickupDateTime),
             businessName: _butcherData?['companyName'],
+            businessType: _butcherData?['type'],
             isPickUp: _isPickUp,
             isDineIn: _isDineIn,
             isScheduledOrder: _scheduledDeliverySlot != null && !_isPickUp && !_isDineIn,
@@ -2668,38 +2669,36 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       onTap: () {
                         HapticFeedback.lightImpact();
                         final mode = _isDineIn ? 'masa' : (_isPickUp ? 'gelal' : 'teslimat');
-                        context.push('/kasap/${cart.butcherId}?mode=$mode');
+                        context.push('/kasap/${cart.butcherId}?mode=$mode&addMore=true');
                       },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: (_accentColor).withValues(alpha: 0.4),
-                            width: 1.5,
-                            strokeAlign: BorderSide.strokeAlignInside,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_rounded,
-                              color: _accentColor,
-                              size: 20,
+                      child: Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          final labelColor = isDark ? Colors.white : const Color(0xFF424242);
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.add_rounded,
+                                  color: labelColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _getAddItemLabel(),
+                                  style: TextStyle(
+                                    color: labelColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'marketplace.add_product'.tr(),
-                              style: TextStyle(
-                                color: _accentColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -3123,6 +3122,41 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
+  /// Returns context-dependent label for the "+ Add" button
+  /// Market -> "Urun Ekle" / "Produkt hinzufugen"
+  /// Yemek/Kermes -> "Menuden Ekle" / "Aus dem Menu hinzufugen"
+  String _getAddItemLabel() {
+    final bType = _butcherData?['type']?.toString().toLowerCase() ??
+                  _butcherData?['businessType']?.toString().toLowerCase() ?? '';
+    final isMarket = bType == 'market' || bType == 'supermarket' || bType == 'grocery';
+    final locale = context.locale.languageCode;
+    if (isMarket) {
+      // Market segment
+      const map = {
+        'tr': 'Urun Ekle',
+        'de': 'Produkt hinzufugen',
+        'en': 'Add Product',
+        'es': 'Agregar producto',
+        'fr': 'Ajouter un produit',
+        'it': 'Aggiungi prodotto',
+        'nl': 'Product toevoegen',
+      };
+      return map[locale] ?? map['de']!;
+    } else {
+      // Yemek / Kermes segment
+      const map = {
+        'tr': 'Menuden Ekle',
+        'de': 'Aus dem Menu hinzufugen',
+        'en': 'Add from Menu',
+        'es': 'Agregar del menu',
+        'fr': 'Ajouter du menu',
+        'it': 'Aggiungi dal menu',
+        'nl': 'Toevoegen uit menu',
+      };
+      return map[locale] ?? map['de']!;
+    }
+  }
+
   /// Build the cold chain banner widget
   Widget _buildColdChainBanner() {
     // Only show for kasap-type businesses
@@ -3533,9 +3567,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: const Text(
-                                      '🎁 Gratis',
-                                      style: TextStyle(fontSize: 11, color: Color(0xFF4CAF50), fontWeight: FontWeight.w500),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.card_giftcard, size: 13, color: Color(0xFF4CAF50)),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Gratis',
+                                          style: TextStyle(fontSize: 11, color: Color(0xFF4CAF50), fontWeight: FontWeight.w500),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -4152,7 +4193,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final name = product['name'] is String ? product['name'] as String : (product['name'] is Map ? (product['name']['tr'] ?? product['name'].values.first ?? '').toString() : '');
     final price = product['price'] as double;
     final unit = product['unit'] as String;
-    final imageUrl = product['imageUrl'] as String;
+    final imageUrl = (product['imageUrl'] as String?) ?? '';
 
     final butcherProduct = ButcherProduct(
       id: product['id'] as String,
@@ -4298,13 +4339,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
     // Localized strings
     final titleMap = {
-      'tr': '🎁 1 İçecek Bedava!',
-      'de': '🎁 1 Getränk Gratis!',
-      'en': '🎁 1 Free Drink!',
-      'es': '🎁 1 Bebida Gratis!',
-      'fr': '🎁 1 Boisson Gratuite!',
-      'it': '🎁 1 Bibita Gratis!',
-      'nl': '🎁 1 Drankje Gratis!',
+      'tr': '1 İçecek Bedava!',
+      'de': '1 Getränk Gratis!',
+      'en': '1 Free Drink!',
+      'es': '1 Bebida Gratis!',
+      'fr': '1 Boisson Gratuite!',
+      'it': '1 Bibita Gratis!',
+      'nl': '1 Drankje Gratis!',
     };
     final subtitleMap = {
       'tr': 'Aşağıdaki içeceklerden birini seç',
@@ -4380,9 +4421,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                   ],
                 ),
-                child: Center(
-                  child: Text('🎁', style: TextStyle(fontSize: 22)),
-                ),
+                  child: Center(
+                    child: Icon(Icons.card_giftcard, size: 22, color: Color(0xFF4CAF50)),
+                  ),
               ),
               SizedBox(width: 12),
               Expanded(
@@ -4457,7 +4498,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ? (product['name'][locale] ?? product['name']['tr'] ?? product['name']['de'] ?? product['name'].values.first ?? '').toString()
                         : '');
                 final price = product['price'] as double;
-                final imageUrl = product['imageUrl'] as String;
+                final imageUrl = (product['imageUrl'] as String?) ?? '';
                 final productId = product['id'] as String;
 
                 // Check if this is the currently selected free drink
@@ -4630,7 +4671,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             : '');
     final price = product['price'] as double;
     final unit = product['unit'] as String;
-    final imageUrl = product['imageUrl'] as String;
+    final imageUrl = (product['imageUrl'] as String?) ?? '';
 
     final butcherProduct = ButcherProduct(
       id: product['id'] as String,
@@ -6018,12 +6059,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         else
                                           Icon(Icons.my_location_rounded, color: _accentColor, size: 20),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'checkout.find_my_location'.tr(),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: isDark ? Colors.white : Colors.black87,
+                                        Flexible(
+                                          child: Text(
+                                            'checkout.find_my_location'.tr(),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: isDark ? Colors.white : Colors.black87,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
                                           ),
                                         ),
                                       ],
@@ -6098,12 +6143,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       children: [
                                         Icon(Icons.map_outlined, color: _accentColor, size: 20),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'checkout.select_on_map'.tr(),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: isDark ? Colors.white : Colors.black87,
+                                        Flexible(
+                                          child: Text(
+                                            'checkout.select_on_map'.tr(),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: isDark ? Colors.white : Colors.black87,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
                                           ),
                                         ),
                                       ],
@@ -7207,12 +7256,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 children: [
                   Icon(Icons.schedule, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
                   const SizedBox(width: 8),
-                  Text(
-                    'checkout.delivery_time_label'.tr(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.onSurface,
+                  Flexible(
+                    child: Text(
+                      'checkout.delivery_time_label'.tr(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (_scheduledDeliverySlot != null) ...[
@@ -9569,26 +9621,27 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     // Legal disclaimer moved here, below payment chips
                     const SizedBox(height: 16),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Builder(
                         builder: (context) {
                           final isDark = Theme.of(context).brightness == Brightness.dark;
-                          final linkColor = isDark ? Colors.white : Colors.grey[800]!;
-                          final textColor = isDark ? Colors.grey[400]! : Colors.grey[500]!;
+                          final linkColor = isDark ? Colors.white70 : Colors.grey[700]!;
+                          final textColor = isDark ? Colors.grey[500]! : Colors.grey[500]!;
                           return Wrap(
                             alignment: WrapAlignment.center,
+                            runAlignment: WrapAlignment.center,
                             children: [
-                              Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4)),
+                              Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w400)),
                               GestureDetector(
                                 onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
-                                child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: linkColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w500, decoration: TextDecoration.underline, decorationColor: linkColor)),
+                                child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: linkColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w400, decoration: TextDecoration.underline, decorationColor: linkColor)),
                               ),
-                              Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4)),
+                              Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w400)),
                               GestureDetector(
                                 onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
-                                child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: linkColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w500, decoration: TextDecoration.underline, decorationColor: linkColor)),
+                                child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: linkColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w400, decoration: TextDecoration.underline, decorationColor: linkColor)),
                               ),
-                              Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4)),
+                              Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: textColor, fontSize: 12, height: 1.4, fontWeight: FontWeight.w400)),
                             ],
                           );
                         },

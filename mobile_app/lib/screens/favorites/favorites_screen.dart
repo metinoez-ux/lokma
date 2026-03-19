@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -67,7 +68,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         elevation: 0,
         centerTitle: true,
         title: Text(
-          tr('favorites.title'),
+          tr('profile.favorilerim'),
           style: TextStyle(
             color: textPrimary,
             fontSize: 18,
@@ -130,29 +131,76 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('users').doc(user.uid)
-          .collection('favoriteOrders')
+          .collection('meat_orders')
+          .where('userId', isEqualTo: user.uid)
           .orderBy('createdAt', descending: true)
+          .limit(20)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
         }
 
+        if (snapshot.hasError) {
+          debugPrint('orders error: ${snapshot.error}');
+          // Firestore index hatasi icin fallback: orderBy olmadan dene
+          return StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('meat_orders')
+                .where('userId', isEqualTo: user.uid)
+                .limit(20)
+                .snapshots(),
+            builder: (context, fallbackSnapshot) {
+              if (fallbackSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
+              }
+              if (!fallbackSnapshot.hasData || fallbackSnapshot.data!.docs.isEmpty || fallbackSnapshot.hasError) {
+                return _buildEmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  title: tr('common.favori_siparis_yok'),
+                  subtitle: tr('common.siparislerinizi_bookmark_ile_f'),
+                  isDark: isDark,
+                );
+              }
+              final docs = fallbackSnapshot.data!.docs.toList();
+              docs.sort((a, b) {
+                final aData = a.data() as Map<String, dynamic>;
+                final bData = b.data() as Map<String, dynamic>;
+                final aTime = aData['createdAt'] as Timestamp?;
+                final bTime = bData['createdAt'] as Timestamp?;
+                if (aTime == null && bTime == null) return 0;
+                if (aTime == null) return 1;
+                if (bTime == null) return -1;
+                return bTime.compareTo(aTime);
+              });
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: docs.length,
+                itemBuilder: (context, index) {
+                  final doc = docs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
+                },
+              );
+            },
+          );
+        }
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return _buildEmptyState(
-            icon: Icons.bookmark_border_rounded,
+            icon: Icons.receipt_long_outlined,
             title: tr('common.favori_siparis_yok'),
             subtitle: tr('common.siparislerinizi_bookmark_ile_f'),
             isDark: isDark,
           );
         }
 
+        final docs = snapshot.data!.docs;
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: snapshot.data!.docs.length,
+          itemCount: docs.length,
           itemBuilder: (context, index) {
-            final doc = snapshot.data!.docs[index];
+            final doc = docs[index];
             final data = doc.data() as Map<String, dynamic>;
             return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
           },
@@ -162,11 +210,16 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildFavoriteOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final favoriteName = data['favoriteName'] ?? '';
-    final businessName = data['businessName'] ?? tr('common.i_sletme');
-    final businessId = data['businessId'] ?? '';
-    final totalAmount = (data['totalAmount'] ?? 0).toDouble();
-    final itemCount = data['itemCount'] ?? 0;
+    final businessName = data['businessName']?.toString() ?? data['butcherName']?.toString() ?? tr('common.i_sletme');
+    final businessId = data['businessId']?.toString() ?? data['butcherId']?.toString() ?? '';
+    final totalAmount = (data['grandTotal'] ?? data['totalAmount'] ?? data['total'] ?? 0).toDouble();
+    final items = data['items'] as List<dynamic>?;
+    final itemCount = items?.length ?? (data['itemCount'] ?? 0);
+    final status = data['status']?.toString() ?? '';
+    final createdAt = data['createdAt'] as Timestamp?;
+    final dateStr = createdAt != null
+        ? '${createdAt.toDate().day.toString().padLeft(2, '0')}.${createdAt.toDate().month.toString().padLeft(2, '0')}.${createdAt.toDate().year}'
+        : '';
 
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('businesses').doc(businessId).get(),
@@ -259,10 +312,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Favorite name (bold, primary)
-                        if (favoriteName.isNotEmpty)
+                        // Siparis tarihi
+                        if (dateStr.isNotEmpty)
                           Text(
-                            favoriteName,
+                            dateStr,
                             style: TextStyle(
                               color: textPrimary,
                               fontSize: 16,
@@ -271,17 +324,64 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        if (favoriteName.isNotEmpty) const SizedBox(height: 2),
+                        if (dateStr.isNotEmpty) const SizedBox(height: 2),
                         // Business name (subtitle)
                         Text(
                           businessName,
                           style: TextStyle(color: textSubtle, fontSize: 13),
                         ),
                         const SizedBox(height: 4),
-                        // Item count + total
-                        Text(
-                          '$itemCount ${tr('common.urun_kucuk')} - ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
-                          style: TextStyle(color: textSubtle, fontSize: 12),
+                        // Siparis icerigindeki urunler
+                        if (items != null && items.isNotEmpty)
+                          Text(
+                            items.take(3).map((item) {
+                              if (item is Map) return item['name']?.toString() ?? item['productName']?.toString() ?? '';
+                              return '';
+                            }).where((n) => n.isNotEmpty).join(', ') + (items.length > 3 ? ' +${items.length - 3}' : ''),
+                            style: TextStyle(color: textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        const SizedBox(height: 4),
+                        // Urun sayisi + toplam + durum
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '$itemCount ${tr('common.urun_kucuk')} - ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
+                                style: TextStyle(color: textSubtle, fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (status.isNotEmpty) ...
+                            [
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: status == 'delivered' ? Colors.green.withValues(alpha: 0.15) :
+                                         status == 'cancelled' ? Colors.red.withValues(alpha: 0.15) :
+                                         Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  status == 'delivered' ? tr('common.teslim_edildi') :
+                                  status == 'cancelled' ? tr('common.iptal_edildi') :
+                                  status == 'accepted' ? tr('common.onaylandi') :
+                                  status == 'preparing' ? tr('common.hazirlaniyor') :
+                                  status,
+                                  style: TextStyle(
+                                    color: status == 'delivered' ? Colors.green :
+                                           status == 'cancelled' ? Colors.red :
+                                           Colors.orange,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 8),
                         // "Siparisi Goruntule" button
@@ -304,20 +404,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                       ],
                     ),
                   ),
-                  // Bookmark icon (filled = remove)
-                  GestureDetector(
-                    onTap: () async {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user == null) return;
-                      await FirebaseFirestore.instance
-                          .collection('users').doc(user.uid)
-                          .collection('favoriteOrders').doc(orderId)
-                          .delete();
-                    },
-                    child: const Icon(
+                  // Bookmark icon
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Icon(
                       Icons.bookmark,
-                      color: Color(0xFFFB335B),
-                      size: 24,
+                      color: const Color(0xFFFB335B),
+                      size: 28,
                     ),
                   ),
                 ],
@@ -348,20 +441,66 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
     return Column(
       children: [
-        // Filter chips row
+        // Dropdown filter (notification style)
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterChip('all', tr('common.hepsi'), Icons.apps, isDark),
-                const SizedBox(width: 8),
-                _buildFilterChip('tuna', tr('common.tuna_isletmeleri'), Icons.verified, isDark),
-                const SizedBox(width: 8),
-                _buildFilterChip('kermes', tr('common.kermesler'), Icons.festival, isDark),
-              ],
-            ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                    width: 0.5,
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _businessFilter,
+                    isDense: true,
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                    dropdownColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'all', child: Text(tr('common.all'))),
+                      DropdownMenuItem(value: 'tuna', child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.verified, size: 14, color: const Color(0xFFFB335B)),
+                          const SizedBox(width: 5),
+                          const Text('TUNA'),
+                        ],
+                      )),
+                      DropdownMenuItem(value: 'kermes', child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.festival, size: 14, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          const SizedBox(width: 5),
+                          Text(tr('home.kermes')),
+                        ],
+                      )),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _businessFilter = val);
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         // Business list
@@ -404,8 +543,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
               if (filtered.isEmpty) {
                 return _buildEmptyState(
                   icon: Icons.filter_list_off,
-                  title: tr('common.sonuc_bulunamadi'),
-                  subtitle: tr('favorites.no_matching_filter'),
+                  title: tr('common.no_results_found'),
+                  subtitle: tr('common.no_results'),
                   isDark: isDark,
                 );
               }
@@ -426,50 +565,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     );
   }
 
-  Widget _buildFilterChip(String filterKey, String label, IconData icon, bool isDark) {
-    final isSelected = _businessFilter == filterKey;
-    return GestureDetector(
-      onTap: () => setState(() => _businessFilter = filterKey),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? lokmaRed
-              : (isDark ? const Color(0xFF262626) : Colors.grey[100]),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? lokmaRed
-                : (isDark ? const Color(0xFF3A3A3A) : Colors.grey[300]!),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isSelected
-                  ? Colors.white
-                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
+
 
   Future<List<DocumentSnapshot>> _fetchBusinessDocs(List<String> ids) async {
     if (ids.isEmpty) return [];
@@ -553,7 +650,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     final textSubtle = isDark ? const Color(0xFF888888) : Colors.grey[600]!;
     final borderSubtle = isDark ? const Color(0xFF262626) : Colors.grey[200]!;
 
-    if (favoriteSkus.isEmpty) {
+    // Use detailed provider for rich data
+    final detailedFavorites = ref.watch(productFavoritesDetailedProvider);
+
+    if (detailedFavorites.isEmpty) {
       return _buildEmptyState(
         icon: Icons.shopping_bag_outlined,
         title: tr('common.favori_urun_yok'),
@@ -562,155 +662,386 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
       );
     }
 
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _fetchProductsBySku(favoriteSkus),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
-        }
-
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState(
-            icon: Icons.shopping_bag_outlined,
-            title: tr('common.urun_bulunamadi'),
-            subtitle: tr('common.favori_urunleriniz_yuklenemedi'),
-            isDark: isDark,
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: snapshot.data!.length,
-          itemBuilder: (context, index) {
-            final product = snapshot.data![index];
-            return _buildProductCard(product, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
-          },
-        );
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: detailedFavorites.length,
+      itemBuilder: (context, index) {
+        final fav = detailedFavorites[index];
+        return _buildProductCardFromFavorite(fav, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
       },
     );
   }
 
-  Future<List<Map<String, dynamic>>> _fetchProductsBySku(List<String> skus) async {
-    if (skus.isEmpty) return [];
-    
-    final List<Map<String, dynamic>> results = [];
-    
-    try {
-      for (String sku in skus) {
-        final querySnapshot = await FirebaseFirestore.instance
-            .collectionGroup('products')
-            .where('sku', isEqualTo: sku)
-            .limit(1)
-            .get();
-        
-        for (var doc in querySnapshot.docs) {
-          final data = doc.data();
-          final butcherId = doc.reference.parent.parent?.id ?? '';
-          
-          String butcherName = '';
-          if (butcherId.isNotEmpty) {
-            final butcherDoc = await FirebaseFirestore.instance
-                .collection('businesses')
-                .doc(butcherId)
-                .get();
-            if (butcherDoc.exists) {
-              butcherName = butcherDoc.data()?['companyName'] ?? butcherDoc.data()?['name'] ?? '';
-            }
+  /// For legacy favorites (no productName), fetch product info from Firestore
+  Widget _buildProductCardFromFavorite(FavoriteProduct fav, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
+    // If legacy (no product name), look up the product from Firestore
+    final isLegacy = fav.productName.isEmpty;
+
+    if (isLegacy && fav.businessId.isNotEmpty) {
+      // businessId var -- direkt document okuma (collectionGroup'a gerek yok)
+      return FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('businesses').doc(fav.businessId)
+            .collection('products').doc(fav.sku)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: surfaceCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: borderSubtle),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 60, height: 60,
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Container(
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
-          
-          results.add({
-            ...data,
-            'butcherId': butcherId,
-            'butcherName': butcherName,
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            // Urun artik yok
+            return _buildProductCardUI(
+              name: fav.sku.length > 12 ? '${fav.sku.substring(0, 12)}...' : fav.sku,
+              imageUrl: '',
+              price: 0,
+              businessId: fav.businessId,
+              sku: fav.sku,
+              surfaceCard: surfaceCard,
+              textPrimary: textSubtle,
+              textSubtle: textSubtle,
+              borderSubtle: borderSubtle,
+              isDark: isDark,
+              isDeleted: true,
+            );
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final productName = _extractProductName(data) ?? fav.sku;
+          final productImage = data['imageUrl']?.toString() ?? '';
+          final productPrice = (data['appSellingPrice'] ?? data['sellingPrice'] ?? data['price'] ?? 0).toDouble();
+
+          // Provider'i zenginlestir (bir kerelik)
+          Future.microtask(() {
+            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku); // cikar
+            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
+              fav.sku,
+              businessId: fav.businessId,
+              productName: productName,
+              imageUrl: productImage,
+              price: productPrice,
+            ); // detayli olarak tekrar ekle
           });
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching products by SKU: $e');
+
+          return _buildProductCardUI(
+            name: productName,
+            imageUrl: productImage,
+            price: productPrice,
+            businessId: fav.businessId,
+            sku: fav.sku,
+            surfaceCard: surfaceCard,
+            textPrimary: textPrimary,
+            textSubtle: textSubtle,
+            borderSubtle: borderSubtle,
+            isDark: isDark,
+          );
+        },
+      );
     }
-    
-    return results;
+
+    if (isLegacy) {
+      // businessId de yok -- gercek legacy veri, detay cekilemez. collectionGroup ile ariyoruz.
+      return FutureBuilder<DocumentSnapshot?>(
+        future: _findLegacyProduct(fav.sku),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            );
+          }
+
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+            return _buildProductCardUI(
+              name: fav.sku.length > 12 ? '${fav.sku.substring(0, 12)}...' : fav.sku,
+              imageUrl: '',
+              price: 0,
+              businessId: '',
+              sku: fav.sku,
+              surfaceCard: surfaceCard,
+              textPrimary: textSubtle,
+              textSubtle: textSubtle,
+              borderSubtle: borderSubtle,
+              isDark: isDark,
+              isDeleted: true,
+            );
+          }
+
+          final doc = snapshot.data!;
+          final data = doc.data() as Map<String, dynamic>;
+          final productName = _extractProductName(data) ?? fav.sku;
+          final productImage = data['imageUrl']?.toString() ?? '';
+          final productPrice = (data['appSellingPrice'] ?? data['sellingPrice'] ?? data['price'] ?? 0).toDouble();
+          final foundBusinessId = doc.reference.parent.parent?.id ?? '';
+
+          // Provider'i zenginlestir (bir kerelik)
+          Future.microtask(() {
+            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(fav.sku); // cikar
+            ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
+              fav.sku,
+              businessId: foundBusinessId,
+              productName: productName,
+              imageUrl: productImage,
+              price: productPrice,
+            ); // detayli olarak tekrar ekle
+          });
+
+          return _buildProductCardUI(
+            name: productName,
+            imageUrl: productImage,
+            price: productPrice,
+            businessId: foundBusinessId,
+            sku: fav.sku,
+            surfaceCard: surfaceCard,
+            textPrimary: textPrimary,
+            textSubtle: textSubtle,
+            borderSubtle: borderSubtle,
+            isDark: isDark,
+          );
+        },
+      );
+    }
+
+    // Non-legacy: use stored data directly
+    return _buildProductCardUI(
+      name: fav.productName,
+      imageUrl: fav.imageUrl,
+      price: fav.price,
+      businessId: fav.businessId,
+      sku: fav.sku,
+      surfaceCard: surfaceCard,
+      textPrimary: textPrimary,
+      textSubtle: textSubtle,
+      borderSubtle: borderSubtle,
+      isDark: isDark,
+    );
   }
 
-  Widget _buildProductCard(Map<String, dynamic> product, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final name = product['name'] ?? tr('common.urun');
-    final sku = product['sku'] ?? '';
-    final price = (product['price'] ?? 0).toDouble();
-    final imageUrl = product['imageUrl'] as String?;
-    final butcherName = product['butcherName'] ?? '';
-    final butcherId = product['butcherId'] ?? '';
+  Future<DocumentSnapshot?> _findLegacyProduct(String sku) async {
+    try {
+      final snap1 = await FirebaseFirestore.instance.collectionGroup('products').where('sku', isEqualTo: sku).limit(1).get();
+      if (snap1.docs.isNotEmpty) return snap1.docs.first;
+      
+      final snap2 = await FirebaseFirestore.instance.collectionGroup('products').where('masterProductSku', isEqualTo: sku).limit(1).get();
+      if (snap2.docs.isNotEmpty) return snap2.docs.first;
+    } catch (_) {}
+    return null;
+  }
+
+  Widget _buildProductCardUI({
+    required String name,
+    required String imageUrl,
+    required double price,
+    required String businessId,
+    required String sku,
+    required Color surfaceCard,
+    required Color textPrimary,
+    required Color textSubtle,
+    required Color borderSubtle,
+    required bool isDark,
+    bool isDeleted = false,
+  }) {
+    final hasImage = imageUrl.isNotEmpty;
+    final hasBusinessId = businessId.isNotEmpty;
 
     return GestureDetector(
-      onTap: () {
-        if (butcherId.isNotEmpty) {
-          context.push('/kasap/$butcherId');
+      onTap: () async {
+        if (isDeleted) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(tr('common.bilgi')),
+                content: Text(tr('common.urun_artik_mevcut_degil')),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(sku);
+                    },
+                    child: Text(tr('common.favorilerden_kaldir')),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(tr('common.ok')),
+                  ),
+                ],
+              ),
+            );
+          }
+          return;
+        }
+        if (hasBusinessId) {
+          try {
+            final businessDoc = await FirebaseFirestore.instance
+                .collection('businesses').doc(businessId).get();
+            if (!mounted) return;
+            if (!businessDoc.exists) {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(tr('common.isletme_bulunamadi')),
+                  content: Text(tr('common.isletme_artik_aktif_degil')),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(sku);
+                      },
+                      child: Text(tr('common.favorilerden_kaldir')),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(tr('common.ok')),
+                    ),
+                  ],
+                ),
+              );
+              return;
+            }
+            if (mounted) context.push('/kasap/$businessId');
+          } catch (e) {
+            if (mounted) context.push('/kasap/$businessId');
+          }
         }
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: surfaceCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderSubtle),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: 60,
-                height: 60,
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover)
-                    : Container(
-                        color: isDark ? Colors.grey[800] : Colors.grey[200],
-                        child: Icon(Icons.shopping_bag, color: isDark ? Colors.white24 : Colors.grey[400]),
-                      ),
+      child: Opacity(
+        opacity: isDeleted ? 0.5 : 1.0,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: surfaceCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderSubtle),
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: hasImage
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) => Container(
+                            color: isDark ? Colors.grey[800] : Colors.grey[200],
+                            child: Icon(Icons.shopping_bag, color: isDark ? Colors.white24 : Colors.grey[400]),
+                          ),
+                        )
+                      : Container(
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          child: Icon(Icons.shopping_bag, color: isDark ? Colors.white24 : Colors.grey[400]),
+                        ),
+                ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        '${CurrencyUtils.getCurrencySymbol()}${price.toStringAsFixed(2)}',
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
-                      ),
-                      if (butcherName.isNotEmpty) ...[
-                        const SizedBox(width: 8),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
                         Expanded(
                           child: Text(
-                            '- $butcherName',
-                            style: TextStyle(color: textSubtle, fontSize: 12),
+                            name,
+                            style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (isDeleted)
+                          Text(
+                            tr('common.silinmis'),
+                            style: TextStyle(color: Colors.red[400], fontSize: 11, fontStyle: FontStyle.italic),
+                          ),
                       ],
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (price > 0)
+                          Text(
+                            '${CurrencyUtils.getCurrencySymbol()}${price.toStringAsFixed(2)}',
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                        if (hasBusinessId) ...[
+                          if (price > 0) const SizedBox(width: 8),
+                          Expanded(
+                            child: FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance.collection('businesses').doc(businessId).get(),
+                              builder: (context, snap) {
+                                if (!snap.hasData || !snap.data!.exists) return const SizedBox.shrink();
+                                final bData = snap.data!.data() as Map<String, dynamic>?;
+                                final bName = bData?['companyName'] ?? bData?['name'] ?? '';
+                                if (bName.toString().isEmpty) return const SizedBox.shrink();
+                                return Text(
+                                  '- $bName',
+                                  style: TextStyle(color: textSubtle, fontSize: 12),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.favorite, color: lokmaRed),
-              onPressed: () => ref.read(productFavoritesProvider.notifier).toggleFavorite(sku),
-            ),
-          ],
+              IconButton(
+                icon: const Icon(Icons.favorite, color: lokmaRed),
+                onPressed: () => ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(sku),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Firestore product name extractor (supports localized and plain string)
+  String? _extractProductName(Map<String, dynamic> data) {
+    final nameField = data['name'];
+    if (nameField == null) return null;
+    if (nameField is String) return nameField;
+    if (nameField is Map) {
+      if (nameField.containsKey('tr') && nameField['tr'] != null) return nameField['tr'].toString();
+      if (nameField.values.isNotEmpty) return nameField.values.first.toString();
+    }
+    return null;
   }
 
   Widget _buildEmptyState({required IconData icon, required String title, required String subtitle, required bool isDark}) {

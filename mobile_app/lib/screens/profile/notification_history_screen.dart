@@ -41,6 +41,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     super.initState();
     timeago.setLocaleMessages('tr', timeago.TrMessages());
     _markAllAsRead();
+    _loadFavoriteNames();
 
     _swipeHintController = AnimationController(
       vsync: this,
@@ -54,6 +55,28 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     ]).animate(_swipeHintController);
 
     _checkSwipeHintNeeded();
+  }
+
+  /// Load existing favorite order names from Firestore
+  Future<void> _loadFavoriteNames() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    final snap = await FirebaseFirestore.instance
+        .collection('users').doc(user.uid)
+        .collection('favoriteOrders')
+        .get();
+    if (!mounted) return;
+    final map = <String, String>{};
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      final name = data['favoriteName'] as String? ?? '';
+      if (name.isNotEmpty) {
+        map[doc.id] = name;
+      }
+    }
+    setState(() {
+      _favoriteNames.addAll(map);
+    });
   }
 
   Future<void> _checkSwipeHintNeeded() async {
@@ -459,6 +482,12 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             }
             final bCity = pendingData['businessCity'] as String? ?? '';
             final bPostal = pendingData['businessPostalCode'] as String? ?? '';
+            // Extract businessId from any status notification
+            String bId = '';
+            for (final s in statuses) {
+              final id = s['businessId'] as String? ?? '';
+              if (id.isNotEmpty) { bId = id; break; }
+            }
 
             // Detect order type from notification data
             String oType = 'delivery';
@@ -470,10 +499,18 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               }
             }
 
+            // Extract itemCount from any status notification
+            int itemCnt = 0;
+            for (final s in statuses) {
+              final cnt = (s['itemCount'] as num?)?.toInt() ?? 0;
+              if (cnt > 0) { itemCnt = cnt; break; }
+            }
+
             orderGroups.add(_OrderGroup(
               orderId: entry.key,
               rawOrderNumber: rawNum,
               businessName: bName,
+              businessId: bId,
               statuses: statuses,
               latestTimestamp: latestTime,
               totalAmount: totalAmt,
@@ -481,6 +518,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               businessPostalCode: bPostal,
               orderType: oType,
               docIds: orderDocIds[entry.key] ?? [],
+              itemCount: itemCnt,
             ));
           }
 
@@ -579,6 +617,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             filtered = combined.where((item) => item is _ReservationGroup).toList();
           } else if (_activeFilter == 'promotions') {
             filtered = combined.where((item) => item is! _OrderGroup && item is! _ReservationGroup).toList();
+          } else if (_activeFilter == 'favorites') {
+            filtered = combined.where((item) => item is _OrderGroup && _favoriteNames.containsKey(item.orderId)).toList();
           } else {
             filtered = combined;
           }
@@ -610,10 +650,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                     children: [
                       // Dropdown filter
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
                             width: 0.5,
@@ -638,6 +678,14 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                             items: [
                               DropdownMenuItem(value: 'all', child: Text('notifications.filter_all'.tr())),
                               DropdownMenuItem(value: 'orders', child: Text('notifications.filter_orders'.tr())),
+                              DropdownMenuItem(value: 'favorites', child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.favorite_rounded, size: 14, color: const Color(0xFFFB335B)),
+                                  const SizedBox(width: 5),
+                                  Text('Favoriler'),
+                                ],
+                              )),
                               DropdownMenuItem(value: 'reservations', child: Text('notifications.filter_reservations'.tr())),
                               DropdownMenuItem(value: 'promotions', child: Text('notifications.filter_promotions'.tr())),
                             ],
@@ -716,6 +764,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                             }
                           }
                           return ListView.separated(
+                        key: const PageStorageKey('notification_list'),
                         padding: EdgeInsets.only(left: 16, right: 16, top: 4, bottom: _isEditMode ? 80 : 12),
                         itemCount: filtered.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -777,6 +826,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       isDark: isDark,
                       isFirst: index == 0,
                       metaFn: _meta,
+                      favoriteName: _favoriteNames[item.orderId],
                     );
                     if (_isEditMode) {
                       if (isActive) return Opacity(opacity: 0.5, child: card);
@@ -787,40 +837,37 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       );
                     }
                     if (isActive) return card;
-                    return GestureDetector(
-                      onLongPress: () {
-                        HapticFeedback.mediumImpact();
-                        setState(() {
-                          _isEditMode = true;
-                          _selectedIds.add(item.orderId);
-                        });
-                      },
-                      child: _buildDismissible(
-                        key: Key('order_${item.orderId}'),
-                        isDark: isDark,
-                        applySwipeHint: isHintTarget,
-                        swipeHintOffset: _swipeHintOffset,
-                        onDismissed: () async {
-                          await _trashOrderGroup(item);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context)
-                              ..clearSnackBars()
-                              ..showSnackBar(
-                              SnackBar(
-                                content: Text('notifications.notification_trashed'.tr()),
-                                duration: const Duration(seconds: 3),
-                                action: SnackBarAction(
-                                  label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFFFB335B),
-                                  onPressed: () => _undoTrashOrderGroup(item),
+                    return Builder(
+                      builder: (cardContext) => GestureDetector(
+                        onLongPress: () => _showHeartOverlayAndFavorite(item, cardContext),
+                        child: _buildDismissible(
+                          key: Key('order_${item.orderId}'),
+                          isDark: isDark,
+                          orderGroup: item,
+                          applySwipeHint: isHintTarget,
+                          swipeHintOffset: _swipeHintOffset,
+                          onDismissed: () async {
+                            await _trashOrderGroup(item);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context)
+                                ..clearSnackBars()
+                                ..showSnackBar(
+                                SnackBar(
+                                  content: Text('notifications.notification_trashed'.tr()),
+                                  duration: const Duration(seconds: 3),
+                                  action: SnackBarAction(
+                                    label: 'notifications.undo'.tr(),
+                                    textColor: const Color(0xFFFB335B),
+                                    onPressed: () => _undoTrashOrderGroup(item),
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                            );
-                          }
-                        },
-                        child: card,
+                              );
+                            }
+                          },
+                          child: card,
+                        ),
                       ),
                     );
                   } else {
@@ -928,21 +975,289 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   }
 
 
+  // ── Favorite helpers ──────────────────────────────────────────────────
+  Future<void> _addToFavoriteOrders(_OrderGroup group, String favoriteName) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users').doc(user.uid)
+        .collection('favoriteOrders').doc(group.orderId)
+        .set({
+      'orderId': group.orderId,
+      'businessName': group.businessName,
+      'businessId': group.businessId,
+      'totalAmount': group.totalAmount ?? 0,
+      'itemCount': group.itemCount,
+      'favoriteName': favoriteName,
+      'orderType': group.orderType,
+      'createdAt': Timestamp.now(),
+    });
+    // Update local state so the card immediately shows the favorite badge
+    if (mounted) {
+      setState(() {
+        _favoriteNames[group.orderId] = favoriteName;
+      });
+    }
+  }
+
+  /// Remove an order from favorites
+  Future<void> _removeFavoriteOrder(_OrderGroup group) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users').doc(user.uid)
+        .collection('favoriteOrders').doc(group.orderId)
+        .delete();
+    HapticFeedback.mediumImpact();
+    if (mounted) {
+      setState(() {
+        _favoriteNames.remove(group.orderId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Favorilerden kaldirildi'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // Local map to track favorited orders and their names
+  final Map<String, String> _favoriteNames = {};
+
+  void _showFavoriteNameSheet(_OrderGroup group) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final nameController = TextEditingController();
+    String? selectedPreset;
+
+    final presets = [
+      {'name': 'Aile', 'icon': Icons.family_restroom},
+      {'name': 'Arkadaslar', 'icon': Icons.groups},
+      {'name': 'Spor Kulubu', 'icon': Icons.sports_soccer},
+      {'name': 'Is', 'icon': Icons.work_outline},
+      {'name': 'Ozel', 'icon': Icons.star_outline},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24, right: 24, top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Title
+                  Row(
+                    children: [
+                      Icon(Icons.favorite_rounded, color: const Color(0xFFFB335B), size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Favoriye Ekle',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '#${group.rawOrderNumber} - ${group.businessName}',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Preset chips
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: presets.map((p) {
+                      final name = p['name'] as String;
+                      final icon = p['icon'] as IconData;
+                      final isSelected = selectedPreset == name;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setSheetState(() {
+                            selectedPreset = isSelected ? null : name;
+                            if (!isSelected) nameController.text = name;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFFFB335B)
+                                : (isDark ? const Color(0xFF2C2C2E) : Colors.grey[100]),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFFFB335B)
+                                  : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(icon, size: 16,
+                                color: isSelected ? Colors.white : (isDark ? Colors.grey[400] : Colors.grey[600])),
+                              const SizedBox(width: 6),
+                              Text(name, style: TextStyle(
+                                color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                                fontSize: 13,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              )),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  // Custom name input
+                  TextField(
+                    controller: nameController,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 15,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Veya kendi ismini yaz...',
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                      prefixIcon: Icon(Icons.edit, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    onChanged: (val) {
+                      setSheetState(() => selectedPreset = null);
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Save button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) {
+                          ScaffoldMessenger.of(context)
+                            ..clearSnackBars()
+                            ..showSnackBar(SnackBar(
+                              content: const Text('Lutfen bir isim secin veya yazin'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ));
+                          return;
+                        }
+                        HapticFeedback.mediumImpact();
+                        await _addToFavoriteOrders(group, name);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context)
+                            ..clearSnackBars()
+                            ..showSnackBar(SnackBar(
+                              content: Text('"$name" olarak favorilere eklendi'),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ));
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFB335B),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Favoriye Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ── Instagram-style heart overlay on long-press ──────────────────────
+  void _showHeartOverlayAndFavorite(_OrderGroup group, BuildContext cardContext) {
+    HapticFeedback.heavyImpact();
+    final overlay = Overlay.of(context);
+    final renderBox = cardContext.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+    final center = Offset(
+      position.dx + size.width / 2,
+      position.dy + size.height / 2,
+    );
+
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _HeartOverlayWidget(
+        center: center,
+        onComplete: () {
+          entry.remove();
+          _showFavoriteNameSheet(group);
+        },
+      ),
+    );
+    overlay.insert(entry);
+  }
+
   // Track whether dismiss threshold was crossed (to avoid repeated haptics)
   bool _dismissThresholdReached = false;
 
-  // Swipe-to-trash widget with haptic feedback
+  // Swipe widget: startToEnd = trash, endToStart = favorite
   Widget _buildDismissible({
     required Key key,
     required bool isDark,
     required Future<void> Function() onDismissed,
     required Widget child,
+    _OrderGroup? orderGroup,
     bool applySwipeHint = false,
     Animation<double>? swipeHintOffset,
   }) {
+    // Trash background (swipe right / startToEnd)
     final trashBg = Container(
-      alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 24),
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 24),
       decoration: BoxDecoration(
         color: const Color(0xFFFB335B).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
@@ -960,10 +1275,41 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       ),
     );
 
-    // Haptic-aware dismiss handler
-    Future<bool> hapticConfirmDismiss(DismissDirection _) async {
+    // Favorite background (swipe left / endToStart)
+    final favBg = Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFB335B).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.favorite_rounded, color: Color(0xFFFB335B), size: 24),
+          SizedBox(height: 2),
+          Text(
+            'Favori',
+            style: TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+
+    // Haptic handlers
+    Future<bool> hapticConfirmDismiss(DismissDirection direction) async {
       HapticFeedback.heavyImpact();
-      await onDismissed();
+      if (direction == DismissDirection.startToEnd) {
+        // Trash
+        await onDismissed();
+      } else if (direction == DismissDirection.endToStart && orderGroup != null) {
+        // Favorite toggle: if already favorited, remove; otherwise add
+        if (_favoriteNames.containsKey(orderGroup.orderId)) {
+          _removeFavoriteOrder(orderGroup);
+        } else {
+          _showFavoriteNameSheet(orderGroup);
+        }
+      }
       _dismissThresholdReached = false;
       return false; // handled via Firestore, stream will update UI
     }
@@ -977,6 +1323,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       }
     }
 
+    final direction = orderGroup != null
+        ? DismissDirection.horizontal
+        : DismissDirection.startToEnd; // non-order items only trash
+
     // Tutorial hint: animate the first card to nudge left and reveal trash icon
     if (applySwipeHint && swipeHintOffset != null) {
       return Stack(
@@ -989,10 +1339,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                 offset: Offset(swipeHintOffset.value, 0),
                 child: Dismissible(
                   key: key,
-                  direction: DismissDirection.endToStart,
+                  direction: direction,
                   onUpdate: hapticOnUpdate,
                   confirmDismiss: hapticConfirmDismiss,
                   background: trashBg,
+                  secondaryBackground: orderGroup != null ? favBg : null,
                   child: child,
                 ),
               );
@@ -1004,10 +1355,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
 
     return Dismissible(
       key: key,
-      direction: DismissDirection.endToStart,
+      direction: direction,
       onUpdate: hapticOnUpdate,
       confirmDismiss: hapticConfirmDismiss,
       background: trashBg,
+      secondaryBackground: orderGroup != null ? favBg : null,
       child: child,
     );
   }
@@ -1054,6 +1406,7 @@ class _OrderGroup {
   final String orderId;
   final String rawOrderNumber;
   final String businessName;
+  final String businessId;
   final List<Map<String, dynamic>> statuses;
   final Timestamp? latestTimestamp;
   final double? totalAmount;
@@ -1061,11 +1414,14 @@ class _OrderGroup {
   final String businessPostalCode;
   final String orderType; // 'delivery', 'pickup', 'dineIn'
   final List<String> docIds; // Firestore doc IDs for all notifications in this group
+  final int itemCount;
+  final String? favoriteName;
 
   _OrderGroup({
     required this.orderId,
     required this.rawOrderNumber,
     required this.businessName,
+    this.businessId = '',
     required this.statuses,
     this.latestTimestamp,
     this.totalAmount,
@@ -1073,6 +1429,8 @@ class _OrderGroup {
     this.businessPostalCode = '',
     this.orderType = 'delivery',
     this.docIds = const [],
+    this.itemCount = 0,
+    this.favoriteName,
   });
 }
 
@@ -1105,12 +1463,14 @@ class _OrderTimelineCard extends ConsumerStatefulWidget {
   final bool isDark;
   final bool isFirst;
   final Map<String, dynamic> Function(String) metaFn;
+  final String? favoriteName;
 
   const _OrderTimelineCard({
     required this.group,
     required this.isDark,
     required this.isFirst,
     required this.metaFn,
+    this.favoriteName,
   });
 
   @override
@@ -1581,9 +1941,34 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           );
                         },
                       ),
+                      // Favorite badge (left of amount)
+                      if (widget.favoriteName != null && widget.favoriteName!.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFB335B).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.favorite_rounded, size: 13, color: Color(0xFFFB335B)),
+                              const SizedBox(width: 3),
+                              Text(
+                                widget.favoriteName!,
+                                style: const TextStyle(
+                                  color: Color(0xFFFB335B),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       if (group.totalAmount != null && group.totalAmount! > 0)
                         Text(
-                          '${group.totalAmount!.toStringAsFixed(2)} €',
+                          '${group.totalAmount!.toStringAsFixed(2)} \u20ac',
                           style: TextStyle(
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontSize: 13,
@@ -1874,7 +2259,9 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: const Color(0xFFFB335B).withValues(alpha: isDark ? 0.85 : 1.0),
+                        backgroundColor: isDark
+                            ? const Color(0xFFFB335B).withValues(alpha: 0.85)
+                            : const Color(0xFF3A3A3C),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -3656,6 +4043,83 @@ class _ReservationCard extends StatelessWidget {
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: textColor),
         ),
       ],
+    );
+  }
+}
+
+// ── Instagram-style heart/bookmark overlay animation ──────────────────────
+class _HeartOverlayWidget extends StatefulWidget {
+  final Offset center;
+  final VoidCallback onComplete;
+
+  const _HeartOverlayWidget({
+    required this.center,
+    required this.onComplete,
+  });
+
+  @override
+  State<_HeartOverlayWidget> createState() => _HeartOverlayWidgetState();
+}
+
+class _HeartOverlayWidgetState extends State<_HeartOverlayWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _opacityAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.4), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.0), weight: 20),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _opacityAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _controller.forward().then((_) {
+      widget.onComplete();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Positioned(
+          left: widget.center.dx - 40,
+          top: widget.center.dy - 40,
+          child: Opacity(
+            opacity: _opacityAnim.value,
+            child: Transform.scale(
+              scale: _scaleAnim.value,
+              child: const Icon(
+                Icons.favorite_rounded,
+                color: Color(0xFFFB335B),
+                size: 80,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -10,7 +10,7 @@ async function loadLogo(): Promise<string | null> {
     try {
         // Browser ortamında logo'yu fetch et
         if (typeof window !== 'undefined') {
-            const response = await fetch('/lokma_logo.png');
+            const response = await fetch('/logo_website_lokma_red.png');
             const blob = await response.blob();
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -57,7 +57,8 @@ export async function generateInvoicePDF(invoice: MerchantInvoice): Promise<Blob
     // Logo (sağ üst köşe)
     if (logo) {
         try {
-            doc.addImage(logo, 'PNG', pageWidth - margin - 35, margin - 5, 35, 35);
+            // Wide format LOKMA text logo (aspect ratio ~4:1)
+            doc.addImage(logo, 'PNG', pageWidth - margin - 50, margin - 3, 50, 14);
         } catch (e) {
             console.warn('Logo eklenemedi:', e);
         }
@@ -86,7 +87,7 @@ export async function generateInvoicePDF(invoice: MerchantInvoice): Promise<Blob
     // Vergi numaraları (sağ taraf)
     const rightX = pageWidth - margin;
     doc.setFontSize(8);
-    let taxY = margin + 8;
+    let taxY = margin + 14;
     if (invoice.seller.taxId) {
         doc.text(`Steuernr.: ${invoice.seller.taxId}`, rightX, taxY, { align: 'right' });
         taxY += 4;
@@ -151,7 +152,7 @@ export async function generateInvoicePDF(invoice: MerchantInvoice): Promise<Blob
 
     y += 15;
 
-    // Tablo başlığı
+    // Tablo basI (header)
     doc.setFillColor(50, 50, 50);
     doc.rect(margin, y, contentWidth, 8, 'F');
 
@@ -159,41 +160,42 @@ export async function generateInvoicePDF(invoice: MerchantInvoice): Promise<Blob
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
 
-    const colPos = margin + 2;
-    const colQty = margin + 90;
-    const colUnit = margin + 105;
-    const colPrice = margin + 125;
-    const colTax = margin + 145;
-    const colTotal = margin + 165;
+    // Column positions (left-edge for text, right-edge for numbers)
+    const colPos = margin + 2;        // Beschreibung (left-aligned)
+    const colQty = margin + 95;       // Menge
+    const colUnit = margin + 112;     // Einheit
+    const colPrice = margin + 135;    // Einzelpreis (right-align)
+    const colTax = margin + 150;      // MwSt
+    const colTotal = margin + contentWidth - 2; // Gesamt (right-align)
 
     doc.text('Beschreibung', colPos, y + 5.5);
     doc.text('Menge', colQty, y + 5.5);
     doc.text('Einheit', colUnit, y + 5.5);
-    doc.text('Einzelpreis', colPrice, y + 5.5);
+    doc.text('Einzelpreis', colPrice, y + 5.5, { align: 'right' });
     doc.text('MwSt', colTax, y + 5.5);
-    doc.text('Gesamt', colTotal, y + 5.5);
+    doc.text('Gesamt', colTotal, y + 5.5, { align: 'right' });
 
     y += 8;
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'normal');
 
-    // Tablo içeriği
+    // Tablo icerigi
     invoice.lineItems.forEach((item, index) => {
         const rowY = y + (index * 7) + 5;
 
-        // Alternatif satır rengi
+        // Alternatif satir rengi
         if (index % 2 === 0) {
             doc.setFillColor(248, 248, 248);
             doc.rect(margin, y + (index * 7), contentWidth, 7, 'F');
         }
 
         doc.setFontSize(9);
-        doc.text(truncateText(item.description, 50), colPos, rowY);
+        doc.text(truncateText(item.description, 55), colPos, rowY);
         doc.text(item.quantity.toString(), colQty, rowY);
         doc.text(item.unit, colUnit, rowY);
-        doc.text(formatCurrency(item.unitPrice), colPrice, rowY);
+        doc.text(formatCurrency(item.unitPrice), colPrice, rowY, { align: 'right' });
         doc.text(`${item.taxRate}%`, colTax, rowY);
-        doc.text(formatCurrency(item.grossAmount), colTotal, rowY);
+        doc.text(formatCurrency(item.grossAmount), colTotal, rowY, { align: 'right' });
     });
 
     y += (invoice.lineItems.length * 7) + 10;

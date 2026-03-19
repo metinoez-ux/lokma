@@ -104,24 +104,29 @@ export async function POST(request: Request) {
             return base;
         };
 
-        // Build line items
-        const lineItems: any[] = [];
+        // Build line items - support both 'lineItems' (new) and 'items' (legacy) field names
+        const lexwareLineItems: any[] = [];
+        const invoiceItems = invoice.lineItems || invoice.items;
 
-        if (invoice.items && Array.isArray(invoice.items) && invoice.items.length > 0) {
-            // Use existing invoice line items
-            for (const item of invoice.items) {
-                lineItems.push({
+        if (invoiceItems && Array.isArray(invoiceItems) && invoiceItems.length > 0) {
+            for (const item of invoiceItems) {
+                const itemTaxRate = item.taxRate ?? taxRate;
+                lexwareLineItems.push({
                     type: 'custom',
                     name: item.description || item.name || 'Leistung',
                     description: item.details || '',
                     quantity: item.quantity || 1,
-                    unitName: item.unit || 'Stück',
-                    unitPrice: makeUnitPrice(item.unitPrice || item.total || 0),
+                    unitName: item.unit || item.unitName || 'Stuck',
+                    unitPrice: {
+                        currency: 'EUR',
+                        netAmount: item.unitPrice || item.netAmount || 0,
+                        taxRatePercentage: itemTaxRate,
+                    },
                 });
             }
         } else {
-            // Single line item from invoice totals
-            lineItems.push({
+            // Fallback: Single line item from invoice totals
+            lexwareLineItems.push({
                 type: 'custom',
                 name: invoice.description || `LOKMA Plattform-Rechnung ${invoice.period || ''}`,
                 description: invoice.period
@@ -129,7 +134,11 @@ export async function POST(request: Request) {
                     : `Rechnungsnr. ${invoice.invoiceNumber}`,
                 quantity: 1,
                 unitName: 'Pauschale',
-                unitPrice: makeUnitPrice(invoice.subtotal || invoice.grandTotal || 0),
+                unitPrice: {
+                    currency: 'EUR',
+                    netAmount: invoice.subtotal || invoice.grandTotal || 0,
+                    taxRatePercentage: taxRate,
+                },
             });
         }
 
@@ -167,7 +176,7 @@ export async function POST(request: Request) {
                 city,
                 countryCode: invoice.countryCode || 'DE',
             },
-            lineItems,
+            lineItems: lexwareLineItems,
             totalPrice: { currency: 'EUR' },
             taxConditions: { taxType },
             paymentConditions: {

@@ -725,14 +725,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                           Container(
                                             padding:
                                                 const EdgeInsets.symmetric(
-                                                    horizontal: 4,
+                                                    horizontal: 2,
                                                     vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: lokmaPink
-                                                  .withValues(alpha: 0.12),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
                                             child: Text(
                                               '${business.distanceKm!.toStringAsFixed(1)}km',
                                               style: TextStyle(

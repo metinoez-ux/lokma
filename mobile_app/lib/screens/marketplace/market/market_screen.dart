@@ -1373,6 +1373,19 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   void _autoSetSliderToNearestBusiness() {
     if (_userLat == null || _userLng == null || _allBusinesses.isEmpty) return;
     
+    // Gel Al mode defaults to 5km
+    if (_deliveryMode == 'gelal') {
+      if (mounted) {
+        setState(() {
+          _sliderAutoSet = true;
+          _currentStepIndex = 0; // 5 km is at index 0 for Market (5, 10, ...)
+          _maxDistance = 5.0;
+        });
+      }
+      debugPrint('🎯 Market auto-set: gelal mode, maxDistance defaulting to 5.0km');
+      return;
+    }
+
     double nearestKm = double.infinity;
     
     for (final doc in _allBusinesses) {

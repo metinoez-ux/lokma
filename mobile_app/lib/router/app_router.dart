@@ -143,7 +143,8 @@ class AppRouter {
           final modeStr = state.uri.queryParameters['mode'] ?? 'teslimat';
           final deliveryMode = modeStr == 'masa' ? 2 : (modeStr == 'gelal' ? 1 : 0);
           final tableNumber = state.uri.queryParameters['table'];
-          final closedAck = state.uri.queryParameters['closedAck'] == 'true';
+          final addMore = state.uri.queryParameters['addMore'] == 'true';
+          final closedAck = state.uri.queryParameters['closedAck'] == 'true' || addMore;
           return BusinessDetailScreen(
             businessId: businessId,
             initialDeliveryMode: deliveryMode,

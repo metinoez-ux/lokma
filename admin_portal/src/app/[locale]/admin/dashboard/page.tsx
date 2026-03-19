@@ -4113,6 +4113,23 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             <div className="space-y-6">
+                                {/* Firestore UID - Only visible to Super Admins */}
+                                {admin?.adminType === 'super' && editingUserProfile.userId && (
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">UID</span>
+                                        <code className="text-xs text-gray-400 font-mono select-all">{editingUserProfile.userId}</code>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(editingUserProfile.userId);
+                                                showToast('UID kopyalandi', 'success');
+                                            }}
+                                            className="ml-auto text-[10px] text-gray-500 hover:text-white transition px-1.5 py-0.5 rounded hover:bg-gray-700"
+                                            title="UID kopyala"
+                                        >
+                                            Kopieren
+                                        </button>
+                                    </div>
+                                )}
                                 {/* Profile Picture Upload Section */}
                                 <div className="flex items-center gap-6 p-4 bg-gray-750/50 rounded-xl border border-gray-700/50">
                                     <div className="relative group shrink-0">

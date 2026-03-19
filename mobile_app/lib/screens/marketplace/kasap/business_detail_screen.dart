@@ -572,7 +572,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               top: 0,
               bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 32,
             ),
-            child: Column(
+            child: SingleChildScrollView(
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -898,6 +899,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
               ],
+              ),
             ),
           );
         },
@@ -2331,22 +2333,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
   Widget _buildOpenStatusHeader(bool isOpenNow) {
-    final accent = _getAccent(context);
-    final bgColor = isOpenNow ? Colors.green : accent;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(isOpenNow ? Icons.check_circle_outline : Icons.cancel_outlined, color: Colors.white, size: 20),
-          const SizedBox(width: 8),
-          Text(isOpenNow ? 'marketplace.filter_open_now_title'.tr() : 'marketplace.currently_closed'.tr(),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          Icon(Icons.schedule_rounded, size: 15, color: isOpenNow ? Colors.green : Colors.red),
+          const SizedBox(width: 5),
+          Text(
+            isOpenNow ? 'marketplace.filter_open_now_title'.tr() : 'marketplace.currently_closed'.tr(),
+            style: TextStyle(
+              color: isOpenNow ? Colors.green : Colors.red,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -2693,9 +2693,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         fit: StackFit.expand,
                         children: [
                           // Business Image
-                          (_butcherDoc != null && _butcherDoc!['imageUrl'] != null && (_butcherDoc!['imageUrl'] as String).isNotEmpty)
+                          (data?['imageUrl'] != null && (data!['imageUrl'] as String).isNotEmpty)
                               ? CachedNetworkImage(
-                                  imageUrl: _butcherDoc!['imageUrl'],
+                                  imageUrl: data['imageUrl'],
                                   fit: BoxFit.cover,
                                 )
                               : Image.asset('assets/images/kasap_card.png', fit: BoxFit.cover),
@@ -3457,6 +3457,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      );
   }
 
+  // Instagram-style animated heart overlay for favorite toggle
+  void _showFavoriteHeartOverlay(BuildContext ctx, bool isNowFavorite) {
+    late OverlayEntry overlayEntry;
+    overlayEntry = OverlayEntry(
+      builder: (context) => _FavoriteHeartAnimation(
+        isAdded: isNowFavorite,
+        onComplete: () => overlayEntry.remove(),
+      ),
+    );
+    Overlay.of(ctx).insert(overlayEntry);
+  }
+
   // LIEFERANDO STYLE: Unified Product Bottom Sheet
   void _showProductBottomSheet(ButcherProduct product) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
@@ -3524,6 +3536,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                     );
                   },
+            onLongPress: () {
+              HapticFeedback.heavyImpact();
+              final favs = ref.read(productFavoritesProvider);
+              final wasFav = favs.contains(product.sku);
+              ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
+                product.sku,
+                businessId: widget.businessId,
+                productName: product.name,
+                imageUrl: product.imageUrl ?? '',
+                price: product.effectiveAppPrice,
+              );
+              _showFavoriteHeartOverlay(context, !wasFav);
+            },
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
               color: Colors.transparent,
@@ -3535,17 +3560,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title
-                        Text(
-                          product.name,
-                          style: TextStyle(
-                            color: isAvailable ? textPrimary : textSecondary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        // Title + favorite heart
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                product.name,
+                                style: TextStyle(
+                                  color: isAvailable ? textPrimary : textSecondary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.2,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (ref.watch(productFavoritesProvider).contains(product.sku)) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.favorite_rounded,
+                                color: const Color(0xFFFB335B),
+                                size: 14,
+                              ),
+                            ],
+                          ],
                         ),
                         // "Nicht verfügbar" label (Lieferando-style)
                         if (!isAvailable) ...[
@@ -3593,6 +3633,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+
                         
                         // Selected extras inline
                         if (isAvailable && inCart && productCartItems.any((ci) => ci.selectedOptions.isNotEmpty))
@@ -3711,33 +3752,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                               ),
                             ),
-                            // ❤️ Product Favorite Heart
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: Consumer(
-                                builder: (context, ref, _) {
-                                  final favs = ref.watch(productFavoritesProvider);
-                                  final isFav = favs.contains(product.sku);
-                                  return GestureDetector(
-                                    onTap: () => ref.read(productFavoritesProvider.notifier).toggleFavorite(product.sku),
-                                    child: Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.35),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        isFav ? Icons.favorite : Icons.favorite_border,
-                                        color: isFav ? Colors.redAccent : Colors.white,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+
                           ],
                         ),
                         
@@ -3887,6 +3902,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 );
               },
+        onLongPress: () {
+          HapticFeedback.heavyImpact();
+          final favs = ref.read(productFavoritesProvider);
+          final wasFav = favs.contains(product.sku);
+          ref.read(productFavoritesDetailedProvider.notifier).toggleFavorite(
+            product.sku,
+            businessId: widget.businessId,
+            productName: product.name,
+            imageUrl: product.imageUrl ?? '',
+            price: product.effectiveAppPrice,
+          );
+          _showFavoriteHeartOverlay(context, !wasFav);
+        },
         child: Container(
           decoration: BoxDecoration(
             color: cardBg,
@@ -3940,34 +3968,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                           ),
                         ),
-                      // Product Favorite Heart (top right, when available)
-                      if (isAvailable)
-                        Positioned(
-                          top: 6,
-                          right: 6,
-                          child: Consumer(
-                            builder: (context, ref, _) {
-                              final favs = ref.watch(productFavoritesProvider);
-                              final isFav = favs.contains(product.sku);
-                              return GestureDetector(
-                                onTap: () => ref.read(productFavoritesProvider.notifier).toggleFavorite(product.sku),
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.35),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    isFav ? Icons.favorite : Icons.favorite_border,
-                                    color: isFav ? Colors.redAccent : Colors.white,
-                                    size: 16,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+
                       // 🏷️ Cart quantity badge (top left) — shows gram/piece count
                       if (inCart)
                         Positioned(
@@ -4013,17 +4014,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name — bigger
-                      Text(
-                        product.name,
-                        style: TextStyle(
-                          color: textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      // Name + favorite heart
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              product.name,
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1.2,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (ref.watch(productFavoritesProvider).contains(product.sku)) ...[
+                            const SizedBox(width: 3),
+                            Icon(
+                              Icons.favorite_rounded,
+                              color: const Color(0xFFFB335B),
+                              size: 12,
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 3),
                       // Price + unit — red accent
@@ -4714,6 +4730,86 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Instagram-style animated heart overlay for favorite toggle feedback
+class _FavoriteHeartAnimation extends StatefulWidget {
+  final bool isAdded;
+  final VoidCallback onComplete;
+
+  const _FavoriteHeartAnimation({required this.isAdded, required this.onComplete});
+
+  @override
+  State<_FavoriteHeartAnimation> createState() => _FavoriteHeartAnimationState();
+}
+
+class _FavoriteHeartAnimationState extends State<_FavoriteHeartAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _opacityAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 900),
+      vsync: this,
+    );
+
+    // Scale: 0 -> 1.4 (overshoot bounce) -> 1.0 then hold
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0).chain(CurveTween(curve: Curves.elasticOut)), weight: 25),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 40),
+    ]).animate(_controller);
+
+    // Opacity: fully visible for first 60%, then fade out
+    _opacityAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 55),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)), weight: 45),
+    ]).animate(_controller);
+
+    _controller.forward().then((_) => widget.onComplete());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Opacity(
+                opacity: _opacityAnim.value,
+                child: Transform.scale(
+                  scale: _scaleAnim.value,
+                  child: Icon(
+                    widget.isAdded ? Icons.favorite : Icons.favorite_border,
+                    color: widget.isAdded ? Colors.redAccent : Colors.white,
+                    size: 100,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

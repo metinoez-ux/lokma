@@ -942,7 +942,8 @@
     "hours_unknown": "Hours unknown",
     "closes_in_minutes": "Closes in {minutes} min.",
     "go_to_market": "Go to Market",
-    "go_to_restaurant": "Go to Restaurant"
+    "go_to_restaurant": "Go to Restaurant",
+    "back_to_menu": "Back to Menu"
   },
   "navigation": {
     "food": "Food",
@@ -1189,6 +1190,8 @@
     "my_account": "My Account",
     "my_orders": "My Orders",
     "favorites": "Favorites",
+    "product_added_to_favorites": "Product added to favorites",
+    "product_removed_from_favorites": "Product removed from favorites",
     "my_addresses": "My Addresses",
     "my_reservations": "Table\nReservation",
     "notification_settings": "Notifications",
@@ -1761,6 +1764,8 @@
     "pickup_hint": "You'll get a notification as soon as we start preparing your order.",
     "delivery_hint": "You'll get a notification when we start preparing. After that, you can track your courier live.",
     "bon_appetit": "Enjoy your meal! 😋",
+    "thanks_market": "Thanks for your purchase! 🛒",
+    "thanks_kermes": "Thank you for your interest in our Kermes! 🎪",
     "notification_reminder": "Don't forget to enable notifications!",
     "ok_button": "OK",
     "today": "Today",
