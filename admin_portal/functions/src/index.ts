@@ -1065,7 +1065,12 @@ export const onOrderStatusChange = onDocumentUpdated(
         // Only send customer notification if we have a token or valid users
         if ((hasCustomerToken || after.userId) && title && body) {
             try {
-                const messagePayload = {
+                // POD (Proof of Delivery) image — attach to "delivered" notification if available
+                const podImageUrl: string | null = (newStatus === "delivered" || newStatus === "completed")
+                    ? (after.podImageUrl || after.deliveryProofUrl || null)
+                    : null;
+
+                const messagePayload: any = {
                     notification: { title, body },
                     data: {
                         type: "order_status",
@@ -1073,6 +1078,19 @@ export const onOrderStatusChange = onDocumentUpdated(
                         status: newStatus,
                     },
                 };
+
+                // Attach POD image for rich iOS & Android notifications
+                if (podImageUrl) {
+                    messagePayload.apns = {
+                        fcm_options: { image: podImageUrl },
+                        payload: { aps: { "mutable-content": 1 } },
+                    };
+                    messagePayload.android = {
+                        notification: { imageUrl: podImageUrl },
+                    };
+                    messagePayload.data.podImageUrl = podImageUrl;
+                    console.log(`[POD] Attaching POD image to delivered notification: ${podImageUrl}`);
+                }
 
                 // Save to Firestore History
                 const userIds = new Set<string>();
@@ -1124,6 +1142,11 @@ export const onOrderStatusChange = onDocumentUpdated(
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         read: false,
                     };
+
+                    // Add POD image URL to notification history record
+                    if (podImageUrl) {
+                        notificationData.podImageUrl = podImageUrl;
+                    }
 
                     // Add cancellation reason for cancelled/rejected orders
                     if (newStatus === 'cancelled') {

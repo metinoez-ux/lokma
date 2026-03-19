@@ -369,6 +369,16 @@ export default function PlansPage() {
                                                 ✓ Garson
                                             </span>
                                         )}
+                                        {(plan.features as any)?.groupOrderLink && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-pink-900/20 text-pink-400 border border-pink-700/30">
+                                                ✓ Grup (L)
+                                            </span>
+                                        )}
+                                        {(plan.features as any)?.groupOrderTable && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-400 border border-orange-700/30">
+                                                ✓ Grup (M)
+                                            </span>
+                                        )}
                                         {(plan.features as any)?.staffShiftTracking && (
                                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-900/20 text-cyan-400 border border-cyan-700/30">
                                                 ✓ Vardiya
@@ -804,6 +814,8 @@ export default function PlansPage() {
                                                         { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-400' },
                                                         { key: 'dineInQR', label: t('masada_siparis_qr_kod'), color: 'text-amber-400' },
                                                         { key: 'waiterOrder', label: t('garson_siparis'), color: 'text-teal-400' },
+                                                        { key: 'groupOrderLink', label: '🔗 Link ile Grup Siparişi', color: 'text-pink-400' },
+                                                        { key: 'groupOrderTable', label: '🪑 Masada Grup Siparişi', color: 'text-orange-400' },
                                                         { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-400' },
                                                         { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true },
                                                     ].map((feature) => (

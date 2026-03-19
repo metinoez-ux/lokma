@@ -915,13 +915,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: _deliveryMode == 'gelal' ? 200 : 175,
+              expandedHeight: _deliveryMode == 'gelal' ? 210 : 175,
               collapsedHeight: 120, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
                   // Scroll oranını hesapla (0 = tamamen açık, 1 = tamamen kapalı)
-                  final expandedHeight = _deliveryMode == 'gelal' ? 200.0 : 175.0;
+                  final expandedHeight = _deliveryMode == 'gelal' ? 210.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) / 
@@ -1436,29 +1436,62 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final businessKms = _businessKmSet;
     final currentKm = _kmSteps[_currentStepIndex];
     final hasBusinessAtCurrent = businessKms.contains(currentKm.toInt());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    int nearestKm = _kmSteps.first.toInt();
+    if (businessKms.isNotEmpty) {
+      final sortedKms = businessKms.toList()..sort();
+      nearestKm = sortedKms.first;
+    }
+
+    String distanceLabel;
+    if (_currentStepIndex == _kmSteps.length - 1) {
+      distanceLabel = 'Tümü';
+    } else {
+      distanceLabel = '${currentKm.toInt()} km';
+    }
+
+    String nearestLabel = '$nearestKm km';
     
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 6),
       child: Row(
         children: [
-          Icon(Icons.location_on_outlined, color: lokmaPink, size: 18),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: lokmaPink.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.near_me, color: lokmaPink, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  nearestLabel,
+                  style: const TextStyle(
+                    color: lokmaPink,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 activeTrackColor: lokmaPink,
-                inactiveTrackColor: Theme.of(context).brightness == Brightness.dark 
-                    ? Colors.grey[600] 
-                    : Colors.grey[400],
+                inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[400],
                 thumbColor: lokmaPink,
                 overlayColor: lokmaPink.withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                // Her km adımını göster - daha büyük ve görünür
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3),
                 activeTickMarkColor: Colors.white.withValues(alpha: 0.8),
-                inactiveTickMarkColor: Theme.of(context).brightness == Brightness.dark 
-                    ? Colors.grey[400] 
-                    : Colors.grey[600],
+                inactiveTickMarkColor: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
               child: Slider(
                 value: _currentStepIndex.toDouble(),
@@ -1472,7 +1505,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     final newKm = _kmSteps[newIndex];
                     final hasBusinessHere = businessKms.contains(newKm.toInt());
                     
-                    // İşletme olan km'de güçlü feedback, diğerlerinde hafif
                     if (hasBusinessHere) {
                       HapticFeedback.mediumImpact(); // Güçlü titreme - işletme var!
                     } else {
@@ -1488,19 +1520,19 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: hasBusinessAtCurrent ? lokmaPink.withValues(alpha: 0.3) : cardBg,
-              borderRadius: BorderRadius.circular(8),
-              border: hasBusinessAtCurrent ? Border.all(color: lokmaPink, width: 1) : Border.all(color: Colors.grey.shade300),
+              color: isDark ? Colors.grey[800] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${currentKm.toInt()} km',
+              distanceLabel,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface, 
-                fontSize: 12, 
-                fontWeight: hasBusinessAtCurrent ? FontWeight.w600 : FontWeight.w600,
+                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -1890,6 +1922,54 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 ),
+
+                // 🪑 Online Masa Rezervasyonu badge (BOTTOM RIGHT)
+                if (data['hasReservation'] == true)
+                  Builder(
+                    builder: (context) {
+                      final cartState = ref.watch(cartProvider);
+                      final hasItemsInCart = cartState.butcherId == id && cartState.items.isNotEmpty;
+                      return Positioned(
+                        right: 12,
+                        bottom: hasItemsInCart ? 66 : 12,
+                        child: Opacity(
+                          opacity: isAvailable ? 1.0 : 0.7,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: lokmaPink.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.event_seat, color: Colors.white, size: 14),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.schedule, color: Colors.white, size: 14),
+                                const SizedBox(width: 6),
+                                const Text(
+                                  'Online Masa Rezervasyonu',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
 
                 // 🆕 Cart badge (bottom right) - only when available
                 if (isAvailable)

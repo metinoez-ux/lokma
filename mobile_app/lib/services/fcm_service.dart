@@ -100,8 +100,10 @@ class FCMService {
             final orderId = parts[1];
             if (type == 'new_delivery') {
               _navigateToDriverDeliveries(orderId);
-            } else if (type == 'order_status' || type == 'order_cancelled') {
-              _navigateToOrders();
+            } else if (type == 'chat_message') {
+              _navigateToOrders(orderId: orderId, openChat: true);
+            } else {
+              _navigateToOrders(orderId: orderId);
             }
           }
         }
@@ -306,6 +308,8 @@ class FCMService {
             final orderId = data['orderId'];
             if (type == 'new_delivery' && orderId != null) {
               _navigateToDriverDeliveries(orderId);
+            } else if (type == 'chat_message' && orderId != null) {
+              _navigateToOrders(orderId: orderId, openChat: true);
             } else {
               _navigateToOrders(orderId: orderId);
             }
@@ -332,7 +336,7 @@ class FCMService {
       _navigateToDriverDeliveries(orderId);
     } else if (type == 'chat_message' && orderId != null) {
       debugPrint('💬 Navigating to orders for chat: $orderId');
-      _navigateToOrders(orderId: orderId);
+      _navigateToOrders(orderId: orderId, openChat: true);
     } else {
       debugPrint('📦 Navigating to order: $orderId');
       _navigateToOrders(orderId: orderId);
@@ -355,12 +359,18 @@ class FCMService {
     });
   }
   
-  void _navigateToOrders({String? orderId}) {
+  void _navigateToOrders({String? orderId, bool openChat = false}) {
     Future.delayed(const Duration(milliseconds: 500), () {
       try {
         final context = _navigatorKey.currentContext;
         if (context != null) {
-          final path = orderId != null ? '/orders?orderId=$orderId' : '/orders';
+          String path = '/notification-history';
+          if (orderId != null) {
+            path += '?orderId=$orderId';
+            if (openChat) {
+              path += '&openChat=true';
+            }
+          }
           GoRouter.of(context).go(path);
           debugPrint('✅ Navigated to $path');
         }

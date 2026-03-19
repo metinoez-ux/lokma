@@ -358,6 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SnackBar(
             content: Text('home.added_to_cart'.tr(args: [vendor])),
             backgroundColor: accent,
+            showCloseIcon: true,
             action: SnackBarAction(
               label: 'home.edit'.tr(),
               textColor: Colors.white,

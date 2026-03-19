@@ -209,7 +209,14 @@ class AppRouter {
       ),
       GoRoute(
         path: '/notification-history',
-        builder: (context, state) => const NotificationHistoryScreen(),
+        builder: (context, state) {
+          final orderId = state.uri.queryParameters['orderId'];
+          final openChat = state.uri.queryParameters['openChat'] == 'true';
+          return NotificationHistoryScreen(
+            openOrderId: orderId,
+            openChat: openChat,
+          );
+        },
       ),
       GoRoute(
         path: '/feedback',

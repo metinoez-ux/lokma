@@ -2646,9 +2646,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
                 _buildColdChainBanner(),
               
-              // 🟡 Minimum Order Bar (Yellow - Lieferando style) - ONLY for Kurye mode
-              if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
-                _buildLieferandoMinimumBar(cart.totalAmount),
+              // No minimum order bar here - integrated into the checkout button at the bottom
               
               // 📦 Kermes Items (if any)
               if (hasKermes) ...[
@@ -2822,49 +2820,73 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildScannedTableBanner(),
-                // 🟡 Persistent min order banner for delivery mode
-                if (!_isPickUp && !_isDineIn) ...[
-                  () {
+                // UNIFIED Lieferando Footer (combines banner and button)
+                Builder(
+                  builder: (context) {
                     final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
-                    if (grandTotal < minOrder) {
-                      final isDark = Theme.of(context).brightness == Brightness.dark;
-                      return Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFFFFD54F).withOpacity(0.15) : const Color(0xFFFFF3CD),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? const Color(0xFFFFD54F).withOpacity(0.3) : const Color(0xFFFFE082),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.info_outline_rounded,
-                              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFFF9A825),
-                              size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              'marketplace.min_order_for_courier'.tr(namedArgs: {
-                                'amount': minOrder.toStringAsFixed(0),
-                                'currency': CurrencyUtils.getCurrencySymbol(),
-                              }),
-                              style: TextStyle(
-                                color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF5D4037),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                    final isDelivery = !_isPickUp && !_isDineIn;
+                    final isUnderMin = isDelivery && (grandTotal < minOrder);
+                    final remaining = minOrder - grandTotal;
+                    
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    
+                    if (!isUnderMin) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        child: _buildLieferandoCheckoutButton(grandTotal),
                       );
                     }
-                    return const SizedBox.shrink();
-                  }(),
-                ],
-                _buildLieferandoCheckoutButton(grandTotal),
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0),
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 14, bottom: 8, left: 16, right: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.pedal_bike, size: 16, color: isDark ? Colors.white70 : Colors.black54),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    'marketplace.min_order_add_text'.tr(namedArgs: {
+                                      'amount': remaining.toStringAsFixed(2),
+                                      'currency': CurrencyUtils.getCurrencySymbol(),
+                                      'minOrder': minOrder.toStringAsFixed(0),
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.white70 : Colors.black87,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                            child: _buildLieferandoCheckoutButton(grandTotal, isUnderMin: true),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -3267,55 +3289,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
-  /// 🟡 Lieferando-style minimum order bar (yellow warning or green success)
-  Widget _buildLieferandoMinimumBar(double currentTotal) {
-    final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
-    final remaining = minOrder - currentTotal;
-    final isReached = remaining <= 0;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    if (isReached) {
-      // ✅ SUCCESS: Minimum reached — hide the banner entirely to save space
-      return const SizedBox.shrink();
-    }
-    
-    // 🟡 WARNING: Below minimum
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFFFFD54F).withValues(alpha: 0.10) : const Color(0xFFFFF9C4),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline_rounded, 
-            color: isDark ? const Color(0xFFFFD54F) : const Color(0xFFF9A825), 
-            size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF5D4037), 
-                  fontSize: 13,
-                ),
-                children: [
-                  TextSpan(
-                    text: 'marketplace.min_order_add_text'.tr(namedArgs: {
-                      'amount': remaining.toStringAsFixed(2).replaceAll('.', ','),
-                      'currency': CurrencyUtils.getCurrencySymbol(),
-                      'minOrder': minOrder.toStringAsFixed(0),
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
   
   /// Section header (e.g., restaurant name)
   Widget _buildLieferandoSectionHeader(String title, {String? subtitle}) {
@@ -4760,34 +4734,36 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
   
   /// 🟠 Orange Checkout Button (Lieferando pill style)
-  Widget _buildLieferandoCheckoutButton(double total) {
+  Widget _buildLieferandoCheckoutButton(double total, {bool isUnderMin = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isUnderMin 
+        ? (isDark ? const Color(0xFF38383A) : const Color(0xFFE0E0E0)) // Slightly lighter than background to differentiate
+        : _accentColor;
+    final textColor = isUnderMin 
+        ? (isDark ? Colors.white54 : Colors.black54) 
+        : Theme.of(context).colorScheme.surface;
+
     return GestureDetector(
       onTap: () {
+        if (isUnderMin) return;
         // 🪑 DINE-IN QR GATE: Require QR scan before checkout
         if (_isDineIn && _scannedTableNumber == null) {
           _showQrScanSheet();
           return;
         }
-        // Check minimum order ONLY for Kurye (delivery) mode - Gel Al has no minimum
-        if (!_isPickUp && !_isDineIn) {
-          final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
-          if (total < minOrder) {
-            return; // Banner is shown persistently above the button
-          }
-        }
         _showCheckoutSheet(total);
       },
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: _accentColor, // 🎨 BRAND COLOUR
-          borderRadius: BorderRadius.circular(28), // Pill shape
-          boxShadow: [
+          color: bgColor,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: isUnderMin ? null : [
             BoxShadow(
               color: _accentColor.withValues(alpha: 0.3),
               blurRadius: 12,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -4796,22 +4772,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_isDineIn && _scannedTableNumber == null) ...[
-                Icon(Icons.qr_code_scanner, color: Theme.of(context).colorScheme.surface, size: 20),
-                SizedBox(width: 8),
+                Icon(Icons.qr_code_scanner, color: textColor, size: 20),
+                const SizedBox(width: 8),
               ],
               Text(
                 (_isDineIn && _scannedTableNumber == null)
                     ? tr('checkout.scan_table_qr', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'})
                     : tr('checkout.proceed', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'}),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: textColor,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               if (!(_isDineIn && _scannedTableNumber == null)) ...[
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward_rounded, color: Theme.of(context).colorScheme.surface, size: 20),
+                const SizedBox(width: 8),
+                Icon(isUnderMin ? Icons.lock_outline : Icons.arrow_forward_rounded, color: textColor, size: 18),
               ],
             ],
           ),

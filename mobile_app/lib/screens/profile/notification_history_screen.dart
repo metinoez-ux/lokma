@@ -903,6 +903,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                               SnackBar(
                                 content: Text('notifications.notification_trashed'.tr()),
                                 duration: const Duration(seconds: 3),
+                                showCloseIcon: true,
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
                                   textColor: const Color(0xFFFB335B),
@@ -923,6 +924,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                       group: item,
                       isDark: isDark,
                       isFirst: index == 0,
+                      isActive: isActive,
                       metaFn: _meta,
                       favoriteName: _favoriteNames[item.orderId],
                     );
@@ -953,6 +955,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                 SnackBar(
                                   content: Text('notifications.notification_trashed'.tr()),
                                   duration: const Duration(seconds: 3),
+                                  showCloseIcon: true,
                                   action: SnackBarAction(
                                     label: 'notifications.undo'.tr(),
                                     textColor: const Color(0xFFFB335B),
@@ -1001,6 +1004,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                               SnackBar(
                                 content: Text('notifications.notification_trashed'.tr()),
                                 duration: const Duration(seconds: 3),
+                                showCloseIcon: true,
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
                                   textColor: const Color(0xFFFB335B),
@@ -1560,6 +1564,7 @@ class _OrderTimelineCard extends ConsumerStatefulWidget {
   final _OrderGroup group;
   final bool isDark;
   final bool isFirst;
+  final bool isActive;
   final Map<String, dynamic> Function(String) metaFn;
   final String? favoriteName;
 
@@ -1567,6 +1572,7 @@ class _OrderTimelineCard extends ConsumerStatefulWidget {
     required this.group,
     required this.isDark,
     required this.isFirst,
+    this.isActive = false,
     required this.metaFn,
     this.favoriteName,
   });
@@ -1624,7 +1630,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
   @override
   void initState() {
     super.initState();
-    _expanded = widget.isFirst;
+    _expanded = widget.isActive || widget.isFirst;
   }
 
   @override
@@ -2978,7 +2984,7 @@ void showChatBottomSheetGlobal(
                         child: ElevatedButton.icon(
                           onPressed: () {
                             Navigator.pop(sheetCtx); // close bottom sheet
-                            _reorderItems(order);
+                            _reorderItems(ctx, order);
                           },
                           icon: const Icon(Icons.replay, size: 18),
                           label: Text(
@@ -3235,8 +3241,8 @@ void showChatBottomSheetGlobal(
   }
 
   // ── Reorder: reconstruct cart items and navigate ─────────────────────────
-  void _reorderItems(LokmaOrder order) {
-    final cartNotifier = ref.read(cartProvider.notifier);
+  void _reorderItems(BuildContext ctx, LokmaOrder order) {
+    final cartNotifier = ProviderScope.containerOf(ctx).read(cartProvider.notifier);
     cartNotifier.clearCart();
 
     for (final item in order.items) {
@@ -3270,7 +3276,7 @@ void showChatBottomSheetGlobal(
       );
     }
 
-    if (mounted) context.go('/cart');
+    if (ctx.mounted) ctx.go('/cart');
   }
 
   // ── Rating bottom sheet: courier ─────────────────────────────────────────

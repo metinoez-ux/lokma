@@ -2921,6 +2921,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                            ],
 
+                           // Table Reservation Icon
+                           if (data?['hasReservation'] as bool? ?? false) ...[
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Icon(Icons.table_restaurant, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 16),
+                                 const SizedBox(width: 2),
+                                 Icon(Icons.access_time_filled, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 14),
+                               ],
+                             ),
+                           ],
+
 
                             // Removed Reservation badge per user request
 
@@ -3319,141 +3332,135 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final showBanner = minOrder > 0 && isDeliveryMode && (remaining > 0 || _showMinOrderSuccess);
      final isSuccess = remaining <= 0 && _showMinOrderSuccess;
 
-     return Column(
-       mainAxisSize: MainAxisSize.min,
-       children: [
-         // Minimum order banner (stacked wallet style - sits behind/above cart pill)
-         if (showBanner)
-           AnimatedContainer(
-             duration: const Duration(milliseconds: 300),
-             curve: Curves.easeOut,
-             margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-             decoration: BoxDecoration(
-               color: isSuccess
-                   ? (isDark ? const Color(0xFF1B5E20) : const Color(0xFFE8F5E9))
-                   : (isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0)),
-               borderRadius: const BorderRadius.only(
-                 topLeft: Radius.circular(16),
-                 topRight: Radius.circular(16),
-               ),
-               boxShadow: [
-                 BoxShadow(
-                   color: Colors.black.withValues(alpha: 0.08),
-                   blurRadius: 4,
-                   offset: const Offset(0, -1),
-                 ),
-               ],
-             ),
-             child: Row(
-               mainAxisAlignment: MainAxisAlignment.center,
-               children: [
-                 Icon(
-                   isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
-                   size: 16,
-                   color: isSuccess
-                       ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
-                       : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                 ),
-                 const SizedBox(width: 8),
-                 Flexible(
-                   child: Text(
-                     isSuccess
-                         ? 'checkout.min_order_success'.tr()
-                         : 'checkout.min_order_remaining'.tr(namedArgs: {
-                             'amount': remaining.toStringAsFixed(2),
-                             'currency': currency,
-                           }),
-                     style: TextStyle(
-                       fontSize: 13,
-                       fontWeight: FontWeight.w500,
-                       color: isSuccess
-                           ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
-                           : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                     ),
-                     textAlign: TextAlign.center,
+     return Container(
+       margin: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
+       decoration: BoxDecoration(
+         color: showBanner 
+             ? (isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0))
+             : Colors.transparent,
+         borderRadius: BorderRadius.circular(32),
+         boxShadow: showBanner ? [
+           BoxShadow(
+             color: Colors.black.withValues(alpha: 0.08),
+             blurRadius: 12,
+             offset: const Offset(0, 4),
+           ),
+         ] : null,
+       ),
+       child: Column(
+         mainAxisSize: MainAxisSize.min,
+         children: [
+           if (showBanner)
+             Padding(
+               padding: const EdgeInsets.only(top: 14, bottom: 8, left: 16, right: 16),
+               child: Row(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   Icon(
+                     isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
+                     size: 16,
+                     color: isSuccess
+                         ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
+                         : (isDark ? Colors.white70 : Colors.black54),
                    ),
-                 ),
-               ],
+                   const SizedBox(width: 8),
+                   Flexible(
+                     child: Text(
+                       isSuccess
+                           ? 'checkout.min_order_success'.tr()
+                           : 'checkout.min_order_remaining'.tr(namedArgs: {
+                               'amount': remaining.toStringAsFixed(2),
+                               'currency': currency,
+                             }),
+                       style: TextStyle(
+                         fontSize: 13,
+                         fontWeight: FontWeight.w500,
+                         color: isSuccess
+                             ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
+                             : (isDark ? Colors.white70 : Colors.black87),
+                       ),
+                       textAlign: TextAlign.center,
+                     ),
+                   ),
+                 ],
+               ),
              ),
-           ),
-         // Cart Button Pill (overlaps banner bottom for stacked wallet effect)
-         Padding(
-           padding: EdgeInsets.only(
-             left: 16, right: 16, top: showBanner ? 0 : 12,
-             bottom: MediaQuery.of(context).padding.bottom + 12,
-           ),
-           child: Material(
-             color: accent,
-             borderRadius: BorderRadius.circular(28),
-             elevation: 4,
-             shadowColor: accent.withValues(alpha: 0.4),
-             child: InkWell(
+             
+           // Cart Button Pill
+           Padding(
+             padding: EdgeInsets.all(showBanner ? 8.0 : 0.0),
+             child: Material(
+               color: accent,
                borderRadius: BorderRadius.circular(28),
-               onTap: () {
-                 HapticFeedback.selectionClick();
-                 Navigator.of(context).push(
-                   MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
-                 );
-               },
-               child: Padding(
-                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                 child: Row(
-                   children: [
-                     // Cart icon with badge
-                     Stack(
-                       clipBehavior: Clip.none,
-                       children: [
-                         const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
-                         Positioned(
-                           top: -6,
-                           right: -8,
-                           child: Container(
-                             padding: const EdgeInsets.all(4),
-                             decoration: const BoxDecoration(
-                               color: Color(0xFF1A1A1A),
-                               shape: BoxShape.circle,
-                             ),
-                             child: Text(
-                               '$itemCount',
-                               style: const TextStyle(
-                                 color: Colors.white,
-                                 fontSize: 12,
-                                 fontWeight: FontWeight.w700,
+               elevation: showBanner ? 0 : 4,
+               shadowColor: accent.withValues(alpha: 0.4),
+               child: InkWell(
+                 borderRadius: BorderRadius.circular(28),
+                 onTap: () {
+                   HapticFeedback.selectionClick();
+                   Navigator.of(context).push(
+                     MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
+                   );
+                 },
+                 child: Padding(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                   child: Row(
+                     children: [
+                       // Cart icon with badge
+                       Stack(
+                         clipBehavior: Clip.none,
+                         children: [
+                           const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
+                           Positioned(
+                             top: -6,
+                             right: -8,
+                             child: Container(
+                               padding: const EdgeInsets.all(4),
+                               decoration: const BoxDecoration(
+                                 color: Color(0xFF1A1A1A),
+                                 shape: BoxShape.circle,
+                               ),
+                               child: Text(
+                                 '$itemCount',
+                                 style: const TextStyle(
+                                   color: Colors.white,
+                                   fontSize: 12,
+                                   fontWeight: FontWeight.w700,
+                                 ),
                                ),
                              ),
                            ),
+                         ],
+                       ),
+                       const SizedBox(width: 14),
+                       // Center text
+                       Expanded(
+                         child: Text(
+                           _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
+                           style: const TextStyle(
+                             color: Colors.white,
+                             fontSize: 16,
+                             fontWeight: FontWeight.w600,
+                           ),
                          ),
-                       ],
-                     ),
-                     const SizedBox(width: 14),
-                     // Center text
-                     Expanded(
-                       child: Text(
-                         _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
+                       ),
+                       // Price on right
+                       Text(
+                         '${cartTotal.toStringAsFixed(2)} $currency',
                          style: const TextStyle(
                            color: Colors.white,
                            fontSize: 16,
                            fontWeight: FontWeight.w600,
                          ),
                        ),
-                     ),
-                     // Price on right
-                     Text(
-                       '${cartTotal.toStringAsFixed(2)} $currency',
-                       style: const TextStyle(
-                         color: Colors.white,
-                         fontSize: 16,
-                         fontWeight: FontWeight.w600,
-                       ),
-                     ),
-                   ],
+                     ],
+                   ),
                  ),
                ),
              ),
            ),
-         ),
-       ],
+         ],
+       ),
      );
   }
 
