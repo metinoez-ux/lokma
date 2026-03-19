@@ -15,6 +15,7 @@ import '../../models/butcher_product.dart';
 import '../../models/product_option.dart';
 import '../../utils/currency_utils.dart';
 import 'notification_trash_screen.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
   final String? openOrderId;
@@ -258,15 +259,47 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
           .where('read', isEqualTo: false)
           .get();
 
-      if (unreadDocs.docs.isEmpty) return;
+      if (unreadDocs.docs.isEmpty) {
+        // Even if no unread docs, still reset badge in case it got stuck
+        _resetAppBadge();
+        return;
+      }
 
       final batch = FirebaseFirestore.instance.batch();
       for (var doc in unreadDocs.docs) {
         batch.update(doc.reference, {'read': true});
       }
       await batch.commit();
+
+      // Reset iOS app icon badge to 0 after marking all as read
+      _resetAppBadge();
     } catch (e) {
       debugPrint('Error marking notifications as read: $e');
+    }
+  }
+
+  /// Resets the iOS app icon badge count to 0
+  void _resetAppBadge() {
+    try {
+      final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
+      flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(badge: true)
+          .then((_) {
+        flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>()
+            ?.getNotificationAppLaunchDetails();
+      });
+      // Set badge to 0 via the iOS-specific show with badge 0
+      flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions();
+    } catch (e) {
+      debugPrint('Badge reset error (non-fatal): $e');
     }
   }
 
