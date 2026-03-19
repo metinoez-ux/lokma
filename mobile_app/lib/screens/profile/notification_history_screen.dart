@@ -3138,7 +3138,6 @@ void showChatBottomSheetGlobal(
       }
     }
 
-    final isScheduled = order.isScheduledOrder || order.scheduledTime != null;
 
     return Row(
       children: [
@@ -3152,31 +3151,6 @@ void showChatBottomSheetGlobal(
             fontWeight: FontWeight.w500,
           ),
         ),
-        if (isScheduled) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFF3E0),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.schedule, size: 11, color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100)),
-                const SizedBox(width: 3),
-                Text(
-                  'notifications.scheduled_delivery'.tr(),
-                  style: TextStyle(
-                    color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
     );
   }
