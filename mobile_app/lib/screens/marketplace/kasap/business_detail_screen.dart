@@ -2860,7 +2860,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          runSpacing: 8,
                          crossAxisAlignment: WrapCrossAlignment.center,
                          children: [
-                           // Rating
+                           // Rating (Google Places or Firestore fallback)
                            if (_placeDetails != null)
                              InkWell(
                                onTap: _showRatings,
@@ -2879,6 +2879,22 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    ),
                                  ],
                                ),
+                             )
+                           else if ((data?['rating'] as num?)?.toDouble() != null && (data?['rating'] as num).toDouble() > 0)
+                             Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 const Icon(Icons.star, color: Colors.amber, size: 16),
+                                 const SizedBox(width: 4),
+                                 Text(
+                                   '${(data!['rating'] as num).toDouble().toStringAsFixed(1).replaceAll('.', ',')}${(data['reviewCount'] as num?)?.toInt() != null && (data['reviewCount'] as num).toInt() > 0 ? ' (${data['reviewCount']})' : ''}',
+                                   style: TextStyle(
+                                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                     fontSize: 13,
+                                     fontWeight: FontWeight.w500,
+                                   ),
+                                 ),
+                               ],
                              ),
                            
                            // Separator
