@@ -3334,31 +3334,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
      return Container(
        margin: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
-       decoration: BoxDecoration(
-         color: showBanner 
-             ? (isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0))
-             : Colors.transparent,
-         borderRadius: BorderRadius.circular(32),
-         boxShadow: showBanner ? [
-           BoxShadow(
-             color: Colors.black.withValues(alpha: 0.08),
-             blurRadius: 12,
-             offset: const Offset(0, 4),
-           ),
-         ] : null,
-       ),
        child: Column(
          mainAxisSize: MainAxisSize.min,
          children: [
            if (showBanner)
-             Padding(
-               padding: const EdgeInsets.only(top: 14, bottom: 8, left: 16, right: 16),
+             Container(
+               margin: const EdgeInsets.only(bottom: 6),
+               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+               decoration: BoxDecoration(
+                 color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFEEEEEE),
+                 borderRadius: BorderRadius.circular(16),
+               ),
                child: Row(
                  mainAxisAlignment: MainAxisAlignment.center,
                  children: [
                    Icon(
                      isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
-                     size: 16,
+                     size: 18,
                      color: isSuccess
                          ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
                          : (isDark ? Colors.white70 : Colors.black54),
@@ -3373,7 +3365,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                'currency': currency,
                              }),
                        style: TextStyle(
-                         fontSize: 13,
+                         fontSize: 14,
                          fontWeight: FontWeight.w500,
                          color: isSuccess
                              ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))

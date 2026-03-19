@@ -2398,7 +2398,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 return;
                               }
 
-                              final session = await showModalBottomSheet<TableGroupSessionModel>(
+                              final session = await showModalBottomSheet<TableGroupSession>(
                                 context: context,
                                 useRootNavigator: true,
                                 shape: const RoundedRectangleBorder(
