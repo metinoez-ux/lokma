@@ -17,7 +17,10 @@ import '../../utils/currency_utils.dart';
 import 'notification_trash_screen.dart';
 
 class NotificationHistoryScreen extends ConsumerStatefulWidget {
-  const NotificationHistoryScreen({super.key});
+  final String? openOrderId;
+  final bool openChat;
+  
+  const NotificationHistoryScreen({super.key, this.openOrderId, this.openChat = false});
 
   @override
   ConsumerState<NotificationHistoryScreen> createState() => _NotificationHistoryScreenState();
@@ -55,6 +58,33 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     ]).animate(_swipeHintController);
 
     _checkSwipeHintNeeded();
+
+    // Check if we need to auto-open an order or chat
+    if (widget.openOrderId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (widget.openChat) {
+          _autoOpenChat(widget.openOrderId!);
+        } else {
+          showOrderDetailGlobal(context, widget.openOrderId!);
+        }
+      });
+    }
+  }
+
+  Future<void> _autoOpenChat(String orderId) async {
+    try {
+      final order = await OrderService().getOrder(orderId);
+      if (!mounted || order == null) return;
+      showChatBottomSheetGlobal(
+        context,
+        orderId,
+        order.orderNumber ?? order.id.substring(0, 6).toUpperCase(),
+        order.butcherName,
+      );
+    } catch (e) {
+      debugPrint('Error auto-opening chat: $e');
+    }
   }
 
   /// Load existing favorite order names from Firestore
@@ -640,6 +670,51 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
               ..addAll(inactiveItems.reversed);
           }
 
+          final currentTime = DateTime.now();
+          final List<dynamic> currentItems = [];
+          final List<dynamic> pastItems = [];
+          
+          for (final item in filtered) {
+            bool isCurrent = false;
+            if (item is _OrderGroup) {
+              if (_isActiveOrder(item)) {
+                isCurrent = true;
+              } else {
+                final dt = item.latestTimestamp?.toDate();
+                if (dt != null && currentTime.difference(dt).inHours < 8) {
+                  isCurrent = true;
+                }
+              }
+            } else if (item is _ReservationGroup) {
+              final status = item.statuses.last['status'] as String? ?? '';
+              if (status == 'pending') {
+                isCurrent = true;
+              } else {
+                final dt = item.latestTimestamp?.toDate();
+                if (dt != null && currentTime.difference(dt).inHours < 8) {
+                  isCurrent = true;
+                }
+              }
+            } else if (item is Map<String, dynamic>) {
+              final dt = (item['createdAt'] as Timestamp?)?.toDate();
+              if (dt != null && currentTime.difference(dt).inHours < 8) {
+                isCurrent = true;
+              }
+            }
+            if (isCurrent) currentItems.add(item);
+            else pastItems.add(item);
+          }
+
+          final List<dynamic> listItems = [];
+          if (currentItems.isNotEmpty) {
+            listItems.add('Aktuelle Bestellungen');
+            listItems.addAll(currentItems);
+          }
+          if (pastItems.isNotEmpty) {
+            listItems.add('Kapanmış Siparişler');
+            listItems.addAll(pastItems);
+          }
+
           return Column(
             children: [
               // -- Dropdown filter + sort icon --
@@ -752,11 +827,11 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                     children: [
                       Builder(
                         builder: (context) {
-                          // Find first dismissible card index (non-active, non-pinned)
                           int swipeHintIdx = -1;
                           if (_showSwipeHint) {
-                            for (int i = 0; i < filtered.length; i++) {
-                              final fi = filtered[i];
+                            for (int i = 0; i < listItems.length; i++) {
+                              final fi = listItems[i];
+                              if (fi is String) continue;
                               if (fi is _OrderGroup && _isActiveOrder(fi)) continue;
                               if (fi is _ReservationGroup && (fi.statuses.last['status'] as String? ?? '') == 'pending') continue;
                               swipeHintIdx = i;
@@ -766,11 +841,34 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                           return ListView.separated(
                         key: const PageStorageKey('notification_list'),
                         padding: EdgeInsets.only(left: 16, right: 16, top: 4, bottom: _isEditMode ? 80 : 12),
-                        itemCount: filtered.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemCount: listItems.length,
+                separatorBuilder: (context, index) {
+                  final currentItem = listItems[index];
+                  final nextItem = index + 1 < listItems.length ? listItems[index + 1] : null;
+                  if (currentItem is String || nextItem is String) {
+                    return const SizedBox(height: 8);
+                  }
+                  return const SizedBox(height: 12);
+                },
                 itemBuilder: (context, index) {
                   final bool isHintTarget = _showSwipeHint && index == swipeHintIdx && swipeHintIdx >= 0;
-                  final item = filtered[index];
+                  final item = listItems[index];
+
+                  if (item is String) {
+                    return Padding(
+                      padding: EdgeInsets.only(top: index == 0 ? 0 : 24, bottom: 4, left: 4),
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[300] : Colors.grey[800],
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    );
+                  }
+
                   if (item is _ReservationGroup) {
                     final card = _ReservationCard(
                       group: item,
@@ -1669,9 +1767,9 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
       final schedDay = DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
       final timeStr = '${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}';
       if (schedDay == today) {
-        pickupTimeStr = '${'common.today'.tr()} $timeStr';
+        pickupTimeStr = '${'today'.tr()} $timeStr';
       } else if (schedDay == tomorrow) {
-        pickupTimeStr = '${'common.tomorrow'.tr()} $timeStr';
+        pickupTimeStr = '${'tomorrow'.tr()} $timeStr';
       } else {
         pickupTimeStr = '${scheduledDate.day.toString().padLeft(2, '0')}.${scheduledDate.month.toString().padLeft(2, '0')} $timeStr';
       }
@@ -2145,12 +2243,12 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                       builder: (context, meatSnap) {
                                         if (!meatSnap.hasData || !meatSnap.data!.exists) return const SizedBox.shrink();
                                         final data = meatSnap.data!.data() as Map<String, dynamic>? ?? {};
-                                        return _buildDeliveryProofWidget(data, context);
+                                        return buildDeliveryProofWidgetGlobal(data, context);
                                       },
                                     );
                                   }
                                   final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-                                  return _buildDeliveryProofWidget(data, context);
+                                  return buildDeliveryProofWidgetGlobal(data, context);
                                 },
                               ),
                             ),
@@ -2249,9 +2347,9 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             orElse: () => group.statuses.first,
                           );
                           final pendingTs = pendingEntry['createdAt'] as Timestamp?;
-                          _showOrderDetail(context, group.orderId, pendingTs?.toDate());
+                          showOrderDetailGlobal(context, group.orderId, pendingTs?.toDate());
                         },
-                      icon: const Icon(Icons.receipt_long_rounded, size: 14),
+                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
                       label: Text(
                         'orders.view_order'.tr(),
                         maxLines: 1,
@@ -2266,7 +2364,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -2285,7 +2383,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                         builder: (ctx, snap) {
                           final unread = snap.data ?? 0;
                           return TextButton.icon(
-                            onPressed: () => _showChatBottomSheet(
+                            onPressed: () => showChatBottomSheetGlobal(
                               context,
                               group.orderId,
                               group.rawOrderNumber.isNotEmpty
@@ -2298,11 +2396,11 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                               backgroundColor: const Color(0xFFFF3B30),
                               label: Text(
                                 '$unread',
-                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                               ),
                               child: Icon(
                                 unread > 0 ? Icons.chat_bubble : Icons.chat_bubble_outline,
-                                size: 14,
+                                size: 16,
                               ),
                             ),
                             label: Text(
@@ -2321,7 +2419,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                             ),
                           );
                         },
@@ -2344,7 +2442,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.map_rounded, size: 14),
+                        icon: const Icon(Icons.map_rounded, size: 16),
                         label: Text(
                           'notification.open_map'.tr(),
                           maxLines: 1,
@@ -2357,7 +2455,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -2370,9 +2468,10 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
       ),
     );
   }
+}
 
-  // ── Chat Bottom Sheet ───────────────────────────────────────────────
-  void _showChatBottomSheet(
+// ── Chat Bottom Sheet ───────────────────────────────────────────────
+void showChatBottomSheetGlobal(
     BuildContext ctx,
     String orderId,
     String orderNumber,
@@ -2408,7 +2507,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
   }
 
   // ── Delivery Proof Widget (type label + photo) ────────────────────────
-  Widget _buildDeliveryProofWidget(Map<String, dynamic> data, BuildContext context) {
+  Widget buildDeliveryProofWidgetGlobal(Map<String, dynamic> data, BuildContext context) {
     final deliveryProof = data['deliveryProof'] as Map<String, dynamic>?;
     if (deliveryProof == null) return const SizedBox.shrink();
 
@@ -2522,7 +2621,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
   }
 
   // ── Show order detail ────────────────────────────────────────────────
-  void _showOrderDetail(BuildContext ctx, String orderId, [DateTime? pendingAt]) async {
+  void showOrderDetailGlobal(BuildContext ctx, String orderId, [DateTime? pendingAt]) async {
     // Show loading indicator
     showDialog(
       context: ctx,
@@ -2579,7 +2678,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Order type line above business name
-                            _buildOrderTypeInline(order, isDark),
+                            buildOrderTypeInlineGlobal(order, isDark),
                             const SizedBox(height: 6),
                             Text(
                               order.butcherName,
@@ -3004,7 +3103,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
   }
 
   // ── Helper: order type inline (for detail sheet header) ──────────────────
-  Widget _buildOrderTypeInline(LokmaOrder order, bool isDark) {
+  Widget buildOrderTypeInlineGlobal(LokmaOrder order, bool isDark) {
     final IconData icon;
     final String label;
     final Color color;
@@ -3313,8 +3412,6 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
       },
     );
   }
-}
-
 // ── Order status row widget ─────────────────────────────────────────────────
 class _OrderStatusRow extends StatelessWidget {
   final LokmaOrder order;

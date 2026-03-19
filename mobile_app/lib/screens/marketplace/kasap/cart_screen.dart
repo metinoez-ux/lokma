@@ -6926,8 +6926,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
       final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
-      if (isToday) return 'common.today'.tr();
-      if (isTomorrow) return 'common.tomorrow'.tr();
+      if (isToday) return 'today'.tr();
+      if (isTomorrow) return 'tomorrow'.tr();
       return dayNames[dateKey.weekday - 1];
     }).toList();
 
@@ -7211,8 +7211,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
             final tomorrow = now.add(const Duration(days: 1));
             final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
-            if (isToday) return 'common.today'.tr();
-            if (isTomorrow) return 'common.tomorrow'.tr();
+            if (isToday) return 'today'.tr();
+            if (isTomorrow) return 'tomorrow'.tr();
             final dayNames = ['common.day_monday', 'common.day_tuesday', 'common.day_wednesday', 'common.day_thursday', 'common.day_friday', 'common.day_saturday', 'common.day_sunday'];
             return dayNames[dateKey.weekday - 1].tr();
           }).toList();
