@@ -1011,6 +1011,10 @@ export interface ButcherPartner {
     deliveryPostalCode?: string; // Merkez PLZ (kasabın kendi PLZ'si)
     deliveryRadius?: number; // Teslimat yarıçapı (km)
 
+    // Grup Siparişi Ayarları
+    groupOrderLinkEnabled?: boolean;
+    groupOrderTableEnabled?: boolean;
+
     // Smart Notifications & IOT
     smartNotifications?: {
         enabled?: boolean;

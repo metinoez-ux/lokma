@@ -22,6 +22,7 @@ interface CardTexts {
   step1: string;
   step2: string;
   step3: string;
+  groupOrderInfo: string;
   bannerSub: string;
   afiyetOlsun: string;
 }
@@ -34,6 +35,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'Menuyu Gor',
     step2: 'Siparis Ver',
     step3: 'Kalkmadan Ode',
+    groupOrderInfo: 'Grup siparisi icin QR kodu MASADAN SADECE 1 KISI okutmalidir. Acilan sayfadaki linki WhatsApp vb. ile arkadaslariniza gondererek herkesin ayni siparise urun eklemesini saglayabilirsiniz.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Afiyet Olsun!',
   },
@@ -44,6 +46,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'Speisekarte',
     step2: 'Bestellen',
     step3: 'Am Tisch bezahlen',
+    groupOrderInfo: 'Für eine Gruppenbestellung sollte NUR 1 PERSON den QR-Code scannen. Teilen Sie dann den Link (zB über WhatsApp) mit Ihrem Tisch, damit jeder Artikel zur gemeinsamen Bestellung hinzufügen kann.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Guten Appetit!',
   },
@@ -54,6 +57,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'View Menu',
     step2: 'Place Order',
     step3: 'Pay at Table',
+    groupOrderInfo: 'For a group order, ONLY 1 PERSON should scan the QR code. Share the link from the opened page with your table to allow everyone to add items to the joint order from their own phones.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Bon Appetit!',
   },
@@ -64,6 +68,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'Voir le menu',
     step2: 'Commander',
     step3: 'Payer a table',
+    groupOrderInfo: 'Pour une commande de groupe, 1 SEULE PERSONNE doit scanner le code QR. Partagez le lien avec votre table pour que chacun puisse ajouter des articles a la commande commune.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Bon Appetit !',
   },
@@ -74,6 +79,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'Ver menu',
     step2: 'Hacer pedido',
     step3: 'Pagar en mesa',
+    groupOrderInfo: 'Para un pedido grupal, SOLO 1 PERSONA debe escanear el codigo QR. Comparta el enlace con su mesa para que todos puedan agregar articulos al pedido conjunto.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Buen Provecho!',
   },
@@ -84,6 +90,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'Vedi menu',
     step2: 'Ordina',
     step3: 'Paga al tavolo',
+    groupOrderInfo: 'Per un ordine di gruppo, SOLO 1 PERSONA deve scansionare il codice QR. Condividi il link con il tuo tavolo in modo che tutti possano aggiungere articoli all\'ordine congiunto.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Buon Appetito!',
   },
@@ -94,6 +101,7 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
     step1: 'Bekijk menu',
     step2: 'Bestellen',
     step3: 'Betaal aan tafel',
+    groupOrderInfo: 'Voor een groepsbestelling hoeft SLECHTS 1 PERSOON de QR-code te scannen. Deel de link met uw tafel, zodat iedereen vanaf zijn eigen telefoon items kan toevoegen aan de gezamenlijke bestelling.',
     bannerSub: 'iOS & Android  |  lokma.app',
     afiyetOlsun: 'Eet Smakelijk!',
   },
@@ -240,7 +248,7 @@ function renderCardPage(
   doc.text(txt.cta, A6_WIDTH / 2, 106, { align: 'center' });
 
   // Feature steps
-  const featureY = 112;
+  const featureY = 111;
   const features = [
     { icon: '1', text: txt.step1 },
     { icon: '2', text: txt.step2 },
@@ -265,11 +273,18 @@ function renderCardPage(
     doc.text(feature.text, x, featureY + 11, { align: 'center' });
   });
 
+  // Group Order Info
+  doc.setFontSize(5.5);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont('helvetica', 'normal');
+  const groupTextLines = doc.splitTextToSize(txt.groupOrderInfo, A6_WIDTH - 20);
+  doc.text(groupTextLines, A6_WIDTH / 2, 126, { align: 'center' });
+
   // "Afiyet Olsun" text - above the bottom banner
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
   doc.setFont('helvetica', 'italic');
-  doc.text(txt.afiyetOlsun, A6_WIDTH / 2, 130, { align: 'center' });
+  doc.text(txt.afiyetOlsun, A6_WIDTH / 2, 134, { align: 'center' });
 
   // Bottom red banner
   const bannerHeight = 10;

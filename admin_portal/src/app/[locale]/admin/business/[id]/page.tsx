@@ -7755,8 +7755,88 @@ export default function BusinessDetailsPage() {
                 </div>
               )}
 
+              {/* ── Link İle Grup Siparişi Card ── */}
+              {(planFeatures.groupOrderLink || admin?.adminType === 'super') && (
+                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700 mt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
+                        <span className="text-xl">🔗</span>
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold">{t('linkIleGrupSiparisi')}</h3>
+                        <p className="text-xs text-gray-400">{t('musterilerSiparisLinkiniPaylasarakOrtakSiparisVerebilir')}</p>
+                      </div>
+                    </div>
+                    <div>
+                      {isEditing ? (
+                        <label className="flex items-center cursor-pointer">
+                          <div className="relative">
+                            <input 
+                              type="checkbox" 
+                              className="sr-only" 
+                              checked={!!formData.groupOrderLinkEnabled}
+                              onChange={(e) => setFormData({ ...formData, groupOrderLinkEnabled: e.target.checked })}
+                            />
+                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-white">
+                            {formData.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
+                          </span>
+                        </label>
+                      ) : (
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                          {business?.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Masada Grup Siparişi Card ── */}
+              {(planFeatures.groupOrderTable || admin?.adminType === 'super') && (
+                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700 mt-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
+                        <span className="text-xl">👥</span>
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold">{t('masadaGrupSiparisi')}</h3>
+                        <p className="text-xs text-gray-400">{t('masadakiMusterilerQrOkutarakAyniSipariseUrunEkleyebilir')}</p>
+                      </div>
+                    </div>
+                    <div>
+                      {isEditing ? (
+                        <label className="flex items-center cursor-pointer">
+                          <div className="relative">
+                            <input 
+                              type="checkbox" 
+                              className="sr-only" 
+                              checked={!!formData.groupOrderTableEnabled}
+                              onChange={(e) => setFormData({ ...formData, groupOrderTableEnabled: e.target.checked })}
+                            />
+                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-white">
+                            {formData.groupOrderTableEnabled ? t('aktif') : t('kapali')}
+                          </span>
+                        </label>
+                      ) : (
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                          {business?.groupOrderTableEnabled ? t('aktif') : t('kapali')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ── Plan Info Footer ── */}
-              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700 mt-6">
                 <p className="text-sm text-gray-400">
                   {t('buOzelliklerIsletmenin')} <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> {t('planiUzerindenYonetilmektedirDegisiklikYapmakIcin')} <a href="/admin/plans" className="text-blue-400 hover:underline">{t('planYonetimi')}</a> {t('sayfasiniZiyaretEdin')}
                 </p>
