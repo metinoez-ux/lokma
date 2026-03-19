@@ -216,9 +216,9 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 ),
                 const SizedBox(height: 16),
                 // Title
-                const Text(
+                Text(
                   '🃏 ${'staff.table_card_select_title'.tr()}',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(

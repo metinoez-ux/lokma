@@ -2080,9 +2080,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     BlendMode.srcIn,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   'marketplace.online_table_reservation_badge'.tr(),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
