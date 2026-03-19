@@ -27,6 +27,7 @@ import '../../../providers/search_provider.dart';
 import 'package:lokma_app/widgets/group_order_setup_sheet.dart';
 import 'package:lokma_app/widgets/marketplace_group_share_sheet.dart';
 import 'package:lokma_app/models/table_group_session_model.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Business type labels for display
 /// Business type keys for i18n lookup
@@ -2363,10 +2364,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.event_seat, color: Colors.white, size: 14),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.schedule, color: Colors.white, size: 14),
-                                const SizedBox(width: 6),
+                                SvgPicture.asset(
+                                  'assets/images/icon_masa_rezervasyon.svg',
+                                  width: 16,
+                                  height: 16,
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
                                 const Text(
                                   'Online Masa Rezervasyonu',
                                   style: TextStyle(

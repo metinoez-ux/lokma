@@ -18,6 +18,7 @@ import 'package:lokma_app/widgets/sponsored_banner_card.dart';
 import 'package:lokma_app/services/sponsored_ad_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../utils/currency_utils.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Business type labels for display
 const Map<String, String> MARKET_TYPE_LABELS = {
@@ -1943,10 +1944,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.event_seat, color: Colors.white, size: 14),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.schedule, color: Colors.white, size: 14),
-                                const SizedBox(width: 6),
+                                SvgPicture.asset(
+                                  'assets/images/icon_masa_rezervasyon.svg',
+                                  width: 16,
+                                  height: 16,
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
                                 const Text(
                                   'Online Masa Rezervasyonu',
                                   style: TextStyle(
