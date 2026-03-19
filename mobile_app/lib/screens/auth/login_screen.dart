@@ -53,7 +53,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String? _verificationId;
   bool _codeSent = false;
   _PhoneStatus _phoneStatus = _PhoneStatus.idle;  // pre-send check result
-  String _checkedFormattedPhone = '';              // the phone we last checked
   
   // GPS-based country code
   String _countryCode = '+49';  // Default to Germany
@@ -1385,7 +1384,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           setState(() {
             _isLoading = false;
             _phoneStatus = _PhoneStatus.notRegistered;
-            _checkedFormattedPhone = formattedPhone;
           });
         }
         return;
@@ -1398,7 +1396,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           setState(() {
             _isLoading = false;
             _phoneStatus = _PhoneStatus.alreadyRegistered;
-            _checkedFormattedPhone = formattedPhone;
           });
         }
         return;

@@ -8,11 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/product_favorites_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
-import 'package:lokma_app/screens/orders/rating_screen.dart';
-import 'package:lokma_app/models/butcher_product.dart';
-import 'package:lokma_app/models/product_option.dart';
-import 'package:lokma_app/providers/cart_provider.dart';
-import 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart';
 import '../../utils/currency_utils.dart';
 
 
@@ -72,7 +67,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Favorilerim',
+          tr('favorites.title'),
           style: TextStyle(
             color: textPrimary,
             fontSize: 18,
@@ -360,11 +355,11 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFilterChip('all', 'Hepsi', Icons.apps, isDark),
+                _buildFilterChip('all', tr('common.hepsi'), Icons.apps, isDark),
                 const SizedBox(width: 8),
-                _buildFilterChip('tuna', 'Tuna Isletmeleri', Icons.verified, isDark),
+                _buildFilterChip('tuna', tr('common.tuna_isletmeleri'), Icons.verified, isDark),
                 const SizedBox(width: 8),
-                _buildFilterChip('kermes', 'Kermesler', Icons.festival, isDark),
+                _buildFilterChip('kermes', tr('common.kermesler'), Icons.festival, isDark),
               ],
             ),
           ),
@@ -409,8 +404,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
               if (filtered.isEmpty) {
                 return _buildEmptyState(
                   icon: Icons.filter_list_off,
-                  title: 'Sonuc bulunamadi',
-                  subtitle: 'Bu filtreye uygun favori isletmeniz yok.',
+                  title: tr('common.sonuc_bulunamadi'),
+                  subtitle: tr('favorites.no_matching_filter'),
                   isDark: isDark,
                 );
               }

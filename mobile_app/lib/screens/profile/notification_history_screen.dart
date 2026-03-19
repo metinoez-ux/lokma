@@ -48,9 +48,9 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     );
     // Slide left 80px, hold briefly, then slide back
     _swipeHintOffset = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0, end: -80).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 35),
-      TweenSequenceItem(tween: ConstantTween(-80), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: -80, end: 0).chain(CurveTween(curve: Curves.easeInOut)), weight: 35),
+      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: -80.0).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 35),
+      TweenSequenceItem(tween: ConstantTween<double>(-80.0), weight: 30),
+      TweenSequenceItem(tween: Tween<double>(begin: -80.0, end: 0.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 35),
     ]).animate(_swipeHintController);
 
     _checkSwipeHintNeeded();
