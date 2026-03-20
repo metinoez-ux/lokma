@@ -302,28 +302,31 @@ function renderCardPage(
   doc.line(PAD, divY, A6_WIDTH - PAD, divY);
 
   // ================================================================
-  // BOTTOM BAR: Logo (left) + Partner text & badges (right)
+  // BOTTOM BAR: Partner text (centered above) + Logo (left) + badges (right)
   // ================================================================
-  const bottomStartY = divY + 3;
+  const bottomStartY = divY + 2;
 
-  // LEFT: LOKMA logo (actual ratio: 4364x1201 = 3.63:1)
-  const logoW = 28;
-  const logoH = logoW / 3.63; // ~7.7mm - preserves aspect ratio
-  try {
-    doc.addImage(logoBase64, 'PNG', PAD, bottomStartY, logoW, logoH);
-  } catch {
-    doc.setFont('Roboto', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(...LOKMA_RED);
-    doc.text('LOKMA', PAD, bottomStartY + 6);
-  }
-
-  // RIGHT: Partner text
+  // TOP: Partner text centered
   const rightEdge = A6_WIDTH - PAD;
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(80, 80, 80);
-  doc.text(txt.partnerLine, rightEdge, bottomStartY + 3, { align: 'right' });
+  doc.text(txt.partnerLine, A6_WIDTH / 2, bottomStartY + 2, { align: 'center' });
+
+  // ROW BELOW: LOKMA logo (left) + badges (right)
+  const rowY = bottomStartY + 5;
+
+  // LEFT: LOKMA logo (actual ratio: 1893x521 = 3.63:1)
+  const logoW = 28;
+  const logoH = logoW / 3.63; // ~7.7mm - preserves aspect ratio
+  try {
+    doc.addImage(logoBase64, 'PNG', PAD, rowY, logoW, logoH);
+  } catch {
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(...LOKMA_RED);
+    doc.text('LOKMA', PAD, rowY + 6);
+  }
 
   // RIGHT: App Store + Google Play badges (real images)
   // App Store badge: 498x167 (ratio ~2.98:1)
@@ -332,7 +335,7 @@ function renderCardPage(
   // Google Play badge: 646x250 (ratio ~2.584:1)
   const gpBadgeW = 18;
   const gpBadgeH = gpBadgeW / 2.584; // ~6.97mm
-  const badgeY = bottomStartY + 5;
+  const badgeY = rowY;
   const badge1X = rightEdge - asBadgeW - gpBadgeW - 3;
   const badge2X = rightEdge - gpBadgeW;
 
