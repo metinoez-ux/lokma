@@ -302,23 +302,24 @@ function renderCardPage(
   doc.line(PAD, divY, A6_WIDTH - PAD, divY);
 
   // ================================================================
-  // BOTTOM BAR: Partner text (centered above) + Logo (left) + badges (right)
+  // BOTTOM BAR: Partner text (left-aligned above logo) + Logo (left) + badges (right)
   // ================================================================
   const bottomStartY = divY + 2;
-
-  // TOP: Partner text centered
-  const rightEdge = A6_WIDTH - PAD;
-  doc.setFont('Roboto', 'normal');
-  doc.setFontSize(6.5);
-  doc.setTextColor(80, 80, 80);
-  doc.text(txt.partnerLine, A6_WIDTH / 2, bottomStartY + 2, { align: 'center' });
-
-  // ROW BELOW: LOKMA logo (left) + badges (right)
-  const rowY = bottomStartY + 5;
 
   // LEFT: LOKMA logo (actual ratio: 1893x521 = 3.63:1)
   const logoW = 28;
   const logoH = logoW / 3.63; // ~7.7mm - preserves aspect ratio
+
+  // Partner text left-aligned directly above logo
+  const rightEdge = A6_WIDTH - PAD;
+  doc.setFont('Roboto', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(80, 80, 80);
+  doc.text(txt.partnerLine, PAD, bottomStartY + 2, { align: 'left' });
+
+  // ROW BELOW: LOKMA logo (left) + badges (right)
+  const rowY = bottomStartY + 5;
+
   try {
     doc.addImage(logoBase64, 'PNG', PAD, rowY, logoW, logoH);
   } catch {
@@ -328,24 +329,23 @@ function renderCardPage(
     doc.text('LOKMA', PAD, rowY + 6);
   }
 
-  // RIGHT: App Store + Google Play badges (real images)
+  // RIGHT: App Store + Google Play badges - SAME HEIGHT
+  const badgeH = 6.5; // unified height for both badges
   // App Store badge: 498x167 (ratio ~2.98:1)
-  const asBadgeW = 18;
-  const asBadgeH = asBadgeW / 2.98; // ~6.04mm
+  const asBadgeW = badgeH * 2.98; // ~19.4mm
   // Google Play badge: 646x250 (ratio ~2.584:1)
-  const gpBadgeW = 18;
-  const gpBadgeH = gpBadgeW / 2.584; // ~6.97mm
-  const badgeY = rowY;
-  const badge1X = rightEdge - asBadgeW - gpBadgeW - 3;
+  const gpBadgeW = badgeH * 2.584; // ~16.8mm
+  const badgeY = rowY + (logoH - badgeH) / 2; // vertically center with logo
   const badge2X = rightEdge - gpBadgeW;
+  const badge1X = badge2X - asBadgeW - 2;
 
   if (appStoreBadge) {
     try {
-      doc.addImage(appStoreBadge, 'PNG', badge1X, badgeY, asBadgeW, asBadgeH);
+      doc.addImage(appStoreBadge, 'PNG', badge1X, badgeY, asBadgeW, badgeH);
     } catch {
       // fallback text badge
       doc.setFillColor(0, 0, 0);
-      doc.roundedRect(badge1X, badgeY, asBadgeW, asBadgeH, 1, 1, 'F');
+      doc.roundedRect(badge1X, badgeY, asBadgeW, badgeH, 1, 1, 'F');
       doc.setFont('Roboto', 'bold');
       doc.setFontSize(4);
       doc.setTextColor(255, 255, 255);
@@ -355,11 +355,11 @@ function renderCardPage(
 
   if (googlePlayBadge) {
     try {
-      doc.addImage(googlePlayBadge, 'PNG', badge2X, badgeY, gpBadgeW, gpBadgeH);
+      doc.addImage(googlePlayBadge, 'PNG', badge2X, badgeY, gpBadgeW, badgeH);
     } catch {
       // fallback text badge
       doc.setFillColor(0, 0, 0);
-      doc.roundedRect(badge2X, badgeY, gpBadgeW, gpBadgeH, 1, 1, 'F');
+      doc.roundedRect(badge2X, badgeY, gpBadgeW, badgeH, 1, 1, 'F');
       doc.setFont('Roboto', 'bold');
       doc.setFontSize(4);
       doc.setTextColor(255, 255, 255);
