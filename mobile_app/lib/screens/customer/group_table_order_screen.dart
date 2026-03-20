@@ -652,6 +652,10 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   }
 
   Widget _buildProductList(bool isDark) {
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.15);
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('businesses')
@@ -664,27 +668,35 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           return const Center(child: CircularProgressIndicator(color: _accent));
         }
 
+        if (snapshot.hasError) {
+          debugPrint('Products stream error: ${snapshot.error}');
+        }
+
         List<ButcherProduct> products = [];
         if (snapshot.hasData) {
-          products = snapshot.data!.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            final sku = data['masterProductId'] ?? data['masterProductSku'];
-            final masterData = MASTER_PRODUCT_CATALOG[sku];
+          for (final doc in snapshot.data!.docs) {
+            try {
+              final data = doc.data() as Map<String, dynamic>;
+              final sku = data['masterProductId'] ?? data['masterProductSku'];
+              final masterData = MASTER_PRODUCT_CATALOG[sku];
 
-            final masterMap = masterData != null
-                ? {
-                    'name': masterData.name,
-                    'description': masterData.description,
-                    'category': masterData.category,
-                    'unit': masterData.unitType,
-                    'imageAsset': masterData.imagePath,
-                    'tags': masterData.tags,
-                  }
-                : null;
+              final masterMap = masterData != null
+                  ? {
+                      'name': masterData.name,
+                      'description': masterData.description,
+                      'category': masterData.category,
+                      'unit': masterData.unitType,
+                      'imageAsset': masterData.imagePath,
+                      'tags': masterData.tags,
+                    }
+                  : null;
 
-            return ButcherProduct.fromFirestore(data, doc.id,
-                butcherId: widget.businessId, masterData: masterMap);
-          }).toList();
+              products.add(ButcherProduct.fromFirestore(data, doc.id,
+                  butcherId: widget.businessId, masterData: masterMap));
+            } catch (e) {
+              debugPrint('Error parsing product ${doc.id}: $e');
+            }
+          }
         }
 
         // Filter
@@ -703,21 +715,63 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
         if (filtered.isEmpty) {
           return Center(
-            child: Text(tr('customer.urun_bulunamadi'), style: TextStyle(color: Colors.grey[500])),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.restaurant_menu, size: 48, color: Colors.grey[300]),
+                const SizedBox(height: 12),
+                Text(tr('customer.urun_bulunamadi'), style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+              ],
+            ),
           );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-          itemCount: filtered.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
-          itemBuilder: (context, index) => _buildProductCard(filtered[index], isDark),
+        // Group by category (like normal ordering screen)
+        final Map<String, List<ButcherProduct>> grouped = {};
+        for (final p in filtered) {
+          final cat = p.category.isNotEmpty ? p.category : tr('customer.diger');
+          grouped.putIfAbsent(cat, () => []).add(p);
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(0, 4, 0, 100),
+          itemCount: grouped.length,
+          itemBuilder: (context, sectionIndex) {
+            final category = grouped.keys.elementAt(sectionIndex);
+            final categoryProducts = grouped[category]!;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F5F5),
+                  child: Text(
+                    category,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: textPrimary,
+                    ),
+                  ),
+                ),
+                // Products in category
+                ...categoryProducts.asMap().entries.map((entry) {
+                  final product = entry.value;
+                  final isLast = entry.key == categoryProducts.length - 1;
+                  return _buildProductCard(product, isDark, textPrimary, textSecondary, dividerColor, isLast);
+                }),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildProductCard(ButcherProduct product, bool isDark) {
+  Widget _buildProductCard(ButcherProduct product, bool isDark, Color textPrimary, Color textSecondary, Color dividerColor, bool isLast) {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final groupNotifier = ref.read(tableGroupProvider.notifier);
     final groupState = ref.watch(tableGroupProvider);
@@ -728,116 +782,202 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     );
     final inCart = existingItem != null;
     final cartQty = existingItem?.quantity ?? 0;
+    final hasImage = product.imageUrl?.isNotEmpty == true;
+    final isByWeight = product.unitType == 'kg';
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: inCart
-            ? Border.all(color: _accent.withValues(alpha: 0.5), width: 1.5)
-            : Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        border: Border(
+          bottom: isLast ? BorderSide.none : BorderSide(color: dividerColor, width: 0.5),
+        ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Product image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 56,
-              height: 56,
-              child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                  ? (product.imageUrl!.startsWith('assets/')
-                      ? Image.asset(product.imageUrl!, fit: BoxFit.cover)
-                      : CachedNetworkImage(
-                          imageUrl: product.imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: Colors.grey[200]),
-                          errorWidget: (_, __, ___) => _productPlaceholder(),
-                        ))
-                  : _productPlaceholder(),
+          // Product Info (Left)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  I18nUtils.getLocalizedText(context, product.nameData),
+                  style: TextStyle(
+                    color: textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (product.description.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    product.description,
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 13,
+                      height: 1.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 6),
+                // Price + cart controls inline
+                Row(
+                  children: [
+                    Text(
+                      '${CurrencyUtils.getCurrencySymbol()}${product.effectiveAppPrice.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (inCart) ...[
+                      const Spacer(),
+                      // Inline qty controls
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _miniCircleButton(Icons.remove, () {
+                              HapticFeedback.lightImpact();
+                              final step = isByWeight ? product.stepQuantity : 1.0;
+                              final newQty = cartQty - step;
+                              if (newQty <= 0) {
+                                groupNotifier.removeItem(product.id);
+                              } else {
+                                groupNotifier.updateItemQuantity(product.id, newQty.toInt() > 0 ? newQty.round() : 1);
+                              }
+                            }),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                isByWeight ? cartQty.toDouble().toStringAsFixed(1) : '$cartQty',
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _accent),
+                              ),
+                            ),
+                            _miniCircleButton(Icons.add, () {
+                              HapticFeedback.lightImpact();
+                              final step = isByWeight ? product.stepQuantity : 1.0;
+                              groupNotifier.updateItemQuantity(product.id, (cartQty + step).round());
+                            }),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 12),
 
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Image + Add Button Stack (Right) - matching normal ordering screen
+          SizedBox(
+            width: 72,
+            height: 72,
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  I18nUtils.getLocalizedText(context, product.nameData),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _accent,
+                // Product Image
+                if (hasImage)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      width: 72,
+                      height: 72,
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          color: isDark ? Colors.white10 : Colors.grey[100],
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          color: isDark ? Colors.white10 : Colors.grey[100],
+                          child: Icon(Icons.image_not_supported, color: textSecondary, size: 24),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      isByWeight ? Icons.scale : Icons.inventory_2_outlined,
+                      color: textSecondary,
+                      size: 24,
+                    ),
                   ),
-                ),
+
+                // Floating + button (bottom-right, overlapping image)
+                if (!inCart)
+                  Positioned(
+                    bottom: -6,
+                    right: -6,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        groupNotifier.addItem(TableGroupItem(
+                          productId: product.id,
+                          productName: product.name,
+                          quantity: isByWeight ? product.minQuantity.toInt() : 1,
+                          unitPrice: product.price,
+                          totalPrice: product.price * (isByWeight ? product.minQuantity : 1),
+                          imageUrl: product.imageUrl,
+                        ));
+                      },
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: _accent,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: _accent.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.add, color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-
-          // Qty controls
-          if (inCart)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _circleButton(Icons.remove, () {
-                  HapticFeedback.lightImpact();
-                  final step = product.unitType == 'kg' ? product.stepQuantity : 1.0;
-                  final newQty = cartQty - step;
-                  if (newQty <= 0) {
-                    groupNotifier.removeItem(product.id);
-                  } else {
-                    groupNotifier.updateItemQuantity(product.id, newQty.toInt() > 0 ? newQty.round() : 1);
-                  }
-                }),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    product.unitType == 'kg'
-                        ? cartQty.toDouble().toStringAsFixed(1)
-                        : '$cartQty',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                _circleButton(Icons.add, () {
-                  HapticFeedback.lightImpact();
-                  final step = product.unitType == 'kg' ? product.stepQuantity : 1.0;
-                  groupNotifier.updateItemQuantity(product.id, (cartQty + step).round());
-                }),
-              ],
-            )
-          else
-            FilledButton.icon(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                groupNotifier.addItem(TableGroupItem(
-                  productId: product.id,
-                  productName: product.name,
-                  quantity: product.unitType == 'kg' ? product.minQuantity.toInt() : 1,
-                  unitPrice: product.price,
-                  totalPrice: product.price * (product.unitType == 'kg' ? product.minQuantity : 1),
-                  imageUrl: product.imageUrl,
-                ));
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(tr('common.add')),
-              style: FilledButton.styleFrom(
-                backgroundColor: _accent,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                minimumSize: Size.zero,
-                textStyle: const TextStyle(fontSize: 13),
-              ),
-            ),
         ],
+      ),
+    );
+  }
+
+  Widget _miniCircleButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: _accent.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 16, color: _accent),
       ),
     );
   }
