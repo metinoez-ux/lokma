@@ -13,7 +13,7 @@ const countries = [
   { code: 'TR', name: 'Türkiye', flag: '🇹🇷', defaultLang: 'tr' },
   { code: 'AT', name: 'Österreich', flag: '🇦🇹', defaultLang: 'de' },
   { code: 'CH', name: 'Schweiz', flag: '🇨🇭', defaultLang: 'de' },
-  { code: 'NL', name: 'Nederland', flag: '🇳🇱', defaultLang: 'en' },
+  { code: 'NL', name: 'Nederland', flag: '🇳🇱', defaultLang: 'nl' },
   { code: 'BE', name: 'België', flag: '🇧🇪', defaultLang: 'fr' },
   { code: 'FR', name: 'France', flag: '🇫🇷', defaultLang: 'fr' },
   { code: 'IT', name: 'Italia', flag: '🇮🇹', defaultLang: 'it' },
@@ -135,17 +135,35 @@ export default function LandingPage() {
     <div className="relative flex min-h-screen flex-col bg-white text-gray-900 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#fb335b]/30">
       <PublicHeader themeAware={false} />
 
-      {/* Hero Section — Lexware-style split layout */}
-      <section className="relative pt-24 md:pt-0 min-h-[60vh] flex items-stretch overflow-hidden" style={{ background: 'linear-gradient(135deg, #e8222a 0%, #fb335b 40%, #ff6b4a 100%)' }}>
-        {/* Decorative elements */}
+      {/* Hero Section — Split layout: gradient left + artisan right with smooth transition */}
+      <section className="relative pt-20 md:pt-0 min-h-[60vh] md:min-h-[75vh] flex items-stretch overflow-hidden" style={{ background: 'linear-gradient(to right, #EE3640 0%, #F44A48 50%, #FD5750 100%)' }}>
+        {/* Decorative glow elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-20 right-1/4 w-[400px] h-[400px] bg-black/10 rounded-full blur-3xl"></div>
+          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 right-1/4 w-[400px] h-[400px] bg-black/5 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center md:min-h-[60vh]">
+        {/* Right side: Artisan image with gradient fade into left */}
+        <div className="absolute inset-0 md:left-[35%] overflow-hidden pointer-events-none">
+          <Image
+            src="/hero_artisan.png"
+            alt="LOKMA - Local Artisan"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Soft gradient fade from left - only enough for text readability, NOT obscuring the artisan */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#EE3640] via-[#EE3640]/50 to-transparent w-[60%]" />
+          {/* Very subtle bottom fade */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#EE3640]/30 via-transparent to-transparent" />
+        </div>
+
+        {/* Mobile overlay: on small screens */}
+        <div className="absolute inset-0 md:hidden bg-gradient-to-b from-[#EE3640]/90 via-[#F44A48]/80 to-[#FD5750]/85" />
+
+        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center md:min-h-[75vh]">
           {/* Left: Text content */}
-          <div className="flex-1 py-16 md:py-24 text-white">
+          <div className="flex-1 py-16 md:py-24 text-white max-w-xl">
             <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black leading-[1.15] tracking-tight mb-6 max-w-lg">
               {t('heroTitle')}{' '}
               <span className="text-white/90">
@@ -157,7 +175,7 @@ export default function LandingPage() {
               <div className="flex text-yellow-300 text-lg">
                 {'★★★★★'}
               </div>
-              <span className="text-white/80 text-sm font-medium">4.8 (10,000+ {t('appDownloadDesc') ? 'siparis' : 'orders'})</span>
+              <span className="text-white/80 text-sm font-medium">4.8 (10,000+ {t('heroOrderCount') || 'orders'})</span>
             </div>
             
             <p className="text-lg md:text-xl text-white/90 max-w-md mb-8 leading-relaxed font-medium">
@@ -174,28 +192,18 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
-                <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" className="h-11" />
+                <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" className="h-[40px]" />
               </a>
               <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-all hover:scale-105">
-                <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Google Play" className="h-11" />
+                <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Google Play" className="h-[58px] -my-2" />
               </a>
             </div>
           </div>
 
-          {/* Right: Hero food image */}
-          <div className="flex-1 relative flex items-center justify-center md:justify-end pointer-events-none w-full">
-            <div className="relative w-full max-w-[500px] md:max-w-[560px] lg:max-w-[680px] xl:max-w-[800px] aspect-square origin-center scale-[1.25] lg:scale-[1.45] z-10 hover:scale-[1.30] lg:hover:scale-[1.50] transition-transform duration-700">
-              <Image
-                src="/hero_pizza_4.png"
-                alt="LOKMA - Fresh Local Food Delivery"
-                fill
-                className="object-contain drop-shadow-[0_45px_65px_rgba(0,0,0,0.55)] filter brightness-105 contrast-105 saturate-110"
-                priority
-              />
-            </div>
-          </div>
+          {/* Right: spacer to keep layout balanced (image is positioned absolutely) */}
+          <div className="hidden md:block flex-1" />
         </div>
       </section>
 
@@ -259,13 +267,28 @@ export default function LandingPage() {
       </section>
 
 
+      {/* Local Support Banner */}
+      <section className="bg-[#fff8f8] py-20 px-4 md:px-8 border-y border-red-50">
+        <div className="max-w-[1000px] mx-auto text-center">
+          <div className="w-16 h-16 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-full mx-auto mb-6">
+            <span className="material-symbols-outlined text-3xl">favorite</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
+            {t('localSupportTitle') || 'Senin için lezzet, esnaf için bereket.'}
+          </h2>
+          <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium">
+            {t('localSupportDesc') || 'LOKMA\'dan verdiğin her siparişte, sadece en sevdiğin yemekleri tatmakla kalmaz, aynı zamanda mahalle esnafının kazancına da bereket katarsın.'}
+          </p>
+        </div>
+      </section>
+
       {/* Partner CTA — Lexware-style clean banner */}
       <section className="bg-gray-50 py-20 px-4 md:px-8">
         <div className="max-w-[1200px] mx-auto relative bg-gradient-to-br from-[#F51736] to-[#c9183d] rounded-3xl p-10 md:p-16 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 flex-1">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-medium mb-4">
-              B2B Partner Platform
+              {t('b2bPartnerBadge') || 'B2B Partner Platform'}
             </div>
             <h3 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">{t('splitPartnerTitle')}</h3>
             <p className="text-white/85 text-lg max-w-md leading-relaxed">{t('splitPartnerDesc')}</p>

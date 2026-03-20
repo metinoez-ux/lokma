@@ -2,13 +2,31 @@
 
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { ROBOTO_REGULAR_BASE64, ROBOTO_BOLD_BASE64, DANCING_SCRIPT_BASE64 } from './tableCardFonts';
 
 // A6 dimensions in mm
 const A6_WIDTH = 105;
 const A6_HEIGHT = 148;
 
 // LOKMA brand color
-const LOKMA_RED: [number, number, number] = [255, 0, 51]; // #FF0033
+const LOKMA_RED: [number, number, number] = [238, 54, 64]; // #EE3640
+
+// ------------------------------------------------------------------
+// Register custom fonts with jsPDF for Unicode (Turkish chars) support
+// ------------------------------------------------------------------
+function registerFonts(doc: jsPDF) {
+  // Roboto Regular
+  doc.addFileToVFS('Roboto-Regular.ttf', ROBOTO_REGULAR_BASE64);
+  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+
+  // Roboto Bold
+  doc.addFileToVFS('Roboto-Bold.ttf', ROBOTO_BOLD_BASE64);
+  doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+
+  // Dancing Script (cursive/script)
+  doc.addFileToVFS('DancingScript-Bold.ttf', DANCING_SCRIPT_BASE64);
+  doc.addFont('DancingScript-Bold.ttf', 'DancingScript', 'normal');
+}
 
 // ------------------------------------------------------------------
 // Language text sets
@@ -19,90 +37,93 @@ interface CardTexts {
   partnerLine: string;
   tablePrefix: string;
   cta: string;
-  step1: string;
-  step2: string;
-  step3: string;
-  groupOrderInfo: string;
-  bannerSub: string;
+  steps: { title: string; desc: string }[];
   afiyetOlsun: string;
 }
 
 const CARD_TEXTS: Record<CardLang, CardTexts> = {
   tr: {
-    partnerLine: 'Bu isletme bir LOKMA Partneridir',
+    partnerLine: 'Bu i\u015fletme bir LOKMA Partneridir',
     tablePrefix: 'Masa',
     cta: 'Hemen Okut, Masana Gelsin!',
-    step1: 'Menuyu Gor',
-    step2: 'Siparis Ver',
-    step3: 'Kalkmadan Ode',
-    groupOrderInfo: 'Grup siparisi icin QR kodu MASADAN SADECE 1 KISI okutmalidir. Acilan sayfadaki linki WhatsApp vb. ile arkadaslariniza gondererek herkesin ayni siparise urun eklemesini saglayabilirsiniz.',
-    bannerSub: 'iOS & Android  |  lokma.app',
+    steps: [
+      { title: 'Men\u00fcy\u00fc G\u00f6r:', desc: 'Dijital men\u00fcye eri\u015fin.' },
+      { title: 'Sipari\u015f Ver:', desc: 'Masadan sipari\u015f verin.' },
+      { title: '\u00d6deme Yap:', desc: 'Masadan \u00f6demenizi yap\u0131n.' },
+      { title: 'Grup Sipari\u015fi:', desc: 'Ortak sipari\u015f verin. Hesab\u0131 ay\u0131r\u0131n veya tek ki\u015fi \u00f6desin.' }
+    ],
     afiyetOlsun: 'Afiyet Olsun!',
   },
   de: {
-    partnerLine: 'Dieses Unternehmen ist ein LOKMA Partner',
+    partnerLine: 'Dieses Restaurant ist ein LOKMA Partner',
     tablePrefix: 'Tisch',
-    cta: 'Jetzt scannen, direkt bestellen!',
-    step1: 'Speisekarte',
-    step2: 'Bestellen',
-    step3: 'Am Tisch bezahlen',
-    groupOrderInfo: 'Für eine Gruppenbestellung sollte NUR 1 PERSON den QR-Code scannen. Teilen Sie dann den Link (zB über WhatsApp) mit Ihrem Tisch, damit jeder Artikel zur gemeinsamen Bestellung hinzufügen kann.',
-    bannerSub: 'iOS & Android  |  lokma.app',
+    cta: 'Jetzt scannen & bestellen!',
+    steps: [
+      { title: 'Speisekarte:', desc: 'Digitale Karte aufrufen.' },
+      { title: 'Bestellen:', desc: 'Direkt vom Tisch bestellen.' },
+      { title: 'Bezahlen:', desc: 'Bequem am Tisch bezahlen.' },
+      { title: 'Gruppenbestellung:', desc: 'Zusammen bestellen. Rechnung teilen oder einzeln zahlen.' }
+    ],
     afiyetOlsun: 'Guten Appetit!',
   },
   en: {
-    partnerLine: 'This business is a LOKMA Partner',
+    partnerLine: 'This restaurant is a LOKMA Partner',
     tablePrefix: 'Table',
     cta: 'Scan now, order to your table!',
-    step1: 'View Menu',
-    step2: 'Place Order',
-    step3: 'Pay at Table',
-    groupOrderInfo: 'For a group order, ONLY 1 PERSON should scan the QR code. Share the link from the opened page with your table to allow everyone to add items to the joint order from their own phones.',
-    bannerSub: 'iOS & Android  |  lokma.app',
+    steps: [
+      { title: 'View Menu:', desc: 'Access the digital menu.' },
+      { title: 'Order:', desc: 'Place order from the table.' },
+      { title: 'Pay:', desc: 'Pay directly from the table.' },
+      { title: 'Group Order:', desc: 'Order together. Split the bill or pay as one.' }
+    ],
     afiyetOlsun: 'Bon Appetit!',
   },
   fr: {
-    partnerLine: 'Cet etablissement est un partenaire LOKMA',
+    partnerLine: 'Ce restaurant est un partenaire LOKMA',
     tablePrefix: 'Table',
-    cta: 'Scannez et commandez a votre table !',
-    step1: 'Voir le menu',
-    step2: 'Commander',
-    step3: 'Payer a table',
-    groupOrderInfo: 'Pour une commande de groupe, 1 SEULE PERSONNE doit scanner le code QR. Partagez le lien avec votre table pour que chacun puisse ajouter des articles a la commande commune.',
-    bannerSub: 'iOS & Android  |  lokma.app',
-    afiyetOlsun: 'Bon Appetit !',
+    cta: 'Scannez et commandez !',
+    steps: [
+      { title: 'Voir le menu:', desc: 'Acc\u00e9der au menu num\u00e9rique.' },
+      { title: 'Commander:', desc: 'Commandez depuis la table.' },
+      { title: 'Payer:', desc: 'Payez directement \u00e0 table.' },
+      { title: 'Commande group\u00e9e:', desc: 'Commandez ensemble. Partagez l\'addition ou payez seul.' }
+    ],
+    afiyetOlsun: 'Bon App\u00e9tit !',
   },
   es: {
-    partnerLine: 'Este negocio es un socio de LOKMA',
+    partnerLine: 'Este restaurante es un socio de LOKMA',
     tablePrefix: 'Mesa',
-    cta: 'Escanea y pide en tu mesa!',
-    step1: 'Ver menu',
-    step2: 'Hacer pedido',
-    step3: 'Pagar en mesa',
-    groupOrderInfo: 'Para un pedido grupal, SOLO 1 PERSONA debe escanear el codigo QR. Comparta el enlace con su mesa para que todos puedan agregar articulos al pedido conjunto.',
-    bannerSub: 'iOS & Android  |  lokma.app',
-    afiyetOlsun: 'Buen Provecho!',
+    cta: '\u00a1Escanea y pide a tu mesa!',
+    steps: [
+      { title: 'Ver men\u00fa:', desc: 'Accede al men\u00fa digital.' },
+      { title: 'Pedir:', desc: 'Haz el pedido desde tu mesa.' },
+      { title: 'Pagar:', desc: 'Paga directamente en la mesa.' },
+      { title: 'Pedido Grupal:', desc: 'Pidan juntos. Dividan la cuenta o paguen juntos.' }
+    ],
+    afiyetOlsun: '\u00a1Buen Provecho!',
   },
   it: {
-    partnerLine: 'Questo locale e un partner LOKMA',
+    partnerLine: 'Questo ristorante \u00e8 un partner LOKMA',
     tablePrefix: 'Tavolo',
-    cta: 'Scansiona e ordina al tavolo!',
-    step1: 'Vedi menu',
-    step2: 'Ordina',
-    step3: 'Paga al tavolo',
-    groupOrderInfo: 'Per un ordine di gruppo, SOLO 1 PERSONA deve scansionare il codice QR. Condividi il link con il tuo tavolo in modo che tutti possano aggiungere articoli all\'ordine congiunto.',
-    bannerSub: 'iOS & Android  |  lokma.app',
+    cta: 'Scansiona e ordina!',
+    steps: [
+      { title: 'Vedi menu:', desc: 'Accedi al menu digitale.' },
+      { title: 'Ordina:', desc: 'Ordina comodamente dal tavolo.' },
+      { title: 'Paga:', desc: 'Paga direttamente al tavolo.' },
+      { title: 'Ordine di Gruppo:', desc: 'Ordina insieme. Dividi il conto o paga in un\'unica soluzione.' }
+    ],
     afiyetOlsun: 'Buon Appetito!',
   },
   nl: {
-    partnerLine: 'Dit bedrijf is een LOKMA Partner',
+    partnerLine: 'Dit restaurant is een LOKMA Partner',
     tablePrefix: 'Tafel',
-    cta: 'Scan en bestel aan tafel!',
-    step1: 'Bekijk menu',
-    step2: 'Bestellen',
-    step3: 'Betaal aan tafel',
-    groupOrderInfo: 'Voor een groepsbestelling hoeft SLECHTS 1 PERSOON de QR-code te scannen. Deel de link met uw tafel, zodat iedereen vanaf zijn eigen telefoon items kan toevoegen aan de gezamenlijke bestelling.',
-    bannerSub: 'iOS & Android  |  lokma.app',
+    cta: 'Scan en bestel!',
+    steps: [
+      { title: 'Bekijk menu:', desc: 'Toegang tot het digitale menu.' },
+      { title: 'Bestellen:', desc: 'Plaats bestelling vanaf tafel.' },
+      { title: 'Betalen:', desc: 'Betaal direct aan tafel.' },
+      { title: 'Groepsbestelling:', desc: 'Samen bestellen. Splits de rekening of betaal tezamen.' }
+    ],
     afiyetOlsun: 'Eet Smakelijk!',
   },
 };
@@ -110,30 +131,16 @@ const CARD_TEXTS: Record<CardLang, CardTexts> = {
 // ------------------------------------------------------------------
 // Determine card languages based on business country
 // ------------------------------------------------------------------
-// Rule: always Turkish + local language
-// Exception: Turkey = Turkish + English
 function getCardLanguages(country?: string): [CardLang, CardLang] {
   const c = (country || 'DE').toUpperCase();
   const countryToLang: Record<string, CardLang> = {
-    DE: 'de',
-    AT: 'de',
-    CH: 'de',
-    FR: 'fr',
-    ES: 'es',
-    IT: 'it',
-    NL: 'nl',
-    BE: 'nl',
-    GB: 'en',
-    US: 'en',
-    TR: 'tr',
+    DE: 'de', AT: 'de', CH: 'de',
+    FR: 'fr', ES: 'es', IT: 'it',
+    NL: 'nl', BE: 'nl',
+    GB: 'en', US: 'en', TR: 'tr',
   };
   const localLang = countryToLang[c] || 'en';
-
-  if (c === 'TR') {
-    // Turkiye: Turkce + Ingilizce
-    return ['tr', 'en'];
-  }
-  // Diger ulkeler: Turkce + yerel dil
+  if (c === 'TR') return ['tr', 'en'];
   return ['tr', localLang];
 }
 
@@ -153,7 +160,7 @@ async function fetchImageAsBase64(url: string): Promise<string> {
 
 async function generateQRCodeBase64(data: string): Promise<string> {
   return QRCode.toDataURL(data, {
-    width: 600,
+    width: 800,
     margin: 1,
     color: { dark: '#000000', light: '#FFFFFF' },
     errorCorrectionLevel: 'H',
@@ -161,7 +168,7 @@ async function generateQRCodeBase64(data: string): Promise<string> {
 }
 
 // ------------------------------------------------------------------
-// Render a single card page onto an existing jsPDF doc
+// Render a single card page
 // ------------------------------------------------------------------
 function renderCardPage(
   doc: jsPDF,
@@ -171,141 +178,197 @@ function renderCardPage(
     logoBase64: string;
     qrBase64: string;
     lang: CardLang;
+    appStoreBadge?: string;
+    googlePlayBadge?: string;
   },
 ) {
-  const { tableLabel, companyName, logoBase64, qrBase64, lang } = opts;
+  const { tableLabel, companyName, logoBase64, qrBase64, lang, appStoreBadge, googlePlayBadge } = opts;
   const txt = CARD_TEXTS[lang];
+  const PAD = 8;
 
-  // White background
-  doc.setFillColor(255, 255, 255);
+  // ---- White background ----
+  doc.setFillColor(248, 248, 248);
   doc.rect(0, 0, A6_WIDTH, A6_HEIGHT, 'F');
 
-  // Top red accent line
+  // ================================================================
+  // TOP: Brand color strip (~4mm / ~15px)
+  // ================================================================
+  const stripH = 4; // mm
   doc.setFillColor(...LOKMA_RED);
-  doc.rect(0, 0, A6_WIDTH, 3, 'F');
+  doc.rect(0, 0, A6_WIDTH, stripH, 'F');
 
-  // LOKMA Logo
-  const logoWidth = 55;
-  const logoHeight = 16;
-  const logoX = (A6_WIDTH - logoWidth) / 2;
-  const logoY = 10;
-  try {
-    doc.addImage(logoBase64, 'PNG', logoX, logoY, logoWidth, logoHeight);
-  } catch {
-    doc.setFontSize(24);
-    doc.setTextColor(...LOKMA_RED);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LOKMA', A6_WIDTH / 2, logoY + 12, { align: 'center' });
-  }
+  // ================================================================
+  // TOP SECTION: Business Name + Table Number
+  // ================================================================
+  const contentStartY = stripH + 10; // offset past the strip
+  doc.setFont('Roboto', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(20, 20, 20);
+  const titleLines = doc.splitTextToSize(companyName, A6_WIDTH - PAD * 2);
+  doc.text(titleLines, A6_WIDTH / 2, contentStartY, { align: 'center' });
+  const titleH = titleLines.length * 6;
 
-  // Partner text
-  doc.setFontSize(7);
-  doc.setTextColor(120, 120, 120);
-  doc.setFont('helvetica', 'normal');
-  doc.text(txt.partnerLine, A6_WIDTH / 2, 31, { align: 'center' });
+  // Table label ("Masa 1")
+  const tableY = contentStartY + titleH + 1;
+  doc.setFont('Roboto', 'normal');
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`${txt.tablePrefix} ${tableLabel}`, A6_WIDTH / 2, tableY, { align: 'center' });
 
-  // Divider line
-  doc.setDrawColor(230, 230, 230);
-  doc.setLineWidth(0.3);
-  doc.line(20, 35, A6_WIDTH - 20, 35);
-
-  // Business name
-  doc.setFontSize(10);
-  doc.setTextColor(40, 40, 40);
-  doc.setFont('helvetica', 'bold');
-  const displayName =
-    companyName.length > 30 ? companyName.substring(0, 28) + '...' : companyName;
-  doc.text(displayName, A6_WIDTH / 2, 41, { align: 'center' });
-
-  // Table label badge
-  const tableLabelText = `${txt.tablePrefix} ${tableLabel}`;
-  doc.setFillColor(245, 245, 245);
-  doc.roundedRect(32, 44, 41, 8, 2, 2, 'F');
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
-  doc.setFont('helvetica', 'bold');
-  doc.text(tableLabelText, A6_WIDTH / 2, 49.5, { align: 'center' });
-
-  // QR Code
-  const qrSize = 42;
+  // ================================================================
+  // QR CODE (centered, large)
+  // ================================================================
+  const qrSize = 48;
   const qrX = (A6_WIDTH - qrSize) / 2;
-  const qrY = 56;
+  const qrY = tableY + 5;
 
-  // QR border/shadow
-  doc.setFillColor(248, 248, 248);
-  doc.roundedRect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 6, 2, 2, 'F');
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 6, 2, 2, 'S');
-
-  // QR image
+  // White pad behind QR
+  doc.setFillColor(255, 255, 255);
+  doc.rect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 4, 'F');
   doc.addImage(qrBase64, 'PNG', qrX, qrY, qrSize, qrSize);
 
-  // CTA text
+  // ================================================================
+  // CTA + STEPS
+  // ================================================================
+  // Red CTA
+  const ctaY = qrY + qrSize + 8;
+  doc.setFont('Roboto', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(...LOKMA_RED);
-  doc.setFont('helvetica', 'bold');
-  doc.text(txt.cta, A6_WIDTH / 2, 106, { align: 'center' });
+  doc.text(txt.cta, A6_WIDTH / 2, ctaY, { align: 'center' });
 
-  // Feature steps
-  const featureY = 111;
-  const features = [
-    { icon: '1', text: txt.step1 },
-    { icon: '2', text: txt.step2 },
-    { icon: '3', text: txt.step3 },
-  ];
-  const featureWidth = A6_WIDTH / 3;
-  features.forEach((feature, i) => {
-    const x = featureWidth * i + featureWidth / 2;
+  // Bullet steps
+  let currentY = ctaY + 8;
+  const leftX = PAD + 5;
 
-    // Circle
-    doc.setFillColor(...LOKMA_RED);
-    doc.circle(x, featureY + 3, 3.5, 'F');
-    doc.setFontSize(7);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text(feature.icon, x, featureY + 4.2, { align: 'center' });
+  txt.steps.forEach((step) => {
+    // Bullet dot (dark)
+    doc.setFillColor(40, 40, 40);
+    doc.circle(leftX - 3.5, currentY - 1.2, 1.2, 'F');
 
-    // Text
-    doc.setFontSize(7);
+    // Title (bold)
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30);
+    doc.text(step.title, leftX, currentY);
+    const tw = doc.getTextWidth(step.title + ' ');
+
+    // Description (normal)
+    doc.setFont('Roboto', 'normal');
     doc.setTextColor(60, 60, 60);
-    doc.setFont('helvetica', 'normal');
-    doc.text(feature.text, x, featureY + 11, { align: 'center' });
+
+    const maxW = A6_WIDTH - PAD - leftX - tw;
+    if (maxW > 25) {
+      const descLines = doc.splitTextToSize(step.desc, maxW);
+      if (descLines.length <= 1) {
+        doc.text(step.desc, leftX + tw, currentY);
+        currentY += 7;
+      } else {
+        // First part on same line, rest below indented
+        doc.text(descLines[0], leftX + tw, currentY);
+        for (let i = 1; i < descLines.length; i++) {
+          currentY += 4;
+          doc.text(descLines[i], leftX + tw, currentY);
+        }
+        currentY += 7;
+      }
+    } else {
+      // Full wrap below title
+      const descLines = doc.splitTextToSize(step.desc, A6_WIDTH - PAD * 2 - 5);
+      doc.text(descLines[0], leftX + tw, currentY);
+      for (let i = 1; i < descLines.length; i++) {
+        currentY += 4;
+        doc.text(descLines[i], leftX + tw, currentY);
+      }
+      currentY += 7;
+    }
   });
 
-  // Group Order Info
-  doc.setFontSize(5.5);
-  doc.setTextColor(100, 100, 100);
-  doc.setFont('helvetica', 'normal');
-  const groupTextLines = doc.splitTextToSize(txt.groupOrderInfo, A6_WIDTH - 20);
-  doc.text(groupTextLines, A6_WIDTH / 2, 126, { align: 'center' });
+  // ================================================================
+  // "Afiyet Olsun!" - Script/Cursive font
+  // ================================================================
+  const afiyetY = currentY + 2;
+  doc.setFont('DancingScript', 'normal');
+  doc.setFontSize(24);
+  doc.setTextColor(...LOKMA_RED);
+  doc.text(txt.afiyetOlsun, A6_WIDTH / 2, afiyetY, { align: 'center' });
 
-  // "Afiyet Olsun" text - above the bottom banner
-  doc.setFontSize(8);
-  doc.setTextColor(120, 120, 120);
-  doc.setFont('helvetica', 'italic');
-  doc.text(txt.afiyetOlsun, A6_WIDTH / 2, 134, { align: 'center' });
+  // ================================================================
+  // THIN DIVIDER LINE
+  // ================================================================
+  const divY = afiyetY + 5;
+  doc.setDrawColor(190, 190, 190);
+  doc.setLineWidth(0.25);
+  doc.line(PAD, divY, A6_WIDTH - PAD, divY);
 
-  // Bottom red banner
-  const bannerHeight = 10;
-  const bannerY = A6_HEIGHT - bannerHeight;
-  doc.setFillColor(...LOKMA_RED);
-  doc.rect(0, bannerY, A6_WIDTH, bannerHeight, 'F');
+  // ================================================================
+  // BOTTOM BAR: Logo (left) + Partner text & badges (right)
+  // ================================================================
+  const bottomStartY = divY + 3;
 
-  // Banner text
-  doc.setFontSize(6);
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'normal');
-  doc.text(txt.bannerSub, A6_WIDTH / 2, bannerY + 5.5, { align: 'center' });
+  // LEFT: LOKMA logo (actual ratio: 4364x1201 = 3.63:1)
+  const logoW = 28;
+  const logoH = logoW / 3.63; // ~7.7mm - preserves aspect ratio
+  try {
+    doc.addImage(logoBase64, 'PNG', PAD, bottomStartY, logoW, logoH);
+  } catch {
+    doc.setFont('Roboto', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(...LOKMA_RED);
+    doc.text('LOKMA', PAD, bottomStartY + 6);
+  }
+
+  // RIGHT: Partner text
+  const rightEdge = A6_WIDTH - PAD;
+  doc.setFont('Roboto', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(80, 80, 80);
+  doc.text(txt.partnerLine, rightEdge, bottomStartY + 3, { align: 'right' });
+
+  // RIGHT: App Store + Google Play badges (real images)
+  // App Store badge: 498x167 (ratio 2.98:1)
+  const asBadgeW = 18;
+  const asBadgeH = asBadgeW / 3; // ~6mm
+  // Google Play badge: 1920x1080 -- but badge area itself is rectangular like 3.4:1
+  const gpBadgeW = 18;
+  const gpBadgeH = gpBadgeW / 3; // ~6mm - match App Store height
+  const badgeY = bottomStartY + 5;
+  const badge1X = rightEdge - asBadgeW - gpBadgeW - 3;
+  const badge2X = rightEdge - gpBadgeW;
+
+  if (appStoreBadge) {
+    try {
+      doc.addImage(appStoreBadge, 'PNG', badge1X, badgeY, asBadgeW, asBadgeH);
+    } catch {
+      // fallback text badge
+      doc.setFillColor(0, 0, 0);
+      doc.roundedRect(badge1X, badgeY, asBadgeW, asBadgeH, 1, 1, 'F');
+      doc.setFont('Roboto', 'bold');
+      doc.setFontSize(4);
+      doc.setTextColor(255, 255, 255);
+      doc.text('App Store', badge1X + asBadgeW / 2, badgeY + 3.8, { align: 'center' });
+    }
+  }
+
+  if (googlePlayBadge) {
+    try {
+      doc.addImage(googlePlayBadge, 'PNG', badge2X, badgeY, gpBadgeW, gpBadgeH);
+    } catch {
+      // fallback text badge
+      doc.setFillColor(0, 0, 0);
+      doc.roundedRect(badge2X, badgeY, gpBadgeW, gpBadgeH, 1, 1, 'F');
+      doc.setFont('Roboto', 'bold');
+      doc.setFontSize(4);
+      doc.setTextColor(255, 255, 255);
+      doc.text('Google Play', badge2X + gpBadgeW / 2, badgeY + 3.8, { align: 'center' });
+    }
+  }
 }
 
 // ------------------------------------------------------------------
 // Public API
 // ------------------------------------------------------------------
 
-/**
- * Generates an A6 table card for a single language.
- */
 export async function generateTableCardPDF(
   tableLabel: string,
   businessId: string,
@@ -317,21 +380,20 @@ export async function generateTableCardPDF(
     unit: 'mm',
     format: [A6_WIDTH, A6_HEIGHT],
   });
+  registerFonts(doc);
 
   const qrUrl = `https://lokma.web.app/dinein/${businessId}/table/${tableLabel}`;
-  const [logoBase64, qrBase64] = await Promise.all([
-    fetchImageAsBase64('/lokma_logo_wide.png'),
+  const [logoBase64, qrBase64, appStoreBadge, googlePlayBadge] = await Promise.all([
+    fetchImageAsBase64('/logo_qr_lokma_red.png'),
     generateQRCodeBase64(qrUrl),
+    fetchImageAsBase64('/app_store_badge.png').catch(() => ''),
+    fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
   ]);
 
-  renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang });
+  renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang, appStoreBadge, googlePlayBadge });
   return doc;
 }
 
-/**
- * Generates a dual-language A6 table card PDF (2 pages: primary + secondary).
- * Language pair is determined by the business country.
- */
 export async function generateDualLangTableCardPDF(
   tableLabel: string,
   businessId: string,
@@ -345,26 +407,23 @@ export async function generateDualLangTableCardPDF(
     unit: 'mm',
     format: [A6_WIDTH, A6_HEIGHT],
   });
+  registerFonts(doc);
 
   const qrUrl = `https://lokma.web.app/dinein/${businessId}/table/${tableLabel}`;
-  const [logoBase64, qrBase64] = await Promise.all([
-    fetchImageAsBase64('/lokma_logo_wide.png'),
+  const [logoBase64, qrBase64, appStoreBadge, googlePlayBadge] = await Promise.all([
+    fetchImageAsBase64('/logo_qr_lokma_red.png'),
     generateQRCodeBase64(qrUrl),
+    fetchImageAsBase64('/app_store_badge.png').catch(() => ''),
+    fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
   ]);
 
-  // Page 1: primary language
-  renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang1 });
-
-  // Page 2: secondary language
+  renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang1, appStoreBadge, googlePlayBadge });
   doc.addPage([A6_WIDTH, A6_HEIGHT]);
-  renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang2 });
+  renderCardPage(doc, { tableLabel, companyName, logoBase64, qrBase64, lang: lang2, appStoreBadge, googlePlayBadge });
 
   return doc;
 }
 
-/**
- * Downloads a dual-language table card PDF for a single table.
- */
 export async function downloadTableCardPDF(
   tableLabel: string,
   businessId: string,
@@ -375,9 +434,6 @@ export async function downloadTableCardPDF(
   doc.save(`Masa_${tableLabel}_LOKMA_Kart.pdf`);
 }
 
-/**
- * Downloads all table cards as individual dual-language PDFs.
- */
 export async function downloadAllTableCardPDFs(
   tables: Array<{ label: string; section?: string }>,
   businessId: string,
@@ -391,10 +447,6 @@ export async function downloadAllTableCardPDFs(
   }
 }
 
-/**
- * Downloads all table cards combined into a single multi-page dual-language PDF.
- * Each table gets 2 consecutive pages (primary lang, then secondary lang).
- */
 export async function downloadAllTableCardsAsSinglePDF(
   tables: Array<{ label: string; section?: string }>,
   businessId: string,
@@ -404,49 +456,33 @@ export async function downloadAllTableCardsAsSinglePDF(
   if (tables.length === 0) return;
 
   const [lang1, lang2] = getCardLanguages(country);
-  const logoBase64 = await fetchImageAsBase64('/lokma_logo_wide.png');
+  const [logoBase64, appStoreBadge, googlePlayBadge] = await Promise.all([
+    fetchImageAsBase64('/logo_qr_lokma_red.png'),
+    fetchImageAsBase64('/app_store_badge.png').catch(() => ''),
+    fetchImageAsBase64('/google_play_badge.png').catch(() => ''),
+  ]);
 
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: [A6_WIDTH, A6_HEIGHT],
   });
+  registerFonts(doc);
 
   for (let i = 0; i < tables.length; i++) {
     const table = tables[i];
     const qrUrl = `https://lokma.web.app/dinein/${businessId}/table/${table.label}`;
     const qrBase64 = await generateQRCodeBase64(qrUrl);
 
-    // Add page break between tables (not before first)
-    if (i > 0) {
-      doc.addPage([A6_WIDTH, A6_HEIGHT]);
-    }
+    if (i > 0) doc.addPage([A6_WIDTH, A6_HEIGHT]);
+    renderCardPage(doc, { tableLabel: table.label, companyName, logoBase64, qrBase64, lang: lang1, appStoreBadge, googlePlayBadge });
 
-    // Page for primary language (e.g. Turkish)
-    renderCardPage(doc, {
-      tableLabel: table.label,
-      companyName,
-      logoBase64,
-      qrBase64,
-      lang: lang1,
-    });
-
-    // Page for secondary language (e.g. German)
     doc.addPage([A6_WIDTH, A6_HEIGHT]);
-    renderCardPage(doc, {
-      tableLabel: table.label,
-      companyName,
-      logoBase64,
-      qrBase64,
-      lang: lang2,
-    });
+    renderCardPage(doc, { tableLabel: table.label, companyName, logoBase64, qrBase64, lang: lang2, appStoreBadge, googlePlayBadge });
   }
 
-  doc.save(
-    `LOKMA_Tum_Masa_Kartlari_${companyName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-  );
+  doc.save(`LOKMA_Tum_Masa_Kartlari_${companyName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
 }
 
-// Re-export the type for external use
 export type { CardLang };
 export { getCardLanguages, CARD_TEXTS };

@@ -838,6 +838,7 @@ export default function BusinessDetailsPage() {
           freeDrinkEnabled: d.freeDrinkEnabled !== false,
           freeDrinkProducts: d.freeDrinkProducts ?? [],
           freeDrinkMinimumOrder: d.freeDrinkMinimumOrder ?? 0,
+          groupOrderLinkEnabled: d.groupOrderLinkEnabled ?? false,
         });
 
         // Resolve plan features from subscription_plans collection
@@ -7839,19 +7840,19 @@ export default function BusinessDetailsPage() {
                             <input 
                               type="checkbox" 
                               className="sr-only" 
-                              checked={!!formData.groupOrderTableEnabled}
-                              onChange={(e) => setFormData({ ...formData, groupOrderTableEnabled: e.target.checked })}
+                              checked={!!formData.groupOrderLinkEnabled}
+                              onChange={(e) => setFormData({ ...formData, groupOrderLinkEnabled: e.target.checked })}
                             />
-                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
-                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
+                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                           <span className="ml-3 text-sm font-medium text-white">
-                            {formData.groupOrderTableEnabled ? t('aktif') : t('kapali')}
+                            {formData.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
                           </span>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
-                          {business?.groupOrderTableEnabled ? t('aktif') : t('kapali')}
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                          {business?.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
                         </span>
                       )}
                     </div>

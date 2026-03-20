@@ -599,7 +599,7 @@ export default function VendorPage() {
                         <div className="order-2 lg:order-1 relative">
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-3xl blur-xl" />
                             <div className="relative bg-gray-50 border border-gray-200 rounded-3xl p-8 overflow-hidden">
-                                <Image src="/images/hardware/minew_esl_shelf.jpg" alt="ESL Digital Labels" width={500} height={400} className="rounded-2xl w-full h-auto object-cover" />
+                                <Image src="/images/hardware/esl_market_fruits.jpg" alt="ESL Digital Labels" width={500} height={400} className="rounded-2xl w-full h-auto object-cover" />
                             </div>
                         </div>
                         <div className="order-1 lg:order-2">

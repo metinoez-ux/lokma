@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
+exports.onNewChatMessage = exports.cleanupTestData = exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
@@ -58,6 +58,31 @@ const lexwareApiKey = (0, params_1.defineSecret)("LEXWARE_API_KEY");
 admin.initializeApp();
 const messaging = admin.messaging();
 const db = admin.firestore();
+// ── Notification Sound Helper ──────────────────────────────────────────────
+// Cache the active notification sound per function invocation
+let _cachedNotifSound = "";
+async function getActiveNotificationSound() {
+    if (_cachedNotifSound)
+        return _cachedNotifSound;
+    try {
+        const soundDoc = await db.doc("platform_config/notification_sound").get();
+        _cachedNotifSound = soundDoc.data()?.activeSound || "lokma_order_bell.caf";
+    }
+    catch (e) {
+        _cachedNotifSound = "lokma_order_bell.caf";
+    }
+    return _cachedNotifSound;
+}
+function buildSoundConfig(soundName) {
+    return {
+        apns: {
+            payload: { aps: { sound: soundName || "default" } },
+        },
+        android: {
+            notification: { sound: soundName || "default", channelId: "lokma_orders" },
+        },
+    };
+}
 /**
  * When a new order is created, send push notification to butcher admin
  */
@@ -67,7 +92,7 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
         return;
     const butcherId = order.butcherId;
     const rawOrderNum = order.orderNumber;
-    let lang = "tr";
+    let lang = "de";
     if (order.userId) {
         lang = await (0, translation_1.getUserLanguage)(order.userId);
     }
@@ -75,10 +100,10 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
         lang = await (0, translation_1.getUserLanguage)(order.customerId);
     }
     const trans = await (0, translation_1.getPushTranslations)(lang);
-    const orderPrefix = trans.orderPrefix || "Sipariş";
-    const orderNumber = rawOrderNum ? `${orderPrefix} #${rawOrderNum}` : "Yeni Sipariş";
+    const orderPrefix = trans.orderPrefix || "Bestellung";
+    const orderNumber = rawOrderNum ? `${orderPrefix} #${rawOrderNum}` : (trans.newOrderTitle || "🔔 Neue Bestellung!");
     const totalAmount = order.totalAmount || 0;
-    const customerName = order.customerName || "Müşteri";
+    const customerName = order.customerName || (trans.customer || "Kunde");
     // ── Pre-Order Detection ──────────────────────────────────────────────
     const isPickupOrder = order.deliveryMethod === "pickup";
     const isDeliveryOrder = order.deliveryMethod === "delivery";
@@ -88,22 +113,36 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
     let isPreOrder = false;
     let pickupTimeStr = "";
     let pickupDate = null;
-    // Helper to format a date nicely
+    // Helper to format a date nicely in Europe/Berlin timezone
+    // Cloud Functions runs in UTC — must convert to local Berlin time
     const formatScheduledDate = (d) => {
-        const hours = d.getHours().toString().padStart(2, "0");
-        const minutes = d.getMinutes().toString().padStart(2, "0");
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        if (d.toDateString() === today.toDateString()) {
-            return `Bugün ${hours}:${minutes}`;
+        const tz = "Europe/Berlin";
+        const timeFmt = new Intl.DateTimeFormat("de-DE", {
+            timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false,
+        });
+        const parts = timeFmt.formatToParts(d);
+        const hours = (parts.find(p => p.type === "hour")?.value ?? "00").padStart(2, "0");
+        const minutes = (parts.find(p => p.type === "minute")?.value ?? "00").padStart(2, "0");
+        // Compare dates in Berlin timezone (YYYY-MM-DD format)
+        const dateFmt = (dt) => new Intl.DateTimeFormat("en-CA", {
+            timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
+        }).format(dt);
+        const dDateStr = dateFmt(d);
+        const todayStr = dateFmt(new Date());
+        const tomorrowStr = dateFmt(new Date(Date.now() + 86400000));
+        if (dDateStr === todayStr) {
+            return `${(0, translation_1.getDateLabel)(lang, 'today')} ${hours}:${minutes}`;
         }
-        else if (d.toDateString() === tomorrow.toDateString()) {
-            return `Yarın ${hours}:${minutes}`;
+        else if (dDateStr === tomorrowStr) {
+            return `${(0, translation_1.getDateLabel)(lang, 'tomorrow')} ${hours}:${minutes}`;
         }
         else {
-            const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-            return `${dayNames[d.getDay()]} ${hours}:${minutes}`;
+            const dayNames = (0, translation_1.getDayNames)(lang);
+            const dowFmt = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" });
+            const dowShort = dowFmt.format(d);
+            const dowMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+            const dayIdx = dowMap[dowShort] ?? d.getDay();
+            return `${dayNames[dayIdx]} ${hours}:${minutes}`;
         }
     };
     // Case 1: Gel Al (pickup) pre-order
@@ -124,6 +163,8 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
             pickupTimeStr = formatScheduledDate(sd);
         }
     }
+    // Get notification sound once for all push notifications
+    const notifSound = await getActiveNotificationSound();
     // Get butcher admin FCM tokens (mobile)
     try {
         const butcherDoc = await admin.firestore()
@@ -134,10 +175,10 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
         const fcmTokens = butcherData?.fcmTokens || [];
         if (fcmTokens.length > 0) {
             const notifTitle = isPreOrder
-                ? `📋 Ön Sipariş (Gel Al)!`
-                : "🔔 Yeni Sipariş!";
+                ? (trans.preOrderTitle || `📋 Vorbestellung (Abholung)!`)
+                : (trans.newOrderTitle || "🔔 Neue Bestellung!");
             const notifBody = isPreOrder && pickupTimeStr
-                ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — Teslim: ${pickupTimeStr}`
+                ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — ${trans.delivery || "Lieferung"}: ${pickupTimeStr}`
                 : `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`;
             const message = {
                 notification: {
@@ -150,6 +191,7 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
                     orderNumber: orderNumber,
                     ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                 },
+                ...buildSoundConfig(notifSound),
                 tokens: fcmTokens,
             };
             const response = await messaging.sendEachForMulticast(message);
@@ -192,10 +234,10 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
         superSnapshot.docs.forEach(processDoc);
         if (webTokens.length > 0) {
             const webNotifTitle = isPreOrder
-                ? `📋 Ön Sipariş (Gel Al)!`
-                : "🔔 Yeni Sipariş!";
+                ? (trans.preOrderTitle || `📋 Vorbestellung (Abholung)!`)
+                : (trans.newOrderTitle || "🔔 Neue Bestellung!");
             const webNotifBody = isPreOrder && pickupTimeStr
-                ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — Teslim: ${pickupTimeStr}`
+                ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — ${trans.delivery || "Lieferung"}: ${pickupTimeStr}`
                 : `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`;
             const webMessage = {
                 notification: {
@@ -208,6 +250,7 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
                     orderNumber: orderNumber,
                     ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                 },
+                ...buildSoundConfig(notifSound),
                 tokens: webTokens,
             };
             const webResponse = await messaging.sendEachForMulticast(webMessage);
@@ -270,12 +313,12 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
     const customerId = order.userId || order.customerId;
     if (customerId) {
         try {
-            const businessName2 = order.butcherName || order.businessName || "İşletme";
+            const businessName2 = order.butcherName || order.businessName || (trans.business || "Geschäft");
             const pendingTitle = `⏳ ${orderNumber}`;
-            const deliveryLabel = isPickupOrder ? "Gel Al" : "Kurye Teslimat";
+            const deliveryLabel = isPickupOrder ? (trans.pickupLabel || "Abholung") : (trans.deliveryLabel || "Lieferung");
             const pendingBody = isPreOrder && pickupTimeStr
-                ? `Ön siparişiniz alındı — ${deliveryLabel}: ${pickupTimeStr}`
-                : `Siparişiniz alındı — ${businessName2} onayını bekliyor.`;
+                ? `${trans.orderAcceptedBody || "Ihre Vorbestellung wurde aufgenommen"} — ${deliveryLabel}: ${pickupTimeStr}`
+                : `${trans.orderPendingBody || "Ihre Bestellung wurde aufgenommen"} — ${businessName2}`;
             // Fetch business address info
             let businessCity = "";
             let businessPostalCode = "";
@@ -306,6 +349,10 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
             if (isPreOrder && pickupTimeStr) {
                 notificationData.isPreOrder = true;
                 notificationData.pickupTimeStr = pickupTimeStr;
+                // Store raw timestamp so mobile can re-localize the date label
+                if (pickupDate) {
+                    notificationData.scheduledTimestamp = admin.firestore.Timestamp.fromDate(pickupDate);
+                }
             }
             await db.collection("users").doc(customerId).collection("notifications").add(notificationData);
             console.log(`[Customer Notify] Saved pending notification for user ${customerId}, order ${rawOrderNum}${isPreOrder ? " (pre-order)" : ""}`);
@@ -333,6 +380,19 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
             catch (e) { /* ignore */ }
             if (customerFcmTokens.length > 0) {
                 try {
+                    // ── Dynamic Badge Count ──────────────────────────────
+                    // Count unread notifications BEFORE adding new one to get accurate badge
+                    let unreadBadgeCount = 1;
+                    try {
+                        const unreadSnap = await db.collection("users").doc(customerId)
+                            .collection("notifications")
+                            .where("read", "==", false)
+                            .count()
+                            .get();
+                        // +1 for the notification we just added above
+                        unreadBadgeCount = (unreadSnap.data().count ?? 0) + 1;
+                    }
+                    catch (e) { /* fallback to 1 */ }
                     const customerPush = {
                         notification: {
                             title: pendingTitle,
@@ -344,10 +404,22 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
                             status: "pending",
                             ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                         },
+                        apns: {
+                            payload: {
+                                aps: {
+                                    sound: notifSound || "default",
+                                    badge: unreadBadgeCount,
+                                    "content-available": 1,
+                                },
+                            },
+                        },
+                        android: {
+                            notification: { sound: notifSound || "default", channelId: "lokma_orders" },
+                        },
                         tokens: customerFcmTokens,
                     };
                     const pushResponse = await messaging.sendEachForMulticast(customerPush);
-                    console.log(`[Customer Push] Sent order confirmation to ${pushResponse.successCount}/${customerFcmTokens.length} customer devices`);
+                    console.log(`[Customer Push] Sent order confirmation to ${pushResponse.successCount}/${customerFcmTokens.length} customer devices (badge: ${unreadBadgeCount})`);
                 }
                 catch (pushErr) {
                     console.error("[Customer Push] Error sending FCM to customer:", pushErr);
@@ -417,7 +489,7 @@ async function createCommissionRecord(orderId, orderData) {
             return;
         }
         const businessData = businessDoc.data();
-        const businessName = businessData.companyName || businessData.name || businessData.businessName || businessData.brand || orderData.butcherName || "İşletme";
+        const businessName = businessData.companyName || businessData.name || businessData.businessName || businessData.brand || orderData.butcherName || "Geschäft";
         const planId = businessData.subscriptionPlan || businessData.plan || "free";
         // Get the plan from subscription_plans collection
         let plan = null;
@@ -613,6 +685,8 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
     // Only process if status changed
     if (before.status === after.status)
         return;
+    // Get notification sound for push notifications
+    const notifSound = await getActiveNotificationSound();
     // Gather all possible FCM tokens for the customer(s)
     const tokenSet = new Set();
     if (after.fcmToken)
@@ -633,7 +707,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
     // UOIP: Fallback to First-6-Digit standard from doc ID if orderNumber not on document
     const rawOrderNumber = after.orderNumber || event.params.orderId.substring(0, 6).toUpperCase();
     // Fetch user language and translation mappings
-    let lang = "tr";
+    let lang = "de";
     if (hasCustomerToken && after.userId) {
         lang = await (0, translation_1.getUserLanguage)(after.userId);
     }
@@ -641,18 +715,18 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
         lang = await (0, translation_1.getUserLanguage)(after.customerId);
     }
     const trans = await (0, translation_1.getPushTranslations)(lang);
-    const orderPrefix = trans.orderPrefix || "Sipariş";
+    const orderPrefix = trans.orderPrefix || "Bestellung";
     const orderNumber = rawOrderNumber ? `${orderPrefix} #${rawOrderNumber}` : orderPrefix;
     const orderTag = rawOrderNumber ? ` (#${rawOrderNumber})` : "";
     const totalAmount = after.totalAmount || 0;
-    const businessName = after.butcherName || after.businessName || "İşletme";
+    const businessName = after.butcherName || after.businessName || (trans.business || "Geschäft");
     const newStatus = after.status;
     let title = "";
     let body = "";
     switch (newStatus) {
         case "pending":
-            title = `${orderPrefix} Güncellendi${orderTag}`;
-            body = `${orderNumber} - Siparişiniz tekrar bekleme durumunda.`;
+            title = `${trans.orderPendingTitle || (orderPrefix + " aktualisiert")}${orderTag}`;
+            body = `${orderNumber} - ${trans.orderPendingBody || "Ihre Bestellung ist wieder im Wartestatus."}`;
             break;
         case "accepted":
             title = `${trans.orderAcceptedTitle}${orderTag}`;
@@ -675,7 +749,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                 const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
                 if (isDineInReady && after.tableNumber != null) {
                     title = `${trans.orderReadyDineInTitle}${orderTag}`;
-                    body = `${orderNumber} - Masa ${after.tableNumber}: ${trans.orderReadyDineInBody}`;
+                    body = `${orderNumber} - ${trans.table || "Tisch"} ${after.tableNumber}: ${trans.orderReadyDineInBody}`;
                 }
                 else {
                     // Pickup order: customer should come pick it up
@@ -749,7 +823,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     if (staffTokens.length > 0) {
                         const staffMessage = {
                             notification: {
-                                title: "🚚 Teslimat Bekliyor!",
+                                title: trans.deliveryPendingTitle || "🚚 Lieferung ausstehend!",
                                 body: `${orderNumber} - ${deliveryAddress.substring(0, 50)}${deliveryAddress.length > 50 ? "..." : ""}`,
                             },
                             data: {
@@ -759,7 +833,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                             },
                             tokens: staffTokens,
                         };
-                        const response = await messaging.sendEachForMulticast(staffMessage);
+                        const response = await messaging.sendEachForMulticast({ ...staffMessage, ...buildSoundConfig(notifSound) });
                         console.log(`[Shift Gate] Sent delivery notification to ${response.successCount}/${staffTokens.length} on-shift drivers/staff`);
                     }
                     else {
@@ -817,8 +891,8 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     if (waiterTokens.length > 0) {
                         const waiterMessage = {
                             notification: {
-                                title: `🍽️ Masa ${tableNum} Siparişi Hazır!`,
-                                body: `${orderNumber} - Masaya servis edilmeyi bekliyor`,
+                                title: `${trans.tableOrderTitle || "🍽️ Tischbestellung fertig!"} (${trans.table || "Tisch"} ${tableNum})`,
+                                body: `${orderNumber} - ${trans.orderReadyDineInBody || "Wartet auf Tischservice"}`,
                             },
                             data: {
                                 type: "table_order_ready",
@@ -828,7 +902,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                             },
                             tokens: waiterTokens,
                         };
-                        const response = await messaging.sendEachForMulticast(waiterMessage);
+                        const response = await messaging.sendEachForMulticast({ ...waiterMessage, ...buildSoundConfig(notifSound) });
                         console.log(`[Waiter Gate] Sent table-ready notification to ${response.successCount}/${waiterTokens.length} assigned waiters for table ${tableNum}`);
                     }
                     else {
@@ -843,14 +917,14 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
         case "served": {
             // Dine-in order served at the table
             const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
-            const servedByName = after.servedByName || "Garson";
+            const servedByName = after.servedByName || "";
             if (isDineInServed && after.tableNumber != null) {
-                title = `${trans.orderDeliveredTitle}${orderTag}`;
-                body = `${orderNumber} - Siparişiniz masanıza servis edildi. Afiyet olsun! 😊`;
+                title = `${trans.orderServedTitle || trans.orderDeliveredTitle}${orderTag}`;
+                body = `${orderNumber} - ${trans.orderServedBody || trans.orderDeliveredBody}`;
             }
             else {
-                title = `${trans.orderDeliveredTitle}${orderTag}`;
-                body = `${orderNumber} - ${servedByName} tarafından servis edildi. Afiyet olsun!`;
+                title = `${trans.orderServedTitle || trans.orderDeliveredTitle}${orderTag}`;
+                body = `${orderNumber} - ${trans.orderServedBody || trans.orderDeliveredBody}`;
             }
             // Schedule feedback request for dine-in served orders
             const servedFeedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -862,7 +936,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
         }
         case "onTheWay":
             // Courier has claimed and started delivery
-            const courierName = after.courierName || "Kurye";
+            const courierName = after.courierName || "";
             title = `${trans.deliveryPickedUpTitle}${orderTag}`;
             body = `${orderNumber} - ${courierName} ${trans.deliveryPickedUpBody.toLowerCase()}`;
             break;
@@ -908,7 +982,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                         rewardBatch.set(referrerTxRef, {
                             type: "referral_reward",
                             amount: referrerReward,
-                            description: "Arkadaş davet ödülü",
+                            description: "Empfehlungsbonus",
                             referredUserId: deliveredUserId,
                             createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         });
@@ -923,7 +997,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                         rewardBatch.set(refereeTxRef, {
                             type: "referral_welcome",
                             amount: refereeReward,
-                            description: "Hoş geldin ödülü",
+                            description: "Willkommensbonus",
                             referrerId: referrerId,
                             createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         });
@@ -950,29 +1024,29 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             await createCommissionRecord(event.params.orderId, after);
             break;
         case "rejected":
-            const reason = after.rejectionReason || "İstediğiniz ürün şu an mevcut değil";
+            const reason = after.rejectionReason || "";
             const butcherPhone = after.butcherPhone || "";
-            title = `❌ Sipariş Kabul Edilemedi${orderTag}`;
-            body = `${orderNumber} - ${reason}${butcherPhone ? ` Tel: ${butcherPhone}` : ""}`;
+            title = `${trans.orderRejectedTitle || "❌ Bestellung konnte nicht bestätigt werden"}${orderTag}`;
+            body = `${orderNumber}${reason ? " - " + reason : ""}${butcherPhone ? ` Tel: ${butcherPhone}` : ""}`;
             break;
         case "cancelled":
-            const cancellationReason = after.cancellationReason || "İşletme tarafından iptal edildi";
+            const cancellationReason = after.cancellationReason || "";
             const paymentStatus = after.paymentStatus;
             const paymentMethod = after.paymentMethod;
             title = `${trans.orderCancelledTitle}${orderTag}`;
             // Build message with reason and refund info
-            let cancelMsg = `${orderNumber} - Sebep: ${cancellationReason}`;
+            let cancelMsg = `${orderNumber}${cancellationReason ? " - " + cancellationReason : ""}`;
             // If payment was made (paid/completed), mention refund
             if (paymentStatus === "paid" || paymentStatus === "completed") {
                 if (paymentMethod === "card" || paymentMethod === "stripe") {
-                    cancelMsg += ". 💳 Ödemeniz kartınıza otomatik olarak iade edilecektir.";
+                    cancelMsg += `. ${trans.refundCardMessage || "Your payment will be automatically refunded to your card."}`;
                 }
                 else {
-                    cancelMsg += ". Ödemeniz iade edilecektir.";
+                    cancelMsg += `. ${trans.refundGeneralMessage || "Your payment will be refunded."}`;
                 }
             }
             // Add apology
-            cancelMsg += " Verdiğimiz rahatsızlık için özür dileriz. 🙏";
+            cancelMsg += ` ${trans.cancelApology || "We apologize for the inconvenience."} 🙏`;
             body = cancelMsg;
             break;
         default:
@@ -981,6 +1055,10 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
     // Only send customer notification if we have a token or valid users
     if ((hasCustomerToken || after.userId) && title && body) {
         try {
+            // POD (Proof of Delivery) image — attach to "delivered" notification if available
+            const podImageUrl = (newStatus === "delivered" || newStatus === "completed")
+                ? (after.podImageUrl || after.deliveryProofUrl || null)
+                : null;
             const messagePayload = {
                 notification: { title, body },
                 data: {
@@ -989,6 +1067,18 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     status: newStatus,
                 },
             };
+            // Attach POD image for rich iOS & Android notifications
+            if (podImageUrl) {
+                messagePayload.apns = {
+                    fcm_options: { image: podImageUrl },
+                    payload: { aps: { "mutable-content": 1 } },
+                };
+                messagePayload.android = {
+                    notification: { imageUrl: podImageUrl },
+                };
+                messagePayload.data.podImageUrl = podImageUrl;
+                console.log(`[POD] Attaching POD image to delivered notification: ${podImageUrl}`);
+            }
             // Save to Firestore History
             const userIds = new Set();
             if (after.userId)
@@ -1032,9 +1122,25 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     status: newStatus,
                     rawOrderNumber,
                     businessName,
+                    deliveryMethod: after.orderType || after.deliveryMethod || '',
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     read: false,
                 };
+                // Add POD image URL to notification history record
+                if (podImageUrl) {
+                    notificationData.podImageUrl = podImageUrl;
+                }
+                // Add cancellation reason for cancelled/rejected orders
+                if (newStatus === 'cancelled') {
+                    notificationData.cancellationReason = after.cancellationReason || '';
+                }
+                else if (newStatus === 'rejected') {
+                    notificationData.cancellationReason = after.rejectionReason || '';
+                }
+                // Add totalAmount if available
+                if (after.totalAmount) {
+                    notificationData.totalAmount = after.totalAmount;
+                }
                 userIds.forEach(uid => {
                     const ref = db.collection("users").doc(uid).collection("notifications").doc();
                     batch.set(ref, notificationData);
@@ -1044,19 +1150,48 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             }
             // Send FCM via Messaging
             if (hasCustomerToken) {
+                // ── Dynamic Badge Count ──────────────────────────────────
+                // Calculate unread count for badge sync with notification inbox
+                let statusBadgeCount = 1;
+                const primaryUserId = after.userId || after.customerId;
+                if (primaryUserId) {
+                    try {
+                        const unreadSnap = await db.collection("users").doc(primaryUserId)
+                            .collection("notifications")
+                            .where("read", "==", false)
+                            .count()
+                            .get();
+                        statusBadgeCount = Math.max(1, unreadSnap.data().count ?? 1);
+                    }
+                    catch (e) { /* fallback to 1 */ }
+                }
+                // Merge badge into APNs payload
+                if (!messagePayload.apns) {
+                    messagePayload.apns = { payload: { aps: {} } };
+                }
+                messagePayload.apns.payload = messagePayload.apns.payload || {};
+                messagePayload.apns.payload.aps = {
+                    ...(messagePayload.apns.payload.aps || {}),
+                    badge: statusBadgeCount,
+                    sound: notifSound || "default",
+                    "content-available": 1,
+                };
+                if (!messagePayload.android) {
+                    messagePayload.android = { notification: { sound: notifSound || "default", channelId: "lokma_orders" } };
+                }
                 if (customerTokens.length === 1) {
                     await messaging.send({
                         ...messagePayload,
                         token: customerTokens[0],
                     });
-                    console.log(`Sent ${newStatus} notification to customer (single device)`);
+                    console.log(`Sent ${newStatus} notification to customer (single device, badge: ${statusBadgeCount})`);
                 }
                 else {
                     const response = await messaging.sendEachForMulticast({
                         ...messagePayload,
                         tokens: customerTokens,
                     });
-                    console.log(`Sent ${newStatus} notification to ${response.successCount}/${customerTokens.length} customer devices`);
+                    console.log(`Sent ${newStatus} notification to ${response.successCount}/${customerTokens.length} customer devices (badge: ${statusBadgeCount})`);
                 }
             }
         }
@@ -1503,7 +1638,7 @@ exports.onScheduledMonthlyDeliveryPauseReport = (0, scheduler_1.onSchedule)({
     // Calculate period (previous month)
     const periodStart = new Date(year, month - 1, 1);
     const periodEnd = new Date(year, month, 0); // Last day of previous month
-    const periodString = `${periodStart.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}`;
+    const periodString = `${periodStart.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}`;
     try {
         // Get all businesses with delivery support
         const businessesSnapshot = await db.collection("businesses")
@@ -1585,7 +1720,7 @@ exports.onScheduledMonthlyDeliveryPauseReport = (0, scheduler_1.onSchedule)({
                 }
             }
             reportData[businessId] = {
-                companyName: business.companyName || business.brand || "Bilinmeyen İşletme",
+                companyName: business.companyName || business.brand || "Unbekanntes Geschäft",
                 pauseCount,
                 resumeCount,
                 totalPausedHours: pausedHours,
@@ -1599,25 +1734,25 @@ exports.onScheduledMonthlyDeliveryPauseReport = (0, scheduler_1.onSchedule)({
         // Build email content
         const businessCount = Object.keys(reportData).length;
         let emailHtml = `
-                <h2>📊 LOKMA İşletme Performans Raporu - ${periodString}</h2>
+                <h2>📊 LOKMA Geschäfts-Leistungsbericht - ${periodString}</h2>
                 <hr/>
-                <h3>Özet</h3>
+                <h3>Zusammenfassung</h3>
                 <ul>
-                    <li><strong>Toplam İşletme Sayısı (kapatma yapan):</strong> ${businessCount}</li>
-                    <li><strong>Toplam Durdurma Sayısı:</strong> ${totalPauses}</li>
-                    <li><strong>Toplam Durdurma Süresi:</strong> ${totalPausedHours} saat</li>
-                    <li><strong>Ort. Sipariş Teslim Süresi:</strong> ${businessesWithOrders > 0 ? Math.round(totalAvgFulfillmentMins / businessesWithOrders) : 0} dakika</li>
+                    <li><strong>Gesamtanzahl Geschäfte (mit Pausen):</strong> ${businessCount}</li>
+                    <li><strong>Gesamtanzahl Pausen:</strong> ${totalPauses}</li>
+                    <li><strong>Gesamte Pausenzeit:</strong> ${totalPausedHours} Stunden</li>
+                    <li><strong>Durchschn. Lieferzeit:</strong> ${businessesWithOrders > 0 ? Math.round(totalAvgFulfillmentMins / businessesWithOrders) : 0} Minuten</li>
                 </ul>
                 <hr/>
-                <h3>İşletmeler Detay</h3>
+                <h3>Geschäftsdetails</h3>
                 <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
                     <tr style="background-color: #f0f0f0;">
-                        <th>İşletme</th>
-                        <th>Durdurma</th>
-                        <th>Devam</th>
-                        <th>Durma Süresi (saat)</th>
-                        <th>Sipariş</th>
-                        <th>Ort. Teslim (dk)</th>
+                        <th>Geschäft</th>
+                        <th>Pausen</th>
+                        <th>Fortgesetzt</th>
+                        <th>Pausenzeit (Std.)</th>
+                        <th>Bestellungen</th>
+                        <th>Durchschn. Lieferung (Min.)</th>
                     </tr>
             `;
         // Sort by pause count descending
@@ -1640,8 +1775,8 @@ exports.onScheduledMonthlyDeliveryPauseReport = (0, scheduler_1.onSchedule)({
                 </table>
                 <hr/>
                 <p style="color: #666; font-size: 12px;">
-                    Bu rapor LOKMA Platform tarafından otomatik olarak oluşturulmuştur.<br/>
-                    Rapor Dönemi: ${periodStart.toLocaleDateString("tr-TR")} - ${periodEnd.toLocaleDateString("tr-TR")}
+                    Dieser Bericht wurde automatisch von der LOKMA-Plattform erstellt.<br/>
+                    Berichtszeitraum: ${periodStart.toLocaleDateString("de-DE")} - ${periodEnd.toLocaleDateString("de-DE")}
                 </p>
             `;
         // Store report in Firestore
@@ -1727,9 +1862,10 @@ exports.onScheduledFeedbackRequests = (0, scheduler_1.onSchedule)({
                 skipCount++;
                 continue;
             }
-            const butcherName = order.butcherName || "İşletme";
+            const butcherName = order.butcherName || "Geschäft";
             const lang = await (0, translation_1.getUserLanguage)(order.userId || order.customerId); // Try to get user language, defaulting to Turkish
             const trans = await (0, translation_1.getPushTranslations)(lang);
+            const notifSound = await getActiveNotificationSound();
             try {
                 await messaging.send({
                     notification: {
@@ -1742,6 +1878,7 @@ exports.onScheduledFeedbackRequests = (0, scheduler_1.onSchedule)({
                         businessId: order.butcherId || "",
                         businessName: butcherName,
                     },
+                    ...buildSoundConfig(notifSound),
                     token: customerFcmToken,
                 });
                 await db.collection("meat_orders").doc(orderId).update({
@@ -1783,11 +1920,11 @@ exports.onNewReservation = (0, firestore_1.onDocumentCreated)("businesses/{busin
     if (!reservation)
         return;
     const businessId = event.params.businessId;
-    const customerName = reservation.userName || reservation.customerName || "Müşteri";
+    const customerName = reservation.userName || reservation.customerName || "Kunde";
     const partySize = reservation.partySize || 0;
     const resDate = reservation.reservationDate?.toDate?.() ?? new Date();
-    const dateStr = resDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
-    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    const dateStr = resDate.toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" });
+    const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
     console.log(`[Reservation] New reservation at business ${businessId} by ${customerName}`);
     try {
         // Collect FCM tokens from all staff assigned to this business
@@ -1825,27 +1962,54 @@ exports.onNewReservation = (0, firestore_1.onDocumentCreated)("businesses/{busin
             .where("butcherId", "==", businessId)
             .get();
         legacySnap.docs.forEach(collectTokens);
-        if (staffTokens.length === 0) {
-            console.log(`[Reservation] No staff tokens found for business ${businessId}`);
-            return;
-        }
         // Remove duplicates
         const uniqueTokens = [...new Set(staffTokens)];
-        const message = {
-            notification: {
-                title: "🍽️ Yeni Masa Rezervasyonu!",
-                body: `${customerName} – ${partySize} kişi – ${dateStr} ${timeStr}`,
-            },
-            data: {
-                type: "new_reservation",
-                reservationId: event.params.reservationId,
-                businessId: businessId,
-                customerName: customerName,
-            },
-            tokens: uniqueTokens,
-        };
-        const response = await messaging.sendEachForMulticast(message);
-        console.log(`[Reservation] Notified ${response.successCount}/${uniqueTokens.length} staff devices`);
+        if (uniqueTokens.length > 0) {
+            const notifSound = await getActiveNotificationSound();
+            const message = {
+                notification: {
+                    title: "🍽️ Yeni Masa Rezervasyonu!",
+                    body: `${customerName} – ${partySize} kişi – ${dateStr} ${timeStr}`,
+                },
+                data: {
+                    type: "new_reservation",
+                    reservationId: event.params.reservationId,
+                    businessId: businessId,
+                    customerName: customerName,
+                },
+                ...buildSoundConfig(notifSound),
+                tokens: uniqueTokens,
+            };
+            const response = await messaging.sendEachForMulticast(message);
+            console.log(`[Reservation] Notified ${response.successCount}/${uniqueTokens.length} staff devices`);
+        }
+        else {
+            console.log(`[Reservation] No staff tokens found for business ${businessId}`);
+        }
+        // ── Persist notification to customer's notification history ──
+        const userId = reservation.userId;
+        if (userId) {
+            const businessName = reservation.businessName || "Restaurant";
+            try {
+                await db.collection("users").doc(userId).collection("notifications").add({
+                    title: "🍽️ Rezervasyon Alındı",
+                    body: `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi`,
+                    type: "reservation_status",
+                    reservationId: event.params.reservationId,
+                    businessId: businessId,
+                    businessName: businessName,
+                    status: "pending",
+                    partySize: partySize,
+                    reservationDate: reservation.reservationDate,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                });
+                console.log(`[Reservation] Saved pending notification for user ${userId}`);
+            }
+            catch (notifError) {
+                console.error("[Reservation] Error saving notification history:", notifError);
+            }
+        }
     }
     catch (error) {
         console.error("[Reservation] Error notifying staff:", error);
@@ -1872,12 +2036,12 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
         return;
     const newStatus = after.status;
     const businessId = event.params.businessId;
-    const businessName = after.businessName || "İşletme";
+    const businessName = after.businessName || "Geschäft";
     const resDate = after.reservationDate?.toDate?.() ?? new Date();
-    const dateStr = resDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
-    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    const dateStr = resDate.toLocaleDateString("de-DE", { day: "numeric", month: "long" });
+    const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
     const partySize = after.partySize || 0;
-    const customerName = after.userName || after.customerName || "Müşteri";
+    const customerName = after.userName || after.customerName || "Kunde";
     const tableCardNumbers = after.tableCardNumbers || [];
     // ─── Customer-initiated cancellation → notify staff ───
     if (newStatus === "cancelled") {
@@ -1919,6 +2083,7 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
             legacySnap.docs.forEach(collectTokens);
             if (staffTokens.length > 0) {
                 const uniqueTokens = [...new Set(staffTokens)];
+                const notifSound = await getActiveNotificationSound();
                 await messaging.sendEachForMulticast({
                     notification: {
                         title: "🚫 Rezervasyon İptal Edildi",
@@ -1929,6 +2094,7 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
                         reservationId: event.params.reservationId,
                         businessId: businessId,
                     },
+                    ...buildSoundConfig(notifSound),
                     tokens: uniqueTokens,
                 });
                 console.log(`[Reservation] Notified staff about cancellation`);
@@ -1937,10 +2103,41 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
         catch (error) {
             console.error("[Reservation] Error notifying staff about cancellation:", error);
         }
+        // Persist cancellation to customer's notification history
+        const cancelUserId = after.userId;
+        console.log(`[Reservation] Cancel notification: userId=${cancelUserId}`);
+        if (cancelUserId) {
+            const cancellationReason = after.cancellationReason || "";
+            const cancellationNote = after.cancellationNote || "";
+            try {
+                await db.collection("users").doc(cancelUserId).collection("notifications").add({
+                    title: "Rezervasyon Iptal Edildi",
+                    body: `${businessName} – ${dateStr} ${timeStr} – ${partySize} kisi`,
+                    type: "reservation_status",
+                    reservationId: event.params.reservationId,
+                    businessId: businessId,
+                    businessName: businessName,
+                    status: "cancelled",
+                    cancellationReason: cancellationReason,
+                    cancellationNote: cancellationNote,
+                    partySize: partySize,
+                    reservationDate: after.reservationDate,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                });
+                console.log(`[Reservation] Saved cancelled notification for user ${cancelUserId}`);
+            }
+            catch (notifError) {
+                console.error("[Reservation] Error saving cancellation notification:", notifError);
+            }
+        }
+        else {
+            console.log(`[Reservation] No userId found, skipping cancel notification persistence`);
+        }
         return;
     }
     // ─── Staff-initiated status change → notify customer ───
-    if (newStatus !== "confirmed" && newStatus !== "rejected")
+    if (newStatus !== "confirmed" && newStatus !== "rejected" && newStatus !== "reactivated")
         return;
     const customerFcmToken = after.customerFcmToken || after.userFcmToken;
     let title = "";
@@ -1949,12 +2146,17 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
         title = "✅ Rezervasyonunuz Onaylandı!";
         body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Afiyet olsun!`;
     }
+    else if (newStatus === "reactivated") {
+        title = "✅ Rezervasyonunuz Tekrar Aktif!";
+        body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Rezervasyonunuz tekrar aktif edildi.`;
+    }
     else {
         title = "❌ Rezervasyonunuz Reddedildi";
         body = `${businessName} – ${dateStr} ${timeStr} için rezervasyonunuz maalesef onaylanmadı.`;
     }
     // Send push notification if token available
     if (customerFcmToken) {
+        const notifSound = await getActiveNotificationSound();
         try {
             await messaging.send({
                 notification: { title, body },
@@ -1964,6 +2166,7 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
                     businessId: businessId,
                     status: newStatus,
                 },
+                ...buildSoundConfig(notifSound),
                 token: customerFcmToken,
             });
             console.log(`[Reservation] Sent ${newStatus} push notification to customer`);
@@ -1971,6 +2174,33 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
         catch (error) {
             console.error(`[Reservation] Error sending ${newStatus} push notification:`, error);
         }
+    }
+    // ── Persist status change to customer's notification history ──
+    const userId = after.userId;
+    console.log(`[Reservation] Notification persistence: userId=${userId}, status=${newStatus}`);
+    if (userId) {
+        try {
+            await db.collection("users").doc(userId).collection("notifications").add({
+                title,
+                body,
+                type: "reservation_status",
+                reservationId: event.params.reservationId,
+                businessId: businessId,
+                businessName: businessName,
+                status: newStatus,
+                partySize: partySize,
+                reservationDate: after.reservationDate,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                read: false,
+            });
+            console.log(`[Reservation] Saved ${newStatus} notification for user ${userId}`);
+        }
+        catch (notifError) {
+            console.error(`[Reservation] Error saving ${newStatus} notification:`, notifError);
+        }
+    }
+    else {
+        console.log(`[Reservation] No userId found in reservation document, skipping notification persistence`);
     }
     // ─── Send confirmation email with calendar links ───
     if (newStatus === "confirmed") {
@@ -2017,7 +2247,7 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
             // Table card display
             const tableCardHtml = tableCardNumbers.length > 0
                 ? `<div style="background: #1b3a1b; border: 1px solid #2E7D32; border-radius: 8px; padding: 12px; margin: 15px 0;">
-                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">MASA KART NUMARANIZ</p>
+                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">IHRE TISCHKARTENUMMER</p>
                         <div style="display: flex; gap: 8px;">
                             ${tableCardNumbers.map((n) => `<span style="background: #2E7D32; color: white; padding: 6px 14px; border-radius: 8px; font-size: 18px; font-weight: bold;">${n}</span>`).join("")}
                         </div>
@@ -2028,52 +2258,52 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
             await resend.emails.send({
                 from: "LOKMA Marketplace <noreply@lokma.shop>",
                 to: customerEmail,
-                subject: `✅ Rezervasyonunuz Onaylandı – ${businessName}`,
+                subject: `✅ Ihre Reservierung ist bestätigt – ${businessName}`,
                 html: `
                         <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
                             <div style="max-width: 600px; margin: 0 auto;">
                                 <div style="background: #2E7D32; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
                                     <h1 style="margin: 0; color: white; font-size: 22px;">LOKMA</h1>
-                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Rezervasyonunuz Onaylandı ✓</p>
+                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Ihre Reservierung ist bestätigt ✓</p>
                                 </div>
                                 <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
-                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Merhaba <strong>${customerName}</strong>,</p>
-                                    <p style="color: #ccc; margin: 0 0 20px;">Masa rezervasyonunuz onaylanmıştır. Detaylar aşağıdadır:</p>
+                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Hallo <strong>${customerName}</strong>,</p>
+                                    <p style="color: #ccc; margin: 0 0 20px;">Ihre Tischreservierung wurde bestätigt. Hier sind die Details:</p>
                                     
                                     <div style="background: #333; border-radius: 10px; padding: 18px; margin: 15px 0;">
                                         <table style="width: 100%; color: #ccc; font-size: 14px; border-collapse: collapse;">
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">İşletme</td>
+                                                <td style="padding: 6px 0; color: #999;">Restaurant</td>
                                                 <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #fff;">${businessName}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Tarih</td>
+                                                <td style="padding: 6px 0; color: #999;">Datum</td>
                                                 <td style="padding: 6px 0; text-align: right; color: #fff;">${dateStr}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Saat</td>
+                                                <td style="padding: 6px 0; color: #999;">Uhrzeit</td>
                                                 <td style="padding: 6px 0; text-align: right; color: #fff;">${timeStr}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Kişi Sayısı</td>
-                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Kişi</td>
+                                                <td style="padding: 6px 0; color: #999;">Personenanzahl</td>
+                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Personen</td>
                                             </tr>
                                         </table>
                                     </div>
 
                                     ${tableCardHtml}
 
-                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Rezervasyonu takviminize ekleyin:</p>
+                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Reservierung zum Kalender hinzufügen:</p>
                                     
                                     <div style="text-align: center; margin: 15px 0;">
                                         <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 6px 10px;">
-                                            📅 Google Takvim'e Ekle
+                                            📅 Zu Google Kalender hinzufügen
                                         </a>
                                     </div>
-                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">iCal dosyası ekte mevcuttur — Apple Takvim veya Outlook'a tek tıkla ekleyebilirsiniz.</p>
+                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">Die iCal-Datei ist im Anhang — mit einem Klick zu Apple Kalender oder Outlook hinzufügen.</p>
                                     
                                     <div style="border-top: 1px solid #444; margin-top: 20px; padding-top: 15px;">
-                                        <p style="color: #999; font-size: 12px; margin: 0;">Afiyet olsun! 🍽️</p>
+                                        <p style="color: #999; font-size: 12px; margin: 0;">Guten Appetit! 🍽️</p>
                                     </div>
                                 </div>
                                 <p style="color: #555; font-size: 11px; text-align: center; margin-top: 15px;">LOKMA Marketplace · noreply@lokma.shop</p>
@@ -2082,7 +2312,7 @@ exports.onReservationStatusChange = (0, firestore_1.onDocumentUpdated)({
                     `,
                 attachments: [
                     {
-                        filename: "rezervasyon.ics",
+                        filename: "reservierung.ics",
                         content: icsBase64,
                     },
                 ],
@@ -2132,7 +2362,7 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
             .get();
         for (const businessDoc of businessesSnapshot.docs) {
             const businessId = businessDoc.id;
-            const businessName = businessDoc.data().companyName || "İşletme";
+            const businessName = businessDoc.data().companyName || "Geschäft";
             // ─── 24h Customer Reminders ───
             const upcoming24h = await db.collection("businesses")
                 .doc(businessId)
@@ -2148,18 +2378,20 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
                 if (!token)
                     continue;
                 const resDate = res.reservationDate?.toDate?.() ?? new Date();
-                const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+                const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                const notifSound = await getActiveNotificationSound();
                 try {
                     await messaging.send({
                         notification: {
-                            title: "🍽️ Yarınki Rezervasyonunuz",
-                            body: `${businessName} – Saat ${timeStr} – ${res.partySize || 0} kişi. İptal etmek isterseniz uygulamadan yapabilirsiniz.`,
+                            title: "🍽️ Ihre Reservierung morgen",
+                            body: `${businessName} – ${timeStr} Uhr – ${res.partySize || 0} Personen. Zum Stornieren nutzen Sie bitte die App.`,
                         },
                         data: {
                             type: "reservation_reminder_24h",
                             reservationId: resDoc.id,
                             businessId: businessId,
                         },
+                        ...buildSoundConfig(notifSound),
                         token: token,
                     });
                     await resDoc.ref.update({ reminder24hSent: true });
@@ -2184,18 +2416,20 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
                 if (!token)
                     continue;
                 const resDate = res.reservationDate?.toDate?.() ?? new Date();
-                const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+                const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                const notifSound2h = await getActiveNotificationSound();
                 try {
                     await messaging.send({
                         notification: {
-                            title: "⏰ Rezervasyonunuz 2 Saat Sonra!",
-                            body: `${businessName} – Saat ${timeStr} – ${res.partySize || 0} kişi. Afiyet olsun!`,
+                            title: "⏰ Ihre Reservierung in 2 Stunden!",
+                            body: `${businessName} – ${timeStr} Uhr – ${res.partySize || 0} Personen. Guten Appetit!`,
                         },
                         data: {
                             type: "reservation_reminder_2h",
                             reservationId: resDoc.id,
                             businessId: businessId,
                         },
+                        ...buildSoundConfig(notifSound2h),
                         token: token,
                     });
                     await resDoc.ref.update({ reminder2hSent: true });
@@ -2251,23 +2485,25 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
                 for (const resDoc of unreminedStaff) {
                     const res = resDoc.data();
                     const resDate = res.reservationDate?.toDate?.() ?? new Date();
-                    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-                    const customerName = res.userName || res.customerName || "Müşteri";
+                    const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                    const customerName = res.userName || res.customerName || "Kunde";
                     const partySize = res.partySize || 0;
                     const tableCards = res.tableCardNumbers || [];
                     const tableInfo = tableCards.length > 0 ? ` (Kart: ${tableCards.join(", ")})` : "";
+                    const notifSound30 = await getActiveNotificationSound();
                     if (uniqueTokens.length > 0) {
                         try {
                             await messaging.sendEachForMulticast({
                                 notification: {
-                                    title: "🔔 Yaklaşan Rezervasyon – 30 Dakika!",
-                                    body: `${customerName} – ${partySize} kişi – Saat ${timeStr}${tableInfo}. Masayı hazırladınız mı?`,
+                                    title: "🔔 Anstehende Reservierung – 30 Minuten!",
+                                    body: `${customerName} – ${partySize} Personen – ${timeStr} Uhr${tableInfo}. Ist der Tisch bereit?`,
                                 },
                                 data: {
                                     type: "reservation_staff_30m_reminder",
                                     reservationId: resDoc.id,
                                     businessId: businessId,
                                 },
+                                ...buildSoundConfig(notifSound30),
                                 tokens: uniqueTokens,
                             });
                             sentStaff30m++;
@@ -2284,11 +2520,11 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
                         if (customerToken) {
                             const hasTable = tableCards.length > 0;
                             const customerTitle = hasTable
-                                ? `🪑 Masanız Hazırlandı! Masa ${tableCards.join(", ")}`
-                                : "🍽️ Rezervasyon Hatırlatma – 30 Dakika!";
+                                ? `🪑 Ihr Tisch ist bereit! Tisch ${tableCards.join(", ")}`
+                                : "🍽️ Reservierungserinnerung – 30 Minuten!";
                             const customerBody = hasTable
-                                ? `${businessName} – Saat ${timeStr} – ${partySize} kişi. Masa numaranız: ${tableCards.join(", ")}. Afiyet olsun!`
-                                : `${businessName} – Saat ${timeStr} – ${partySize} kişi. Görüşmek üzere!`;
+                                ? `${businessName} – ${timeStr} Uhr – ${partySize} Personen. Ihre Tischnummer: ${tableCards.join(", ")}. Guten Appetit!`
+                                : `${businessName} – ${timeStr} Uhr – ${partySize} Personen. Bis gleich!`;
                             try {
                                 await messaging.send({
                                     notification: {
@@ -2300,6 +2536,7 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
                                         reservationId: resDoc.id,
                                         businessId: businessId,
                                     },
+                                    ...buildSoundConfig(notifSound30),
                                     token: customerToken,
                                 });
                                 sentCustomer30m++;
@@ -2442,6 +2679,7 @@ exports.onShiftEnd = (0, firestore_1.onDocumentUpdated)("admins/{adminId}", asyn
             }
         });
         if (adminTokens.length > 0) {
+            const notifSoundOrphan = await getActiveNotificationSound();
             const orphanMessage = {
                 notification: {
                     title: "⚠️ Sahipsiz Masa Uyarısı",
@@ -2452,6 +2690,7 @@ exports.onShiftEnd = (0, firestore_1.onDocumentUpdated)("admins/{adminId}", asyn
                     businessId: businessId,
                     tables: orphanTables.join(","),
                 },
+                ...buildSoundConfig(notifSoundOrphan),
                 tokens: adminTokens,
             };
             const response = await messaging.sendEachForMulticast(orphanMessage);
@@ -2532,16 +2771,18 @@ exports.preOrderReminder = (0, scheduler_1.onSchedule)({
             if (allTokens.length > 0) {
                 const orderNum = reminder.orderNumber ? `#${reminder.orderNumber}` : "";
                 const pickupStr = reminder.pickupTimeStr || "";
+                const notifSoundPre = await getActiveNotificationSound();
                 const message = {
                     notification: {
-                        title: `⏰ Ön Sipariş Hatırlatma! ${orderNum}`,
-                        body: `${reminder.customerName || "Müşteri"} - ${(reminder.totalAmount || 0).toFixed(2)}€ — ${pickupStr} teslim alınacak`,
+                        title: `⏰ Vorbestellungs-Erinnerung! ${orderNum}`,
+                        body: `${reminder.customerName || "Kunde"} - ${(reminder.totalAmount || 0).toFixed(2)}€ — ${pickupStr}`,
                     },
                     data: {
                         type: "pre_order_reminder",
                         orderId: orderId,
                         businessId: businessId,
                     },
+                    ...buildSoundConfig(notifSoundPre),
                     tokens: allTokens,
                 };
                 const response = await messaging.sendEachForMulticast(message);
@@ -2556,6 +2797,417 @@ exports.preOrderReminder = (0, scheduler_1.onSchedule)({
     }
     catch (error) {
         console.error("[Pre-Order Reminder] Error:", error);
+    }
+});
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPER ADMIN: Test Data Cleanup
+// Deletes ALL users (Firebase Auth + Firestore) except the protected Super Admin
+// Also deletes all test orders, ratings, and commission records
+// Protected accounts: hardcoded list of real accounts that must never be deleted
+// ─────────────────────────────────────────────────────────────────────────────
+exports.cleanupTestData = (0, https_1.onRequest)({ secrets: [], cors: true, timeoutSeconds: 300, memory: "512MiB" }, async (req, res) => {
+    // Only allow POST
+    if (req.method !== "POST") {
+        res.status(405).json({ error: "Method not allowed" });
+        return;
+    }
+    // Verify caller is Super Admin via Firebase Auth token
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+    }
+    let callerUid;
+    try {
+        const token = authHeader.split("Bearer ")[1];
+        const decoded = await admin.auth().verifyIdToken(token);
+        callerUid = decoded.uid;
+        // Verify the caller is a super admin in Firestore
+        const callerDoc = await db.collection("admins").doc(callerUid).get();
+        if (!callerDoc.exists || callerDoc.data()?.adminType !== "super") {
+            res.status(403).json({ error: "Forbidden: Super Admin only" });
+            return;
+        }
+    }
+    catch (e) {
+        res.status(401).json({ error: "Invalid token" });
+        return;
+    }
+    // ── Protected accounts — NEVER delete these ────────────────────────
+    const PROTECTED_EMAILS = new Set([
+        "metin.oez@gmail.com",
+    ]);
+    const stats = {
+        authDeleted: 0,
+        usersDeleted: 0,
+        adminsDeleted: 0,
+        ordersDeleted: 0,
+        ratingsDeleted: 0,
+        commissionRecordsDeleted: 0,
+        notificationsDeleted: 0,
+        scheduledNotificationsDeleted: 0,
+        sponsoredConversionsDeleted: 0,
+        referralsDeleted: 0,
+        groupOrdersDeleted: 0,
+        reservationsDeleted: 0,
+        businessesReset: 0,
+        errors: [],
+    };
+    try {
+        console.log(`[Cleanup] Started by Super Admin: ${callerUid}`);
+        // ── Step 1: List all Firebase Auth users ──────────────────────
+        const authUsersToDelete = [];
+        let pageToken;
+        do {
+            const result = await admin.auth().listUsers(1000, pageToken);
+            for (const user of result.users) {
+                // Skip protected accounts
+                if (user.email && PROTECTED_EMAILS.has(user.email)) {
+                    console.log(`[Cleanup] SKIPPING protected: ${user.email}`);
+                    continue;
+                }
+                // Skip the caller themselves (extra safety)
+                if (user.uid === callerUid)
+                    continue;
+                authUsersToDelete.push(user.uid);
+            }
+            pageToken = result.pageToken;
+        } while (pageToken);
+        console.log(`[Cleanup] Auth users to delete: ${authUsersToDelete.length}`);
+        // ── Step 2: Delete sub-collections for each user (notifications) ─
+        for (const uid of authUsersToDelete) {
+            try {
+                const notifSnap = await db.collection("users").doc(uid)
+                    .collection("notifications").limit(500).get();
+                const batch = db.batch();
+                notifSnap.docs.forEach(d => batch.delete(d.ref));
+                if (!notifSnap.empty) {
+                    await batch.commit();
+                    stats.notificationsDeleted += notifSnap.size;
+                }
+            }
+            catch (e) {
+                stats.errors.push(`notifications/${uid}: ${e.message}`);
+            }
+        }
+        // ── Step 3: Delete Firestore users documents ─────────────────
+        const uidSet = new Set(authUsersToDelete);
+        const usersSnap = await db.collection("users").limit(500).get();
+        const usersBatch = db.batch();
+        for (const doc of usersSnap.docs) {
+            if (uidSet.has(doc.id)) {
+                usersBatch.delete(doc.ref);
+                stats.usersDeleted++;
+            }
+        }
+        await usersBatch.commit();
+        // ── Step 4: Delete admins (non-super, excluding caller) ───────
+        const adminsSnap = await db.collection("admins").get();
+        const adminsBatch = db.batch();
+        for (const doc of adminsSnap.docs) {
+            if (doc.id === callerUid)
+                continue;
+            const data = doc.data();
+            // Never delete super admins
+            if (data.adminType === "super")
+                continue;
+            adminsBatch.delete(doc.ref);
+            stats.adminsDeleted++;
+        }
+        await adminsBatch.commit();
+        // ── Step 5: Delete Firebase Auth users in batches of 1000 ─────
+        const BATCH_SIZE = 1000;
+        for (let i = 0; i < authUsersToDelete.length; i += BATCH_SIZE) {
+            const chunk = authUsersToDelete.slice(i, i + BATCH_SIZE);
+            try {
+                const result = await admin.auth().deleteUsers(chunk);
+                stats.authDeleted += result.successCount;
+                if (result.errors.length > 0) {
+                    result.errors.forEach(e => {
+                        stats.errors.push(`auth/${chunk[e.index]}: ${e.error.message}`);
+                    });
+                }
+            }
+            catch (e) {
+                stats.errors.push(`auth batch: ${e.message}`);
+            }
+        }
+        // ── Step 6: Delete all meat_orders ────────────────────────────
+        let hasMoreOrders = true;
+        while (hasMoreOrders) {
+            const ordersSnap = await db.collection("meat_orders").limit(400).get();
+            if (ordersSnap.empty) {
+                hasMoreOrders = false;
+                break;
+            }
+            const batch = db.batch();
+            ordersSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.ordersDeleted += ordersSnap.size;
+            if (ordersSnap.size < 400)
+                hasMoreOrders = false;
+        }
+        // ── Step 7: Delete all ratings ────────────────────────────────
+        const ratingsSnap = await db.collection("ratings").limit(500).get();
+        if (!ratingsSnap.empty) {
+            const batch = db.batch();
+            ratingsSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.ratingsDeleted = ratingsSnap.size;
+        }
+        // ── Step 8: Delete all commission_records ─────────────────────
+        const commSnap = await db.collection("commission_records").limit(500).get();
+        if (!commSnap.empty) {
+            const batch = db.batch();
+            commSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.commissionRecordsDeleted = commSnap.size;
+        }
+        // ── Step 9: Delete scheduled_notifications ────────────────────
+        // These reference deleted orders → would cause errors if left behind
+        const schedNotifSnap = await db.collection("scheduled_notifications").limit(500).get();
+        if (!schedNotifSnap.empty) {
+            const batch = db.batch();
+            schedNotifSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.scheduledNotificationsDeleted = schedNotifSnap.size;
+            console.log(`[Cleanup] scheduled_notifications deleted: ${schedNotifSnap.size}`);
+        }
+        // ── Step 10: Delete sponsored_conversions ─────────────────────
+        // These reference deleted orderIds → orphan records
+        const sponsoredSnap = await db.collection("sponsored_conversions").limit(500).get();
+        if (!sponsoredSnap.empty) {
+            const batch = db.batch();
+            sponsoredSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.sponsoredConversionsDeleted = sponsoredSnap.size;
+            console.log(`[Cleanup] sponsored_conversions deleted: ${sponsoredSnap.size}`);
+        }
+        // ── Step 11: Delete referrals ─────────────────────────────────
+        // These contain deleted user UIDs as referrerId / referredId
+        const referralsSnap = await db.collection("referrals").limit(500).get();
+        if (!referralsSnap.empty) {
+            const batch = db.batch();
+            referralsSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.referralsDeleted = referralsSnap.size;
+            console.log(`[Cleanup] referrals deleted: ${referralsSnap.size}`);
+        }
+        // ── Step 12: Delete group_orders ──────────────────────────────
+        // These contain deleted user UIDs as participants
+        const groupOrdersSnap = await db.collection("group_orders").limit(500).get();
+        if (!groupOrdersSnap.empty) {
+            const batch = db.batch();
+            groupOrdersSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.groupOrdersDeleted = groupOrdersSnap.size;
+            console.log(`[Cleanup] group_orders deleted: ${groupOrdersSnap.size}`);
+        }
+        // ── Step 13: Reset usage counters in all businesses ───────────
+        // Test orders inflated these counters — reset them so billing starts fresh
+        const businessesSnap = await db.collection("businesses").limit(500).get();
+        if (!businessesSnap.empty) {
+            const batch = db.batch();
+            businessesSnap.docs.forEach(doc => {
+                batch.update(doc.ref, {
+                    usage: {}, // wipe all monthly usage counters
+                    accountBalance: 0, // clear any accumulated cash balance
+                });
+            });
+            await batch.commit();
+            stats.businessesReset = businessesSnap.size;
+            console.log(`[Cleanup] Businesses usage reset: ${businessesSnap.size}`);
+        }
+        // ── Step 14: Clean dead FCM tokens from butcher_admins ────────
+        const butcherAdminsSnap = await db.collection("butcher_admins").limit(500).get();
+        if (!butcherAdminsSnap.empty) {
+            const batch = db.batch();
+            butcherAdminsSnap.docs.forEach(doc => {
+                batch.update(doc.ref, { fcmTokens: [], webFcmTokens: [] });
+            });
+            await batch.commit();
+            console.log(`[Cleanup] Cleared FCM tokens from ${butcherAdminsSnap.size} butcher_admins`);
+        }
+        // ── Step 15: Delete reservations ──────────────────────────────
+        const reservationsSnap = await db.collection("reservations").limit(500).get();
+        if (!reservationsSnap.empty) {
+            const batch = db.batch();
+            reservationsSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            stats.reservationsDeleted = reservationsSnap.size;
+            console.log(`[Cleanup] reservations deleted: ${reservationsSnap.size}`);
+        }
+        // ── Step 16: Delete table_sessions ────────────────────────────
+        const tableSessionsSnap = await db.collection("table_sessions").limit(500).get();
+        if (!tableSessionsSnap.empty) {
+            const batch = db.batch();
+            tableSessionsSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            console.log(`[Cleanup] table_sessions deleted: ${tableSessionsSnap.size}`);
+        }
+        // ── Step 17: Delete courier_locations ─────────────────────────
+        const courierLocsSnap = await db.collection("courier_locations").limit(500).get();
+        if (!courierLocsSnap.empty) {
+            const batch = db.batch();
+            courierLocsSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            console.log(`[Cleanup] courier_locations deleted: ${courierLocsSnap.size}`);
+        }
+        // ── Step 18: Delete promo_usages + coupon_usages ──────────────
+        for (const colName of ["promo_usages", "coupon_usages", "promotion_usages"]) {
+            const snap = await db.collection(colName).limit(500).get();
+            if (!snap.empty) {
+                const batch = db.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                console.log(`[Cleanup] ${colName} deleted: ${snap.size}`);
+            }
+        }
+        // ── Step 19: Delete delivery_proofs ───────────────────────────
+        const proofsSnap = await db.collection("delivery_proofs").limit(500).get();
+        if (!proofsSnap.empty) {
+            const batch = db.batch();
+            proofsSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            console.log(`[Cleanup] delivery_proofs deleted: ${proofsSnap.size}`);
+        }
+        // ── Step 20: Delete abandoned carts ───────────────────────────
+        for (const colName of ["carts", "kermes_carts"]) {
+            const snap = await db.collection(colName).limit(500).get();
+            if (!snap.empty) {
+                const batch = db.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                console.log(`[Cleanup] ${colName} deleted: ${snap.size}`);
+            }
+        }
+        // ── Step 21: Reset averageRating on all businesses ────────────
+        // Test ratings skewed the averages — reset to null so next real rating starts fresh
+        if (!businessesSnap.empty) {
+            const batch = db.batch();
+            businessesSnap.docs.forEach(doc => {
+                batch.update(doc.ref, {
+                    averageRating: admin.firestore.FieldValue.delete(),
+                    totalRatings: admin.firestore.FieldValue.delete(),
+                    ratingCount: admin.firestore.FieldValue.delete(),
+                });
+            });
+            await batch.commit();
+            console.log(`[Cleanup] Rating averages reset on ${businessesSnap.size} businesses`);
+        }
+        console.log("[Cleanup] Complete:", stats);
+        res.status(200).json({
+            success: true,
+            message: "Test data cleaned up successfully",
+            stats,
+        });
+    }
+    catch (error) {
+        console.error("[Cleanup] Fatal error:", error);
+        res.status(500).json({ error: error.message, stats });
+    }
+});
+/**
+ * When a new chat message is created, send a push notification to the recipient
+ */
+exports.onNewChatMessage = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}/messages/{messageId}", async (event) => {
+    const message = event.data?.data();
+    if (!message)
+        return;
+    const orderId = event.params.orderId;
+    const senderRole = message.senderRole || "customer";
+    // Fetch order to get tokens and languages
+    const orderSnap = await db.collection("meat_orders").doc(orderId).get();
+    if (!orderSnap.exists)
+        return;
+    const order = orderSnap.data();
+    const notifSound = await getActiveNotificationSound();
+    try {
+        if (senderRole === "courier" || senderRole === "business") {
+            // Send push to customer
+            const customerId = order.userId || order.customerId;
+            let lang = "de";
+            if (customerId) {
+                lang = await (0, translation_1.getUserLanguage)(customerId);
+            }
+            const trans = await (0, translation_1.getPushTranslations)(lang);
+            // Get customer tokens
+            const customerFcmTokens = [];
+            if (order.fcmToken)
+                customerFcmTokens.push(order.fcmToken);
+            if (order.customerFcmToken)
+                customerFcmTokens.push(order.customerFcmToken);
+            if (customerId) {
+                const userDoc = await db.collection("users").doc(customerId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    if (userData.fcmToken && !customerFcmTokens.includes(userData.fcmToken)) {
+                        customerFcmTokens.push(userData.fcmToken);
+                    }
+                    if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+                        userData.fcmTokens.forEach((t) => {
+                            if (t && !customerFcmTokens.includes(t))
+                                customerFcmTokens.push(t);
+                        });
+                    }
+                }
+            }
+            if (customerFcmTokens.length > 0) {
+                const title = trans.newChatMessageTitle || "💬 Neue Nachricht vom Kurier";
+                const body = message.text;
+                const pushData = {
+                    notification: { title, body },
+                    data: {
+                        type: "chat_message",
+                        orderId: orderId,
+                    },
+                    ...buildSoundConfig(notifSound),
+                    tokens: customerFcmTokens,
+                };
+                await messaging.sendEachForMulticast(pushData);
+                console.log(`[Chat Push] Sent to customer devices for order ${orderId}`);
+            }
+        }
+        else if (senderRole === "customer") {
+            // Send push to courier
+            const courierId = order.courierId || order.assignedCourierId;
+            if (!courierId) {
+                console.log(`[Chat Push] No courier assigned for order ${orderId}, skipping courier notification`);
+                return;
+            }
+            const courierDoc = await db.collection("admins").doc(courierId).get();
+            if (!courierDoc.exists)
+                return;
+            const courierData = courierDoc.data();
+            const courierTokens = [];
+            if (courierData.fcmToken)
+                courierTokens.push(courierData.fcmToken);
+            if (courierData.fcmTokens && Array.isArray(courierData.fcmTokens)) {
+                courierTokens.push(...courierData.fcmTokens);
+            }
+            if (courierTokens.length > 0) {
+                // Translate for courier
+                const courierLang = courierData.language || "tr";
+                const trans = await (0, translation_1.getPushTranslations)(courierLang);
+                const title = trans.newChatMessageCourierTitle || "💬 Yeni Müşteri Mesajı";
+                const customerName = order.customerName || order.userName || "Müşteri";
+                const body = `${customerName}: ${message.text}`;
+                const pushData = {
+                    notification: { title, body },
+                    data: {
+                        type: "chat_message",
+                        orderId: orderId,
+                    },
+                    ...buildSoundConfig(notifSound),
+                    tokens: courierTokens,
+                };
+                await messaging.sendEachForMulticast(pushData);
+                console.log(`[Chat Push] Sent to courier devices for order ${orderId}`);
+            }
+        }
+    }
+    catch (error) {
+        console.error("[Chat Push] Error sending chat notification:", error);
     }
 });
 //# sourceMappingURL=index.js.map

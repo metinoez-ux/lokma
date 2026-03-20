@@ -370,6 +370,19 @@ export const onNewOrder = onDocumentCreated(
 
                 if (customerFcmTokens.length > 0) {
                     try {
+                        // ── Dynamic Badge Count ──────────────────────────────
+                        // Count unread notifications BEFORE adding new one to get accurate badge
+                        let unreadBadgeCount = 1;
+                        try {
+                            const unreadSnap = await db.collection("users").doc(customerId)
+                                .collection("notifications")
+                                .where("read", "==", false)
+                                .count()
+                                .get();
+                            // +1 for the notification we just added above
+                            unreadBadgeCount = (unreadSnap.data().count ?? 0) + 1;
+                        } catch (e) { /* fallback to 1 */ }
+
                         const customerPush = {
                             notification: {
                                 title: pendingTitle,
@@ -381,11 +394,22 @@ export const onNewOrder = onDocumentCreated(
                                 status: "pending",
                                 ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                             },
-                            ...buildSoundConfig(notifSound),
+                            apns: {
+                                payload: {
+                                    aps: {
+                                        sound: notifSound || "default",
+                                        badge: unreadBadgeCount,
+                                        "content-available": 1,
+                                    },
+                                },
+                            },
+                            android: {
+                                notification: { sound: notifSound || "default", channelId: "lokma_orders" },
+                            },
                             tokens: customerFcmTokens,
                         };
                         const pushResponse = await messaging.sendEachForMulticast(customerPush);
-                        console.log(`[Customer Push] Sent order confirmation to ${pushResponse.successCount}/${customerFcmTokens.length} customer devices`);
+                        console.log(`[Customer Push] Sent order confirmation to ${pushResponse.successCount}/${customerFcmTokens.length} customer devices (badge: ${unreadBadgeCount})`);
                     } catch (pushErr) {
                         console.error("[Customer Push] Error sending FCM to customer:", pushErr);
                     }
@@ -1170,20 +1194,48 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                 // Send FCM via Messaging
                 if (hasCustomerToken) {
+                    // ── Dynamic Badge Count ──────────────────────────────────
+                    // Calculate unread count for badge sync with notification inbox
+                    let statusBadgeCount = 1;
+                    const primaryUserId = after.userId || after.customerId;
+                    if (primaryUserId) {
+                        try {
+                            const unreadSnap = await db.collection("users").doc(primaryUserId)
+                                .collection("notifications")
+                                .where("read", "==", false)
+                                .count()
+                                .get();
+                            statusBadgeCount = Math.max(1, unreadSnap.data().count ?? 1);
+                        } catch (e) { /* fallback to 1 */ }
+                    }
+
+                    // Merge badge into APNs payload
+                    if (!messagePayload.apns) {
+                        messagePayload.apns = { payload: { aps: {} } };
+                    }
+                    messagePayload.apns.payload = messagePayload.apns.payload || {};
+                    messagePayload.apns.payload.aps = {
+                        ...(messagePayload.apns.payload.aps || {}),
+                        badge: statusBadgeCount,
+                        sound: notifSound || "default",
+                        "content-available": 1,
+                    };
+                    if (!messagePayload.android) {
+                        messagePayload.android = { notification: { sound: notifSound || "default", channelId: "lokma_orders" } };
+                    }
+
                     if (customerTokens.length === 1) {
                         await messaging.send({
                             ...messagePayload,
-                            ...buildSoundConfig(notifSound),
                             token: customerTokens[0],
                         });
-                        console.log(`Sent ${newStatus} notification to customer (single device)`);
+                        console.log(`Sent ${newStatus} notification to customer (single device, badge: ${statusBadgeCount})`);
                     } else {
                         const response = await messaging.sendEachForMulticast({
                             ...messagePayload,
-                            ...buildSoundConfig(notifSound),
                             tokens: customerTokens,
                         });
-                        console.log(`Sent ${newStatus} notification to ${response.successCount}/${customerTokens.length} customer devices`);
+                        console.log(`Sent ${newStatus} notification to ${response.successCount}/${customerTokens.length} customer devices (badge: ${statusBadgeCount})`);
                     }
                 }
             } catch (error) {
