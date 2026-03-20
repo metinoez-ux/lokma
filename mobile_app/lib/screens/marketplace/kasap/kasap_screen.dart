@@ -28,6 +28,7 @@ const Map<String, Map<String, dynamic>> BUSINESS_SECTORS = {
   'balik': {'label': 'Balık', 'icon': '🐟', 'color': 0xFF2196F3},
   'kuruyemis': {'label': 'Kuru Yemiş', 'icon': '🥜', 'color': 0xFFFFC107},
   'ciftci': {'label': 'Çiftçi', 'icon': '🌾', 'color': 0xFF8BC34A},
+  'eticaret': {'label': 'Online Shop', 'icon': '🛍️', 'color': 0xFF00BCD4},
 };
 
 class KasapScreen extends StatefulWidget {

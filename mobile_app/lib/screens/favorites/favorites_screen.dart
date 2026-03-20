@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -129,13 +130,23 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     final textSubtle = isDark ? const Color(0xFF888888) : Colors.grey[600]!;
     final borderSubtle = isDark ? const Color(0xFF262626) : Colors.grey[200]!;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('meat_orders')
-          .where('userId', isEqualTo: user.uid)
-          .orderBy('createdAt', descending: true)
-          .limit(20)
-          .snapshots(),
+    // Two streams: own orders + group participant orders
+    final ownOrdersStream = FirebaseFirestore.instance
+        .collection('meat_orders')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(20)
+        .snapshots();
+
+    final groupOrdersStream = FirebaseFirestore.instance
+        .collection('meat_orders')
+        .where('participantUserIds', arrayContains: user.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(10)
+        .snapshots();
+
+    return StreamBuilder<List<QuerySnapshot>>(
+      stream: _combineStreams([ownOrdersStream, groupOrdersStream]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
@@ -143,7 +154,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
         if (snapshot.hasError) {
           debugPrint('orders error: ${snapshot.error}');
-          // Firestore index hatasi icin fallback: orderBy olmadan dene
+          // Fallback: only own orders without orderBy
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('meat_orders')
@@ -186,7 +197,16 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           );
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        // Merge and deduplicate docs from both streams
+        final allSnapshots = snapshot.data ?? [];
+        final Map<String, QueryDocumentSnapshot> uniqueDocs = {};
+        for (final qs in allSnapshots) {
+          for (final doc in qs.docs) {
+            uniqueDocs[doc.id] = doc;
+          }
+        }
+
+        if (uniqueDocs.isEmpty) {
           return _buildEmptyState(
             icon: Icons.receipt_long_outlined,
             title: tr('common.favori_siparis_yok'),
@@ -195,18 +215,63 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           );
         }
 
-        final docs = snapshot.data!.docs;
+        // Sort by createdAt descending
+        final sortedDocs = uniqueDocs.values.toList();
+        sortedDocs.sort((a, b) {
+          final aData = a.data() as Map<String, dynamic>;
+          final bData = b.data() as Map<String, dynamic>;
+          final aTime = aData['createdAt'] as Timestamp?;
+          final bTime = bData['createdAt'] as Timestamp?;
+          if (aTime == null && bTime == null) return 0;
+          if (aTime == null) return 1;
+          if (bTime == null) return -1;
+          return bTime.compareTo(aTime);
+        });
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: docs.length,
+          itemCount: sortedDocs.length,
           itemBuilder: (context, index) {
-            final doc = docs[index];
+            final doc = sortedDocs[index];
             final data = doc.data() as Map<String, dynamic>;
             return _buildFavoriteOrderCard(doc.id, data, surfaceCard, textPrimary, textSubtle, borderSubtle, isDark);
           },
         );
       },
     );
+  }
+
+  /// Combines multiple Firestore query streams into a single stream of lists
+  Stream<List<QuerySnapshot>> _combineStreams(List<Stream<QuerySnapshot>> streams) async* {
+    final latestSnapshots = List<QuerySnapshot?>.filled(streams.length, null);
+    
+    await for (final _ in Stream.periodic(const Duration(milliseconds: 100))) {
+      break; // Just to start the async generator
+    }
+    
+    // Use a simple approach: listen to all streams and yield combined results
+    final controller = StreamController<List<QuerySnapshot>>();
+    final subscriptions = <StreamSubscription>[];
+    
+    for (int i = 0; i < streams.length; i++) {
+      subscriptions.add(streams[i].listen((snapshot) {
+        latestSnapshots[i] = snapshot;
+        final nonNull = latestSnapshots.whereType<QuerySnapshot>().toList();
+        if (nonNull.isNotEmpty) {
+          controller.add(nonNull);
+        }
+      }, onError: (e) {
+        controller.addError(e);
+      }));
+    }
+    
+    yield* controller.stream;
+    
+    // Cleanup on done
+    for (final sub in subscriptions) {
+      sub.cancel();
+    }
+    controller.close();
   }
 
   Widget _buildFavoriteOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {

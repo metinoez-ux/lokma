@@ -487,11 +487,24 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     );
   }
 
-  /// Cancel session (host only)
+  /// Cancel session (host) or leave session (non-host).
+  /// Smart routing: prevents ONLY_HOST_CAN_CANCEL for non-hosts.
   Future<void> cancelSession() async {
     final currentSession = state.session;
     if (currentSession == null) return;
-    await _service.cancelSession(currentSession.id);
+    
+    if (state.isHost) {
+      await _service.cancelSession(currentSession.id);
+    } else {
+      // Non-host: gracefully leave instead of trying to cancel
+      final participantId = state.myParticipantId;
+      if (participantId != null) {
+        await _service.leaveSession(
+          sessionId: currentSession.id,
+          participantId: participantId,
+        );
+      }
+    }
     clearSession();
   }
 

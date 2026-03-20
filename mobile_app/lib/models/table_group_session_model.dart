@@ -179,6 +179,7 @@ class TableGroupParticipant {
   TableGroupParticipant copyWith({
     List<TableGroupItem>? items,
     double? subtotal,
+    bool? isHost,
     bool? isReady,
     String? paymentStatus,
     String? paymentMethod,
@@ -189,7 +190,7 @@ class TableGroupParticipant {
       participantId: participantId,
       userId: userId,
       name: name,
-      isHost: isHost,
+      isHost: isHost ?? this.isHost,
       isReady: isReady ?? this.isReady,
       items: items ?? this.items,
       subtotal: subtotal ?? this.subtotal,

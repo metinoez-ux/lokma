@@ -18,7 +18,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lokma_app/services/table_group_service.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/providers/bottom_nav_provider.dart';
-import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import 'package:lokma_app/widgets/open_partners_map_sheet.dart';
@@ -28,6 +27,7 @@ import 'package:lokma_app/widgets/group_order_setup_sheet.dart';
 import 'package:lokma_app/widgets/marketplace_group_share_sheet.dart';
 import 'package:lokma_app/models/table_group_session_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'reservation_discovery_screen.dart';
 
 /// Business type labels for display
 /// Business type keys for i18n lookup
@@ -730,31 +730,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               ),
             ),
 
-            // 🆕 Masa Hero Header (QR Okut vs) if in masa mode
+            // Masa Hero Header (QR Okut + Tischreservierung) if in masa mode
             if (_deliveryMode == 'masa')
-              if (_scannedTableNumber == null) ...[
+              if (_scannedTableNumber == null) ...[ 
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
                     child: _buildMasaHeroHeader(),
                   ),
                 ),
+                // Tischreservierung Hero Card
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                    child: Text(
-                      tr('home.table_reservation'),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ),
+                  child: _buildReservationHeroCard(),
                 ),
+                // Empty bottom spacer
+                const SliverToBoxAdapter(child: SizedBox(height: 120)),
               ] else ...[
                 SliverToBoxAdapter(
                   child: Padding(
@@ -762,17 +752,35 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: _buildScannedTableBanner(),
                   ),
                 ),
+                // Show business list after scan
+                if (!_isLoading && _filteredBusinesses.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+                      child: Text(
+                        tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                SliverPadding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                  sliver: _buildRestaurantSliverList(),
+                ),
               ],
 
-            // "Bei X Partnern bestellen" header — Lieferando style
-            if (!_isLoading && _filteredBusinesses.isNotEmpty)
+            // "Bei X Partnern bestellen" header — non-masa modes
+            if (_deliveryMode != 'masa' && !_isLoading && _filteredBusinesses.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
                   child: Text(
-                    _deliveryMode == 'masa' 
-                        ? tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'})
-                        : tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                    tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -783,11 +791,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ),
               ),
 
-            // Restaurant List
-            SliverPadding(
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
-              sliver: _buildRestaurantSliverList(),
-            ),
+            // Restaurant List — non-masa modes
+            if (_deliveryMode != 'masa' || _scannedTableNumber != null)
+              SliverPadding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                sliver: _buildRestaurantSliverList(),
+              ),
           ],
         ),
       ),
@@ -3463,6 +3472,124 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     );
   }
 
+  /// Tischreservierung Hero Card - navigates to reservation discovery page
+  Widget _buildReservationHeroCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Count businesses with reservation enabled
+    int reservationCount = 0;
+    for (final doc in _filteredBusinesses) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['hasReservation'] == true) reservationCount++;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReservationDiscoveryScreen(
+                allBusinesses: _allBusinesses,
+                userLat: _userLat,
+                userLng: _userLng,
+              ),
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.grey.withValues(alpha: 0.12),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF6C00).withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/images/icon_masa_rezervasyon.svg',
+                    width: 34,
+                    height: 34,
+                    colorFilter: const ColorFilter.mode(Color(0xFFEF6C00), BlendMode.srcIn),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                tr('home.table_reservation'),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                reservationCount > 0
+                    ? tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '$reservationCount'})
+                    : tr('home.scan_qr_table'),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF6C00),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SvgPicture.asset(
+                      'assets/images/icon_masa_rezervasyon.svg',
+                      width: 16,
+                      height: 16,
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      tr('home.table_reservation'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Extracted Hero UI for Masa when no table is scanned yet
   Widget _buildMasaHeroHeader() {
     return Column(
@@ -3483,16 +3610,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 if (success && mounted) {
                   final session = ref.read(tableGroupProvider).session;
                   if (session != null) {
-                    Navigator.of(context, rootNavigator: true).push(
-                      MaterialPageRoute(
-                        builder: (_) => GroupTableOrderScreen(
-                          businessId: session.businessId,
-                          businessName: session.businessName,
-                          tableNumber: session.tableNumber,
-                          sessionId: session.id,
-                        ),
-                      ),
-                    );
+                    context.push('/kasap/${session.businessId}?mode=masa&table=${session.tableNumber}&groupSessionId=${session.id}');
                   }
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -3596,56 +3714,87 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             onTap: _showMasaQrScanSheet,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFFB335B),
-                    Color(0xFFE91E63),
-                    Color(0xFFD81B60),
-                  ],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF2C2C2E)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.12),
                 ),
-                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.2),
+                      color: const Color(0xFFFB335B).withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.qr_code_scanner,
-                      size: 30,
-                      color: Theme.of(context).colorScheme.surface,
+                      size: 36,
+                      color: Color(0xFFFB335B),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Text(
                     tr('home.order_with_qr'),
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.surface,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87,
                       letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     tr('home.scan_qr_table'),
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.8),
+                      fontSize: 14,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[500],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFB335B),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.qr_code_scanner,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          tr('home.scan_qr_code'),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -3667,75 +3816,94 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.green.withValues(alpha: isDark ? 0.2 : 0.12),
-              Colors.green.withValues(alpha: isDark ? 0.1 : 0.06),
-            ],
+      child: GestureDetector(
+        onTap: () {
+          // Tap banner to resume table order
+          if (_scannedBusinessId != null && _scannedBusinessId!.isNotEmpty && _scannedTableNumber != null) {
+            final groupState = ref.read(tableGroupProvider);
+            final groupSessionId = groupState.session?.id;
+            if (groupSessionId != null) {
+              context.push('/kasap/$_scannedBusinessId?mode=masa&table=$_scannedTableNumber&groupSessionId=$groupSessionId');
+            } else {
+              context.push('/kasap/$_scannedBusinessId?mode=masa&table=$_scannedTableNumber');
+            }
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.green.withValues(alpha: isDark ? 0.2 : 0.12),
+                Colors.green.withValues(alpha: isDark ? 0.1 : 0.06),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
           ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.check_circle,
-                  color: Colors.green, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Masa $_scannedTableNumber${_scannedBusinessName != null ? ' — $_scannedBusinessName' : ''}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    'QR kod ile doğrulandı ✓',
-                    style: TextStyle(fontSize: 12, color: Colors.green[700]),
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _scannedTableNumber = null;
-                  _scannedBusinessId = null;
-                  _scannedBusinessName = null;
-                });
-                _showMasaQrScanSheet();
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(
-                  'Değiştir',
-                  style: TextStyle(
-                      color: Colors.green[700],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600),
+                child: const Icon(Icons.check_circle,
+                    color: Colors.green, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Masa $_scannedTableNumber${_scannedBusinessName != null ? ' \u2014 $_scannedBusinessName' : ''}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'cart.table_verified'.tr(namedArgs: {'tableNum': _scannedTableNumber ?? ''}),
+                          style: TextStyle(fontSize: 12, color: Colors.green[700]),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 10, color: Colors.green[700]),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _scannedTableNumber = null;
+                    _scannedBusinessId = null;
+                    _scannedBusinessName = null;
+                  });
+                  _showMasaQrScanSheet();
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'common.change'.tr(),
+                    style: TextStyle(
+                        color: Colors.green[700],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -4043,16 +4211,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (isAlreadyInGroup) {
           // Bypass dialog, directly enter the group session
           _setScannedTable(tableNum, businessId, businessName);
-          Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(
-              builder: (_) => GroupTableOrderScreen(
-                businessId: businessId ?? '',
-                businessName: businessName ?? 'İşletme',
-                tableNumber: tableNum,
-                sessionId: activeSession.id,
-              ),
-            ),
-          );
+          context.push('/kasap/${businessId ?? ''}?mode=masa&table=$tableNum&groupSessionId=${activeSession.id}');
         } else {
           // Active session found — show join dialog
           _showMasaJoinGroupDialog(
@@ -4272,16 +4431,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       if (success && mounted) {
                         Navigator.pop(ctx);
                         _setScannedTable(tableNum, businessId, businessName);
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute(
-                            builder: (_) => GroupTableOrderScreen(
-                              businessId: businessId,
-                              businessName: businessName,
-                              tableNumber: tableNum,
-                              sessionId: activeSession.id,
-                            ),
-                          ),
-                        );
+                        context.push('/kasap/$businessId?mode=masa&table=$tableNum&groupSessionId=${activeSession.id}');
                       }
                     } catch (e) {
                       if (e.toString().contains('WRONG_PIN')) {
@@ -4363,10 +4513,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             Navigator.pop(confirmCtx); // close confirm dialog
                             Navigator.pop(ctx); // close join bottom sheet
 
-                            // Cancel current session
+                            // Cancel/leave current session via provider (handles host vs non-host)
                             try {
-                              await TableGroupService.instance
-                                  .cancelSession(activeSession.id);
+                              final groupNotifier = ref.read(tableGroupProvider.notifier);
+                              // If we have a session loaded, use provider's smart cancel
+                              // Otherwise fall back to direct service call
+                              final currentState = ref.read(tableGroupProvider);
+                              if (currentState.session?.id == activeSession.id) {
+                                await groupNotifier.cancelSession();
+                              } else {
+                                // Direct service call - wrap with error handling
+                                await TableGroupService.instance
+                                    .cancelSession(activeSession.id);
+                              }
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -4653,16 +4812,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
       // Navigate to group order screen after PIN is acknowledged
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute(
-            builder: (_) => GroupTableOrderScreen(
-              businessId: businessId,
-              businessName: businessName,
-              tableNumber: tableNum,
-              sessionId: ref.read(tableGroupProvider).session?.id,
-            ),
-          ),
-        );
+        final sessionId = ref.read(tableGroupProvider).session?.id;
+        context.push('/kasap/$businessId?mode=masa&table=$tableNum&groupSessionId=$sessionId');
       }
     } catch (e) {
       if (mounted) {

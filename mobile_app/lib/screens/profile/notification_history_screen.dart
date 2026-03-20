@@ -1620,10 +1620,18 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
   // Full pipeline steps (dynamic based on order type)
   static const _deliveryPipeline = ['pending', 'accepted', 'preparing', 'ready', 'onTheWay', 'delivered'];
   static const _pickupPipeline = ['pending', 'accepted', 'preparing', 'ready', 'readyForPickup', 'delivered'];
+  static const _dineInPipeline = ['pending', 'accepted', 'preparing', 'served'];
 
   List<String> get _pipelineSteps {
     final ot = widget.group.orderType.toLowerCase();
-    return ot == 'pickup' ? _pickupPipeline : _deliveryPipeline;
+    if (ot == 'pickup') return _pickupPipeline;
+    if (ot == 'dine-in' || ot == 'masa' || ot == 'group' || ot == 'group_table') return _dineInPipeline;
+    return _deliveryPipeline;
+  }
+
+  bool get _isDineInOrder {
+    final ot = widget.group.orderType.toLowerCase();
+    return ot == 'dine-in' || ot == 'masa' || ot == 'group' || ot == 'group_table';
   }
 
   static String _orderTypeLabel(String orderType) {
@@ -1742,9 +1750,15 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
     final isPickup = widget.group.orderType.toLowerCase() == 'pickup';
     
     // For pickup orders, 'onTheWay' from Firestore maps to 'readyForPickup' in our pipeline
+    // For dine-in orders, 'delivered'/'ready' from Firestore maps to 'served' in our pipeline
     String effectiveLatestStatus = latestStatus;
     if (isPickup && latestStatus == 'onTheWay') {
       effectiveLatestStatus = 'readyForPickup';
+    }
+    if (_isDineInOrder) {
+      if (latestStatus == 'delivered' || latestStatus == 'ready' || latestStatus == 'onTheWay') {
+        effectiveLatestStatus = 'served';
+      }
     }
     
     final latestPipelineIndex = _pipelineSteps.indexOf(effectiveLatestStatus);
@@ -1757,7 +1771,10 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
         completedStatuses.add(_pipelineSteps[i]);
         final step = _pipelineSteps[i];
         // For readyForPickup, use the 'ready' timestamp
-        final tsKey = (step == 'readyForPickup') ? 'ready' : step;
+        // For served (dine-in), use 'delivered' or 'ready' timestamp
+        String tsKey = step;
+        if (step == 'readyForPickup') tsKey = 'ready';
+        if (step == 'served') tsKey = allStatusTimestamps.containsKey('delivered') ? 'delivered' : (allStatusTimestamps.containsKey('ready') ? 'ready' : 'served');
         if (allStatusTimestamps.containsKey(tsKey)) {
           statusTimestamps[step] = allStatusTimestamps[tsKey]!;
         }
@@ -2033,6 +2050,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                       ),
                       const Spacer(),
                       // ── Checked items counter (live from Firestore) ──
+                      if (group.orderId.isNotEmpty)
                       StreamBuilder<DocumentSnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('orders')
@@ -2272,7 +2290,9 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             padding: const EdgeInsets.only(left: 42, top: 4, bottom: 8),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: FutureBuilder<DocumentSnapshot>(
+                              child: (group.orderId.isEmpty)
+                                ? const SizedBox.shrink()
+                                : FutureBuilder<DocumentSnapshot>(
                                 future: FirebaseFirestore.instance.collection('orders').doc(group.orderId).get(),
                                 builder: (context, snapshot) {
                                   if (!snapshot.hasData || !snapshot.data!.exists) {

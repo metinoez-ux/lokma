@@ -29,6 +29,7 @@ import '../screens/staff/staff_hub_screen.dart';
 import '../screens/staff/waiter_order_screen.dart';
 import '../screens/customer/table_order_view_screen.dart';
 import '../screens/customer/group_link_join_screen.dart';
+import '../screens/customer/group_table_order_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 
@@ -145,11 +146,25 @@ class AppRouter {
           final tableNumber = state.uri.queryParameters['table'];
           final addMore = state.uri.queryParameters['addMore'] == 'true';
           final closedAck = state.uri.queryParameters['closedAck'] == 'true' || addMore;
+          final groupSessionId = state.uri.queryParameters['groupSessionId'];
+          final businessName = state.uri.queryParameters['businessName'] ?? '';
+          
+          // Group mode: Navigate to GroupTableOrderScreen with tabs (Menu/Ben/Masa)
+          if (groupSessionId != null && groupSessionId.isNotEmpty) {
+            return GroupTableOrderScreen(
+              businessId: businessId,
+              businessName: businessName,
+              tableNumber: tableNumber ?? '1',
+              sessionId: groupSessionId,
+            );
+          }
+          
           return BusinessDetailScreen(
             businessId: businessId,
             initialDeliveryMode: deliveryMode,
             initialTableNumber: tableNumber,
             closedAcknowledged: closedAck,
+            groupSessionId: groupSessionId,
           );
         },
       ),

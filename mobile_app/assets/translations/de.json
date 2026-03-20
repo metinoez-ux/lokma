@@ -167,6 +167,7 @@
     "please_enter_street_city": "Bitte Straße und Stadt eingeben",
     "add_note": "Notiz hinzufügen",
     "your_note": "Deine Notiz",
+    "food_note": "Anmerkung zum Essen",
     "note_allergy_disclaimer": "Bitte nenne in der Nachricht keine Details zu Allergien oder Unverträglichkeiten.",
     "note_placeholder": "Zum Beispiel \"Bitte extrascharf\"",
     "note_saved": "Notiz gespeichert",
@@ -971,7 +972,9 @@
     "closes_in_minutes": "Schließt in {minutes} Min.",
     "go_to_market": "Zum Markt",
     "go_to_restaurant": "Zum Restaurant",
-    "back_to_menu": "Zuruck zum Menu"
+    "back_to_menu": "Zuruck zum Menu",
+    "view_menu": "Menu ansehen",
+    "reserve_now": "Reservieren"
   },
   "navigation": {
     "food": "Essen",
@@ -1920,5 +1923,11 @@
     "no_nearby_market": "Kein Markt in Ihrer Nähe gefunden, der dieses Produkt verkauft",
     "go_to_store": "Zum Geschäft",
     "add_to_cart": "In den Warenkorb"
+  },
+  "masa": {
+    "preorder_title": "Vorbestellung aufgeben?",
+    "preorder_desc": "Sie können Ihr Essen vorab bestellen, damit es pünktlich zu Ihrem Restaurantbesuch zubereitet wird. So vermeiden Sie Wartezeiten -- auch in Stoßzeiten wird Ihr Essen rechtzeitig serviert.",
+    "preorder_yes": "Ja, vorbestellen",
+    "preorder_no": "Nur Menü ansehen"
   }
 }

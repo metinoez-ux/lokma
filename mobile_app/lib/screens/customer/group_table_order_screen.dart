@@ -14,6 +14,7 @@ import '../../providers/table_group_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/product_catalog_data.dart';
 import '../../utils/currency_utils.dart';
+import '../../widgets/three_dimensional_pill_tab_bar.dart';
 
 /// Grup Masa Sipariş Ekranı
 /// 3-tab layout: Menü · Benim Siparişim · Masa Toplam
@@ -53,6 +54,33 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     _tabController = TabController(length: 3, vsync: this);
     _autoResumeIfNeeded();
     _startIdleTimer();
+    // Fetch business name from Firestore if not provided via constructor
+    if (widget.businessName.isEmpty) {
+      _fetchBusinessName();
+    }
+  }
+  
+  String _resolvedBusinessName = '';
+  
+  String get _businessName => 
+      widget.businessName.isNotEmpty ? widget.businessName : _resolvedBusinessName;
+  
+  Future<void> _fetchBusinessName() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(widget.businessId)
+          .get();
+      if (doc.exists && mounted) {
+        final data = doc.data();
+        setState(() {
+          _resolvedBusinessName = data?['businessName'] ?? 
+              data?['companyName'] ?? '';
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching business name: $e');
+    }
   }
 
   void _startIdleTimer() {
@@ -360,7 +388,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           children: [
             Flexible(
               child: Text(
-                widget.businessName,
+                _businessName,
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -464,35 +492,36 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             ],
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: _accent,
-          unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
-          indicatorColor: _accent,
-          indicatorSize: TabBarIndicatorSize.label,
-          tabs: [
-            Tab(icon: Icon(Icons.restaurant_menu, size: 20), text: tr('customer.menu')),
-            Tab(
-              icon: Badge(
-                isLabelVisible: (groupState.myParticipant?.totalItemCount ?? 0) > 0,
-                label: Text('${groupState.myParticipant?.totalItemCount ?? 0}'),
-                child: const Icon(Icons.person, size: 20),
-              ),
-              text: 'Ben',
-            ),
-            Tab(
-              icon: Badge(
-                isLabelVisible: (session?.totalItemCount ?? 0) > 0,
-                label: Text('${session?.totalItemCount ?? 0}'),
-                child: const Icon(Icons.groups, size: 20),
-              ),
-              text: 'Masa',
-            ),
-          ],
-        ),
       ),
       body: Column(
         children: [
+          // ThreeDimensionalPillTabBar - modern Lieferando style
+          ThreeDimensionalPillTabBar(
+            activeColor: _accent,
+            selectedIndex: _tabController.index,
+            tabs: [
+              TabItem(title: tr('customer.menu'), icon: Icons.restaurant_menu),
+              TabItem(
+                title: 'Ben',
+                icon: Icons.person,
+                subtitle: (groupState.myParticipant?.totalItemCount ?? 0) > 0
+                    ? '${groupState.myParticipant?.totalItemCount ?? 0} urun'
+                    : null,
+              ),
+              TabItem(
+                title: 'Masa',
+                icon: Icons.groups,
+                subtitle: (session?.totalItemCount ?? 0) > 0
+                    ? '${session?.totalItemCount ?? 0} urun'
+                    : null,
+              ),
+            ],
+            onTabSelected: (index) {
+              _tabController.animateTo(index);
+              setState(() {});
+            },
+          ),
+
           // Remaining balance banner
           if (session != null && session.grandTotal > 0)
             _buildBalanceBanner(session, isDark),
@@ -578,21 +607,90 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   Widget _buildMenuTab(bool isDark) {
     return Column(
       children: [
-        // Search bar
+        // Lieferando-style search bar
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: TextField(
-            onChanged: (v) => setState(() => _menuSearchQuery = v),
-            decoration: InputDecoration(
-              hintText: tr('customer.menude_ara'),
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
+          child: GestureDetector(
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (ctx) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                    left: 16, right: 16, top: 16,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        autofocus: true,
+                        onChanged: (v) => setState(() => _menuSearchQuery = v),
+                        decoration: InputDecoration(
+                          hintText: tr('customer.menude_ara'),
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _menuSearchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    setState(() => _menuSearchQuery = '');
+                                    Navigator.pop(ctx);
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                borderRadius: BorderRadius.circular(22),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  const SizedBox(width: 14),
+                  Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _menuSearchQuery.isNotEmpty ? _menuSearchQuery : tr('customer.menude_ara'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _menuSearchQuery.isNotEmpty
+                            ? (isDark ? Colors.white : Colors.black87)
+                            : Colors.grey[500],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (_menuSearchQuery.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => setState(() => _menuSearchQuery = ''),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Icon(Icons.close, size: 18, color: Colors.grey[500]),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 14),
+                ],
+              ),
             ),
           ),
         ),
@@ -609,6 +707,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   }
 
   Widget _buildCategoryChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('businesses')
@@ -629,7 +728,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         }
 
         return SizedBox(
-          height: 40,
+          height: 44,
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
@@ -638,11 +737,35 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             itemBuilder: (context, index) {
               final cat = categories.elementAt(index);
               final isSelected = cat == _selectedCategory;
-              return ChoiceChip(
-                label: Text(cat),
-                selected: isSelected,
-                selectedColor: _accent.withValues(alpha: 0.2),
-                onSelected: (_) => setState(() => _selectedCategory = cat),
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedCategory = cat);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? _accent
+                        : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5)),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: isSelected ? _accent : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                      width: 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                        fontSize: 13,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
               );
             },
           ),
@@ -743,18 +866,34 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Category header
+                // Category header - Lieferando style
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F5F5),
-                  child: Text(
-                    category,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
-                    ),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
+                  color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8F8F8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 3,
+                        height: 22,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          color: _accent,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 // Products in category
@@ -786,7 +925,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final isByWeight = product.unitType == 'kg';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: cardBg,
         border: Border(
@@ -794,7 +933,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product Info (Left)
           Expanded(
@@ -806,27 +945,28 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   I18nUtils.getLocalizedText(context, product.nameData),
                   style: TextStyle(
                     color: textPrimary,
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    height: 1.2,
+                    height: 1.25,
+                    letterSpacing: -0.2,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (product.description.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
                   Text(
                     product.description,
                     style: TextStyle(
                       color: textSecondary,
                       fontSize: 13,
-                      height: 1.3,
+                      height: 1.35,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                const SizedBox(height: 6),
+                const SizedBox(height: 10),
                 // Price + cart controls inline
                 Row(
                   children: [
@@ -834,8 +974,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       '${CurrencyUtils.getCurrencySymbol()}${product.effectiveAppPrice.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                       style: TextStyle(
                         color: textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     if (inCart) ...[
@@ -843,8 +983,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       // Inline qty controls
                       Container(
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(20),
+                          color: _accent.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: _accent.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -860,10 +1001,10 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                               }
                             }),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
                               child: Text(
                                 isByWeight ? cartQty.toDouble().toStringAsFixed(1) : '$cartQty',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _accent),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _accent),
                               ),
                             ),
                             _miniCircleButton(Icons.add, () {
@@ -880,22 +1021,22 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
-          // Image + Add Button Stack (Right) - matching normal ordering screen
+          // Image + Add Button Stack (Right) - Lieferando-style larger image
           SizedBox(
-            width: 72,
-            height: 72,
+            width: 100,
+            height: 100,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 // Product Image
                 if (hasImage)
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
-                      width: 72,
-                      height: 72,
+                      width: 100,
+                      height: 100,
                       child: CachedNetworkImage(
                         imageUrl: product.imageUrl!,
                         fit: BoxFit.cover,
@@ -904,31 +1045,31 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         ),
                         errorWidget: (_, __, ___) => Container(
                           color: isDark ? Colors.white10 : Colors.grey[100],
-                          child: Icon(Icons.image_not_supported, color: textSecondary, size: 24),
+                          child: Icon(Icons.image_not_supported, color: textSecondary, size: 28),
                         ),
                       ),
                     ),
                   )
                 else
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
                       color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       isByWeight ? Icons.scale : Icons.inventory_2_outlined,
                       color: textSecondary,
-                      size: 24,
+                      size: 28,
                     ),
                   ),
 
                 // Floating + button (bottom-right, overlapping image)
                 if (!inCart)
                   Positioned(
-                    bottom: -6,
-                    right: -6,
+                    bottom: -8,
+                    right: -8,
                     child: GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
@@ -942,20 +1083,20 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         ));
                       },
                       child: Container(
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                           color: _accent,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: _accent.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                              color: _accent.withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 18),
+                        child: const Icon(Icons.add, color: Colors.white, size: 20),
                       ),
                     ),
                   ),
@@ -992,16 +1133,59 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: _accent.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.shopping_bag_outlined, size: 40, color: _accent.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(height: 20),
             Text(
               tr('customer.henuz_urun_eklemediniz'),
-              style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                letterSpacing: -0.3,
+              ),
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => _tabController.animateTo(0),
-              child: Text(tr('customer.menuye_git'), style: TextStyle(color: _accent)),
+            const SizedBox(height: 6),
+            Text(
+              'Menuye giderek urunleri sepetine ekle',
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _tabController.animateTo(0);
+                setState(() {});
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _accent,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  tr('customer.menuye_git'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -1009,63 +1193,82 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       children: [
         // My items
         ...items.map((item) => _buildMyItemCard(item, isDark)),
 
-        const SizedBox(height: 16),
-        const Divider(),
-        const SizedBox(height: 8),
+        const SizedBox(height: 20),
 
-        // My subtotal
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Benim Toplamım',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : Colors.black87,
+        // My subtotal - modern glassmorphism card
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _accent.withValues(alpha: 0.12),
+                _accent.withValues(alpha: 0.04),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _accent.withValues(alpha: 0.25)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Benim Toplamim',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  Text(
+                    '${CurrencyUtils.getCurrencySymbol()}${myParticipant!.subtotal.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: _accent,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              '${CurrencyUtils.getCurrencySymbol()}${myParticipant!.subtotal.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: _accent,
-              ),
-            ),
-          ],
-        ),
-
-        // Payment status
-        if (myParticipant.isPaid) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade300),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green.shade700),
-                const SizedBox(width: 8),
-                Text(
-                  tr('customer.odeme_tamamlandi'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green.shade700,
+              if (myParticipant.isPaid) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green.shade600, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        tr('customer.odeme_tamamlandi'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.green.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
       ],
     );
   }
@@ -1075,20 +1278,29 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final groupNotifier = ref.read(tableGroupProvider.notifier);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // Image
+          // Image - larger 64px
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: SizedBox(
-              width: 48,
-              height: 48,
+              width: 64,
+              height: 64,
               child: item.imageUrl != null && item.imageUrl!.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: item.imageUrl!,
@@ -1098,7 +1310,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   : _productPlaceholder(),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
           // Name + price
           Expanded(
@@ -1107,13 +1319,19 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               children: [
                 Text(
                   item.productName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                  maxLines: 1,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: isDark ? Colors.white : Colors.black87,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 3),
                 Text(
-                  '${CurrencyUtils.getCurrencySymbol()}${item.unitPrice.toStringAsFixed(2)} × ${item.quantity}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  '${CurrencyUtils.getCurrencySymbol()}${item.unitPrice.toStringAsFixed(2)} x ${item.quantity}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -1126,90 +1344,116 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             children: [
               Text(
                 '${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.3,
+                ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               if (item.isSubmitted) ...[
                 Builder(
                   builder: (context) {
                     String statusText = tr('customer.sipariste');
                     Color statusColor = Colors.grey.shade700;
                     Color statusBgColor = Colors.grey.withValues(alpha: 0.1);
+                    IconData statusIcon = Icons.pending;
 
                     switch (item.orderStatus) {
                       case 'pending':
-                        statusText = '⏳ Bekliyor';
-                        statusColor = Colors.orange.shade800;
+                        statusText = 'Bekliyor';
+                        statusColor = Colors.orange.shade700;
                         statusBgColor = Colors.orange.withValues(alpha: 0.1);
+                        statusIcon = Icons.schedule;
                         break;
                       case 'accepted':
                         statusText = tr('customer.onaylandi');
                         statusColor = Colors.blue.shade700;
                         statusBgColor = Colors.blue.withValues(alpha: 0.1);
+                        statusIcon = Icons.check_circle_outline;
                         break;
                       case 'preparing':
-                        statusText = '👨‍🍳 Hazırlanıyor';
+                        statusText = 'Hazirlaniyor';
                         statusColor = Colors.blue.shade700;
                         statusBgColor = Colors.blue.withValues(alpha: 0.1);
+                        statusIcon = Icons.restaurant;
                         break;
                       case 'ready':
-                        statusText = '✅ Hazır';
+                        statusText = 'Hazir';
                         statusColor = Colors.green.shade700;
                         statusBgColor = Colors.green.withValues(alpha: 0.1);
+                        statusIcon = Icons.check_circle;
                         break;
                       case 'delivered':
                       case 'completed':
-                        statusText = '✓ Teslim Edildi';
+                        statusText = 'Teslim Edildi';
                         statusColor = Colors.teal.shade700;
                         statusBgColor = Colors.teal.withValues(alpha: 0.1);
+                        statusIcon = Icons.done_all;
                         break;
                       case 'cancelled':
                         statusText = tr('customer.i_ptal');
                         statusColor = Colors.red.shade700;
                         statusBgColor = Colors.red.withValues(alpha: 0.1);
+                        statusIcon = Icons.cancel_outlined;
                         break;
                     }
 
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusBgColor,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        statusText,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(statusIcon, size: 12, color: statusColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
                 ),
               ]
               else
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _miniCircleButton(Icons.remove, () {
-                      HapticFeedback.lightImpact();
-                      if (item.quantity <= 1) {
-                        groupNotifier.removeItem(item.productId);
-                      } else {
-                        groupNotifier.updateItemQuantity(item.productId, item.quantity - 1);
-                      }
-                    }),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text('${item.quantity}',
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                    _miniCircleButton(Icons.add, () {
-                      HapticFeedback.lightImpact();
-                      groupNotifier.updateItemQuantity(item.productId, item.quantity + 1);
-                    }),
-                  ],
+                Container(
+                  decoration: BoxDecoration(
+                    color: _accent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: _accent.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _miniCircleButton(Icons.remove, () {
+                        HapticFeedback.lightImpact();
+                        if (item.quantity <= 1) {
+                          groupNotifier.removeItem(item.productId);
+                        } else {
+                          groupNotifier.updateItemQuantity(item.productId, item.quantity - 1);
+                        }
+                      }),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Text('${item.quantity}',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: _accent)),
+                      ),
+                      _miniCircleButton(Icons.add, () {
+                        HapticFeedback.lightImpact();
+                        groupNotifier.updateItemQuantity(item.productId, item.quantity + 1);
+                      }),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -1226,9 +1470,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       children: [
-        // Readiness progress bar — only show when there are pending (unsubmitted) items
+        // Readiness progress bar
         if (session.isActive &&
             session.participants.any((p) => p.items.any((i) => !i.isSubmitted)))
           _buildReadinessBar(session, isDark),
@@ -1241,16 +1485,30 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
         const SizedBox(height: 20),
 
-        // Per-person breakdown
-        Text(
-          tr('customer.kisi_bazli'),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
+        // Per-person breakdown header
+        Row(
+          children: [
+            Container(
+              width: 3,
+              height: 20,
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(
+                color: _accent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text(
+              tr('customer.kisi_bazli'),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black87,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
 
         ...session.participants.map((p) => _buildParticipantCard(p, isDark, groupState)),
 
@@ -1258,12 +1516,14 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
         // Grand total
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [_accent.withValues(alpha: 0.15), _accent.withValues(alpha: 0.05)],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: _accent.withValues(alpha: 0.3)),
           ),
           child: Column(
@@ -1274,50 +1534,71 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   Text(
                     'Masa Toplam',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   Text(
                     '${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
                       color: _accent,
+                      letterSpacing: -0.5,
                     ),
                   ),
                 ],
               ),
               if (session.paidTotal > 0) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
+                Container(
+                  height: 1,
+                  color: _accent.withValues(alpha: 0.15),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(tr('customer.odenen'), style: TextStyle(color: Colors.green.shade700)),
+                    Text(
+                      tr('customer.odenen'),
+                      style: TextStyle(
+                        color: Colors.green.shade600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     Text(
                       '-${CurrencyUtils.getCurrencySymbol()}${session.paidTotal.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Colors.green.shade700,
+                        fontSize: 15,
+                        color: Colors.green.shade600,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Kalan Hesap',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: isDark ? Colors.white : Colors.black87,
+                        letterSpacing: -0.3,
+                      ),
                     ),
                     Text(
                       '${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
                         color: _accent,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ],
@@ -1408,61 +1689,104 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final aggregated = session.aggregatedItems;
     if (aggregated.isEmpty) {
       return Center(
-        child: Text(tr('customer.henuz_siparis_yok'), style: TextStyle(color: Colors.grey[500])),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            children: [
+              Icon(Icons.receipt_long, size: 40, color: Colors.grey[300]),
+              const SizedBox(height: 8),
+              Text(tr('customer.henuz_siparis_yok'), style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+            ],
+          ),
+        ),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            tr('customer.toplam_urunler'),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 3,
+                height: 18,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: _accent,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                tr('customer.toplam_urunler'),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           ...aggregated.entries.map((entry) {
             final data = entry.value;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
                   Container(
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: _accent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _accent.withValues(alpha: 0.15)),
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      '${data['quantity']}×',
+                      '${data['quantity']}x',
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                         color: _accent,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       data['productName'],
-                      style: const TextStyle(fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : Colors.black87,
+                        letterSpacing: -0.2,
+                      ),
                     ),
                   ),
                   Text(
                     '${CurrencyUtils.getCurrencySymbol()}${(data['totalPrice'] as double).toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: -0.3,
+                    ),
                   ),
                 ],
               ),
@@ -1689,10 +2013,24 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       final amIReady = myParticipant?.isReady ?? false;
 
       return Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -2))],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [const Color(0xFF1E1E1E).withValues(alpha: 0.95), const Color(0xFF1E1E1E)]
+                : [Colors.white.withValues(alpha: 0.95), Colors.white],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.4)
+                  : Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1888,10 +2226,24 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       );
 
       return Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 32),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -2))],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [const Color(0xFF1E1E1E).withValues(alpha: 0.95), const Color(0xFF1E1E1E)]
+                : [Colors.white.withValues(alpha: 0.95), Colors.white],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.4)
+                  : Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

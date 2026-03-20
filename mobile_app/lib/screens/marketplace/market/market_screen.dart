@@ -32,7 +32,7 @@ const Map<String, String> MARKET_TYPE_LABELS = {
   'sarkuteri': 'Şarküteri',
   'petshop': 'Pet Shop',
   'kozmetik': 'Kozmetik',
-  'eticaret': 'E-Ticaret',
+  'eticaret': 'Online Shop',
 };
 
 /// Marketler Keşif Ekranı - LOKMA

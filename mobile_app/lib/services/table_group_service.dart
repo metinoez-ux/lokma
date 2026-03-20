@@ -541,6 +541,7 @@ class TableGroupService {
           'items': allUnsubmittedItems,
           'totalAmount': totalCombinedAmount,
           'deliveryMethod': 'dineIn',
+          'orderType': 'dine-in',
           'tableNumber': session.tableNumber,
           'paymentMethod': 'payLater',
           'paymentStatus': 'pending',
@@ -551,6 +552,11 @@ class TableGroupService {
           'groupSessionId': session.id,
           'isGroupOrder': true,
           'groupParticipantCount': session.participants.length,
+          // Per-participant order history: all participant userIds
+          'participantUserIds': session.participants
+              .map((p) => p.userId)
+              .where((id) => id.isNotEmpty)
+              .toList(),
           if (fcmToken != null) 'fcmToken': fcmToken,
           if (fcmTokensList.isNotEmpty) 'fcmTokens': fcmTokensList,
           'createdAt': FieldValue.serverTimestamp(),
@@ -697,24 +703,35 @@ class TableGroupService {
     debugPrint('❌ Session $sessionId cancelled by $cancellerName');
   }
 
-  /// Leave a session — removes participant from the array
+  /// Leave a session — removes participant from the array.
+  /// If the leaving participant is the host, the next participant is promoted.
   Future<void> leaveSession({
     required String sessionId,
     required String participantId,
   }) async {
     final docRef = _db.collection(_collection).doc(sessionId);
+    bool hostLeft = false;
 
     await _db.runTransaction((tx) async {
       final snapshot = await tx.get(docRef);
       if (!snapshot.exists) return;
 
       final session = TableGroupSession.fromFirestore(snapshot);
-      final updatedParticipants = session.participants
+      
+      // Check if the leaving participant is the host
+      final leavingParticipant = session.participants.cast<TableGroupParticipant?>().firstWhere(
+        (p) => p?.participantId == participantId,
+        orElse: () => null,
+      );
+      final isHostLeaving = leavingParticipant?.isHost ?? false;
+      hostLeft = isHostLeaving;
+      
+      var updatedParticipants = session.participants
           .where((p) => p.participantId != participantId)
           .toList();
 
       if (updatedParticipants.isEmpty) {
-        // Last person left → close session
+        // Last person left -> close session
         tx.update(docRef, {
           'participants': [],
           'grandTotal': 0,
@@ -722,16 +739,25 @@ class TableGroupService {
           'closedAt': FieldValue.serverTimestamp(),
         });
       } else {
+        // If host is leaving, promote the next participant to host
+        if (isHostLeaving) {
+          final first = updatedParticipants.first;
+          updatedParticipants[0] = first.copyWith(isHost: true);
+        }
+        
         // Recalculate grand total
         final grandTotal = updatedParticipants.fold(0.0, (sum, p) => sum + p.subtotal);
         tx.update(docRef, {
           'participants': updatedParticipants.map((p) => p.toMap()).toList(),
           'grandTotal': grandTotal,
+          // Update hostUserId if host changed
+          if (isHostLeaving) 'hostUserId': updatedParticipants.first.userId,
+          if (isHostLeaving) 'hostName': updatedParticipants.first.name,
         });
       }
     });
 
-    debugPrint('👋 Participant $participantId left session $sessionId');
+    debugPrint('${hostLeft ? "Host left, promoted next" : "Participant left"} $participantId from $sessionId');
   }
 
   /// Get real-time session stream

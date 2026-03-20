@@ -21,6 +21,7 @@ import 'package:lokma_app/providers/product_favorites_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
+import 'package:lokma_app/providers/table_group_provider.dart';
 import 'cart_screen.dart';
 import 'product_customization_sheet.dart';
 import 'reservation_booking_screen.dart';
@@ -33,8 +34,9 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
   final int initialDeliveryMode;
   final String? initialTableNumber;
   final bool closedAcknowledged;
+  final String? groupSessionId;
   
-  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber, this.closedAcknowledged = false});
+  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber, this.closedAcknowledged = false, this.groupSessionId});
 
   @override
   ConsumerState<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
@@ -244,6 +246,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // 0 = Kurye/Teslimat, 1 = Gel Al/Abholung, 2 = Masa/Dine-in
   late int _deliveryModeIndex;
   bool get _isMasaMode => _deliveryModeIndex == 2;
+  bool get _isGroupMode => widget.groupSessionId != null;
+
+  // Masa Pre-Order Prompt state
+  bool _masaPreOrderPromptShown = false;
+  bool _masaPreOrderEnabled = false; // true = pre-order, false = just browsing
   
   // 🛒 Market-type detection: grid layout for these business types
   static const Set<String> _marketTypes = {
@@ -2634,7 +2641,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
                 // Title: Search Bar when scrolled, else Service Toggle
-                title: _showSearchBar
+                // In masa mode: always show search bar (no toggle needed)
+                title: (_showSearchBar || _isMasaMode)
                     ? GestureDetector(
                         onTap: () => _showMenuSearchOverlay(),
                         child: Container(
@@ -2876,16 +2884,34 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                        Row(
                          children: [
                            Expanded(
-                             child: Text(
-                               data?['companyName'] ?? data?['name'] ?? 'common.business'.tr(),
-                               style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface,
-                                 fontSize: 24,
-                                 fontWeight: FontWeight.w600,
-                                 letterSpacing: -0.5,
-                               ),
-                               maxLines: 2,
-                               overflow: TextOverflow.ellipsis,
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 Text(
+                                   data?['companyName'] ?? data?['name'] ?? 'common.business'.tr(),
+                                   style: TextStyle(
+                                     color: Theme.of(context).colorScheme.onSurface,
+                                     fontSize: 24,
+                                     fontWeight: FontWeight.w600,
+                                     letterSpacing: -0.5,
+                                   ),
+                                   maxLines: 2,
+                                   overflow: TextOverflow.ellipsis,
+                                 ),
+                                 // In masa mode: show table info + order type
+                                 if (_isMasaMode && widget.initialTableNumber != null)
+                                   Padding(
+                                     padding: const EdgeInsets.only(top: 2),
+                                     child: Text(
+                                       '(${tr('delivery_modes.dine_in')} ${widget.initialTableNumber}${_isGroupMode ? ' / ${tr('orders.label_group_order')}' : ' / ${tr('cart.single_person_order')}'})',
+                                       style: TextStyle(
+                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                         fontSize: 14,
+                                         fontWeight: FontWeight.w400,
+                                       ),
+                                     ),
+                                   ),
+                               ],
                              ),
                            ),
                            const SizedBox(width: 8),
@@ -2927,56 +2953,59 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                        const SizedBox(height: 8),
                        
                        // 2b. Stats Line (Lieferando: ★ 4.5 · Open/Closed · Delivery info)
+                       // In masa mode: simplified - only cuisine type + open/closed
                        Wrap(
                          spacing: 12,
                          runSpacing: 8,
                          crossAxisAlignment: WrapCrossAlignment.center,
                          children: [
-                           // Rating (Google Places or Firestore fallback)
-                           if (_placeDetails != null)
-                             InkWell(
-                               onTap: _showRatings,
-                               child: Row(
-                                 mainAxisSize: MainAxisSize.min,
-                                 children: [
-                                   const Icon(Icons.star, color: Colors.amber, size: 16),
-                                   const SizedBox(width: 4),
-                                   Text(
-                                     '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
-                                     style: TextStyle(
-                                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                                       fontSize: 13,
-                                       fontWeight: FontWeight.w500,
+                           // Rating (hidden in masa mode)
+                           if (!_isMasaMode) ...[
+                             if (_placeDetails != null)
+                               InkWell(
+                                 onTap: _showRatings,
+                                 child: Row(
+                                   mainAxisSize: MainAxisSize.min,
+                                   children: [
+                                     const Icon(Icons.star, color: Colors.amber, size: 16),
+                                     const SizedBox(width: 4),
+                                     Text(
+                                       '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
+                                       style: TextStyle(
+                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                         fontSize: 13,
+                                         fontWeight: FontWeight.w500,
+                                       ),
                                      ),
-                                   ),
-                                 ],
-                               ),
-                             )
-                            else if ((data?['rating'] as num?)?.toDouble() != null && (data?['rating'] as num).toDouble() > 0)
-                              InkWell(
-                                onTap: _showRatings,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${(data!['rating'] as num).toDouble().toStringAsFixed(1).replaceAll('.', ',')}${(data['reviewCount'] as num?)?.toInt() != null && (data['reviewCount'] as num).toInt() > 0 ? ' (${data['reviewCount']})' : ''}',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
+                                   ],
+                                 ),
+                               )
+                              else if ((data?['rating'] as num?)?.toDouble() != null && (data?['rating'] as num).toDouble() > 0)
+                                InkWell(
+                                  onTap: _showRatings,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${(data!['rating'] as num).toDouble().toStringAsFixed(1).replaceAll('.', ',')}${(data['reviewCount'] as num?)?.toInt() != null && (data['reviewCount'] as num).toInt() > 0 ? ' (${data['reviewCount']})' : ''}',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                           
-                           // Separator
-                           Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             
+                             // Separator
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                           ],
 
-                           // Masa Rezervasyon (2nd position, right after rating)
-                           if (data?["hasReservation"] as bool? ?? false) ...[
+                           // Masa Rezervasyon (hidden in masa mode)
+                           if (!_isMasaMode && (data?["hasReservation"] as bool? ?? false)) ...[
                              GestureDetector(
                                onTap: () {
                                  HapticFeedback.selectionClick();
@@ -3004,7 +3033,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    ),
                                    const SizedBox(width: 4),
                                    Text(
-                                     "Masa Rezervasyon",
+                                      tr('marketplace.table_reservation'),
                                      style: TextStyle(
                                        fontSize: 13,
                                        fontWeight: FontWeight.w500,
@@ -3080,8 +3109,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                            ),
                            
-                           // Delivery Fee
-                           if ((data?['deliveryFee'] as num?)?.toDouble() != null) ...[
+                           // Delivery Fee (hidden in masa mode)
+                           if (!_isMasaMode && (data?['deliveryFee'] as num?)?.toDouble() != null) ...[
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                              Row(
                                mainAxisSize: MainAxisSize.min,
@@ -3104,8 +3133,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                            ],
 
-                           // Min Order (if applicable)
-                           if ((data?['minDeliveryOrder'] ?? 0) > 0) ...[
+                           // Min Order (hidden in masa mode)
+                           if (!_isMasaMode && (data?['minDeliveryOrder'] ?? 0) > 0) ...[
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                              Text(
                                'Min. ${data!['minDeliveryOrder']}${CurrencyUtils.getCurrencySymbol()}',
@@ -3647,6 +3676,178 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     Overlay.of(ctx).insert(overlayEntry);
   }
 
+  // Masa Pre-Order Prompt - shown on first "+" tap in Masa mode
+  void _showMasaPreOrderPrompt(ButcherProduct product) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[600] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Icon
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFB335B).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(36),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_menu_rounded,
+                    color: Color(0xFFFB335B),
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Title
+                Text(
+                  'masa.preorder_title'.tr(),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                
+                // Description
+                Text(
+                  'masa.preorder_desc'.tr(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 28),
+                
+                // Button 1: Pre-order
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    setState(() {
+                      _masaPreOrderPromptShown = true;
+                      _masaPreOrderEnabled = true;
+                    });
+                    Navigator.pop(ctx);
+                    // Carry through the original add action
+                    if (product.optionGroups.isNotEmpty) {
+                      _showProductBottomSheet(product);
+                    } else {
+                      final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                      final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+                      ref.read(cartProvider.notifier).addToCart(
+                        product,
+                        product.unitType.toLowerCase() == 'kg' ? product.minQuantity : 1,
+                        widget.businessId,
+                        butcherName,
+                      );
+                      setState(() {});
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFB335B),
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'masa.preorder_yes'.tr(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Button 2: Just browse
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() {
+                      _masaPreOrderPromptShown = true;
+                      _masaPreOrderEnabled = false;
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 0.5,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.menu_book_rounded, 
+                          color: isDark ? Colors.grey[400] : Colors.grey[700], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'masa.preorder_no'.tr(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // LIEFERANDO STYLE: Unified Product Bottom Sheet
   void _showProductBottomSheet(ButcherProduct product) {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
@@ -3940,12 +4141,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       if (isAvailable)
                         GestureDetector(
                           onTap: () {
+                            // Masa pre-order prompt check
+                            if (_isMasaMode && !_masaPreOrderPromptShown) {
+                              _showMasaPreOrderPrompt(product);
+                              return;
+                            }
+                            // If Masa browse-only mode, do nothing
+                            if (_isMasaMode && !_masaPreOrderEnabled) return;
+                            
                             // + button tapped directly
                             if (product.optionGroups.isNotEmpty) {
-                              // Has options → open customization sheet
+                              // Has options -> open customization sheet
                               _showProductBottomSheet(product);
                             } else {
-                              // No options → add directly to cart
+                              // No options -> add directly to cart
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
                               final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                               HapticFeedback.mediumImpact();

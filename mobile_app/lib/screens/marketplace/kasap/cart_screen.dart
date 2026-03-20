@@ -528,6 +528,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Future<void> _submitOrder() async {
     if (_isSubmitting) return;
     
+    // Guard: Block regular order submission if a group session is active
+    final groupState = ref.read(tableGroupProvider);
+    if (groupState.session != null && _isDineIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Grup siparisi aktif. Lutfen grup siparis ekranindan siparis verin.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
     final cart = ref.read(cartProvider);
     final authState = ref.read(authProvider);
     final currentUser = authState.appUser;
@@ -735,7 +747,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }).toList(),
         'totalAmount': cart.totalAmount,
         'deliveryMethod': _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery'),
-        'pickupTime': (_isPickUp || _isDineIn) ? Timestamp.fromDate(pickupDateTime) : null,
+        'pickupTime': _isPickUp ? Timestamp.fromDate(pickupDateTime) : null,
         // 🆕 Scheduled Delivery
         if (_scheduledDeliverySlot != null && !_isPickUp && !_isDineIn) ...{
           'scheduledDeliveryTime': Timestamp.fromDate(_scheduledDeliverySlot!),
@@ -2815,7 +2827,32 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           right: 0,
           bottom: 0,
           child: Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
+            padding: EdgeInsets.fromLTRB(20, 14, 20, MediaQuery.of(context).padding.bottom + 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: Theme.of(context).brightness == Brightness.dark
+                    ? [
+                        const Color(0xFF1C1C1E).withValues(alpha: 0.0),
+                        const Color(0xFF1C1C1E).withValues(alpha: 0.95),
+                        const Color(0xFF1C1C1E),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white.withValues(alpha: 0.95),
+                        Colors.white,
+                      ],
+                stops: const [0.0, 0.25, 0.5],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -3728,6 +3765,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   String _buildNoteDisplayText(CartItem item) {
     final hasRecipient = item.recipientName != null && item.recipientName!.isNotEmpty;
     final hasNote = item.note != null && item.note!.isNotEmpty;
+    if (_isDineIn) {
+      // Masa mode: only show food note
+      return hasNote ? item.note! : 'cart.food_note'.tr();
+    }
     if (hasRecipient && hasNote) {
       return '${item.recipientName!} · ${item.note!}';
     } else if (hasRecipient) {
@@ -3779,7 +3820,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   
                   // ── Title ──
                   Text(
-                    'cart.your_note'.tr(),
+                    _isDineIn ? 'cart.food_note'.tr() : 'cart.your_note'.tr(),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w500,
@@ -3790,7 +3831,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   
                   // ═══════════════════════════════════════
                   // FIELD 1: Kimin için? (Recipient Name)
+                  // Hidden in Masa/dine-in mode
                   // ═══════════════════════════════════════
+                  if (!_isDineIn) ...[
                   Text(
                     'cart.note_recipient_label'.tr(),
                     style: TextStyle(
@@ -3841,6 +3884,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                   ),
                   const SizedBox(height: 16),
+                  ],
                   
                   // ═══════════════════════════════════════
                   // FIELD 2: Yemek Notu (Food Note)
@@ -5014,7 +5058,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Future<void> _handleQrTableScanned(String tableNum) async {
     final cart = ref.read(cartProvider);
     final businessId = cart.butcherId ?? '';
-    final businessName = _butcherData?['name'] ?? 'Geschäft';
+    final businessName = _butcherData?['name'] ?? 'common.business'.tr();
     
     if (businessId.isEmpty) {
       // No business — just set table number directly
@@ -5140,7 +5184,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 },
                 icon: const Icon(Icons.group_add),
                 label: Text(
-                  'cart.join_group'.tr(),
+                   'group_order.join_group'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 style: FilledButton.styleFrom(
@@ -5304,17 +5348,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       await groupNotifier.joinSession(sessionId, pin: pin);
       
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GroupTableOrderScreen(
-              businessId: businessId,
-              businessName: businessName,
-              tableNumber: tableNum,
-              sessionId: ref.read(tableGroupProvider).session?.id,
-            ),
-          ),
-        );
+        final sid = ref.read(tableGroupProvider).session?.id;
+        context.push('/kasap/$businessId?mode=masa&table=$tableNum&groupSessionId=$sid');
       }
     } catch (e) {
       if (mounted) {
@@ -5340,17 +5375,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
       
       if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GroupTableOrderScreen(
-              businessId: businessId,
-              businessName: businessName,
-              tableNumber: tableNum,
-              sessionId: ref.read(tableGroupProvider).session?.id,
-            ),
-          ),
-        );
+        final sid = ref.read(tableGroupProvider).session?.id;
+        context.push('/kasap/$businessId?mode=masa&table=$tableNum&groupSessionId=$sid');
       }
     } catch (e) {
       if (mounted) {
@@ -5404,7 +5430,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                 ),
                 Text(
-                  'Per QR-Code bestätigt ✓',
+                  'cart.table_verified'.tr(namedArgs: {'tableNum': _scannedTableNumber ?? ''}),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.green[700],
@@ -5426,7 +5452,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Ändern',
+                'common.change'.tr(),
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -8512,7 +8538,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         },
                       ),
 
-                    // ── Delivery Notes Row ──
+                    // ── Delivery Notes Row (hidden in dine-in) ──
+                    if (!parent._isDineIn)
                     _buildCheckoutRow(
                       context,
                       icon: Icons.description_outlined,
@@ -8664,7 +8691,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         },
                       ),
 
-                    // ── Unavailability Preference Row (beneath delivery time) ──
+                    // ── Unavailability Preference Row (hidden in dine-in) ──
+                    if (!parent._isDineIn)
                     Builder(builder: (ctx) {
                       String selectedLabel;
                       switch (parent._unavailabilityPreference) {
@@ -8785,21 +8813,35 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   if (parent._isPickUp && !parent._isDineIn)
                                     parent._buildPickupTimePicker(setState),
                                   if (parent._isDineIn) ...[
-                                    TextField(
-                                      controller: parent._tableNumberController,
-                                      readOnly: parent._scannedTableNumber != null,
-                                      keyboardType: TextInputType.number,
-                                      textInputAction: TextInputAction.done,
-                                      onSubmitted: (_) => Navigator.pop(ctx),
-                                      onChanged: parent._scannedTableNumber != null ? null : (val) => setState(() => parent._scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null),
-                                      decoration: InputDecoration(
-                                        hintText: parent._scannedTableNumber != null ? 'QR ile belirlendi' : 'checkout.enter_table'.tr(),
-                                        filled: true, fillColor: Theme.of(context).colorScheme.surface,
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                        prefixIcon: Icon(parent._scannedTableNumber != null ? Icons.lock : Icons.table_bar, color: parent._scannedTableNumber != null ? Colors.green : neutralIcon, size: 20),
+                                    if (parent._scannedTableNumber != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.lock, color: Colors.green, size: 16),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'cart.table_verified'.tr(namedArgs: {'tableNum': parent._scannedTableNumber ?? ''}),
+                                              style: TextStyle(color: Colors.green[700], fontSize: 13),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      TextField(
+                                        controller: parent._tableNumberController,
+                                        keyboardType: TextInputType.number,
+                                        textInputAction: TextInputAction.done,
+                                        onSubmitted: (_) => Navigator.pop(ctx),
+                                        onChanged: (val) => setState(() => parent._scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null),
+                                        decoration: InputDecoration(
+                                          hintText: 'checkout.enter_table'.tr(),
+                                          filled: true, fillColor: Theme.of(context).colorScheme.surface,
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                          prefixIcon: Icon(Icons.table_bar, color: neutralIcon, size: 20),
+                                        ),
+                                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w500),
                                       ),
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w500),
-                                    ),
                                   ],
                                   const SizedBox(height: 16),
                                   SizedBox(
