@@ -1,0 +1,35 @@
+Launching lib/main.dart on iPhone 11 Metin in release mode...
+Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
+Running Xcode build...                                          
+Xcode build done.                                           85,7s
+Failed to build iOS app
+Could not build the precompiled application for the device.
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.iaC8rN/flutter_ios_build_temp_direjmDnl/temporary_xcresult_bundle
+
+    lib/screens/customer/group_table_order_screen.dart:2482:10: Error: '_miniCircleButton' is already declared in this scope.
+      Widget _miniCircleButton(IconData icon, VoidCallback onTap) {
+             ^^^^^^^^^^^^^^^^^
+    lib/screens/customer/group_table_order_screen.dart:970:10: Context: Previous declaration of '_miniCircleButton'.
+      Widget _miniCircleButton(IconData icon, VoidCallback onTap) {
+             ^^^^^^^^^^^^^^^^^
+    Target kernel_snapshot_program failed: Exception
+    Failed to package /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/mobile_app.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'abseil' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'BoringSSL-GRPC' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-Core' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-C++' from project 'Pods')
+    warning: no rule to process file '/Users/metinoz/.pub-cache/hosted/pub.dev/geocoding_ios-3.1.0/ios/geocoding_ios/Sources/geocoding_ios/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'geocoding_ios' from project 'Pods')
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+
+Error running application on iPhone 11 Metin.

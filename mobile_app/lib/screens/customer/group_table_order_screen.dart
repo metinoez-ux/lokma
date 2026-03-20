@@ -2479,21 +2479,6 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     );
   }
 
-  Widget _miniCircleButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _accent.withValues(alpha: 0.1),
-        ),
-        child: Icon(icon, size: 14, color: _accent),
-      ),
-    );
-  }
 
   Widget _productPlaceholder() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
