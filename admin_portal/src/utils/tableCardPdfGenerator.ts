@@ -326,12 +326,12 @@ function renderCardPage(
   doc.text(txt.partnerLine, rightEdge, bottomStartY + 3, { align: 'right' });
 
   // RIGHT: App Store + Google Play badges (real images)
-  // App Store badge: 498x167 (ratio 2.98:1)
+  // App Store badge: 498x167 (ratio ~2.98:1)
   const asBadgeW = 18;
-  const asBadgeH = asBadgeW / 3; // ~6mm
-  // Google Play badge: 1920x1080 -- but badge area itself is rectangular like 3.4:1
+  const asBadgeH = asBadgeW / 2.98; // ~6.04mm
+  // Google Play badge: 646x250 (ratio ~2.584:1)
   const gpBadgeW = 18;
-  const gpBadgeH = gpBadgeW / 3; // ~6mm - match App Store height
+  const gpBadgeH = gpBadgeW / 2.584; // ~6.97mm
   const badgeY = bottomStartY + 5;
   const badge1X = rightEdge - asBadgeW - gpBadgeW - 3;
   const badge2X = rightEdge - gpBadgeW;
