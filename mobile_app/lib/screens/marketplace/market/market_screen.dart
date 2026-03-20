@@ -704,7 +704,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   ),
                   child: Text(
                     preOrderEnabled ? tr('marketplace.browse_products_and_order') : tr('marketplace.browse_products'),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: preOrderEnabled ? 13 : 15, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),

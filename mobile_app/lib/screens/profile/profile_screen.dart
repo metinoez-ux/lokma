@@ -12,6 +12,7 @@ import '../../services/staff_role_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/referral_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../auth/login_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -412,35 +413,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               const SizedBox(height: 12),
 
-              // === POWERED BY OZSOFT ===
+              // === DESIGNED & DEVELOPED BY OZSOFT ===
               Center(
                 child: Builder(
                   builder: (context) {
                     final isDark = Theme.of(context).brightness == Brightness.dark;
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Powered by ',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.4)
-                                : Colors.grey[500],
+                    return GestureDetector(
+                      onTap: () {
+                        launchUrl(Uri.parse('https://ozsoft.net'), mode: LaunchMode.externalApplication);
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Designed & Developed by',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.35)
+                                  : Colors.grey[500],
+                            ),
                           ),
-                        ),
-                        SvgPicture.asset(
-                          'assets/images/ozsoft_logo.svg',
-                          height: 18,
-                          colorFilter: ColorFilter.mode(
-                            isDark
-                                ? Colors.white.withOpacity(0.45)
-                                : Colors.grey.shade500,
-                            BlendMode.srcIn,
+                          const SizedBox(height: 4),
+                          SvgPicture.asset(
+                            'assets/images/ozsoft_logo.svg',
+                            height: 20,
+                            colorFilter: ColorFilter.mode(
+                              isDark
+                                  ? Colors.white.withOpacity(0.45)
+                                  : Colors.grey.shade500,
+                              BlendMode.srcIn,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),

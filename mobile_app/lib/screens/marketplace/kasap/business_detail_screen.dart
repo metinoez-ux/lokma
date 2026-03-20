@@ -872,12 +872,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   child: Text(
                     preOrderEnabled
                         ? 'marketplace.browse_products_and_order'.tr()
                         : 'marketplace.browse_products'.tr(),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: preOrderEnabled ? 14 : 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
 
@@ -1913,10 +1919,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           const SizedBox(height: 24),
                           Divider(color: dividerColor, height: 1),
                           const SizedBox(height: 16),
-                          Text('marketplace.impressum'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 12),
-                          _buildImpressumSection(data, textColor, subtitleColor),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F0E8),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Impressum',
+                                  style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 12),
+                                _buildImpressumSection(data, textColor, subtitleColor),
+                              ],
+                            ),
+                          ),
                         ],
                         
                         const SizedBox(height: 30),
@@ -1960,19 +1979,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final taxId = data['taxId']?.toString() ?? data['taxNumber']?.toString() ?? '';
     final vatId = data['vatId']?.toString() ?? '';
     final email = data['email']?.toString() ?? data['shopEmail']?.toString() ?? data['contactEmail']?.toString() ?? '';
+    final phone = data['phone']?.toString() ?? data['phoneNumber']?.toString() ?? data['contactPhone']?.toString() ?? '';
     
     final address = data['address'];
     final street = address is Map ? (address['street'] ?? '') : '';
+    final houseNumber = address is Map ? (address['houseNumber'] ?? '') : '';
     final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
     final city = address is Map ? (address['city'] ?? '') : '';
-    final fullAddress = street.toString().trim().isNotEmpty 
-      ? '$street, $postalCode $city' 
+    final streetFull = houseNumber.toString().trim().isNotEmpty 
+      ? '${street} ${houseNumber}' 
+      : street.toString();
+    final fullAddress = streetFull.toString().trim().isNotEmpty 
+      ? '$streetFull\n$postalCode $city' 
       : '';
     
     // Format legal form label
     String legalFormLabel = '';
     const legalFormMap = {
-      'gmbh': 'GmbH', 'ug': 'UG (haftungsbeschränkt)', 'ag': 'AG',
+      'gmbh': 'GmbH', 'ug': 'UG (haftungsbeschr\u00e4nkt)', 'ag': 'AG',
       'gbr': 'GbR', 'ohg': 'OHG', 'kg': 'KG', 'gmbh_co_kg': 'GmbH & Co. KG',
       'einzelunternehmen': 'Einzelunternehmen', 'freiberufler': 'Freiberufler',
       'ev': 'e.V.', 'eg': 'eG', 'se': 'SE',
@@ -1980,38 +2004,86 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (legalForm.isNotEmpty) {
       legalFormLabel = legalFormMap[legalForm] ?? legalForm;
     }
+
+    // Body text style: very small, very thin
+    final bodyStyle = TextStyle(color: subtitleColor, fontSize: 11, fontWeight: FontWeight.w300, height: 1.5);
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (displayName.isNotEmpty)
-          _impressumRow(displayName + (legalFormLabel.isNotEmpty ? ' ($legalFormLabel)' : ''), textColor),
-        if (fullAddress.isNotEmpty)
-          _impressumRow(fullAddress, subtitleColor),
-        if (managingDirector.isNotEmpty)
-          _impressumRow('${'marketplace.impressum_representative'.tr()}: $managingDirector', subtitleColor),
-        if (authorizedRep.isNotEmpty && authorizedRep != managingDirector)
-          _impressumRow('${'marketplace.impressum_authorized'.tr()}: $authorizedRep', subtitleColor),
-        if (registerCourt.isNotEmpty || registerNumber.isNotEmpty)
-          _impressumRow(
-            [if (registerCourt.isNotEmpty) registerCourt, if (registerNumber.isNotEmpty) registerNumber].join(', '),
-            subtitleColor,
+          Text(
+            displayName + (legalFormLabel.isNotEmpty ? ' ($legalFormLabel)' : ''),
+            style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
           ),
+        if (fullAddress.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(fullAddress, style: bodyStyle),
+          ),
+        if (managingDirector.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('${'marketplace.impressum_representative'.tr()}: $managingDirector', style: bodyStyle),
+          ),
+        if (authorizedRep.isNotEmpty && authorizedRep != managingDirector)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('${'marketplace.impressum_authorized'.tr()}: $authorizedRep', style: bodyStyle),
+          ),
+        
+        // Phone
+        if (phone.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(phone, style: bodyStyle),
+        ],
+        
+        // Register info
+        if (registerCourt.isNotEmpty || registerNumber.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            [if (registerCourt.isNotEmpty) registerCourt, if (registerNumber.isNotEmpty) registerNumber].join(', '),
+            style: bodyStyle,
+          ),
+        ],
         if (taxId.isNotEmpty)
-          _impressumRow('${'marketplace.impressum_tax_id'.tr()}: $taxId', subtitleColor),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('${'marketplace.impressum_tax_id'.tr()}: $taxId', style: bodyStyle),
+          ),
         if (vatId.isNotEmpty)
-          _impressumRow('${'marketplace.impressum_vat_id'.tr()}: $vatId', subtitleColor),
-        if (email.isNotEmpty)
-          _impressumRow('${'marketplace.impressum_email'.tr()}: $email', subtitleColor),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('${'marketplace.impressum_vat_id'.tr()}: $vatId', style: bodyStyle),
+          ),
+        // Email - always show label
+        const SizedBox(height: 8),
+        Text('${'marketplace.impressum_email'.tr()}: ${email.isNotEmpty ? email : "-"}', style: bodyStyle),
+        
+        // Professional tagline
+        const SizedBox(height: 14),
+        Divider(color: subtitleColor.withValues(alpha: 0.2), height: 1),
+        const SizedBox(height: 10),
+        Text(
+          _getImpressumTagline(),
+          style: TextStyle(color: subtitleColor.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.w300, height: 1.5),
+        ),
       ],
     );
   }
   
-  Widget _impressumRow(String text, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w100, height: 1.4)),
-    );
+  String _getImpressumTagline() {
+    final locale = context.locale.languageCode;
+    switch (locale) {
+      case 'de': return 'Wir sind ein professioneller Anbieter. Erfahre mehr dar\u00fcber, wie wir gemeinsam mit LOKMA die Verbraucherverantwortung \u00fcbernehmen.';
+      case 'en': return 'We are a professional provider. Learn more about how we take consumer responsibility together with LOKMA.';
+      case 'tr': return 'Profesyonel bir hizmet saglayicisiyiz. LOKMA ile birlikte t\u00fcketici sorumlulugunu nasil \u00fcstlendigimiz hakkinda daha fazla bilgi edinin.';
+      case 'nl': return 'Wij zijn een professionele aanbieder. Lees meer over hoe wij samen met LOKMA de consumentenverantwoordelijkheid dragen.';
+      case 'fr': return 'Nous sommes un prestataire professionnel. D\u00e9couvrez comment nous assumons ensemble la responsabilit\u00e9 envers les consommateurs avec LOKMA.';
+      case 'it': return 'Siamo un fornitore professionale. Scopri come assumiamo la responsabilit\u00e0 verso i consumatori insieme a LOKMA.';
+      case 'es': return 'Somos un proveedor profesional. Descubre c\u00f3mo asumimos la responsabilidad del consumidor junto con LOKMA.';
+      default: return 'We are a professional provider. Learn more about how we take consumer responsibility together with LOKMA.';
+    }
   }
 
   // ═══ CLOSING SOON HELPER ═══
@@ -2880,22 +2952,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  ],
                                ),
                              )
-                           else if ((data?['rating'] as num?)?.toDouble() != null && (data?['rating'] as num).toDouble() > 0)
-                             Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 const Icon(Icons.star, color: Colors.amber, size: 16),
-                                 const SizedBox(width: 4),
-                                 Text(
-                                   '${(data!['rating'] as num).toDouble().toStringAsFixed(1).replaceAll('.', ',')}${(data['reviewCount'] as num?)?.toInt() != null && (data['reviewCount'] as num).toInt() > 0 ? ' (${data['reviewCount']})' : ''}',
-                                   style: TextStyle(
-                                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                                     fontSize: 13,
-                                     fontWeight: FontWeight.w500,
-                                   ),
-                                 ),
-                               ],
-                             ),
+                            else if ((data?['rating'] as num?)?.toDouble() != null && (data?['rating'] as num).toDouble() > 0)
+                              InkWell(
+                                onTap: _showRatings,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.star, color: Colors.amber, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${(data!['rating'] as num).toDouble().toStringAsFixed(1).replaceAll('.', ',')}${(data['reviewCount'] as num?)?.toInt() != null && (data['reviewCount'] as num).toInt() > 0 ? ' (${data['reviewCount']})' : ''}',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                            
                            // Separator
                            Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),

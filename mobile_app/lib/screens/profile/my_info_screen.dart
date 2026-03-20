@@ -207,11 +207,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
 
       if (data['status'] == 'OK') {
          final predictions = data['predictions'] as List;
-         _currentPredictions = predictions.map((p) => {
+         _currentPredictions = predictions.map<Map<String, dynamic>>((p) => <String, dynamic>{
            'description': p['description'] as String,
            'place_id': p['place_id'] as String,
          }).toList();
-         return _currentPredictions.map<String>((p) => p['description']!);
+         return _currentPredictions.map<String>((p) => p['description'] as String);
       }
     } catch (e) {
       debugPrint("Suggestions Fetch Error: $e");
@@ -247,7 +247,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
 
       if (data['status'] == 'OK') {
          final predictions = data['predictions'] as List;
-         _cityPredictions = predictions.map((p) => {
+         _cityPredictions = predictions.map<Map<String, dynamic>>((p) => <String, dynamic>{
            'description': p['description'] as String,
            'place_id': p['place_id'] as String,
          }).toList();
