@@ -28,7 +28,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Color get cardBg => Theme.of(context).cardTheme.color ?? Colors.white;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   bool _isLoading = false; // ignore: unused_field
   bool _isUploadingPhoto = false; // ignore: unused_field
 
