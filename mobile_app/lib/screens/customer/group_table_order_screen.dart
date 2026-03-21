@@ -41,6 +41,15 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   late TabController _tabController;
   String _selectedCategory = tr('customer.tumu');
   String _menuSearchQuery = '';
+  
+  // Chip Animation State
+  final ScrollController _chipScrollController = ScrollController();
+  final Map<String, GlobalKey> _tabKeys = {};
+  final GlobalKey _chipRowKey = GlobalKey();
+  double _pillLeft = 0;
+  double _pillWidth = 0;
+  bool _pillInitialized = false;
+
   bool _isSubmitting = false;
   bool _hasShownClosedPrompt = false;
   Timer? _idleTimer;
@@ -130,6 +139,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   void dispose() {
     _idleTimer?.cancel();
     _tabController.dispose();
+    _chipScrollController.dispose();
     super.dispose();
   }
 
@@ -706,6 +716,66 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     );
   }
 
+  void _scrollChipBarToSelected(String category) {
+    if (!_chipScrollController.hasClients) return;
+    final tabKey = _tabKeys[category];
+    if (tabKey == null || tabKey.currentContext == null) return;
+    
+    final RenderBox? chipBox = tabKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null) return;
+    
+    final chipPosition = chipBox.localToGlobal(Offset.zero);
+    final chipWidth = chipBox.size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    final chipCenter = chipPosition.dx + chipWidth / 2;
+    final viewportCenter = screenWidth / 2;
+    final scrollDelta = chipCenter - viewportCenter;
+    
+    final targetOffset = (_chipScrollController.offset + scrollDelta).clamp(
+      0.0,
+      _chipScrollController.position.maxScrollExtent,
+    );
+    
+    _chipScrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _updatePillPosition([String? cat]) {
+    final category = cat ?? _selectedCategory;
+    final tabKey = _tabKeys[category];
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
+    
+    final RenderBox? chipBox = tabKey!.currentContext!.findRenderObject() as RenderBox?;
+    final RenderBox? rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null || rowBox == null) return;
+    
+    final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
+    
+    if (mounted) {
+      setState(() {
+        _pillLeft = chipPos.dx;
+        _pillWidth = chipBox.size.width;
+        _pillInitialized = true;
+      });
+    }
+  }
+
+  void _selectCategory(String catName) {
+    HapticFeedback.selectionClick();
+    setState(() => _selectedCategory = catName);
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        _scrollChipBarToSelected(catName);
+        _updatePillPosition(catName);
+      }
+    });
+
+  }
+
   Widget _buildCategoryChips() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<QuerySnapshot>(
@@ -727,47 +797,86 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           }
         }
 
+        if (!_pillInitialized && categories.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _updatePillPosition();
+          });
+        }
+
         return SizedBox(
-          height: 44,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 48, // slightly taller for padding
+          child: SingleChildScrollView(
+            controller: _chipScrollController,
             scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final cat = categories.elementAt(index);
-              final isSelected = cat == _selectedCategory;
-              return GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedCategory = cat);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? _accent
-                        : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5)),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: isSelected ? _accent : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
-                      width: 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      cat,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                        fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                if (_pillInitialized)
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutBack,
+                    left: _pillLeft,
+                    top: 0,
+                    bottom: 0,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutBack,
+                      width: _pillWidth,
+                      decoration: BoxDecoration(
+                        color: _accent, // Uses the rose accent
+                        borderRadius: BorderRadius.circular(50),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _accent.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                Row(
+                  key: _chipRowKey,
+                  children: categories.map((cat) {
+                    final isSelected = cat == _selectedCategory;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => _selectCategory(cat),
+                        child: Container(
+                          key: _tabKeys.putIfAbsent(cat, () => GlobalKey()),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent, // background is handled by pill
+                            borderRadius: BorderRadius.circular(50),
+                            border: Border.all(
+                              color: isSelected ? Colors.transparent : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                                child: Text(cat),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         );
       },

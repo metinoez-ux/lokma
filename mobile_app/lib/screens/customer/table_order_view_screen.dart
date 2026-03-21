@@ -43,6 +43,15 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
   String _selectedCategory = tr('customer.tumu');
   String _menuSearchQuery = '';
   final Map<String, _CartItem> _cart = {};
+  
+  // Chip Animation State
+  final ScrollController _chipScrollController = ScrollController();
+  final Map<String, GlobalKey> _tabKeys = {};
+  final GlobalKey _chipRowKey = GlobalKey();
+  double _pillLeft = 0;
+  double _pillWidth = 0;
+  bool _pillInitialized = false;
+
   bool _isSubmitting = false;
   String? _notes;
 
@@ -68,6 +77,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     _tableController.dispose();
     _pinController.dispose();
     _tabController.dispose();
+    _chipScrollController.dispose();
     super.dispose();
   }
 
@@ -566,7 +576,68 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     );
   }
 
+  void _scrollChipBarToSelected(String category) {
+    if (!_chipScrollController.hasClients) return;
+    final tabKey = _tabKeys[category];
+    if (tabKey == null || tabKey.currentContext == null) return;
+    
+    final RenderBox? chipBox = tabKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null) return;
+    
+    final chipPosition = chipBox.localToGlobal(Offset.zero);
+    final chipWidth = chipBox.size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    final chipCenter = chipPosition.dx + chipWidth / 2;
+    final viewportCenter = screenWidth / 2;
+    final scrollDelta = chipCenter - viewportCenter;
+    
+    final targetOffset = (_chipScrollController.offset + scrollDelta).clamp(
+      0.0,
+      _chipScrollController.position.maxScrollExtent,
+    );
+    
+    _chipScrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _updatePillPosition([String? cat]) {
+    final category = cat ?? _selectedCategory;
+    final tabKey = _tabKeys[category];
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
+    
+    final RenderBox? chipBox = tabKey!.currentContext!.findRenderObject() as RenderBox?;
+    final RenderBox? rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null || rowBox == null) return;
+    
+    final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
+    
+    if (mounted) {
+      setState(() {
+        _pillLeft = chipPos.dx;
+        _pillWidth = chipBox.size.width;
+        _pillInitialized = true;
+      });
+    }
+  }
+
+  void _selectCategory(String catName) {
+    HapticFeedback.selectionClick();
+    setState(() => _selectedCategory = catName);
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        _scrollChipBarToSelected(catName);
+        _updatePillPosition(catName);
+      }
+    });
+  }
+
   Widget _buildCategoryChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('businesses')
@@ -586,23 +657,84 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           }
         }
 
+        if (!_pillInitialized && categories.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _updatePillPosition();
+          });
+        }
+
         return SizedBox(
-          height: 40,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 44, // Slightly taller for the pill
+          child: SingleChildScrollView(
+            controller: _chipScrollController,
             scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final cat = categories.elementAt(index);
-              final isSelected = cat == _selectedCategory;
-              return ChoiceChip(
-                label: Text(cat),
-                selected: isSelected,
-                selectedColor: Colors.amber.shade100,
-                onSelected: (_) => setState(() => _selectedCategory = cat),
-              );
-            },
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                if (_pillInitialized)
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutBack,
+                    left: _pillLeft,
+                    top: 0,
+                    bottom: 0,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutBack,
+                      width: _pillWidth,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white : const Color(0xFF3E3E3F),
+                        borderRadius: BorderRadius.circular(50),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Row(
+                  key: _chipRowKey,
+                  children: categories.map((cat) {
+                    final isSelected = cat == _selectedCategory;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => _selectCategory(cat),
+                        child: Container(
+                          key: _tabKeys.putIfAbsent(cat, () => GlobalKey()),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                style: TextStyle(
+                                  color: isSelected 
+                                    ? (isDark ? Colors.black : Colors.white) 
+                                    : (isDark ? Colors.white70 : Colors.black54),
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                                child: Text(cat),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
         );
       },

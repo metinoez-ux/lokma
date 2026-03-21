@@ -2810,34 +2810,41 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             Positioned(
                               top: 12,
                               left: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFA01E22),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.3),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.verified, color: Colors.white, size: 14),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      isTunaPartner ? 'TUNA' : _getBrandLabel(brand).toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1.2,
+                              child: GestureDetector(
+                                onTap: isTunaPartner ? _showTunaBrandInfo : null,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFA01E22),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.verified, color: Colors.white, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isTunaPartner ? 'TUNA' : _getBrandLabel(brand).toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                      if (isTunaPartner) ...[
+                                        const SizedBox(width: 4),
+                                        const Icon(Icons.info_outline, color: Colors.white, size: 15),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
