@@ -4,6 +4,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   experimental: {
     serverActions: {
       bodySizeLimit: '50mb', // AI menu multi-image uploads
@@ -32,3 +33,6 @@ const nextConfig: NextConfig = {
 };
 
 export default withNextIntl(nextConfig);
+
+// Force new Firebase Cloud Run revision hash to bypass 409 conflict
+// Timestamp: 2026-03-21T06:55:00Z

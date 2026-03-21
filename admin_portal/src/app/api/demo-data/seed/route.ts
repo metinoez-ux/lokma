@@ -30,16 +30,19 @@ function normalizeGoogleHoursLine(line: string): string {
 }
 
 /**
- * PLZ -> geo koordinatlari almak icin Google Geocoding API
+ * Address -> geo koordinatlari almak icin Google Geocoding API
  */
-async function geocodePLZ(plz: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
+async function geocodeAddress(postalCode: string, street: string, apiKey: string): Promise<{ lat: number; lng: number, locality: string } | null> {
     try {
-        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(plz + ' Deutschland')}&key=${apiKey}`;
+        const addr = street ? `${street}, ${postalCode} Deutschland` : `${postalCode} Deutschland`;
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addr)}&key=${apiKey}`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.status === 'OK' && data.results?.[0]) {
             const loc = data.results[0].geometry.location;
-            return { lat: loc.lat, lng: loc.lng };
+            const comps = data.results[0].address_components;
+            const locality = comps?.find((c: any) => c.types.includes('locality'))?.long_name || postalCode;
+            return { lat: loc.lat, lng: loc.lng, locality };
         }
     } catch {}
     return null;
@@ -90,9 +93,9 @@ export async function POST(req: NextRequest) {
         body = {};
     }
 
-    // Frontend dryRun=true -> search, dryRun=false -> save
     const mode = body.mode || (body.dryRun === false ? 'save' : 'search');
     const postalCode = body.postalCode || '41836';
+    const street = body.street || '';
     const maxResults = Math.min(Math.max(body.maxResults || body.maxBusinesses || 20, 1), 50);
 
     // Zaten kayitli isletmelerin googlePlaceId'lerini al
@@ -108,30 +111,19 @@ export async function POST(req: NextRequest) {
     // MODE: SEARCH -- Sadece bul ve listele
     // ==========================================
     if (mode === 'search') {
-        // PLZ'den koordinat al
-        const center = await geocodePLZ(postalCode, apiKey);
-        if (!center) {
-            return NextResponse.json({ error: `PLZ ${postalCode} konnte nicht geocodiert werden` }, { status: 400 });
+        // Adres'ten koordinat al
+        const geoInfo = await geocodeAddress(postalCode, street, apiKey);
+        if (!geoInfo) {
+            return NextResponse.json({ error: `Adresse konnte nicht geocodiert werden: ${street} ${postalCode}` }, { status: 400 });
         }
+        
+        const center = { lat: geoInfo.lat, lng: geoInfo.lng };
+        const cityName = geoInfo.locality;
 
         const allPlaceIds = new Set<string>();
         const foundPlaces: any[] = [];
         const errors: string[] = [];
         const radius = 5000;
-
-        // Arama sorgulari -- PLZ=41836 yerine dinamik sehir adi
-        // Once PLZ'nin sehir adini geocode'dan cikarmaya calisiyoruz
-        let cityName = postalCode;
-        try {
-            const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(postalCode + ' Deutschland')}&key=${apiKey}`;
-            const geoRes = await fetch(geoUrl);
-            const geoData = await geoRes.json();
-            if (geoData.status === 'OK' && geoData.results?.[0]) {
-                const comps = geoData.results[0].address_components;
-                const locality = comps?.find((c: any) => c.types.includes('locality'));
-                if (locality) cityName = locality.long_name;
-            }
-        } catch {}
 
         // Dinamik arama sorgulari olustur (Huckelhoven yerine sehir adi)
         const searchQueries = DEMO_SEARCH_QUERIES.map(sq => ({

@@ -1,0 +1,11 @@
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+README.md
+.next
+.git
+.firebase
+ firebase-debug.log
+ firebase-custom.json
+ scripts/

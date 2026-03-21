@@ -426,6 +426,7 @@ export default function BusinessDetailsPage() {
     freeDrinkMinimumOrder: 0,  // 0 = her siparişte aktif, >0 = min. sipariş tutarında aktif
     // 🆕 Group Order Link
     groupOrderLinkEnabled: false,
+    groupOrderTableEnabled: false,
   });
 
   // Google Places search states
@@ -839,6 +840,7 @@ export default function BusinessDetailsPage() {
           freeDrinkProducts: d.freeDrinkProducts ?? [],
           freeDrinkMinimumOrder: d.freeDrinkMinimumOrder ?? 0,
           groupOrderLinkEnabled: d.groupOrderLinkEnabled ?? false,
+          groupOrderTableEnabled: d.groupOrderTableEnabled ?? false,
         });
 
         // Resolve plan features from subscription_plans collection
@@ -2201,7 +2203,9 @@ export default function BusinessDetailsPage() {
         accountBalance: Number(formData.accountBalance) || 0,
         notes: formData.notes || "",
         supportsDelivery: formData.supportsDelivery || false,
+        offersDelivery: formData.supportsDelivery || false, // mirror for mobile app compatibility
         pickupEnabled: formData.pickupEnabled !== false,
+        offersPickup: formData.pickupEnabled !== false, // mirror for mobile app compatibility
         rating: formData.rating || 0,
         reviewCount: formData.reviewCount || 0,
         reviews: Array.isArray(formData.reviews) ? formData.reviews : [], // Ensure not undefined
@@ -3750,8 +3754,8 @@ export default function BusinessDetailsPage() {
                        {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
                      </button>
                    )}
-                   {/* Tüm isletme tab'ları: Düzenle / İptal / Kaydet */}
-                   {settingsSubTab === 'isletme' && (
+                   {/* Tüm isletme & masa tab'ları: Düzenle / İptal / Kaydet */}
+                   {(settingsSubTab === 'isletme' || settingsSubTab === 'masa') && (
                      <>
                        {!isEditing ? (
                          <button
@@ -4350,15 +4354,15 @@ export default function BusinessDetailsPage() {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               <div>
                                 <label className="text-gray-400 text-sm">{t('minSiparis')}</label>
-                                <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
                                 <label className="text-gray-400 text-sm">{t('teslimatUcreti')}</label>
-                                <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
                                 <label className="text-gray-400 text-sm">{t('maksMesafe')}</label>
-                                <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                             </div>
                           )}
@@ -4367,7 +4371,7 @@ export default function BusinessDetailsPage() {
                           <div className="mt-3">
                             <label className="text-gray-400 text-sm flex items-center gap-1">{t('ucretsizTeslimatEsigi')}</label>
                             <div className="flex items-center gap-2 mt-1">
-                              <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} disabled={!isEditing} className="w-32 bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
+                              <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-32 bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
                               <span className="text-gray-400 text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-1">{t('0HerZamanTeslimatUcretiUygulanir')}</p>
@@ -6708,12 +6712,29 @@ export default function BusinessDetailsPage() {
                           <label className="text-gray-400 text-sm block mb-2">Plan</label>
                           <select
                             value={formData.subscriptionPlan}
-                            onChange={(e) =>
+                            onChange={async (e) => {
+                              const newPlan = e.target.value as string;
                               setFormData({
                                 ...formData,
-                                subscriptionPlan: e.target.value as string,
-                              })
-                            }
+                                subscriptionPlan: newPlan,
+                              });
+                              if (!business?.id) return;
+                              setSaving(true);
+                              try {
+                                const { updateDoc, doc } = await import('firebase/firestore');
+                                const { db } = await import('@/lib/firebase');
+                                await updateDoc(doc(db, 'businesses', business.id), {
+                                  subscriptionPlan: newPlan,
+                                });
+                                showToast(`Plan '${newPlan}' olarak guncellendi`, 'success');
+                                setBusiness((prev: any) => prev ? { ...prev, subscriptionPlan: newPlan } : prev);
+                              } catch (err: any) {
+                                console.error('Plan update error:', err);
+                                showToast('Plan guncellenemedi: ' + err.message, 'error');
+                              } finally {
+                                setSaving(false);
+                              }
+                            }}
                             className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
                           >
                             <option value="none">{t('yok')}</option>
@@ -6735,25 +6756,28 @@ export default function BusinessDetailsPage() {
                         {/* Quick Save Button */}
                         <button
                           type="button"
+                          disabled={saving}
                           onClick={async () => {
                             if (!business?.id) return;
+                            setSaving(true);
                             try {
                               const { updateDoc, doc } = await import('firebase/firestore');
                               const { db } = await import('@/lib/firebase');
                               await updateDoc(doc(db, 'businesses', business.id), {
                                 subscriptionPlan: formData.subscriptionPlan || 'none',
                               });
-                              showToast(`Plan '${formData.subscriptionPlan}' olarak guncellendi`, 'success');
-                              // Update local business state
+                              showToast(`Plan '${formData.subscriptionPlan}' olarak kaydedildi`, 'success');
                               setBusiness((prev: any) => prev ? { ...prev, subscriptionPlan: formData.subscriptionPlan } : prev);
                             } catch (err: any) {
                               console.error('Plan update error:', err);
                               showToast('Plan guncellenemedi: ' + err.message, 'error');
+                            } finally {
+                              setSaving(false);
                             }
                           }}
-                          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                          className={`${saving ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} w-full text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-4`}
                         >
-                          Plan Kaydet
+                          {saving ? 'Kaydediliyor...' : 'Plan Kaydet'}
                         </button>
                       </div>
 
@@ -7907,19 +7931,19 @@ export default function BusinessDetailsPage() {
                             <input 
                               type="checkbox" 
                               className="sr-only" 
-                              checked={!!formData.groupOrderLinkEnabled}
-                              onChange={(e) => setFormData({ ...formData, groupOrderLinkEnabled: e.target.checked })}
+                              checked={!!formData.groupOrderTableEnabled}
+                              onChange={(e) => setFormData({ ...formData, groupOrderTableEnabled: e.target.checked })}
                             />
-                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
-                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
+                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                           <span className="ml-3 text-sm font-medium text-white">
-                            {formData.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
+                            {formData.groupOrderTableEnabled ? t('aktif') : t('kapali')}
                           </span>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
-                          {business?.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                          {business?.groupOrderTableEnabled ? t('aktif') : t('kapali')}
                         </span>
                       )}
                     </div>

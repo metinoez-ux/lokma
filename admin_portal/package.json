@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "deploy:cf": "firebase deploy --only functions",
+    "deploy:production": "gcloud run deploy ssrlokma --source . --region europe-west1 --project aylar-a45af --clear-base-image --quiet"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

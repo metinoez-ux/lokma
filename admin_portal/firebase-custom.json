@@ -1,0 +1,20 @@
+{
+    "hosting": {
+        "site": "lokma",
+        "public": ".firebase/lokma/hosting",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "**",
+                "run": {
+                    "serviceId": "ssrlokma",
+                    "region": "europe-west1"
+                }
+            }
+        ]
+    }
+}

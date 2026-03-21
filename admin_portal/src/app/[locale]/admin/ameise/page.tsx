@@ -57,6 +57,7 @@ export default function AmeisePage() {
     type DemoPhase = 'idle' | 'searching' | 'results' | 'saving' | 'saved' | 'cleaning' | 'cleaned' | 'error';
     const [demoPhase, setDemoPhase] = useState<DemoPhase>('idle');
     const [demoPlz, setDemoPlz] = useState('41836');
+    const [demoStreet, setDemoStreet] = useState('Schulte-Braucks-Str. 1');
     const [demoMaxCount, setDemoMaxCount] = useState(20);
     const [demoFoundPlaces, setDemoFoundPlaces] = useState<any[]>([]);
     const [demoSelectedIds, setDemoSelectedIds] = useState<Set<string>>(new Set());
@@ -204,7 +205,12 @@ export default function AmeisePage() {
             const res = await fetch('/api/demo-data/seed', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ postalCode: demoPlz.trim(), maxBusinesses: demoMaxCount, dryRun: true }),
+                body: JSON.stringify({ 
+                    postalCode: demoPlz.trim(), 
+                    street: demoStreet.trim(),
+                    maxBusinesses: demoMaxCount, 
+                    dryRun: true 
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Suche fehlgeschlagen');
@@ -235,7 +241,13 @@ export default function AmeisePage() {
             const res = await fetch('/api/demo-data/seed', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ postalCode: demoPlz.trim(), maxBusinesses: demoMaxCount, dryRun: false, selectedPlaceIds: selectedPlaces }),
+                body: JSON.stringify({ 
+                    postalCode: demoPlz.trim(), 
+                    street: demoStreet.trim(),
+                    maxBusinesses: demoMaxCount, 
+                    dryRun: false, 
+                    selectedPlaceIds: selectedPlaces 
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Speichern fehlgeschlagen');
@@ -454,7 +466,17 @@ export default function AmeisePage() {
                     {(demoPhase === 'idle' || demoPhase === 'results') && (
                         <div className="space-y-3 mb-5">
                             <div className="flex gap-3">
-                                <div className="flex-1">
+                                <div className="flex-[2]">
+                                    <label className="block text-[10px] text-gray-500 mb-1">Strasse & Hausnr. (Merkez)</label>
+                                    <input
+                                        type="text"
+                                        value={demoStreet}
+                                        onChange={e => setDemoStreet(e.target.value)}
+                                        placeholder="z.B. Hauptstr. 1"
+                                        className="w-full px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div className="w-28">
                                     <label className="block text-[10px] text-gray-500 mb-1">PLZ</label>
                                     <input
                                         type="text"
