@@ -3,10 +3,20 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // iOS requires explicit clientId - matches GIDClientID in Info.plist
-    clientId: '259070566992-5oqs2q5tgkrg6rfbddot5fgj08nec03u.apps.googleusercontent.com',
-  );
+
+  // v7: singleton pattern required
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  bool _initialized = false;
+
+  // Must be called once before using Google Sign-In
+  Future<void> _ensureInitialized() async {
+    if (_initialized) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: '259070566992-5oqs2q5tgkrg6rfbddot5fgj08nec03u.apps.googleusercontent.com',
+    );
+    _initialized = true;
+  }
 
   // Stream of auth changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -30,15 +40,19 @@ class AuthService {
     );
   }
 
-  // Sign in with Google
+  // Sign in with Google (v7 API)
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      await _ensureInitialized();
+
+      // v7: authenticate() replaces signIn()
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
       if (googleUser == null) return null; // User canceled
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      // v7: authentication is synchronous, accessToken requires separate authorization
+      // For Firebase Auth, idToken alone is sufficient
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -90,3 +104,4 @@ class AuthService {
     await _auth.signOut();
   }
 }
+
