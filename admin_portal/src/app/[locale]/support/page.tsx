@@ -274,30 +274,30 @@ export default function SupportPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-white text-gray-900 font-['Plus_Jakarta_Sans',sans-serif]">
-            <PublicHeader themeAware={false} />
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif]">
+            <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[800px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black mb-4">{tx.title}</h1>
-                    <p className="text-gray-500 text-lg mb-12">{tx.subtitle}</p>
+                    <p className="text-gray-500 dark:text-white/60 text-lg mb-12">{tx.subtitle}</p>
 
                     {/* Contact Cards */}
                     <div className="grid md:grid-cols-3 gap-6 mb-16">
-                        <a href="mailto:destek@lokma.shop" className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="mailto:destek@lokma.shop" className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">mail</span>
                             <h3 className="font-bold mb-2">{tx.email}</h3>
-                            <p className="text-sm text-gray-500">destek@lokma.shop</p>
+                            <p className="text-sm text-gray-500 dark:text-white/50">destek@lokma.shop</p>
                         </a>
-                        <a href="tel:+4917612345678" className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="tel:+4917612345678" className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">phone</span>
                             <h3 className="font-bold mb-2">{tx.phone}</h3>
-                            <p className="text-sm text-gray-500">+49 176 123 456 78</p>
+                            <p className="text-sm text-gray-500 dark:text-white/50">+49 176 123 456 78</p>
                         </a>
-                        <a href="https://wa.me/4917612345678" className="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                        <a href="https://wa.me/4917612345678" className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
                             <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">chat</span>
                             <h3 className="font-bold mb-2">{tx.whatsapp}</h3>
-                            <p className="text-sm text-gray-500">{tx.whatsappDesc}</p>
+                            <p className="text-sm text-gray-500 dark:text-white/50">{tx.whatsappDesc}</p>
                         </a>
                     </div>
 
@@ -309,7 +309,7 @@ export default function SupportPage() {
                             <h3 className="text-lg font-bold text-[#fb335b] mb-4">{section.category}</h3>
                             <div className="space-y-3">
                                 {section.items.map((faq, idx) => (
-                                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+                                    <div key={idx} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
                                         <button
                                             className="w-full flex items-center justify-between p-5 text-left"
                                             onClick={() => setOpenFaq(openFaq === `${section.category}-${idx}` ? null : `${section.category}-${idx}`)}
@@ -320,7 +320,7 @@ export default function SupportPage() {
                                             </span>
                                         </button>
                                         {openFaq === `${section.category}-${idx}` && (
-                                            <div className="px-5 pb-5 text-gray-600">
+                                            <div className="px-5 pb-5 text-gray-600 dark:text-white/60">
                                                 {faq.a}
                                             </div>
                                         )}
@@ -332,7 +332,7 @@ export default function SupportPage() {
                 </div>
             </main>
 
-            <PublicFooter themeAware={false} />
+            <PublicFooter themeAware={true} />
         </div>
     );
 }

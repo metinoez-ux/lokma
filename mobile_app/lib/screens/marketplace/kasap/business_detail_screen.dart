@@ -4146,8 +4146,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               _showMasaPreOrderPrompt(product);
                               return;
                             }
-                            // If Masa browse-only mode, do nothing
-                            if (_isMasaMode && !_masaPreOrderEnabled) return;
                             
                             // + button tapped directly
                             if (product.optionGroups.isNotEmpty) {

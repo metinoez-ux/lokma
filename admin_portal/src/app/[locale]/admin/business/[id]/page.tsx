@@ -6687,13 +6687,25 @@ export default function BusinessDetailsPage() {
                 settingsSubTab === "abonelik" && (
                   <div className="space-y-6">
                     <div className="space-y-6">
-                      {/* Subscription */}
-                      <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          {t('uyelikAbonelik')}
-                        </h4>
+                      {/* Current Plan Display */}
+                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-white font-medium text-lg">{t('uyelikAbonelik')}</h4>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            (formData.subscriptionPlan === 'enterprise') ? 'bg-purple-600 text-white' :
+                            (formData.subscriptionPlan === 'premium') ? 'bg-amber-500 text-black' :
+                            (formData.subscriptionPlan === 'standard') ? 'bg-blue-500 text-white' :
+                            (formData.subscriptionPlan === 'basic') ? 'bg-green-600 text-white' :
+                            (formData.subscriptionPlan === 'free') ? 'bg-gray-500 text-white' :
+                            'bg-gray-600 text-gray-300'
+                          }`}>
+                            {formData.subscriptionPlan?.toUpperCase() || 'NONE'}
+                          </span>
+                        </div>
+
+                        {/* Plan Selection */}
                         <div>
-                          <label className="text-gray-400 text-sm">Plan</label>
+                          <label className="text-gray-400 text-sm block mb-2">Plan</label>
                           <select
                             value={formData.subscriptionPlan}
                             onChange={(e) =>
@@ -6702,14 +6714,69 @@ export default function BusinessDetailsPage() {
                                 subscriptionPlan: e.target.value as string,
                               })
                             }
-                            disabled={!isEditing}
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                            className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
                           >
                             <option value="none">{t('yok')}</option>
-                            {availablePlans.map(plan => (
-                              <option key={plan.code} value={plan.code}>{plan.name}</option>
-                            ))}
+                            <option value="free">LOKMA Free</option>
+                            <option value="basic">LOKMA Basic</option>
+                            <option value="standard">LOKMA Standard</option>
+                            <option value="premium">LOKMA Premium</option>
+                            <option value="enterprise">LOKMA Enterprise</option>
+                            {/* Also show dynamic plans if available */}
+                            {availablePlans
+                              .filter(p => !['none','free','basic','standard','premium','enterprise'].includes(p.code))
+                              .map(plan => (
+                                <option key={plan.code} value={plan.code}>{plan.name}</option>
+                              ))
+                            }
                           </select>
+                        </div>
+
+                        {/* Quick Save Button */}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!business?.id) return;
+                            try {
+                              const { updateDoc, doc } = await import('firebase/firestore');
+                              const { db } = await import('@/lib/firebase');
+                              await updateDoc(doc(db, 'businesses', business.id), {
+                                subscriptionPlan: formData.subscriptionPlan || 'none',
+                              });
+                              showToast(`Plan '${formData.subscriptionPlan}' olarak guncellendi`, 'success');
+                              // Update local business state
+                              setBusiness((prev: any) => prev ? { ...prev, subscriptionPlan: formData.subscriptionPlan } : prev);
+                            } catch (err: any) {
+                              console.error('Plan update error:', err);
+                              showToast('Plan guncellenemedi: ' + err.message, 'error');
+                            }
+                          }}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                        >
+                          Plan Kaydet
+                        </button>
+                      </div>
+
+                      {/* Plan Features Info */}
+                      <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 space-y-3">
+                        <h5 className="text-gray-300 text-sm font-medium">Plan Ozellikleri</h5>
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="bg-gray-800/50 rounded-lg p-3">
+                            <span className="text-gray-500 font-bold">FREE</span>
+                            <p className="text-gray-400 mt-1">Temel profil, sinirli siparis</p>
+                          </div>
+                          <div className="bg-gray-800/50 rounded-lg p-3">
+                            <span className="text-green-400 font-bold">BASIC</span>
+                            <p className="text-gray-400 mt-1">Siparis yonetimi, temel istatistik</p>
+                          </div>
+                          <div className="bg-gray-800/50 rounded-lg p-3">
+                            <span className="text-blue-400 font-bold">STANDARD</span>
+                            <p className="text-gray-400 mt-1">Tam ERP, kurye, promosyon</p>
+                          </div>
+                          <div className="bg-gray-800/50 rounded-lg p-3">
+                            <span className="text-amber-400 font-bold">PREMIUM</span>
+                            <p className="text-gray-400 mt-1">AI analiz, sponsorlu gosterim</p>
+                          </div>
                         </div>
                       </div>
 

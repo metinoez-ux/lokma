@@ -138,14 +138,14 @@ export const BUSINESS_TYPES: Record<string, BusinessTypeConfig> = {
     },
     eticaret: {
         value: 'eticaret',
-        label: 'E-Ticaret',
+        label: 'Online Shop',
         icon: '🛍️',
         color: 'cyan',
-        description: 'Online Mağaza',
+        description: 'Online Shop / Sanal Magaza',
         hasModule: true,
         moduleRoute: '/admin/shop',
         features: ['products', 'orders', 'shipping'],
-        category: 'hizmet',  // Özel modül - ayrı sayfa
+        category: 'market',  // Marketler sekmesinde gosterilir
     },
 } as const;
 
@@ -161,9 +161,9 @@ export const SPECIAL_MODULES = {
         route: '/admin/kermes',
     },
     eticaret: {
-        label: 'E-Ticaret',
+        label: 'Online Shop',
         icon: '🛍️',
-        description: 'Online Shop',
+        description: 'Online Shop / Sanal Magaza',
         route: '/admin/shop',
     },
 } as const;

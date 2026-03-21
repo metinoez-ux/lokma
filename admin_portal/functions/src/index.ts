@@ -953,6 +953,27 @@ export const onOrderStatusChange = onDocumentUpdated(
                     feedbackSendAt: admin.firestore.Timestamp.fromDate(servedFeedbackSendAt),
                     feedbackSent: false,
                 });
+
+                // Auto-close group session when order is served -> releases table QR for new customers
+                if (after.groupSessionId) {
+                    try {
+                        const sessionRef = db.collection("table_group_sessions").doc(after.groupSessionId);
+                        const sessionSnap = await sessionRef.get();
+                        if (sessionSnap.exists && sessionSnap.data()?.status !== "closed") {
+                            await sessionRef.update({
+                                status: "closed",
+                                closedAt: admin.firestore.FieldValue.serverTimestamp(),
+                                closeReason: "order_served",
+                            });
+                            console.log(`[Session Release] Closed group session ${after.groupSessionId} after order served`);
+                        }
+                    } catch (sessionErr) {
+                        console.error(`[Session Release] Error closing session ${after.groupSessionId}:`, sessionErr);
+                    }
+                }
+
+                // Also create commission record for served dine-in orders
+                await createCommissionRecord(event.params.orderId, after);
                 break;
             }
             case "onTheWay":

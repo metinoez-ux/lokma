@@ -78,6 +78,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCtaSub: 'Starten Sie noch heute mit LOKMA und erreichen Sie Tausende neuer Kunden.',
         bottomCtaBtn: 'Kostenlos registrieren',
         loginLink: 'Bereits Handler? Hier einloggen',
+        pricingLink: 'Preise ansehen',
     },
     tr: {
         heroTag: 'İŞLETMELER İÇİN',
@@ -149,6 +150,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCtaSub: 'LOKMA ile bugun baslayin ve binlerce yeni musteriye ulasin.',
         bottomCtaBtn: 'Ucretsiz kaydolun',
         loginLink: 'Zaten uye misiniz? Giris yapin',
+        pricingLink: 'Fiyatlari goruntuleyun',
     },
     en: {
         heroTag: 'FOR BUSINESSES',
@@ -219,6 +221,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Ready for digitalization?',
         bottomCtaSub: 'Start with LOKMA today and reach thousands of new customers.',
         bottomCtaBtn: 'Register for free',
+        pricingLink: 'View Pricing',
         loginLink: 'Already a partner? Log in here',
     },
     fr: {
@@ -276,6 +279,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Prêt pour la numérisation ?',
         bottomCtaSub: 'Commencez avec LOKMA des aujourd\'hui et atteignez des milliers de nouveaux clients.',
         bottomCtaBtn: 'S\'inscrire gratuitement',
+        pricingLink: 'Voir les tarifs',
         loginLink: 'Deja partenaire ? Connectez-vous ici',
     },
     it: {
@@ -333,6 +337,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Pronto per la digitalizzazione?',
         bottomCtaSub: 'Inizia con LOKMA oggi e raggiungi migliaia di nuovi clienti.',
         bottomCtaBtn: 'Registrati gratis',
+        pricingLink: 'Vedi i prezzi',
         loginLink: 'Gia partner? Accedi qui',
     },
     es: {
@@ -390,6 +395,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: '¿Listo para la digitalización?',
         bottomCtaSub: 'Empieza con LOKMA hoy y alcanza a miles de nuevos clientes.',
         bottomCtaBtn: 'Registrarse gratis',
+        pricingLink: 'Ver precios',
         loginLink: 'Ya eres socio? Inicia sesion aqui',
     },
     nl: {
@@ -447,6 +453,7 @@ const vendorTexts: Record<string, Record<string, string>> = {
         bottomCta: 'Klaar voor digitalisering?',
         bottomCtaSub: 'Begin vandaag met LOKMA en bereik duizenden nieuwe klanten.',
         bottomCtaBtn: 'Gratis registreren',
+        pricingLink: 'Prijzen bekijken',
         loginLink: 'Al partner? Log hier in',
     },
 };
@@ -513,6 +520,10 @@ export default function VendorPage() {
                             <Link href="#features" className="inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-900 px-10 py-4 rounded-2xl font-bold text-lg transition-all">
                                 {tx.ctaLearnMore}
                                 <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                            </Link>
+                            <Link href="/vendor/pricing" className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 border-2 border-[#fb335b]/30 text-[#fb335b] px-10 py-4 rounded-2xl font-bold text-lg transition-all hover:border-[#fb335b]">
+                                <span className="material-symbols-outlined text-[18px]">payments</span>
+                                {tx.pricingLink}
                             </Link>
                         </div>
                         <p className="text-gray-400 text-sm font-medium mb-4">{tx.ctaSub}</p>

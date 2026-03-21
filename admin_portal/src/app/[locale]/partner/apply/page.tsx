@@ -126,13 +126,13 @@ export default function PartnerApplyPage() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto p-8">
                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span className="material-symbols-outlined text-green-500 text-4xl">check_circle</span>
                     </div>
                     <h1 className="text-3xl font-bold mb-4">{t('successTitle')}</h1>
-                    <p className="text-white/60 mb-8">{t('successDesc')}</p>
+                    <p className="text-gray-500 dark:text-white/60 mb-8">{t('successDesc')}</p>
                     <Link href="/" className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all">
                         {t('backHome')}
                     </Link>
@@ -143,23 +143,23 @@ export default function PartnerApplyPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[600px] mx-auto">
                     <h1 className="text-3xl md:text-4xl font-black mb-4">{t('title')}</h1>
-                    <p className="text-white/60 mb-8">{t('subtitle')}</p>
+                    <p className="text-gray-500 dark:text-white/60 mb-8">{t('subtitle')}</p>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('businessName')}</label>
-                            <input type="text" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder={t('businessNamePh')} value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('businessType')}</label>
-                            <select required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <select required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 value={formData.businessType} onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}>
                                 <option value="">{t('selectType')}</option>
                                 {businessTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
@@ -167,40 +167,40 @@ export default function PartnerApplyPage() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('ownerName')}</label>
-                            <input type="text" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder={t('ownerNamePh')} value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2">{t('email')}</label>
-                                <input type="email" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                                <input type="email" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                     placeholder="ornek@email.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2">{t('phone')}</label>
-                                <input type="tel" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                                <input type="tel" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                     placeholder="+49 176 123 456 78" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('city')}</label>
-                            <input type="text" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder={t('cityPh')} value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('address')}</label>
-                            <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder={t('addressPh')} value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('about')}</label>
-                            <textarea rows={3} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all resize-none"
+                            <textarea rows={3} className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all resize-none"
                                 placeholder={t('aboutPh')} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                         </div>
                         <button type="submit" className="w-full bg-[#fb335b] hover:bg-red-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-[#fb335b]/20">
                             {t('submit')}
                         </button>
-                        <p className="text-center text-white/40 text-sm">
+                        <p className="text-center text-gray-400 dark:text-white/40 text-sm">
                             {t('terms')} <Link href="/agb" className="underline">{t('termsLink')}</Link>
                         </p>
                     </form>

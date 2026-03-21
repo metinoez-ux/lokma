@@ -116,13 +116,13 @@ const INITIAL_SECTORS = [
     },
     {
         id: 'eticaret',
-        label: 'E-Ticaret',
+        label: 'Online Shop',
         icon: '🛍️',
         color: 'cyan',
-        description: 'Online Mağaza',
-        category: 'hizmet',
+        description: 'Online Shop / Sanal Magaza',
+        category: 'market',
         isActive: true,
-        sortOrder: 21,
+        sortOrder: 13,
         features: ['products', 'orders', 'shipping'],
     },
 ];

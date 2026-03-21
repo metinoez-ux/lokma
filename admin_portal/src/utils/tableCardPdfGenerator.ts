@@ -302,6 +302,33 @@ function renderCardPage(
   doc.line(PAD, divY, A6_WIDTH - PAD, divY);
 
   // ================================================================
+  // DIN A6 LABEL + CORNER CROP MARKS (cutting guide)
+  // ================================================================
+  // Corner crop marks (L-shaped, 5mm each arm)
+  const cropLen = 5;
+  const cropOffset = 1.5; // offset from page edge
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.2);
+  // Top-left
+  doc.line(cropOffset, 0, cropOffset, cropLen);
+  doc.line(0, cropOffset, cropLen, cropOffset);
+  // Top-right
+  doc.line(A6_WIDTH - cropOffset, 0, A6_WIDTH - cropOffset, cropLen);
+  doc.line(A6_WIDTH, cropOffset, A6_WIDTH - cropLen, cropOffset);
+  // Bottom-left
+  doc.line(cropOffset, A6_HEIGHT, cropOffset, A6_HEIGHT - cropLen);
+  doc.line(0, A6_HEIGHT - cropOffset, cropLen, A6_HEIGHT - cropOffset);
+  // Bottom-right
+  doc.line(A6_WIDTH - cropOffset, A6_HEIGHT, A6_WIDTH - cropOffset, A6_HEIGHT - cropLen);
+  doc.line(A6_WIDTH, A6_HEIGHT - cropOffset, A6_WIDTH - cropLen, A6_HEIGHT - cropOffset);
+
+  // "DIN A6" label - subtle, bottom-right
+  doc.setFont('Roboto', 'normal');
+  doc.setFontSize(5);
+  doc.setTextColor(190, 190, 190);
+  doc.text('DIN A6 \u00b7 105\u00d7148 mm', A6_WIDTH - PAD, A6_HEIGHT - 2, { align: 'right' });
+
+  // ================================================================
   // BOTTOM BAR: Partner text (left-aligned above logo) + Logo (left) + badges (right)
   // ================================================================
   const bottomStartY = divY + 2;

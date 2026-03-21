@@ -662,7 +662,7 @@ export default function LoginPage() {
     // Show loading while checking if user is already authenticated
     if (checkingAuth) {
         return (
-            <div className="min-h-screen bg-[#120a0a] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fb335b]"></div>
             </div>
         );
@@ -671,7 +671,7 @@ export default function LoginPage() {
     // Show access denied screen for non-business accounts
     if (accessDenied) {
         return (
-            <div className="min-h-screen bg-[#120a0a] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center p-4">
                 <div className="w-full max-w-md">
                     <div className="bg-[#1a1010] border border-white/10 rounded-2xl shadow-xl p-8 text-center">
                         {/* Icon */}
@@ -734,7 +734,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#120a0a] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Back to Home */}
                 <Link href="/" className="inline-flex items-center text-white/60 hover:text-white mb-6">

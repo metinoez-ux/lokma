@@ -35,8 +35,8 @@ class ReservationDiscoveryScreen extends StatefulWidget {
 class _ReservationDiscoveryScreenState
     extends State<ReservationDiscoveryScreen> {
   // Distance slider
-  static const List<double> _distanceSteps = [1, 2, 3, 4, 5, 10, 15, 20, 30, 50];
-  int _currentStepIndex = 4; // 5km default
+  static const List<double> _distanceSteps = [1, 2, 3, 5, 10, 15, 20, 30, 50, 100, 200];
+  int _currentStepIndex = 10; // 200km default = show all
   double get _maxDistance => _distanceSteps[_currentStepIndex];
 
   // Search
@@ -110,8 +110,15 @@ class _ReservationDiscoveryScreenState
   void _filterBusinesses() {
     final results = <_ReservationBusiness>[];
 
+    debugPrint('RESERVATION_FILTER: Total businesses received: ${widget.allBusinesses.length}');
+
     for (final doc in widget.allBusinesses) {
       final data = doc.data() as Map<String, dynamic>;
+
+      final name = data['companyName'] as String? ?? 'unknown';
+      final hasRes = data['hasReservation'];
+      final isActive = data['isActive'];
+      debugPrint('RESERVATION_FILTER: $name -> hasReservation=$hasRes, isActive=$isActive');
 
       // Only reservation-enabled businesses
       if (data['hasReservation'] != true) continue;
@@ -223,7 +230,7 @@ class _ReservationDiscoveryScreenState
             elevation: 0,
             scrolledUnderElevation: 0,
             pinned: true,
-            expandedHeight: 210,
+            expandedHeight: 175,
             collapsedHeight: 120,
             leading: IconButton(
               icon: Icon(
@@ -235,7 +242,7 @@ class _ReservationDiscoveryScreenState
             ),
             flexibleSpace: LayoutBuilder(
               builder: (context, constraints) {
-                final expandedHeight = 210.0;
+                final expandedHeight = 175.0;
                 final collapsedHeight = 120.0;
                 final currentHeight = constraints.maxHeight;
                 final expandRatio = ((currentHeight - collapsedHeight) /
@@ -310,9 +317,9 @@ class _ReservationDiscoveryScreenState
                                 children: [
                                   // Search bar
                                   Padding(
-                                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                                     child: Container(
-                                      height: 42,
+                                      height: 48,
                                       decoration: BoxDecoration(
                                         color: isDark
                                             ? Colors.white.withValues(alpha: 0.08)
@@ -355,9 +362,9 @@ class _ReservationDiscoveryScreenState
                           ] else ...[
                             // Collapsed: just search
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                               child: Container(
-                                height: 42,
+                                height: 48,
                                 decoration: BoxDecoration(
                                   color: isDark
                                       ? Colors.white.withValues(alpha: 0.08)
@@ -404,7 +411,7 @@ class _ReservationDiscoveryScreenState
           // Results header
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Text(
                 tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                 style: TextStyle(
@@ -462,9 +469,26 @@ class _ReservationDiscoveryScreenState
 
   Widget _buildDistanceSlider(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 2, bottom: 4),
       child: Row(
         children: [
+          // Business count badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _lokmaPink.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${_filteredBusinesses.length}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: _lokmaPink,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(

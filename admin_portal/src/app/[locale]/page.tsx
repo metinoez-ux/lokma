@@ -123,7 +123,7 @@ export default function LandingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
         <div className="animate-pulse">
           <Image src="/lokma_logo_red_web.png" alt="LOKMA" width={160} height={40} className="object-contain" />
         </div>
@@ -132,8 +132,8 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-white text-gray-900 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#fb335b]/30">
-      <PublicHeader themeAware={false} />
+    <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#fb335b]/30">
+      <PublicHeader themeAware={true} />
 
       {/* Hero Section — Split layout: gradient left + artisan right with smooth transition */}
       <section className="relative pt-20 md:pt-0 min-h-[60vh] md:min-h-[75vh] flex items-stretch overflow-hidden" style={{ background: 'linear-gradient(to right, #EE3640 0%, #F44A48 50%, #FD5750 100%)' }}>
@@ -208,7 +208,7 @@ export default function LandingPage() {
       </section>
 
       {/* Feature Cards — Lexware style (light background) */}
-      <section className="bg-white py-20 px-4 md:px-8">
+      <section className="bg-white dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
         <div className="max-w-[1200px] mx-auto">
           <div className="mb-14">
             <p className="text-[#F51736] font-bold text-sm tracking-wider uppercase mb-3 flex items-center gap-2">
@@ -228,39 +228,39 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Card 1 */}
-            <div className="group p-6 rounded-2xl border border-gray-200 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white">
+            <div className="group p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">bolt</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">{t('whyFastTitle')}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">{t('whyFastDesc')}</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('whyFastDesc')}</p>
             </div>
 
             {/* Card 2 */}
-            <div className="group p-6 rounded-2xl border border-gray-200 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white">
+            <div className="group p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">handshake</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">{t('whyFairTitle')}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">{t('whyFairDesc')}</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('whyFairDesc')}</p>
             </div>
 
             {/* Card 3 */}
-            <div className="group p-6 rounded-2xl border border-gray-200 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white">
+            <div className="group p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">storefront</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">{t('whyWideTitle')}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">{t('whyWideDesc')}</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('whyWideDesc')}</p>
             </div>
 
             {/* Card 4 */}
-            <div className="group p-6 rounded-2xl border border-gray-200 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white">
+            <div className="group p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">eco</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">{t('market')}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">{t('marketDesc')}</p>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('marketDesc')}</p>
             </div>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function LandingPage() {
 
 
       {/* Local Support Banner */}
-      <section className="bg-[#fff8f8] py-20 px-4 md:px-8 border-y border-red-50">
+      <section className="bg-[#fff8f8] dark:bg-[#150a0a] py-20 px-4 md:px-8 border-y border-red-50 dark:border-white/5">
         <div className="max-w-[1000px] mx-auto text-center">
           <div className="w-16 h-16 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-full mx-auto mb-6">
             <span className="material-symbols-outlined text-3xl">favorite</span>
@@ -276,14 +276,14 @@ export default function LandingPage() {
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
             {t('localSupportTitle') || 'Senin için lezzet, esnaf için bereket.'}
           </h2>
-          <p className="text-lg md:text-xl text-gray-600 leading-relaxed font-medium">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
             {t('localSupportDesc') || 'LOKMA\'dan verdiğin her siparişte, sadece en sevdiğin yemekleri tatmakla kalmaz, aynı zamanda mahalle esnafının kazancına da bereket katarsın.'}
           </p>
         </div>
       </section>
 
       {/* Partner CTA — Lexware-style clean banner */}
-      <section className="bg-gray-50 py-20 px-4 md:px-8">
+      <section className="bg-gray-50 dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
         <div className="max-w-[1200px] mx-auto relative bg-gradient-to-br from-[#F51736] to-[#c9183d] rounded-3xl p-10 md:p-16 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 flex-1">
@@ -303,12 +303,12 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="bg-white py-20 px-4 md:px-8">
+      <section className="bg-white dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-12 text-gray-900">{t('faqTitle')}</h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div key={index} className="border border-gray-200 rounded-2xl overflow-hidden hover:border-[#F51736]/20 transition-colors">
+              <div key={index} className="border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden hover:border-[#F51736]/20 transition-colors">
                 <button
                   className="w-full flex items-center justify-between p-6 text-left"
                   onClick={() => setFaqOpen(faqOpen === index ? null : index)}
@@ -321,7 +321,7 @@ export default function LandingPage() {
                 <div
                    className={`overflow-hidden transition-all duration-300 ease-in-out ${faqOpen === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                 >
-                  <div className="px-6 pb-6 pt-0 text-gray-600 text-lg">
+                  <div className="px-6 pb-6 pt-0 text-gray-600 dark:text-gray-400 text-lg">
                     {faq.a}
                   </div>
                 </div>

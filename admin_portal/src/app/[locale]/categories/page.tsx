@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import PublicHeader from '@/components/ui/PublicHeader';
+import PublicFooter from '@/components/ui/PublicFooter';
 
 const categories = [
     { name: 'Market', desc: 'Taze meyve, sebze ve günlük ihtiyaçlarınız', href: '/categories/market', icon: '🛒', count: 45 },
@@ -20,35 +22,27 @@ const categories = [
 
 export default function CategoriesPage() {
     return (
-        <div className="min-h-screen bg-[#120a0a] text-white font-['Plus_Jakarta_Sans',sans-serif]">
-            {/* Header */}
-            <header className="fixed top-0 z-50 w-full bg-[#120a0a]/80 backdrop-blur-xl border-b border-white/10 px-4 md:px-20 lg:px-40 py-4">
-                <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3">
-                        <Image src="/lokma_logo_wide.png" alt="LOKMA" width={140} height={36} className="object-contain" />
-                    </Link>
-                    <Link href="/" className="text-sm text-white/60 hover:text-white">← Ana Sayfa</Link>
-                </div>
-            </header>
+        <div className="min-h-screen bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif]">
+            <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
                 <div className="max-w-[1200px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-black mb-4">Kategoriler</h1>
-                    <p className="text-white/60 text-lg mb-12">Tüm kategorileri keşfedin</p>
+                    <p className="text-gray-500 dark:text-white/60 text-lg mb-12">Tum kategorileri kesfedin</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {categories.map((cat) => (
                             <Link
                                 key={cat.name}
                                 href={cat.href}
-                                className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-[#fb335b]/50 hover:bg-white/10 transition-all group"
+                                className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:border-[#fb335b]/50 hover:bg-gray-100 dark:hover:bg-white/10 transition-all group"
                             >
                                 <div className="text-4xl mb-4">{cat.icon}</div>
                                 <h3 className="text-xl font-bold mb-2 group-hover:text-[#fb335b] transition-colors">{cat.name}</h3>
-                                <p className="text-sm text-white/60 mb-4">{cat.desc}</p>
+                                <p className="text-sm text-gray-500 dark:text-white/60 mb-4">{cat.desc}</p>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs text-white/40">{cat.count} işletme</span>
-                                    <span className="material-symbols-outlined text-white/40 group-hover:text-[#fb335b] transition-colors">arrow_forward</span>
+                                    <span className="text-xs text-gray-400 dark:text-white/40">{cat.count} isletme</span>
+                                    <span className="material-symbols-outlined text-gray-400 dark:text-white/40 group-hover:text-[#fb335b] transition-colors">arrow_forward</span>
                                 </div>
                             </Link>
                         ))}
@@ -56,6 +50,7 @@ export default function CategoriesPage() {
                 </div>
             </main>
 
+            <PublicFooter themeAware={true} />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         </div>

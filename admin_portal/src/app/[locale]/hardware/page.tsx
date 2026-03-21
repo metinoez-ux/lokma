@@ -13,7 +13,7 @@ export default function HardwarePage() {
     const t = (key: string) => (tx[key] as string) || key;
     const tArr = (key: string) => (tx[key] as string[]) || [];
     return (
-        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             {/* ═══════════════════════════════════════ */}
