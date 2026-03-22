@@ -192,8 +192,19 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: spacer to keep layout balanced (image is positioned absolutely) */}
-          <div className="hidden md:block flex-1" />
+          {/* Right: Hero pizza image */}
+          <div className="hidden md:flex flex-1 items-center justify-center relative">
+            <div className="relative w-[420px] h-[420px] lg:w-[500px] lg:h-[500px]">
+              <div className="absolute inset-0 bg-black/20 rounded-full blur-3xl scale-90 translate-y-4" />
+              <Image
+                src="/images/hero_pizza.png"
+                alt="Fresh artisan pizza"
+                fill
+                className="object-contain drop-shadow-2xl transform -rotate-6 hover:rotate-0 transition-transform duration-700 ease-out"
+                priority
+              />
+            </div>
+          </div>
         </div>
       </section>
 
