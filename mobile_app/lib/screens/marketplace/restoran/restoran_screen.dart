@@ -1373,17 +1373,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.near_me,
-                  color: _deliveryMode == 'masa'
-                      ? const Color(0xFFFF6B00)
-                      : (isDark ? lokmaPink : Colors.grey[700]),
+                  color: isDark ? lokmaPink : Colors.grey[700],
                   size: 14),
               const SizedBox(width: 4),
               Text(
                 nearestLabel,
                 style: TextStyle(
-                  color: _deliveryMode == 'masa'
-                      ? const Color(0xFFFF6B00)
-                      : (isDark ? lokmaPink : Colors.grey[700]),
+                  color: isDark ? lokmaPink : Colors.grey[700],
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1394,10 +1390,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: _deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink,
+                activeTrackColor: lokmaPink,
                 inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                thumbColor: _deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink,
-                overlayColor: (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink).withValues(alpha: 0.2),
+                thumbColor: lokmaPink,
+                overlayColor: lokmaPink.withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
@@ -1441,9 +1437,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             child: Text(
               distanceLabel,
               style: TextStyle(
-                color: _deliveryMode == 'masa'
-                    ? const Color(0xFFFF6B00)
-                    : (isDark ? Colors.grey[300]! : Colors.grey[700]!),
+                color: isDark ? Colors.grey[300]! : Colors.grey[700]!,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -2726,7 +2720,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink,
+                            backgroundColor: lokmaPink,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
@@ -2761,7 +2755,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     bool useRadio = false,
     bool isMasaMode = false,
   }) {
-    final accentColor = isMasaMode ? const Color(0xFFFF6B00) : lokmaPink;
+    final accentColor = lokmaPink;
     return Builder(
       builder: (context) {
         final textColor = Theme.of(context).colorScheme.onSurface;
