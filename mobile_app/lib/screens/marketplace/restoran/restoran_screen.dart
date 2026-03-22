@@ -2982,65 +2982,83 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final screenH = MediaQuery.of(context).size.height;
     final cardH = (screenH * 0.38).clamp(180.0, 320.0);
 
-    Widget cardContent(String titleKey, String subtitleKey, Widget centerIcon) =>
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.20),
-                  shape: BoxShape.circle,
+    Widget cardContent(String titleKey, String subtitleKey, Widget smallIcon, String svgAssetPath) =>
+        Stack(
+          children: [
+            // Buyuk merkez SVG ikon
+            Positioned(
+              right: 16,
+              top: 16,
+              bottom: 60,
+              child: Opacity(
+                opacity: 0.18,
+                child: SvgPicture.asset(
+                  svgAssetPath,
+                  fit: BoxFit.contain,
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                 ),
-                child: Center(child: centerIcon),
               ),
-              Column(
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    tr(titleKey),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(14),
                     ),
+                    child: Center(child: smallIcon),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          tr(subtitleKey),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.85),
-                            height: 1.3,
-                          ),
+                      Text(
+                        tr(titleKey),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.20),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward,
-                          size: 16,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              tr(subtitleKey),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.20),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         );
 
     BoxDecoration gradientDeco(List<Color> colors, Color shadow) => BoxDecoration(
@@ -3079,7 +3097,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               child: cardContent(
                 'home.order_with_qr',
                 'home.scan_qr_table',
-                const Icon(Icons.qr_code_scanner, size: 30, color: Colors.white),
+                SvgPicture.asset(
+                  'assets/images/icon_qr_scan.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                ),
+                'assets/images/icon_qr_scan.svg',
               ),
             ),
           ),
@@ -3101,11 +3125,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 'home.table_reservation',
                 'marketplace.reserve_table_discover',
                 SvgPicture.asset(
-                  'assets/images/icon_masa_rezervasyon.svg',
-                  width: 30,
-                  height: 30,
+                  'assets/images/icon_masa_reservation.svg',
+                  width: 24,
+                  height: 24,
                   colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                 ),
+                'assets/images/icon_masa_reservation.svg',
               ),
             ),
           ),
