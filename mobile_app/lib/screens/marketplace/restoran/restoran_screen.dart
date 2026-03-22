@@ -1168,7 +1168,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         TabItem(
             title: tr('delivery_modes.pickup'),
             icon: Icons.shopping_bag_outlined),
-        TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.restaurant),
+        TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.table_restaurant),
       ],
       onTabSelected: (index) {
         String newMode = 'teslimat';
