@@ -756,7 +756,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
                       child: Text(
-                        tr('marketplace.reserve_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                        tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -1168,7 +1168,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         TabItem(
             title: tr('delivery_modes.pickup'),
             icon: Icons.shopping_bag_outlined),
-        TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.table_restaurant),
+        TabItem(title: tr('delivery_modes.dine_in'), svgAssetPath: 'assets/images/icon_masa_tab.svg'),
       ],
       onTabSelected: (index) {
         String newMode = 'teslimat';
@@ -1373,13 +1373,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.near_me,
-                  color: isDark ? lokmaPink : Colors.grey[700],
+                  color: isDark ? (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink) : Colors.grey[700],
                   size: 14),
               const SizedBox(width: 4),
               Text(
                 nearestLabel,
                 style: TextStyle(
-                  color: isDark ? lokmaPink : Colors.grey[700],
+                  color: isDark ? (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink) : Colors.grey[700],
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1390,10 +1390,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(0xFFFF6B00),
+                activeTrackColor: _deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink,
                 inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                thumbColor: const Color(0xFFFF6B00),
-                overlayColor: const Color(0xFFFF6B00).withValues(alpha: 0.2),
+                thumbColor: _deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink,
+                overlayColor: (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink).withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
@@ -1437,7 +1437,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             child: Text(
               distanceLabel,
               style: TextStyle(
-                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                color: isDark
+                    ? (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : Colors.grey[300]!)
+                    : Colors.grey[700],
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

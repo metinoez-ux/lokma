@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class TabItem {
   final String title;
   final String? subtitle;
   final IconData? icon;
+  final String? svgAssetPath;
 
-  const TabItem({required this.title, this.subtitle, this.icon});
+  const TabItem({required this.title, this.subtitle, this.icon, this.svgAssetPath});
 }
 
 class ThreeDimensionalPillTabBar extends StatefulWidget {
@@ -253,7 +255,15 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (tab.icon != null) ...[
+          if (tab.svgAssetPath != null) ...[
+            SvgPicture.asset(
+              tab.svgAssetPath!,
+              width: _iconSize,
+              height: _iconSize,
+              colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
+            ),
+            SizedBox(width: widget.compact ? 3 : 4),
+          ] else if (tab.icon != null) ...[
             Icon(tab.icon, color: textColor, size: _iconSize),
             SizedBox(width: widget.compact ? 3 : 4),
           ],
