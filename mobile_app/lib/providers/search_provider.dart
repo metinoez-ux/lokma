@@ -385,13 +385,15 @@ class SearchNotifier extends Notifier<SearchState> {
         // Use correct Firestore field names: companyName and brand
         // Apply Turkish character normalization for flexible search
         final companyName = _normalizeTurkish((data['companyName'] ?? '').toString().toLowerCase());
+        final businessName = _normalizeTurkish((data['businessName'] ?? '').toString().toLowerCase());
         final brand = _normalizeTurkish((data['brand'] ?? '').toString().toLowerCase());
         final city = _normalizeTurkish((data['address']?['city'] ?? '').toString().toLowerCase());
+        final cuisineType = _normalizeTurkish((data['cuisineType'] ?? '').toString().toLowerCase());
         
-        // 🆕 MULTI-WORD SEARCH: Split query into words, ALL must match somewhere
-        // e.g., "tuna hückelhoven" → ["tuna", "huckelhoven"] → both words must match
+        // MULTI-WORD SEARCH: Split query into words, ALL must match somewhere
+        // e.g., "tuna hückelhoven" -> ["tuna", "huckelhoven"] -> both words must match
         final queryWords = queryNormalized.split(RegExp(r'\s+')).where((w) => w.length >= 2).toList();
-        final searchableText = '$companyName $brand $city';
+        final searchableText = '$companyName $businessName $brand $city $cuisineType';
         
         bool allWordsMatch = queryWords.isNotEmpty && queryWords.every((word) => searchableText.contains(word));
         
@@ -427,24 +429,34 @@ class SearchNotifier extends Notifier<SearchState> {
           // Determine the category - check all possible type fields
           final businessType = (data['businessType'] ?? data['businessCategory'] ?? data['type'] ?? '').toString().toLowerCase();
           final categories = data['businessCategories'] as List<dynamic>? ?? [];
-          String categoryKey = businessType.isNotEmpty ? businessType : 
-              (categories.isNotEmpty ? categories.first.toString().toLowerCase() : 'isletme');
+          // Also check 'types' list field (used by market_screen._hasMarketSector)
+          final typesField = data['types'] as List<dynamic>? ?? [];
+          final allCategoryKeys = <String>{
+            if (businessType.isNotEmpty) businessType,
+            ...categories.map((c) => c.toString().toLowerCase()),
+            ...typesField.map((t) => t.toString().toLowerCase()),
+          };
+          String categoryKey = allCategoryKeys.isNotEmpty ? allCategoryKeys.first : 'isletme';
           
-          // 🔧 SEGMENT FILTERING - only show businesses matching current segment
+          // SEGMENT FILTERING - only show businesses matching current segment
+          // Market = everything that is NOT yemek and NOT kermes
           final yemekCategories = {'restoran', 'restaurant', 'imbiss', 'pastane', 'bakery', 'cigkofte', 'catering', 'firin'};
-          final marketCategories = {'market', 'kasap', 'butcher'};
           final kermesCategories = {'kermes'};
+          
+          final isYemek = allCategoryKeys.intersection(yemekCategories).isNotEmpty;
+          final isKermes = allCategoryKeys.intersection(kermesCategories).isNotEmpty;
           
           bool passesSegmentFilter = true;
           switch (state.activeSegment) {
             case SearchSegment.yemek:
-              passesSegmentFilter = yemekCategories.contains(categoryKey);
+              passesSegmentFilter = isYemek;
               break;
             case SearchSegment.market:
-              passesSegmentFilter = marketCategories.contains(categoryKey);
+              // Market = everything that is NOT yemek and NOT kermes
+              passesSegmentFilter = !isYemek && !isKermes;
               break;
             case SearchSegment.kermes:
-              passesSegmentFilter = kermesCategories.contains(categoryKey);
+              passesSegmentFilter = isKermes;
               break;
           }
           
@@ -568,7 +580,7 @@ class SearchNotifier extends Notifier<SearchState> {
           // Search market/kasap product menus
           final marketResults = await _searchBusinessMenuItems(
             query: queryNormalized,
-            businessTypes: {'market', 'kasap', 'butcher'},
+            businessTypes: {'market', 'kasap', 'butcher', 'cicekci', 'florist', 'aktar', 'eticaret', 'kuruyemis'},
           );
           results.addAll(marketResults);
           break;

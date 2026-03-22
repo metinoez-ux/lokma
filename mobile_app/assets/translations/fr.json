@@ -393,7 +393,8 @@
     "urun_isletme_bilgisi_eksik": "Les informations sur l'établissement manquent pour ce produit.",
     "favori_siparis_yok": "Aucune commande favorite",
     "siparislerinizi_bookmark_ile_f": "Ajoutez vos commandes aux favoris avec le signet!",
-    "urun_kucuk": "article"
+    "urun_kucuk": "article",
+    "continue_button": "Continuer"
   },
   "customer": {
     "tumu": "Tous",
@@ -729,7 +730,7 @@
     "ingredients_tags_de": "Ingrédients / Tags",
     "see_menu": "Voir le menu",
     "browse_products": "Voir les produits",
-    "browse_products_and_order": "Voir les produits \u0026 commander",
+    "browse_products_and_order": "Voir les produits & commander",
     "open_menu": "Ouvrir le menu",
     "required_field": "Obligatoire",
     "add_to_cart": "Ajouter",
@@ -932,6 +933,7 @@
     "yuksek_et_orani": "Haute Teneur en Viande",
     "yuksek_et_orani_desc": "Utilisation de viande de qualité",
     "session_timeout_warning": "Avertissement d'expiration",
+    "session_timeout_message": "Vous n'avez pas termine votre commande depuis 15 minutes. Votre numero de table a ete reinitialise pour liberer la table pour d'autres clients.",
     "join_group": "Rejoindre le groupe",
     "single_order": "Commander seul",
     "yes_close_session": "Oui, fermer la session",
@@ -970,7 +972,9 @@
     "hours_unknown": "Horaires inconnus",
     "mode_delivery": "Livraison",
     "mode_dine_in": "Sur place",
-    "mode_pickup": "À emporter"
+    "mode_pickup": "À emporter",
+    "closed_but_preorder_short": "Vous pouvez planifier la livraison ou le retrait pour plus tard",
+    "closed_plan_later": "Vous pouvez planifier la livraison ou le retrait pour plus tard"
   },
   "navigation": {
     "food": "Repas",
@@ -1650,7 +1654,13 @@
     "session_expired": "Cette commande groupée a expiré",
     "session_closed": "Cette commande groupée a déjà été clôturée",
     "everyone_pays_own": "Chacun paie sa part (Addition séparée)",
-    "host_pays": "L'hôte paie pour tout le monde"
+    "host_pays": "L'hôte paie pour tout le monde",
+    "group_order_label": "Commande groupee",
+    "tab_me": "Moi",
+    "tab_everyone": "Tous",
+    "tab_table": "Table",
+    "items_short": "articles",
+    "invite_more": "Inviter plus"
   },
   "checkout": {
     "cart_title": "Panier",

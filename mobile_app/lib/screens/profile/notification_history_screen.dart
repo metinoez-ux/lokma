@@ -1823,9 +1823,9 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
       final schedDay = DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
       final timeStr = '${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}';
       if (schedDay == today) {
-        pickupTimeStr = '${'today'.tr()} $timeStr';
+        pickupTimeStr = '${'checkout.today'.tr()} $timeStr';
       } else if (schedDay == tomorrow) {
-        pickupTimeStr = '${'tomorrow'.tr()} $timeStr';
+        pickupTimeStr = '${'checkout.tomorrow'.tr()} $timeStr';
       } else {
         pickupTimeStr = '${scheduledDate.day.toString().padLeft(2, '0')}.${scheduledDate.month.toString().padLeft(2, '0')} $timeStr';
       }

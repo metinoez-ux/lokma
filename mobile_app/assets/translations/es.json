@@ -393,7 +393,8 @@
     "urun_isletme_bilgisi_eksik": "Falta información del negocio para este producto.",
     "favori_siparis_yok": "No hay pedido favorito",
     "siparislerinizi_bookmark_ile_f": "¡Agrega tus pedidos a favoritos con el marcador!",
-    "urun_kucuk": "artículo"
+    "urun_kucuk": "artículo",
+    "continue_button": "Continuar"
   },
   "customer": {
     "tumu": "Todos",
@@ -729,7 +730,7 @@
     "ingredients_tags_de": "Ingredientes / Etiquetas",
     "see_menu": "Ver el menú",
     "browse_products": "Ver productos",
-    "browse_products_and_order": "Ver productos \u0026 pedir",
+    "browse_products_and_order": "Ver productos & pedir",
     "open_menu": "Abrir menú",
     "required_field": "Obligatorio",
     "add_to_cart": "Añadir",
@@ -932,6 +933,7 @@
     "yuksek_et_orani": "Alto Contenido de Carne",
     "yuksek_et_orani_desc": "Uso de carne de calidad",
     "session_timeout_warning": "Aviso de tiempo agotado",
+    "session_timeout_message": "No has completado tu pedido en 15 minutos. Tu numero de mesa ha sido restablecido para que la mesa pueda estar disponible para otros clientes.",
     "join_group": "Unirse al grupo",
     "single_order": "Pedido individual",
     "yes_close_session": "Sí, cerrar sesión",
@@ -970,7 +972,9 @@
     "hours_unknown": "Horarios desconocidos",
     "mode_delivery": "Entrega",
     "mode_dine_in": "En el local",
-    "mode_pickup": "Recogida"
+    "mode_pickup": "Recogida",
+    "closed_but_preorder_short": "Puedes programar la entrega o recogida para más tarde",
+    "closed_plan_later": "Puedes programar la entrega o recogida para más tarde"
   },
   "navigation": {
     "food": "Comida",
@@ -1650,7 +1654,13 @@
     "session_expired": "Este pedido grupal ha caducado",
     "session_closed": "Este pedido grupal ya ha sido cerrado",
     "everyone_pays_own": "Cada uno paga lo suyo (Cuenta separada)",
-    "host_pays": "El anfitrión paga por todos"
+    "host_pays": "El anfitrión paga por todos",
+    "group_order_label": "Pedido grupal",
+    "tab_me": "Yo",
+    "tab_everyone": "Todos",
+    "tab_table": "Mesa",
+    "items_short": "articulos",
+    "invite_more": "Invitar mas"
   },
   "checkout": {
     "cart_title": "Carrito",

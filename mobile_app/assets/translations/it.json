@@ -393,7 +393,8 @@
     "urun_isletme_bilgisi_eksik": "Mancano le informazioni sull'attività per questo prodotto.",
     "favori_siparis_yok": "Nessun ordine preferito",
     "siparislerinizi_bookmark_ile_f": "Aggiungi i tuoi ordini ai preferiti con il segnalibro!",
-    "urun_kucuk": "articolo"
+    "urun_kucuk": "articolo",
+    "continue_button": "Continua"
   },
   "customer": {
     "tumu": "Tutti",
@@ -729,7 +730,7 @@
     "ingredients_tags_de": "Ingredienti/Tag",
     "see_menu": "Vedi il menu",
     "browse_products": "Vedi i prodotti",
-    "browse_products_and_order": "Vedi i prodotti \u0026 ordina",
+    "browse_products_and_order": "Vedi i prodotti & ordina",
     "open_menu": "Apri il menu",
     "required_field": "Obbligatorio",
     "add_to_cart": "Aggiungi",
@@ -932,6 +933,7 @@
     "yuksek_et_orani": "Alto Contenuto di Carne",
     "yuksek_et_orani_desc": "Utilizzo di carne di qualità",
     "session_timeout_warning": "Avviso di scadenza sessione",
+    "session_timeout_message": "Non hai completato il tuo ordine da 15 minuti. Il tuo numero di tavolo e stato reimpostato per rendere il tavolo disponibile per altri ospiti.",
     "join_group": "Unisciti al gruppo",
     "single_order": "Ordine singolo",
     "yes_close_session": "Sì, chiudi sessione",
@@ -970,7 +972,9 @@
     "hours_unknown": "Orari sconosciuti",
     "mode_delivery": "Consegna",
     "mode_dine_in": "Al tavolo",
-    "mode_pickup": "Ritiro"
+    "mode_pickup": "Ritiro",
+    "closed_but_preorder_short": "Puoi programmare la consegna o il ritiro per dopo",
+    "closed_plan_later": "Puoi programmare la consegna o il ritiro per dopo"
   },
   "navigation": {
     "food": "Cibo",
@@ -1650,7 +1654,13 @@
     "session_expired": "Questo ordine di gruppo è scaduto",
     "session_closed": "Questo ordine di gruppo è già stato chiuso",
     "everyone_pays_own": "Ognuno paga il suo (Conto separato)",
-    "host_pays": "L'organizzatore paga per tutti"
+    "host_pays": "L'organizzatore paga per tutti",
+    "group_order_label": "Ordine di gruppo",
+    "tab_me": "Io",
+    "tab_everyone": "Tutti",
+    "tab_table": "Tavolo",
+    "items_short": "articoli",
+    "invite_more": "Invita altri"
   },
   "checkout": {
     "cart_title": "Carrello",

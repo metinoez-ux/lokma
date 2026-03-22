@@ -15,6 +15,7 @@ import '../../providers/auth_provider.dart';
 import '../../data/product_catalog_data.dart';
 import '../../utils/currency_utils.dart';
 import '../../widgets/three_dimensional_pill_tab_bar.dart';
+import '../../widgets/marketplace_group_share_sheet.dart';
 
 /// Grup Masa Sipariş Ekranı
 /// 3-tab layout: Menü · Benim Siparişim · Masa Toplam
@@ -413,10 +414,18 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.table_restaurant, size: 14, color: _accent),
+                  Icon(
+                    session != null && session.isLinkBased
+                        ? (session.isDelivery ? Icons.delivery_dining : Icons.storefront)
+                        : Icons.table_restaurant,
+                    size: 14,
+                    color: _accent,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    'Masa ${widget.tableNumber}',
+                    session != null && session.isLinkBased
+                        ? tr('group_order.group_order_label')
+                        : 'Masa ${widget.tableNumber}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -441,7 +450,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         surfaceTintColor: scaffoldBg,
         centerTitle: true,
         actions: [
-          if (session != null && session.groupPin != null)
+          if (session != null && session.isLinkBased && groupState.isHost)
+            IconButton(
+              icon: const Icon(Icons.share, size: 20),
+              tooltip: tr('group_order.invite_more'),
+              onPressed: () => _shareGroupLink(session),
+            ),
+          if (session != null && session.groupPin != null && !session.isLinkBased)
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(right: 8.0),
@@ -512,17 +527,19 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             tabs: [
               TabItem(title: tr('customer.menu'), icon: Icons.restaurant_menu),
               TabItem(
-                title: 'Ben',
+                title: tr('group_order.tab_me'),
                 icon: Icons.person,
                 subtitle: (groupState.myParticipant?.totalItemCount ?? 0) > 0
-                    ? '${groupState.myParticipant?.totalItemCount ?? 0} urun'
+                    ? '${groupState.myParticipant?.totalItemCount ?? 0} ${tr('group_order.items_short')}'
                     : null,
               ),
               TabItem(
-                title: 'Masa',
+                title: session != null && session.isLinkBased
+                    ? tr('group_order.tab_everyone')
+                    : tr('group_order.tab_table'),
                 icon: Icons.groups,
                 subtitle: (session?.totalItemCount ?? 0) > 0
-                    ? '${session?.totalItemCount ?? 0} urun'
+                    ? '${session?.totalItemCount ?? 0} ${tr('group_order.items_short')}'
                     : null,
               ),
             ],
@@ -2792,6 +2809,18 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       },
     );
   }
+
+  // ─── SHARE GROUP LINK (Link-based mode) ───────────────────────
+  void _shareGroupLink(TableGroupSession session) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => MarketplaceGroupShareSheet(session: session),
+    );
+  }
+
   // ─── CANCEL / LEAVE ────────────────────────────────────────────
   void _showCancelGroupDialog() {
     showDialog(

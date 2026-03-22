@@ -6921,7 +6921,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
 
     final now = DateTime.now();
-    final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    final dayNames = ['common.day_monday', 'common.day_tuesday', 'common.day_wednesday', 'common.day_thursday', 'common.day_friday', 'common.day_saturday', 'common.day_sunday'];
     final dayKeys = grouped.keys.toList();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -6930,9 +6930,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
       final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
-      if (isToday) return 'today'.tr();
-      if (isTomorrow) return 'tomorrow'.tr();
-      return dayNames[dateKey.weekday - 1];
+      if (isToday) return 'checkout.today'.tr();
+      if (isTomorrow) return 'checkout.tomorrow'.tr();
+      return dayNames[dateKey.weekday - 1].tr();
     }).toList();
 
     // Determine initial day index
@@ -7215,8 +7215,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
             final tomorrow = now.add(const Duration(days: 1));
             final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
-            if (isToday) return 'today'.tr();
-            if (isTomorrow) return 'tomorrow'.tr();
+            if (isToday) return 'checkout.today'.tr();
+            if (isTomorrow) return 'checkout.tomorrow'.tr();
             final dayNames = ['common.day_monday', 'common.day_tuesday', 'common.day_wednesday', 'common.day_thursday', 'common.day_friday', 'common.day_saturday', 'common.day_sunday'];
             return dayNames[dateKey.weekday - 1].tr();
           }).toList();

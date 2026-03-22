@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../widgets/wallet_business_card.dart';
 import '../kasap/reservation_booking_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lokma_app/services/table_group_service.dart';
@@ -251,11 +253,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               children: [
                 const Icon(Icons.warning_amber_rounded, color: Colors.orange),
                 const SizedBox(width: 8),
-                Text('marketplace.session_timeout_warning'.tr()),
+                Flexible(child: Text('marketplace.session_timeout_warning'.tr())),
               ],
             ),
-            content: const Text(
-                '15 dakikadır siparişinizi tamamlamadınız. Masanın başka müşterilere açılabilmesi için masa numaranız sıfırlanmıştır.'),
+            content: Text(
+                'marketplace.session_timeout_message'.tr()),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
@@ -865,7 +867,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_on, color: lokmaPink, size: 14),
+                  Icon(Icons.location_on, color: Theme.of(context).brightness == Brightness.dark ? lokmaPink : Colors.grey[700], size: 14),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Column(
@@ -930,7 +932,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      // Bell icon - white outline style for contrast
+                      // Bell icon - always dark grey, consistent circle bg
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -943,10 +945,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           unreadCount > 0
                               ? Icons.notifications_rounded
                               : Icons.notifications_outlined,
-                          color: unreadCount > 0
-                              ? lokmaPink
-                              : (isDark ? Colors.white70 : Colors.grey[800]),
-                          size: 24,
+                          color: isDark ? Colors.white70 : Colors.grey[700],
+                          size: 20,
                         ),
                       ),
                       // Badge - red to match other badges
@@ -993,26 +993,36 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
           const SizedBox(width: 2),
 
-          // Favoriler (kalp ikonu) - favoriler sayfasına git
+          // Favoriler (kalp ikonu) - favoriler sayfasina git
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
               context.push('/favorites');
             },
             child: Container(
-              padding:
-                  const EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               child: Builder(
                 builder: (context) {
                   final favorites = ref.watch(butcherFavoritesProvider);
                   final hasAny = favorites.isNotEmpty;
+                  final isDarkFav = Theme.of(context).brightness == Brightness.dark;
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Icon(
-                        hasAny ? Icons.favorite : Icons.favorite_border,
-                        color: lokmaPink,
-                        size: 24,
+                      // Heart icon - same circle bg as bell
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isDarkFav
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.grey.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          hasAny ? Icons.favorite : Icons.favorite_border,
+                          color: lokmaPink,
+                          size: 20,
+                        ),
                       ),
                       if (hasAny)
                         Positioned(
@@ -1106,7 +1116,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Icon(Icons.tune, color: lokmaPink, size: 20),
+                    child: Icon(Icons.tune, color: Theme.of(context).brightness == Brightness.dark ? lokmaPink : Colors.grey[700], size: 20),
                   ),
                 ),
               ),
@@ -2026,6 +2036,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     // Calculate distance
     String distanceText = '';
+    double? distanceKm;
     if (_userLat != null && _userLng != null) {
       double? lat;
       double? lng;
@@ -2044,14 +2055,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (lat != null && lng != null) {
         final distanceMeters =
             Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
-        final distanceKm = distanceMeters / 1000;
+        distanceKm = distanceMeters / 1000;
         distanceText = '${distanceKm.toStringAsFixed(1)} km';
       }
     }
-
-    // Favorite state
-    final favorites = ref.watch(butcherFavoritesProvider);
-    final isFavorite = favorites.contains(id);
 
     // Review count text
     String reviewText = '';
@@ -2063,687 +2070,32 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       }
     }
 
-    return GestureDetector(
+    return WalletBusinessCard(
+      data: data,
+      id: id,
+      name: name,
+      logoUrl: logoUrl,
+      imageUrl: imageUrl,
+      isAvailable: isAvailable,
+      unavailableReason: unavailableReason ?? tr('marketplace.currently_closed'),
+      isTunaPartner: isTunaPartner,
+      deliveryMode: _deliveryMode,
+      rating: rating,
+      reviewText: reviewText,
+      typeLabel: typeLabel,
+      cuisineType: cuisineType,
+      distance: distanceKm ?? 0.0,
       onTap: () {
         HapticFeedback.lightImpact();
         if (!isAvailable) {
-          // Store business ID for dialog navigation
           _currentBusinessIdForDialog = id;
-          _showClosedBusinessDialog(context, name, unavailableReason, data);
+          _showClosedBusinessDialog(context, name, unavailableReason ?? tr('marketplace.currently_closed'), data);
         } else {
-          context.push('/business/$id?mode=$_deliveryMode');
+          final encodedName = Uri.encodeComponent(name);
+          context.push('/kasap/$id?mode=$_deliveryMode&businessName=$encodedName');
         }
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.06),
-            width: 0.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // Main card content
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Large image with overlays
-                Stack(
-                  children: [
-                    // Main image - Lieferando style (230px fixed height)
-                    SizedBox(
-                      height: 230,
-                      width: double.infinity,
-                      child: imageUrl != null && imageUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                color: const Color(0xFF2A2A28),
-                                child: const Center(
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: lokmaPink,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                color: const Color(0xFF2A2A28),
-                                child: const Center(
-                                  child: Icon(Icons.restaurant,
-                                      color: lokmaPink, size: 48),
-                                ),
-                              ),
-                            )
-                          : Container(
-                              color: const Color(0xFF1C1C1E),
-                              child: const Center(
-                                child: Icon(Icons.restaurant,
-                                    color: lokmaPink, size: 48),
-                              ),
-                            ),
-                    ),
-
-                    // 🆕 Darker overlay for unavailable businesses (keep image dim)
-                    if (!isAvailable)
-                      Positioned.fill(
-                        child: Container(
-                          color: Colors.black.withValues(alpha: 
-                              0.4), // Slightly lighter dark overlay
-                        ),
-                      ),
-
-                    // 🆕 Thin top-aligned banner for unavailable businesses (Overlying the image)
-                    if (!isAvailable) ...[
-                      // Build time info string like Lieferando: "Lieferung ab 16:15 · Abholen ab 12:00"
-                      () {
-                        final deliveryTime = availability.deliveryTime;
-                        final pickupTime = availability.pickupTime;
-                        final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
-                        
-                        // Build time parts
-                        final timeParts = <String>[];
-                        if (deliveryTime != null && deliveryTime.isNotEmpty) {
-                          timeParts.add('${tr('marketplace.delivery_from_short', namedArgs: {'time': deliveryTime})}');
-                        }
-                        if (pickupTime != null && pickupTime.isNotEmpty) {
-                          timeParts.add('${tr('marketplace.pickup_from_short', namedArgs: {'time': pickupTime})}');
-                        }
-                        final timeInfo = timeParts.isNotEmpty ? timeParts.join(' · ') : null;
-                        
-                        // Main status text
-                        final statusText = preOrderEnabled
-                            ? '${unavailableReason ?? 'marketplace.currently_closed'.tr()} (${tr('marketplace.pre_order_active')})'
-                            : unavailableReason ?? 'marketplace.currently_closed'.tr();
-                        
-                        return Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: timeInfo != null ? 5 : 6),
-                            color: const Color(0xFF2A2A28),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  statusText,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                                if (timeInfo != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    timeInfo,
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.7),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      }(),
-                    ],
-
-                    // 🆕 Overlay for table reservation warning
-                    if (_deliveryMode == 'masada' && (data['hasReservation'] as bool? ?? false))
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                          color: Colors.black.withValues(alpha: 0.65),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.info_outline, color: Colors.white, size: 14),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  tr('marketplace.business_approval_required'),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-
-                    // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
-                    if (logoUrl != null && logoUrl.isNotEmpty)
-                      Positioned(
-                        left: 12,
-                        bottom: 12,
-                        child: Opacity(
-                          opacity: isAvailable ? 1.0 : 0.7,
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.2),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: CachedNetworkImage(
-                                imageUrl: logoUrl,
-                                fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) => const Center(
-                                  child: Icon(Icons.store,
-                                      color: lokmaPink, size: 24),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    // 🏷️ TUNA brand badge (TOP LEFT) — kapalı banner ile birlikte dinamik hizalı
-                    // Kapalı banner yüksekliği: padding 6 * 2 + fontSize 12 ≈ 34px
-                    if (isTunaPartner)
-                      Positioned(
-                        left: 12,
-                        top: bannerTopOffset,
-                        child: Opacity(
-                          opacity: 1.0, // Her durumda tam görünür
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFA01E22), // TUNA dark red
-                              borderRadius:
-                                  BorderRadius.circular(16), // Pill shape
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.verified, color: Colors.white, size: 14),
-                                SizedBox(width: 4),
-                                Text(
-                                  'TUNA',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    // ♥️ Favorite button (TOP RIGHT) — TUNA ile aynı top hizası (her iki durumda da eşit)
-                    Positioned(
-                      top: bannerTopOffset,
-                      right: 12,
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          ref
-                              .read(butcherFavoritesProvider.notifier)
-                              .toggleFavorite(id);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? lokmaPink : Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // 🪑 Online Masa Rezervasyonu badge (BOTTOM RIGHT, above Group Order)
-                    if (data['hasReservation'] == true)
-                      Positioned(
-                        right: 12,
-                        bottom: data['dineInEnabled'] == true ? 48 : 12,
-                        child: Opacity(
-                          opacity: isAvailable ? 1.0 : 0.7,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: lokmaPink.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/images/icon_masa_rezervasyon.svg',
-                                  width: 16,
-                                  height: 16,
-                                  colorFilter: const ColorFilter.mode(
-                                    Colors.white,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                                Text(
-                                  'marketplace.online_table_reservation_badge'.tr(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    // Grup Siparis badge (BOTTOM RIGHT) - only for dine-in enabled businesses
-                    if (data['dineInEnabled'] == true)
-                      Positioned(
-                        right: 12,
-                        bottom: 12,
-                        child: Opacity(
-                          opacity: isAvailable ? 1.0 : 0.7,
-                          child: GestureDetector(
-                            onTap: () async {
-                              HapticFeedback.lightImpact();
-                              if (!isAvailable) {
-                                _currentBusinessIdForDialog = id;
-                                _showClosedBusinessDialog(context, name, unavailableReason, data);
-                                return;
-                              }
-
-                              final session = await showModalBottomSheet<TableGroupSession>(
-                                context: context,
-                                useRootNavigator: true,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                                ),
-                                backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                                    ? const Color(0xFF2A2A28) 
-                                    : Colors.white,
-                                isScrollControlled: true,
-                                builder: (ctx) => GroupOrderSetupSheet(
-                                  businessId: id,
-                                  businessName: name,
-                                ),
-                              );
-
-                              if (session != null && context.mounted) {
-                                // 1. Show share sheet
-                                await showModalBottomSheet(
-                                  context: context,
-                                  useRootNavigator: true,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (ctx) => MarketplaceGroupShareSheet(
-                                    session: session,
-                                  ),
-                                );
-                                
-                                // 2. Navigate to Kasap / Menu
-                                if (context.mounted) {
-                                  context.push('/kasap/$id?mode=$_deliveryMode');
-                                }
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2E7D32).withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(14),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.groups_rounded, color: Colors.white, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    tr('marketplace.group_order_badge'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                  ],
-                ),
-
-                Builder(
-                  builder: (context) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600, // Reduced from w700
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.star,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiary,
-                                      size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    rating
-                                        .toStringAsFixed(1)
-                                        .replaceAll('.', ','),
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.9),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  if (reviewText.isNotEmpty) ...[
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      reviewText,
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.7),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                  Text(
-                                    ' · ',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.7),
-                                        fontSize: 13),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      cuisineType != null &&
-                                              cuisineType.isNotEmpty
-                                          ? cuisineType
-                                          : typeLabel,
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.7),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Builder(
-                                builder: (context) {
-                                  final deliveryFee =
-                                      (data['deliveryFee'] as num?)
-                                              ?.toDouble() ??
-                                          0.0;
-                                  final minOrderAmount =
-                                      (data['minDeliveryOrder'] as num?)?.toDouble() ??
-                                      (data['minOrderAmount'] as num?)?.toDouble() ??
-                                          10.0;
-                                  // ignore: unused_local_variable
-                                  final freeDeliveryThreshold =
-                                      (data['freeDeliveryThreshold'] as num?)
-                                          ?.toDouble();
-
-                                  if (_deliveryMode == 'teslimat') {
-                                    final hasMinOrder = minOrderAmount > 0;
-
-                                    return Row(
-                                      children: [
-                                        Icon(Icons.delivery_dining,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withValues(alpha: 0.7),
-                                            size: 16),
-                                        const SizedBox(width: 6),
-                                        if (deliveryFee == 0)
-                                          Text(
-                                            tr('marketplace.free_delivery_label'),
-                                            style: TextStyle(
-                                                color: tunaGreen,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600),
-                                          )
-                                        else
-                                          Text(
-                                            '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
-                                            style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withValues(alpha: 0.7),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        if (hasMinOrder) ...[
-                                          Text(' · ',
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.7),
-                                                  fontSize: 13)),
-                                          Icon(Icons.shopping_basket_outlined,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withValues(alpha: 0.7),
-                                              size: 14),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                                            style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withValues(alpha: 0.7),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    );
-                                  } else {
-                                    final hasReservation = data['hasReservation'] as bool? ?? false;
-                                    return Row(
-                                      children: [
-                                        Icon(Icons.location_on_outlined,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withValues(alpha: 0.7),
-                                            size: 14),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          distanceText.isNotEmpty
-                                              ? distanceText
-                                              : '—',
-                                          style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withValues(alpha: 0.7),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        if (hasReservation) ...[
-                                          Text(' · ',
-                                              style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.7),
-                                                  fontSize: 13)),
-                                          GestureDetector(
-                                            onTap: () {
-                                              HapticFeedback.lightImpact();
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) => ReservationBookingScreen(
-                                                    businessId: id,
-                                                    businessName: data['companyName'] as String? ?? data['name'] as String? ?? '',
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.event_seat,
-                                                    color: lokmaPink,
-                                                    size: 14),
-                                                const SizedBox(width: 4),
-                                                Icon(Icons.schedule,
-                                                    color: lokmaPink,
-                                                    size: 14),
-                                                const SizedBox(width: 4),
-                                                Flexible(
-                                                  child: Text(
-                                                    tr('marketplace.reservation_available'),
-                                                    style: TextStyle(
-                                                      color: lokmaPink,
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      showClosedDialog: _showClosedBusinessDialog,
     );
   }
 

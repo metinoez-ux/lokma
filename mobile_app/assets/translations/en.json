@@ -394,7 +394,8 @@
     "try_again": "Try Again",
     "unpaid": "Unpaid",
     "urun_artik_mevcut_degil": "This product is no longer available. It may have been removed by the business.",
-    "urun_isletme_bilgisi_eksik": "Business information for this product is missing."
+    "urun_isletme_bilgisi_eksik": "Business information for this product is missing.",
+    "continue_button": "Continue"
   },
   "customer": {
     "tumu": "All",
@@ -730,7 +731,7 @@
     "ingredients_tags_de": "Ingredients / Tags",
     "see_menu": "See Menu",
     "browse_products": "Browse Products",
-    "browse_products_and_order": "Browse Products \u0026 Order",
+    "browse_products_and_order": "Browse Products & Order",
     "open_menu": "Open Menu",
     "required_field": "Required",
     "add_to_cart": "Add",
@@ -933,6 +934,7 @@
     "yuksek_et_orani": "High Meat Content",
     "yuksek_et_orani_desc": "Quality meat usage",
     "session_timeout_warning": "Session Timeout Warning",
+    "session_timeout_message": "You haven't completed your order for 15 minutes. Your table number has been reset so the table can be made available for other guests.",
     "join_group": "Join Group",
     "single_order": "Order Alone",
     "yes_close_session": "Yes, Close Session",
@@ -971,7 +973,9 @@
     "closes_in_minutes": "Closes in {minutes} min.",
     "go_to_market": "Go to Market",
     "go_to_restaurant": "Go to Restaurant",
-    "back_to_menu": "Back to Menu"
+    "back_to_menu": "Back to Menu",
+    "closed_but_preorder_short": "You can schedule delivery or pickup for later",
+    "closed_plan_later": "You can schedule delivery or pickup for later"
   },
   "navigation": {
     "food": "Food",
@@ -1650,7 +1654,13 @@
     "session_expired": "This group order has expired",
     "session_closed": "This group order has already been closed",
     "everyone_pays_own": "Everyone pays their own (Split Bill)",
-    "host_pays": "Host pays for everyone"
+    "host_pays": "Host pays for everyone",
+    "group_order_label": "Group Order",
+    "tab_me": "Me",
+    "tab_everyone": "Everyone",
+    "tab_table": "Table",
+    "items_short": "items",
+    "invite_more": "Invite more"
   },
   "checkout": {
     "cart_title": "Cart",

@@ -67,6 +67,7 @@ dependencies:
   timeago: ^3.7.1
   device_calendar: ^3.9.0
   audioplayers: ^6.1.0
+  google_fonts: ^8.0.2
 
 dev_dependencies:
   flutter_test:

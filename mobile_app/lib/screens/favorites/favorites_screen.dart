@@ -11,6 +11,7 @@ import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/product_favorites_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import '../../utils/currency_utils.dart';
+import '../marketplace/widgets/wallet_business_card.dart';
 
 
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -645,67 +646,51 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildBusinessCard(String id, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final name = data['companyName'] ?? data['name'] ?? tr('common.i_sletme');
+    final name = data['businessName'] ?? data['companyName'] ?? data['name'] ?? tr('common.i_sletme');
     final imageUrl = data['imageUrl'] as String?;
+    final logoUrl = data['logoUrl'] as String? ?? data['logo'] as String?;
     final address = data['address'] as Map<String, dynamic>?;
     final city = address?['city'] ?? '';
-
-    return GestureDetector(
+    
+    // Rating info
+    final rating = (data['rating'] ?? data['averageRating'] ?? 0.0) as num;
+    final reviewCount = (data['reviewCount'] ?? data['ratingCount'] ?? 0) as num;
+    
+    // TUNA status
+    final isTuna = data['isTuna'] == true || 
+                   data['isTunaPartner'] == true ||
+                   data['isTunaApproved'] == true ||
+                   data['brand']?.toString().toLowerCase() == 'tuna' ||
+                   (data['companyName']?.toString().toLowerCase().contains('tuna') ?? false);
+    
+    // Business type
+    final businessType = (data['businessType'] ?? data['type'] ?? data['businessCategory'] ?? '').toString();
+    final cuisineType = data['cuisineType']?.toString();
+    
+    // Availability
+    final isOpen = data['isOpen'] ?? true;
+    
+    
+    return WalletBusinessCard(
+      data: data,
+      id: id,
+      name: name,
+      logoUrl: logoUrl,
+      imageUrl: imageUrl,
+      isAvailable: isOpen == true,
+      unavailableReason: isOpen != true ? tr('marketplace.currently_closed') : '',
+      isTunaPartner: isTuna,
+      deliveryMode: 'delivery',
+      rating: rating.toDouble(),
+      reviewText: '(${reviewCount.toInt()})',
+      typeLabel: businessType,
+      cuisineType: cuisineType,
+      distance: 0,
       onTap: () => context.push('/kasap/$id'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: surfaceCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderSubtle),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: 60,
-                height: 60,
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover)
-                    : Container(
-                        color: isDark ? Colors.grey[800] : Colors.grey[200],
-                        child: Icon(Icons.store, color: isDark ? Colors.white24 : Colors.grey[400]),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (city.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.grey, size: 14),
-                        const SizedBox(width: 4),
-                        Text(city, style: TextStyle(color: textSubtle, fontSize: 12)),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.favorite, color: lokmaRed),
-              onPressed: () => ref.read(butcherFavoritesProvider.notifier).toggleFavorite(id),
-            ),
-          ],
-        ),
-      ),
+      showClosedDialog: (ctx, closedName, reason, closedData) {
+        // Navigate anyway in favorites
+        context.push('/kasap/$id');
+      },
     );
   }
 

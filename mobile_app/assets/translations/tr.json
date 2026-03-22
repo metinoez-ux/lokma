@@ -394,7 +394,8 @@
     "favorilerden_kaldir": "Favorilerden Kaldir",
     "urun_artik_mevcut_degil": "Bu urun artik mevcut degil. Isletme tarafindan kaldirilmis olabilir.",
     "silinmis": "Silinmis",
-    "urun_isletme_bilgisi_eksik": "Bu urunun isletme bilgisi eksik."
+    "urun_isletme_bilgisi_eksik": "Bu urunun isletme bilgisi eksik.",
+    "continue_button": "Devam"
   },
   "customer": {
     "tumu": "Tümü",
@@ -730,7 +731,7 @@
     "ingredients_tags_de": "Zutaten / Tags",
     "see_menu": "Menüyü Gör",
     "browse_products": "Ürünleri İncele",
-    "browse_products_and_order": "Ürünleri İncele \u0026 Sipariş Ver",
+    "browse_products_and_order": "Ürünleri İncele & Sipariş Ver",
     "open_menu": "Menüyü Aç",
     "required_field": "Zorunlu alan",
     "add_to_cart": "Ekle",
@@ -856,9 +857,9 @@
     "business_type_ciftci": "Ciftci",
     "business_type_baklava": "Baklava & Tatli",
     "group_order_badge": "Grup Siparis",
-    "out_of_stock": "Mevcut de\u011fil",
+    "out_of_stock": "Mevcut değil",
     "product_not_available": "Mevcut değil",
-    "product_out_of_stock_desc": "Bu \u00fcr\u00fcn \u015fu anda mevcut de\u011fil",
+    "product_out_of_stock_desc": "Bu ürün şu anda mevcut değil",
     "product_not_available_desc": "Bu ürün şu anda mevcut değil",
     "add_note_hint": "Not ekle (opsiyonel)  Ör: Hasan Usta",
     "cart_note_hint": "Ör: Hasan Usta, Marulsuz...",
@@ -932,7 +933,8 @@
     "closed": "Kapalı",
     "see_menu_and_order": "Menüyü Gör & Sipariş Ver",
     "weekly_hours": "Haftalık Çalışma Saatleri",
-    "session_timeout_warning": "Zaman Aşımı Uyarısı",
+    "session_timeout_warning": "Zaman Asimi Uyarisi",
+    "session_timeout_message": "15 dakikadir siparisinizi tamamlamadiniz. Masanin baska musterilere acilabilmesi icin masa numaraniz sifirlanmistir.",
     "join_group": "Gruba Katıl",
     "single_order": "Tek Kişi Sipariş",
     "yes_close_session": "Evet, Oturumu Kapat",
@@ -971,7 +973,9 @@
     "closes_in_minutes": "{minutes} dk. sonra kapanıyor",
     "go_to_market": "Markete Git",
     "go_to_restaurant": "Restorana Git",
-    "back_to_menu": "Menuye Don"
+    "back_to_menu": "Menuye Don",
+    "closed_but_preorder_short": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz",
+    "closed_plan_later": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz"
   },
   "navigation": {
     "food": "Yemek",
@@ -1650,7 +1654,13 @@
     "session_expired": "Bu grup siparişinin süresi dolmuş",
     "session_closed": "Bu grup siparişi zaten kapatılmış",
     "everyone_pays_own": "Herkes kendi payını öder (Hesap Ayrı)",
-    "host_pays": "Sipariş sahibi hepsini öder"
+    "host_pays": "Sipariş sahibi hepsini öder",
+    "group_order_label": "Grup Siparis",
+    "tab_me": "Ben",
+    "tab_everyone": "Herkes",
+    "tab_table": "Masa",
+    "items_short": "urun",
+    "invite_more": "Daha fazla davet et"
   },
   "checkout": {
     "cart_title": "Sepetim",

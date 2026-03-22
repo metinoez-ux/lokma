@@ -91,6 +91,7 @@ class LokmaOrder {
   final String? tableSessionId;
   final dynamic tableNumber; // Can be int or String from Firestore
   final double tipAmount; // Tip given by customer (§3(51) EStG: tax-free)
+  final bool isGroupOrder; // true if this is a group table order
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -133,6 +134,7 @@ class LokmaOrder {
     this.tableSessionId,
     this.tableNumber,
     this.tipAmount = 0,
+    this.isGroupOrder = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -203,6 +205,7 @@ class LokmaOrder {
       tableSessionId: data['tableSessionId'] ?? data['groupSessionId'],
       tableNumber: data['tableNumber'],
       tipAmount: (data['tipAmount'] ?? data['tip'] ?? 0).toDouble(),
+      isGroupOrder: data['isGroupOrder'] == true,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );

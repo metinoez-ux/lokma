@@ -35,10 +35,13 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen> {
       if (!mounted) return;
 
       if (success) {
-        // Navigate to the business detail screen for the group order
+        // Navigate to GroupTableOrderScreen with session context
         final session = ref.read(tableGroupProvider).session;
         if (session != null) {
-          context.go('/kasap/${session.businessId}?mode=teslimat');
+          final mode = session.isDelivery ? 'teslimat' : 'gelal';
+          final encodedName = Uri.encodeComponent(session.businessName);
+          final tableNum = session.tableNumber.isNotEmpty ? session.tableNumber : '1';
+          context.go('/kasap/${session.businessId}?mode=$mode&groupSessionId=${session.id}&businessName=$encodedName&table=$tableNum');
         } else {
           context.go('/restoran');
         }

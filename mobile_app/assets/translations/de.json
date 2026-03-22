@@ -395,7 +395,8 @@
     "try_again": "Nochmal versuchen",
     "unpaid": "Nicht bezahlt",
     "urun_artik_mevcut_degil": "Dieses Produkt ist nicht mehr verfügbar. Es wurde möglicherweise vom Geschäft entfernt.",
-    "urun_isletme_bilgisi_eksik": "Geschäftsinformation für dieses Produkt fehlt."
+    "urun_isletme_bilgisi_eksik": "Geschäftsinformation für dieses Produkt fehlt.",
+    "continue_button": "Weiter"
   },
   "customer": {
     "tumu": "Alle",
@@ -731,7 +732,7 @@
     "ingredients_tags_de": "Zutaten / Tags",
     "see_menu": "Menü ansehen",
     "browse_products": "Produkte ansehen",
-    "browse_products_and_order": "Produkte ansehen \u0026 bestellen",
+    "browse_products_and_order": "Produkte ansehen & bestellen",
     "open_menu": "Menü öffnen",
     "required_field": "Erforderlich",
     "add_to_cart": "Hinzufügen",
@@ -933,7 +934,8 @@
     "closed": "Geschlossen",
     "see_menu_and_order": "Menü ansehen & bestellen",
     "weekly_hours": "Wöchentliche Geschäftszeiten",
-    "session_timeout_warning": "Sitzungszeitüberschreitung",
+    "session_timeout_warning": "Sitzungs-Timeout",
+    "session_timeout_message": "Sie haben Ihre Bestellung seit 15 Minuten nicht abgeschlossen. Ihre Tischnummer wurde zurueckgesetzt, damit der Tisch fuer andere Gaeste freigegeben werden kann.",
     "join_group": "Gruppe beitreten",
     "single_order": "Einzelbestellung",
     "yes_close_session": "Ja, Sitzung schließen",
@@ -974,7 +976,9 @@
     "go_to_restaurant": "Zum Restaurant",
     "back_to_menu": "Zuruck zum Menu",
     "view_menu": "Menu ansehen",
-    "reserve_now": "Reservieren"
+    "reserve_now": "Reservieren",
+    "closed_but_preorder_short": "Du kannst die Lieferung oder Abholung für später planen",
+    "closed_plan_later": "Du kannst die Lieferung oder Abholung für später planen"
   },
   "navigation": {
     "food": "Essen",
@@ -1683,7 +1687,13 @@
     "session_expired": "Diese Gruppenbestellung ist abgelaufen",
     "session_closed": "Diese Gruppenbestellung wurde bereits geschlossen",
     "everyone_pays_own": "Jeder zahlt selbst (Getrennte Rechnung)",
-    "host_pays": "Gastgeber zahlt alles"
+    "host_pays": "Gastgeber zahlt alles",
+    "group_order_label": "Gruppenbestellung",
+    "tab_me": "Ich",
+    "tab_everyone": "Alle",
+    "tab_table": "Tisch",
+    "items_short": "Artikel",
+    "invite_more": "Weitere einladen"
   },
   "checkout": {
     "cart_title": "Warenkorb",

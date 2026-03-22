@@ -474,14 +474,26 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         }
 
         final googlePlaceId = data['googlePlaceId'] as String?;
-        if (googlePlaceId != null && googlePlaceId.isNotEmpty && _placeDetails == null) {
+        if (_placeDetails == null) {
           try {
-            final details = await GooglePlacesService.getPlaceDetails(googlePlaceId);
-            if (mounted) setState(() => _placeDetails = details);
+            Map<String, dynamic>? details;
+            if (googlePlaceId != null && googlePlaceId.isNotEmpty) {
+              details = await GooglePlacesService.getPlaceDetails(googlePlaceId);
+            } else {
+              final bName = data['businessName'] ?? data['companyName'] ?? '';
+              final cCity = data['address'] is Map ? (data['address']['city'] ?? '') : '';
+              final fAddr = _formatAddress(data['address']);
+              if (bName.toString().isNotEmpty) {
+                details = await GooglePlacesService.getBusinessDetails(bName, cCity, fullAddress: fAddr);
+              }
+            }
+            if (mounted && details != null) {
+              setState(() => _placeDetails = details);
+            }
           } catch (e) {
             debugPrint('Google Places Error: $e');
           }
-        } 
+        }
 
         // 🆕 Resolve plan features from subscription_plans collection
         final planCode = data['subscriptionPlan'] as String? ?? 'basic';
@@ -510,14 +522,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
-  // 🆕 Kapalı işletme uyarı popup'ı — Beautiful Bottom Sheet
+  // Compact closed-business popup (China-Thai style)
   void _showClosedBusinessDialog({bool preOrderEnabled = false}) {
-    // Get business name
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     final businessName = data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
     
     // Calculate next opening time
-    // Use deliveryHours/pickupHours as fallback for next opening calculation
     OpeningHoursHelper openingHelper;
     if (data?['openingHours'] != null) {
       openingHelper = OpeningHoursHelper(data?['openingHours']);
@@ -527,392 +537,110 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       openingHelper = OpeningHoursHelper(data?['pickupHours']);
     }
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
-    String? nextOpenText;
+    String nextOpenText = '';
     if (nextOpen != null) {
-      final dayNames = [
-        'common.day_monday'.tr(),
-        'common.day_tuesday'.tr(),
-        'common.day_wednesday'.tr(),
-        'common.day_thursday'.tr(),
-        'common.day_friday'.tr(),
-        'common.day_saturday'.tr(),
-        'common.day_sunday'.tr(),
-      ];
+      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
       final now = DateTime.now();
       final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
       final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
       
-      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
       if (isToday) {
         nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
       } else if (isTomorrow) {
         nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
       } else {
+        final dayNames = [
+          'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
+          'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+        ];
         nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayNames[nextOpen.weekday - 1], 'time': timeStr});
       }
     }
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final sheetBg = isDark ? const Color(0xFF1C1C1E) : Colors.white;
-      final textPrimary = isDark ? Colors.white : const Color(0xFF3E3E40);
-      final textSecondary = isDark ? Colors.white70 : Colors.black54;
-      final handleColor = isDark ? Colors.white24 : Colors.black12;
+      
       final accent = _getAccent(context);
-
-      showModalBottomSheet(
+      
+      showDialog(
         context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        barrierColor: Colors.black54,
-        builder: (sheetCtx) {
-          return Container(
-            decoration: BoxDecoration(
-              color: sheetBg,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            padding: EdgeInsets.only(
-              left: 24,
-              right: 24,
-              top: 0,
-              bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 32,
-            ),
-            child: SingleChildScrollView(
+        barrierDismissible: true,
+        builder: (dialogCtx) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Drag handle ──
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 12, bottom: 20),
-                    width: 40, height: 4,
-                    decoration: BoxDecoration(
-                      color: handleColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-
-                // ── Clock icon + Business name ──
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.schedule_rounded, color: Colors.amber, size: 26),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        businessName,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // ── "Şu an kapalı" badge ──
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.access_time_filled_rounded, color: Colors.amber, size: 18),
-                      const SizedBox(width: 10),
-                      Text(
-                        'marketplace.currently_closed'.tr(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.amber,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ── Next opening time badge ──
-                if (nextOpenText != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: isDark ? 0.15 : 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.event_available_rounded, color: Colors.blue, size: 18),
-                        const SizedBox(width: 10),
-                        Text(
-                          nextOpenText,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 16),
-
-                // ── Weekly Opening Hours Schedule ──
-                if (data?['openingHours'] != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.schedule_rounded, size: 16, color: accent),
-                            const SizedBox(width: 6),
-                            Text(
-                              'marketplace.opening_hours_title'.tr(),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        ...List.generate(7, (i) {
-                          final dayNamesDisplay = [
-                            'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
-                            'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
-                          ];
-                          final now = DateTime.now();
-                          final isToday = (now.weekday - 1) == i;
-                          final date = now.add(Duration(days: i - (now.weekday - 1)));
-                          final helper = OpeningHoursHelper(data?['openingHours']);
-                          final hoursStr = helper.getHoursStringForDate(date);
-                          
-                          final isClosed = hoursStr == null || 
-                              hoursStr.toLowerCase().contains('kapalı') || 
-                              hoursStr.toLowerCase().contains('closed') ||
-                              hoursStr.trim() == '-' || 
-                              hoursStr.trim().isEmpty;
-                          
-                          final displayHours = isClosed 
-                              ? 'marketplace.closed_day'.tr()
-                              : hoursStr!.replaceAll('–', '-').trim();
-
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                            margin: const EdgeInsets.only(bottom: 2),
-                            decoration: BoxDecoration(
-                              color: isToday 
-                                  ? accent.withValues(alpha: isDark ? 0.15 : 0.08)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 90,
-                                  child: Text(
-                                    isToday 
-                                        ? '${dayNamesDisplay[i]} • ${'marketplace.today'.tr()}'
-                                        : dayNamesDisplay[i],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                                      color: isToday ? accent : textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    displayHours,
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                                      color: isClosed 
-                                          ? Colors.red.shade400 
-                                          : (isToday ? accent : textPrimary),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-
-                // ── Body text ──
-                Text(
-                  preOrderEnabled
-                      ? 'marketplace.closed_but_preorder'.tr()
-                      : 'marketplace.closed_but_browse'.tr(),
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.5,
-                    color: textSecondary,
-                  ),
-                ),
-
-                // ── Pre-order active badge ──
-                if (preOrderEnabled) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: isDark ? 0.15 : 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle_rounded, color: Colors.green, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'marketplace.pre_order_active'.tr(),
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                // ── Business Type + Address Info ──
-                if (data?['type'] != null || data?['address'] != null) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        if (data?['type'] != null)
-                          Row(
-                            children: [
-                              Icon(Icons.storefront_rounded, size: 16, color: accent),
-                              const SizedBox(width: 8),
-                              Text(
-                                (data!['type'] as String?)?.replaceFirst(
-                                  (data['type'] as String?)?.substring(0, 1) ?? '',
-                                  (data['type'] as String?)?.substring(0, 1).toUpperCase() ?? '',
-                                ) ?? '',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        if (data?['type'] != null && data?['address'] != null)
-                          const SizedBox(height: 6),
-                        if (data?['address'] != null)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(Icons.location_on_outlined, size: 16, color: textSecondary),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  data!['address'].toString(),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: textSecondary,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 24),
-
-                // ── Primary CTA: See menu ──
-                FilledButton(
-                  onPressed: () => Navigator.pop(sheetCtx),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 52),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Text(
-                    preOrderEnabled
-                        ? 'marketplace.browse_products_and_order'.tr()
-                        : 'marketplace.browse_products'.tr(),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title: business name + opens at time
+                  Text(
+                    nextOpenText.isNotEmpty
+                        ? '$businessName\n$nextOpenText'
+                        : businessName,
                     textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: preOrderEnabled ? 14 : 16,
-                      fontWeight: FontWeight.w600,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // ── Secondary CTA: Find Open Businesses ──
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(sheetCtx);
-                    context.go('/');
-                  },
-                  icon: const Icon(Icons.explore_rounded, size: 18),
-                  label: Text('marketplace.find_open_businesses'.tr()),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: accent,
-                    side: BorderSide(color: accent.withValues(alpha: 0.4)),
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Subtitle
+                  Text(
+                    preOrderEnabled
+                        ? 'marketplace.closed_but_preorder_short'.tr()
+                        : 'marketplace.closed_plan_later'.tr(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.6),
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              ],
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Primary CTA: Weiter / Continue
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(dialogCtx),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: accent,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'common.continue_button'.tr(),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Secondary: Find open businesses
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      context.go('/');
+                    },
+                    child: Text(
+                      'marketplace.find_open_businesses'.tr(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -955,6 +683,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // DEPRECATED: Now using OpeningHoursHelper
   // Removed _isShopOpenNow and _getTodayHours
 
+
+  // Format address: handles both String and Map<String, dynamic>
+  String _formatAddress(dynamic address) {
+    if (address is String) return address;
+    if (address is Map) {
+      final street = address['street'] ?? '';
+      final houseNumber = address['houseNumber'] ?? '';
+      final postalCode = address['postalCode'] ?? address['zipCode'] ?? address['zip'] ?? '';
+      final city = address['city'] ?? '';
+      final country = address['country'] ?? '';
+      final parts = <String>[];
+      if (street.toString().isNotEmpty) {
+        final streetFull = houseNumber.toString().isNotEmpty 
+            ? '${street} ${houseNumber}' 
+            : street.toString();
+        parts.add(streetFull);
+      }
+      if (postalCode.toString().isNotEmpty || city.toString().isNotEmpty) {
+        final cityFull = [postalCode, city].where((s) => s.toString().isNotEmpty).join(' ');
+        parts.add(cityFull);
+      }
+      if (country.toString().isNotEmpty) parts.add(country.toString());
+      return parts.join(', ');
+    }
+    return address?.toString() ?? '';
+  }
 
   String _getBrandLabel(String? brand) {
     if (brand == null) return 'marketplace.independent_butcher'.tr();
@@ -3011,8 +2765,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                            ],
 
-                           // Masa Rezervasyon (hidden in masa mode)
-                           if (!_isMasaMode && (data?["hasReservation"] as bool? ?? false)) ...[
+                           // Masa Rezervasyon (only shown in masa mode)
+                           if (_isMasaMode && (data?["hasReservation"] as bool? ?? false)) ...[
                              GestureDetector(
                                onTap: () {
                                  HapticFeedback.selectionClick();
@@ -3488,6 +3242,38 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ];
               }),
             ],
+
+            // Impressum at bottom of menu
+            SliverToBoxAdapter(
+              child: Builder(
+                builder: (context) {
+                  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                  final textColor = isDarkMode ? Colors.white : Colors.black87;
+                  final subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
+                  final butcherData = _butcherDoc?.data() as Map<String, dynamic>?;
+                  
+                  if (butcherData == null) return const SizedBox.shrink();
+                  
+                  return Container(
+                    margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Impressum',
+                          style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 12),
+                        _buildImpressumSection(butcherData, textColor, subtitleColor),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
 
             // Bottom Spacer
             const SliverToBoxAdapter(child: SizedBox(height: 100)),

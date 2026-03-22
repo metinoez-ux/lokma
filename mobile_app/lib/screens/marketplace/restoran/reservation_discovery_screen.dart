@@ -285,24 +285,6 @@ class _ReservationDiscoveryScreenState
                                       ),
                                     ),
                                   ),
-                                  // Filter button
-                                  GestureDetector(
-                                    onTap: () => _showFilterSheet(),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: isDark
-                                            ? Colors.white.withValues(alpha: 0.08)
-                                            : Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Icon(
-                                        Icons.tune_rounded,
-                                        size: 20,
-                                        color: isDark ? Colors.white70 : Colors.black54,
-                                      ),
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -315,7 +297,7 @@ class _ReservationDiscoveryScreenState
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Search bar
+                                   // Search bar (pill-shaped with filter icon)
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                                     child: Container(
@@ -324,8 +306,81 @@ class _ReservationDiscoveryScreenState
                                         color: isDark
                                             ? Colors.white.withValues(alpha: 0.08)
                                             : Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(24),
                                       ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _searchController,
+                                              onChanged: (val) {
+                                                _searchQuery = val;
+                                                _filterBusinesses();
+                                              },
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: isDark ? Colors.white : Colors.black87,
+                                              ),
+                                              decoration: InputDecoration(
+                                                hintText: tr('home.search_hint'),
+                                                hintStyle: TextStyle(
+                                                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                                  fontSize: 14,
+                                                ),
+                                                prefixIcon: Icon(
+                                                  Icons.search,
+                                                  size: 20,
+                                                  color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                                ),
+                                                border: InputBorder.none,
+                                                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                              ),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: _showFilterSheet,
+                                            child: Container(
+                                              width: 36,
+                                              height: 36,
+                                              margin: const EdgeInsets.only(right: 6),
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context).scaffoldBackgroundColor,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.tune,
+                                                  color: isDark ? const Color(0xFFEF6C00) : Colors.grey[700],
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Distance slider
+                                  _buildDistanceSlider(isDark),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            // Collapsed: pill search with filter
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                              child: Container(
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
                                       child: TextField(
                                         controller: _searchController,
                                         onChanged: (val) {
@@ -348,53 +403,30 @@ class _ReservationDiscoveryScreenState
                                             color: isDark ? Colors.grey[400] : Colors.grey[500],
                                           ),
                                           border: InputBorder.none,
-                                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
                                         ),
                                       ),
                                     ),
-                                  ),
-
-                                  // Distance slider
-                                  _buildDistanceSlider(isDark),
-                                ],
-                              ),
-                            ),
-                          ] else ...[
-                            // Collapsed: just search
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                              child: Container(
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.08)
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: TextField(
-                                  controller: _searchController,
-                                  onChanged: (val) {
-                                    _searchQuery = val;
-                                    _filterBusinesses();
-                                  },
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: tr('home.search_hint'),
-                                    hintStyle: TextStyle(
-                                      color: isDark ? Colors.grey[500] : Colors.grey[400],
-                                      fontSize: 14,
+                                    GestureDetector(
+                                      onTap: _showFilterSheet,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        margin: const EdgeInsets.only(right: 6),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).scaffoldBackgroundColor,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            Icons.tune,
+                                            color: isDark ? const Color(0xFFEF6C00) : Colors.grey[700],
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                    prefixIcon: Icon(
-                                      Icons.search,
-                                      size: 20,
-                                      color: isDark ? Colors.grey[400] : Colors.grey[500],
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                                  ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -472,20 +504,13 @@ class _ReservationDiscoveryScreenState
       padding: const EdgeInsets.only(left: 16, right: 16, top: 2, bottom: 4),
       child: Row(
         children: [
-          // Business count badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _lokmaPink.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '${_filteredBusinesses.length}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: _lokmaPink,
-              ),
+          // Business count (orange, no background)
+          Text(
+            '${_filteredBusinesses.length}',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFEF6C00),
             ),
           ),
           const SizedBox(width: 6),

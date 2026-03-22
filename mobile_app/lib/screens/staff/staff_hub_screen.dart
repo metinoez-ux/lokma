@@ -5156,6 +5156,17 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
+                      // LOKMA Logo
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Center(
+                          child: Image.asset(
+                            'assets/images/lokma_logo_black.png',
+                            height: 36,
+                            color: isDark ? Colors.white : null,
+                          ),
+                        ),
+                      ),
                       // Header
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -5275,42 +5286,148 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           ),
                                         ),
                                       ),
+                                      // Group order badge
+                                      if (order.isGroupOrder) ...[
+                                        const SizedBox(width: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.purple.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            'Grup',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.purple.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                       const Spacer(),
                                       Text(time, style: TextStyle(fontSize: 12, color: subtleText)),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  // Items
-                                  ...order.items.map((item) => Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 2),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          '${item.quantity == item.quantity.roundToDouble() ? item.quantity.toInt() : item.quantity}x',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.amber.shade700,
+                                  // Items -- grouped by participant for group orders
+                                  if (order.isGroupOrder && order.items.any((i) => i.participantName != null)) ...[
+                                    // Group items by participantName
+                                    ...(() {
+                                      final grouped = <String, List<OrderItem>>{};
+                                      for (final item in order.items) {
+                                        final pName = item.participantName ?? 'Diger';
+                                        grouped.putIfAbsent(pName, () => []);
+                                        grouped[pName]!.add(item);
+                                      }
+                                      return grouped.entries.map((entry) {
+                                        final pName = entry.key;
+                                        final pItems = entry.value;
+                                        final pSubtotal = pItems.fold<double>(0, (s, i) => s + (i.price * i.quantity));
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            // Participant header
+                                            Container(
+                                              margin: const EdgeInsets.only(top: 4, bottom: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.person, size: 14, color: Colors.amber.shade700),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      pName,
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: textColor,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '${CurrencyUtils.getCurrencySymbol()}${pSubtotal.toStringAsFixed(2)}',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: subtleText,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Participant items
+                                            ...pItems.map((item) => Padding(
+                                              padding: const EdgeInsets.only(left: 12, top: 2, bottom: 2),
+                                              child: Row(
+                                                children: [
+                                                  Text(
+                                                    '${item.quantity == item.quantity.roundToDouble() ? item.quantity.toInt() : item.quantity}x',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Colors.amber.shade700,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      item.name,
+                                                      style: TextStyle(fontSize: 13, color: textColor),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: textColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            )),
+                                          ],
+                                        );
+                                      }).toList();
+                                    })(),
+                                  ] else ...[
+                                    // Normal flat list for non-group orders
+                                    ...order.items.map((item) => Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            '${item.quantity == item.quantity.roundToDouble() ? item.quantity.toInt() : item.quantity}x',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.amber.shade700,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            item.name,
-                                            style: TextStyle(fontSize: 13, color: textColor),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              item.name,
+                                              style: TextStyle(fontSize: 13, color: textColor),
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: textColor,
+                                          Text(
+                                            '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: textColor,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  )),
+                                        ],
+                                      ),
+                                    )),
+                                  ],
                                   const Divider(height: 16),
                                   // Subtotal
                                   Row(
