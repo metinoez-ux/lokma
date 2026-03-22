@@ -406,7 +406,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   future: _getVersionString(),
                   builder: (context, snap) => Text(
                     snap.data ?? '${'profile.version'.tr()} ...',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w100),
                   ),
                 ),
               ),
@@ -429,6 +429,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             'Designed & Developed by',
                             style: TextStyle(
                               fontSize: 11,
+                              fontWeight: FontWeight.w100,
                               color: isDark
                                   ? Colors.white.withOpacity(0.35)
                                   : Colors.grey[500],
