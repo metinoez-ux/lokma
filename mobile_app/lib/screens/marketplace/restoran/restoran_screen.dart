@@ -680,7 +680,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               clipBehavior: Clip.hardEdge,
               expandedHeight: (_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null)
                   ? 120
-                  : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 192 : 175,
+                  : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 210 : 175,
               collapsedHeight:
                   120,
               automaticallyImplyLeading: false,
@@ -688,7 +688,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 builder: (context, constraints) {
                   final expandedHeight = (_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null)
                       ? 120.0
-                      : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 192.0 : 175.0;
+                      : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 210.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -1373,13 +1373,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.near_me,
-                  color: isDark ? (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink) : Colors.grey[700],
+                  color: _deliveryMode == 'masa'
+                      ? const Color(0xFFFF6B00)
+                      : (isDark ? lokmaPink : Colors.grey[700]),
                   size: 14),
               const SizedBox(width: 4),
               Text(
                 nearestLabel,
                 style: TextStyle(
-                  color: isDark ? (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink) : Colors.grey[700],
+                  color: _deliveryMode == 'masa'
+                      ? const Color(0xFFFF6B00)
+                      : (isDark ? lokmaPink : Colors.grey[700]),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1437,9 +1441,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             child: Text(
               distanceLabel,
               style: TextStyle(
-                color: isDark
-                    ? (_deliveryMode == 'masa' ? const Color(0xFFFF6B00) : Colors.grey[300]!)
-                    : Colors.grey[700],
+                color: _deliveryMode == 'masa'
+                    ? const Color(0xFFFF6B00)
+                    : (isDark ? Colors.grey[300]! : Colors.grey[700]!),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
