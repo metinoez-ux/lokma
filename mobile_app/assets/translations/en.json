@@ -845,6 +845,7 @@
     "business_count": "{} businesses",
     "order_at_partners": "Order from {count} partners",
     "reserve_table_at_partners": "Reserve a table at {count} partners",
+    "reserve_table_discover": "Discover businesses near you",
     "quick_filters_section": "Quick Filters",
     "show_businesses": "Show {} Businesses",
     "filter_cancel": "Cancel",

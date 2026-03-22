@@ -830,6 +830,7 @@
     "business_count": "{} işletme",
     "order_at_partners": "{count} İş Yerinde Sipariş Ver",
     "reserve_table_at_partners": "{count} işletmede masa rezervasyonu",
+    "reserve_table_discover": "Yakınındaki işletmeleri keşfet",
     "quick_filters_section": "Hızlı Filtreler",
     "show_businesses": "{} İşletme Göster",
     "filter_cancel": "İptal",

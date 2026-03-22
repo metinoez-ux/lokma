@@ -3782,7 +3782,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ],
                         const SizedBox(height: 6),
                         // Description (Ingredients)
-                        if (product.description.isNotEmpty)
+                         if (product.description.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Text(
@@ -3790,6 +3790,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               style: TextStyle(
                                 color: textSecondary,
                                 fontSize: 13,
+                                fontWeight: FontWeight.w300,
                                 height: 1.3,
                               ),
                               maxLines: 2,
@@ -3802,7 +3803,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           style: TextStyle(
                             color: isAvailable ? textPrimary : textSecondary,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w300,
                           ),
                         ),
 
@@ -3903,9 +3904,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Product Image (if any)
+                      // Image + overlaid Add button (McDonalds/Lieferando style)
                       if (hasImage)
                         Stack(
+                          clipBehavior: Clip.none,
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
@@ -3924,28 +3926,96 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                               ),
                             ),
-
+                            // + button overlay: bottom-right corner
+                            if (isAvailable)
+                              Positioned(
+                                right: -4,
+                                bottom: -4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (_isMasaMode && !_masaPreOrderPromptShown) {
+                                      _showMasaPreOrderPrompt(product);
+                                      return;
+                                    }
+                                    if (product.optionGroups.isNotEmpty) {
+                                      _showProductBottomSheet(product);
+                                    } else {
+                                      final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                                      final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
+                                      HapticFeedback.mediumImpact();
+                                      ref.read(cartProvider.notifier).addToCart(
+                                        product,
+                                        isByWeight ? product.minQuantity : 1,
+                                        widget.businessId,
+                                        butcherName,
+                                      );
+                                      setState(() {});
+                                    }
+                                  },
+                                  child: inCart && product.optionGroups.isEmpty
+                                    ? Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: isDark ? Colors.white : Colors.black87,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.15),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          '${totalQtyInCart.toInt()}',
+                                          style: TextStyle(
+                                            color: isDark ? Colors.black : Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                                            width: 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.1),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.add,
+                                          color: accent,
+                                          size: 20,
+                                        ),
+                                      ),
+                                ),
+                              ),
                           ],
-                        ),
-                        
-                      if (hasImage) const SizedBox(height: 12),
-                      
-                      // Action Button (+ / Qty Badge) - Lieferando style
-                      if (isAvailable)
+                        )
+                      else if (isAvailable)
+                        // No image: standalone + button below text
                         GestureDetector(
                           onTap: () {
-                            // Masa pre-order prompt check
                             if (_isMasaMode && !_masaPreOrderPromptShown) {
                               _showMasaPreOrderPrompt(product);
                               return;
                             }
-                            
-                            // + button tapped directly
                             if (product.optionGroups.isNotEmpty) {
-                              // Has options -> open customization sheet
                               _showProductBottomSheet(product);
                             } else {
-                              // No options -> add directly to cart
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
                               final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                               HapticFeedback.mediumImpact();
@@ -3959,7 +4029,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             }
                           },
                           child: inCart && product.optionGroups.isEmpty
-                            // Show count badge (Lieferando style: dark circle with number)
                             ? Container(
                                 width: 44,
                                 height: 44,
@@ -3977,7 +4046,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   ),
                                 ),
                               )
-                            // Show + button
                             : Container(
                                 width: 44,
                                 height: 44,

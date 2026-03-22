@@ -844,6 +844,7 @@
     "business_count": "{} attività",
     "order_at_partners": "Ordina da {count} partner",
     "reserve_table_at_partners": "Prenota un tavolo in {count} partner",
+    "reserve_table_discover": "Scopri le attività vicino a te",
     "quick_filters_section": "Filtri Rapidi",
     "show_businesses": "Mostra {} Attività",
     "filter_cancel": "Annulla",

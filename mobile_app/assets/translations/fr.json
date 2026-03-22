@@ -844,6 +844,7 @@
     "business_count": "{} commerces",
     "order_at_partners": "Commander chez {count} partenaires",
     "reserve_table_at_partners": "Réserver une table chez {count} partenaires",
+    "reserve_table_discover": "Découvrez les établissements près de vous",
     "quick_filters_section": "Filtres Rapides",
     "show_businesses": "Afficher {} Commerces",
     "filter_cancel": "Annuler",

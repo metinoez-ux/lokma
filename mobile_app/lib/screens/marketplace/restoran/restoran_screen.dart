@@ -76,6 +76,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   String? _scannedBusinessId; // ignore: unused_field
   String? _scannedBusinessName;
 
+  // Masa initial state - neither card shown until user selects an action
+  bool _masaReservationSelected = false;
+
   // Category filter - 'all' or specific businessType
   String _categoryFilter = 'all';
 
@@ -675,13 +678,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 210 : 175,
+              expandedHeight: (_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null)
+                  ? 120
+                  : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 192 : 175,
               collapsedHeight:
                   120,
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 210.0 : 175.0;
+                  final expandedHeight = (_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null)
+                      ? 120.0
+                      : (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 192.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
@@ -709,19 +716,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     // Delivery mode tabs
                                     _buildDeliveryModeTabs(),
 
-                                    // Arama Çubuğu
-                                    _buildSearchBar(),
+                                    // Arama Cubuğu - masa initial'da gizle
+                                    if (!(_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null))
+                                      _buildSearchBar(),
 
-                                    // Mesafe aralığını Gel Al ve Masa modlarında göster
+                                    // Mesafe araligını Gel Al ve (secim yapilmis) Masa modlarnda goster
                                     if (_deliveryMode == 'gelal' ||
-                                        _deliveryMode == 'masa')
+                                        (_deliveryMode == 'masa' && (_masaReservationSelected || _scannedTableNumber != null)))
                                       _buildDistanceSlider(),
                                   ],
                                 ),
                               ),
                             ] else ...[
-                              // Collapsed state: sadece arama çubuğu görünür, mesafe ve tabs gizli
-                              _buildSearchBar(),
+                              // Collapsed: masa initial'da hicbir sey, diger modlarda search
+                              if (!(_deliveryMode == 'masa' && !_masaReservationSelected && _scannedTableNumber == null))
+                                _buildSearchBar(),
                             ],
                           ],
                         ),
@@ -734,20 +743,33 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
             // Masa Hero Header (QR Okut + Tischreservierung) if in masa mode
             if (_deliveryMode == 'masa')
-              if (_scannedTableNumber == null) ...[ 
-                // Tischreservierung Hero Card (FIRST)
+              if (_scannedTableNumber == null && !_masaReservationSelected) ...[
+                // INITIAL STATE: Compact two-button choice (no big cards)
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                    child: _buildReservationHeroCard(),
-                  ),
+                  child: _buildMasaInitialChoice(),
                 ),
-                // QR Code Hero Card (SECOND)
-                SliverToBoxAdapter(
-                  child: _buildMasaHeroHeader(),
-                ),
-                // Empty bottom spacer
                 const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              ] else if (_scannedTableNumber == null && _masaReservationSelected) ...[
+                // RESERVATION selected: skip hero card, show list directly
+                if (!_isLoading && _filteredBusinesses.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+                      child: Text(
+                        tr('marketplace.reserve_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                SliverPadding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 15, bottom: 120),
+                  sliver: _buildRestaurantSliverList(),
+                ),
               ] else ...[
                 SliverToBoxAdapter(
                   child: Padding(
@@ -772,7 +794,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   ),
                 SliverPadding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 15, bottom: 120),
                   sliver: _buildRestaurantSliverList(),
                 ),
               ],
@@ -1162,12 +1184,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           _sliderAutoSet = false;
           _currentStepIndex = 9; // Reset to 10km default
           _maxDistance = 10.0;
-          // Reset QR scan state when leaving Masa mode
+          // Reset QR scan state and masa sub-mode when switching modes
           if (newMode != 'masa') {
             _scannedTableNumber = null;
             _scannedBusinessId = null;
             _scannedBusinessName = null;
           }
+          // Always reset masa reservation selected on mode switch
+          _masaReservationSelected = false;
         });
         // Re-trigger auto-set for the new delivery mode
         _autoSetSliderToNearestBusiness();
@@ -1342,7 +1366,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     String nearestLabel = '$nearestKm km';
 
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 6),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 2),
       child: Row(
         children: [
           Row(
@@ -1366,12 +1390,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: isDark ? lokmaPink : Colors.grey[700],
+                activeTrackColor: const Color(0xFFFF6B00),
                 inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                thumbColor: isDark ? lokmaPink : Colors.grey[700],
-                overlayColor: isDark
-                    ? lokmaPink.withValues(alpha: 0.2)
-                    : Colors.grey.withValues(alpha: 0.15),
+                thumbColor: const Color(0xFFFF6B00),
+                overlayColor: const Color(0xFFFF6B00).withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
@@ -2604,6 +2626,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               setStateSheet(() {});
                             },
                           ),
+                          if (_deliveryMode != 'masa')
                           _buildFilterListItem(
                             title: tr('marketplace.filter_free_delivery_title'),
                             subtitle: 'marketplace.filter_free_delivery'.tr(),
@@ -2686,7 +2709,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: lokmaPink,
+                            backgroundColor: const Color(0xFFFF6B00),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
@@ -2787,7 +2810,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? lokmaPink : subtitleColor,
+                          color: isSelected ? const Color(0xFFFF6B00) : subtitleColor,
                           width: 2,
                         ),
                       ),
@@ -2797,7 +2820,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 width: 12,
                                 height: 12,
                                 decoration: BoxDecoration(
-                                  color: lokmaPink,
+                                  color: const Color(0xFFFF6B00),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -2808,10 +2831,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       width: 22,
                       height: 22,
                       decoration: BoxDecoration(
-                        color: isSelected ? lokmaPink : Colors.transparent,
+                        color: isSelected ? const Color(0xFFFF6B00) : Colors.transparent,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: isSelected ? lokmaPink : subtitleColor,
+                          color: isSelected ? const Color(0xFFFF6B00) : subtitleColor,
                           width: 1.5,
                         ),
                       ),
@@ -2948,6 +2971,143 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Initial choice shown when masa mode is first selected (before any interaction)
+  Widget _buildMasaInitialChoice() {
+    final screenH = MediaQuery.of(context).size.height;
+    final cardH = (screenH * 0.38).clamp(180.0, 320.0);
+
+    Widget cardContent(String titleKey, String subtitleKey, Widget centerIcon) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.20),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(child: centerIcon),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr(titleKey),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          tr(subtitleKey),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward,
+                          size: 16,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+
+    BoxDecoration gradientDeco(List<Color> colors, Color shadow) => BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: colors,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: shadow.withValues(alpha: 0.32),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        children: [
+          // QR Kart - pembe gradient
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _showMasaQrScanSheet();
+            },
+            child: Container(
+              width: double.infinity,
+              height: cardH,
+              decoration: gradientDeco(
+                const [Color(0xFFFB335B), Color(0xFFD1184A)],
+                lokmaPink,
+              ),
+              child: cardContent(
+                'home.order_with_qr',
+                'home.scan_qr_table',
+                const Icon(Icons.qr_code_scanner, size: 30, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Rezervasyon Kart - turuncu gradient
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              setState(() => _masaReservationSelected = true);
+            },
+            child: Container(
+              width: double.infinity,
+              height: cardH,
+              decoration: gradientDeco(
+                const [Color(0xFFEF6C00), Color(0xFFBF360C)],
+                const Color(0xFFEF6C00),
+              ),
+              child: cardContent(
+                'home.table_reservation',
+                'marketplace.reserve_table_discover',
+                SvgPicture.asset(
+                  'assets/images/icon_masa_rezervasyon.svg',
+                  width: 30,
+                  height: 30,
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

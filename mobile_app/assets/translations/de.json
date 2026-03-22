@@ -831,6 +831,7 @@
     "business_count": "{} Geschäfte",
     "order_at_partners": "Bei {count} Partnern bestellen",
     "reserve_table_at_partners": "Bei {count} Partnern einen Tisch reservieren",
+    "reserve_table_discover": "Partner in deiner Nähe entdecken",
     "quick_filters_section": "Schnellfilter",
     "show_businesses": "{} Geschäfte anzeigen",
     "filter_cancel": "Abbrechen",

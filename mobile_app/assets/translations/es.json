@@ -844,6 +844,7 @@
     "business_count": "{} negocios",
     "order_at_partners": "Ordene en {count} socios",
     "reserve_table_at_partners": "Reservar una mesa en {count} socios",
+    "reserve_table_discover": "Descubre negocios cercanos",
     "quick_filters_section": "Filtros Rápidos",
     "show_businesses": "Mostrar {} Negocios",
     "filter_cancel": "Cancelar",
