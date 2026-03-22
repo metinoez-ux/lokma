@@ -135,21 +135,22 @@ export default function LandingPage() {
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#fb335b]/30">
       <PublicHeader themeAware={true} />
 
-      {/* Hero Section — Split layout: gradient left + artisan right with smooth transition */}
-      <section className="relative pt-20 md:pt-0 min-h-[60vh] md:min-h-[75vh] flex items-stretch overflow-hidden" style={{ background: 'linear-gradient(to right, #EE3640 0%, #F44A48 50%, #FD5750 100%)' }}>
-        {/* Decorative glow elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 right-1/4 w-[400px] h-[400px] bg-black/5 rounded-full blur-3xl" />
-        </div>
+      {/* Hero Section — Full-width background image with gradient overlay */}
+      <section className="relative pt-20 md:pt-0 min-h-[60vh] md:min-h-[75vh] flex items-stretch overflow-hidden">
+        {/* Background image */}
+        <Image
+          src="/images/hero_pizza.png"
+          alt="Fresh food on table"
+          fill
+          className="object-cover"
+          priority
+        />
 
-        {/* Decorative texture on right side */}
-        <div className="absolute inset-0 md:left-[60%] overflow-hidden pointer-events-none opacity-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[length:24px_24px]" />
-        </div>
+        {/* Gradient overlay — strong on left for text readability, fading to right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#EE3640] via-[#EE3640]/95 to-[#EE3640]/40 md:to-transparent" />
 
-        {/* Mobile overlay: on small screens */}
-        <div className="absolute inset-0 md:hidden bg-gradient-to-b from-[#EE3640]/90 via-[#F44A48]/80 to-[#FD5750]/85" />
+        {/* Mobile overlay: stronger for readability */}
+        <div className="absolute inset-0 md:hidden bg-[#EE3640]/80" />
 
         <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center md:min-h-[75vh]">
           {/* Left: Text content */}
@@ -192,19 +193,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: Hero pizza image */}
-          <div className="hidden md:flex flex-1 items-center justify-center relative">
-            <div className="relative w-[420px] h-[420px] lg:w-[500px] lg:h-[500px]">
-              <div className="absolute inset-0 bg-black/20 rounded-full blur-3xl scale-90 translate-y-4" />
-              <Image
-                src="/images/hero_pizza.png"
-                alt="Fresh artisan pizza"
-                fill
-                className="object-contain drop-shadow-2xl transform -rotate-6 hover:rotate-0 transition-transform duration-700 ease-out"
-                priority
-              />
-            </div>
-          </div>
+          {/* Right: spacer for layout balance */}
+          <div className="hidden md:block flex-1" />
         </div>
       </section>
 
