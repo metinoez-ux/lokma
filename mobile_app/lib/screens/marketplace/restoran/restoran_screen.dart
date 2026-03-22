@@ -1348,12 +1348,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.near_me, color: lokmaPink, size: 14),
+              Icon(Icons.near_me,
+                  color: isDark ? lokmaPink : Colors.grey[700],
+                  size: 14),
               const SizedBox(width: 4),
               Text(
                 nearestLabel,
-                style: const TextStyle(
-                  color: lokmaPink,
+                style: TextStyle(
+                  color: isDark ? lokmaPink : Colors.grey[700],
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1364,10 +1366,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: lokmaPink,
-                inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[400],
-                thumbColor: lokmaPink,
-                overlayColor: lokmaPink.withValues(alpha: 0.2),
+                activeTrackColor: isDark ? lokmaPink : Colors.grey[700],
+                inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
+                thumbColor: isDark ? lokmaPink : Colors.grey[700],
+                overlayColor: isDark
+                    ? lokmaPink.withValues(alpha: 0.2)
+                    : Colors.grey.withValues(alpha: 0.15),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
@@ -2900,6 +2904,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       letterSpacing: -0.3,
                     ),
                   ),
+                  if (reservationCount > 0) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '$reservationCount'}),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w300,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -2931,27 +2946,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ],
               ),
             ),
-            // Business count pill badge - top right
-            if (reservationCount > 0)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF6C00),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    '$reservationCount',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
