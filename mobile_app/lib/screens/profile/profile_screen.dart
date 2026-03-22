@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -406,7 +407,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   future: _getVersionString(),
                   builder: (context, snap) => Text(
                     snap.data ?? '${'profile.version'.tr()} ...',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w100),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w200,
+                      letterSpacing: 0.5,
+                      color: Colors.grey[500],
+                    ),
                   ),
                 ),
               ),
@@ -427,9 +433,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         children: [
                           Text(
                             'Designed & Developed by',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w100,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w200,
+                              letterSpacing: 0.5,
                               color: isDark
                                   ? Colors.white.withOpacity(0.35)
                                   : Colors.grey[500],
