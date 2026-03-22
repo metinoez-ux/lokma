@@ -735,15 +735,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             // Masa Hero Header (QR Okut + Tischreservierung) if in masa mode
             if (_deliveryMode == 'masa')
               if (_scannedTableNumber == null) ...[ 
+                // Tischreservierung Hero Card (FIRST)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                    child: _buildMasaHeroHeader(),
+                    child: _buildReservationHeroCard(),
                   ),
                 ),
-                // Tischreservierung Hero Card
+                // QR Code Hero Card (SECOND)
                 SliverToBoxAdapter(
-                  child: _buildReservationHeroCard(),
+                  child: _buildMasaHeroHeader(),
                 ),
                 // Empty bottom spacer
                 const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -2850,93 +2851,108 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             ),
           );
         },
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.grey.withValues(alpha: 0.12),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF6C00).withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
+        child: Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.12),
                 ),
-                child: Center(
-                  child: SvgPicture.asset(
-                    'assets/images/icon_masa_rezervasyon.svg',
-                    width: 34,
-                    height: 34,
-                    colorFilter: const ColorFilter.mode(Color(0xFFEF6C00), BlendMode.srcIn),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF6C00).withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/images/icon_masa_rezervasyon.svg',
+                        width: 34,
+                        height: 34,
+                        colorFilter: const ColorFilter.mode(Color(0xFFEF6C00), BlendMode.srcIn),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    tr('home.table_reservation'),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF6C00),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/icon_masa_rezervasyon.svg',
+                          width: 16,
+                          height: 16,
+                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          tr('home.table_reservation'),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Business count pill badge - top right
+            if (reservationCount > 0)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF6C00),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    '$reservationCount',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                tr('home.table_reservation'),
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                reservationCount > 0
-                    ? tr('marketplace.reserve_table_at_partners', namedArgs: {'count': '$reservationCount'})
-                    : tr('home.scan_qr_table'),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.grey[400] : Colors.grey[500],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF6C00),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(
-                      'assets/images/icon_masa_rezervasyon.svg',
-                      width: 16,
-                      height: 16,
-                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      tr('home.table_reservation'),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
