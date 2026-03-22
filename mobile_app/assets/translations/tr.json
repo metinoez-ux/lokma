@@ -976,7 +976,18 @@
     "go_to_restaurant": "Restorana Git",
     "back_to_menu": "Menuye Don",
     "closed_but_preorder_short": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz",
-    "closed_plan_later": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz"
+    "closed_plan_later": "Teslimat veya teslim almayı daha sonra planlayabilirsiniz",
+    "distance_all": "Tümü",
+    "table_selected": "Masa {tableNum} secildi",
+    "table_verified": "Masa {tableNum} dogrulandi",
+    "active_group_at_table": "Masa {tableNum} — Aktif Grup Siparisi",
+    "active_group_desc": "Bu masada {count} kisilik aktif bir grup siparisi var.",
+    "table_at_business": "Masa {tableNum} — {businessName}",
+    "table_hint": "Orn: 5",
+    "name_hint": "Orn: Ahmet",
+    "wrong_pin": "Yanlis PIN kodu girdiniz.",
+    "wrong_pin_detail": "Yanlis PIN kodu girdiniz. Lutfen grup siparisini baslatan kisiye kodu sorun.",
+    "group_create_error_msg": "Grup olusturulurken hata: {error}"
   },
   "navigation": {
     "food": "Yemek",

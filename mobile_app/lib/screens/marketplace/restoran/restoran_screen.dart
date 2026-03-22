@@ -1358,7 +1358,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     String distanceLabel;
     if (_currentStepIndex == _kmSteps.length - 1) {
-      distanceLabel = 'Tümü';
+      distanceLabel = tr('marketplace.distance_all');
     } else {
       distanceLabel = '${currentKm.toInt()} km';
     }
@@ -1904,7 +1904,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3E3E40),
+                          color: Theme.of(context).colorScheme.inverseSurface,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -2026,7 +2026,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   /// Lieferando-style restaurant card with large image
   Widget _buildRestaurantCard(String id, Map<String, dynamic> data) {
-    final name = data['businessName'] ?? data['companyName'] ?? 'İsimsiz';
+    final name = data['businessName'] ?? data['companyName'] ?? tr('marketplace.unnamed_store');
     final businessType = data['businessType'] as String? ?? '';
     final brandLabel = data['brandLabel'] as String?;
     final brand = data['brand'] as String?;
@@ -2281,9 +2281,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     _onlyTuna = false;
                   });
                 },
-                child: const Text(
-                  'Filtreleri Temizle',
-                  style: TextStyle(color: lokmaPink),
+                child: Text(
+                  tr('marketplace.clear_filters'),
+                  style: const TextStyle(color: lokmaPink),
                 ),
               ),
             ),
@@ -2347,8 +2347,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             ),
                             child: Text(
                               tr('marketplace.filter_cancel'),
-                              style: const TextStyle(
-                                color: Color(0xFF3E3E40),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -2399,8 +2399,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             ),
                             child: Text(
                               tr('marketplace.filter_reset'),
-                              style: const TextStyle(
-                                color: Color(0xFF3E3E40),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -3513,7 +3513,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Icon(Icons.qr_code_scanner, size: 36, color: lokmaPink),
               const SizedBox(height: 12),
               Text(
-                'Masanızdaki QR Kodu Okutun',
+                tr('home.order_with_qr'),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -3522,7 +3522,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Sipariş vermek için masanızdaki QR kodu taratın',
+                tr('marketplace.scan_qr_to_order'),
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -3608,7 +3608,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 },
                 icon: Icon(Icons.edit, size: 18, color: lokmaPink),
                 label: Text(
-                  'Manuel masa numarası gir',
+                  tr('marketplace.enter_manual_table_number'),
                   style: TextStyle(color: lokmaPink, fontSize: 14),
                 ),
               ),
@@ -3636,7 +3636,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             Icon(Icons.restaurant, color: lokmaPink, size: 24),
             const SizedBox(width: 8),
             Text(
-              'Masa Numarası',
+              tr('marketplace.table_number'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -3650,7 +3650,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           keyboardType: TextInputType.number,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: 'Örn: 5',
+            hintText: tr('marketplace.table_hint'),
             hintStyle: TextStyle(color: Colors.grey[500]),
             filled: true,
             fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
@@ -3669,7 +3669,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('İptal', style: TextStyle(color: Colors.grey[500])),
+            child: Text(tr('common.cancel'), style: TextStyle(color: Colors.grey[500])),
           ),
           FilledButton(
             onPressed: () {
@@ -3706,7 +3706,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final data = doc.data()!;
           businessName = data['companyName'] as String? ??
               data['businessName'] as String? ??
-              'İşletme';
+              tr('marketplace.unnamed_store');
         }
       } catch (e) {
         debugPrint('Error resolving business: $e');
@@ -3722,7 +3722,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         final data = first.data() as Map<String, dynamic>;
         businessName = data['companyName'] as String? ??
             data['businessName'] as String? ??
-            'İşletme';
+            tr('marketplace.unnamed_store');
       }
     }
 
@@ -3738,7 +3738,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 Icon(Icons.check_circle,
                     color: Theme.of(context).colorScheme.surface, size: 20),
                 const SizedBox(width: 8),
-                Text('Masa $tableNum seçildi ✓'),
+                Text('marketplace.table_selected'.tr(namedArgs: {'tableNum': tableNum})),
               ],
             ),
             backgroundColor: Colors.green,
@@ -3775,7 +3775,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         } else {
           // Active session found — show join dialog
           _showMasaJoinGroupDialog(
-              activeSession, tableNum, businessId, businessName ?? 'İşletme');
+              activeSession, tableNum, businessId, businessName ?? tr('marketplace.unnamed_store'));
         }
       } else {
         // No active session — show create or solo option
@@ -3785,7 +3785,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         ref.read(tableGroupProvider.notifier).clearSession();
 
         _showMasaCreateGroupDialog(
-            tableNum, businessId, businessName ?? 'İşletme');
+            tableNum, businessId, businessName ?? tr('marketplace.unnamed_store'));
       }
     } catch (e) {
       debugPrint('Error checking group session: $e');
@@ -3843,13 +3843,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Icon(Icons.groups, size: 48, color: lokmaPink),
               const SizedBox(height: 12),
               Text(
-                'Masa $tableNum — Aktif Grup Siparişi',
+                'marketplace.active_group_at_table'.tr(namedArgs: {'tableNum': tableNum}),
                 style:
                     const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
-                'Bu masada $participantCount kişilik aktif bir grup siparişi var.',
+                'marketplace.active_group_desc'.tr(namedArgs: {'count': participantCount.toString()}),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
@@ -3858,7 +3858,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               // Name input for anonymous users
               if (isAnonymous) ...[
                 Text(
-                  'İsminiz',
+                  tr('marketplace.your_name'),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -3875,7 +3875,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Örn: Ahmet',
+                    hintText: tr('marketplace.name_hint'),
                     hintStyle: TextStyle(color: Colors.grey[400]),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -3896,7 +3896,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Hesap oluşturmak zorunlu değil — sadece gruba isminizle katılın.',
+                  tr('marketplace.no_account_needed'),
                   style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                 ),
                 const SizedBox(height: 16),
@@ -3904,7 +3904,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
               // PIN entry
               Text(
-                'Grup PIN Kodu',
+                tr('marketplace.group_pin_code'),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -3976,7 +3976,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     final pin = pinController.text.trim();
                     if (pin.length != 4) {
                       setSheetState(
-                          () => pinError = '4 haneli PIN kodu giriniz');
+                          () => pinError = tr('orders.enter_4_digit_pin'));
                       return;
                     }
                     try {
@@ -3996,12 +3996,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     } catch (e) {
                       if (e.toString().contains('WRONG_PIN')) {
                         setSheetState(
-                            () => pinError = 'Yanlış PIN kodu girdiniz.');
+                            () => pinError = tr('marketplace.wrong_pin'));
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                  'Yanlış PIN kodu girdiniz. Lütfen grup siparişini başlatan kişiye kodu sorun.'),
+                                  tr('marketplace.wrong_pin_detail')),
                               backgroundColor: Colors.red,
                               behavior: SnackBarBehavior.floating,
                             ),
@@ -4059,8 +4059,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     context: context,
                     builder: (confirmCtx) => AlertDialog(
                       title: Text(tr('auth.close_session')),
-                      content: const Text(
-                        'Şifreye ulaşamıyor musunuz? Masadaki mevcut sipariş oturumunu kapatıp baştan başlayabilirsiniz. Bu işlem mevcut gruptakilerin siparişe devam etmesini engeller. Devam etmek istiyor musunuz?',
+                      content: Text(
+                        tr('marketplace.pin_not_accessible'),
                       ),
                       actions: [
                         TextButton(
@@ -4088,9 +4088,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               }
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text(
-                                        'Önceki oturum kapatıldı. Şimdi yeni bir başlangıç yapabilirsiniz.'),
+                                        tr('marketplace.previous_session_closed')),
                                     backgroundColor: Colors.green,
                                   ),
                                 );
@@ -4119,8 +4119,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   );
                 },
-                child: const Text(
-                  'Şifreyi Öğrenemiyorum / Oturumu Sıfırla',
+                child: Text(
+                  tr('marketplace.cannot_learn_password_reset_session'),
                   style: TextStyle(
                       color: Colors.red,
                       fontSize: 13,
@@ -4169,12 +4169,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             Icon(Icons.restaurant, size: 48, color: lokmaPink),
             const SizedBox(height: 12),
             Text(
-              'Masa $tableNum — $businessName',
+              'marketplace.table_at_business'.tr(namedArgs: {'tableNum': tableNum, 'businessName': businessName}),
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
-              'Birden fazla kişi mi sipariş verecek?',
+              tr('marketplace.multiple_people_ordering'),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
@@ -4223,7 +4223,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: Theme.of(context).colorScheme.surface,
                                 size: 20),
                             const SizedBox(width: 8),
-                            Text('Masa $tableNum doğrulandı ✓'),
+                            Text('marketplace.table_verified'.tr(namedArgs: {'tableNum': tableNum})),
                           ],
                         ),
                         backgroundColor: Colors.green,
@@ -4237,7 +4237,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 },
                 icon: Icon(Icons.person, color: Colors.grey[600]),
                 label: Text(
-                  'Tek Kişi Sipariş',
+                  tr('marketplace.single_order'),
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -4311,7 +4311,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Grup PIN Kodu',
+                tr('marketplace.group_pin_code'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -4342,7 +4342,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Bu kodu masadaki diğer kişilerle paylaşın.\nGruba katılmak için bu PIN gerekli.',
+                tr('marketplace.share_pin_with_table'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 14, color: Colors.grey[600], height: 1.5),
@@ -4379,7 +4379,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Grup oluşturulurken hata: $e'),
+              content: Text('marketplace.group_create_error_msg'.tr(namedArgs: {'error': e.toString()})),
               backgroundColor: Colors.red),
         );
       }

@@ -975,7 +975,18 @@
     "mode_dine_in": "Sur place",
     "mode_pickup": "À emporter",
     "closed_but_preorder_short": "Vous pouvez planifier la livraison ou le retrait pour plus tard",
-    "closed_plan_later": "Vous pouvez planifier la livraison ou le retrait pour plus tard"
+    "closed_plan_later": "Vous pouvez planifier la livraison ou le retrait pour plus tard",
+    "distance_all": "Tous",
+    "table_selected": "Table {tableNum} selectionnee",
+    "table_verified": "Table {tableNum} verifiee",
+    "active_group_at_table": "Table {tableNum} — Commande de groupe active",
+    "active_group_desc": "Il y a une commande de groupe active avec {count} personnes a cette table.",
+    "table_at_business": "Table {tableNum} — {businessName}",
+    "table_hint": "Ex.: 5",
+    "name_hint": "Ex.: Jean",
+    "wrong_pin": "Code PIN incorrect.",
+    "wrong_pin_detail": "Code PIN incorrect. Veuillez demander a la personne qui a lance la commande de groupe.",
+    "group_create_error_msg": "Erreur lors de la creation du groupe: {error}"
   },
   "navigation": {
     "food": "Repas",

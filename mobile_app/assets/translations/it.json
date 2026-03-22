@@ -975,7 +975,18 @@
     "mode_dine_in": "Al tavolo",
     "mode_pickup": "Ritiro",
     "closed_but_preorder_short": "Puoi programmare la consegna o il ritiro per dopo",
-    "closed_plan_later": "Puoi programmare la consegna o il ritiro per dopo"
+    "closed_plan_later": "Puoi programmare la consegna o il ritiro per dopo",
+    "distance_all": "Tutti",
+    "table_selected": "Tavolo {tableNum} selezionato",
+    "table_verified": "Tavolo {tableNum} verificato",
+    "active_group_at_table": "Tavolo {tableNum} — Ordine di gruppo attivo",
+    "active_group_desc": "C'e un ordine di gruppo attivo con {count} persone a questo tavolo.",
+    "table_at_business": "Tavolo {tableNum} — {businessName}",
+    "table_hint": "Es.: 5",
+    "name_hint": "Es.: Marco",
+    "wrong_pin": "Codice PIN errato.",
+    "wrong_pin_detail": "Codice PIN errato. Chiedi alla persona che ha avviato l'ordine di gruppo.",
+    "group_create_error_msg": "Errore nella creazione del gruppo: {error}"
   },
   "navigation": {
     "food": "Cibo",

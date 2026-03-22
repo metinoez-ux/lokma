@@ -976,7 +976,18 @@
     "go_to_restaurant": "Go to Restaurant",
     "back_to_menu": "Back to Menu",
     "closed_but_preorder_short": "You can schedule delivery or pickup for later",
-    "closed_plan_later": "You can schedule delivery or pickup for later"
+    "closed_plan_later": "You can schedule delivery or pickup for later",
+    "distance_all": "All",
+    "table_selected": "Table {tableNum} selected",
+    "table_verified": "Table {tableNum} verified",
+    "active_group_at_table": "Table {tableNum} — Active Group Order",
+    "active_group_desc": "There is an active group order with {count} people at this table.",
+    "table_at_business": "Table {tableNum} — {businessName}",
+    "table_hint": "e.g.: 5",
+    "name_hint": "e.g.: John",
+    "wrong_pin": "Wrong PIN code.",
+    "wrong_pin_detail": "Wrong PIN code. Please ask the person who started the group order.",
+    "group_create_error_msg": "Error creating group: {error}"
   },
   "navigation": {
     "food": "Food",

@@ -979,7 +979,18 @@
     "view_menu": "Menu ansehen",
     "reserve_now": "Reservieren",
     "closed_but_preorder_short": "Du kannst die Lieferung oder Abholung für später planen",
-    "closed_plan_later": "Du kannst die Lieferung oder Abholung für später planen"
+    "closed_plan_later": "Du kannst die Lieferung oder Abholung für später planen",
+    "distance_all": "Alle",
+    "table_selected": "Tisch {tableNum} ausgewählt",
+    "table_verified": "Tisch {tableNum} bestätigt",
+    "active_group_at_table": "Tisch {tableNum} — Aktive Gruppenbestellung",
+    "active_group_desc": "An diesem Tisch gibt es eine aktive Gruppenbestellung mit {count} Personen.",
+    "table_at_business": "Tisch {tableNum} — {businessName}",
+    "table_hint": "z.B.: 5",
+    "name_hint": "z.B.: Max",
+    "wrong_pin": "Falscher PIN-Code.",
+    "wrong_pin_detail": "Falscher PIN-Code. Bitte fragen Sie die Person, die die Gruppenbestellung gestartet hat.",
+    "group_create_error_msg": "Fehler beim Erstellen der Gruppe: {error}"
   },
   "navigation": {
     "food": "Essen",

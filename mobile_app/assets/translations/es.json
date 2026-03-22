@@ -975,7 +975,18 @@
     "mode_dine_in": "En el local",
     "mode_pickup": "Recogida",
     "closed_but_preorder_short": "Puedes programar la entrega o recogida para más tarde",
-    "closed_plan_later": "Puedes programar la entrega o recogida para más tarde"
+    "closed_plan_later": "Puedes programar la entrega o recogida para más tarde",
+    "distance_all": "Todos",
+    "table_selected": "Mesa {tableNum} seleccionada",
+    "table_verified": "Mesa {tableNum} verificada",
+    "active_group_at_table": "Mesa {tableNum} — Pedido grupal activo",
+    "active_group_desc": "Hay un pedido grupal activo con {count} personas en esta mesa.",
+    "table_at_business": "Mesa {tableNum} — {businessName}",
+    "table_hint": "Ej.: 5",
+    "name_hint": "Ej.: Juan",
+    "wrong_pin": "Codigo PIN incorrecto.",
+    "wrong_pin_detail": "Codigo PIN incorrecto. Pregunte a la persona que inicio el pedido grupal.",
+    "group_create_error_msg": "Error al crear el grupo: {error}"
   },
   "navigation": {
     "food": "Comida",
