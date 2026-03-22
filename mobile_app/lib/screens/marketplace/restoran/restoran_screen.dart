@@ -2528,6 +2528,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             subtitle: 'marketplace.sort_by_distance'.tr(),
                             isSelected: _sortOption == 'nearest',
                             useRadio: true,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(() => _sortOption = 'nearest');
                               setStateSheet(() {});
@@ -2538,6 +2539,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _sortOption == 'rating',
                             useRadio: true,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(() => _sortOption = 'rating');
                               setStateSheet(() {});
@@ -2569,6 +2571,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             subtitle: 'marketplace.sort_show_all'.tr(),
                             isSelected: _categoryFilter == 'all',
                             useRadio: true,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(() => _categoryFilter = 'all');
                               setStateSheet(() {});
@@ -2587,6 +2590,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               subtitle: tr('marketplace.business_count', args: ['$count']),
                               isSelected: _categoryFilter == typeKey,
                               useRadio: true,
+                              isMasaMode: _deliveryMode == 'masa',
                               onTap: () {
                                 setState(() => _categoryFilter = typeKey);
                                 setStateSheet(() {});
@@ -2617,6 +2621,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             title: tr('marketplace.filter_campaigns_title'),
                             subtitle: 'marketplace.filter_campaigns'.tr(),
                             isSelected: _filterDiscounts,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(
                                   () => _filterDiscounts = !_filterDiscounts);
@@ -2627,6 +2632,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             title: tr('marketplace.filter_cash_title'),
                             subtitle: 'marketplace.filter_cash'.tr(),
                             isSelected: _filterCash,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(() => _filterCash = !_filterCash);
                               setStateSheet(() {});
@@ -2637,6 +2643,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             title: tr('marketplace.filter_free_delivery_title'),
                             subtitle: 'marketplace.filter_free_delivery'.tr(),
                             isSelected: _filterFreeDelivery,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(() =>
                                   _filterFreeDelivery = !_filterFreeDelivery);
@@ -2648,6 +2655,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             subtitle:
                                 tr('marketplace.filter_meal_cards_subtitle'),
                             isSelected: _filterMealCards,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(
                                   () => _filterMealCards = !_filterMealCards);
@@ -2658,6 +2666,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             title: tr('marketplace.filter_high_rating_title'),
                             subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _filterHighRating,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(
                                   () => _filterHighRating = !_filterHighRating);
@@ -2668,6 +2677,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             title: tr('marketplace.filter_open_now_title'),
                             subtitle: 'marketplace.filter_open_now'.tr(),
                             isSelected: _filterOpenNow,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(() => _filterOpenNow = !_filterOpenNow);
                               setStateSheet(() {});
@@ -2678,6 +2688,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             title: tr('marketplace.filter_vegetarian_title'),
                             subtitle: 'marketplace.filter_vegetarian'.tr(),
                             isSelected: _filterVegetarian,
+                            isMasaMode: _deliveryMode == 'masa',
                             onTap: () {
                               setState(
                                   () => _filterVegetarian = !_filterVegetarian);
@@ -2715,7 +2726,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6B00),
+                            backgroundColor: _deliveryMode == 'masa' ? const Color(0xFFFF6B00) : lokmaPink,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
@@ -2748,7 +2759,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     required VoidCallback onTap,
     bool isPremium = false,
     bool useRadio = false,
+    bool isMasaMode = false,
   }) {
+    final accentColor = isMasaMode ? const Color(0xFFFF6B00) : lokmaPink;
     return Builder(
       builder: (context) {
         final textColor = Theme.of(context).colorScheme.onSurface;
@@ -2816,7 +2829,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? const Color(0xFFFF6B00) : subtitleColor,
+                          color: isSelected ? accentColor : subtitleColor,
                           width: 2,
                         ),
                       ),
@@ -2826,7 +2839,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 width: 12,
                                 height: 12,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFF6B00),
+                                  color: accentColor,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -2837,10 +2850,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       width: 22,
                       height: 22,
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFFF6B00) : Colors.transparent,
+                        color: isSelected ? accentColor : Colors.transparent,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFFFF6B00) : subtitleColor,
+                          color: isSelected ? accentColor : subtitleColor,
                           width: 1.5,
                         ),
                       ),
