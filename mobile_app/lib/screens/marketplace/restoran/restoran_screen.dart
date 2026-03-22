@@ -767,7 +767,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   ),
                 SliverPadding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 15, bottom: 120),
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
                   sliver: _buildRestaurantSliverList(),
                 ),
               ] else ...[
@@ -794,7 +794,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   ),
                 SliverPadding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 15, bottom: 120),
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
                   sliver: _buildRestaurantSliverList(),
                 ),
               ],
