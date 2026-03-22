@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
@@ -12,20 +12,53 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+// Lazy initialization — Firebase client SDK is only initialized on first use,
+// NOT at module evaluation time. This prevents build failures when env vars
+// are absent during Next.js static page data collection.
+let _app: FirebaseApp | null = null;
+let _auth: Auth | null = null;
+let _db: Firestore | null = null;
+let _storage: FirebaseStorage | null = null;
 
-if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-} else {
-    app = getApps()[0];
+function getFirebaseApp(): FirebaseApp {
+    if (!_app) {
+        if (getApps().length === 0) {
+            _app = initializeApp(firebaseConfig);
+        } else {
+            _app = getApps()[0];
+        }
+    }
+    return _app;
 }
 
-auth = getAuth(app);
-db = getFirestore(app);
-storage = getStorage(app);
+// Getter functions that return REAL instances (not Proxies).
+// Firestore collection() does internal type checks and rejects Proxy wrappers.
+export function getDb(): Firestore {
+    if (!_db) _db = getFirestore(getFirebaseApp());
+    return _db;
+}
 
-export { app, auth, db, storage };
+export function getAuthInstance(): Auth {
+    if (!_auth) _auth = getAuth(getFirebaseApp());
+    return _auth;
+}
+
+export function getStorageInstance(): FirebaseStorage {
+    if (!_storage) _storage = getStorage(getFirebaseApp());
+    return _storage;
+}
+
+// Backward-compatible named exports.
+// These use defineProperty so they are lazy — evaluated on first access,
+// not at module load time. Safe for Next.js build.
+const _exports = {} as { app: FirebaseApp; auth: Auth; db: Firestore; storage: FirebaseStorage };
+
+Object.defineProperty(_exports, 'app', { get: () => getFirebaseApp(), enumerable: true });
+Object.defineProperty(_exports, 'auth', { get: () => getAuthInstance(), enumerable: true });
+Object.defineProperty(_exports, 'db', { get: () => getDb(), enumerable: true });
+Object.defineProperty(_exports, 'storage', { get: () => getStorageInstance(), enumerable: true });
+
+export const app = _exports.app;
+export const auth = _exports.auth;
+export const db = _exports.db;
+export const storage = _exports.storage;

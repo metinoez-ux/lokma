@@ -46,3 +46,6 @@ ios/build/
 android/.gradle/
 android/build/
 nohup*.out
+
+# Service account key (do not commit)
+service-account.json

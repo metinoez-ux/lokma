@@ -143,19 +143,9 @@ export default function LandingPage() {
           <div className="absolute -bottom-20 right-1/4 w-[400px] h-[400px] bg-black/5 rounded-full blur-3xl" />
         </div>
 
-        {/* Right side: Artisan image with gradient fade into left */}
-        <div className="absolute inset-0 md:left-[35%] overflow-hidden pointer-events-none">
-          <Image
-            src="/hero_artisan.png"
-            alt="LOKMA - Local Artisan"
-            fill
-            className="object-cover object-center"
-            priority
-          />
-          {/* Soft gradient fade from left - only enough for text readability, NOT obscuring the artisan */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#EE3640] via-[#EE3640]/50 to-transparent w-[60%]" />
-          {/* Very subtle bottom fade */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#EE3640]/30 via-transparent to-transparent" />
+        {/* Decorative texture on right side */}
+        <div className="absolute inset-0 md:left-[60%] overflow-hidden pointer-events-none opacity-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] bg-[length:24px_24px]" />
         </div>
 
         {/* Mobile overlay: on small screens */}
@@ -175,7 +165,7 @@ export default function LandingPage() {
               <div className="flex text-yellow-300 text-lg">
                 {'★★★★★'}
               </div>
-              <span className="text-white/80 text-sm font-medium">4.8 (10,000+ {t('heroOrderCount') || 'orders'})</span>
+              <span className="text-white/80 text-sm font-medium">4.8 (10,000+ {t('heroOrderCount')})</span>
             </div>
             
             <p className="text-lg md:text-xl text-white/90 max-w-md mb-8 leading-relaxed font-medium">
@@ -188,7 +178,7 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined text-xl">arrow_forward</span>
               </Link>
               <Link href="/vendor" className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/25 transition-all">
-                {t('splitPartnerTitle') || 'Partner werden'}
+                {t('splitPartnerTitle')}
               </Link>
             </div>
 
@@ -216,7 +206,7 @@ export default function LandingPage() {
               All-in-One
             </p>
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight text-gray-900 max-w-lg leading-tight">
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white max-w-lg leading-tight">
                 {t('whyLokmaTitle')}
               </h2>
               <Link className="text-[#F51736] font-bold flex items-center gap-1 group hover:gap-2 transition-all" href="/categories">
@@ -232,7 +222,7 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">bolt</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('whyFastTitle')}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t('whyFastTitle')}</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('whyFastDesc')}</p>
             </div>
 
@@ -241,7 +231,7 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">handshake</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('whyFairTitle')}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t('whyFairTitle')}</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('whyFairDesc')}</p>
             </div>
 
@@ -250,7 +240,7 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">storefront</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('whyWideTitle')}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t('whyWideTitle')}</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('whyWideDesc')}</p>
             </div>
 
@@ -259,7 +249,7 @@ export default function LandingPage() {
               <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
                 <span className="material-symbols-outlined text-[28px]">eco</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('market')}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{t('market')}</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{t('marketDesc')}</p>
             </div>
           </div>
@@ -273,11 +263,11 @@ export default function LandingPage() {
           <div className="w-16 h-16 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-full mx-auto mb-6">
             <span className="material-symbols-outlined text-3xl">favorite</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-6 leading-tight">
-            {t('localSupportTitle') || 'Senin için lezzet, esnaf için bereket.'}
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-6 leading-tight">
+            {t('localSupportTitle')}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-            {t('localSupportDesc') || 'LOKMA\'dan verdiğin her siparişte, sadece en sevdiğin yemekleri tatmakla kalmaz, aynı zamanda mahalle esnafının kazancına da bereket katarsın.'}
+            {t('localSupportDesc')}
           </p>
         </div>
       </section>
@@ -288,7 +278,7 @@ export default function LandingPage() {
           <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 flex-1">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-medium mb-4">
-              {t('b2bPartnerBadge') || 'B2B Partner Platform'}
+              {t('b2bPartnerBadge')}
             </div>
             <h3 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">{t('splitPartnerTitle')}</h3>
             <p className="text-white/85 text-lg max-w-md leading-relaxed">{t('splitPartnerDesc')}</p>
@@ -305,7 +295,7 @@ export default function LandingPage() {
       {/* FAQ Section */}
       <section className="bg-white dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-12 text-gray-900">{t('faqTitle')}</h2>
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-12 text-gray-900 dark:text-white">{t('faqTitle')}</h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
               <div key={index} className="border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden hover:border-[#F51736]/20 transition-colors">
@@ -313,7 +303,7 @@ export default function LandingPage() {
                   className="w-full flex items-center justify-between p-6 text-left"
                   onClick={() => setFaqOpen(faqOpen === index ? null : index)}
                 >
-                  <span className="font-bold text-lg md:text-xl pr-4 text-gray-900">{faq.q}</span>
+                  <span className="font-bold text-lg md:text-xl pr-4 text-gray-900 dark:text-white">{faq.q}</span>
                   <div className={`w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 transition-transform duration-300 ${faqOpen === index ? 'rotate-180 bg-[#F51736]/10 text-[#F51736]' : 'text-gray-500'}`}>
                     <span className="material-symbols-outlined text-[20px]">expand_more</span>
                   </div>

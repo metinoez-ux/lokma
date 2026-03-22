@@ -1,10 +1,14 @@
-// Resend Email Service for MIRA Portal
-// Using Resend for transactional emails (orders, notifications)
-
 import { Resend } from 'resend';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy Resend client — initialized on first use, NOT at module evaluation time.
+// Prevents build failures when RESEND_API_KEY is absent during Next.js static analysis.
+let _resend: Resend | null = null;
+function getResend(): Resend {
+    if (!_resend) {
+        _resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return _resend;
+}
 
 // Default sender (must be verified in Resend - lokma.shop domain)
 export const DEFAULT_SENDER = 'LOKMA Marketplace <noreply@lokma.shop>';
@@ -27,7 +31,7 @@ export async function sendEmailWithResend(params: SendEmailParams): Promise<{ su
     const recipients = Array.isArray(to) ? to : [to];
 
     try {
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await getResend().emails.send({
             from,
             to: recipients,
             subject,

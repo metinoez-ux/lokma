@@ -74,88 +74,119 @@
             min-height: 85vh;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding-top: 6rem;
+            padding-top: 5rem;
             overflow: hidden;
+            background: linear-gradient(135deg, #ec131e 0%, #ff4757 40%, #ff6b81 70%, #ff8a9e 100%);
         }
-        .hero-bg {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-        }
-        .hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, rgba(18,10,10,0.8), rgba(18,10,10,0.6), #120a0a);
-            z-index: 1;
-        }
-        .hero-image {
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            padding: 3rem 2rem;
             width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            transform: scale(1.05);
-            background-image: url('./herp_pizza_3_transparent.png');
         }
-        .hero-content {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            padding: 0 1.5rem;
-            max-width: 800px;
+        .hero-text {
+            flex: 1;
+            min-width: 320px;
         }
-        .hero h1 {
-            font-size: clamp(2rem, 6vw, 4.5rem);
+        .hero-text h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
             font-weight: 900;
             line-height: 1.1;
             letter-spacing: -0.02em;
-            text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+            color: white;
         }
-        .hero h1 span { color: #ec131e; font-style: italic; }
-        .hero p {
-            font-size: 1.125rem;
-            color: rgba(255,255,255,0.8);
-            margin-top: 1.5rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+        .hero-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.25rem;
+        }
+        .hero-stars {
+            color: #ffd700;
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+        .hero-rating span {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.9);
+        }
+        .hero-text p {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.85);
+            margin-top: 1rem;
+            max-width: 440px;
+            line-height: 1.6;
         }
         .hero-buttons {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
-            justify-content: center;
-            margin-top: 2.5rem;
+            margin-top: 2rem;
         }
         .btn-primary {
-            background: #ec131e;
-            color: white;
-            padding: 1rem 2.5rem;
-            border-radius: 0.75rem;
+            background: white;
+            color: #ec131e;
+            padding: 0.875rem 2rem;
+            border-radius: 2rem;
             font-weight: 700;
-            font-size: 1.125rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            box-shadow: 0 10px 40px rgba(236,19,30,0.3);
             transition: all 0.3s;
             border: none;
             cursor: pointer;
         }
-        .btn-primary:hover { background: #c41018; transform: translateY(-2px); }
+        .btn-primary:hover { background: #fff5f5; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
         .btn-secondary {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             color: white;
-            padding: 1rem 2.5rem;
-            border-radius: 0.75rem;
+            padding: 0.875rem 2rem;
+            border-radius: 2rem;
             font-weight: 700;
-            font-size: 1.125rem;
+            font-size: 1rem;
             transition: all 0.3s;
             cursor: pointer;
         }
-        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+        .hero-badges img {
+            height: 40px;
+            border-radius: 6px;
+        }
+        .hero-image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 300px;
+        }
+        .hero-image-container img {
+            max-width: 100%;
+            height: auto;
+            max-height: 520px;
+            filter: drop-shadow(0 20px 60px rgba(0,0,0,0.3));
+        }
+
+        @media (max-width: 768px) {
+            .hero-inner { flex-direction: column; text-align: center; }
+            .hero-text { min-width: 0; }
+            .hero-rating { justify-content: center; }
+            .hero-text p { margin-left: auto; margin-right: auto; }
+            .hero-buttons { justify-content: center; }
+            .hero-badges { justify-content: center; }
+            .hero-image-container { min-width: 0; }
+            .hero-image-container img { max-height: 350px; }
+        }
 
         /* Categories */
         .categories {
@@ -331,19 +362,28 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-bg">
-            <div class="hero-overlay"></div>
-            <div class="hero-image"></div>
-        </div>
-        <div class="hero-content">
-            <h1>Lokma, <span>alın terinin</span> yanında duran bir platformdur.</h1>
-            <p>Mahallenizin ruhunu dijital dünyayla birleştiriyoruz. Adil, şeffaf ve topluluk odaklı yeni nesil yaşam ekosistemi.</p>
-            <div class="hero-buttons">
-                <button class="btn-primary">
-                    Keşfetmeye Başla
-                    <span class="material-symbols-outlined">arrow_forward</span>
-                </button>
-                <button class="btn-secondary">Partnerimiz Olun</button>
+        <div class="hero-inner">
+            <div class="hero-text">
+                <h1>Deine<br>Lieblingsgerichte<br>Und das fair für alle!</h1>
+                <div class="hero-rating">
+                    <span class="hero-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    <span>4.8 (10.000+ siparis)</span>
+                </div>
+                <p>Bestelle bei den besten Restaurants in deiner Umgebung. Mit Lokma.shop unterstützt du nicht nur dich, sondern auch die lokalen Geschäfte.</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary">
+                        Jetzt entdecken
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
+                    <button class="btn-secondary">Erweitere dein Geschäft!</button>
+                </div>
+                <div class="hero-badges">
+                    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play">
+                </div>
+            </div>
+            <div class="hero-image-container">
+                <img src="./pizza_2.png" alt="LOKMA Pizza">
             </div>
         </div>
     </section>

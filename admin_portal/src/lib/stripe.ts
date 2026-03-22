@@ -3,23 +3,44 @@ import Stripe from 'stripe';
 // Determine if we are in test mode based on the environment variable
 const isTestMode = process.env.NEXT_PUBLIC_USE_STRIPE_TEST_MODE === 'true';
 
-// Select the appropriate secret key
-const secretKey = isTestMode
-    ? process.env.STRIPE_TEST_SECRET_KEY!
-    : process.env.STRIPE_SECRET_KEY!;
+// Lazy Stripe instance — created on first use, NOT at module evaluation time.
+// This prevents build failures when env vars are absent during Next.js static analysis.
+let _stripe: Stripe | null = null;
 
-// Server-side Stripe instance
-export const stripe = new Stripe(secretKey, {
-    apiVersion: '2025-12-15.clover',
+function getStripeInstance(): Stripe {
+    if (!_stripe) {
+        const secretKey = isTestMode
+            ? process.env.STRIPE_TEST_SECRET_KEY!
+            : process.env.STRIPE_SECRET_KEY!;
+
+        if (!secretKey) {
+            throw new Error(
+                `Stripe secret key is not set. Please set ${isTestMode ? 'STRIPE_TEST_SECRET_KEY' : 'STRIPE_SECRET_KEY'} in your environment.`
+            );
+        }
+
+        _stripe = new Stripe(secretKey, {
+            apiVersion: '2025-12-15.clover',
+        });
+    }
+    return _stripe;
+}
+
+// Re-export as a getter so existing code using `stripe.xyz()` still works
+// via `import { stripe } from '@/lib/stripe'` — now via a Proxy
+export const stripe: Stripe = new Proxy({} as Stripe, {
+    get(_target, prop, receiver) {
+        return Reflect.get(getStripeInstance(), prop, receiver);
+    },
 });
 
 export const STRIPE_WEBHOOK_SECRET = isTestMode
-    ? process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET!
-    : process.env.STRIPE_WEBHOOK_SECRET!;
+    ? process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || ''
+    : process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export const STRIPE_PUBLISHABLE_KEY = isTestMode
-    ? process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY!
-    : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!;
+    ? process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY || ''
+    : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 
 // =============================================================================
 // SEPA DIRECT DEBIT FUNCTIONS

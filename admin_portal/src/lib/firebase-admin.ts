@@ -19,7 +19,10 @@ function initializeFirebaseAdmin() {
         const serviceAccount = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
         if (!serviceAccount) {
-            throw new Error('ADMIN_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set');
+            // During Next.js build, env vars may not be available.
+            // Skip initialization — actual runtime calls will fail with a clear error.
+            console.warn('[firebase-admin] Service account not set — skipping init (expected during build).');
+            return;
         }
 
         try {
@@ -37,10 +40,12 @@ function initializeFirebaseAdmin() {
         adminApp = getApps()[0];
     }
 
-    messaging = getMessaging(adminApp);
-    db = getFirestore(adminApp);
-    auth = getAuth(adminApp);
-    storage = getStorage(adminApp);
+    if (adminApp) {
+        messaging = getMessaging(adminApp);
+        db = getFirestore(adminApp);
+        auth = getAuth(adminApp);
+        storage = getStorage(adminApp);
+    }
     return { adminApp, messaging, db, auth, storage };
 }
 
