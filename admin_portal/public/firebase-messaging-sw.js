@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-com
 
 firebase.initializeApp({
     apiKey: 'AIzaSyA-GSWm0DtaagUw5tvO4kTv085du53j_Wk',
-    authDomain: 'aylar-a45af.firebaseapp.com',
+    authDomain: 'lokma.shop',
     projectId: 'aylar-a45af',
     storageBucket: 'aylar-a45af.firebasestorage.app',
     messagingSenderId: '259070566992',

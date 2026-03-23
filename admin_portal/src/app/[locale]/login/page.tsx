@@ -840,7 +840,7 @@ export default function LoginPage() {
                                 : 'text-white/60 hover:text-white'
                                 }`}
                         >
-                            📱 Telefon
+                            SMS
                         </button>
                         <button
                             onClick={() => { setAuthMethod('email'); setError(''); }}
@@ -849,7 +849,7 @@ export default function LoginPage() {
                                 : 'text-white/60 hover:text-white'
                                 }`}
                         >
-                            ✉️ E-posta
+                            E-Mail
                         </button>
                     </div>
 
@@ -1010,7 +1010,7 @@ export default function LoginPage() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-white/70 mb-1">
-                                            E-posta
+                                            E-Mail
                                         </label>
                                         <input
                                             type="email"
@@ -1102,7 +1102,7 @@ export default function LoginPage() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-white/70 mb-1">
-                                            E-posta
+                                            E-Mail
                                         </label>
                                         <input
                                             type="email"
