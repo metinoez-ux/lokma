@@ -6330,5 +6330,12 @@
     "kullanici_super_admin_yapildi": "Gebruiker is bevorderd tot Super Admin.",
     "davet_linki_olusturuldu": "Uitnodigingslink aangemaakt:",
     "duzenle": "Bewerken"
+  },
+  "Ameise": {
+    "ameise_title": "Ameise (Entwickler-Tools)",
+    "datenimport_export_und_bereinigung": "Datenimport, Export und System-Bereinigung",
+    "json_import": "JSON Import",
+    "suchen": "Suchen",
+    "test_verilerini_temizle": "Test-Daten Bereinigen"
   }
 }

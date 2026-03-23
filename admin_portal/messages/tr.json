@@ -7897,7 +7897,12 @@
     "schliessen": "Kapat",
     "importiere": "İçe aktarılıyor...",
     "abbrechen": "İptal",
-    "betrieb_import_google": "Google Places İşletme Aktar"
+    "betrieb_import_google": "Google Places İşletme Aktar",
+    "ameise_title": "Ameise (Geliştirici Araçları)",
+    "datenimport_export_und_bereinigung": "Veri İçe/Dışa Aktarma ve Sistem Temizliği",
+    "json_import": "JSON İçe Aktar",
+    "suchen": "Ara",
+    "test_verilerini_temizle": "Test Verilerini Temizle"
   },
   "SuperAdmins": {
     "super_admins_title": "Süper Adminler",

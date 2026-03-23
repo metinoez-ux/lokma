@@ -1038,7 +1038,7 @@ export default function OrdersPage() {
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm"
                             >
                                 <option value="today">{t('bugun')}</option>
                                 <option value="week">📅 Bu Hafta</option>
@@ -1049,7 +1049,7 @@ export default function OrdersPage() {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm"
                             >
                                 <option value="all">{t('filters.allStatuses')}</option>
                                 {Object.entries(orderStatuses).map(([key, value]) => (
@@ -1060,7 +1060,7 @@ export default function OrdersPage() {
                             <select
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm"
                             >
                                 <option value="all">{t('filters.allTypes')}</option>
                                 {Object.entries(orderTypes).map(([key, value]) => (
@@ -1084,7 +1084,7 @@ export default function OrdersPage() {
                                             }}
                                             onFocus={() => setShowBusinessDropdown(true)}
                                             placeholder={t('i_sletme_ara')}
-                                            className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600 w-48"
+                                            className="px-3 py-1.5 bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-300 dark:border-gray-600 w-48 shadow-sm"
                                         />
                                         {businessFilter !== 'all' && (
                                             <button
@@ -1254,21 +1254,21 @@ export default function OrdersPage() {
 
                         {/* Quick Stats */}
                         <div className="flex gap-2">
-                            <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-blue-800 dark:text-blue-400">{stats.total}</p>
-                                <p className="text-[10px] text-blue-300">{t('toplam')}</p>
+                            <div className="bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                                <p className="text-xl font-bold text-blue-800 dark:text-blue-300">{stats.total}</p>
+                                <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-400">{t('toplam')}</p>
                             </div>
-                            <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-yellow-800 dark:text-yellow-400">{stats.pending}</p>
-                                <p className="text-[10px] text-yellow-300">{t('bekleyen')}</p>
+                            <div className="bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                                <p className="text-xl font-bold text-yellow-800 dark:text-yellow-300">{stats.pending}</p>
+                                <p className="text-[10px] font-semibold text-yellow-700 dark:text-yellow-400">{t('bekleyen')}</p>
                             </div>
-                            <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-amber-800 dark:text-amber-400">{stats.preparing}</p>
-                                <p className="text-[10px] text-amber-300">{t('hazirlanan')}</p>
+                            <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                                <p className="text-xl font-bold text-amber-800 dark:text-amber-300">{stats.preparing}</p>
+                                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('hazirlanan')}</p>
                             </div>
-                            <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
-                                <p className="text-[10px] text-green-300">Ciro</p>
+                            <div className="bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                                <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
+                                <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Ciro</p>
                             </div>
                         </div>
                     </div>
@@ -1426,61 +1426,61 @@ export default function OrdersPage() {
                     <div className="flex items-center gap-2 overflow-x-auto pb-2">
                         {/* Bekleyen - Yanıp söner */}
                         <div
-                            className={`flex-1 min-w-[100px] bg-yellow-600/20 border-2 border-yellow-500 rounded-lg p-4 text-center relative ${stats.pending > 0 ? "animate-pulse" : ""}`}
+                            className={`flex-1 min-w-[100px] bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-300 dark:border-yellow-600 rounded-xl p-4 text-center relative shadow-sm ${stats.pending > 0 ? "animate-pulse" : ""}`}
                         >
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-500 rounded-full border-2 border-border"></div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-400 dark:bg-yellow-500 rounded-full border-2 border-border shadow-sm"></div>
                             <p
                                 className={`text-yellow-800 dark:text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? "animate-bounce" : ""}`}
                             >
                                 {stats.pending}
                             </p>
-                            <p className="text-yellow-300 text-sm font-medium">
+                            <p className="text-yellow-700 dark:text-yellow-300 text-sm font-semibold mt-1">
                                 🔔 {t('workflow.pending')}
                             </p>
                         </div>
 
-                        <div className="text-gray-500 text-xl">→</div>
+                        <div className="text-gray-400 dark:text-gray-600 text-xl">→</div>
 
                         {/* Hazırlanıyor */}
-                        <div className="flex-1 min-w-[100px] bg-amber-600/20 border border-amber-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-500 rounded-full border-2 border-border"></div>
+                        <div className="flex-1 min-w-[100px] bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-400 dark:bg-amber-500 rounded-full border-2 border-border shadow-sm"></div>
                             <p className="text-amber-800 dark:text-amber-400 text-3xl font-bold">
                                 {stats.preparing}
                             </p>
-                            <p className="text-muted-foreground text-sm">👨‍🍳 {t('workflow.preparing')}</p>
+                            <p className="text-amber-700 dark:text-amber-300 text-sm font-semibold mt-1">👨‍🍳 {t('workflow.preparing')}</p>
                         </div>
 
-                        <div className="text-gray-500 text-xl">→</div>
+                        <div className="text-gray-400 dark:text-gray-600 text-xl">→</div>
 
                         {/* Hazır */}
-                        <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-border"></div>
+                        <div className="flex-1 min-w-[100px] bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-400 dark:bg-green-500 rounded-full border-2 border-border shadow-sm"></div>
                             <p className="text-green-800 dark:text-green-400 text-3xl font-bold">
                                 {stats.ready}
                             </p>
-                            <p className="text-muted-foreground text-sm">📦 {t('workflow.ready')}</p>
+                            <p className="text-green-700 dark:text-green-300 text-sm font-semibold mt-1">📦 {t('workflow.ready')}</p>
                         </div>
 
-                        <div className="text-gray-500 text-xl">→</div>
+                        <div className="text-gray-400 dark:text-gray-600 text-xl">→</div>
 
                         {/* Yolda */}
-                        <div className="flex-1 min-w-[100px] bg-indigo-600/20 border border-indigo-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-500 rounded-full border-2 border-border"></div>
+                        <div className="flex-1 min-w-[100px] bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-200 dark:border-indigo-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-400 dark:bg-indigo-500 rounded-full border-2 border-border shadow-sm"></div>
                             <p className="text-indigo-800 dark:text-indigo-400 text-3xl font-bold">
                                 {stats.inTransit}
                             </p>
-                            <p className="text-muted-foreground text-sm">🛵 {t('workflow.inTransit')}</p>
+                            <p className="text-indigo-700 dark:text-indigo-300 text-sm font-semibold mt-1">🛵 {t('workflow.inTransit')}</p>
                         </div>
 
-                        <div className="text-gray-500 text-xl">→</div>
+                        <div className="text-gray-400 dark:text-gray-600 text-xl">→</div>
 
                         {/* Tamamlanan */}
-                        <div className="flex-1 min-w-[100px] bg-emerald-600/20 border border-emerald-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-border"></div>
+                        <div className="flex-1 min-w-[100px] bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-400 dark:bg-emerald-500 rounded-full border-2 border-border shadow-sm"></div>
                             <p className="text-emerald-800 dark:text-emerald-400 text-3xl font-bold">
                                 {stats.completed}
                             </p>
-                            <p className="text-muted-foreground text-sm">✓ {t('workflow.completed')}</p>
+                            <p className="text-emerald-700 dark:text-emerald-300 text-sm font-semibold mt-1">✓ {t('workflow.completed')}</p>
                         </div>
                     </div>
 

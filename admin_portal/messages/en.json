@@ -7899,7 +7899,12 @@
     "schliessen": "Close",
     "importiere": "Importing...",
     "abbrechen": "Cancel",
-    "betrieb_import_google": "Business Import (Google Places)"
+    "betrieb_import_google": "Business Import (Google Places)",
+    "ameise_title": "Ameise (Entwickler-Tools)",
+    "datenimport_export_und_bereinigung": "Datenimport, Export und System-Bereinigung",
+    "json_import": "JSON Import",
+    "suchen": "Suchen",
+    "test_verilerini_temizle": "Test-Daten Bereinigen"
   },
   "SuperAdmins": {
     "super_admins_title": "Super Admins",

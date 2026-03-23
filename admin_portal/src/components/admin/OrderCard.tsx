@@ -72,8 +72,8 @@ export default function OrderCard({
         <button
             onClick={onClick}
             className={`w-full text-left rounded-xl p-3 transition ${isPreOrder
-                ? 'bg-purple-900/20 hover:bg-purple-900/30 border-l-3 border-purple-500'
-                : 'bg-gray-700 hover:bg-gray-600'
+                ? 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border-l-4 border-purple-500 shadow-sm'
+                : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 shadow-sm'
                 }`}
         >
             <div className="flex items-center justify-between mb-2">
@@ -81,7 +81,7 @@ export default function OrderCard({
                     #{order.orderNumber || order.id.slice(0, 6).toUpperCase()}
                 </span>
                 <div className="flex items-center gap-1">
-                    <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-400`}>
+                    <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-100 dark:bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-700 dark:text-${typeInfo?.color || 'gray'}-400 font-medium`}>
                         {t(typeInfo?.labelKey || 'type_pickup')}
                     </span>
                 </div>
@@ -92,7 +92,7 @@ export default function OrderCard({
             {/* Pre-order scheduled time badge */}
             {isPreOrder && order.scheduledAt && (
                 <div className="mb-1.5">
-                    <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
+                    <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
                         🕐 {formatScheduledTime()}
                     </span>
                 </div>
@@ -101,16 +101,16 @@ export default function OrderCard({
             {order.type === 'dine_in' && (
                 <div className="mb-1 space-y-0.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 text-xs font-medium">
+                        <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium">
                             🍽️ {t('kanban.table')} {order.tableNumber ? `#${order.tableNumber}` : ''}
                         </span>
                         {order.isGroupOrder && (
-                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
+                            <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
                                 👥 {t('kanban.group')}{order.groupParticipantCount ? ` (${order.groupParticipantCount} ${t('kanban.person')})` : ''}
                             </span>
                         )}
                         {order.paymentStatus === 'paid' && (
-                            <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-800 dark:text-green-400 text-xs">✓</span>
+                            <span className="px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">✓</span>
                         )}
                     </div>
                     <p className="text-muted-foreground text-xs pl-0.5">
@@ -127,7 +127,7 @@ export default function OrderCard({
                 <span className="text-green-800 dark:text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
                 <div className="flex items-center gap-2">
                     {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-gray-600 text-muted-foreground'}`}>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${checkedCount >= itemCount ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
                             ✓{checkedCount}/{itemCount}
                         </span>
                     )}
