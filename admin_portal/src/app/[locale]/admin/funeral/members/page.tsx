@@ -104,7 +104,7 @@ export default function FuneralMembersPage() {
     if (adminLoading) return <div className="p-8 text-center text-white">{t('yukleniyor')}</div>;
 
     return (
-        <div className="min-h-screen bg-background text-white p-6">
+        <div className="min-h-screen bg-background text-foreground p-6">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">

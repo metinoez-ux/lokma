@@ -2777,7 +2777,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderDateFilter}
                     onChange={(e) => setOrderDateFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                   >
                     <option value="today">{t('filter_heute')}</option>
                     <option value="week">{t('filter_diese_woche')}</option>
@@ -2788,7 +2788,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderStatusFilter}
                     onChange={(e) => setOrderStatusFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                   >
                     <option value="all">{t('filter_alle_status')}</option>
                     <option value="pending">{t('order_pending')}</option>
@@ -2804,7 +2804,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderTypeFilter}
                     onChange={(e) => setOrderTypeFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                   >
                     <option value="all">{t('filter_alle_typen')}</option>
                     <option value="pickup">{t('pickup_label')}</option>
@@ -4628,7 +4628,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex gap-3">
                                 <button
                                   onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
-                                  className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
+                                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 transition"
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={handleSaveCategory}
@@ -4654,7 +4654,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex gap-3 mt-5">
                                 <button
                                   onClick={() => setDeletingCategoryId(null)}
-                                  className="flex-1 px-4 py-2.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600"
+                                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600"
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={() => handleDeleteCategory(deletingCategoryId)}
@@ -5901,14 +5901,14 @@ export default function BusinessDetailsPage() {
                                         <button
                                           onClick={() => setProductCurrentPage(1)}
                                           disabled={safeCurrentPage === 1}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           «
                                         </button>
                                         <button
                                           onClick={() => setProductCurrentPage(Math.max(1, safeCurrentPage - 1))}
                                           disabled={safeCurrentPage === 1}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           ‹
                                         </button>
@@ -5931,14 +5931,14 @@ export default function BusinessDetailsPage() {
                                         <button
                                           onClick={() => setProductCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
                                           disabled={safeCurrentPage === totalPages}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           ›
                                         </button>
                                         <button
                                           onClick={() => setProductCurrentPage(totalPages)}
                                           disabled={safeCurrentPage === totalPages}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           »
                                         </button>
@@ -7713,7 +7713,7 @@ export default function BusinessDetailsPage() {
                                         updated[table._idx] = { ...updated[table._idx], section: e.target.value };
                                         setFormData({ ...formData, tables: updated });
                                       }}
-                                      className="w-full bg-gray-700 text-foreground px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-xs"
+                                      className="w-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-xs"
                                     >
                                       <option value="">—</option>
                                       {formData.tableSections.map((s: string) => (

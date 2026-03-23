@@ -1291,7 +1291,7 @@ function PromotionsPageContent() {
                                         </button>
                                         <button
                                             onClick={() => setConflictWarning(null)}
-                                            className="px-3 py-2 bg-gray-700 text-foreground rounded-lg text-xs hover:bg-gray-600 transition"
+                                            className="px-3 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-xs hover:bg-gray-600 transition"
                                         >
                                             {t('cancel')}
                                         </button>
@@ -1746,7 +1746,7 @@ function PromotionsPageContent() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => { setShowModal(false); setConflictWarning(null); setForceOverrideConflict(false); }}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
+                                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 transition"
                                 >
                                     {t('cancel')}
                                 </button>
@@ -1782,7 +1782,7 @@ function PromotionsPageContent() {
 export default function PromotionsPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-background text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
         }>

@@ -236,7 +236,7 @@ export default function PlansPage() {
     if (loading || adminLoading || sectorsLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
 
     return (
-        <div className="flex flex-col min-h-screen bg-background text-white">
+        <div className="flex flex-col min-h-screen bg-background text-foreground">
             <div className="w-full max-w-4xl mx-auto px-6 py-8">
                 {/* Back Button */}
                 <button

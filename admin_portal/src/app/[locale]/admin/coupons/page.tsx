@@ -26,7 +26,7 @@ function CouponsPageContent() {
 export default function CouponsPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-background text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500" />
             </div>
         }>

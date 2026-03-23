@@ -391,7 +391,7 @@ function CategoriesPageContent() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
+                                className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 transition"
                             >
                                 {t('cancel')}
                             </button>
@@ -429,7 +429,7 @@ export default function CategoriesPage() {
   const t = useTranslations('AdminCategories');
 return (
         <Suspense fallback={
-            <div className="min-h-screen bg-background text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>

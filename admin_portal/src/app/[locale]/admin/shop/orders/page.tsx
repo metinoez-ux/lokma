@@ -425,7 +425,7 @@ export default function ShopOrdersPage() {
                         </div>
 
                         <div className="p-6 border-t border-border flex justify-end gap-3">
-                            <button onClick={() => setShowShippingModal(false)} className="px-6 py-2 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600">
+                            <button onClick={() => setShowShippingModal(false)} className="px-6 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600">
                                 {t('iptal')}
                             </button>
                             <button

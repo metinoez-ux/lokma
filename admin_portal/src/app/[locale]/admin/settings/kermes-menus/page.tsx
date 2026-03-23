@@ -303,7 +303,7 @@ export default function KermesMenusPage() {
                                 <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">
                                     {item.category}
                                 </span>
-                                <span className="px-2 py-1 bg-gray-700 text-foreground rounded text-xs">
+                                <span className="px-2 py-1 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded text-xs">
                                     {item.unit}
                                 </span>
                                 {item.tags?.map(tag => (

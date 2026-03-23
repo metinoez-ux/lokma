@@ -219,7 +219,7 @@ export default function ReportsPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                        className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                     >
                         <option value="all">{t('allStatus')}</option>
                         {Object.entries(reportStatusKeys).map(([key, value]) => (
@@ -360,7 +360,7 @@ export default function ReportsPage() {
                                 <textarea
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
-                                    className="w-full bg-gray-700 text-foreground text-sm rounded-lg p-3 border border-gray-600 focus:border-orange-500 outline-none resize-none"
+                                    className="w-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg p-3 border border-gray-600 focus:border-orange-500 outline-none resize-none"
                                     rows={3}
                                     placeholder={t('notesPlaceholder')}
                                 />

@@ -824,7 +824,7 @@ export default function KermesDetailPage() {
                                         setEditFeatures(kermes?.features || []);
                                         setEditCustomFeatures(kermes?.customFeatures || []);
                                         setIsEditing(true);
-                                    }} className="px-3 py-1 bg-gray-700 text-foreground rounded-lg text-sm hover:bg-gray-600">
+                                    }} className="px-3 py-1 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-sm hover:bg-gray-600">
                                         ✏️ Düzenle
                                     </button>
                                 ) : (

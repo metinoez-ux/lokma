@@ -477,7 +477,7 @@ export default function ApiKeysPage() {
                                                         setEditingKey(null);
                                                         setNewKeyValue('');
                                                     }}
-                                                    className="px-4 py-2 bg-gray-700 text-foreground rounded-xl text-sm hover:bg-gray-600 transition-all"
+                                                    className="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-xl text-sm hover:bg-gray-600 transition-all"
                                                 >
                                                     {t('cancel')}
                                                 </button>

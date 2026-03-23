@@ -372,7 +372,7 @@ export default function SponsoredAdsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* -- Header -- */}
         <div className="flex items-center justify-between">
@@ -711,7 +711,7 @@ export default function SponsoredAdsPage() {
                     <button
                       type="button"
                       onClick={() => { setShowProductPicker(!showProductPicker); setProductSearch(''); }}
-                      className="w-full px-3 py-2.5 bg-gray-700 text-foreground rounded-lg border border-dashed border-gray-500 hover:border-gray-400 text-sm text-left transition"
+                      className="w-full px-3 py-2.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg border border-dashed border-gray-500 hover:border-gray-400 text-sm text-left transition"
                     >
                       Urun auswaehlen...
                     </button>

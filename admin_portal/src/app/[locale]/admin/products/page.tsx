@@ -1258,7 +1258,7 @@ function GlobalProductsPageContent() {
     }, [categoryFilter, wholesalerFilter, countryFilter, brandFilter, searchQuery]);
 
     return (
-        <div className="min-h-screen bg-background text-white p-6 md:p-8">
+        <div className="min-h-screen bg-background text-foreground p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header - Context Aware */}
@@ -1292,7 +1292,7 @@ function GlobalProductsPageContent() {
                             <button
                                 onClick={handleSeed}
                                 disabled={seeding}
-                                className="px-4 py-2 bg-card border border-gray-600 rounded-lg hover:bg-gray-700 text-foreground font-medium transition-colors"
+                                className="px-4 py-2 bg-card border border-gray-600 rounded-lg hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 font-medium transition-colors"
                             >
                                 {seeding ? "Ekleniyor..." : t('varsayilanlariYukleSeed')}
                             </button>
@@ -1564,7 +1564,7 @@ function GlobalProductsPageContent() {
                                     </h2>
                                     <button
                                         onClick={fetchBusinessProducts}
-                                        className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 text-sm"
+                                        className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 text-sm"
                                     >
                                         🔄 Yenile
                                     </button>
@@ -2207,7 +2207,7 @@ function GlobalProductsPageContent() {
                                                                 <button
                                                                     onClick={() => setBusinessProductPage(p => Math.max(1, p - 1))}
                                                                     disabled={safeBizPage <= 1}
-                                                                    className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
+                                                                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
                                                                 >
                                                                     ← Önceki
                                                                 </button>
@@ -2226,7 +2226,7 @@ function GlobalProductsPageContent() {
                                                                 <button
                                                                     onClick={() => setBusinessProductPage(p => Math.min(totalBizPages, p + 1))}
                                                                     disabled={safeBizPage >= totalBizPages}
-                                                                    className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
+                                                                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
                                                                 >
                                                                     Sonraki →
                                                                 </button>
@@ -2455,7 +2455,7 @@ function GlobalProductsPageContent() {
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => { setShowCategoryModal(false); setEditingCategoryItem(null); }}
-                                            className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
+                                            className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 transition"
                                         >{t('iptal')}</button>
                                         <button
                                             onClick={handleCategorySave}
@@ -2842,14 +2842,14 @@ function GlobalProductsPageContent() {
                                                         <button
                                                             onClick={() => setCurrentPage(1)}
                                                             disabled={currentPage === 1}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             ⟨⟨
                                                         </button>
                                                         <button
                                                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                             disabled={currentPage === 1}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             {t('onceki')}
                                                         </button>
@@ -2885,14 +2885,14 @@ function GlobalProductsPageContent() {
                                                         <button
                                                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                                             disabled={currentPage === totalPages}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             Sonraki →
                                                         </button>
                                                         <button
                                                             onClick={() => setCurrentPage(totalPages)}
                                                             disabled={currentPage === totalPages}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             ⟩⟩
                                                         </button>
@@ -4163,7 +4163,7 @@ export default function GlobalProductsPage() {
     const t = useTranslations('AdminProducts');
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-background text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>

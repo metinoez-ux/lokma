@@ -164,7 +164,7 @@ export default function SuperAdminsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background text-white">
+        <div className="min-h-screen bg-background text-foreground">
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
 
                 {/* ── Header ── */}
@@ -328,7 +328,7 @@ export default function SuperAdminsPage() {
                             onChange={e => setAddEmail(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddSuperAdmin()}
                             placeholder="E-Mail-Adresse"
-                            className="flex-1 px-3 py-2 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none"
+                            className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none"
                         />
                         <button
                             onClick={handleAddSuperAdmin}

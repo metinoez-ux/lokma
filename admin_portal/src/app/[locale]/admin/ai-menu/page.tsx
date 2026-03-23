@@ -769,7 +769,7 @@ function AIMenuPageContent() {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => { setStep(1); setParsedMenu(null); setFiles([]); }}
-                                    className="px-4 py-2 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition text-sm"
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 transition text-sm"
                                 >
                                     ← Yeniden Yükle
                                 </button>
@@ -1087,7 +1087,7 @@ export default function AIMenuPage() {
   const t = useTranslations('AdminAimenu');
 return (
         <Suspense fallback={
-            <div className="min-h-screen bg-background text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
                 <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>

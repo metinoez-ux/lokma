@@ -240,7 +240,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
     }
 
     return (
-        <div className="min-h-screen bg-background text-white p-6">
+        <div className="min-h-screen bg-background text-foreground p-6">
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold">{t('admin_yonetimi')}</h1>

@@ -353,7 +353,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                 </div>
                 <button
                     onClick={fetchReservations}
-                    className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 text-sm transition"
+                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 text-sm transition"
                 >
                     Aktualisieren
                 </button>

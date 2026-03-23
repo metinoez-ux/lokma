@@ -118,7 +118,7 @@ export default function PrinterSettingsPage() {
                                 value={settings.printerIp}
                                 onChange={(e) => save({ ...settings, printerIp: e.target.value })}
                                 placeholder="z.B. 192.168.188.177"
-                                className="w-full px-4 py-3 bg-background text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600"
+                                className="w-full px-4 py-3 bg-background text-foreground rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600"
                             />
                             <p className="text-xs text-gray-600 mt-1">Die lokale Netzwerkadresse Ihres Druckers</p>
                         </div>
@@ -128,7 +128,7 @@ export default function PrinterSettingsPage() {
                                 type="number"
                                 value={settings.printerPort}
                                 onChange={(e) => save({ ...settings, printerPort: parseInt(e.target.value) || 9100 })}
-                                className="w-full px-4 py-3 bg-background text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                className="w-full px-4 py-3 bg-background text-foreground rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
                             />
                             <p className="text-xs text-gray-600 mt-1">Standard: 9100 (ESC/POS)</p>
                         </div>
@@ -145,7 +145,7 @@ export default function PrinterSettingsPage() {
                                 value={settings.printServerUrl || ''}
                                 onChange={(e) => save({ ...settings, printServerUrl: e.target.value })}
                                 placeholder="z.B. http://192.168.x.x:3000"
-                                className="flex-1 px-4 py-3 bg-background text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600 font-mono text-sm"
+                                className="flex-1 px-4 py-3 bg-background text-foreground rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600 font-mono text-sm"
                             />
                             <button
                                 onClick={() => save({ ...settings, printServerUrl: 'http://localhost:3000' })}

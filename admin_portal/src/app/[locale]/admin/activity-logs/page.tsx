@@ -266,7 +266,7 @@ export default function CustomerServicePage() {
                                                                 <span className="text-[10px]">🏕️</span> Community User
                                                             </span>
                                                         ) : (
-                                                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-700 text-foreground uppercase tracking-wider">
+                                                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 uppercase tracking-wider">
                                                                 <span className="text-[10px]">👤</span> {t('b2c_kunde')}
                                                             </span>
                                                         )}
@@ -337,7 +337,7 @@ export default function CustomerServicePage() {
                                                                         <span className="text-gray-500 shrink-0 ml-2">{ro.createdAt ? new Date(ro.createdAt).toLocaleDateString() : '-'}</span>
                                                                     </div>
                                                                     <div className="flex justify-between items-center text-xs mt-1.5 pt-1.5 border-t border-border/30">
-                                                                        <span className="px-2 py-0.5 rounded bg-gray-700 text-foreground uppercase shrink-0 text-[10px]">{ro.type}</span>
+                                                                        <span className="px-2 py-0.5 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 uppercase shrink-0 text-[10px]">{ro.type}</span>
                                                                         <span className="text-emerald-800 dark:text-emerald-400 font-bold shrink-0">{formatCurrency(ro.totalPrice, ro.currency)}</span>
                                                                     </div>
                                                                 </div>
@@ -370,7 +370,7 @@ export default function CustomerServicePage() {
                                             <div>
                                                 <h3 className="text-lg font-bold text-foreground group-hover:text-blue-800 dark:text-blue-400 transition-colors flex items-center gap-2">
                                                     #{order.orderNumber}
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-foreground font-normal">
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 font-normal">
                                                         {order.id.substring(0, 6)}...
                                                     </span>
                                                 </h3>

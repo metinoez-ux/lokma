@@ -280,7 +280,7 @@ const { admin, loading: adminLoading } = useAdmin();
     if (!admin?.butcherId && admin?.adminType !== 'super') return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
 
     return (
-        <div className="flex flex-col min-h-screen bg-background text-white">
+        <div className="flex flex-col min-h-screen bg-background text-foreground">
             <div className="w-full max-w-6xl mx-auto px-6 py-8">
                 {/* Back Button */}
                 <button

@@ -527,7 +527,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             </Link>
                                             <button
                                                 onClick={(ev) => handleArchive(event.id, ev)}
-                                                className="px-3 py-2 bg-gray-700 text-foreground rounded-lg hover:bg-amber-600 hover:text-white transition text-sm"
+                                                className="px-3 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-amber-600 hover:text-white transition text-sm"
                                             >
                                                 📦
                                             </button>

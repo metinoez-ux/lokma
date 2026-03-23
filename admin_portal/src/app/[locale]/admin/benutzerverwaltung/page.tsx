@@ -91,7 +91,7 @@ export default function BenutzerverwaltungPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-background text-white">
+        <div className="min-h-screen bg-background text-foreground">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -116,7 +116,7 @@ export default function BenutzerverwaltungPage() {
                                         {t(section.labelKey) || section.fallbackLabel}
                                     </h3>
                                     {count !== undefined && (
-                                        <span className="bg-gray-700 text-foreground text-xs px-2 py-0.5 rounded-full">
+                                        <span className="bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-xs px-2 py-0.5 rounded-full">
                                             {count.toLocaleString('de-DE')}
                                         </span>
                                     )}

@@ -1038,7 +1038,7 @@ export default function OrdersPage() {
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                             >
                                 <option value="today">{t('bugun')}</option>
                                 <option value="week">📅 Bu Hafta</option>
@@ -1049,7 +1049,7 @@ export default function OrdersPage() {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                             >
                                 <option value="all">{t('filters.allStatuses')}</option>
                                 {Object.entries(orderStatuses).map(([key, value]) => (
@@ -1060,7 +1060,7 @@ export default function OrdersPage() {
                             <select
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                             >
                                 <option value="all">{t('filters.allTypes')}</option>
                                 {Object.entries(orderTypes).map(([key, value]) => (
@@ -1084,7 +1084,7 @@ export default function OrdersPage() {
                                             }}
                                             onFocus={() => setShowBusinessDropdown(true)}
                                             placeholder={t('i_sletme_ara')}
-                                            className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 w-48"
+                                            className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600 w-48"
                                         />
                                         {businessFilter !== 'all' && (
                                             <button
@@ -1377,7 +1377,7 @@ export default function OrdersPage() {
                                             <select
                                                 value={printerSettings.printCopies}
                                                 onChange={(e) => savePrinterSettings({ ...printerSettings, printCopies: parseInt(e.target.value) })}
-                                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
+                                                className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
                                                 title={t('copy_count_title')}
                                             >
                                                 <option value={1}>1</option>
