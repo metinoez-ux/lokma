@@ -185,7 +185,7 @@ export default function ReportsPage() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                             🚩 {t('title')}
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1">
@@ -196,15 +196,15 @@ export default function ReportsPage() {
                     {/* Quick Stats */}
                     <div className="flex gap-2 shrink-0">
                         <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-yellow-400">{stats.new}</p>
+                            <p className="text-xl font-bold text-yellow-800 dark:text-yellow-400">{stats.new}</p>
                             <p className="text-[10px] text-yellow-300">{t('statusNew')}</p>
                         </div>
                         <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-blue-400">{stats.inReview}</p>
+                            <p className="text-xl font-bold text-blue-800 dark:text-blue-400">{stats.inReview}</p>
                             <p className="text-[10px] text-blue-300">{t('statusInReview')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-green-400">{stats.resolved}</p>
+                            <p className="text-xl font-bold text-green-800 dark:text-green-400">{stats.resolved}</p>
                             <p className="text-[10px] text-green-300">{t('statusResolved')}</p>
                         </div>
                         <div className="bg-gray-600/20 border border-gray-500/30 rounded-xl px-3 py-1.5 text-center">
@@ -219,7 +219,7 @@ export default function ReportsPage() {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                        className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                     >
                         <option value="all">{t('allStatus')}</option>
                         {Object.entries(reportStatusKeys).map(([key, value]) => (
@@ -266,7 +266,7 @@ export default function ReportsPage() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-sm text-orange-400 font-medium">
+                                                <span className="text-sm text-orange-800 dark:text-orange-400 font-medium">
                                                     {(() => { const tl = topicLabelKeys[report.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : report.topic; })()}
                                                 </span>
                                                 <span className="text-gray-600">•</span>
@@ -274,7 +274,7 @@ export default function ReportsPage() {
                                                     {report.reason}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-white truncate">{report.description}</p>
+                                            <p className="text-sm text-foreground truncate">{report.description}</p>
                                             <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
                                                 <span>🏪 {report.businessName}</span>
                                                 {report.productName && <span>📦 {report.productName}</span>}
@@ -297,7 +297,7 @@ export default function ReportsPage() {
                         <div className="p-6">
                             {/* Modal Header */}
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                                     🚩 {t('reportDetails')}
                                 </h2>
                                 <button onClick={() => setSelectedReport(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
@@ -320,36 +320,36 @@ export default function ReportsPage() {
                             <div className="space-y-3 mb-6">
                                 <div className="bg-gray-700/50 rounded-lg p-3">
                                     <p className="text-xs text-muted-foreground mb-1">{t('topic')}</p>
-                                    <p className="text-sm text-white">{(() => { const tl = topicLabelKeys[selectedReport.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : selectedReport.topic; })()}</p>
+                                    <p className="text-sm text-foreground">{(() => { const tl = topicLabelKeys[selectedReport.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : selectedReport.topic; })()}</p>
                                 </div>
                                 <div className="bg-gray-700/50 rounded-lg p-3">
                                     <p className="text-xs text-muted-foreground mb-1">{t('reason')}</p>
-                                    <p className="text-sm text-white">{selectedReport.reason}</p>
+                                    <p className="text-sm text-foreground">{selectedReport.reason}</p>
                                 </div>
                                 <div className="bg-gray-700/50 rounded-lg p-3">
                                     <p className="text-xs text-muted-foreground mb-1">{t('description')}</p>
-                                    <p className="text-sm text-white whitespace-pre-wrap">{selectedReport.description}</p>
+                                    <p className="text-sm text-foreground whitespace-pre-wrap">{selectedReport.description}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-700/50 rounded-lg p-3">
                                         <p className="text-xs text-muted-foreground mb-1">🏪 {t('business')}</p>
-                                        <p className="text-sm text-white">{selectedReport.businessName}</p>
+                                        <p className="text-sm text-foreground">{selectedReport.businessName}</p>
                                     </div>
                                     {selectedReport.productName && (
                                         <div className="bg-gray-700/50 rounded-lg p-3">
                                             <p className="text-xs text-muted-foreground mb-1">📦 {t('product')}</p>
-                                            <p className="text-sm text-white">{selectedReport.productName}</p>
+                                            <p className="text-sm text-foreground">{selectedReport.productName}</p>
                                         </div>
                                     )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-700/50 rounded-lg p-3">
                                         <p className="text-xs text-muted-foreground mb-1">👤 {t('reporter')}</p>
-                                        <p className="text-sm text-white">{selectedReport.reporterName}</p>
+                                        <p className="text-sm text-foreground">{selectedReport.reporterName}</p>
                                     </div>
                                     <div className="bg-gray-700/50 rounded-lg p-3">
                                         <p className="text-xs text-muted-foreground mb-1">📧 {t('emailLabel')}</p>
-                                        <p className="text-sm text-orange-400">{selectedReport.reporterEmail}</p>
+                                        <p className="text-sm text-orange-800 dark:text-orange-400">{selectedReport.reporterEmail}</p>
                                     </div>
                                 </div>
                             </div>
@@ -360,7 +360,7 @@ export default function ReportsPage() {
                                 <textarea
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
-                                    className="w-full bg-gray-700 text-white text-sm rounded-lg p-3 border border-gray-600 focus:border-orange-500 outline-none resize-none"
+                                    className="w-full bg-gray-700 text-foreground text-sm rounded-lg p-3 border border-gray-600 focus:border-orange-500 outline-none resize-none"
                                     rows={3}
                                     placeholder={t('notesPlaceholder')}
                                 />
@@ -371,7 +371,7 @@ export default function ReportsPage() {
                                 {selectedReport.status !== 'in_review' && (
                                     <button
                                         onClick={() => handleStatusChange(selectedReport.id, 'in_review')}
-                                        className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
+                                        className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-foreground text-sm font-medium rounded-xl transition-colors"
                                     >
                                         🔍 {t('inReview')}
                                     </button>
@@ -379,7 +379,7 @@ export default function ReportsPage() {
                                 {selectedReport.status !== 'resolved' && (
                                     <button
                                         onClick={() => handleStatusChange(selectedReport.id, 'resolved')}
-                                        className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-xl transition-colors"
+                                        className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-foreground text-sm font-medium rounded-xl transition-colors"
                                     >
                                         ✅ {t('resolved')}
                                     </button>
@@ -387,7 +387,7 @@ export default function ReportsPage() {
                                 {selectedReport.status !== 'dismissed' && (
                                     <button
                                         onClick={() => handleStatusChange(selectedReport.id, 'dismissed')}
-                                        className="flex-1 px-4 py-2.5 bg-gray-600 hover:bg-gray-500 text-white text-sm font-medium rounded-xl transition-colors"
+                                        className="flex-1 px-4 py-2.5 bg-gray-600 hover:bg-gray-500 text-foreground text-sm font-medium rounded-xl transition-colors"
                                     >
                                         ❌ {t('dismiss')}
                                     </button>
@@ -399,7 +399,7 @@ export default function ReportsPage() {
                                 <div className="mt-4 pt-3 border-t border-border">
                                     <button
                                         onClick={() => handleDeleteReport(selectedReport.id)}
-                                        className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-sm rounded-xl transition-colors"
+                                        className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-800/50 text-red-800 dark:text-red-400 text-sm rounded-xl transition-colors"
                                     >
                                         {t('deleteReport')}
                                     </button>

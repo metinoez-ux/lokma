@@ -303,7 +303,7 @@ export default function ApiKeysPage() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
                     <span className="text-6xl block mb-4">🔒</span>
-                    <h1 className="text-2xl font-bold text-white mb-2">{t('accessDenied')}</h1>
+                    <h1 className="text-2xl font-bold text-foreground mb-2">{t('accessDenied')}</h1>
                     <p className="text-muted-foreground">{t('superAdminOnly')}</p>
                 </div>
             </div>
@@ -311,7 +311,7 @@ export default function ApiKeysPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -331,7 +331,7 @@ export default function ApiKeysPage() {
                     <span className="text-2xl flex-shrink-0 mt-0.5">🛡️</span>
                     <div>
                         <h3 className="font-bold text-emerald-300 text-sm">{t('encryption')}</h3>
-                        <p className="text-emerald-400/70 text-xs mt-1">
+                        <p className="text-emerald-800 dark:text-emerald-400/70 text-xs mt-1">
                             {t('encryptionDesc')}
                         </p>
                     </div>
@@ -341,8 +341,8 @@ export default function ApiKeysPage() {
                 {feedback && (
                     <div
                         className={`mb-6 p-4 rounded-xl border text-sm font-medium flex items-center gap-2 ${feedback.type === 'success'
-                                ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-300'
-                                : 'bg-red-950/40 border-red-700/50 text-red-300'
+                                ? 'bg-emerald-950/40 border-emerald-200 dark:border-emerald-700/50 text-emerald-300'
+                                : 'bg-red-950/40 border-red-200 dark:border-red-700/50 text-red-300'
                             }`}
                     >
                         <span>{feedback.type === 'success' ? '✅' : '❌'}</span>
@@ -401,13 +401,13 @@ export default function ApiKeysPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3">
-                                                <h3 className="font-bold text-white text-lg">{svc.label}</h3>
+                                                <h3 className="font-bold text-foreground text-lg">{svc.label}</h3>
                                                 {stored ? (
-                                                    <span className="px-2 py-0.5 bg-emerald-900/50 text-emerald-400 text-xs rounded-full font-medium">
+                                                    <span className="px-2 py-0.5 bg-emerald-900/50 text-emerald-800 dark:text-emerald-400 text-xs rounded-full font-medium">
                                                         {t('configured')}
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2 py-0.5 bg-yellow-900/50 text-yellow-400 text-xs rounded-full font-medium">
+                                                    <span className="px-2 py-0.5 bg-yellow-900/50 text-yellow-800 dark:text-yellow-400 text-xs rounded-full font-medium">
                                                         {t('notConfigured')}
                                                     </span>
                                                 )}
@@ -421,7 +421,7 @@ export default function ApiKeysPage() {
                                         <div className="mt-4 bg-background/80 rounded-xl p-4 border border-border/50">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-gray-500 text-xs font-medium">{t('keyLabel')}</span>
-                                                <code className="text-amber-400 font-mono text-sm bg-card px-2 py-0.5 rounded">
+                                                <code className="text-amber-800 dark:text-amber-400 font-mono text-sm bg-card px-2 py-0.5 rounded">
                                                     {stored.masked}
                                                 </code>
                                             </div>
@@ -461,7 +461,7 @@ export default function ApiKeysPage() {
                                                 <button
                                                     onClick={() => handleSave(svc.keyId, svc.service, svc.label)}
                                                     disabled={!newKeyValue.trim() || isSaving}
-                                                    className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl text-sm hover:from-amber-400 hover:to-orange-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                                                    className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-foreground font-bold rounded-xl text-sm hover:from-amber-400 hover:to-orange-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                                                 >
                                                     {isSaving ? (
                                                         <>
@@ -509,7 +509,7 @@ export default function ApiKeysPage() {
                                                 <button
                                                     onClick={() => handleDelete(svc.keyId, svc.label)}
                                                     disabled={isSaving}
-                                                    className="px-4 py-2 bg-red-900/30 text-red-400 rounded-xl text-sm font-medium hover:bg-red-900/50 transition-all disabled:opacity-50"
+                                                    className="px-4 py-2 bg-red-900/30 text-red-800 dark:text-red-400 rounded-xl text-sm font-medium hover:bg-red-900/50 transition-all disabled:opacity-50"
                                                 >
                                                     🗑️ {t('deleteKey')}
                                                 </button>

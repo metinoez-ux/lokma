@@ -310,7 +310,7 @@ export default function AmeisePage() {
     if (!admin || admin.adminType !== 'super') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <p className="text-red-400">Zugriff verweigert</p>
+                <p className="text-red-800 dark:text-red-400">Zugriff verweigert</p>
             </div>
         );
     }
@@ -328,7 +328,7 @@ export default function AmeisePage() {
                 {/* ── Betriebe Export / Import ── */}
                 <section className="bg-card rounded-xl border border-emerald-900/40 p-6">
                     <div className="mb-4">
-                        <h2 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Betriebe Export / Import</h2>
+                        <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">Betriebe Export / Import</h2>
                         <p className="text-xs text-muted-foreground mt-1">
                             Alle Betriebe mit Kategorien, Produkten, Offnungszeiten und allen Daten als JSON sichern oder wiederherstellen.
                         </p>
@@ -370,20 +370,20 @@ export default function AmeisePage() {
                     {importPreview && (
                         <div className="space-y-3">
                             <div className="bg-background/60 rounded-lg p-4">
-                                <p className="text-sm text-white font-medium mb-2">Import-Vorschau</p>
+                                <p className="text-sm text-foreground font-medium mb-2">Import-Vorschau</p>
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="bg-card rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-white">{importPreview.businessCount || importPreview.businesses?.length || 0}</div>
+                                        <div className="text-lg font-bold text-foreground">{importPreview.businessCount || importPreview.businesses?.length || 0}</div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">Betriebe</div>
                                     </div>
                                     <div className="bg-card rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-white">
+                                        <div className="text-lg font-bold text-foreground">
                                             {(importPreview.businesses || []).reduce((s: number, b: any) => s + (b.categories?.length || 0), 0)}
                                         </div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">Kategorien</div>
                                     </div>
                                     <div className="bg-card rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-white">
+                                        <div className="text-lg font-bold text-foreground">
                                             {(importPreview.businesses || []).reduce((s: number, b: any) => s + (b.products?.length || 0), 0)}
                                         </div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">Produkte</div>
@@ -423,7 +423,7 @@ export default function AmeisePage() {
                     {/* Import Result */}
                     {importResult && (
                         <div className="space-y-3">
-                            <p className="text-green-400 font-medium text-sm">Import abgeschlossen.</p>
+                            <p className="text-green-800 dark:text-green-400 font-medium text-sm">Import abgeschlossen.</p>
                             <div className="grid grid-cols-4 gap-2">
                                 {[
                                     { label: 'Importiert', value: importResult.imported },
@@ -432,13 +432,13 @@ export default function AmeisePage() {
                                     { label: 'Produkte', value: importResult.productsCreated },
                                 ].map(item => (
                                     <div key={item.label} className="bg-background rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-white">{item.value}</div>
+                                        <div className="text-lg font-bold text-foreground">{item.value}</div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">{item.label}</div>
                                     </div>
                                 ))}
                             </div>
                             {importResult.errors?.length > 0 && (
-                                <div className="bg-red-950/30 rounded-lg p-3 text-xs text-red-400 space-y-1">
+                                <div className="bg-red-950/30 rounded-lg p-3 text-xs text-red-800 dark:text-red-400 space-y-1">
                                     {importResult.errors.map((e: string, i: number) => <div key={i}>{e}</div>)}
                                 </div>
                             )}
@@ -455,7 +455,7 @@ export default function AmeisePage() {
                 {/* ── Demo-Daten (Betrieb Import) ── */}
                 <section className="bg-card rounded-xl border border-blue-900/40 p-6">
                     <div className="mb-4">
-                        <h2 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">Betrieb Import (Google Places)</h2>
+                        <h2 className="text-sm font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider">Betrieb Import (Google Places)</h2>
                         <p className="text-xs text-muted-foreground mt-1">
                             Google Places uzerinden gercek isletmeleri ara, sec ve sisteme ekle.
                             Her isletme icin otomatik menu olusturulur.
@@ -473,7 +473,7 @@ export default function AmeisePage() {
                                         value={demoStreet}
                                         onChange={e => setDemoStreet(e.target.value)}
                                         placeholder="z.B. Hauptstr. 1"
-                                        className="w-full px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                        className="w-full px-3 py-2 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
                                     />
                                 </div>
                                 <div className="w-28">
@@ -483,7 +483,7 @@ export default function AmeisePage() {
                                         value={demoPlz}
                                         onChange={e => setDemoPlz(e.target.value)}
                                         placeholder="z.B. 41836"
-                                        className="w-full px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                        className="w-full px-3 py-2 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
                                     />
                                 </div>
                                 <div className="w-24">
@@ -494,7 +494,7 @@ export default function AmeisePage() {
                                         onChange={e => setDemoMaxCount(Number(e.target.value))}
                                         min={1}
                                         max={60}
-                                        className="w-full px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                        className="w-full px-3 py-2 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
                                     />
                                 </div>
                                 <div className="flex items-end">
@@ -510,7 +510,7 @@ export default function AmeisePage() {
                             {/* Demo cleanup button */}
                             <button
                                 onClick={handleDemoCleanup}
-                                className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                                className="text-xs text-gray-500 hover:text-red-800 dark:text-red-400 transition-colors"
                             >
                                 Demo-Betriebe loschen
                             </button>
@@ -519,7 +519,7 @@ export default function AmeisePage() {
 
                     {/* Searching */}
                     {demoPhase === 'searching' && (
-                        <div className="flex items-center gap-3 text-blue-400 text-sm">
+                        <div className="flex items-center gap-3 text-blue-800 dark:text-blue-400 text-sm">
                             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-blue-400" />
                             Google Places API wird abgefragt...
                         </div>
@@ -532,7 +532,7 @@ export default function AmeisePage() {
                                 <p className="text-sm text-muted-foreground">
                                     {demoFoundPlaces.length} Betriebe gefunden, {demoSelectedIds.size} ausgewahlt
                                 </p>
-                                <button onClick={toggleAllDemoPlaces} className="text-xs text-blue-400 hover:text-blue-300">
+                                <button onClick={toggleAllDemoPlaces} className="text-xs text-blue-800 dark:text-blue-400 hover:text-blue-300">
                                     {demoSelectedIds.size === demoFoundPlaces.filter((p: any) => !p.alreadyAdded).length ? 'Keine' : 'Alle'} auswahlen
                                 </button>
                             </div>
@@ -591,7 +591,7 @@ export default function AmeisePage() {
 
                     {/* Saving */}
                     {demoPhase === 'saving' && (
-                        <div className="flex items-center gap-3 text-blue-400 text-sm">
+                        <div className="flex items-center gap-3 text-blue-800 dark:text-blue-400 text-sm">
                             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-blue-400" />
                             {demoSelectedIds.size} Betriebe werden importiert...
                         </div>
@@ -600,11 +600,11 @@ export default function AmeisePage() {
                     {/* Saved */}
                     {demoPhase === 'saved' && (
                         <div className="space-y-4">
-                            <p className="text-green-400 font-medium text-sm">
+                            <p className="text-green-800 dark:text-green-400 font-medium text-sm">
                                 {demoSavedBusinesses.length} Betriebe erfolgreich importiert.
                             </p>
                             {demoErrors.length > 0 && (
-                                <div className="bg-red-950/30 rounded-lg p-3 text-xs text-red-400 space-y-1">
+                                <div className="bg-red-950/30 rounded-lg p-3 text-xs text-red-800 dark:text-red-400 space-y-1">
                                     {demoErrors.map((e: string, i: number) => <div key={i}>{e}</div>)}
                                 </div>
                             )}
@@ -612,7 +612,7 @@ export default function AmeisePage() {
                                 {demoSavedBusinesses.map((b: any, i: number) => (
                                     <div key={i} className="text-xs text-muted-foreground flex items-center gap-2">
                                         <span className="text-green-500">+</span>
-                                        <span className="text-white font-medium">{b.companyName}</span>
+                                        <span className="text-foreground font-medium">{b.companyName}</span>
                                         <span className="text-gray-600">({BUSINESS_TYPE_LABELS[b.businessType] || b.businessType})</span>
                                     </div>
                                 ))}
@@ -628,7 +628,7 @@ export default function AmeisePage() {
 
                     {/* Cleaning */}
                     {demoPhase === 'cleaning' && (
-                        <div className="flex items-center gap-3 text-yellow-400 text-sm">
+                        <div className="flex items-center gap-3 text-yellow-800 dark:text-yellow-400 text-sm">
                             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-yellow-400" />
                             Demo-Betriebe werden geloscht...
                         </div>
@@ -637,7 +637,7 @@ export default function AmeisePage() {
                     {/* Cleaned */}
                     {demoPhase === 'cleaned' && demoCleanupStats && (
                         <div className="space-y-4">
-                            <p className="text-green-400 font-medium text-sm">Demo-Betriebe wurden geloscht.</p>
+                            <p className="text-green-800 dark:text-green-400 font-medium text-sm">Demo-Betriebe wurden geloscht.</p>
                             <div className="grid grid-cols-3 gap-2">
                                 {[
                                     { label: 'Betriebe', value: demoCleanupStats.businessesDeleted },
@@ -645,7 +645,7 @@ export default function AmeisePage() {
                                     { label: 'Produkte', value: demoCleanupStats.productsDeleted },
                                 ].map(item => (
                                     <div key={item.label} className="bg-background rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-white">{item.value}</div>
+                                        <div className="text-lg font-bold text-foreground">{item.value}</div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">{item.label}</div>
                                     </div>
                                 ))}
@@ -662,7 +662,7 @@ export default function AmeisePage() {
                     {/* Error */}
                     {demoPhase === 'error' && (
                         <div className="space-y-3">
-                            <p className="text-red-400 text-sm">{demoErrorMsg}</p>
+                            <p className="text-red-800 dark:text-red-400 text-sm">{demoErrorMsg}</p>
                             <button
                                 onClick={() => setDemoPhase('idle')}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
@@ -676,14 +676,14 @@ export default function AmeisePage() {
                 {/* ── Test Data Cleanup ── */}
                 <section className="bg-card rounded-xl border border-red-900/40 p-6">
                     <div className="mb-4">
-                        <h2 className="text-sm font-semibold text-red-400 uppercase tracking-wider">Test Verilerini Temizle</h2>
+                        <h2 className="text-sm font-semibold text-red-800 dark:text-red-400 uppercase tracking-wider">Test Verilerini Temizle</h2>
                         <p className="text-xs text-muted-foreground mt-1">
                             metin.oez@gmail.com haric secilen kategorilerdeki test verilerini siler.
                         </p>
                     </div>
 
                     {/* Protected */}
-                    <div className="bg-green-900/20 border border-green-800/30 rounded-lg px-4 py-2.5 mb-5 text-xs text-green-400">
+                    <div className="bg-green-900/20 border border-green-800/30 rounded-lg px-4 py-2.5 mb-5 text-xs text-green-800 dark:text-green-400">
                         metin.oez@gmail.com -- korumali, silinmez
                     </div>
 
@@ -692,7 +692,7 @@ export default function AmeisePage() {
                         <>
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-xs text-muted-foreground">Temizlenecek verileri secin:</p>
-                                <button onClick={toggleAll} className="text-xs text-blue-400 hover:text-blue-300">
+                                <button onClick={toggleAll} className="text-xs text-blue-800 dark:text-blue-400 hover:text-blue-300">
                                     {selectedCategories.size === CLEANUP_CATEGORIES.length ? 'Keine' : 'Alle'} auswahlen
                                 </button>
                             </div>
@@ -740,7 +740,7 @@ export default function AmeisePage() {
                                         <option value="all">Alle Betriebe</option>
                                     </select>
                                     {businessDateFilter === 'all' && (
-                                        <span className="text-[10px] text-red-400 font-medium">Alle Betriebe werden geloscht!</span>
+                                        <span className="text-[10px] text-red-800 dark:text-red-400 font-medium">Alle Betriebe werden geloscht!</span>
                                     )}
                                 </div>
                             )}
@@ -762,7 +762,7 @@ export default function AmeisePage() {
                     {phase === 'confirm' && (
                         <div className="space-y-3">
                             <p className="text-xs text-muted-foreground">
-                                Zum Bestatigen <span className="font-mono text-red-400">{CONFIRM_PHRASE}</span> eingeben:
+                                Zum Bestatigen <span className="font-mono text-red-800 dark:text-red-400">{CONFIRM_PHRASE}</span> eingeben:
                             </p>
                             <div className="flex gap-3">
                                 <input
@@ -770,7 +770,7 @@ export default function AmeisePage() {
                                     value={confirmText}
                                     onChange={e => setConfirmText(e.target.value)}
                                     placeholder={CONFIRM_PHRASE}
-                                    className="flex-1 px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-red-600/40 focus:border-red-500 focus:outline-none font-mono"
+                                    className="flex-1 px-3 py-2 bg-gray-700 text-foreground text-sm rounded-lg border border-red-600/40 focus:border-red-500 focus:outline-none font-mono"
                                 />
                                 <button
                                     onClick={handleCleanup}
@@ -791,7 +791,7 @@ export default function AmeisePage() {
 
                     {/* Loading */}
                     {phase === 'loading' && (
-                        <div className="flex items-center gap-3 text-yellow-400 text-sm">
+                        <div className="flex items-center gap-3 text-yellow-800 dark:text-yellow-400 text-sm">
                             <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-yellow-400" />
                             {selectedCategories.size} Kategorie{selectedCategories.size > 1 ? 'n' : ''} werden bereinigt... Bitte warten.
                         </div>
@@ -800,7 +800,7 @@ export default function AmeisePage() {
                     {/* Done */}
                     {phase === 'done' && stats && (
                         <div className="space-y-4">
-                            <p className="text-green-400 font-medium text-sm">Bereinigung abgeschlossen.</p>
+                            <p className="text-green-800 dark:text-green-400 font-medium text-sm">Bereinigung abgeschlossen.</p>
                             <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
                                 {[
                                     { label: 'Auth', value: stats.authDeleted },
@@ -820,19 +820,19 @@ export default function AmeisePage() {
                                     { label: 'Arbeitszeiten', value: stats.shiftsDeleted },
                                 ].filter(item => item.value > 0).map(item => (
                                     <div key={item.label} className="bg-background rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-white">{item.value}</div>
+                                        <div className="text-lg font-bold text-foreground">{item.value}</div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">{item.label}</div>
                                     </div>
                                 ))}
                                 {stats.errors.length > 0 && (
                                     <div className="bg-background rounded-lg p-2.5 text-center">
-                                        <div className="text-lg font-bold text-red-400">{stats.errors.length}</div>
+                                        <div className="text-lg font-bold text-red-800 dark:text-red-400">{stats.errors.length}</div>
                                         <div className="text-[10px] text-muted-foreground mt-0.5">Fehler</div>
                                     </div>
                                 )}
                             </div>
                             {stats.errors.length > 0 && (
-                                <div className="bg-red-950/30 rounded-lg p-3 text-xs text-red-400 space-y-1">
+                                <div className="bg-red-950/30 rounded-lg p-3 text-xs text-red-800 dark:text-red-400 space-y-1">
                                     {stats.errors.map((e: string, i: number) => <div key={i}>{e}</div>)}
                                 </div>
                             )}
@@ -848,7 +848,7 @@ export default function AmeisePage() {
                     {/* Error */}
                     {phase === 'error' && (
                         <div className="space-y-3">
-                            <p className="text-red-400 text-sm">{errorMsg}</p>
+                            <p className="text-red-800 dark:text-red-400 text-sm">{errorMsg}</p>
                             <button
                                 onClick={() => { setPhase('idle'); setConfirmText(''); }}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"

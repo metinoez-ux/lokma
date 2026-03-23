@@ -265,7 +265,7 @@ export default function InvitationsPage() {
                 {/* Invite Tab */}
                 {activeTab === 'invite' && (
                     <div className="bg-card rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">{t('yeni_super_admin_davet_et')}</h2>
+                        <h2 className="text-xl font-bold text-foreground mb-4">{t('yeni_super_admin_davet_et')}</h2>
                         <p className="text-muted-foreground mb-6">
                             {t('davet_edilen_kisi_48_saat_icinde_linke_t')}
                         </p>
@@ -306,12 +306,12 @@ export default function InvitationsPage() {
                         {/* Recent Invitations */}
                         {invitations.length > 0 && (
                             <div className="mt-8">
-                                <h3 className="text-white font-semibold mb-3">{t('recent_invitations')}</h3>
+                                <h3 className="text-foreground font-semibold mb-3">{t('recent_invitations')}</h3>
                                 <div className="space-y-2">
                                     {invitations.slice(0, 5).map((inv) => (
                                         <div key={inv.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                                             <div>
-                                                <p className="text-white">{inv.email}</p>
+                                                <p className="text-foreground">{inv.email}</p>
                                                 <p className="text-muted-foreground text-xs">
                                                     {inv.createdAt?.toLocaleDateString('de-DE')} • {inv.role}
                                                 </p>
@@ -336,7 +336,7 @@ export default function InvitationsPage() {
                 {/* Pending Approvals Tab */}
                 {activeTab === 'pending' && (
                     <div className="bg-card rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">{t('onay_bekleyen_basvurular')}</h2>
+                        <h2 className="text-xl font-bold text-foreground mb-4">{t('onay_bekleyen_basvurular')}</h2>
 
                         {pendingApprovals.length === 0 ? (
                             <div className="text-center py-12 text-muted-foreground">
@@ -349,7 +349,7 @@ export default function InvitationsPage() {
                                     <div key={inv.id} className="bg-gray-700 rounded-xl p-4">
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
-                                                <p className="text-white font-semibold text-lg">{inv.email}</p>
+                                                <p className="text-foreground font-semibold text-lg">{inv.email}</p>
                                                 <p className="text-muted-foreground text-sm">
                                                     {t('davet_eden')}: {inv.invitedByEmail} • {inv.createdAt?.toLocaleDateString('de-DE')}
                                                 </p>
@@ -361,7 +361,7 @@ export default function InvitationsPage() {
 
                                         {inv.registrationData && (
                                             <div className="bg-card rounded-lg p-4 mb-4">
-                                                <h4 className="text-white font-medium mb-3">{t('kayit_bilgileri')}</h4>
+                                                <h4 className="text-foreground font-medium mb-3">{t('kayit_bilgileri')}</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <div>
                                                         <span className="text-muted-foreground">{t('full_name')}</span>
@@ -412,13 +412,13 @@ export default function InvitationsPage() {
                 {/* Super Admins Tab */}
                 {activeTab === 'superadmins' && (
                     <div className="bg-card rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">{t('existing_super_admins')}</h2>
+                        <h2 className="text-xl font-bold text-foreground mb-4">{t('existing_super_admins')}</h2>
                         <div className="space-y-2">
                             {superAdmins.map((email, index) => (
                                 <div key={index} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
                                     <div className="flex items-center space-x-3">
                                         <span className="text-2xl">👑</span>
-                                        <span className="text-white">{email}</span>
+                                        <span className="text-foreground">{email}</span>
                                     </div>
                                     <span className="px-3 py-1 bg-green-600 text-white rounded text-sm">{t('aktif')}</span>
                                 </div>

@@ -328,7 +328,7 @@ export default function TranslationsPage() {
         <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">{t('arayuz_cevirileri_cms')}</h1>
+                    <h1 className="text-2xl font-bold text-foreground">{t('arayuz_cevirileri_cms')}</h1>
                     <p className="text-muted-foreground text-sm mt-1">
                         {t('uygulama_genelindeki_tum_sabit_metinleri')}
                     </p>
@@ -461,8 +461,8 @@ export default function TranslationsPage() {
                                         <tr key={`${item.namespace}.${item.key}`} className="hover:bg-slate-700/30 transition-colors">
                                             <td className="px-4 py-3 border-r border-border/50">
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs text-indigo-400 font-mono mb-1">{item.namespace}</span>
-                                                    <span className="text-white font-medium">{item.key}</span>
+                                                    <span className="text-xs text-indigo-800 dark:text-indigo-400 font-mono mb-1">{item.namespace}</span>
+                                                    <span className="text-foreground font-medium">{item.key}</span>
                                                 </div>
                                             </td>
                                             {LANGUAGES.map(lang => (
@@ -488,7 +488,7 @@ export default function TranslationsPage() {
                 {totalPages > 1 && (
                     <div className="bg-background/80 px-4 py-3 border-t border-border flex items-center justify-between">
                         <div className="text-sm text-muted-foreground select-none">
-                            {t('toplam')} <span className="font-semibold text-white">{filteredKeys.length}</span> {t('kayittan')} <span className="font-semibold text-white">{(currentPage - 1) * ROWS_PER_PAGE + 1} - {Math.min(currentPage * ROWS_PER_PAGE, filteredKeys.length)}</span> {t('arasi_gosteriliyor')}
+                            {t('toplam')} <span className="font-semibold text-foreground">{filteredKeys.length}</span> {t('kayittan')} <span className="font-semibold text-foreground">{(currentPage - 1) * ROWS_PER_PAGE + 1} - {Math.min(currentPage * ROWS_PER_PAGE, filteredKeys.length)}</span> {t('arasi_gosteriliyor')}
                         </div>
                         <div className="flex gap-2">
                             <button
@@ -498,7 +498,7 @@ export default function TranslationsPage() {
                             >
                                 {t('onceki')}
                             </button>
-                            <div className="px-3 py-1.5 rounded bg-card border border-slate-600 text-white font-medium select-none text-sm flex items-center">
+                            <div className="px-3 py-1.5 rounded bg-card border border-slate-600 text-foreground font-medium select-none text-sm flex items-center">
                                 {currentPage} / {totalPages}
                             </div>
                             <button

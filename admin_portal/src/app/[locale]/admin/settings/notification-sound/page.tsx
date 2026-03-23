@@ -142,7 +142,7 @@ export default function NotificationSoundPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-2">
@@ -157,7 +157,7 @@ export default function NotificationSoundPage() {
                         <span className="text-2xl">🔔</span>
                         <div>
                             <p className="text-sm text-rose-300">{t('ns_aktiver_ton')}</p>
-                            <p className="font-bold text-white">
+                            <p className="font-bold text-foreground">
                                 {SOUND_OPTIONS.find(s => s.id === activeSound)?.name || activeSound}
                             </p>
                         </div>
@@ -191,7 +191,7 @@ export default function NotificationSoundPage() {
                                         >
                                             <span className="absolute top-3 right-3 text-xs text-gray-600 font-mono">{sound.freq} Hz</span>
                                             <div className="text-2xl mb-2">{sound.icon}</div>
-                                            <h3 className="font-bold text-white">{sound.name}</h3>
+                                            <h3 className="font-bold text-foreground">{sound.name}</h3>
                                             <p className="text-xs text-gray-500 mt-1">{sound.desc}</p>
 
                                             {/* Action buttons */}
@@ -225,7 +225,7 @@ export default function NotificationSoundPage() {
 
                 {/* Info Box */}
                 <div className="bg-card border border-border rounded-xl p-5 mt-4">
-                    <h3 className="font-bold text-yellow-400 mb-2">⚡ {t('ns_wie_funktioniert')}</h3>
+                    <h3 className="font-bold text-yellow-800 dark:text-yellow-400 mb-2">⚡ {t('ns_wie_funktioniert')}</h3>
                     <ul className="text-sm text-muted-foreground space-y-1.5">
                         <li>• {t('ns_info_1')}</li>
                         <li>• {t('ns_info_2')}</li>

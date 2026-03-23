@@ -276,9 +276,9 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <a href="/admin/settings" className="text-muted-foreground hover:text-white text-sm transition">← Ayarlar</a>
+                            <a href="/admin/settings" className="text-muted-foreground hover:text-foreground text-sm transition">← Ayarlar</a>
                         </div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
                             {t('teslimat_saat_ayarlari')}
                         </h1>
                     </div>
@@ -294,7 +294,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         {!isEditing ? (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition flex items-center gap-2"
+                                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-foreground font-medium rounded-lg transition flex items-center gap-2"
                             >
                                 {t('duzenle')}
                             </button>
@@ -309,7 +309,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition flex items-center gap-2 disabled:opacity-50"
+                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground font-medium rounded-lg transition flex items-center gap-2 disabled:opacity-50"
                                 >
                                     {saving ? '⏳ Kaydediliyor...' : t('kaydet')}
                                 </button>
@@ -327,7 +327,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                 {/* ═══════ Section 1: Açılış Saatleri ═══════ */}
                 <div className="bg-card rounded-xl border border-border p-6 mb-6">
-                    <h4 className="text-white font-medium mb-4 flex items-center gap-2">
+                    <h4 className="text-foreground font-medium mb-4 flex items-center gap-2">
                         {t('calisma_saatleri')}
                     </h4>
                     {isEditing ? (
@@ -343,7 +343,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             value={formatTo24h(startTime)}
                                             disabled={isClosed}
                                             onChange={(e) => updateDayHours(dayObj, e.target.value, endTime, false)}
-                                            className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
+                                            className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
                                         />
                                         <span className="text-gray-500 font-bold">–</span>
                                         <input
@@ -351,7 +351,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             value={formatTo24h(endTime)}
                                             disabled={isClosed}
                                             onChange={(e) => updateDayHours(dayObj, startTime, e.target.value, false)}
-                                            className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
+                                            className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
                                         />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                             <input
@@ -377,7 +377,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 return (
                                     <li key={i} className="flex justify-between items-center border-b border-border/50 pb-1.5 last:border-0">
                                         <span className="font-medium text-muted-foreground text-sm w-24">{dayName}</span>
-                                        <span className={`font-mono text-sm ${isClosed ? 'text-red-400' : 'text-foreground'}`}>
+                                        <span className={`font-mono text-sm ${isClosed ? 'text-red-800 dark:text-red-400' : 'text-foreground'}`}>
                                             {isClosed ? t('kapali') : content || '-'}
                                         </span>
                                     </li>
@@ -390,7 +390,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             {!isEditing && (
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="block mx-auto mt-2 text-blue-400 hover:text-blue-300 text-sm"
+                                    className="block mx-auto mt-2 text-blue-800 dark:text-blue-400 hover:text-blue-300 text-sm"
                                 >
                                     {t('saat_ekle')}
                                 </button>
@@ -404,17 +404,17 @@ const { admin, loading: adminLoading } = useAdmin();
 
                     {/* Kurye Desteği */}
                     <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-border pb-2">
+                        <h4 className="text-foreground font-medium border-b border-border pb-2">
                             {t('teslimat_ayarlari')}
                         </h4>
 
                         {/* Plan gating warning */}
                         {!planHasDelivery && (
-                            <div className="p-3 bg-amber-900/30 rounded-lg border border-amber-700/50">
+                            <div className="p-3 bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700/50">
                                 <p className="text-amber-300 text-sm flex items-center gap-2">
                                     {t('mevcut_planiniz')}<strong>{planName}</strong>{t('kurye_modulunu_icermiyor')}
                                 </p>
-                                <p className="text-amber-400/70 text-xs mt-1">
+                                <p className="text-amber-800 dark:text-amber-400/70 text-xs mt-1">
                                     {t('kurye_destegini_aktiflestirmek_icin_plan')}
                                     <a href="/account" className="underline ml-1 hover:text-amber-300">{t('plan_degistir')}</a>
                                 </p>
@@ -464,7 +464,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                     {/* Gelişmiş Sipariş Saatleri */}
                     <div className="p-4 bg-background/50 rounded-lg border border-border">
-                        <h5 className="text-white font-medium mb-3 flex items-center gap-2">
+                        <h5 className="text-foreground font-medium mb-3 flex items-center gap-2">
                             {t('gelismis_siparis_saatleri')}
                             <span className="text-xs text-gray-500">(Opsiyonel)</span>
                         </h5>
@@ -556,7 +556,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 className="w-5 h-5 accent-amber-500"
                             />
                             <div>
-                                <span className="text-white">{t('on_siparis_kabul_et')}</span>
+                                <span className="text-foreground">{t('on_siparis_kabul_et')}</span>
                                 <p className="text-xs text-muted-foreground">
                                     {t('i_sletme_kapaliyken_de_ertesi_gun_icin_s')}
                                 </p>
@@ -577,14 +577,14 @@ const { admin, loading: adminLoading } = useAdmin();
 
                 {/* ═══════ Section 3: Kurye Yapılandırması ═══════ */}
                 <div className="bg-card rounded-xl border border-border p-6 mt-6 space-y-6">
-                    <h4 className="text-white font-medium border-b border-border pb-2 flex items-center gap-2">
+                    <h4 className="text-foreground font-medium border-b border-border pb-2 flex items-center gap-2">
                         {t('kurye_yapilandirmasi')}
                     </h4>
 
                     {/* Kendi Kuryem Var */}
                     <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-border">
                         <div>
-                            <p className="text-white font-medium flex items-center gap-2">{t('kendi_kuryem_var')}</p>
+                            <p className="text-foreground font-medium flex items-center gap-2">{t('kendi_kuryem_var')}</p>
                             <p className="text-xs text-muted-foreground mt-1">{t('i_sletmenizin_kendi_teslimat_personeli_v')}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -603,11 +603,11 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
 
                     {/* LOKMA Sürücü Desteği */}
-                    <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-blue-700/30">
+                    <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-blue-200 dark:border-blue-700/30">
                         <div>
-                            <p className="text-white font-medium flex items-center gap-2">{t('lokma_surucu_destegi')}</p>
+                            <p className="text-foreground font-medium flex items-center gap-2">{t('lokma_surucu_destegi')}</p>
                             <p className="text-xs text-muted-foreground mt-1">LOKMA platform kuryelerinden destek almak ister misiniz?</p>
-                            <p className="text-xs text-blue-400/70 mt-0.5">{t('aktiflestiginde_lokma_kuryelerine_sipari')}</p>
+                            <p className="text-xs text-blue-800 dark:text-blue-400/70 mt-0.5">{t('aktiflestiginde_lokma_kuryelerine_sipari')}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -627,7 +627,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     {/* Teslimat Tercihi */}
                     {(formData.hasOwnCourier && formData.lokmaDriverEnabled) && (
                         <div className="p-4 bg-background/50 rounded-lg border border-border">
-                            <label className="text-white font-medium flex items-center gap-2 mb-2">
+                            <label className="text-foreground font-medium flex items-center gap-2 mb-2">
                                 ⚡ Bildirim Tercihi
                             </label>
                             <p className="text-xs text-muted-foreground mb-3">{t('yeni_teslimat_siparislerinde_kimlere_bil')}</p>
@@ -653,15 +653,15 @@ const { admin, loading: adminLoading } = useAdmin();
                         <div className="grid grid-cols-3 gap-3">
                             <div className="text-center p-3 bg-card rounded-lg border border-border">
                                 <p className="text-xs text-muted-foreground mb-1">🟢 Gel-Al</p>
-                                <p className="text-lg font-bold text-emerald-400">%{commissionRates.clickCollect}</p>
+                                <p className="text-lg font-bold text-emerald-800 dark:text-emerald-400">%{commissionRates.clickCollect}</p>
                             </div>
                             <div className="text-center p-3 bg-card rounded-lg border border-border">
                                 <p className="text-xs text-muted-foreground mb-1">{t('kendi_kurye')}</p>
-                                <p className="text-lg font-bold text-amber-400">%{commissionRates.ownCourier}</p>
+                                <p className="text-lg font-bold text-amber-800 dark:text-amber-400">%{commissionRates.ownCourier}</p>
                             </div>
                             <div className="text-center p-3 bg-card rounded-lg border border-border">
                                 <p className="text-xs text-muted-foreground mb-1">{t('lokma_kurye')}</p>
-                                <p className="text-lg font-bold text-blue-400">%{commissionRates.lokmaCourier}</p>
+                                <p className="text-lg font-bold text-blue-800 dark:text-blue-400">%{commissionRates.lokmaCourier}</p>
                             </div>
                         </div>
                         <p className="text-xs text-gray-500 mt-2 text-center">
@@ -671,11 +671,11 @@ const { admin, loading: adminLoading } = useAdmin();
 
                     {/* Smart Info Banner */}
                     {!formData.hasOwnCourier && !formData.lokmaDriverEnabled && (
-                        <div className="p-3 bg-red-900/30 rounded-lg border border-red-700/50">
+                        <div className="p-3 bg-red-900/30 rounded-lg border border-red-200 dark:border-red-700/50">
                             <p className="text-red-300 text-sm flex items-center gap-2">
                                 {t('dikkat_ne_kendi_kurye_ne_de_lokma_kurye_')}
                             </p>
-                            <p className="text-red-400/70 text-xs mt-1">
+                            <p className="text-red-800 dark:text-red-400/70 text-xs mt-1">
                                 {t('teslimat_siparisleri_atanamayacaktir_en_')}
                             </p>
                         </div>

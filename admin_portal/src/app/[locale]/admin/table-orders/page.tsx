@@ -9,10 +9,10 @@ import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
 const sessionStatuses = {
-    active: { label: 'Aktif', icon: '🟢', badge: 'bg-green-600/20 text-green-400 border-green-500/30', cardBorder: 'border-green-500/40 hover:border-green-400', headerBg: 'bg-green-600/10' },
-    ordering: { label: 'Sipariş', icon: '🔵', badge: 'bg-blue-600/20 text-blue-400 border-blue-500/30', cardBorder: 'border-blue-500/40 hover:border-blue-400', headerBg: 'bg-blue-600/10' },
-    paying: { label: 'Ödeme', icon: '🟡', badge: 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30', cardBorder: 'border-yellow-500/40 hover:border-yellow-400', headerBg: 'bg-yellow-600/10' },
-    cancelled: { label: 'İptal', icon: '🔴', badge: 'bg-red-600/20 text-red-400 border-red-500/30', cardBorder: 'border-red-500/40 hover:border-red-400', headerBg: 'bg-red-600/10' },
+    active: { label: 'Aktif', icon: '🟢', badge: 'bg-green-600/20 text-green-800 dark:text-green-400 border-green-500/30', cardBorder: 'border-green-500/40 hover:border-green-400', headerBg: 'bg-green-600/10' },
+    ordering: { label: 'Sipariş', icon: '🔵', badge: 'bg-blue-600/20 text-blue-800 dark:text-blue-400 border-blue-500/30', cardBorder: 'border-blue-500/40 hover:border-blue-400', headerBg: 'bg-blue-600/10' },
+    paying: { label: 'Ödeme', icon: '🟡', badge: 'bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 border-yellow-500/30', cardBorder: 'border-yellow-500/40 hover:border-yellow-400', headerBg: 'bg-yellow-600/10' },
+    cancelled: { label: 'İptal', icon: '🔴', badge: 'bg-red-600/20 text-red-800 dark:text-red-400 border-red-500/30', cardBorder: 'border-red-500/40 hover:border-red-400', headerBg: 'bg-red-600/10' },
     closed: { label: 'Kapandı', icon: '⚫', badge: 'bg-gray-600/20 text-muted-foreground border-gray-600/30', cardBorder: 'border-gray-600/40 hover:border-gray-500', headerBg: 'bg-gray-700/30' },
 } as const;
 
@@ -301,7 +301,7 @@ export default function TableOrdersPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {t('masa_grup_siparisleri')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -314,19 +314,19 @@ export default function TableOrdersPage() {
                     {/* Quick Stats */}
                     <div className="flex gap-3">
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-2xl font-bold text-green-400">{stats.active}</p>
+                            <p className="text-2xl font-bold text-green-800 dark:text-green-400">{stats.active}</p>
                             <p className="text-xs text-green-300">{t('aktif')}</p>
                         </div>
                         <div className={`bg-blue-600/20 border border-blue-500/30 rounded-xl px-4 py-2 text-center ${stats.ordering > 0 ? 'animate-pulse' : ''}`}>
-                            <p className="text-2xl font-bold text-blue-400">{stats.ordering}</p>
+                            <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{stats.ordering}</p>
                             <p className="text-xs text-blue-300">{t('siparis')}</p>
                         </div>
                         <div className={`bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-4 py-2 text-center ${stats.paying > 0 ? 'animate-pulse' : ''}`}>
-                            <p className="text-2xl font-bold text-yellow-400">{stats.paying}</p>
+                            <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{stats.paying}</p>
                             <p className="text-xs text-yellow-300">{t('odeme')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-lg font-bold text-amber-400">{formatCurrency(stats.totalRevenue, sessions[0]?.currency)}</p>
+                            <p className="text-lg font-bold text-amber-800 dark:text-amber-400">{formatCurrency(stats.totalRevenue, sessions[0]?.currency)}</p>
                             <p className="text-xs text-amber-300">{t('toplam')}</p>
                         </div>
                     </div>
@@ -380,7 +380,7 @@ export default function TableOrdersPage() {
                                 {showBusinessDropdown && (
                                     <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-card border border-gray-600 rounded-lg shadow-xl z-50">
                                         <div
-                                            className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
+                                            className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-800 dark:text-green-400 font-medium"
                                             onClick={() => {
                                                 setBusinessFilter('all');
                                                 setBusinessSearch('');
@@ -423,7 +423,7 @@ export default function TableOrdersPage() {
                             className={`flex-1 min-w-[100px] rounded-lg p-4 text-center cursor-pointer transition border-2 ${statusFilter === 'active' ? 'bg-green-600/30 border-green-500' : 'bg-green-600/10 border-green-600/30 hover:bg-green-600/20'}`}
                             onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}
                         >
-                            <p className={`text-green-400 text-3xl font-bold ${stats.active > 0 ? 'animate-bounce' : ''}`}>{stats.active}</p>
+                            <p className={`text-green-800 dark:text-green-400 text-3xl font-bold ${stats.active > 0 ? 'animate-bounce' : ''}`}>{stats.active}</p>
                             <p className="text-green-300 text-sm font-medium">{t('aktif')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
@@ -431,7 +431,7 @@ export default function TableOrdersPage() {
                             className={`flex-1 min-w-[100px] rounded-lg p-4 text-center cursor-pointer transition border-2 ${statusFilter === 'ordering' ? 'bg-blue-600/30 border-blue-500' : 'bg-blue-600/10 border-blue-600/30 hover:bg-blue-600/20'}`}
                             onClick={() => setStatusFilter(statusFilter === 'ordering' ? 'all' : 'ordering')}
                         >
-                            <p className="text-blue-400 text-3xl font-bold">{stats.ordering}</p>
+                            <p className="text-blue-800 dark:text-blue-400 text-3xl font-bold">{stats.ordering}</p>
                             <p className="text-muted-foreground text-sm">{t('siparis')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
@@ -439,7 +439,7 @@ export default function TableOrdersPage() {
                             className={`flex-1 min-w-[100px] rounded-lg p-4 text-center cursor-pointer transition border-2 ${statusFilter === 'paying' ? 'bg-yellow-600/30 border-yellow-500' : 'bg-yellow-600/10 border-yellow-600/30 hover:bg-yellow-600/20'}`}
                             onClick={() => setStatusFilter(statusFilter === 'paying' ? 'all' : 'paying')}
                         >
-                            <p className="text-yellow-400 text-3xl font-bold">{stats.paying}</p>
+                            <p className="text-yellow-800 dark:text-yellow-400 text-3xl font-bold">{stats.paying}</p>
                             <p className="text-muted-foreground text-sm">{t('odeme')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
@@ -484,11 +484,11 @@ export default function TableOrdersPage() {
                                     {/* Card Header */}
                                     <div className={`px-4 py-3 flex items-center justify-between ${statusInfo.headerBg}`}>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-3xl font-bold text-white bg-gray-700/60 px-3 py-1 rounded-lg">
+                                            <span className="text-3xl font-bold text-foreground bg-gray-700/60 px-3 py-1 rounded-lg">
                                                 🪑 {session.tableNumber}
                                             </span>
                                             <div>
-                                                <p className="text-white font-medium text-sm truncate max-w-[140px]">
+                                                <p className="text-foreground font-medium text-sm truncate max-w-[140px]">
                                                     {session.businessName || businesses[session.businessId] || ''}
                                                 </p>
                                                 <p className="text-muted-foreground text-xs">
@@ -514,7 +514,7 @@ export default function TableOrdersPage() {
                                                 <span
                                                     key={p.participantId}
                                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${p.paymentStatus === 'paid'
-                                                        ? 'bg-green-600/20 text-green-400'
+                                                        ? 'bg-green-600/20 text-green-800 dark:text-green-400'
                                                         : 'bg-gray-700 text-foreground'
                                                         } ${p.isHost ? 'ring-1 ring-amber-400/50' : ''}`}
                                                 >
@@ -550,18 +550,18 @@ export default function TableOrdersPage() {
                                     <div className="px-4 py-3 flex items-center justify-between">
                                         <div>
                                             <span className="text-muted-foreground text-xs">{t('toplam')}</span>
-                                            <p className="text-white font-bold text-lg">{formatCurrency(session.grandTotal, session.currency)}</p>
+                                            <p className="text-foreground font-bold text-lg">{formatCurrency(session.grandTotal, session.currency)}</p>
                                         </div>
                                         {session.paidTotal > 0 && (
                                             <div className="text-right">
-                                                <span className="text-green-400 text-xs">{t('odenen')}</span>
-                                                <p className="text-green-400 font-bold">{formatCurrency(session.paidTotal, session.currency)}</p>
+                                                <span className="text-green-800 dark:text-green-400 text-xs">{t('odenen')}</span>
+                                                <p className="text-green-800 dark:text-green-400 font-bold">{formatCurrency(session.paidTotal, session.currency)}</p>
                                             </div>
                                         )}
                                         {remaining > 0 && session.grandTotal > 0 && (
                                             <div className="text-right">
-                                                <span className="text-amber-400 text-xs">{t('remaining')}</span>
-                                                <p className="text-amber-400 font-bold">{formatCurrency(remaining, session.currency)}</p>
+                                                <span className="text-amber-800 dark:text-amber-400 text-xs">{t('remaining')}</span>
+                                                <p className="text-amber-800 dark:text-amber-400 font-bold">{formatCurrency(remaining, session.currency)}</p>
                                             </div>
                                         )}
                                     </div>
@@ -581,7 +581,7 @@ export default function TableOrdersPage() {
                             <div className="flex items-center gap-3">
                                 <span className="text-3xl">🪑</span>
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">
+                                    <h2 className="text-xl font-bold text-foreground">
                                         Masa {selectedSession.tableNumber}
                                     </h2>
                                     <p className="text-muted-foreground text-sm">
@@ -607,29 +607,29 @@ export default function TableOrdersPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-700/30 rounded-lg p-3">
                                     <span className="text-muted-foreground text-xs">{t('host')}</span>
-                                    <p className="text-white font-medium">👑 {selectedSession.hostName}</p>
+                                    <p className="text-foreground font-medium">👑 {selectedSession.hostName}</p>
                                 </div>
                                 <div className="bg-gray-700/30 rounded-lg p-3">
                                     <span className="text-muted-foreground text-xs">{t('acilis')}</span>
-                                    <p className="text-white font-medium">{formatDate(selectedSession.createdAt)}</p>
+                                    <p className="text-foreground font-medium">{formatDate(selectedSession.createdAt)}</p>
                                 </div>
                             </div>
 
                             {/* Financial Summary */}
                             <div className="bg-gray-700/20 border border-gray-600/30 rounded-xl p-4">
-                                <h3 className="text-white font-bold text-sm mb-3">{t('hesap_ozeti')}</h3>
+                                <h3 className="text-foreground font-bold text-sm mb-3">{t('hesap_ozeti')}</h3>
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
-                                        <p className="text-2xl font-bold text-white">{formatCurrency(selectedSession.grandTotal, selectedSession.currency)}</p>
+                                        <p className="text-2xl font-bold text-foreground">{formatCurrency(selectedSession.grandTotal, selectedSession.currency)}</p>
                                         <p className="text-muted-foreground text-xs">{t('toplam')}</p>
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-green-400">{formatCurrency(selectedSession.paidTotal, selectedSession.currency)}</p>
-                                        <p className="text-green-400/70 text-xs">{t('odenen')}</p>
+                                        <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(selectedSession.paidTotal, selectedSession.currency)}</p>
+                                        <p className="text-green-800 dark:text-green-400/70 text-xs">{t('odenen')}</p>
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal, selectedSession.currency)}</p>
-                                        <p className="text-amber-400/70 text-xs">{t('remaining')}</p>
+                                        <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal, selectedSession.currency)}</p>
+                                        <p className="text-amber-800 dark:text-amber-400/70 text-xs">{t('remaining')}</p>
                                     </div>
                                 </div>
                                 {/* Progress bar */}
@@ -649,7 +649,7 @@ export default function TableOrdersPage() {
                                 if (items.length === 0) return null;
                                 return (
                                     <div>
-                                        <h3 className="text-white font-bold text-sm mb-3">{t('siparis_ozeti')}{items.length} {t('urun')}</h3>
+                                        <h3 className="text-foreground font-bold text-sm mb-3">{t('siparis_ozeti')}{items.length} {t('urun')}</h3>
                                         <div className="bg-gray-700/20 rounded-xl overflow-hidden">
                                             <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/40 text-muted-foreground text-xs font-medium">
                                                 <div className="col-span-6">{t('urun')}</div>
@@ -660,14 +660,14 @@ export default function TableOrdersPage() {
                                             <div className="divide-y divide-border/50">
                                                 {items.map((item, idx) => (
                                                     <div key={idx} className="grid grid-cols-12 gap-2 px-4 py-2 items-center">
-                                                        <div className="col-span-6 text-white text-sm truncate">{item.productName}</div>
+                                                        <div className="col-span-6 text-foreground text-sm truncate">{item.productName}</div>
                                                         <div className="col-span-2 text-center">
-                                                            <span className="bg-amber-600/20 text-amber-400 px-2 py-0.5 rounded text-xs font-bold">
+                                                            <span className="bg-amber-600/20 text-amber-800 dark:text-amber-400 px-2 py-0.5 rounded text-xs font-bold">
                                                                 ×{item.quantity}
                                                             </span>
                                                         </div>
                                                         <div className="col-span-2 text-right text-muted-foreground text-sm">{formatCurrency(item.unitPrice, selectedSession.currency)}</div>
-                                                        <div className="col-span-2 text-right text-white font-medium text-sm">{formatCurrency(item.totalPrice, selectedSession.currency)}</div>
+                                                        <div className="col-span-2 text-right text-foreground font-medium text-sm">{formatCurrency(item.totalPrice, selectedSession.currency)}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -678,24 +678,24 @@ export default function TableOrdersPage() {
 
                             {/* Participants Breakdown */}
                             <div>
-                                <h3 className="text-white font-bold text-sm mb-3">{t('katilimcilar')}{selectedSession.participants.length})</h3>
+                                <h3 className="text-foreground font-bold text-sm mb-3">{t('katilimcilar')}{selectedSession.participants.length})</h3>
                                 <div className="space-y-3">
                                     {selectedSession.participants.map((p) => (
                                         <div key={p.participantId} className={`bg-gray-700/20 rounded-xl p-4 border ${p.paymentStatus === 'paid' ? 'border-green-500/30' : 'border-gray-600/30'
                                             }`}>
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-white font-medium">
+                                                    <span className="text-foreground font-medium">
                                                         {p.isHost && '👑 '}{p.name}
                                                     </span>
                                                     {p.isHost && (
-                                                        <span className="text-amber-400 text-xs bg-amber-600/20 px-2 py-0.5 rounded">{t('host')}</span>
+                                                        <span className="text-amber-800 dark:text-amber-400 text-xs bg-amber-600/20 px-2 py-0.5 rounded">{t('host')}</span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${p.paymentStatus === 'paid'
-                                                        ? 'bg-green-600/20 text-green-400'
-                                                        : 'bg-yellow-600/20 text-yellow-400'
+                                                        ? 'bg-green-600/20 text-green-800 dark:text-green-400'
+                                                        : 'bg-yellow-600/20 text-yellow-800 dark:text-yellow-400'
                                                         }`}>
                                                         {p.paymentStatus === 'paid' ? t('odendi') : '⏳ Bekliyor'}
                                                     </span>
@@ -704,7 +704,7 @@ export default function TableOrdersPage() {
                                                             {p.paymentMethod === 'cash' ? '💵' : '💳'} {p.paymentMethod}
                                                         </span>
                                                     )}
-                                                    <span className="text-white font-bold">{formatCurrency(p.subtotal, selectedSession.currency)}</span>
+                                                    <span className="text-foreground font-bold">{formatCurrency(p.subtotal, selectedSession.currency)}</span>
                                                 </div>
                                             </div>
                                             {p.items.length > 0 && (
@@ -713,7 +713,7 @@ export default function TableOrdersPage() {
                                                         <div key={idx} className="flex items-center justify-between text-xs">
                                                             <span className="text-muted-foreground">
                                                                 {item.productName} <span className="text-gray-500">×{item.quantity}</span>
-                                                                {item.itemNote && <span className="text-yellow-400 ml-1">📝 {item.itemNote}</span>}
+                                                                {item.itemNote && <span className="text-yellow-800 dark:text-yellow-400 ml-1">📝 {item.itemNote}</span>}
                                                             </span>
                                                             <span className="text-foreground">{formatCurrency(item.totalPrice, selectedSession.currency)}</span>
                                                         </div>
@@ -728,7 +728,7 @@ export default function TableOrdersPage() {
                             {/* Cancellation Info */}
                             {selectedSession.status === 'cancelled' && (
                                 <div className="bg-red-600/10 border border-red-500/30 rounded-xl p-4">
-                                    <h3 className="text-red-400 font-bold text-sm mb-2">🔴 İptal Bilgisi</h3>
+                                    <h3 className="text-red-800 dark:text-red-400 font-bold text-sm mb-2">🔴 İptal Bilgisi</h3>
                                     <div className="space-y-1 text-sm">
                                         <p className="text-foreground">
                                             <span className="text-gray-500">{t('cancelled_by')}</span>{' '}
@@ -780,7 +780,7 @@ export default function TableOrdersPage() {
                     <div className="bg-card rounded-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center mb-6">
                             <span className="text-4xl">⚠️</span>
-                            <h3 className="text-xl font-bold text-white mt-3">
+                            <h3 className="text-xl font-bold text-foreground mt-3">
                                 Oturumu İptal Et
                             </h3>
                             <p className="text-muted-foreground text-sm mt-2">

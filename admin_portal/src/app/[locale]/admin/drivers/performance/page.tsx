@@ -178,7 +178,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-white">
+                    <h1 className="text-2xl font-bold text-foreground">
                         {t('surucu_performans_raporu')}
                     </h1>
                     <p className="text-muted-foreground mt-1">
@@ -225,7 +225,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                 {/* Error Banner */}
                 {error && (
                     <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center gap-3">
-                        <span className="text-red-400 text-xl">⚠️</span>
+                        <span className="text-red-800 dark:text-red-400 text-xl">⚠️</span>
                         <p className="text-red-300 text-sm font-medium">{error}</p>
                     </div>
                 )}
@@ -234,7 +234,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-card rounded-lg shadow p-4 border border-border">
                         <div className="text-sm text-muted-foreground">{t('toplam_teslimat')}</div>
-                        <div className="text-2xl font-bold text-white">
+                        <div className="text-2xl font-bold text-foreground">
                             {totals.deliveries}
                         </div>
                     </div>
@@ -300,12 +300,12 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                                 driverStats.map((driver) => (
                                     <tr key={driver.courierId} className="hover:bg-gray-700/50">
                                         <td className="px-4 py-3">
-                                            <div className="font-medium text-white">
+                                            <div className="font-medium text-foreground">
                                                 {driver.courierName}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-bold">
+                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-400 font-bold">
                                                 {driver.deliveryCount}
                                             </span>
                                         </td>

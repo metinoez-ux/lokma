@@ -227,7 +227,7 @@ export default function KermesMenusPage() {
     if (!admin || admin.role !== 'super_admin') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">{t('erisim_reddedildi_sadece_super_admin')}</div>
+                <div className="text-foreground">{t('erisim_reddedildi_sadece_super_admin')}</div>
             </div>
         );
     }
@@ -236,13 +236,13 @@ export default function KermesMenusPage() {
         <div className="min-h-screen bg-background p-6">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
                     {t('kermes_yonetimi')}
                 </Link>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {t('kermes_menuleri')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -291,10 +291,10 @@ export default function KermesMenusPage() {
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <div>
-                                    <h3 className="font-bold text-white">{item.name}</h3>
+                                    <h3 className="font-bold text-foreground">{item.name}</h3>
                                     <p className="text-xs text-gray-500">{item.sku}</p>
                                 </div>
-                                <span className="text-lg font-bold text-pink-400">€{item.defaultPrice.toFixed(2)}</span>
+                                <span className="text-lg font-bold text-pink-800 dark:text-pink-400">€{item.defaultPrice.toFixed(2)}</span>
                             </div>
                             {item.description && (
                                 <p className="text-muted-foreground text-sm mb-2">{item.description}</p>
@@ -349,7 +349,7 @@ export default function KermesMenusPage() {
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold text-white mb-4">
+                        <h2 className="text-xl font-bold text-foreground mb-4">
                             {editingItem ? t('menu_duzenle') : t('yeni_menu_ekle')}
                         </h2>
 

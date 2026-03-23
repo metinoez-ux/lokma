@@ -59,7 +59,7 @@ export default function NewKermesPage() {
 return (
         <Suspense fallback={
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white text-lg">{t('yukleniyor')}</div>
+                <div className="text-foreground text-lg">{t('yukleniyor')}</div>
             </div>
         }>
             <NewKermesContent />
@@ -346,7 +346,7 @@ function NewKermesContent() {
     if (orgLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white text-lg">Organizasyon yükleniyor...</div>
+                <div className="text-foreground text-lg">Organizasyon yükleniyor...</div>
             </div>
         );
     }
@@ -355,10 +355,10 @@ function NewKermesContent() {
         <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-6">
-                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
                     ← Geri
                 </Link>
-                <h1 className="text-2xl font-bold text-pink-400 mt-2">🎪 Yeni Kermes Oluştur</h1>
+                <h1 className="text-2xl font-bold text-pink-800 dark:text-pink-400 mt-2">🎪 Yeni Kermes Oluştur</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
@@ -368,7 +368,7 @@ function NewKermesContent() {
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">🕌</span>
                             <div>
-                                <h2 className="font-bold text-white">{organization.name}</h2>
+                                <h2 className="font-bold text-foreground">{organization.name}</h2>
                                 <p className="text-foreground text-sm">
                                     {organization.address}, {organization.postalCode} {organization.city}
                                 </p>
@@ -379,7 +379,7 @@ function NewKermesContent() {
 
                 {/* 📍 Konum Bilgileri */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
-                    <h2 className="text-lg font-bold text-white mb-4">📍 Konum Bilgileri</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">📍 Konum Bilgileri</h2>
 
                     {/* Dernek Seç Button */}
                     <div className="mb-4">
@@ -402,7 +402,7 @@ function NewKermesContent() {
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <p className="text-sm text-muted-foreground mb-1">Seçilen Dernek:</p>
-                                    <h3 className="text-white font-medium">{organization.name}</h3>
+                                    <h3 className="text-foreground font-medium">{organization.name}</h3>
                                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                                         <span>📍</span>
                                         <span>
@@ -522,7 +522,7 @@ function NewKermesContent() {
 
                 {/* 📝 Etkinlik Bilgileri */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
-                    <h2 className="text-lg font-bold text-white mb-4">📝 Etkinlik Bilgileri</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">📝 Etkinlik Bilgileri</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Birincil Dil - Etkinlik Adı */}
@@ -635,7 +635,7 @@ function NewKermesContent() {
 
                 {/* 👤 Yetkili Kişi */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
-                    <h2 className="text-lg font-bold text-white mb-4">👤 Yetkili Kişi</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">👤 Yetkili Kişi</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Ad */}
@@ -703,7 +703,7 @@ function NewKermesContent() {
                 {/* 🚚 Kurye/Nakliyat Servisi */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-white">🚚 Kurye / Nakliyat Servisi</h2>
+                        <h2 className="text-lg font-bold text-foreground">🚚 Kurye / Nakliyat Servisi</h2>
                         <label className="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -711,7 +711,7 @@ function NewKermesContent() {
                                 onChange={(e) => setHasDelivery(e.target.checked)}
                                 className="w-5 h-5 rounded text-pink-600 focus:ring-pink-500"
                             />
-                            <span className="text-white">Kurye Servisi Mevcut</span>
+                            <span className="text-foreground">Kurye Servisi Mevcut</span>
                         </label>
                     </div>
 
@@ -732,7 +732,7 @@ function NewKermesContent() {
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-1">
                                     Minimum Sipariş Tutarı (€)
-                                    <span className="text-yellow-400 text-xs ml-2">(Bu tutarın altında kurye kabul edilmez)</span>
+                                    <span className="text-yellow-800 dark:text-yellow-400 text-xs ml-2">(Bu tutarın altında kurye kabul edilmez)</span>
                                 </label>
                                 <input
                                     type="number"
@@ -745,7 +745,7 @@ function NewKermesContent() {
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-1">
                                     Ücretsiz Teslimat İçin Min. (€)
-                                    <span className="text-green-400 text-xs ml-2">(Bu tutardan sonra teslimat ücretsiz)</span>
+                                    <span className="text-green-800 dark:text-green-400 text-xs ml-2">(Bu tutardan sonra teslimat ücretsiz)</span>
                                 </label>
                                 <input
                                     type="number"
@@ -762,7 +762,7 @@ function NewKermesContent() {
 
                 {/* ⚙️ Genel Ayarlar (Pfand + KDV) */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
-                    <h2 className="text-lg font-bold text-white mb-4">⚙️ Genel Ayarlar</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">⚙️ Genel Ayarlar</h2>
 
                     {/* Checkbox'lar Yan Yana */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -775,7 +775,7 @@ function NewKermesContent() {
                                 className="w-5 h-5 rounded text-pink-600 focus:ring-pink-500"
                             />
                             <div>
-                                <span className="text-white font-medium">💰 Pfand / Depozito Sistemi</span>
+                                <span className="text-foreground font-medium">💰 Pfand / Depozito Sistemi</span>
                                 <p className="text-muted-foreground text-xs">Bardak/tabak için depozito</p>
                             </div>
                         </label>
@@ -789,7 +789,7 @@ function NewKermesContent() {
                                 className="w-5 h-5 rounded text-pink-600 focus:ring-pink-500"
                             />
                             <div>
-                                <span className="text-white font-medium">📊 KDV / Vergi Göster</span>
+                                <span className="text-foreground font-medium">📊 KDV / Vergi Göster</span>
                                 <p className="text-muted-foreground text-xs">Fişlerde KDV ayrı gösterilsin</p>
                             </div>
                         </label>
@@ -860,7 +860,7 @@ function NewKermesContent() {
                 {/* 🅿️ Park İmkanları */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-white">🅿️ Park İmkanları</h2>
+                        <h2 className="text-lg font-bold text-foreground">🅿️ Park İmkanları</h2>
                         <button
                             type="button"
                             onClick={addParkingLocation}
@@ -883,12 +883,12 @@ function NewKermesContent() {
                                             <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
                                                 {index + 1}
                                             </span>
-                                            <span className="text-white font-medium">Park İmkanı {index + 1}</span>
+                                            <span className="text-foreground font-medium">Park İmkanı {index + 1}</span>
                                         </span>
                                         <button
                                             type="button"
                                             onClick={() => removeParkingLocation(index)}
-                                            className="text-red-400 hover:text-red-300 text-sm"
+                                            className="text-red-800 dark:text-red-400 hover:text-red-300 text-sm"
                                         >
                                             🗑️ Sil
                                         </button>
@@ -963,7 +963,7 @@ function NewKermesContent() {
 
                 {/* ✨ Etkinlik Özellikleri */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
-                    <h2 className="text-lg font-bold text-white mb-2">✨ Etkinlik Özellikleri</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-2">✨ Etkinlik Özellikleri</h2>
                     <p className="text-muted-foreground text-sm mb-4">Bu kermeste hangi özellikler mevcut?</p>
 
                     <div className="flex flex-wrap gap-3">
@@ -1017,7 +1017,7 @@ function NewKermesContent() {
                                         <button
                                             type="button"
                                             onClick={() => removeCustomFeature(index)}
-                                            className="text-purple-400 hover:text-white"
+                                            className="text-purple-800 dark:text-purple-400 hover:text-white"
                                         >
                                             ×
                                         </button>

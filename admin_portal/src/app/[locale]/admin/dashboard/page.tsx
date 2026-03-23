@@ -1903,7 +1903,7 @@ export default function SuperAdminDashboard() {
                         <span className="font-bold text-lg flex-1">{toast.message}</span>
                         <button
                             onClick={() => setToast(null)}
-                            className="ml-2 text-white/80 hover:text-white text-2xl font-bold hover:scale-110 transition-transform"
+                            className="ml-2 text-white/80 hover:text-foreground text-2xl font-bold hover:scale-110 transition-transform"
                         >
                             ✕
                         </button>
@@ -1924,7 +1924,7 @@ export default function SuperAdminDashboard() {
                 {activeTab === 'users' && (
                     <div className="bg-card rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-white">{tNav('kullanici_yonetimi')}</h2>
+                            <h2 className="text-xl font-bold text-foreground">{tNav('kullanici_yonetimi')}</h2>
                             {/* Super Admin ve İşletme Sahipleri kullanıcı/personel ekleyebilir */}
                             {(admin?.adminType === 'super' || (admin?.adminType && !admin?.adminType?.includes('_staff'))) && (
                                 <button
@@ -2209,7 +2209,7 @@ export default function SuperAdminDashboard() {
                                                             }`}
                                                     />
                                                 ) : (
-                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0 ${(user as any).isActive !== false ? 'bg-gray-600 group-hover:bg-gray-500' : 'bg-red-900/30 text-red-200'
+                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-foreground font-bold shrink-0 ${(user as any).isActive !== false ? 'bg-gray-600 group-hover:bg-gray-500' : 'bg-red-900/30 text-red-200'
                                                         }`}>
                                                         {String((user as any).firstName || '').charAt(0).toUpperCase() || String(user.displayName || '').charAt(0).toUpperCase() || String(user.email || '').charAt(0).toUpperCase() || '?'}
                                                     </div>
@@ -2226,8 +2226,8 @@ export default function SuperAdminDashboard() {
 
                                                         {/* Status Badge */}
                                                         <span className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider ${(user as any).isActive !== false
-                                                            ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                                                            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                            ? 'bg-green-500/10 text-green-800 dark:text-green-400 border border-green-500/20'
+                                                            : 'bg-red-500/10 text-red-800 dark:text-red-400 border border-red-500/20'
                                                             }`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${(user as any).isActive !== false ? 'bg-green-500 animate-pulse' : 'bg-red-500'
                                                                 }`}></span>
@@ -2364,7 +2364,7 @@ export default function SuperAdminDashboard() {
                                                                 longitude: (user as any).longitude,
                                                             });
                                                         }}
-                                                        className="p-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600 hover:text-white transition"
+                                                        className="p-2 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg hover:bg-blue-600 hover:text-white transition"
                                                         title={tNav('duzenle')}
                                                     >
                                                         ✏
@@ -2410,8 +2410,8 @@ export default function SuperAdminDashboard() {
                                                             });
                                                         }}
                                                         className={`p-2 rounded-lg transition ${(user as any).isActive !== false
-                                                            ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
-                                                            : 'bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white'}`}
+                                                            ? 'bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white'
+                                                            : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600 hover:text-white'}`}
                                                         title={(user as any).isActive !== false ? tNav('arsivle') : tNav('aktiflestir')}
                                                     >
                                                         {(user as any).isActive !== false ? '📦' : '✅'}
@@ -2452,7 +2452,7 @@ export default function SuperAdminDashboard() {
                     activeTab === 'admins' && (
                         <div className="bg-card rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold text-white">{tNav('mevcutAdminler')}</h2>
+                                <h2 className="text-xl font-bold text-foreground">{tNav('mevcutAdminler')}</h2>
                                 <button
                                     onClick={() => {
                                         // 🔧 CRITICAL FIX: Set the correct state for showNewUserModal
@@ -2554,7 +2554,7 @@ export default function SuperAdminDashboard() {
                                         <th className="pb-3 py-2">{tNav('i_slemler')}</th>
                                     </tr>
                                 </thead>
-                                <tbody className="text-white">
+                                <tbody className="text-foreground">
                                     {admins.filter(a => {
                                         // Filter by search
                                         const matchesSearch = !searchQuery ||
@@ -2605,7 +2605,7 @@ export default function SuperAdminDashboard() {
                                             <td className="py-4">
                                                 {/* 🟣 Primary Admin (İşletme Sahibi) - Purple */}
                                                 {(a as any).isPrimaryAdmin ? (
-                                                    <span className="px-2 py-1 rounded text-xs bg-purple-600 text-white font-medium">
+                                                    <span className="px-2 py-1 rounded text-xs bg-purple-600 text-foreground font-medium">
                                                         👑 {getRoleLabel(a.adminType) || a.adminType} {tNav('i_sletme_sahibi')}
                                                     </span>
                                                 ) : a.adminType === 'super' ? (
@@ -2637,7 +2637,7 @@ export default function SuperAdminDashboard() {
                                                         {/* Düzenle - herkes için göster */}
                                                         <button
                                                             onClick={() => handleEditAdmin(a)}
-                                                            className="text-blue-400 hover:text-blue-300 text-sm"
+                                                            className="text-blue-800 dark:text-blue-400 hover:text-blue-300 text-sm"
                                                         >
                                                             {tNav('duzenle')}
                                                         </button>
@@ -2695,14 +2695,14 @@ export default function SuperAdminDashboard() {
                                                                             },
                                                                         });
                                                                     }}
-                                                                    className={`text-sm ${a.isActive !== false ? 'text-amber-400 hover:text-amber-300' : 'text-green-400 hover:text-green-300'}`}
+                                                                    className={`text-sm ${a.isActive !== false ? 'text-amber-800 dark:text-amber-400 hover:text-amber-300' : 'text-green-800 dark:text-green-400 hover:text-green-300'}`}
                                                                 >
                                                                     {a.isActive !== false ? tNav('arsivle') : tNav('aktiflestir')}
                                                                 </button>
                                                                 {/* Yetkiyi Kaldır (soft delete - removes admin role) */}
                                                                 <button
                                                                     onClick={() => handleRemoveAdmin(a.id, a.displayName)}
-                                                                    className="text-amber-400 hover:text-amber-300 text-sm"
+                                                                    className="text-amber-800 dark:text-amber-400 hover:text-amber-300 text-sm"
                                                                 >
                                                                     {tNav('yetkiyi_kaldir')}
                                                                 </button>
@@ -2731,7 +2731,7 @@ export default function SuperAdminDashboard() {
                                                                             },
                                                                         });
                                                                     }}
-                                                                    className="text-red-400 hover:text-red-300 text-sm"
+                                                                    className="text-red-800 dark:text-red-400 hover:text-red-300 text-sm"
                                                                 >
                                                                     {tNav('sil')}
                                                                 </button>
@@ -2754,10 +2754,10 @@ export default function SuperAdminDashboard() {
                 selectedUser && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
                         <div className="bg-card rounded-2xl p-6 w-full max-w-2xl">
-                            <h3 className="text-xl font-bold text-white mb-4">{tNav('admin_rolu_ata')}</h3>
+                            <h3 className="text-xl font-bold text-foreground mb-4">{tNav('admin_rolu_ata')}</h3>
 
                             <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                                <p className="text-white font-medium">{selectedUser.displayName || t('unnamed')}</p>
+                                <p className="text-foreground font-medium">{selectedUser.displayName || t('unnamed')}</p>
                                 <p className="text-muted-foreground text-sm">{selectedUser.email}</p>
                             </div>
 
@@ -2781,12 +2781,12 @@ export default function SuperAdminDashboard() {
                                         <label className="block text-foreground text-sm mb-2">🏪 İşletme Seçin</label>
                                         {selectedButcherId && (
                                             <div className="mb-2 px-4 py-2 bg-green-600/20 border border-green-500 rounded-lg flex items-center justify-between">
-                                                <span className="text-green-400">
+                                                <span className="text-green-800 dark:text-green-400">
                                                     ✅ {butcherList.find(b => b.id === selectedButcherId)?.name || tNav('secili')}
                                                 </span>
                                                 <button
                                                     onClick={() => setSelectedButcherId('')}
-                                                    className="text-green-400 hover:text-green-300"
+                                                    className="text-green-800 dark:text-green-400 hover:text-green-300"
                                                 >
                                                     ✕
                                                 </button>
@@ -2855,18 +2855,18 @@ export default function SuperAdminDashboard() {
                 showCreateModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                         <div className="bg-card rounded-xl p-6 w-full max-w-2xl">
-                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                                 <span>📱</span> {tNav('admin_davetiyesi_gonder')}
                             </h3>
 
                             {createError && (
-                                <div className="bg-red-500/20 text-red-400 px-4 py-2 rounded-lg mb-4 text-sm">
+                                <div className="bg-red-500/20 text-red-800 dark:text-red-400 px-4 py-2 rounded-lg mb-4 text-sm">
                                     {createError}
                                 </div>
                             )}
 
                             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
-                                <p className="text-blue-400 text-sm">
+                                <p className="text-blue-800 dark:text-blue-400 text-sm">
                                     {tNav('davet_edilen_kisiye_sms_gonderilecek_lin')}
                                 </p>
                             </div>
@@ -2929,7 +2929,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* If admin is a kasap admin with butcherId, show auto-assigned info */}
                                         {admin?.butcherId && admin?.adminType !== 'super' ? (
-                                            <div className="w-full px-4 py-3 bg-green-900/30 border border-green-600 text-green-400 rounded-lg">
+                                            <div className="w-full px-4 py-3 bg-green-900/30 border border-green-600 text-green-800 dark:text-green-400 rounded-lg">
                                                 <span className="font-medium">✓ {admin.butcherName || tNav('senin_kasabin')}</span>
                                                 <p className="text-xs text-green-500 mt-1">
                                                     {tNav('personel_davetiyesi_kendi_isletmene_otom')}
@@ -2946,7 +2946,7 @@ export default function SuperAdminDashboard() {
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex-1 px-3 py-2 bg-green-900/30 border border-green-600 text-green-200 rounded-lg">
                                                             ✅ {butcherList.find(b => b.id === selectedButcherId)?.name || tNav('secildi')}
-                                                            <span className="text-xs text-green-400 ml-2">
+                                                            <span className="text-xs text-green-800 dark:text-green-400 ml-2">
                                                                 - {butcherList.find(b => b.id === selectedButcherId)?.city}
                                                             </span>
                                                         </div>
@@ -2971,7 +2971,7 @@ export default function SuperAdminDashboard() {
                                                             className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500"
                                                         />
                                                         {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
-                                                            <p className="text-yellow-400 text-xs mt-1">
+                                                            <p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">
                                                                 {tNav('en_az_3_karakter_yazin')}
                                                             </p>
                                                         )}
@@ -3002,7 +3002,7 @@ export default function SuperAdminDashboard() {
                                                                             }}
                                                                             className="w-full text-left px-4 py-3 hover:bg-green-600/30 border-b border-border last:border-b-0 transition"
                                                                         >
-                                                                            <div className="font-medium text-white">{b.name}</div>
+                                                                            <div className="font-medium text-foreground">{b.name}</div>
                                                                             <div className="text-sm text-muted-foreground">
                                                                                 {b.country === 'TR' ? '🇹🇷' : '🇩🇪'} {b.postalCode && `${b.postalCode}`} {b.city}
                                                                                 {b.types?.length > 0 && (
@@ -3078,13 +3078,13 @@ export default function SuperAdminDashboard() {
                 showShareModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                         <div className="bg-card rounded-xl p-6 w-full max-w-2xl">
-                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                                 <span>✅</span> {tNav('davetiye_olusturuldu')}
                             </h3>
 
                             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-4">
                                 <div className="text-sm text-muted-foreground mb-2">{tNav('davet_detaylari')}</div>
-                                <div className="text-white font-medium">{invitationRole}</div>
+                                <div className="text-foreground font-medium">{invitationRole}</div>
                                 {invitationBusiness && (
                                     <div className="text-foreground text-sm">{invitationBusiness}</div>
                                 )}
@@ -3198,14 +3198,14 @@ export default function SuperAdminDashboard() {
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
                         <div className="bg-card rounded-2xl p-6 w-full max-w-2xl my-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white">{tNav('admin_duzenle')}</h3>
-                                <button onClick={() => setEditingAdmin(null)} className="text-muted-foreground hover:text-white text-2xl">✕</button>
+                                <h3 className="text-xl font-bold text-foreground">{tNav('admin_duzenle')}</h3>
+                                <button onClick={() => setEditingAdmin(null)} className="text-muted-foreground hover:text-foreground text-2xl">✕</button>
                             </div>
 
                             <div className="space-y-6">
                                 {/* 📝 Kişisel Bilgiler */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                    <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         {tNav('kisisel_bilgiler')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4">
@@ -3246,7 +3246,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* 📞 İletişim Bilgileri */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                    <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         {tNav('i_letisim_bilgileri')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4">
@@ -3288,7 +3288,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* 📍 Adres Bilgileri */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                    <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         📍 Adres Bilgileri
                                     </h4>
                                     <div className="space-y-3">
@@ -3313,7 +3313,7 @@ export default function SuperAdminDashboard() {
                                                         {addressSuggestions.map((s) => (
                                                             <div
                                                                 key={s.place_id}
-                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm"
+                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm"
                                                                 onClick={() => handleAddressSelect(s.place_id, s.description, false)}
                                                             >
                                                                 📍 {s.description}
@@ -3397,7 +3397,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* 🔐 Yetki Yönetimi */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                    <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         {tNav('yetki_yonetimi')}
                                     </h4>
                                     <div className="space-y-4">
@@ -3506,7 +3506,7 @@ export default function SuperAdminDashboard() {
                                                         <p className="text-purple-200 font-medium flex items-center gap-2">
                                                             {tNav('i_sletme_sahibi_olarak_i_saretle')}
                                                         </p>
-                                                        <p className="text-purple-400 text-xs mt-1">
+                                                        <p className="text-purple-800 dark:text-purple-400 text-xs mt-1">
                                                             {tNav('i_sletme_sahipleri_diger_adminler_tarafi')}
                                                         </p>
                                                     </div>
@@ -3571,7 +3571,7 @@ export default function SuperAdminDashboard() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                         <div className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                     {tNav('yeni_kullanici_ekle')}
                                 </h3>
                                 <button
@@ -3646,7 +3646,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Address Section */}
                                 <div className="border-t border-border pt-4 mt-2">
-                                    <h4 className="text-white font-semibold mb-3">
+                                    <h4 className="text-foreground font-semibold mb-3">
                                         {tNav('adres_bilgileri') || 'Adressinformationen'}
                                     </h4>
                                     <div className="space-y-3">
@@ -3675,7 +3675,7 @@ export default function SuperAdminDashboard() {
                                                         {addressSuggestions.map((suggestion) => (
                                                             <div
                                                                 key={suggestion.place_id}
-                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
+                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm flex items-center gap-2"
                                                                 onClick={() => handleAddressSelect(suggestion.place_id, suggestion.description, true)}
                                                             >
                                                                 <span className="text-red-500">📍</span>
@@ -3866,7 +3866,7 @@ export default function SuperAdminDashboard() {
                                                     .map(b => (
                                                         <div
                                                             key={b.id}
-                                                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm"
+                                                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm"
                                                             onClick={() => {
                                                                 setNewUserData(prev => ({ ...prev, businessId: b.id }));
                                                                 setBusinessSearchQuery(`${b.name} - ${b.city || ''}`);
@@ -4101,7 +4101,7 @@ export default function SuperAdminDashboard() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                         <div className="bg-card rounded-xl border border-border shadow-2xl max-w-6xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                     {tNav('kullanici_profili_duzenle')}
                                 </h3>
                                 <button
@@ -4193,7 +4193,7 @@ export default function SuperAdminDashboard() {
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
-                                            <h4 className="text-white font-medium">{tNav('profil_gorseli')}</h4>
+                                            <h4 className="text-foreground font-medium">{tNav('profil_gorseli')}</h4>
                                             {editingUserProfile.photoURL && (
                                                 <button
                                                     onClick={() => {
@@ -4209,7 +4209,7 @@ export default function SuperAdminDashboard() {
                                                             },
                                                         });
                                                     }}
-                                                    className="text-red-400 text-xs hover:text-red-300 transition flex items-center gap-1 px-2 py-1 hover:bg-red-900/20 rounded"
+                                                    className="text-red-800 dark:text-red-400 text-xs hover:text-red-300 transition flex items-center gap-1 px-2 py-1 hover:bg-red-900/20 rounded"
                                                 >
                                                     {tNav('resmi_kaldir')}
                                                 </button>
@@ -4227,7 +4227,7 @@ export default function SuperAdminDashboard() {
                                     <div className="space-y-6">
                                         {/* Personal Info */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                            <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                                 {tNav('kisisel_bilgiler')}
                                             </h4>
                                             <div className="grid grid-cols-2 gap-4">
@@ -4254,7 +4254,7 @@ export default function SuperAdminDashboard() {
                                             {/* Active/Inactive Toggle */}
                                             <div className="mt-4 flex items-center justify-between p-3 bg-gray-750 rounded-lg border border-gray-600">
                                                 <div className="flex-1">
-                                                    <span className="text-white font-medium">{tNav('hesap_durumu')}</span>
+                                                    <span className="text-foreground font-medium">{tNav('hesap_durumu')}</span>
                                                     <p className="text-muted-foreground text-xs">{tNav('pasif_hesaplar_giris_yapamaz_ama_veriler')}</p>
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -4277,8 +4277,8 @@ export default function SuperAdminDashboard() {
                                                         />
                                                     </button>
                                                     <span className={`text-sm font-medium min-w-[60px] ${editingUserProfile.isActive !== false
-                                                        ? 'text-green-400'
-                                                        : 'text-red-400'
+                                                        ? 'text-green-800 dark:text-green-400'
+                                                        : 'text-red-800 dark:text-red-400'
                                                         }`}>
                                                         {editingUserProfile.isActive !== false ? tNav('aktif') : tNav('pasif')}
                                                     </span>
@@ -4288,7 +4288,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* Contact Info - GDPR Privacy: Business admins cannot see phone/email */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                            <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                                 {tNav('i_letisim_bilgileri')}
                                                 {admin?.adminType !== 'super' && (
                                                     <span className="text-xs text-yellow-500 font-normal ml-2">{tNav('gizlilik_korumali')}</span>
@@ -4332,8 +4332,8 @@ export default function SuperAdminDashboard() {
                                                 </div>
                                             ) : (
                                                 /* Business Admin: Privacy protected - cannot see or edit contact info */
-                                                <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
-                                                    <div className="flex items-center gap-3 text-yellow-400 mb-2">
+                                                <div className="bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg p-4">
+                                                    <div className="flex items-center gap-3 text-yellow-800 dark:text-yellow-400 mb-2">
                                                         <span className="text-xl">🔒</span>
                                                         <span className="font-medium">{tNav('musteri_gizliligi_korumasi')}</span>
                                                     </div>
@@ -4360,7 +4360,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* Address */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center justify-between border-b border-border pb-2">
+                                            <h4 className="text-foreground font-semibold mb-3 flex items-center justify-between border-b border-border pb-2">
                                                 <span className="flex items-center gap-2">📍 Adres Bilgileri</span>
                                                 <button
                                                     type="button"
@@ -4398,7 +4398,7 @@ export default function SuperAdminDashboard() {
                                                                 {addressSuggestions.map((suggestion, index) => (
                                                                     <div
                                                                         key={suggestion.place_id}
-                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
+                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm flex items-center gap-2"
                                                                         onClick={() => handleAddressSelect(suggestion.place_id, suggestion.description, false)}
                                                                     >
                                                                         <span className="text-red-500">📍</span>
@@ -4469,10 +4469,10 @@ export default function SuperAdminDashboard() {
                                                                 {citySuggestions.map((suggestion) => (
                                                                     <div
                                                                         key={suggestion.place_id}
-                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
+                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm flex items-center gap-2"
                                                                         onClick={() => handleCitySelect(suggestion.description, false)}
                                                                     >
-                                                                        <span className="text-blue-400">&#x1f3d9;&#xfe0f;</span>
+                                                                        <span className="text-blue-800 dark:text-blue-400">&#x1f3d9;&#xfe0f;</span>
                                                                         <span className="truncate">{suggestion.description}</span>
                                                                     </div>
                                                                 ))}
@@ -4499,7 +4499,7 @@ export default function SuperAdminDashboard() {
                                     <div className="space-y-6">
                                         {/* Admin Role Section */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
+                                            <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                                 {tNav('yetki_yonetimi')}
                                             </h4>
                                             <div className="space-y-3">
@@ -4581,7 +4581,7 @@ export default function SuperAdminDashboard() {
                                                                         className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
                                                                     />
                                                                     {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
-                                                                        <p className="text-yellow-400 text-xs mt-1">
+                                                                        <p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">
                                                                             {tNav('en_az_3_karakter_yazin')}
                                                                         </p>
                                                                     )}
@@ -4622,7 +4622,7 @@ export default function SuperAdminDashboard() {
                                                                                         }}
                                                                                         className="w-full text-left px-4 py-3 hover:bg-blue-600/30 border-b border-border last:border-b-0 transition"
                                                                                     >
-                                                                                        <div className="font-medium text-white">{b.name}</div>
+                                                                                        <div className="font-medium text-foreground">{b.name}</div>
                                                                                         <div className="text-sm text-muted-foreground">
                                                                                             📍 {b.city} {b.postalCode && `- ${b.postalCode}`}
                                                                                             {b.types?.length > 0 && (
@@ -4641,7 +4641,7 @@ export default function SuperAdminDashboard() {
                                                         )}
 
                                                         {!editingUserProfile.butcherId && (
-                                                            <p className="text-red-400 text-xs mt-1">
+                                                            <p className="text-red-800 dark:text-red-400 text-xs mt-1">
                                                                 {tNav('admin_rolu_icin_isletme_secimi_zorunludu')}
                                                             </p>
                                                         )}
@@ -4687,7 +4687,7 @@ export default function SuperAdminDashboard() {
                                                                         className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500"
                                                                     />
                                                                     {organizationSearchFilter.length > 0 && organizationSearchFilter.length < 3 && (
-                                                                        <p className="text-yellow-400 text-xs mt-1">
+                                                                        <p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">
                                                                             {tNav('en_az_3_karakter_yazin')}
                                                                         </p>
                                                                     )}
@@ -4732,7 +4732,7 @@ export default function SuperAdminDashboard() {
                                                                                         }}
                                                                                         className="w-full text-left px-4 py-3 hover:bg-emerald-600/30 border-b border-border last:border-b-0 transition"
                                                                                     >
-                                                                                        <div className="font-medium text-white">🕌 {o.shortName || o.name}</div>
+                                                                                        <div className="font-medium text-foreground">🕌 {o.shortName || o.name}</div>
                                                                                         <div className="text-sm text-muted-foreground">
                                                                                             📍 {o.postalCode && `${o.postalCode} `}{o.city}
                                                                                             <span className="ml-2 text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">
@@ -4749,7 +4749,7 @@ export default function SuperAdminDashboard() {
                                                         )}
 
                                                         {!editingUserProfile.organizationId && (
-                                                            <p className="text-red-400 text-xs mt-1">
+                                                            <p className="text-red-800 dark:text-red-400 text-xs mt-1">
                                                                 {tNav('kermes_admin_personel_icin_organizasyon_')}
                                                             </p>
                                                         )}
@@ -4771,7 +4771,7 @@ export default function SuperAdminDashboard() {
                                                                 <p className="text-purple-200 font-medium flex items-center gap-2">
                                                                     {tNav('i_sletme_sahibi_olarak_i_saretle')}
                                                                 </p>
-                                                                <p className="text-purple-400 text-xs mt-1">
+                                                                <p className="text-purple-800 dark:text-purple-400 text-xs mt-1">
                                                                     {tNav('i_sletme_sahipleri_diger_adminler_tarafi')}
                                                                 </p>
                                                             </div>
@@ -4808,7 +4808,7 @@ export default function SuperAdminDashboard() {
                                                                 <p className="text-emerald-200 font-medium flex items-center gap-2">
                                                                     {tNav('surucu_olarak_i_saretle')}
                                                                 </p>
-                                                                <p className="text-emerald-400 text-xs mt-1">
+                                                                <p className="text-emerald-800 dark:text-emerald-400 text-xs mt-1">
                                                                     {tNav('bu_kullaniciyi_teslimat_surucusu_olarak_')}
                                                                 </p>
                                                             </div>
@@ -4850,7 +4850,7 @@ export default function SuperAdminDashboard() {
                                                                         />
                                                                         <div>
                                                                             <p className="text-emerald-200 text-sm font-medium">🚚 LOKMA Filosu</p>
-                                                                            <p className="text-emerald-400/70 text-xs">{tNav('platform_surucusu_tum_isletmelere_atanab')}</p>
+                                                                            <p className="text-emerald-800 dark:text-emerald-400/70 text-xs">{tNav('platform_surucusu_tum_isletmelere_atanab')}</p>
                                                                         </div>
                                                                     </label>
                                                                     <label
@@ -4872,7 +4872,7 @@ export default function SuperAdminDashboard() {
                                                                         />
                                                                         <div>
                                                                             <p className="text-amber-200 text-sm font-medium">{tNav('i_sletme_surucusu')}</p>
-                                                                            <p className="text-amber-400/70 text-xs">{tNav('sadece_kendi_isletmesinin_siparislerini_')}</p>
+                                                                            <p className="text-amber-800 dark:text-amber-400/70 text-xs">{tNav('sadece_kendi_isletmesinin_siparislerini_')}</p>
                                                                         </div>
                                                                     </label>
                                                                 </div>
@@ -4885,7 +4885,7 @@ export default function SuperAdminDashboard() {
 
                                                 {/* 🆕 ROLLER BÖLÜMÜ - Çoklu Rol Listesi ve Rol Ekleme */}
                                                 {editingUserProfile.isAdmin && admin?.adminType === 'super' && (
-                                                    <div className="mt-6 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-700 rounded-xl p-4">
+                                                    <div className="mt-6 bg-gradient-to-br from-indigo-100 dark:from-indigo-900/40 to-purple-900/40 border border-indigo-700 rounded-xl p-4">
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h4 className="text-indigo-200 font-semibold flex items-center gap-2">
                                                                 {tNav('kullanici_rolleri')}
@@ -4902,7 +4902,7 @@ export default function SuperAdminDashboard() {
                                                                     loadButchersHelper();
                                                                     loadOrganizationsHelper();
                                                                 }}
-                                                                className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500 transition flex items-center gap-1"
+                                                                className="px-3 py-1.5 bg-indigo-600 text-foreground text-sm rounded-lg hover:bg-indigo-500 transition flex items-center gap-1"
                                                             >
                                                                 {tNav('rol_ekle')}
                                                             </button>
@@ -4930,7 +4930,7 @@ export default function SuperAdminDashboard() {
                                                                                                 role.type?.includes('market') ? '🛒' : '🎫'}
                                                                             </span>
                                                                             <div>
-                                                                                <p className="text-white font-medium">
+                                                                                <p className="text-foreground font-medium">
                                                                                     {getRoleLabel(role.type) || role.type}
                                                                                     {role.isPrimary && (
                                                                                         <span className="ml-2 text-xs bg-yellow-600 text-yellow-100 px-2 py-0.5 rounded">
@@ -5318,11 +5318,11 @@ export default function SuperAdminDashboard() {
                                 <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-4xl">⚠️</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">{tNav('kullaniciyi_sil')}</h3>
+                                <h3 className="text-xl font-bold text-foreground mb-2">{tNav('kullaniciyi_sil')}</h3>
                                 <p className="text-muted-foreground">
-                                    <span className="font-semibold text-white">"{deleteModal.userName}"</span> {tNav('kullanicisini_silmek_istediginize_emin_m')}
+                                    <span className="font-semibold text-foreground">"{deleteModal.userName}"</span> {tNav('kullanicisini_silmek_istediginize_emin_m')}
                                 </p>
-                                <p className="text-red-400 text-sm mt-2 flex items-center justify-center gap-1">
+                                <p className="text-red-800 dark:text-red-400 text-sm mt-2 flex items-center justify-center gap-1">
                                     {tNav('bu_islem_geri_alinamaz')}
                                 </p>
                             </div>
@@ -5350,12 +5350,12 @@ export default function SuperAdminDashboard() {
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
                     <div className="bg-card rounded-xl border border-indigo-600 shadow-2xl max-w-2xl w-full p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 {tNav('yeni_rol_ekle')}
                             </h3>
                             <button
                                 onClick={() => setShowAddRoleModal(false)}
-                                className="text-muted-foreground hover:text-white text-2xl"
+                                className="text-muted-foreground hover:text-foreground text-2xl"
                             >
                                 ×
                             </button>
@@ -5478,7 +5478,7 @@ export default function SuperAdminDashboard() {
                                                                         }}
                                                                         className="w-full text-left px-3 py-2 hover:bg-indigo-600/30 border-b border-gray-600 last:border-b-0 transition"
                                                                     >
-                                                                        <div className="text-white text-sm font-medium">{b.name}</div>
+                                                                        <div className="text-foreground text-sm font-medium">{b.name}</div>
                                                                         <div className="text-muted-foreground text-xs">📍 {b.city}</div>
                                                                     </button>
                                                                 ))}
@@ -5582,7 +5582,7 @@ export default function SuperAdminDashboard() {
                                                                         }}
                                                                         className="w-full text-left px-3 py-2 hover:bg-emerald-600/30 border-b border-gray-600 last:border-b-0 transition"
                                                                     >
-                                                                        <div className="text-white text-sm font-medium">🕌 {o.shortName || o.name}</div>
+                                                                        <div className="text-foreground text-sm font-medium">🕌 {o.shortName || o.name}</div>
                                                                         <div className="text-muted-foreground text-xs">📍 {o.postalCode && `${o.postalCode} `}{o.city}</div>
                                                                     </button>
                                                                 ))}

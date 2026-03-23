@@ -304,9 +304,9 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
 
     const statusBadge = (status: string) => {
         const styles: Record<string, string> = {
-            pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-            confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
-            rejected: "bg-red-500/20 text-red-400 border-red-500/30",
+            pending: "bg-yellow-500/20 text-yellow-800 dark:text-yellow-400 border-yellow-500/30",
+            confirmed: "bg-green-500/20 text-green-800 dark:text-green-400 border-green-500/30",
+            rejected: "bg-red-500/20 text-red-800 dark:text-red-400 border-red-500/30",
             cancelled: "bg-gray-500/20 text-muted-foreground border-gray-500/30",
         };
         const labels: Record<string, string> = {
@@ -339,7 +339,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                         {t('rezervasyon_yonetimi')}
                         {pendingCount > 0 && (
                             <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
@@ -362,7 +362,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             {/* Notification */}
             {notification && (
                 <div
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${notification.type === "success" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${notification.type === "success" ? "bg-green-500/20 text-green-800 dark:text-green-400" : "bg-red-500/20 text-red-800 dark:text-red-400"
                         }`}
                 >
                     {notification.msg}
@@ -442,22 +442,22 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                             <div>
                                                 <p className="text-gray-500 text-xs">{t('musteri')}</p>
-                                                <p className="text-white font-medium truncate">{res.userName}</p>
+                                                <p className="text-foreground font-medium truncate">{res.userName}</p>
                                                 {res.userPhone && (
                                                     <p className="text-muted-foreground text-xs">{res.userPhone}</p>
                                                 )}
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">{t('tarih')}</p>
-                                                <p className="text-white font-medium">{formatDate(res.reservationDate)}</p>
+                                                <p className="text-foreground font-medium">{formatDate(res.reservationDate)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">{t('saat')}</p>
-                                                <p className="text-white font-medium text-lg">{formatTime(res.reservationDate)}</p>
+                                                <p className="text-foreground font-medium text-lg">{formatTime(res.reservationDate)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">{t('kisi')}</p>
-                                                <p className="text-white font-medium text-lg">{res.partySize}</p>
+                                                <p className="text-foreground font-medium text-lg">{res.partySize}</p>
                                             </div>
                                         </div>
 
@@ -493,14 +493,14 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                             <button
                                                 onClick={() => handleStatusChange(res.id, "confirmed")}
                                                 disabled={actionLoading === res.id}
-                                                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
                                             >
                                                 {actionLoading === res.id ? "..." : t('onayla')}
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(res.id, "rejected")}
                                                 disabled={actionLoading === res.id}
-                                                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
                                             >
                                                 {actionLoading === res.id ? "..." : "Reddet"}
                                             </button>
@@ -511,7 +511,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                             <button
                                                 onClick={() => { setShowCancelModal({ resId: res.id }); setCancelReason(""); setCancelNote(""); }}
                                                 disabled={actionLoading === res.id}
-                                                className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-medium rounded-lg border border-red-500/30 transition disabled:opacity-50"
+                                                className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-800 dark:text-red-400 text-xs font-medium rounded-lg border border-red-500/30 transition disabled:opacity-50"
                                             >
                                                 Iptal Et
                                             </button>
@@ -522,7 +522,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                             <button
                                                 onClick={() => handleReactivate(res.id)}
                                                 disabled={actionLoading === res.id}
-                                                className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition disabled:opacity-50"
+                                                className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-800 dark:text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 transition disabled:opacity-50"
                                             >
                                                 {actionLoading === res.id ? "..." : "Tekrar Aktif Et"}
                                             </button>
@@ -540,7 +540,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                     <div className="bg-card rounded-2xl w-full max-w-md">
                         <div className="p-6 border-b border-border">
-                            <h2 className="text-xl font-bold text-white">{t('masa_kart_numarasi_secin')}</h2>
+                            <h2 className="text-xl font-bold text-foreground">{t('masa_kart_numarasi_secin')}</h2>
                             <p className="text-muted-foreground text-sm mt-1">{t('musteriye_verilecek_masa_kartini_secin')}</p>
                             <div className="flex items-center gap-4 mt-3 text-xs">
                                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> {t('secili')}</span>
@@ -572,7 +572,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                                     });
                                                 }}
                                                 className={`aspect-square rounded-xl text-xl font-bold transition-all ${isOccupied
-                                                        ? "bg-red-900/30 border border-red-500/30 text-red-400/50 cursor-not-allowed"
+                                                        ? "bg-red-900/30 border border-red-500/30 text-red-800 dark:text-red-400/50 cursor-not-allowed"
                                                         : isSelected
                                                             ? "bg-green-500 border-2 border-green-400 text-white shadow-lg shadow-green-500/30 scale-105"
                                                             : "bg-gray-700 border border-gray-600 text-foreground hover:bg-gray-600 hover:border-gray-500"
@@ -617,7 +617,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                     <div className="bg-card rounded-2xl w-full max-w-md">
                         <div className="p-6 border-b border-border">
-                            <h2 className="text-xl font-bold text-white">Rezervasyonu Iptal Et</h2>
+                            <h2 className="text-xl font-bold text-foreground">Rezervasyonu Iptal Et</h2>
                             <p className="text-muted-foreground text-sm mt-1">Iptal sebebini secin</p>
                         </div>
                         <div className="p-6 space-y-3">
@@ -646,7 +646,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                 onChange={(e) => setCancelNote(e.target.value)}
                                 placeholder="Ek aciklama (istege bagli)..."
                                 rows={2}
-                                className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                                className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:border-red-500/50"
                             />
                         </div>
                         <div className="p-4 border-t border-border flex gap-3">

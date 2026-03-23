@@ -114,11 +114,11 @@ const { admin } = useAdmin();
     };
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <Link href="/admin/orders" className="text-muted-foreground text-sm hover:text-white mb-2 inline-block">{t('cancel_back')}</Link>
+                        <Link href="/admin/orders" className="text-muted-foreground text-sm hover:text-foreground mb-2 inline-block">{t('cancel_back')}</Link>
                         <h1 className="text-3xl font-bold">{t('yeni_siparis_olustur')}</h1>
                         <p className="text-muted-foreground">{t('adim')} {step}/3: {step === 1 ? t('tedarikci_secimi') : step === 2 ? t('urunleri_gir') : t('onizleme_gonder')}</p>
                     </div>
@@ -130,7 +130,7 @@ const { admin } = useAdmin();
                         {suppliers.length === 0 && (
                             <div className="col-span-full text-center py-12 bg-card rounded-xl">
                                 <p className="text-muted-foreground mb-4">{t('kayitli_tedarikciniz_yok')}</p>
-                                <Link href="/admin/orders/suppliers" className="text-green-400 underline font-bold">{t('tedarikci_ekle')}</Link>
+                                <Link href="/admin/orders/suppliers" className="text-green-800 dark:text-green-400 underline font-bold">{t('tedarikci_ekle')}</Link>
                             </div>
                         )}
                         {suppliers.map(s => (
@@ -142,7 +142,7 @@ const { admin } = useAdmin();
                                 <div className="text-2xl mb-2">
                                     {s.category === 'meat' ? '🥩' : s.category === 'vegetable' ? '🥦' : '📦'}
                                 </div>
-                                <h3 className="font-bold text-lg group-hover:text-green-400 transition">{s.name}</h3>
+                                <h3 className="font-bold text-lg group-hover:text-green-800 dark:text-green-400 transition">{s.name}</h3>
                                 {s.companyName && <p className="text-sm text-gray-500">{s.companyName}</p>}
                             </button>
                         ))}
@@ -215,7 +215,7 @@ const { admin } = useAdmin();
                                             />
                                             <button
                                                 onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                                                className="text-red-400 hover:bg-red-900/30 p-2 rounded"
+                                                className="text-red-800 dark:text-red-400 hover:bg-red-900/30 p-2 rounded"
                                             >✕</button>
                                         </div>
                                     ))}
@@ -225,7 +225,7 @@ const { admin } = useAdmin();
                             {/* Manual Add Button */}
                             <button
                                 onClick={() => setItems([...items, { name: '', quantity: 1, unit: 'Stk' }])}
-                                className="mt-4 text-sm text-blue-400 hover:text-blue-300 font-bold"
+                                className="mt-4 text-sm text-blue-800 dark:text-blue-400 hover:text-blue-300 font-bold"
                             >
                                 {t('satir_ekle')}
                             </button>

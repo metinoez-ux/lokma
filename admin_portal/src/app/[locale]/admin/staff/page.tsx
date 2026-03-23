@@ -35,7 +35,7 @@ export default function StaffRedirectPage() {
                     <div className="absolute inset-0 border-4 border-red-600 rounded-full border-t-transparent animate-spin"></div>
                 </div>
                 
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-foreground mb-2">
                     Yönlendiriliyorsunuz
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-muted-foreground">

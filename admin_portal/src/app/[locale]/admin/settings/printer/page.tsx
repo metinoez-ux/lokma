@@ -78,7 +78,7 @@ export default function PrinterSettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-2xl mx-auto">
                 {/* Back Link */}
                 <div className="flex items-center gap-3 mb-2">
@@ -90,15 +90,15 @@ export default function PrinterSettingsPage() {
 
                 {/* ─── Main Config Card ─── */}
                 <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
                         ⚙️ Verbindungseinstellungen
-                        {saved && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">✓ Gespeichert</span>}
+                        {saved && <span className="text-xs bg-green-500/20 text-green-800 dark:text-green-400 px-2 py-0.5 rounded-full">✓ Gespeichert</span>}
                     </h2>
 
                     {/* Enable Toggle */}
                     <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border mb-4">
                         <div>
-                            <h3 className="font-semibold text-white">Drucker aktivieren</h3>
+                            <h3 className="font-semibold text-foreground">Drucker aktivieren</h3>
                             <p className="text-xs text-gray-500 mt-0.5">Bon-Drucker für die Bestellverarbeitung aktivieren</p>
                         </div>
                         <button
@@ -168,8 +168,8 @@ export default function PrinterSettingsPage() {
                             }
                         </p>
                         {settings.printServerUrl && (
-                            <div className="mt-2 bg-blue-900/20 border border-blue-700/30 rounded-xl p-3">
-                                <p className="text-blue-400 text-xs">
+                            <div className="mt-2 bg-blue-900/20 border border-blue-200 dark:border-blue-700/30 rounded-xl p-3">
+                                <p className="text-blue-800 dark:text-blue-400 text-xs">
                                     🔄 Print-Befehle werden über <span className="font-mono font-bold">{settings.printServerUrl}</span> weitergeleitet.
                                     <br />
                                     <b>Wichtig für Tablets:</b> Verwenden Sie hier NICHT "localhost", sondern die tatsächliche IP (z.B. 192.168.x.x) des PCs, auf dem <code className="font-mono bg-blue-900 px-1 rounded">npm run dev</code> läuft.
@@ -189,7 +189,7 @@ export default function PrinterSettingsPage() {
                             ? 'bg-red-950/30 border-red-500/40'
                             : 'bg-card border-border'
                     }`}>
-                        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                             📡 Verbindungsstatus
                         </h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -203,9 +203,9 @@ export default function PrinterSettingsPage() {
                                         'bg-gray-500'
                                     }`} />
                                     <span className={`font-bold text-sm ${
-                                        health.status === 'online' ? 'text-green-400' :
-                                        health.status === 'offline' ? 'text-red-400' :
-                                        health.status === 'checking' ? 'text-yellow-400' :
+                                        health.status === 'online' ? 'text-green-800 dark:text-green-400' :
+                                        health.status === 'offline' ? 'text-red-800 dark:text-red-400' :
+                                        health.status === 'checking' ? 'text-yellow-800 dark:text-yellow-400' :
                                         'text-muted-foreground'
                                     }`}>
                                         {health.status === 'online' ? 'Verbunden' :
@@ -216,23 +216,23 @@ export default function PrinterSettingsPage() {
                             </div>
                             <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Antwortzeit</p>
-                                <p className="font-bold text-sm text-white">{health.responseTimeMs ? `${health.responseTimeMs}ms` : '—'}</p>
+                                <p className="font-bold text-sm text-foreground">{health.responseTimeMs ? `${health.responseTimeMs}ms` : '—'}</p>
                             </div>
                             <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Letzte Prüfung</p>
-                                <p className="font-bold text-sm text-white">
+                                <p className="font-bold text-sm text-foreground">
                                     {health.lastChecked ? health.lastChecked.toLocaleTimeString('de-DE') : '—'}
                                 </p>
                             </div>
                             <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Adresse</p>
-                                <p className="font-bold text-sm text-white font-mono">{settings.printerIp}:{settings.printerPort}</p>
+                                <p className="font-bold text-sm text-foreground font-mono">{settings.printerIp}:{settings.printerPort}</p>
                             </div>
                         </div>
 
                         {health.error && (
-                            <div className="mt-4 bg-red-900/30 border border-red-700/50 rounded-xl p-3">
-                                <p className="text-red-400 text-sm">⚠️ {health.error}</p>
+                            <div className="mt-4 bg-red-900/30 border border-red-200 dark:border-red-700/50 rounded-xl p-3">
+                                <p className="text-red-800 dark:text-red-400 text-sm">⚠️ {health.error}</p>
                             </div>
                         )}
                     </div>
@@ -240,7 +240,7 @@ export default function PrinterSettingsPage() {
 
                 {/* ─── Test Print Card ─── */}
                 <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-white mb-4">🧪 Druckertest</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">🧪 Druckertest</h2>
                     <p className="text-muted-foreground text-sm mb-4">
                         Senden Sie einen Test-Bon, um die Verbindung und Druckqualität zu überprüfen.
                     </p>
@@ -258,7 +258,7 @@ export default function PrinterSettingsPage() {
                         {testing ? '⏳ Wird gedruckt...' : '🖨️ Test-Bon drucken'}
                     </button>
                     {testResult && (
-                        <div className={`mt-3 p-3 rounded-xl text-sm ${testResult.ok ? 'bg-green-900/30 text-green-400 border border-green-700/50' : 'bg-red-900/30 text-red-400 border border-red-700/50'}`}>
+                        <div className={`mt-3 p-3 rounded-xl text-sm ${testResult.ok ? 'bg-green-900/30 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-700/50' : 'bg-red-900/30 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-700/50'}`}>
                             {testResult.ok ? '✅' : '❌'} {testResult.msg}
                         </div>
                     )}
@@ -266,7 +266,7 @@ export default function PrinterSettingsPage() {
 
                 {/* ─── Info Box ─── */}
                 <div className="bg-card border border-border rounded-2xl p-6">
-                    <h3 className="font-bold text-yellow-400 mb-3">💡 Hinweise</h3>
+                    <h3 className="font-bold text-yellow-800 dark:text-yellow-400 mb-3">💡 Hinweise</h3>
                     <ul className="text-sm text-muted-foreground space-y-2">
                         <li>• Unterstützt werden ESC/POS-kompatible Thermodrucker (Epson, Star, etc.)</li>
                         <li>• Der Drucker muss im gleichen WLAN-Netzwerk wie dieses Gerät sein</li>

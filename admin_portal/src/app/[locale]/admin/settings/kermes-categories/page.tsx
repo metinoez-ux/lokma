@@ -218,7 +218,7 @@ const { admin, loading: adminLoading } = useAdmin();
     if (!admin || admin.role !== 'super_admin') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">{t('erisim_reddedildi_sadece_super_admin')}</div>
+                <div className="text-foreground">{t('erisim_reddedildi_sadece_super_admin')}</div>
             </div>
         );
     }
@@ -230,7 +230,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {toasts.map(toast => (
                     <div
                         key={toast.id}
-                        className={`px-6 py-4 rounded-xl shadow-2xl text-white font-medium text-center animate-fade-in pointer-events-auto ${toast.type === 'success' ? 'bg-green-600' :
+                        className={`px-6 py-4 rounded-xl shadow-2xl text-foreground font-medium text-center animate-fade-in pointer-events-auto ${toast.type === 'success' ? 'bg-green-600' :
                             toast.type === 'error' ? 'bg-red-600' :
                                 'bg-blue-600'
                             }`}
@@ -260,13 +260,13 @@ const { admin, loading: adminLoading } = useAdmin();
             `}</style>
 
             <div className="max-w-4xl mx-auto">
-                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
                     {t('kermes_yonetimi')}
                 </Link>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {t('menu_kategorileri')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -314,7 +314,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
 
                             <div className="flex-1">
-                                <h3 className="font-bold text-white">{category.name}</h3>
+                                <h3 className="font-bold text-foreground">{category.name}</h3>
                                 {category.name_de && (
                                     <p className="text-muted-foreground text-sm">{category.name_de}</p>
                                 )}
@@ -364,7 +364,7 @@ const { admin, loading: adminLoading } = useAdmin();
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-xl p-6 max-w-md w-full">
-                        <h2 className="text-xl font-bold text-white mb-4">
+                        <h2 className="text-xl font-bold text-foreground mb-4">
                             {editingCategory ? t('kategori_duzenle') : t('yeni_kategori')}
                         </h2>
 

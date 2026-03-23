@@ -192,7 +192,7 @@ export default function HesabimPage() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-2xl p-8 max-w-md text-center">
                     <span className="text-5xl mb-4 block">🏪</span>
-                    <h2 className="text-xl font-bold text-white mb-2">{t('i_sletme_bulunamadi')}</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">{t('i_sletme_bulunamadi')}</h2>
                     <p className="text-muted-foreground">{t('hesabiniza_bagli_bir_isletme_bulunmuyor_')}</p>
                 </div>
             </div>
@@ -205,7 +205,7 @@ export default function HesabimPage() {
                 {/* Page Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">{t('hesabim')}</h1>
+                        <h1 className="text-2xl font-bold text-foreground">{t('hesabim')}</h1>
                         <p className="text-muted-foreground text-sm">{businessName} {t('provizyon_ve_bakiye_takibi')}</p>
                     </div>
                     <button
@@ -219,12 +219,12 @@ export default function HesabimPage() {
                 {/* Account Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* Balance Card */}
-                    <div className="bg-gradient-to-br from-amber-600/30 to-amber-800/20 border border-amber-500/30 rounded-2xl p-6">
+                    <div className="bg-gradient-to-br from-amber-600/30 to-amber-50 dark:to-amber-800/20 border border-amber-500/30 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">💰</span>
                             <div>
                                 <p className="text-muted-foreground text-xs uppercase tracking-wider">{t('acik_bakiye')}</p>
-                                <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-amber-400' : 'text-green-400'}`}>
+                                <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-amber-800 dark:text-amber-400' : 'text-green-800 dark:text-green-400'}`}>
                                     {formatCurrency((businessData?.accountBalance || 0), businessData?.currency)}
                                 </p>
                             </div>
@@ -237,12 +237,12 @@ export default function HesabimPage() {
                     </div>
 
                     {/* Plan Card */}
-                    <div className="bg-gradient-to-br from-indigo-600/30 to-indigo-800/20 border border-indigo-500/30 rounded-2xl p-6">
+                    <div className="bg-gradient-to-br from-indigo-600/30 to-indigo-50 dark:to-indigo-800/20 border border-indigo-500/30 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">📋</span>
                             <div>
                                 <p className="text-muted-foreground text-xs uppercase tracking-wider">{t('mevcut_plan')}</p>
-                                <p className="text-2xl font-bold text-indigo-400 capitalize">
+                                <p className="text-2xl font-bold text-indigo-800 dark:text-indigo-400 capitalize">
                                     {businessData?.subscriptionPlan || 'Free'}
                                 </p>
                             </div>
@@ -253,12 +253,12 @@ export default function HesabimPage() {
                     </div>
 
                     {/* Monthly Usage Card */}
-                    <div className="bg-gradient-to-br from-cyan-600/30 to-cyan-800/20 border border-cyan-500/30 rounded-2xl p-6">
+                    <div className="bg-gradient-to-br from-cyan-600/30 to-cyan-50 dark:to-cyan-800/20 border border-cyan-500/30 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">📊</span>
                             <div>
                                 <p className="text-muted-foreground text-xs uppercase tracking-wider">{t('bu_ay')}</p>
-                                <p className="text-2xl font-bold text-cyan-400">
+                                <p className="text-2xl font-bold text-cyan-800 dark:text-cyan-400">
                                     {monthlyOrders} {t('siparis')}
                                 </p>
                             </div>
@@ -272,7 +272,7 @@ export default function HesabimPage() {
                 {/* Commission Stats */}
                 <div className="bg-card rounded-2xl p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-white">{t('provizyon_ozeti')}</h2>
+                        <h2 className="text-lg font-bold text-foreground">{t('provizyon_ozeti')}</h2>
                         <div className="flex items-center gap-3">
                             <input
                                 type="month"
@@ -291,23 +291,23 @@ export default function HesabimPage() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
+                            <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
                             <p className="text-muted-foreground text-xs">{t('siparisler')}</p>
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</p>
+                            <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</p>
                             <p className="text-muted-foreground text-xs">{t('toplam_ciro')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-amber-400">{formatCurrency(stats.totalCommission, businessData?.currency)}</p>
+                            <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">{formatCurrency(stats.totalCommission, businessData?.currency)}</p>
                             <p className="text-muted-foreground text-xs">{t('provizyon')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.collectedAmount, businessData?.currency)}</p>
+                            <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.collectedAmount, businessData?.currency)}</p>
                             <p className="text-muted-foreground text-xs">{t('tahsil_edilen')}</p>
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-yellow-400">{formatCurrency(stats.pendingAmount, businessData?.currency)}</p>
+                            <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{formatCurrency(stats.pendingAmount, businessData?.currency)}</p>
                             <p className="text-muted-foreground text-xs">{t('bekleyen')}</p>
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
@@ -320,12 +320,12 @@ export default function HesabimPage() {
                     <div className="mt-4 flex gap-4">
                         <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-600/20 rounded-lg px-4 py-2">
                             <span>💳</span>
-                            <span className="text-blue-400 text-sm font-medium">{stats.cardOrders} {t('kart')}</span>
+                            <span className="text-blue-800 dark:text-blue-400 text-sm font-medium">{stats.cardOrders} {t('kart')}</span>
                             <span className="text-gray-500 text-sm">— {formatCurrency(stats.cardCommission, businessData?.currency)}</span>
                         </div>
                         <div className="flex items-center gap-2 bg-purple-600/10 border border-purple-600/20 rounded-lg px-4 py-2">
                             <span>💵</span>
-                            <span className="text-purple-400 text-sm font-medium">{stats.cashOrders} {t('nakit')}</span>
+                            <span className="text-purple-800 dark:text-purple-400 text-sm font-medium">{stats.cashOrders} {t('nakit')}</span>
                             <span className="text-gray-500 text-sm">— {formatCurrency(stats.cashCommission, businessData?.currency)}</span>
                         </div>
                     </div>
@@ -337,7 +337,7 @@ export default function HesabimPage() {
                         onClick={() => setShowDetail(!showDetail)}
                         className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-700/50 transition"
                     >
-                        <h2 className="text-lg font-bold text-white">{t('siparis_bazli_detay')}</h2>
+                        <h2 className="text-lg font-bold text-foreground">{t('siparis_bazli_detay')}</h2>
                         <span className={`text-muted-foreground text-2xl transition-transform ${showDetail ? 'rotate-180' : ''}`}>
                             ▼
                         </span>
@@ -370,7 +370,7 @@ export default function HesabimPage() {
                                         filteredRecords.map((r) => (
                                             <tr key={r.id} className="hover:bg-gray-700/50 text-sm">
                                                 <td className="px-3 py-2">
-                                                    <span className="text-white font-mono text-xs">#{r.orderNumber || r.orderId.slice(0, 6)}</span>
+                                                    <span className="text-foreground font-mono text-xs">#{r.orderNumber || r.orderId.slice(0, 6)}</span>
                                                 </td>
                                                 <td className="px-3 py-2 text-center">
                                                     <span className="text-foreground text-xs">{courierLabels[r.courierType] || r.courierType}</span>
@@ -378,7 +378,7 @@ export default function HesabimPage() {
                                                 <td className="px-3 py-2 text-right text-white">{formatCurrency(r.orderTotal, businessData?.currency)}</td>
                                                 <td className="px-3 py-2 text-right text-muted-foreground">%{r.commissionRate}</td>
                                                 <td className="px-3 py-2 text-right">
-                                                    <span className="text-amber-400 font-bold">{formatCurrency(r.totalCommission, businessData?.currency)}</span>
+                                                    <span className="text-amber-800 dark:text-amber-400 font-bold">{formatCurrency(r.totalCommission, businessData?.currency)}</span>
                                                 </td>
                                                 <td className="px-3 py-2 text-right">
                                                     <span className="text-foreground text-xs">
@@ -406,12 +406,12 @@ export default function HesabimPage() {
                             {/* Summary footer */}
                             {filteredRecords.length > 0 && (
                                 <div className="bg-background border-t-2 border-gray-600 px-4 py-3 flex items-center justify-between">
-                                    <span className="text-white font-bold text-sm">
+                                    <span className="text-foreground font-bold text-sm">
                                         {t('toplam')} {filteredRecords.length} {t('siparis')}
                                     </span>
                                     <div className="flex gap-6">
-                                        <span className="text-white text-sm">{t('ciro')}: <strong>{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</strong></span>
-                                        <span className="text-amber-400 text-sm">{t('provizyon')}: <strong>{formatCurrency(stats.totalCommission, businessData?.currency)}</strong></span>
+                                        <span className="text-foreground text-sm">{t('ciro')}: <strong>{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</strong></span>
+                                        <span className="text-amber-800 dark:text-amber-400 text-sm">{t('provizyon')}: <strong>{formatCurrency(stats.totalCommission, businessData?.currency)}</strong></span>
                                     </div>
                                 </div>
                             )}
@@ -422,7 +422,7 @@ export default function HesabimPage() {
                 {/* Info Note */}
                 <div className="mt-6 bg-card/50 border border-border rounded-xl p-4">
                     <p className="text-muted-foreground text-xs leading-relaxed">
-                        {t('kart_ile_yapilan_odemelerde_provizyon_ot')} <span className="text-blue-400">info@lokma.shop</span> {t('iletisim_son')}.
+                        {t('kart_ile_yapilan_odemelerde_provizyon_ot')} <span className="text-blue-800 dark:text-blue-400">info@lokma.shop</span> {t('iletisim_son')}.
                     </p>
                 </div>
             </div>

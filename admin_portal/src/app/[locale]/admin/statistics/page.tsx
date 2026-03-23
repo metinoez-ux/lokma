@@ -303,7 +303,7 @@ export default function StatisticsPage() {
         if (change === null || change === undefined) return null;
         const isPositive = change >= 0;
         const icon = isPositive ? '↑' : '↓';
-        const color = isPositive ? 'text-green-400' : 'text-red-400';
+        const color = isPositive ? 'text-green-800 dark:text-green-400' : 'text-red-800 dark:text-red-400';
         return (
             <span className={`text-xs ${color} ml-1`}>
                 {icon} {Math.abs(change).toFixed(1)}%
@@ -408,7 +408,7 @@ export default function StatisticsPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             📊 İstatistikler
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -499,7 +499,7 @@ export default function StatisticsPage() {
                                 {admin?.adminType === 'super' && (
                                     <button
                                         onClick={() => setBusinessFilter('all')}
-                                        className="text-emerald-400 hover:text-white"
+                                        className="text-emerald-800 dark:text-emerald-400 hover:text-white"
                                     >
                                         ✕
                                     </button>
@@ -532,7 +532,7 @@ export default function StatisticsPage() {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         <div className="bg-card rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-blue-400">
+                            <p className="text-3xl font-bold text-blue-800 dark:text-blue-400">
                                 {stats.total}
                                 {changes && formatChange(changes.total)}
                             </p>
@@ -542,7 +542,7 @@ export default function StatisticsPage() {
                             )}
                         </div>
                         <div className="bg-card rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-green-400">
+                            <p className="text-3xl font-bold text-green-800 dark:text-green-400">
                                 {formatCurrency(stats.revenue)}
                                 {changes && formatChange(changes.revenue)}
                             </p>
@@ -552,7 +552,7 @@ export default function StatisticsPage() {
                             )}
                         </div>
                         <div className="bg-card rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-purple-400">
+                            <p className="text-3xl font-bold text-purple-800 dark:text-purple-400">
                                 {formatCurrency(stats.avgOrderValue)}
                                 {changes && formatChange(changes.avgOrderValue)}
                             </p>
@@ -562,7 +562,7 @@ export default function StatisticsPage() {
                             )}
                         </div>
                         <div className="bg-card rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-emerald-400">
+                            <p className="text-3xl font-bold text-emerald-800 dark:text-emerald-400">
                                 {stats.completed}
                                 {changes && formatChange(changes.completed)}
                             </p>
@@ -572,7 +572,7 @@ export default function StatisticsPage() {
                             )}
                         </div>
                         <div className="bg-card rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-red-400">
+                            <p className="text-3xl font-bold text-red-800 dark:text-red-400">
                                 {stats.cancelled}
                                 {changes && formatChange(changes.cancelled)}
                             </p>
@@ -582,28 +582,28 @@ export default function StatisticsPage() {
                             )}
                         </div>
                         <div className="bg-card rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-amber-400">{analytics.peakHour}:00</p>
+                            <p className="text-3xl font-bold text-amber-800 dark:text-amber-400">{analytics.peakHour}:00</p>
                             <p className="text-xs text-muted-foreground mt-1">{t('en_yogun_saat')}</p>
                         </div>
                     </div>
 
                     {/* Insights Row */}
                     <div className="grid md:grid-cols-3 gap-4">
-                        <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-700/30 rounded-xl p-4">
-                            <p className="text-green-400 text-sm font-medium mb-1">{t('en_yogun_gun')}</p>
+                        <div className="bg-gradient-to-br from-green-100 dark:from-green-900/30 to-green-50 dark:to-green-800/20 border border-green-200 dark:border-green-700/30 rounded-xl p-4">
+                            <p className="text-green-800 dark:text-green-400 text-sm font-medium mb-1">{t('en_yogun_gun')}</p>
                             <p className="text-white text-xl font-bold">{analytics.busiestDay}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-700/30 rounded-xl p-4">
-                            <p className="text-blue-400 text-sm font-medium mb-1">{t('en_durgun_gun')}</p>
+                        <div className="bg-gradient-to-br from-blue-100 dark:from-blue-900/30 to-blue-50 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700/30 rounded-xl p-4">
+                            <p className="text-blue-800 dark:text-blue-400 text-sm font-medium mb-1">{t('en_durgun_gun')}</p>
                             <p className="text-white text-xl font-bold">{analytics.slowestDay}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-4">
-                            <p className="text-purple-400 text-sm font-medium mb-1">{t('siparis_orani')}</p>
+                        <div className="bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-purple-50 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700/30 rounded-xl p-4">
+                            <p className="text-purple-800 dark:text-purple-400 text-sm font-medium mb-1">{t('siparis_orani')}</p>
                             {filteredOrders.length > 0 ? (
                                 <div className="flex flex-wrap gap-2 mt-1">
-                                    <span className="text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}{t('kurye')}</span>
-                                    <span className="text-amber-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
-                                    <span className="text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
+                                    <span className="text-blue-800 dark:text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}{t('kurye')}</span>
+                                    <span className="text-amber-800 dark:text-amber-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
+                                    <span className="text-green-800 dark:text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
                                 </div>
                             ) : (
                                 <p className="text-gray-500 text-sm">{t('veri_yok')}</p>
@@ -615,7 +615,7 @@ export default function StatisticsPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Hourly Distribution */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">{t('saatlik_siparis_dagilimi')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">{t('saatlik_siparis_dagilimi')}</h3>
                             {(() => {
                                 const hourData = analytics.hourlyDistribution.slice(8, 22);
                                 const maxCount = Math.max(...hourData.map(h => h.count), 1);
@@ -653,7 +653,7 @@ export default function StatisticsPage() {
 
                         {/* Daily Distribution */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">{t('gunluk_siparis_dagilimi')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">{t('gunluk_siparis_dagilimi')}</h3>
                             <div className="space-y-2">
                                 {analytics.dailyDistribution.map((d) => {
                                     const maxCount = Math.max(...analytics.dailyDistribution.map(d => d.count), 1);
@@ -667,7 +667,7 @@ export default function StatisticsPage() {
                                                     style={{ width: `${width}%` }}
                                                 />
                                             </div>
-                                            <span className="text-white font-medium w-12 text-right">{d.count}</span>
+                                            <span className="text-foreground font-medium w-12 text-right">{d.count}</span>
                                         </div>
                                     );
                                 })}
@@ -734,7 +734,7 @@ export default function StatisticsPage() {
                         return (
                             <div className="bg-card rounded-xl p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-white font-bold">{t('siparis_ciro_trendi')}</h3>
+                                    <h3 className="text-foreground font-bold">{t('siparis_ciro_trendi')}</h3>
                                     <div className="flex bg-gray-700 rounded-lg overflow-hidden">
                                         {(['weekly', 'monthly', 'yearly'] as const).map(tab => (
                                             <button
@@ -816,7 +816,7 @@ export default function StatisticsPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Top Products */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">{t('en_cok_satan_urunler')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">{t('en_cok_satan_urunler')}</h3>
                             {analytics.topProducts.length === 0 ? (
                                 <p className="text-gray-500 text-center py-8">{t('urun_verisi_bulunamadi')}</p>
                             ) : (
@@ -824,13 +824,13 @@ export default function StatisticsPage() {
                                     {analytics.topProducts.slice(0, 5).map((p, idx) => (
                                         <div key={p.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                             <div className="flex items-center gap-3">
-                                                <span className={`text-lg ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-foreground' : idx === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
+                                                <span className={`text-lg ${idx === 0 ? 'text-yellow-800 dark:text-yellow-400' : idx === 1 ? 'text-foreground' : idx === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
                                                     {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
                                                 </span>
-                                                <span className="text-white">{p.name}</span>
+                                                <span className="text-foreground">{p.name}</span>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-green-400 font-medium">{formatCurrency(p.revenue)}</p>
+                                                <p className="text-green-800 dark:text-green-400 font-medium">{formatCurrency(p.revenue)}</p>
                                                 <p className="text-xs text-gray-500">{p.quantity} {t('adet')}</p>
                                             </div>
                                         </div>
@@ -842,7 +842,7 @@ export default function StatisticsPage() {
                         {/* Business Performance - ONLY for Super Admin when viewing all businesses */}
                         {admin?.adminType === 'super' && (
                             <div className="bg-card rounded-xl p-6">
-                                <h3 className="text-white font-bold mb-4">{t('i_sletme_performansi')}</h3>
+                                <h3 className="text-foreground font-bold mb-4">{t('i_sletme_performansi')}</h3>
                                 {analytics.businessPerformance.length === 0 ? (
                                     <p className="text-gray-500 text-center py-8">{t('i_sletme_verisi_bulunamadi')}</p>
                                 ) : (
@@ -850,11 +850,11 @@ export default function StatisticsPage() {
                                         {analytics.businessPerformance.slice(0, 5).map((b) => (
                                             <div key={b.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                                 <div>
-                                                    <p className="text-white font-medium">{b.name}</p>
+                                                    <p className="text-foreground font-medium">{b.name}</p>
                                                     <p className="text-xs text-gray-500">{b.orders} {t('siparis')}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-green-400 font-bold">{formatCurrency(b.revenue)}</p>
+                                                    <p className="text-green-800 dark:text-green-400 font-bold">{formatCurrency(b.revenue)}</p>
                                                     <p className="text-xs text-gray-500">Ort: {formatCurrency(b.avgOrder)}</p>
                                                 </div>
                                             </div>
@@ -872,7 +872,7 @@ export default function StatisticsPage() {
                 <div className="max-w-7xl mx-auto mt-6">
                     <div className="bg-card rounded-xl p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-white font-bold text-lg flex items-center gap-2">{t('i_sletme_performansi')}</h3>
+                            <h3 className="text-foreground font-bold text-lg flex items-center gap-2">{t('i_sletme_performansi')}</h3>
                             <select value={perfDateRange} onChange={e => setPerfDateRange(e.target.value as any)} className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none">
                                 <option value="7d">{t('son_7_gun')}</option>
                                 <option value="30d">{t('son_30_gun')}</option>
@@ -883,23 +883,23 @@ export default function StatisticsPage() {
                         {/* Performance Stats Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                             <div className="bg-background rounded-lg p-4">
-                                <div className="text-3xl font-bold text-white">{perfStats.totalOrders}</div>
+                                <div className="text-3xl font-bold text-foreground">{perfStats.totalOrders}</div>
                                 <div className="text-sm text-muted-foreground">{t('toplam_siparis')}</div>
                             </div>
                             <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
-                                <div className="text-3xl font-bold text-green-400">{perfStats.completedOrders}</div>
+                                <div className="text-3xl font-bold text-green-800 dark:text-green-400">{perfStats.completedOrders}</div>
                                 <div className="text-sm text-green-300">{t('completed_label')}</div>
                             </div>
                             <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
-                                <div className="text-3xl font-bold text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">{t('minutes_short')}</span></div>
+                                <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">{t('minutes_short')}</span></div>
                                 <div className="text-sm text-blue-300">{t('ort_hazirlama')}</div>
                             </div>
                             <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
-                                <div className="text-3xl font-bold text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">{t('minutes_short')}</span></div>
+                                <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">{t('minutes_short')}</span></div>
                                 <div className="text-sm text-purple-300">{t('avg_delivery')}</div>
                             </div>
                             <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
-                                <div className="text-3xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
+                                <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
                                 <div className="text-sm text-amber-300">{t('kurye_durdurma')}</div>
                             </div>
                         </div>
@@ -908,22 +908,22 @@ export default function StatisticsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div className="bg-background rounded-lg p-4">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-muted-foreground">{t('durdurma_sayisi')}</span></div>
-                                <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
+                                <div className="text-2xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
                             </div>
                             <div className="bg-background rounded-lg p-4">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-muted-foreground">{t('retention_label')}</span></div>
-                                <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
+                                <div className="text-2xl font-bold text-green-800 dark:text-green-400">{pauseStats.resumeCount}</div>
                             </div>
                             <div className="bg-background rounded-lg p-4">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-muted-foreground">{t('toplam_durdurma_suresi')}</span></div>
-                                <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
+                                <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
                             </div>
                         </div>
 
                         {/* Delivery Pause Log Table */}
                         <div className="bg-background rounded-lg overflow-hidden">
                             <div className="px-4 py-3 border-b border-border">
-                                <h4 className="text-white font-bold flex items-center gap-2">{t('kurye_acma_kapama_gecmisi')}</h4>
+                                <h4 className="text-foreground font-bold flex items-center gap-2">{t('kurye_acma_kapama_gecmisi')}</h4>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-border">

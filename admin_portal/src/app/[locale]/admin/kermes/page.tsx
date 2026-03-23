@@ -105,9 +105,9 @@ const { admin, loading: adminLoading } = useAdmin();
             case 'past':
                 return { label: 'Geçmiş', color: 'bg-gray-600', border: 'border-gray-500', text: 'text-foreground', bg: 'bg-card/50' };
             case 'active':
-                return { label: t('aktif'), color: 'bg-green-600', border: 'border-green-500', text: 'text-green-400', bg: 'bg-green-900/20' };
+                return { label: t('aktif'), color: 'bg-green-600', border: 'border-green-500', text: 'text-green-800 dark:text-green-400', bg: 'bg-green-900/20' };
             case 'future':
-                return { label: 'Yaklaşan', color: 'bg-blue-600', border: 'border-blue-500', text: 'text-blue-400', bg: 'bg-blue-900/20' };
+                return { label: 'Yaklaşan', color: 'bg-blue-600', border: 'border-blue-500', text: 'text-blue-800 dark:text-blue-400', bg: 'bg-blue-900/20' };
         }
     };
 
@@ -316,7 +316,7 @@ const { admin, loading: adminLoading } = useAdmin();
     if (!admin) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">{t('erisim_reddedildi')}</div>
+                <div className="text-foreground">{t('erisim_reddedildi')}</div>
             </div>
         );
     }
@@ -325,12 +325,12 @@ const { admin, loading: adminLoading } = useAdmin();
         <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-6xl mx-auto mb-6">
-                <Link href="/admin/dashboard" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/dashboard" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
                     ← Admin Paneli
                 </Link>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {t('kermes_yonetimi')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -424,7 +424,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {filteredEvents.length === 0 ? (
                     <div className="bg-card rounded-xl p-12 text-center">
                         <div className="text-6xl mb-4">🎪</div>
-                        <h2 className="text-xl font-bold text-white mb-2">
+                        <h2 className="text-xl font-bold text-foreground mb-2">
                             {events.length === 0 ? t('henuz_kermes_yok') : t('sonuc_bulunamadi')}
                         </h2>
                         <p className="text-muted-foreground mb-6">
@@ -469,7 +469,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-6 gap-3 items-center">
                                             {/* Title & Org */}
                                             <div className="md:col-span-2">
-                                                <h3 className="text-white font-semibold truncate group-hover:text-pink-400 transition">
+                                                <h3 className="text-foreground font-semibold truncate group-hover:text-pink-800 dark:text-pink-400 transition">
                                                     {event.title || 'İsimsiz Kermes'}
                                                 </h3>
                                                 {event.organizationName && (
@@ -480,23 +480,23 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {/* Date */}
                                             <div className="hidden md:block">
                                                 <span className="text-gray-500 text-xs">{t('tarih')}</span>
-                                                <p className="text-white text-sm truncate">{formatDateRange(event)}</p>
+                                                <p className="text-foreground text-sm truncate">{formatDateRange(event)}</p>
                                             </div>
 
                                             {/* Location */}
                                             <div className="hidden md:block">
                                                 <span className="text-gray-500 text-xs">📍 Konum</span>
-                                                <p className="text-white text-sm truncate">{getLocationDisplay(event)}</p>
+                                                <p className="text-foreground text-sm truncate">{getLocationDisplay(event)}</p>
                                             </div>
 
                                             {/* Contact */}
                                             <div className="hidden md:block">
                                                 <span className="text-gray-500 text-xs">📞 Sorumlu</span>
-                                                <p className="text-white text-sm truncate">{contactName}</p>
+                                                <p className="text-foreground text-sm truncate">{contactName}</p>
                                                 {contactPhone && (
                                                     <a
                                                         href={`tel:${contactPhone}`}
-                                                        className="text-cyan-400 text-xs hover:text-cyan-300"
+                                                        className="text-cyan-800 dark:text-cyan-400 text-xs hover:text-cyan-300"
                                                         onClick={(ev) => ev.stopPropagation()}
                                                     >
                                                         {contactPhone}
@@ -507,7 +507,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {/* Menu Count */}
                                             <div className="hidden md:block">
                                                 <span className="text-gray-500 text-xs">{t('menu')}</span>
-                                                <p className="text-cyan-400 text-sm">{event.productCount || 0} {t('urun')}</p>
+                                                <p className="text-cyan-800 dark:text-cyan-400 text-sm">{event.productCount || 0} {t('urun')}</p>
                                             </div>
                                         </div>
 

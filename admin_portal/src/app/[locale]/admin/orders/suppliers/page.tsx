@@ -151,8 +151,8 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <Link href="/admin/orders" className="text-muted-foreground text-sm hover:text-white mb-2 inline-block">{t('siparis_paneline_don')}</Link>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">{t('tedarikcilerim')}</h1>
+                        <Link href="/admin/orders" className="text-muted-foreground text-sm hover:text-foreground mb-2 inline-block">{t('siparis_paneline_don')}</Link>
+                        <h1 className="text-3xl font-bold text-foreground tracking-tight">{t('tedarikcilerim')}</h1>
                         <p className="text-muted-foreground">{t('toptanci_listenizi_yonetin')}</p>
                     </div>
                     <button
@@ -169,9 +169,9 @@ const { admin, loading: adminLoading } = useAdmin();
                 ) : suppliers.length === 0 ? (
                     <div className="bg-card/50 border border-border rounded-2xl p-12 text-center">
                         <div className="text-4xl mb-4">🚛</div>
-                        <h3 className="text-xl font-bold text-white mb-2">{t('henuz_tedarikci_yok')}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{t('henuz_tedarikci_yok')}</h3>
                         <p className="text-muted-foreground mb-6">{t('i_lk_toptancinizi_ekleyerek_baslayin')}</p>
-                        <button onClick={() => handleOpenModal()} className="text-green-400 hover:text-green-300 underline">{t('simdi_ekle')}</button>
+                        <button onClick={() => handleOpenModal()} className="text-green-800 dark:text-green-400 hover:text-green-300 underline">{t('simdi_ekle')}</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -185,11 +185,11 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     supplier.category === 'spices' ? '🧂' : '🔧'}
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                        <button onClick={() => handleOpenModal(supplier)} className="p-2 hover:bg-gray-700 rounded text-blue-400">✏️</button>
-                                        <button onClick={() => setConfirmDeleteSupplier(supplier)} className="p-2 hover:bg-gray-700 rounded text-red-400">🗑️</button>
+                                        <button onClick={() => handleOpenModal(supplier)} className="p-2 hover:bg-gray-700 rounded text-blue-800 dark:text-blue-400">✏️</button>
+                                        <button onClick={() => setConfirmDeleteSupplier(supplier)} className="p-2 hover:bg-gray-700 rounded text-red-800 dark:text-red-400">🗑️</button>
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-1">{supplier.name}</h3>
+                                <h3 className="text-xl font-bold text-foreground mb-1">{supplier.name}</h3>
                                 {supplier.companyName && <p className="text-sm text-muted-foreground mb-4">{supplier.companyName}</p>}
 
                                 <div className="space-y-2 text-sm text-foreground">
@@ -218,7 +218,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
                     <div className="bg-card rounded-2xl w-full max-w-lg shadow-2xl border border-border">
                         <div className="p-6 border-b border-border flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-white">
+                            <h2 className="text-xl font-bold text-foreground">
                                 {editingId ? t('tedarikciyi_duzenle') : t('yeni_tedarikci_ekle')}
                             </h2>
                             <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-white">✕</button>

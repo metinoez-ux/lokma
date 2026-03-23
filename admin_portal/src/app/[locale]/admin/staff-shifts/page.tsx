@@ -285,7 +285,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Back Button */}
                 <button
                     onClick={() => router.push('/admin/dashboard')}
-                    className="flex items-center text-muted-foreground hover:text-white mb-6 transition-colors group"
+                    className="flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors group"
                 >
                     <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
                     {t('panela_geri_don')}
@@ -305,7 +305,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             type="month"
                             value={selectedMonth}
                             onChange={e => setSelectedMonth(e.target.value)}
-                            className="bg-card border border-gray-600 rounded-xl px-4 py-2.5 text-white text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
+                            className="bg-card border border-gray-600 rounded-xl px-4 py-2.5 text-foreground text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
                         />
                         {/* Export Buttons */}
                         <button
@@ -329,21 +329,21 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_vardiya')}</p>
-                        <p className="text-3xl font-black text-white mt-1">{shifts.length}</p>
+                        <p className="text-3xl font-black text-foreground mt-1">{shifts.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('personel_sayisi')}</p>
-                        <p className="text-3xl font-black text-cyan-400 mt-1">{staffSummary.length}</p>
+                        <p className="text-3xl font-black text-cyan-800 dark:text-cyan-400 mt-1">{staffSummary.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_calisma')}</p>
-                        <p className="text-3xl font-black text-green-400 mt-1">
+                        <p className="text-3xl font-black text-green-800 dark:text-green-400 mt-1">
                             {formatMinutes(staffSummary.reduce((t, s) => t + s.totalMinutes, 0))}
                         </p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_mola')}</p>
-                        <p className="text-3xl font-black text-amber-400 mt-1">
+                        <p className="text-3xl font-black text-amber-800 dark:text-amber-400 mt-1">
                             {formatMinutes(staffSummary.reduce((t, s) => t + s.pauseMinutes, 0))}
                         </p>
                     </div>
@@ -352,7 +352,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Staff Summary Table */}
                 {staffSummary.length > 0 && (
                     <div className="mb-8">
-                        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                             <span className="w-1 h-5 bg-cyan-500 rounded-full"></span>
                             {t('personel_ozeti')} {monthLabel}
                         </h2>
@@ -371,14 +371,14 @@ const { admin, loading: adminLoading } = useAdmin();
                                 <tbody>
                                     {staffSummary.map((s, i) => (
                                         <tr key={s.staffId} className={`border-b border-border/50 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-card/50'}`}>
-                                            <td className="px-5 py-3 font-medium text-white">{s.name}</td>
+                                            <td className="px-5 py-3 font-medium text-foreground">{s.name}</td>
                                             <td className="px-4 py-3 text-center text-sm text-foreground">{s.shiftCount}</td>
-                                            <td className="px-4 py-3 text-center text-sm text-green-400 font-bold">{formatMinutes(s.totalMinutes)}</td>
-                                            <td className="px-4 py-3 text-center text-sm text-amber-400">{formatMinutes(s.pauseMinutes)}</td>
-                                            <td className="px-4 py-3 text-center text-sm text-cyan-400 font-bold">{formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
+                                            <td className="px-4 py-3 text-center text-sm text-green-800 dark:text-green-400 font-bold">{formatMinutes(s.totalMinutes)}</td>
+                                            <td className="px-4 py-3 text-center text-sm text-amber-800 dark:text-amber-400">{formatMinutes(s.pauseMinutes)}</td>
+                                            <td className="px-4 py-3 text-center text-sm text-cyan-800 dark:text-cyan-400 font-bold">{formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
                                             <td className="px-4 py-3 text-center">
                                                 {s.driverShifts > 0 ? (
-                                                    <span className="bg-blue-900/40 text-blue-400 border border-blue-700/40 px-2 py-0.5 rounded-full text-xs font-medium">
+                                                    <span className="bg-blue-900/40 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-700/40 px-2 py-0.5 rounded-full text-xs font-medium">
                                                         🛵 {s.driverShifts}
                                                     </span>
                                                 ) : (
@@ -395,7 +395,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                 {/* Detailed Shifts Table */}
                 <div>
-                    <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                         <span className="w-1 h-5 bg-purple-500 rounded-full"></span>
                         {t('detayli_vardiya_kayitlari')}
                     </h2>
@@ -430,28 +430,28 @@ const { admin, loading: adminLoading } = useAdmin();
                                 <tbody>
                                     {shifts.map((s, i) => (
                                         <tr key={s.id} className={`border-b border-border/30 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-card/50'}`}>
-                                            <td className="px-4 py-2.5 font-medium text-white text-sm">{s.staffName}</td>
+                                            <td className="px-4 py-2.5 font-medium text-foreground text-sm">{s.staffName}</td>
                                             <td className="px-3 py-2.5 text-center text-xs text-foreground font-mono">{s.date}</td>
                                             <td className="px-3 py-2.5 text-center text-xs text-foreground">{formatDate(s.startedAt)}</td>
                                             <td className="px-3 py-2.5 text-center text-xs text-foreground">{formatDate(s.endedAt)}</td>
-                                            <td className="px-3 py-2.5 text-center text-xs text-green-400 font-bold">{formatMinutes(s.totalMinutes)}</td>
-                                            <td className="px-3 py-2.5 text-center text-xs text-amber-400">{formatMinutes(s.pauseMinutes)}</td>
-                                            <td className="px-3 py-2.5 text-center text-xs text-cyan-400 font-bold">{formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
+                                            <td className="px-3 py-2.5 text-center text-xs text-green-800 dark:text-green-400 font-bold">{formatMinutes(s.totalMinutes)}</td>
+                                            <td className="px-3 py-2.5 text-center text-xs text-amber-800 dark:text-amber-400">{formatMinutes(s.pauseMinutes)}</td>
+                                            <td className="px-3 py-2.5 text-center text-xs text-cyan-800 dark:text-cyan-400 font-bold">{formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
                                             <td className="px-3 py-2.5 text-center text-xs text-muted-foreground">
                                                 {s.assignedTables.length > 0 ? s.assignedTables.join(', ') : '-'}
                                             </td>
                                             <td className="px-3 py-2.5 text-center">
                                                 {s.isDeliveryDriver ? (
-                                                    <span className="bg-blue-900/40 text-blue-400 border border-blue-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('kurye')}</span>
+                                                    <span className="bg-blue-900/40 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('kurye')}</span>
                                                 ) : s.isOtherRole ? (
-                                                    <span className="bg-purple-900/40 text-purple-400 border border-purple-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('diger')}</span>
+                                                    <span className="bg-purple-900/40 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('diger')}</span>
                                                 ) : (
                                                     <span className="bg-gray-700/40 text-muted-foreground border border-gray-600/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('servis')}</span>
                                                 )}
                                             </td>
                                             <td className="px-3 py-2.5 text-center">
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'active'
-                                                    ? 'bg-green-900/40 text-green-400 border border-green-700/40'
+                                                    ? 'bg-green-900/40 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-700/40'
                                                     : 'bg-gray-700/40 text-muted-foreground border border-gray-600/40'
                                                     }`}>
                                                     {s.status === 'active' ? t('aktif') : t('tamamlandi')}

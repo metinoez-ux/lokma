@@ -207,7 +207,7 @@ function CategoriesPageContent() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">{t('no_access')}</h2>
+                    <h2 className="text-xl font-bold text-foreground mt-4">{t('no_access')}</h2>
                     <p className="text-muted-foreground mt-2">
                         {t('no_access_desc')}
                     </p>
@@ -261,7 +261,7 @@ function CategoriesPageContent() {
                 {categories.length === 0 ? (
                     <div className="bg-card rounded-xl p-12 text-center">
                         <span className="text-5xl">🗂️</span>
-                        <h3 className="text-lg font-medium text-white mt-4">{t('no_categories')}</h3>
+                        <h3 className="text-lg font-medium text-foreground mt-4">{t('no_categories')}</h3>
                         <p className="text-muted-foreground mt-2">{t('no_categories_desc')}</p>
                         <button
                             onClick={openAdd}
@@ -305,7 +305,7 @@ function CategoriesPageContent() {
 
                                     {/* Info */}
                                     <div className="flex-1">
-                                        <h3 className="text-white font-bold text-lg">{category.name}</h3>
+                                        <h3 className="text-foreground font-bold text-lg">{category.name}</h3>
                                         <p className="text-gray-500 text-sm">
                                             {category.productCount || 0} {t('products_count', { count: category.productCount || 0 })} {category.isActive ? t('active') : t('inactive')}
                                         </p>
@@ -339,7 +339,7 @@ function CategoriesPageContent() {
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-xl p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold text-white mb-4">
+                        <h2 className="text-xl font-bold text-foreground mb-4">
                             {editingCategory ? t('edit_category') : t('new_category')}
                         </h2>
 

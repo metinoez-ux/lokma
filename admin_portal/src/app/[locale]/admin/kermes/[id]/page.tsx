@@ -726,7 +726,7 @@ export default function KermesDetailPage() {
     if (!kermes) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <p className="text-white">{t('kermes_bulunamadi')}</p>
+                <p className="text-foreground">{t('kermes_bulunamadi')}</p>
             </div>
         );
     }
@@ -752,13 +752,13 @@ export default function KermesDetailPage() {
                     <div className="flex items-center gap-4">
                         <Link href="/admin/business?type=kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
                         <div>
-                            <h1 className="text-xl font-bold text-white flex items-center gap-2">🎪 {kermes.title}</h1>
+                            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">🎪 {kermes.title}</h1>
                             {kermes.organizationName && <p className="text-muted-foreground text-sm">🕌 {kermes.organizationName}</p>}
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-400 rounded text-xs">🐟 TUNA</span>}
-                        {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-amber-600/30 text-amber-400 rounded text-xs">🏔️ TOROS</span>}
+                        {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">🐟 TUNA</span>}
+                        {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-amber-600/30 text-amber-800 dark:text-amber-400 rounded text-xs">🏔️ TOROS</span>}
                         <button onClick={toggleActiveStatus}
                             className={`px-3 py-1 rounded-lg text-sm font-medium ${kermes.isActive ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                             {kermes.isActive ? t('aktif') : t('kapali')}
@@ -784,7 +784,7 @@ export default function KermesDetailPage() {
                         {/* Main Info Card */}
                         <div className="bg-card rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-white font-bold">📋 Kermes Bilgileri</h3>
+                                <h3 className="text-foreground font-bold">📋 Kermes Bilgileri</h3>
                                 {!isEditing ? (
                                     <button onClick={() => {
                                         setEditForm({
@@ -886,10 +886,10 @@ export default function KermesDetailPage() {
 
                                     {/* Konum Bilgileri */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-white font-medium mb-3">📍 Konum Bilgileri</h4>
+                                        <h4 className="text-foreground font-medium mb-3">📍 Konum Bilgileri</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="md:col-span-2">
-                                                <label className="text-muted-foreground text-xs block mb-1">Ana Adres <span className="text-blue-400">{t('google_ile_ara')}</span></label>
+                                                <label className="text-muted-foreground text-xs block mb-1">Ana Adres <span className="text-blue-800 dark:text-blue-400">{t('google_ile_ara')}</span></label>
                                                 <PlacesAutocomplete
                                                     value={editForm.address || ''}
                                                     onChange={(value) => setEditForm({ ...editForm, address: value })}
@@ -954,7 +954,7 @@ export default function KermesDetailPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowStockImageModal(true)}
-                                                    className="w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-cyan-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-cyan-400"
+                                                    className="w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-cyan-500 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-cyan-800 dark:text-cyan-400"
                                                 >
                                                     <span className="text-3xl">🖼️</span>
                                                     <span className="text-sm">{t('stok_gorsel_sec')}</span>
@@ -1030,7 +1030,7 @@ export default function KermesDetailPage() {
 
                                     {/* Yetkili Kişi Bilgileri */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-white font-medium mb-3">{t('yetkili_kisi')}</h4>
+                                        <h4 className="text-foreground font-medium mb-3">{t('yetkili_kisi')}</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-muted-foreground text-xs block mb-1">{t('first_name')}</label>
@@ -1064,12 +1064,12 @@ export default function KermesDetailPage() {
 
                                     {/* Kurumsal Ayarlar (Pfand & KDV) */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-white font-medium mb-3">🏢 Kurumsal Ayarlar</h4>
+                                        <h4 className="text-foreground font-medium mb-3">🏢 Kurumsal Ayarlar</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Pfand Sistemi */}
                                             <div className="bg-card p-4 rounded-lg border border-gray-600">
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-white font-medium">🍶 Pfand (Depozito) Sistemi</span>
+                                                    <span className="text-foreground font-medium">🍶 Pfand (Depozito) Sistemi</span>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input type="checkbox" checked={editForm.hasPfandSystem} onChange={(e) => setEditForm({ ...editForm, hasPfandSystem: e.target.checked })} className="sr-only peer" />
                                                         <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
@@ -1087,7 +1087,7 @@ export default function KermesDetailPage() {
                                             {/* KDV Sistemi */}
                                             <div className="bg-card p-4 rounded-lg border border-gray-600">
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-white font-medium">{t('kdv_gosterimi')}</span>
+                                                    <span className="text-foreground font-medium">{t('kdv_gosterimi')}</span>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input type="checkbox" checked={editForm.showKdv} onChange={(e) => setEditForm({ ...editForm, showKdv: e.target.checked })} className="sr-only peer" />
                                                         <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -1113,10 +1113,10 @@ export default function KermesDetailPage() {
 
                                     {/* Nakliyat & Kurye */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-white font-medium mb-3">{t('hizmet_secenekleri')}</h4>
+                                        <h4 className="text-foreground font-medium mb-3">{t('hizmet_secenekleri')}</h4>
                                         <div className="bg-card p-4 rounded-lg border border-gray-600">
                                             <div className="flex items-center justify-between mb-4">
-                                                <span className="text-white font-medium">{t('eve_teslimat_kurye')}</span>
+                                                <span className="text-foreground font-medium">{t('eve_teslimat_kurye')}</span>
                                                 <label className="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" checked={editForm.hasDelivery} onChange={(e) => setEditForm({ ...editForm, hasDelivery: e.target.checked })} className="sr-only peer" />
                                                     <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
@@ -1147,7 +1147,7 @@ export default function KermesDetailPage() {
                                     {/* Park İmkanları */}
                                     <div className="pt-4 border-t border-border">
                                         <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-white font-medium">{t('park_i_mkanlari')}</h4>
+                                            <h4 className="text-foreground font-medium">{t('park_i_mkanlari')}</h4>
                                             <button type="button" onClick={() => setEditForm({ ...editForm, parkingLocations: [...editForm.parkingLocations, { street: '', city: '', postalCode: '', country: '', note: '', images: [] }] })}
                                                 className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-500">
                                                 {t('park_alani_ekle')}
@@ -1161,11 +1161,11 @@ export default function KermesDetailPage() {
                                                         const updated = [...editForm.parkingLocations];
                                                         updated.splice(idx, 1);
                                                         setEditForm({ ...editForm, parkingLocations: updated });
-                                                    }} className="absolute top-2 right-2 text-red-400 hover:text-red-300 text-xs">{t('sil')}</button>
+                                                    }} className="absolute top-2 right-2 text-red-800 dark:text-red-400 hover:text-red-300 text-xs">{t('sil')}</button>
 
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                                                         <div className="md:col-span-2">
-                                                            <label className="text-muted-foreground text-xs block mb-1">📍 Park Yeri Adresi / İsim <span className="text-blue-400">{t('google_ile_ara')}</span></label>
+                                                            <label className="text-muted-foreground text-xs block mb-1">📍 Park Yeri Adresi / İsim <span className="text-blue-800 dark:text-blue-400">{t('google_ile_ara')}</span></label>
                                                             <PlacesAutocomplete
                                                                 value={loc.street || ''}
                                                                 onChange={(value) => {
@@ -1219,24 +1219,24 @@ export default function KermesDetailPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-gray-500">{t('tarih')}</span>
-                                            <span className="text-white">{formatDate(kermes.date || kermes.startDate)}</span>
+                                            <span className="text-foreground">{formatDate(kermes.date || kermes.startDate)}</span>
                                         </div>
                                         {kermes.endDate && (
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">{t('bitis')}</span>
-                                                <span className="text-white">{formatDate(kermes.endDate)}</span>
+                                                <span className="text-foreground">{formatDate(kermes.endDate)}</span>
                                             </div>
                                         )}
                                         {kermes.openingTime && (
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">{t('saat')}</span>
-                                                <span className="text-white">{kermes.openingTime} - {kermes.closingTime || '?'}</span>
+                                                <span className="text-foreground">{kermes.openingTime} - {kermes.closingTime || '?'}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between text-sm md:col-span-2">
                                             <span className="text-gray-500">📍 Adres:</span>
                                             <div className="text-right">
-                                                <div className="text-white">{kermes.address || '-'}</div>
+                                                <div className="text-foreground">{kermes.address || '-'}</div>
                                                 {(kermes.secondStreetName) && <div className="text-muted-foreground text-xs">{kermes.secondStreetName}</div>}
                                                 <div className="text-foreground text-xs">{[kermes.postalCode, kermes.city, kermes.country].filter(Boolean).join(' ')}</div>
                                             </div>
@@ -1247,7 +1247,7 @@ export default function KermesDetailPage() {
                                             <div className="flex justify-between text-sm md:col-span-2 border-t border-border pt-2 mt-2">
                                                 <span className="text-gray-500">🌍 {kermes.secondaryLanguage?.toUpperCase()} {t('baslik')}</span>
                                                 <div className="text-right">
-                                                    <div className="text-white">{kermes.titleSecondary}</div>
+                                                    <div className="text-foreground">{kermes.titleSecondary}</div>
                                                     {kermes.descriptionSecondary && <div className="text-muted-foreground text-xs truncate max-w-[200px]">{kermes.descriptionSecondary}</div>}
                                                 </div>
                                             </div>
@@ -1259,7 +1259,7 @@ export default function KermesDetailPage() {
                                         <div className="pt-4 border-t border-border">
                                             <span className="text-gray-500 text-sm block mb-2">{t('yetkili_kisi')}</span>
                                             <div className="flex justify-between items-center text-sm">
-                                                <div className="text-white">
+                                                <div className="text-foreground">
                                                     {kermes.contactFirstName ? `${kermes.contactFirstName} ${kermes.contactLastName}` : kermes.contactName}
                                                 </div>
                                                 {kermes.contactPhone && (
@@ -1279,13 +1279,13 @@ export default function KermesDetailPage() {
                                                 {kermes.hasPfandSystem && (
                                                     <div className="bg-card p-2 rounded border border-gray-600">
                                                         <span className="text-muted-foreground block text-xs">{t('deposit_system')}</span>
-                                                        <span className="text-green-400 font-medium">{kermes.pfandAmount}€</span>
+                                                        <span className="text-green-800 dark:text-green-400 font-medium">{kermes.pfandAmount}€</span>
                                                     </div>
                                                 )}
                                                 {kermes.showKdv && (
                                                     <div className="bg-card p-2 rounded border border-gray-600">
                                                         <span className="text-muted-foreground block text-xs">KDV ({kermes.kdvRate}%)</span>
-                                                        <span className="text-blue-400 font-medium">{kermes.pricesIncludeKdv ? 'Dahil' : t('haric')}</span>
+                                                        <span className="text-blue-800 dark:text-blue-400 font-medium">{kermes.pricesIncludeKdv ? 'Dahil' : t('haric')}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -1309,7 +1309,7 @@ export default function KermesDetailPage() {
                                                         <div className="space-y-2">
                                                             {kermes.parkingLocations.map((loc, i) => (
                                                                 <div key={i} className="text-xs text-foreground bg-card p-2 rounded border border-gray-600">
-                                                                    <div className="font-medium text-white">{loc.street}</div>
+                                                                    <div className="font-medium text-foreground">{loc.street}</div>
                                                                     <div className="text-gray-500">{loc.note} {loc.city && `(${loc.city})`}</div>
                                                                 </div>
                                                             ))}
@@ -1326,13 +1326,13 @@ export default function KermesDetailPage() {
                                             <span className="text-gray-500 text-sm block mb-2">{t('ozellikler')}</span>
                                             <div className="flex flex-wrap gap-2">
                                                 {kermes.features.map(fId => (
-                                                    <span key={fId} className="px-3 py-1 bg-pink-600/20 text-pink-400 rounded-full text-xs">
+                                                    <span key={fId} className="px-3 py-1 bg-pink-600/20 text-pink-800 dark:text-pink-400 rounded-full text-xs">
                                                         {getFeatureLabel(fId)}
                                                     </span>
                                                 ))}
                                                 {/* Özel özellikler */}
                                                 {kermes.customFeatures && kermes.customFeatures.map((cf: string, idx: number) => (
-                                                    <span key={`custom-${idx}`} className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs">
+                                                    <span key={`custom-${idx}`} className="px-3 py-1 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-full text-xs">
                                                         {cf}
                                                     </span>
                                                 ))}
@@ -1345,7 +1345,7 @@ export default function KermesDetailPage() {
 
                         {/* Contact Person Card */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">{t('yetkili_kisi')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">{t('yetkili_kisi')}</h3>
                             {isEditing ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -1363,11 +1363,11 @@ export default function KermesDetailPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="flex items-center gap-3 text-sm">
                                         <span className="text-gray-500">👤 İsim:</span>
-                                        <span className="text-white">{kermes.contactName || '-'}</span>
+                                        <span className="text-foreground">{kermes.contactName || '-'}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm">
                                         <span className="text-gray-500">📞 Telefon:</span>
-                                        <span className="text-white">{kermes.contactPhone || '-'}</span>
+                                        <span className="text-foreground">{kermes.contactPhone || '-'}</span>
                                     </div>
                                 </div>
                             )}
@@ -1375,14 +1375,14 @@ export default function KermesDetailPage() {
 
                         {/* Nakliyat/Kurye Servisi Card */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">{t('kurye_nakliyat_servisi')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">{t('kurye_nakliyat_servisi')}</h3>
                             {isEditing ? (
                                 <div className="space-y-4">
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input type="checkbox" checked={editForm.hasDelivery}
                                             onChange={(e) => setEditForm({ ...editForm, hasDelivery: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
-                                        <span className="text-white">{t('kurye_servisi_mevcut')}</span>
+                                        <span className="text-foreground">{t('kurye_servisi_mevcut')}</span>
                                     </label>
                                     {editForm.hasDelivery && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
@@ -1393,7 +1393,7 @@ export default function KermesDetailPage() {
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="3.00" />
                                             </div>
                                             <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('minimum_siparis_tutari')} <span className="text-yellow-400">{t('bu_tutarin_altinda_kurye_kabul_edilmez')}</span></label>
+                                                <label className="text-muted-foreground text-xs block mb-1">{t('minimum_siparis_tutari')} <span className="text-yellow-800 dark:text-yellow-400">{t('bu_tutarin_altinda_kurye_kabul_edilmez')}</span></label>
                                                 <input type="number" step="1" min="0" value={editForm.minOrderAmount || ''}
                                                     onChange={(e) => setEditForm({ ...editForm, minOrderAmount: parseFloat(e.target.value) || 0 })}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="15" />
@@ -1404,7 +1404,7 @@ export default function KermesDetailPage() {
                             ) : (
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3 text-sm">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasDelivery ? 'bg-green-600/30 text-green-400' : 'bg-gray-600/30 text-muted-foreground'}`}>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasDelivery ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-gray-600/30 text-muted-foreground'}`}>
                                             {kermes.hasDelivery ? t('kurye_var') : t('kurye_yok')}
                                         </span>
                                     </div>
@@ -1412,12 +1412,12 @@ export default function KermesDetailPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <span className="text-gray-500">{t('nakliyat_ucreti')}</span>
-                                                <span className="text-white font-medium">{(kermes.deliveryFee || 0).toFixed(2)} €</span>
+                                                <span className="text-foreground font-medium">{(kermes.deliveryFee || 0).toFixed(2)} €</span>
                                             </div>
                                             {(kermes.minOrderAmount || 0) > 0 && (
                                                 <div className="flex items-center gap-2 text-sm">
                                                     <span className="text-gray-500">{t('min_siparis')}</span>
-                                                    <span className="text-yellow-400 font-medium">{(kermes.minOrderAmount || 0).toFixed(2)} {t('altinda_kurye_kabul_edilmez')}</span>
+                                                    <span className="text-yellow-800 dark:text-yellow-400 font-medium">{(kermes.minOrderAmount || 0).toFixed(2)} {t('altinda_kurye_kabul_edilmez')}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -1428,7 +1428,7 @@ export default function KermesDetailPage() {
 
                         {/* Park İmkanları Card */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">{t('park_i_mkanlari')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">{t('park_i_mkanlari')}</h3>
                             {isEditing ? (
                                 <div className="space-y-4">
                                     {/* Park Locations List */}
@@ -1437,17 +1437,17 @@ export default function KermesDetailPage() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">{idx + 1}</span>
-                                                    <span className="text-white font-medium text-sm">{t('park_i_mkani')} {idx + 1}</span>
+                                                    <span className="text-foreground font-medium text-sm">{t('park_i_mkani')} {idx + 1}</span>
                                                 </div>
                                                 <button onClick={() => {
                                                     const updated = [...editForm.parkingLocations];
                                                     updated.splice(idx, 1);
                                                     setEditForm({ ...editForm, parkingLocations: updated });
-                                                }} className="text-red-400 hover:text-red-300 text-xs">{t('sil')}</button>
+                                                }} className="text-red-800 dark:text-red-400 hover:text-red-300 text-xs">{t('sil')}</button>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 <div className="md:col-span-2">
-                                                    <label className="text-muted-foreground text-xs block mb-1">📍 Sokak / Cadde Adresi <span className="text-blue-400">{t('google_ile_ara')}</span></label>
+                                                    <label className="text-muted-foreground text-xs block mb-1">📍 Sokak / Cadde Adresi <span className="text-blue-800 dark:text-blue-400">{t('google_ile_ara')}</span></label>
                                                     <PlacesAutocomplete
                                                         value={loc.street || ''}
                                                         onChange={(value) => {
@@ -1580,7 +1580,7 @@ export default function KermesDetailPage() {
                                     <div className="grid grid-cols-3 gap-2">
                                         {/* Manuel Ekle */}
                                         <button onClick={() => setEditForm({ ...editForm, parkingLocations: [...editForm.parkingLocations, { street: '', city: '', postalCode: '', country: '', note: '', images: [] }] })}
-                                            className="py-3 border-2 border-dashed border-gray-600 text-muted-foreground rounded-lg hover:border-blue-500 hover:text-blue-400 text-sm flex flex-col items-center gap-1">
+                                            className="py-3 border-2 border-dashed border-gray-600 text-muted-foreground rounded-lg hover:border-blue-500 hover:text-blue-800 dark:text-blue-400 text-sm flex flex-col items-center gap-1">
                                             <span className="text-lg">✏️</span>
                                             <span>{t('manuel_ekle')}</span>
                                         </button>
@@ -1589,7 +1589,7 @@ export default function KermesDetailPage() {
                                             setMapPickerIndex('new');
                                             setMapPickerOpen(true);
                                         }}
-                                            className="py-3 border-2 border-dashed border-green-600/50 text-green-400 rounded-lg hover:border-green-500 hover:bg-green-900/20 text-sm flex flex-col items-center gap-1">
+                                            className="py-3 border-2 border-dashed border-green-600/50 text-green-800 dark:text-green-400 rounded-lg hover:border-green-500 hover:bg-green-900/20 text-sm flex flex-col items-center gap-1">
                                             <span className="text-lg">🛰️</span>
                                             <span>GPS / Harita</span>
                                         </button>
@@ -1609,7 +1609,7 @@ export default function KermesDetailPage() {
                                                 }]
                                             });
                                         }}
-                                            className="py-3 border-2 border-dashed border-purple-600/50 text-purple-400 rounded-lg hover:border-purple-500 hover:bg-purple-900/20 text-sm flex flex-col items-center gap-1">
+                                            className="py-3 border-2 border-dashed border-purple-600/50 text-purple-800 dark:text-purple-400 rounded-lg hover:border-purple-500 hover:bg-purple-900/20 text-sm flex flex-col items-center gap-1">
                                             <span className="text-lg">📍</span>
                                             <span>{t('kermes_location')}</span>
                                         </button>
@@ -1632,7 +1632,7 @@ export default function KermesDetailPage() {
                                                     <div className="flex items-start gap-3">
                                                         <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">{idx + 1}</span>
                                                         <div className="flex-1">
-                                                            <p className="text-white text-sm font-medium">
+                                                            <p className="text-foreground text-sm font-medium">
                                                                 {loc.street || loc.address}{loc.city && `, ${loc.city}`}
                                                             </p>
                                                             {(loc.postalCode || loc.country) && (
@@ -1662,10 +1662,10 @@ export default function KermesDetailPage() {
                 {activeTab === 'menu' && (
                     <div className="bg-card rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-white font-bold">{t('kermes_menusu')}</h3>
+                            <h3 className="text-foreground font-bold">{t('kermes_menusu')}</h3>
                             <div className="flex gap-2">
                                 <button onClick={() => setShowCategoryModal(true)}
-                                    className="px-3 py-2 bg-purple-600/20 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-600/40">
+                                    className="px-3 py-2 bg-purple-600/20 text-purple-800 dark:text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-600/40">
                                     {t('kategori_ekle')}
                                 </button>
                                 <button onClick={() => { setShowAddModal(true); setModalView('select'); }}
@@ -1718,7 +1718,7 @@ export default function KermesDetailPage() {
                                     .filter(([category]) => !selectedCategory || category === selectedCategory)
                                     .map(([category, items]) => (
                                         <div key={category}>
-                                            <h4 className="text-pink-400 text-sm font-medium mb-2">{getCategoryEmoji(category)} {category}</h4>
+                                            <h4 className="text-pink-800 dark:text-pink-400 text-sm font-medium mb-2">{getCategoryEmoji(category)} {category}</h4>
                                             <div className="space-y-2">
                                                 {items.map((product) => (
                                                     <div key={product.id} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-gray-600 transition ${!product.isAvailable ? 'opacity-50' : ''}`}
@@ -1738,18 +1738,18 @@ export default function KermesDetailPage() {
                                                             newIngredient: '',
                                                         })}>
                                                         <div className="flex items-center gap-3">
-                                                            <span className="text-white font-medium">{product.name}</span>
-                                                            {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-400 rounded text-xs">{t('ozel')}</span>}
-                                                            {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-400 rounded text-xs">{t('barcode')}</span>}
-                                                            <span className="text-green-400 font-bold">{product.price.toFixed(2)} €</span>
+                                                            <span className="text-foreground font-medium">{product.name}</span>
+                                                            {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-800 dark:text-purple-400 rounded text-xs">{t('ozel')}</span>}
+                                                            {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">{t('barcode')}</span>}
+                                                            <span className="text-green-800 dark:text-green-400 font-bold">{product.price.toFixed(2)} €</span>
                                                             <span className="text-gray-500 text-xs">{t('duzenle')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                             <button onClick={() => handleToggleAvailability(product)}
-                                                                className={`px-2 py-1 rounded text-xs ${product.isAvailable ? 'bg-green-600/30 text-green-400' : 'bg-red-600/30 text-red-400'}`}>
+                                                                className={`px-2 py-1 rounded text-xs ${product.isAvailable ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
                                                                 {product.isAvailable ? '✓ Mevcut' : t('tukendi')}
                                                             </button>
-                                                            <button onClick={() => handleDeleteProduct(product)} className="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/40 rounded text-xs">🗑️</button>
+                                                            <button onClick={() => handleDeleteProduct(product)} className="px-2 py-1 bg-red-600/20 text-red-800 dark:text-red-400 hover:bg-red-600/40 rounded text-xs">🗑️</button>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -1766,7 +1766,7 @@ export default function KermesDetailPage() {
             {showCategoryModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                     <div className="bg-card rounded-2xl w-full max-w-md p-6">
-                        <h2 className="text-lg font-bold text-white mb-4">{t('yeni_kategori_ekle')}</h2>
+                        <h2 className="text-lg font-bold text-foreground mb-4">{t('yeni_kategori_ekle')}</h2>
                         <input
                             type="text"
                             value={newCategoryName}
@@ -1790,7 +1790,7 @@ export default function KermesDetailPage() {
                         <div className="p-4 border-b border-border flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 {modalView !== 'select' && <button onClick={() => setModalView('select')} className="text-muted-foreground hover:text-white">←</button>}
-                                <h2 className="text-lg font-bold text-white">
+                                <h2 className="text-lg font-bold text-foreground">
                                     {modalView === 'select' && t('urun_ekle')}
                                     {modalView === 'catalog' && t('kermes_katalogu')}
                                     {modalView === 'master' && '📦 Master Katalog (Barkodlu)'}
@@ -1805,17 +1805,17 @@ export default function KermesDetailPage() {
                                 <div className="grid grid-cols-3 gap-4">
                                     <button onClick={() => setModalView('catalog')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
                                         <div className="text-3xl mb-2">🎪</div>
-                                        <h3 className="text-white font-bold">{t('kermes_katalogu')}</h3>
+                                        <h3 className="text-foreground font-bold">{t('kermes_katalogu')}</h3>
                                         <p className="text-muted-foreground text-sm">{t('hazir_yemek_listesi')}</p>
                                     </button>
                                     <button onClick={() => { setModalView('master'); loadMasterProducts(); }} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
                                         <div className="text-3xl mb-2">📦</div>
-                                        <h3 className="text-white font-bold">{t('master_catalog')}</h3>
+                                        <h3 className="text-foreground font-bold">{t('master_catalog')}</h3>
                                         <p className="text-muted-foreground text-sm">{t('barkodlu_urunler')}</p>
                                     </button>
                                     <button onClick={() => setModalView('custom')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
                                         <div className="text-3xl mb-2">✨</div>
-                                        <h3 className="text-white font-bold">{t('ozel_urun')}</h3>
+                                        <h3 className="text-foreground font-bold">{t('ozel_urun')}</h3>
                                         <p className="text-muted-foreground text-sm">{t('kendi_urununuzu_ekleyin')}</p>
                                     </button>
                                 </div>
@@ -1838,11 +1838,11 @@ export default function KermesDetailPage() {
                                             return (
                                                 <div key={item.sku} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between ${isAdded ? 'opacity-50' : ''}`}>
                                                     <div>
-                                                        <span className="text-white">{item.name}</span>
+                                                        <span className="text-foreground">{item.name}</span>
                                                         <span className="text-gray-500 text-sm ml-2">{item.category}</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>
+                                                        <span className="text-green-800 dark:text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>
                                                         {isAdded ? <span className="text-muted-foreground text-xs">✓</span> : (
                                                             <button onClick={() => handleSelectFromCatalog(item)} disabled={saving}
                                                                 className="px-3 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded text-sm disabled:opacity-50">{t('ekle')}</button>
@@ -1874,11 +1874,11 @@ export default function KermesDetailPage() {
                                                 return (
                                                     <div key={item.id} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between ${isAdded ? 'opacity-50' : ''}`}>
                                                         <div>
-                                                            <span className="text-white">{item.name}</span>
+                                                            <span className="text-foreground">{item.name}</span>
                                                             {item.barcode && <span className="text-gray-500 text-xs ml-2">#{item.barcode}</span>}
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            {item.defaultPrice && <span className="text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>}
+                                                            {item.defaultPrice && <span className="text-green-800 dark:text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>}
                                                             {isAdded ? <span className="text-muted-foreground text-xs">✓</span> : (
                                                                 <button onClick={() => handleSelectFromMaster(item)} disabled={saving}
                                                                     className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm disabled:opacity-50">{t('ekle')}</button>
@@ -1926,7 +1926,7 @@ export default function KermesDetailPage() {
             {editBeforeAdd && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
                     <div className="bg-card rounded-2xl w-full max-w-md p-6">
-                        <h2 className="text-lg font-bold text-white mb-4">
+                        <h2 className="text-lg font-bold text-foreground mb-4">
                             {t('urun_ekle')} {editBeforeAdd.type === 'catalog'
                                 ? (editBeforeAdd.item as KermesMenuItemData).name
                                 : (editBeforeAdd.item as MasterProduct).name}
@@ -1968,7 +1968,7 @@ export default function KermesDetailPage() {
                     <div className="bg-card rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
                         {/* Header */}
                         <div className="sticky top-0 bg-card px-6 py-4 border-b border-border flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-white">
+                            <h2 className="text-lg font-bold text-foreground">
                                 {t('duzenle')} {editProduct.product.name}
                             </h2>
                             <button onClick={() => setEditProduct(null)} className="text-muted-foreground hover:text-white text-xl">×</button>
@@ -1983,13 +1983,13 @@ export default function KermesDetailPage() {
                                         <label className="text-muted-foreground text-xs block mb-1">{t('satis_fiyati')}</label>
                                         <input type="number" step="0.50" min="0" value={editProduct.price || ''}
                                             onChange={(e) => setEditProduct({ ...editProduct, price: parseFloat(e.target.value) || 0 })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-green-400 text-xl font-bold rounded-lg border border-gray-600" placeholder="0.00" />
+                                            className="w-full px-3 py-2 bg-gray-700 text-green-800 dark:text-green-400 text-xl font-bold rounded-lg border border-gray-600" placeholder="0.00" />
                                     </div>
                                     <div>
                                         <label className="text-muted-foreground text-xs block mb-1">{t('maliyet_fiyati')}</label>
                                         <input type="number" step="0.10" min="0" value={editProduct.costPrice || ''}
                                             onChange={(e) => setEditProduct({ ...editProduct, costPrice: parseFloat(e.target.value) || 0 })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-amber-400 text-lg font-medium rounded-lg border border-gray-600" placeholder="0.00" />
+                                            className="w-full px-3 py-2 bg-gray-700 text-amber-800 dark:text-amber-400 text-lg font-medium rounded-lg border border-gray-600" placeholder="0.00" />
                                         {editProduct.costPrice > 0 && editProduct.price > 0 && (
                                             <p className="text-xs text-gray-500 mt-1">
                                                 Kar: {(editProduct.price - editProduct.costPrice).toFixed(2)}€ ({((editProduct.price - editProduct.costPrice) / editProduct.costPrice * 100).toFixed(0)}%)
@@ -2052,7 +2052,7 @@ export default function KermesDetailPage() {
 
                             {/* Alerjenler */}
                             <div className="bg-amber-900/20 rounded-xl p-4 border border-amber-800/30">
-                                <label className="text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
+                                <label className="text-amber-800 dark:text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
                                 <div className="flex flex-wrap gap-2 mb-2">
                                     {editProduct.allergens.map((allergen, idx) => (
                                         <span key={idx} className="px-3 py-1 bg-amber-600/30 text-amber-300 rounded-full text-xs flex items-center gap-1">
@@ -2161,9 +2161,9 @@ export default function KermesDetailPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
                     <div className="bg-card rounded-2xl w-full max-w-sm p-6 text-center">
                         <div className="text-4xl mb-4">🗑️</div>
-                        <h2 className="text-lg font-bold text-white mb-2">{t('urun_kaldirilsin_mi')}</h2>
+                        <h2 className="text-lg font-bold text-foreground mb-2">{t('urun_kaldirilsin_mi')}</h2>
                         <p className="text-muted-foreground mb-6">
-                            <span className="text-pink-400 font-medium">"{deleteConfirm.name}"</span> {t('menuden_kaldirilacak')}
+                            <span className="text-pink-800 dark:text-pink-400 font-medium">"{deleteConfirm.name}"</span> {t('menuden_kaldirilacak')}
                         </p>
                         <div className="flex gap-3">
                             <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium">İptal</button>
@@ -2179,10 +2179,10 @@ export default function KermesDetailPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b border-border">
-                            <h2 className="text-xl font-bold text-white">{t('stok_gorsel_sec')}</h2>
+                            <h2 className="text-xl font-bold text-foreground">{t('stok_gorsel_sec')}</h2>
                             <button
                                 onClick={() => setShowStockImageModal(false)}
-                                className="text-muted-foreground hover:text-white text-2xl"
+                                className="text-muted-foreground hover:text-foreground text-2xl"
                             >
                                 ×
                             </button>
@@ -2191,7 +2191,7 @@ export default function KermesDetailPage() {
                             {stockImages.length === 0 ? (
                                 <div className="text-center py-12">
                                     <div className="text-6xl mb-4">🖼️</div>
-                                    <h3 className="text-lg font-medium text-white mb-2">{t('henuz_stok_gorsel_yok')}</h3>
+                                    <h3 className="text-lg font-medium text-foreground mb-2">{t('henuz_stok_gorsel_yok')}</h3>
                                     <p className="text-muted-foreground mb-4">
                                         {t('super_admin_olarak_stok_gorseller_sayfas')}
                                     </p>
@@ -2220,11 +2220,11 @@ export default function KermesDetailPage() {
                                                     className="w-full h-full object-cover"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                                    <span className="text-white font-medium">{t('sec')}</span>
+                                                    <span className="text-foreground font-medium">{t('sec')}</span>
                                                 </div>
                                             </div>
                                             <div className="p-2">
-                                                <p className="text-white text-sm truncate">{img.title}</p>
+                                                <p className="text-foreground text-sm truncate">{img.title}</p>
                                             </div>
                                         </button>
                                     ))}

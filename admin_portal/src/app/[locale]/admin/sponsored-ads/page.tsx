@@ -366,7 +366,7 @@ export default function SponsoredAdsPage() {
   if (!admin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-red-400">{t('accessDenied')}</p>
+        <p className="text-red-800 dark:text-red-400">{t('accessDenied')}</p>
       </div>
     );
   }
@@ -382,7 +382,7 @@ export default function SponsoredAdsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white font-medium rounded-lg text-sm transition"
+            className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-foreground font-medium rounded-lg text-sm transition"
           >
             + {t('createCampaign')}
           </button>
@@ -456,7 +456,7 @@ export default function SponsoredAdsPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-white truncate">{ad.title}</span>
+                          <span className="font-semibold text-foreground truncate">{ad.title}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${badge.color}`}>
                             {badge.text}
                           </span>
@@ -469,7 +469,7 @@ export default function SponsoredAdsPage() {
                             {ad.originalPrice && ad.discountPrice && ad.discountPrice < ad.originalPrice ? (
                               <>
                                 <span className="text-gray-500 line-through">{ad.originalPrice.toFixed(2)} EUR</span>
-                                <span className="text-green-400 font-semibold">{ad.discountPrice.toFixed(2)} EUR</span>
+                                <span className="text-green-800 dark:text-green-400 font-semibold">{ad.discountPrice.toFixed(2)} EUR</span>
                               </>
                             ) : ad.originalPrice ? (
                               <span className="text-muted-foreground">{ad.originalPrice.toFixed(2)} EUR</span>
@@ -483,19 +483,19 @@ export default function SponsoredAdsPage() {
                         {/* Metrics row */}
                         <div className="flex items-center gap-4 mt-2 text-xs">
                           <span className="text-muted-foreground">
-                            {t('impressionsLabel')}: <span className="text-white font-medium">{ad.impressions.toLocaleString()}</span>
+                            {t('impressionsLabel')}: <span className="text-foreground font-medium">{ad.impressions.toLocaleString()}</span>
                           </span>
                           <span className="text-muted-foreground">
-                            {t('clicksLabel')}: <span className="text-white font-medium">{ad.clicks.toLocaleString()}</span>
+                            {t('clicksLabel')}: <span className="text-foreground font-medium">{ad.clicks.toLocaleString()}</span>
                           </span>
                           <span className="text-muted-foreground">
-                            CTR: <span className="text-white font-medium">{ctr(ad)}</span>
+                            CTR: <span className="text-foreground font-medium">{ctr(ad)}</span>
                           </span>
                           <span className="text-muted-foreground">
-                            {t('conversionsLabel')}: <span className="text-green-400 font-medium">{ad.conversions}</span>
+                            {t('conversionsLabel')}: <span className="text-green-800 dark:text-green-400 font-medium">{ad.conversions}</span>
                           </span>
                           <span className="text-muted-foreground">
-                            {t('spent')}: <span className="text-yellow-400 font-medium">{ad.spentAmount.toFixed(2)}/{ad.totalBudget.toFixed(2)}</span>
+                            {t('spent')}: <span className="text-yellow-800 dark:text-yellow-400 font-medium">{ad.spentAmount.toFixed(2)}/{ad.totalBudget.toFixed(2)}</span>
                           </span>
                         </div>
                       </div>
@@ -506,8 +506,8 @@ export default function SponsoredAdsPage() {
                           onClick={() => handleToggleActive(ad)}
                           className={`px-3 py-1.5 text-xs rounded-lg transition ${
                             ad.isActive
-                              ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30'
-                              : 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
+                              ? 'bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 hover:bg-yellow-600/30'
+                              : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600/30'
                           }`}
                         >
                           {ad.isActive ? t('pause') : t('activate')}
@@ -520,7 +520,7 @@ export default function SponsoredAdsPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(ad)}
-                          className="px-3 py-1.5 text-xs bg-red-900/30 text-red-400 hover:bg-red-900/50 rounded-lg transition"
+                          className="px-3 py-1.5 text-xs bg-red-900/30 text-red-800 dark:text-red-400 hover:bg-red-900/50 rounded-lg transition"
                         >
                           {t('delete')}
                         </button>
@@ -614,7 +614,7 @@ export default function SponsoredAdsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs text-muted-foreground">{t('adTitle')} * (Reklam Satiri)</label>
-                    <span className={`text-[10px] font-mono ${form.title.length > 35 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                    <span className={`text-[10px] font-mono ${form.title.length > 35 ? 'text-yellow-800 dark:text-yellow-400' : 'text-gray-500'}`}>
                       {form.title.length}/40
                     </span>
                   </div>
@@ -630,7 +630,7 @@ export default function SponsoredAdsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs text-muted-foreground">{t('adSubtitle')} (Alt Yazi)</label>
-                    <span className={`text-[10px] font-mono ${(form.subtitle?.length || 0) > 80 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                    <span className={`text-[10px] font-mono ${(form.subtitle?.length || 0) > 80 ? 'text-yellow-800 dark:text-yellow-400' : 'text-gray-500'}`}>
                       {form.subtitle?.length || 0}/90
                     </span>
                   </div>
@@ -674,7 +674,7 @@ export default function SponsoredAdsPage() {
                       })()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">{selectedProductName}</div>
+                      <div className="text-sm font-medium text-foreground truncate">{selectedProductName}</div>
                       {/* Price display */}
                       <div className="flex items-center gap-2 mt-1">
                         {(() => {
@@ -684,11 +684,11 @@ export default function SponsoredAdsPage() {
                             return (
                               <>
                                 <span className="text-muted-foreground line-through text-xs">{Number(origP).toFixed(2)} EUR</span>
-                                <span className="text-green-400 font-bold text-sm">{Number(discP).toFixed(2)} EUR</span>
+                                <span className="text-green-800 dark:text-green-400 font-bold text-sm">{Number(discP).toFixed(2)} EUR</span>
                               </>
                             );
                           } else if (origP) {
-                            return <span className="text-white text-sm font-medium">{Number(origP).toFixed(2)} EUR</span>;
+                            return <span className="text-foreground text-sm font-medium">{Number(origP).toFixed(2)} EUR</span>;
                           }
                           return null;
                         })()}
@@ -700,7 +700,7 @@ export default function SponsoredAdsPage() {
                         setForm(f => ({ ...f, selectedProductId: '', selectedProductImage: '', originalPrice: '', discountPrice: '' }));
                         setSelectedProductName('');
                       }}
-                      className="shrink-0 text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-900/20 rounded-lg transition"
+                      className="shrink-0 text-xs text-red-800 dark:text-red-400 hover:text-red-300 px-2 py-1 bg-red-900/20 rounded-lg transition"
                     >
                       Entfernen
                     </button>
@@ -765,7 +765,7 @@ export default function SponsoredAdsPage() {
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm text-white truncate">{pName}</div>
+                                    <div className="text-sm text-foreground truncate">{pName}</div>
                                     {pPrice > 0 && <div className="text-[10px] text-muted-foreground">{pPrice.toFixed(2)} EUR</div>}
                                   </div>
                                 </button>
@@ -820,7 +820,7 @@ export default function SponsoredAdsPage() {
                         return (
                           <div className="col-span-2 flex items-center gap-2 text-xs">
                             <span className="bg-red-600 text-white px-2 py-0.5 rounded-full font-bold">%{pct} Rabatt</span>
-                            <span className="text-muted-foreground">Originalpreis: <span className="line-through">{origP.toFixed(2)} EUR</span> &rarr; <span className="text-green-400 font-semibold">{discP.toFixed(2)} EUR</span></span>
+                            <span className="text-muted-foreground">Originalpreis: <span className="line-through">{origP.toFixed(2)} EUR</span> &rarr; <span className="text-green-800 dark:text-green-400 font-semibold">{discP.toFixed(2)} EUR</span></span>
                           </div>
                         );
                       }
@@ -1027,7 +1027,7 @@ export default function SponsoredAdsPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving || !form.advertiserName}
-                  className="flex-1 py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-medium rounded-lg text-sm disabled:opacity-50 transition"
+                  className="flex-1 py-2.5 bg-pink-600 hover:bg-pink-500 text-foreground font-medium rounded-lg text-sm disabled:opacity-50 transition"
                 >
                   {saving ? t('saving') : editingId ? t('save') : t('create')}
                 </button>

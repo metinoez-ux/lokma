@@ -309,7 +309,7 @@ export default function InvoiceDetailPage() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <div className="text-5xl mb-4">⚠️</div>
-                    <h2 className="text-xl font-bold text-white mb-2">{t('notFound')}</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">{t('notFound')}</h2>
                     <p className="text-muted-foreground mb-6">{error || t('notFoundDesc')}</p>
                     <Link href="/admin/invoices" className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500">
                         ← {t('backToInvoices')}
@@ -329,7 +329,7 @@ export default function InvoiceDetailPage() {
                             ← {t('back')}
                         </Link>
                         <div>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                            <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
                                 📄 {t('invoice')} {invoice.invoiceNumber}
                                 <span className={`px-3 py-1 rounded-full text-xs text-white ${statusColors[invoice.status]}`}>
                                     {t(statusLabelKeys[invoice.status]) || invoice.status}
@@ -355,20 +355,20 @@ export default function InvoiceDetailPage() {
                     <div className="flex gap-2">
                         <button
                             onClick={() => setShowPreview(true)}
-                            className="px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-500 transition-colors"
+                            className="px-4 py-2 bg-teal-600 text-foreground text-sm rounded-lg hover:bg-teal-500 transition-colors"
                         >
                             👁️ {t('preview')}
                         </button>
                         <button
                             onClick={handleDownloadPDF}
                             disabled={pdfGenerating}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50"
+                            className="px-4 py-2 bg-blue-600 text-foreground text-sm rounded-lg hover:bg-blue-500 transition-colors disabled:opacity-50"
                         >
                             {pdfGenerating ? `⏳ ${t('generating')}` : `📄 ${t('pdf')}`}
                         </button>
                         <button
                             onClick={handleDownloadXML}
-                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-500 transition-colors"
+                            className="px-4 py-2 bg-purple-600 text-foreground text-sm rounded-lg hover:bg-purple-500 transition-colors"
                         >
                             📋 {t('xrechnung')}
                         </button>
@@ -377,7 +377,7 @@ export default function InvoiceDetailPage() {
                             <button
                                 onClick={handleSendToLexware}
                                 disabled={lexwareSending}
-                                className="px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-500 transition-colors disabled:opacity-50"
+                                className="px-4 py-2 bg-orange-600 text-foreground text-sm rounded-lg hover:bg-orange-500 transition-colors disabled:opacity-50"
                             >
                                 {lexwareSending ? `⏳ ${t('sending')}` : `📤 ${t('sendToLexware')}`}
                             </button>
@@ -389,7 +389,7 @@ export default function InvoiceDetailPage() {
                         {invoice.status !== 'cancelled' && !invoice.isStorno && !invoice.isCancelled && (
                             <button
                                 onClick={() => setShowStornoModal(true)}
-                                className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-500 transition-colors"
+                                className="px-4 py-2 bg-red-600 text-foreground text-sm rounded-lg hover:bg-red-500 transition-colors"
                             >
                                 ❌ {t('cancel')}
                             </button>
@@ -406,7 +406,7 @@ export default function InvoiceDetailPage() {
                             {/* Seller */}
                             <div className="bg-card rounded-xl p-5">
                                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('seller')}</h3>
-                                <p className="text-white font-bold">{LOKMA_COMPANY_INFO.name}</p>
+                                <p className="text-foreground font-bold">{LOKMA_COMPANY_INFO.name}</p>
                                 <p className="text-foreground text-sm">{LOKMA_COMPANY_INFO.address}</p>
                                 <p className="text-foreground text-sm">{LOKMA_COMPANY_INFO.postalCode} {LOKMA_COMPANY_INFO.city}</p>
                                 <p className="text-gray-500 text-xs mt-2">{t('taxNo')}: {LOKMA_COMPANY_INFO.taxId}</p>
@@ -416,7 +416,7 @@ export default function InvoiceDetailPage() {
                             {/* Buyer */}
                             <div className="bg-card rounded-xl p-5">
                                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('buyer')}</h3>
-                                <p className="text-white font-bold">{invoice.butcherName}</p>
+                                <p className="text-foreground font-bold">{invoice.butcherName}</p>
                                 <p className="text-foreground text-sm">{invoice.butcherAddress || '-'}</p>
                                 {invoice.butcherTaxId && (
                                     <p className="text-gray-500 text-xs mt-2">{t('vatIdLabel')}: {invoice.butcherTaxId}</p>
@@ -427,7 +427,7 @@ export default function InvoiceDetailPage() {
                         {/* Line Items */}
                         <div className="bg-card rounded-xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-border">
-                                <h3 className="text-white font-semibold">{t('lineItems')}</h3>
+                                <h3 className="text-foreground font-semibold">{t('lineItems')}</h3>
                             </div>
                             <table className="w-full">
                                 <thead className="bg-gray-700/50">
@@ -447,7 +447,7 @@ export default function InvoiceDetailPage() {
                                                 <td className="px-5 py-3 text-right text-foreground">{item.quantity}</td>
                                                 <td className="px-5 py-3 text-right text-foreground">{formatCurrency(item.unitPrice)}</td>
                                                 <td className="px-5 py-3 text-right text-foreground">{invoice.taxRate}%</td>
-                                                <td className="px-5 py-3 text-right text-white font-medium">{formatCurrency(item.total)}</td>
+                                                <td className="px-5 py-3 text-right text-foreground font-medium">{formatCurrency(item.total)}</td>
                                             </tr>
                                         ))
                                     ) : (
@@ -456,7 +456,7 @@ export default function InvoiceDetailPage() {
                                             <td className="px-5 py-3 text-right text-foreground">1</td>
                                             <td className="px-5 py-3 text-right text-foreground">{formatCurrency(invoice.subtotal)}</td>
                                             <td className="px-5 py-3 text-right text-foreground">{invoice.taxRate}%</td>
-                                            <td className="px-5 py-3 text-right text-white font-medium">{formatCurrency(invoice.subtotal)}</td>
+                                            <td className="px-5 py-3 text-right text-foreground font-medium">{formatCurrency(invoice.subtotal)}</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -466,21 +466,21 @@ export default function InvoiceDetailPage() {
                             <div className="px-5 py-4 border-t border-border space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">{t('subtotal')}</span>
-                                    <span className="text-white">{formatCurrency(invoice.subtotal)}</span>
+                                    <span className="text-foreground">{formatCurrency(invoice.subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">{t('vat')} ({invoice.taxRate}%)</span>
-                                    <span className="text-white">{formatCurrency(invoice.taxAmount)}</span>
+                                    <span className="text-foreground">{formatCurrency(invoice.taxAmount)}</span>
                                 </div>
                                 {invoice.surchargeAmount && invoice.surchargeAmount > 0 && (
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-amber-400">{t('surcharge')} ({invoice.surchargeRate}%)</span>
-                                        <span className="text-amber-400">+{formatCurrency(invoice.surchargeAmount)}</span>
+                                        <span className="text-amber-800 dark:text-amber-400">{t('surcharge')} ({invoice.surchargeRate}%)</span>
+                                        <span className="text-amber-800 dark:text-amber-400">+{formatCurrency(invoice.surchargeAmount)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-600">
-                                    <span className="text-white">{t('grandTotal')}</span>
-                                    <span className="text-white">{formatCurrency(invoice.grandTotal)}</span>
+                                    <span className="text-foreground">{t('grandTotal')}</span>
+                                    <span className="text-foreground">{formatCurrency(invoice.grandTotal)}</span>
                                 </div>
                             </div>
                         </div>
@@ -488,7 +488,7 @@ export default function InvoiceDetailPage() {
                         {/* Storno Info */}
                         {(invoice.isCancelled || invoice.isStorno) && (
                             <div className="bg-red-900/30 border border-red-700 rounded-xl p-5">
-                                <h3 className="text-red-400 font-semibold mb-2">⚠️ {t('stornoInfo')}</h3>
+                                <h3 className="text-red-800 dark:text-red-400 font-semibold mb-2">⚠️ {t('stornoInfo')}</h3>
                                 {invoice.stornoReason && (
                                     <p className="text-foreground text-sm"><strong>{t('stornoReason')}:</strong> {invoice.stornoReason || invoice.cancelReason}</p>
                                 )}
@@ -513,41 +513,41 @@ export default function InvoiceDetailPage() {
                             <div className="space-y-3">
                                 <div>
                                     <span className="text-gray-500 text-xs">{t('invoiceNumber')}</span>
-                                    <p className="text-white font-mono">{invoice.invoiceNumber}</p>
+                                    <p className="text-foreground font-mono">{invoice.invoiceNumber}</p>
                                 </div>
                                 <div>
                                     <span className="text-gray-500 text-xs">{t('period')}</span>
-                                    <p className="text-white">{invoice.period || `${formatDate(invoice.periodStart)} - ${formatDate(invoice.periodEnd)}`}</p>
+                                    <p className="text-foreground">{invoice.period || `${formatDate(invoice.periodStart)} - ${formatDate(invoice.periodEnd)}`}</p>
                                 </div>
                                 <div>
                                     <span className="text-gray-500 text-xs">{t('invoiceDate')}</span>
-                                    <p className="text-white">{formatDate(invoice.issueDate || invoice.createdAt)}</p>
+                                    <p className="text-foreground">{formatDate(invoice.issueDate || invoice.createdAt)}</p>
                                 </div>
                                 <div>
                                     <span className="text-gray-500 text-xs">{t('dueDate')}</span>
-                                    <p className="text-white">{formatDate(invoice.dueDate)}</p>
+                                    <p className="text-foreground">{formatDate(invoice.dueDate)}</p>
                                 </div>
                                 {invoice.paidAt && (
                                     <div>
                                         <span className="text-gray-500 text-xs">{t('paidOn')}</span>
-                                        <p className="text-green-400">{formatDate(invoice.paidAt)}</p>
+                                        <p className="text-green-800 dark:text-green-400">{formatDate(invoice.paidAt)}</p>
                                     </div>
                                 )}
                                 <div>
                                     <span className="text-gray-500 text-xs">{t('currency')}</span>
-                                    <p className="text-white">{invoice.currency || 'EUR'}</p>
+                                    <p className="text-foreground">{invoice.currency || 'EUR'}</p>
                                 </div>
                                 {/* Lexware Reference */}
                                 {(invoice as any).lexwareInvoiceId && (
                                     <>
                                         <div className="pt-3 border-t border-border">
                                             <span className="text-gray-500 text-xs">Lexware Invoice ID</span>
-                                            <p className="text-orange-400 font-mono text-xs break-all">{(invoice as any).lexwareInvoiceId}</p>
+                                            <p className="text-orange-800 dark:text-orange-400 font-mono text-xs break-all">{(invoice as any).lexwareInvoiceId}</p>
                                         </div>
                                         {(invoice as any).lexwareVoucherNumber && (
                                             <div>
                                                 <span className="text-gray-500 text-xs">{t('lexwareInvoiceNo')}</span>
-                                                <p className="text-orange-400 font-mono">{(invoice as any).lexwareVoucherNumber}</p>
+                                                <p className="text-orange-800 dark:text-orange-400 font-mono">{(invoice as any).lexwareVoucherNumber}</p>
                                             </div>
                                         )}
                                         {(invoice as any).lexwareSentAt && (
@@ -576,13 +576,13 @@ export default function InvoiceDetailPage() {
                                 {invoice.stripePaymentIntentId && (
                                     <div>
                                         <span className="text-gray-500 text-xs">Stripe Payment Intent</span>
-                                        <p className="text-blue-400 font-mono text-xs break-all">{invoice.stripePaymentIntentId}</p>
+                                        <p className="text-blue-800 dark:text-blue-400 font-mono text-xs break-all">{invoice.stripePaymentIntentId}</p>
                                     </div>
                                 )}
                                 {invoice.stripeInvoiceId && (
                                     <div>
                                         <span className="text-gray-500 text-xs">Stripe Invoice</span>
-                                        <p className="text-blue-400 font-mono text-xs break-all">{invoice.stripeInvoiceId}</p>
+                                        <p className="text-blue-800 dark:text-blue-400 font-mono text-xs break-all">{invoice.stripeInvoiceId}</p>
                                     </div>
                                 )}
                             </div>
@@ -643,7 +643,7 @@ export default function InvoiceDetailPage() {
             {showStornoModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
-                        <h2 className="text-xl font-bold text-white mb-2">⚠️ {t('cancelInvoice')}</h2>
+                        <h2 className="text-xl font-bold text-foreground mb-2">⚠️ {t('cancelInvoice')}</h2>
                         <p className="text-muted-foreground text-sm mb-4">
                             {t('gobdNote')}
                         </p>

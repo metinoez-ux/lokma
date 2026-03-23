@@ -375,7 +375,7 @@ export default function AdminHeader() {
                             {/* Printer status compact */}
                             <Link
                                 href="/admin/settings"
-                                className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition ${!printerSettings.enabled || !printerSettings.printerIp ? 'text-gray-500' : printerHealth.status === 'online' ? 'text-green-400' : printerHealth.status === 'offline' ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}
+                                className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition ${!printerSettings.enabled || !printerSettings.printerIp ? 'text-gray-500' : printerHealth.status === 'online' ? 'text-green-800 dark:text-green-400' : printerHealth.status === 'offline' ? 'text-red-800 dark:text-red-400 animate-pulse' : 'text-yellow-800 dark:text-yellow-400'}`}
                                 title={`Printer: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Checking...' : 'Not configured'}`}
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,7 +391,7 @@ export default function AdminHeader() {
                                 onClick={() => router.push('/admin/orders')}
                                 className="flex items-center gap-1.5 bg-yellow-600/25 border border-yellow-500/50 rounded-full px-3 py-1 animate-pulse hover:bg-yellow-600/40 transition"
                             >
-                                <span className="text-yellow-400 text-xs font-bold">{pendingOrderCount}</span>
+                                <span className="text-yellow-800 dark:text-yellow-400 text-xs font-bold">{pendingOrderCount}</span>
                                 <span className="text-yellow-300 text-[10px]">{t('pendingOrders')}</span>
                                 {pendingWaitStr && (
                                     <span className="text-yellow-500 text-[10px] font-mono">{pendingWaitStr}</span>
@@ -411,7 +411,7 @@ export default function AdminHeader() {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <span className="text-white font-bold text-sm">
+                                        <span className="text-foreground font-bold text-sm">
                                             {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
                                         </span>
                                     )}
@@ -421,7 +421,7 @@ export default function AdminHeader() {
                             {tabletProfileOpen && (
                             <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border z-50 min-w-[200px]">
                                 <Link href="/admin/settings" onClick={() => setTabletProfileOpen(false)} className="block px-4 py-3 border-b border-border hover:bg-gray-700/50 transition">
-                                    <p className="text-white text-sm font-medium truncate">{admin.displayName || 'Super Admin'}</p>
+                                    <p className="text-foreground text-sm font-medium truncate">{admin.displayName || 'Super Admin'}</p>
                                     <p className="text-muted-foreground text-xs truncate">{admin.email || ''}</p>
                                 </Link>
                                 <div className="py-2 border-b border-border">
@@ -442,7 +442,7 @@ export default function AdminHeader() {
                                 <button
                                     onMouseDown={handleLogout}
                                     disabled={loggingOut}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-400 transition text-xs font-medium rounded-b-lg disabled:opacity-50"
+                                    className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-800 dark:text-red-400 transition text-xs font-medium rounded-b-lg disabled:opacity-50"
                                 >
                                     {loggingOut ? '...' : t('logout')}
                                 </button>
@@ -697,7 +697,7 @@ export default function AdminHeader() {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <span className="text-white font-bold text-sm">
+                                            <span className="text-foreground font-bold text-sm">
                                                 {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
                                             </span>
                                         )}
@@ -716,7 +716,7 @@ export default function AdminHeader() {
                                 {/* Dropdown Menu (including Settings) */}
                                 <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
                                     <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-gray-700/50 transition">
-                                        <p className="text-white text-sm font-medium truncate">
+                                        <p className="text-foreground text-sm font-medium truncate">
                                             {admin.displayName || 'Super Admin'}
                                         </p>
                                         <p className="text-muted-foreground text-xs truncate">
@@ -746,7 +746,7 @@ export default function AdminHeader() {
                                     <button
                                         onMouseDown={handleLogout}
                                         disabled={loggingOut}
-                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-400 transition text-xs font-medium rounded-b-lg disabled:opacity-50"
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-800 dark:text-red-400 transition text-xs font-medium rounded-b-lg disabled:opacity-50"
                                     >
                                         {loggingOut ? '...' : t('logout')}
                                     </button>
@@ -765,7 +765,7 @@ export default function AdminHeader() {
                             />
                             <div className="min-[1921px]:hidden fixed top-0 left-0 h-full w-72 bg-background border-r border-border z-50 overflow-y-auto shadow-2xl">
                                 <div className="p-4 border-b border-border flex items-center justify-between">
-                                    <span className="text-white font-semibold text-sm">Menu</span>
+                                    <span className="text-foreground font-semibold text-sm">Menu</span>
                                     <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-white text-xl">{'\u2715'}</button>
                                 </div>
                                 <nav className="py-2">
@@ -901,13 +901,13 @@ export default function AdminHeader() {
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <span className="text-white font-bold text-sm">
+                                            <span className="text-foreground font-bold text-sm">
                                                 {businessInfo.companyName.charAt(0).toUpperCase()}
                                             </span>
                                         )}
                                     </div>
                                     <div className="min-w-0">
-                                        <h1 className="text-white font-semibold text-sm truncate leading-tight">
+                                        <h1 className="text-foreground font-semibold text-sm truncate leading-tight">
                                             {businessInfo.companyName}
                                         </h1>
                                         {(businessInfo.streetAddress || businessInfo.city) && (
@@ -957,10 +957,10 @@ export default function AdminHeader() {
                                         !printerSettings.enabled || !printerSettings.printerIp
                                             ? 'text-gray-500'
                                             : printerHealth.status === 'online'
-                                            ? 'text-green-400'
+                                            ? 'text-green-800 dark:text-green-400'
                                             : printerHealth.status === 'offline'
-                                            ? 'text-red-400 animate-pulse'
-                                            : 'text-yellow-400'
+                                            ? 'text-red-800 dark:text-red-400 animate-pulse'
+                                            : 'text-yellow-800 dark:text-yellow-400'
                                     }`}
                                 >
                                     <span className={`w-1.5 h-1.5 rounded-full ${
@@ -976,7 +976,7 @@ export default function AdminHeader() {
                                         onClick={() => router.push('/admin/orders')}
                                         className="flex items-center gap-1 bg-yellow-600/25 border border-yellow-500/50 rounded-full px-2 py-0.5 animate-pulse hover:bg-yellow-600/40 transition"
                                     >
-                                        <span className="text-yellow-400 text-[10px] font-bold">{pendingOrderCount}</span>
+                                        <span className="text-yellow-800 dark:text-yellow-400 text-[10px] font-bold">{pendingOrderCount}</span>
                                         <span className="text-yellow-300 text-[10px]">{t('pendingOrders')}</span>
                                         {pendingWaitStr && (
                                             <span className="text-yellow-500 text-[10px] font-mono">{pendingWaitStr}</span>
@@ -1104,11 +1104,11 @@ export default function AdminHeader() {
                                             !printerSettings.enabled || !printerSettings.printerIp
                                                 ? 'bg-gray-700/50 border border-gray-600 text-muted-foreground'
                                                 : printerHealth.status === 'online'
-                                                ? 'bg-green-600/20 border border-green-500/50 text-green-400'
+                                                ? 'bg-green-600/20 border border-green-500/50 text-green-800 dark:text-green-400'
                                                 : printerHealth.status === 'offline'
-                                                ? 'bg-red-600/20 border border-red-500/50 text-red-400 animate-pulse'
+                                                ? 'bg-red-600/20 border border-red-500/50 text-red-800 dark:text-red-400 animate-pulse'
                                                 : printerHealth.status === 'checking'
-                                                ? 'bg-yellow-600/20 border border-yellow-500/50 text-yellow-400'
+                                                ? 'bg-yellow-600/20 border border-yellow-500/50 text-yellow-800 dark:text-yellow-400'
                                                 : 'bg-gray-700/50 border border-gray-600 text-muted-foreground'
                                         }`}
                                         title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Pruefe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
@@ -1140,7 +1140,7 @@ export default function AdminHeader() {
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <span className="text-white font-bold text-xs">
+                                                <span className="text-foreground font-bold text-xs">
                                                     {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
                                                 </span>
                                             )}
@@ -1157,7 +1157,7 @@ export default function AdminHeader() {
                                     </button>
                                     <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
                                         <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-gray-700/50 transition">
-                                            <p className="text-white text-sm font-medium truncate">
+                                            <p className="text-foreground text-sm font-medium truncate">
                                                 {admin.displayName || 'Admin'}
                                             </p>
                                             <p className="text-muted-foreground text-xs truncate">
@@ -1182,14 +1182,14 @@ export default function AdminHeader() {
                                         </div>
                                         <Link
                                             href="/account"
-                                            className="w-full flex items-center gap-2 px-4 py-3 text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 transition text-sm border-b border-border"
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-blue-800 dark:text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 transition text-sm border-b border-border"
                                         >
                                             {t('myAccount')}
                                         </Link>
                                         <button
                                             onMouseDown={handleLogout}
                                             disabled={loggingOut}
-                                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm disabled:opacity-50"
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-red-800 dark:text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm disabled:opacity-50"
                                         >
                                             {loggingOut ? '...' : t('logout')}
                                         </button>
@@ -1208,7 +1208,7 @@ export default function AdminHeader() {
                             />
                             <div className="min-[1921px]:hidden fixed top-0 left-0 h-full w-72 bg-background border-r border-border z-50 overflow-y-auto shadow-2xl">
                                 <div className="p-4 border-b border-border flex items-center justify-between">
-                                    <span className="text-white font-semibold text-sm">Menu</span>
+                                    <span className="text-foreground font-semibold text-sm">Menu</span>
                                     <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-white text-xl">{`\u2715`}</button>
                                 </div>
                                 <nav className="py-2">
@@ -1261,12 +1261,12 @@ export default function AdminHeader() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 <span>⏳</span> {t('pendingInvitations')}
                             </h3>
                             <button
                                 onClick={() => setShowPendingModal(false)}
-                                className="text-muted-foreground hover:text-white text-2xl"
+                                className="text-muted-foreground hover:text-foreground text-2xl"
                             >
                                 ×
                             </button>
@@ -1290,12 +1290,12 @@ export default function AdminHeader() {
                                                     <span className="text-lg">
                                                         {invitation.status === 'registered' ? '✅' : '📱'}
                                                     </span>
-                                                    <span className="text-white font-medium">
+                                                    <span className="text-foreground font-medium">
                                                         {invitation.phone}
                                                     </span>
                                                     <span className={`text-xs px-2 py-0.5 rounded ${invitation.status === 'registered'
-                                                        ? 'bg-green-600/30 text-green-400'
-                                                        : 'bg-yellow-600/30 text-yellow-400'
+                                                        ? 'bg-green-600/30 text-green-800 dark:text-green-400'
+                                                        : 'bg-yellow-600/30 text-yellow-800 dark:text-yellow-400'
                                                         }`}>
                                                         {invitation.status === 'registered' ? t('registrationComplete') : t('waitingForLink')}
                                                     </span>

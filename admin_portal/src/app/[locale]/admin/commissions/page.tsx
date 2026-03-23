@@ -252,7 +252,7 @@ const router = useRouter();
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">{t('yukleniyor')}</div>
+                <div className="text-foreground">{t('yukleniyor')}</div>
             </div>
         );
     }
@@ -263,7 +263,7 @@ const router = useRouter();
                 {/* Page Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">💰 Provizyon Raporu</h1>
+                        <h1 className="text-2xl font-bold text-foreground">💰 Provizyon Raporu</h1>
                         <p className="text-muted-foreground text-sm">{t('i_sletme_bazli_provizyon_takibi_ve_rapor')}</p>
                     </div>
                     <div className="flex gap-2">
@@ -285,31 +285,31 @@ const router = useRouter();
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
                     <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
+                        <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
                         <p className="text-muted-foreground text-xs">{t('siparis')}</p>
                     </div>
                     <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
+                        <p className="text-2xl font-bold text-foreground">€{stats.totalOrderAmount.toFixed(0)}</p>
                         <p className="text-muted-foreground text-xs">Ciro</p>
                     </div>
                     <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
                         <p className="text-muted-foreground text-xs">{t('toplam_provizyon')}</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-green-800 dark:text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
                         <p className="text-muted-foreground text-xs">Tahsil Edilen</p>
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
                         <p className="text-muted-foreground text-xs">{t('bekleyen_nakit')}</p>
                     </div>
                     <div className="bg-blue-600/20 border border-blue-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
                         <p className="text-muted-foreground text-xs">Kart Provizyon</p>
                     </div>
                     <div className="bg-purple-600/20 border border-purple-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-purple-400">€{stats.cashCommission.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-purple-800 dark:text-purple-400">€{stats.cashCommission.toFixed(2)}</p>
                         <p className="text-muted-foreground text-xs">Nakit Provizyon</p>
                     </div>
                     <div className="bg-card rounded-xl p-4 text-center">
@@ -400,24 +400,24 @@ const router = useRouter();
                                             }}
                                         >
                                             <td className="px-4 py-3">
-                                                <span className="text-white font-medium">{bs.businessName}</span>
+                                                <span className="text-foreground font-medium">{bs.businessName}</span>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="text-muted-foreground text-sm">{bs.planName}</span>
-                                                <span className="text-amber-400 text-xs ml-1">%{bs.commissionRate}</span>
+                                                <span className="text-amber-800 dark:text-amber-400 text-xs ml-1">%{bs.commissionRate}</span>
                                             </td>
                                             <td className="px-4 py-3 text-right text-white">{bs.totalOrders}</td>
                                             <td className="px-4 py-3 text-right text-white">€{bs.totalOrderAmount.toFixed(2)}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <span className="text-amber-400 font-bold">€{bs.totalCommission.toFixed(2)}</span>
+                                                <span className="text-amber-800 dark:text-amber-400 font-bold">€{bs.totalCommission.toFixed(2)}</span>
                                             </td>
-                                            <td className="px-4 py-3 text-right text-blue-400">€{bs.cardCommission.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-right text-purple-400">€{bs.cashCommission.toFixed(2)}</td>
+                                            <td className="px-4 py-3 text-right text-blue-800 dark:text-blue-400">€{bs.cardCommission.toFixed(2)}</td>
+                                            <td className="px-4 py-3 text-right text-purple-800 dark:text-purple-400">€{bs.cashCommission.toFixed(2)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 {bs.pendingAmount > 0 ? (
-                                                    <span className="text-yellow-400 font-bold">€{bs.pendingAmount.toFixed(2)}</span>
+                                                    <span className="text-yellow-800 dark:text-yellow-400 font-bold">€{bs.pendingAmount.toFixed(2)}</span>
                                                 ) : (
-                                                    <span className="text-green-400">✓ Tahsil</span>
+                                                    <span className="text-green-800 dark:text-green-400">✓ Tahsil</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -428,13 +428,13 @@ const router = useRouter();
                             {businessSummaries.length > 0 && (
                                 <tfoot className="bg-background border-t-2 border-gray-600">
                                     <tr>
-                                        <td className="px-4 py-3 text-white font-bold" colSpan={2}>{t('toplam')}</td>
-                                        <td className="px-4 py-3 text-right text-white font-bold">{stats.totalOrders}</td>
-                                        <td className="px-4 py-3 text-right text-white font-bold">€{stats.totalOrderAmount.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-amber-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-blue-400 font-bold">€{stats.cardCommission.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-purple-400 font-bold">€{stats.cashCommission.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-yellow-400 font-bold">€{stats.pendingAmount.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-foreground font-bold" colSpan={2}>{t('toplam')}</td>
+                                        <td className="px-4 py-3 text-right text-foreground font-bold">{stats.totalOrders}</td>
+                                        <td className="px-4 py-3 text-right text-foreground font-bold">€{stats.totalOrderAmount.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right text-amber-800 dark:text-amber-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right text-blue-800 dark:text-blue-400 font-bold">€{stats.cardCommission.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right text-purple-800 dark:text-purple-400 font-bold">€{stats.cashCommission.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right text-yellow-800 dark:text-yellow-400 font-bold">€{stats.pendingAmount.toFixed(2)}</td>
                                     </tr>
                                 </tfoot>
                             )}
@@ -469,7 +469,7 @@ const router = useRouter();
                                     filteredRecords.map((r) => (
                                         <tr key={r.id} className="hover:bg-gray-700/50 text-sm cursor-pointer" onClick={() => loadOrderDetail(r.orderId, r)}>
                                             <td className="px-3 py-2">
-                                                <span className="text-white font-mono text-xs">#{r.orderNumber || r.orderId.slice(0, 6)}</span>
+                                                <span className="text-foreground font-mono text-xs">#{r.orderNumber || r.orderId.slice(0, 6)}</span>
                                             </td>
                                             <td className="px-3 py-2">
                                                 <span className="text-white text-xs">{r.businessName}</span>
@@ -481,9 +481,9 @@ const router = useRouter();
                                             <td className="px-3 py-2 text-right text-muted-foreground">%{r.commissionRate}</td>
                                             <td className="px-3 py-2 text-right">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
+                                                    <span className="text-amber-800 dark:text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
                                                     {r.perOrderFee > 0 && (
-                                                        <span className="text-[10px] text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} {t('ucret')}</span>
+                                                        <span className="text-[10px] text-yellow-800 dark:text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} {t('ucret')}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -525,13 +525,13 @@ const router = useRouter();
                             ) : selectedOrder?.notFound ? (
                                 <div className="p-6">
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-bold text-white">{t('siparis')}{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
+                                        <h3 className="text-lg font-bold text-foreground">{t('siparis')}{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
                                         <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
                                     </div>
                                     <p className="text-muted-foreground">{t('siparis_detayi_bulunamadi_sadece_provizy')}</p>
                                     {selectedOrder.commission && (
                                         <div className="mt-4 bg-background/50 rounded-lg p-4">
-                                            <p className="text-foreground text-sm">💰 Provizyon: <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
+                                            <p className="text-foreground text-sm">💰 Provizyon: <span className="text-amber-800 dark:text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
                                             <p className="text-foreground text-sm">{t('tutar')}{selectedOrder.commission.orderTotal.toFixed(2)}</p>
                                         </div>
                                     )}
@@ -541,10 +541,10 @@ const router = useRouter();
                                     {/* Header */}
                                     <div className="flex justify-between items-start mb-5">
                                         <div>
-                                            <h3 className="text-lg font-bold text-white">{t('siparis')}{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
+                                            <h3 className="text-lg font-bold text-foreground">{t('siparis')}{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
                                             <p className="text-muted-foreground text-sm mt-0.5">{selectedOrder.butcherName || selectedOrder.businessName || selectedOrder.commission?.businessName}</p>
                                         </div>
-                                        <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-white text-2xl leading-none">✕</button>
+                                        <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-foreground text-2xl leading-none">✕</button>
                                     </div>
 
                                     {/* Status Badge */}
@@ -574,20 +574,20 @@ const router = useRouter();
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <p className="text-gray-500 text-xs">Ad Soyad</p>
-                                                <p className="text-white text-sm font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
+                                                <p className="text-foreground text-sm font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">Telefon</p>
-                                                <p className="text-white text-sm">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
+                                                <p className="text-foreground text-sm">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">E-posta</p>
-                                                <p className="text-white text-sm">{selectedOrder.userEmail || '-'}</p>
+                                                <p className="text-foreground text-sm">{selectedOrder.userEmail || '-'}</p>
                                             </div>
                                             {selectedOrder.deliveryAddress && (
                                                 <div>
                                                     <p className="text-gray-500 text-xs">Teslimat Adresi</p>
-                                                    <p className="text-white text-sm">{selectedOrder.deliveryAddress}</p>
+                                                    <p className="text-foreground text-sm">{selectedOrder.deliveryAddress}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -601,16 +601,16 @@ const router = useRouter();
                                                 {selectedOrder.items.map((item: any, idx: number) => (
                                                     <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
                                                         <div className="flex-1">
-                                                            <p className="text-white text-sm font-medium">{item.productName || item.name}</p>
+                                                            <p className="text-foreground text-sm font-medium">{item.productName || item.name}</p>
                                                             <p className="text-muted-foreground text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || t('adet')}</p>
                                                         </div>
-                                                        <p className="text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
+                                                        <p className="text-amber-800 dark:text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
                                                     </div>
                                                 ))}
                                             </div>
                                             <div className="mt-3 pt-3 border-t border-border flex justify-between">
-                                                <span className="text-white font-bold">{t('toplam')}</span>
-                                                <span className="text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
+                                                <span className="text-foreground font-bold">{t('toplam')}</span>
+                                                <span className="text-amber-800 dark:text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
                                             </div>
                                         </div>
                                     )}
@@ -622,16 +622,16 @@ const router = useRouter();
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <p className="text-gray-500 text-xs">{t('kurye_adi')}</p>
-                                                    <p className="text-white text-sm font-medium">{selectedOrder.courierName || '-'}</p>
+                                                    <p className="text-foreground text-sm font-medium">{selectedOrder.courierName || '-'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-gray-500 text-xs">{t('kurye_telefon')}</p>
-                                                    <p className="text-white text-sm">{selectedOrder.courierPhone || '-'}</p>
+                                                    <p className="text-foreground text-sm">{selectedOrder.courierPhone || '-'}</p>
                                                 </div>
                                                 {selectedOrder.deliveryProof && (
                                                     <div className="col-span-2">
                                                         <p className="text-gray-500 text-xs">{t('teslimat_kaniti')}</p>
-                                                        <p className="text-white text-sm">
+                                                        <p className="text-foreground text-sm">
                                                             {selectedOrder.deliveryProof.type === 'personal_handoff' ? '🤝 Elden Teslim' :
                                                                 selectedOrder.deliveryProof.type === 'left_at_door' ? t('kapida_birakildi') :
                                                                     selectedOrder.deliveryProof.type || '-'}
@@ -652,31 +652,31 @@ const router = useRouter();
                                             {selectedOrder.createdAt && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground text-sm">{t('siparis_olusturuldu')}</span>
-                                                    <span className="text-white text-sm">{selectedOrder.createdAt.toLocaleString('de-DE')}</span>
+                                                    <span className="text-foreground text-sm">{selectedOrder.createdAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.statusHistory?.ready && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground text-sm">{t('hazir')}</span>
-                                                    <span className="text-white text-sm">{(selectedOrder.statusHistory.ready.toDate ? selectedOrder.statusHistory.ready.toDate() : new Date(selectedOrder.statusHistory.ready)).toLocaleString('de-DE')}</span>
+                                                    <span className="text-foreground text-sm">{(selectedOrder.statusHistory.ready.toDate ? selectedOrder.statusHistory.ready.toDate() : new Date(selectedOrder.statusHistory.ready)).toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.claimedAt && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground text-sm">{t('kurye_aldi')}</span>
-                                                    <span className="text-white text-sm">{selectedOrder.claimedAt.toLocaleString('de-DE')}</span>
+                                                    <span className="text-foreground text-sm">{selectedOrder.claimedAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.deliveredAt && (
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground text-sm">✅ Teslim Edildi</span>
-                                                    <span className="text-white text-sm">{selectedOrder.deliveredAt.toLocaleString('de-DE')}</span>
+                                                    <span className="text-foreground text-sm">{selectedOrder.deliveredAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.createdAt && selectedOrder.deliveredAt && (
                                                 <div className="flex justify-between pt-2 border-t border-border/50">
                                                     <span className="text-muted-foreground text-sm">{t('toplam_sure')}</span>
-                                                    <span className="text-amber-400 text-sm font-medium">
+                                                    <span className="text-amber-800 dark:text-amber-400 text-sm font-medium">
                                                         {Math.round((selectedOrder.deliveredAt.getTime() - selectedOrder.createdAt.getTime()) / 60000)} dk
                                                     </span>
                                                 </div>
@@ -687,37 +687,37 @@ const router = useRouter();
                                     {/* Commission & Payment */}
                                     {selectedOrder.commission && (
                                         <div className="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
-                                            <h4 className="text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('provizyon_detayi')}</h4>
+                                            <h4 className="text-amber-800 dark:text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('provizyon_detayi')}</h4>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground text-sm">{t('siparis_tutari')}</span>
-                                                    <span className="text-white text-sm">€{selectedOrder.commission.orderTotal.toFixed(2)}</span>
+                                                    <span className="text-foreground text-sm">€{selectedOrder.commission.orderTotal.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? t('kendi_kurye') : t('lokma_kurye')})</span>
-                                                    <span className="text-white text-sm">%{selectedOrder.commission.commissionRate}</span>
+                                                    <span className="text-foreground text-sm">%{selectedOrder.commission.commissionRate}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground text-sm">Provizyon</span>
-                                                    <span className="text-amber-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
+                                                    <span className="text-amber-800 dark:text-amber-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
                                                 </div>
                                                 {selectedOrder.commission.perOrderFee > 0 && (
                                                     <div className="flex justify-between">
                                                         <span className="text-foreground text-sm">{t('siparis_basi_ucret')}</span>
-                                                        <span className="text-white text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
+                                                        <span className="text-foreground text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
                                                     </div>
                                                 )}
-                                                <div className="flex justify-between pt-2 border-t border-amber-700/30">
+                                                <div className="flex justify-between pt-2 border-t border-amber-200 dark:border-amber-700/30">
                                                     <span className="text-foreground text-sm">Net Provizyon</span>
-                                                    <span className="text-white text-sm">€{selectedOrder.commission.netCommission.toFixed(2)}</span>
+                                                    <span className="text-foreground text-sm">€{selectedOrder.commission.netCommission.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-foreground text-sm">KDV (%{selectedOrder.commission.vatRate})</span>
-                                                    <span className="text-white text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
+                                                    <span className="text-foreground text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
                                                 </div>
-                                                <div className="flex justify-between pt-2 border-t border-amber-700/30">
-                                                    <span className="text-white text-sm font-bold">{t('toplam_provizyon')}</span>
-                                                    <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
+                                                <div className="flex justify-between pt-2 border-t border-amber-200 dark:border-amber-700/30">
+                                                    <span className="text-foreground text-sm font-bold">{t('toplam_provizyon')}</span>
+                                                    <span className="text-amber-800 dark:text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center mt-2">
                                                     <span className="text-foreground text-sm">{t('odeme')}</span>
@@ -739,7 +739,7 @@ const router = useRouter();
                                     {selectedOrder.notes && (
                                         <div className="bg-background/50 rounded-xl p-4 mb-4">
                                             <h4 className="text-muted-foreground text-xs font-medium mb-2 uppercase tracking-wider">{t('siparis_notu')}</h4>
-                                            <p className="text-white text-sm">{selectedOrder.notes}</p>
+                                            <p className="text-foreground text-sm">{selectedOrder.notes}</p>
                                         </div>
                                     )}
 

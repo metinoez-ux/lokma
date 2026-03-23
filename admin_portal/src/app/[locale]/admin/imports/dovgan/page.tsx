@@ -376,7 +376,7 @@ export default function DovganImportPage() {
                 <button
                     onClick={handleImport}
                     disabled={importing || getSelectedProductCount() === 0}
-                    className={`w-full py-4 rounded-lg text-white font-semibold text-lg transition-colors ${importing || getSelectedProductCount() === 0
+                    className={`w-full py-4 rounded-lg text-foreground font-semibold text-lg transition-colors ${importing || getSelectedProductCount() === 0
                         ? 'bg-gray-400 cursor-not-allowed'
                         : 'bg-blue-600 hover:bg-blue-700'
                         }`}
@@ -431,8 +431,8 @@ export default function DovganImportPage() {
             {/* Logs */}
             {logs.length > 0 && (
                 <div className="bg-background rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <h3 className="text-white font-semibold mb-2">{t('import_log')}</h3>
-                    <div className="font-mono text-sm text-green-400 space-y-1">
+                    <h3 className="text-foreground font-semibold mb-2">{t('import_log')}</h3>
+                    <div className="font-mono text-sm text-green-800 dark:text-green-400 space-y-1">
                         {logs.map((log, i) => (
                             <div key={i}>{log}</div>
                         ))}

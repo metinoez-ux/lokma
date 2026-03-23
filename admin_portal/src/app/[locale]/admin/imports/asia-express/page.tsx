@@ -184,7 +184,7 @@ export default function AsiaExpressImportPage() {
                     <div className="flex items-center gap-4">
                         <span className="text-4xl">🌏</span>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">{t('asia_express_food_import')}</h1>
+                            <h1 className="text-3xl font-bold text-foreground">{t('asia_express_food_import')}</h1>
                             <p className="text-amber-100">{t('asya_urunleri_master_kataloga_aktariliyo')}</p>
                         </div>
                     </div>
@@ -193,19 +193,19 @@ export default function AsiaExpressImportPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
+                        <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
                         <div className="text-sm text-foreground">{t('toplam_urun')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-purple-400">{CATEGORIES.length}</div>
+                        <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{CATEGORIES.length}</div>
                         <div className="text-sm text-foreground">{t('kategori')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-green-400">{scrapedProducts.length}</div>
+                        <div className="text-3xl font-bold text-green-800 dark:text-green-400">{scrapedProducts.length}</div>
                         <div className="text-sm text-foreground">Scraped</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-amber-400">{stats.imported}</div>
+                        <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{stats.imported}</div>
                         <div className="text-sm text-foreground">İmported</div>
                     </div>
                 </div>
@@ -213,7 +213,7 @@ export default function AsiaExpressImportPage() {
                 {/* Categories */}
                 <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-white">📦 Kategoriler</h2>
+                        <h2 className="text-xl font-bold text-foreground">📦 Kategoriler</h2>
                         <div className="flex gap-2">
                             <button onClick={selectAll} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm">
                                 {t('tumunu_sec')}
@@ -232,13 +232,13 @@ export default function AsiaExpressImportPage() {
                                     onChange={() => toggleCategory(cat.id)}
                                     className="w-4 h-4"
                                 />
-                                <span className="text-white text-sm">{cat.name}</span>
-                                <span className="text-amber-400 text-xs ml-auto">({cat.count})</span>
+                                <span className="text-foreground text-sm">{cat.name}</span>
+                                <span className="text-amber-800 dark:text-amber-400 text-xs ml-auto">({cat.count})</span>
                             </label>
                         ))}
                     </div>
                     <div className="mt-4 text-center text-foreground">
-                        {t('secili')} <span className="text-amber-400 font-bold">{getTotalSelected()}</span> {t('urun')}
+                        {t('secili')} <span className="text-amber-800 dark:text-amber-400 font-bold">{getTotalSelected()}</span> {t('urun')}
                     </div>
                 </div>
 
@@ -246,14 +246,14 @@ export default function AsiaExpressImportPage() {
                 {scrapingInstructions && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                         <div className="bg-card rounded-2xl p-6 max-w-3xl max-h-[80vh] overflow-y-auto">
-                            <h3 className="text-2xl font-bold text-white mb-4">{t('manuel_scraping_talimatlari')}</h3>
+                            <h3 className="text-2xl font-bold text-foreground mb-4">{t('manuel_scraping_talimatlari')}</h3>
                             <div className="text-foreground space-y-4">
                                 <p>{t('asia_express_food_sitesi_login_gerektird')}</p>
 
                                 <div className="bg-background p-4 rounded-lg">
-                                    <p className="text-amber-400 font-bold mb-2">{t('1_browser_devtools_u_acin_f12')}</p>
-                                    <p className="text-amber-400 font-bold mb-2">{t('2_console_a_bu_kodu_yapistirin')}</p>
-                                    <pre className="bg-black p-4 rounded text-green-400 text-xs overflow-x-auto">
+                                    <p className="text-amber-800 dark:text-amber-400 font-bold mb-2">{t('1_browser_devtools_u_acin_f12')}</p>
+                                    <p className="text-amber-800 dark:text-amber-400 font-bold mb-2">{t('2_console_a_bu_kodu_yapistirin')}</p>
+                                    <pre className="bg-black p-4 rounded text-green-800 dark:text-green-400 text-xs overflow-x-auto">
                                         {`// Asia Express Food Scraper
 const products = [];
 document.querySelectorAll('.product-item').forEach((card) => {
@@ -292,7 +292,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                        <h3 className="text-lg font-bold text-white mb-3">{t('scraped_data_yukle')}</h3>
+                        <h3 className="text-lg font-bold text-foreground mb-3">{t('scraped_data_yukle')}</h3>
                         <input
                             type="file"
                             accept=".json"
@@ -307,7 +307,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                         </button>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                        <h3 className="text-lg font-bold text-white mb-3">🚀 Firestore'a Aktar</h3>
+                        <h3 className="text-lg font-bold text-foreground mb-3">🚀 Firestore'a Aktar</h3>
                         <button
                             onClick={importToFirestore}
                             disabled={isImporting || scrapedProducts.length === 0}
@@ -324,7 +324,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                 {/* Progress */}
                 {(isImporting || progress > 0) && (
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 mb-6">
-                        <div className="flex justify-between text-white mb-2">
+                        <div className="flex justify-between text-foreground mb-2">
                             <span>{currentCategory}</span>
                             <span>{progress}%</span>
                         </div>
@@ -341,15 +341,15 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                 {(stats.imported > 0 || stats.skipped > 0 || stats.errors > 0) && (
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="bg-green-600/20 border border-green-500 rounded-xl p-4 text-center">
-                            <div className="text-3xl font-bold text-green-400">{stats.imported}</div>
+                            <div className="text-3xl font-bold text-green-800 dark:text-green-400">{stats.imported}</div>
                             <div className="text-sm text-green-300">{t('basarili')}</div>
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-500 rounded-xl p-4 text-center">
-                            <div className="text-3xl font-bold text-yellow-400">{stats.skipped}</div>
+                            <div className="text-3xl font-bold text-yellow-800 dark:text-yellow-400">{stats.skipped}</div>
                             <div className="text-sm text-yellow-300">{t('atlandi')}</div>
                         </div>
                         <div className="bg-red-600/20 border border-red-500 rounded-xl p-4 text-center">
-                            <div className="text-3xl font-bold text-red-400">{stats.errors}</div>
+                            <div className="text-3xl font-bold text-red-800 dark:text-red-400">{stats.errors}</div>
                             <div className="text-sm text-red-300">{t('hata')}</div>
                         </div>
                     </div>
@@ -358,14 +358,14 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                 {/* Logs */}
                 {logs.length > 0 && (
                     <div className="bg-black/50 rounded-xl p-4 max-h-96 overflow-y-auto">
-                        <h3 className="text-lg font-bold text-white mb-3">{t('import_log')}</h3>
+                        <h3 className="text-lg font-bold text-foreground mb-3">{t('import_log')}</h3>
                         <div className="space-y-1 font-mono text-sm">
                             {logs.map((log, i) => (
                                 <div key={i} className={`
-                                    ${log.type === 'success' ? 'text-green-400' : ''}
-                                    ${log.type === 'error' ? 'text-red-400' : ''}
-                                    ${log.type === 'warning' ? 'text-yellow-400' : ''}
-                                    ${log.type === 'info' ? 'text-blue-400' : ''}
+                                    ${log.type === 'success' ? 'text-green-800 dark:text-green-400' : ''}
+                                    ${log.type === 'error' ? 'text-red-800 dark:text-red-400' : ''}
+                                    ${log.type === 'warning' ? 'text-yellow-800 dark:text-yellow-400' : ''}
+                                    ${log.type === 'info' ? 'text-blue-800 dark:text-blue-400' : ''}
                                 `}>
                                     {log.message}
                                 </div>

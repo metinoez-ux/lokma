@@ -130,7 +130,7 @@ export default function OrderDetailsModal({
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                 <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
                     <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
-                        <h2 className="text-xl font-bold text-white">
+                        <h2 className="text-xl font-bold text-foreground">
                             📦 {t('modal.order')} #{order.orderNumber || order.id.slice(0, 6).toUpperCase()} <span className="text-muted-foreground text-sm ml-2 font-normal">({t(ORDER_TYPES[order.type]?.labelKey || 'type_pickup')})</span>
                         </h2>
                         <button
@@ -153,7 +153,7 @@ export default function OrderDetailsModal({
                         {/* Business */}
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">{t('modal.business')}</span>
-                            <Link href={`/admin/butchers/${order.businessId}`} className="text-blue-400 hover:underline">
+                            <Link href={`/admin/butchers/${order.businessId}`} className="text-blue-800 dark:text-blue-400 hover:underline">
                                 {businesses[order.businessId] || order.businessId}
                             </Link>
                         </div>
@@ -186,24 +186,24 @@ export default function OrderDetailsModal({
                         {/* Dine-in Info */}
                         {order.type === 'dine_in' && (
                             <div className="bg-amber-600/10 border border-amber-500/30 rounded-xl p-4 space-y-3">
-                                <h4 className="text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ {t('modal.dineInDetail')}</h4>
+                                <h4 className="text-amber-800 dark:text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ {t('modal.dineInDetail')}</h4>
                                 {order.tableNumber && (
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">{t('modal.table')}</span>
-                                        <span className="text-white font-bold text-lg">#{order.tableNumber}</span>
+                                        <span className="text-foreground font-bold text-lg">#{order.tableNumber}</span>
                                     </div>
                                 )}
                                 {order.waiterName && (
                                     <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">{t('modal.waiter')}</span>
-                                        <span className="text-white">{order.waiterName}</span>
+                                        <span className="text-foreground">{order.waiterName}</span>
                                     </div>
                                 )}
                                 <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground">{t('modal.payment')}</span>
                                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === 'paid'
-                                        ? 'bg-green-600/20 text-green-400'
-                                        : 'bg-red-600/20 text-red-400'
+                                        ? 'bg-green-600/20 text-green-800 dark:text-green-400'
+                                        : 'bg-red-600/20 text-red-800 dark:text-red-400'
                                         }`}>
                                         {order.paymentStatus === 'paid'
                                             ? `✅ ${t('modal.paid')}${order.paymentMethod === 'card' ? ` (${t('modal.card')})` : order.paymentMethod === 'cash' ? ` (${t('modal.cash')})` : ''}`
@@ -223,9 +223,9 @@ export default function OrderDetailsModal({
                         <div className="flex items-center justify-between border-t border-border pt-4">
                             <span className="text-muted-foreground">{t('modal.customer')}</span>
                             <div className="text-right">
-                                <p className="text-white font-medium">{order.customerName || t('modal.guest')}</p>
+                                <p className="text-foreground font-medium">{order.customerName || t('modal.guest')}</p>
                                 {order.customerPhone && (
-                                    <a href={`tel:${order.customerPhone}`} className="text-blue-400 text-sm hover:underline">
+                                    <a href={`tel:${order.customerPhone}`} className="text-blue-800 dark:text-blue-400 text-sm hover:underline">
                                         {order.customerPhone}
                                     </a>
                                 )}
@@ -236,7 +236,7 @@ export default function OrderDetailsModal({
                         {order.address && (
                             <div className="flex items-center justify-between bg-gray-700/30 rounded-lg p-3">
                                 <span className="text-muted-foreground">{t('modal.address')}</span>
-                                <div className="text-right text-white text-sm">
+                                <div className="text-right text-foreground text-sm">
                                     <p>{order.address.street}</p>
                                     <p>{order.address.postalCode} {order.address.city}</p>
                                 </div>
@@ -246,10 +246,10 @@ export default function OrderDetailsModal({
                         {/* Items */}
                         <div className="border-t border-border pt-4">
                             <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-white font-semibold">{t('modal.products')}</h4>
+                                <h4 className="text-foreground font-semibold">{t('modal.products')}</h4>
                                 {order.items?.length > 0 && (
                                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium shadow-sm border ${allChecked
-                                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                                        ? 'bg-green-500/20 text-green-800 dark:text-green-400 border-green-500/30'
                                         : 'bg-card text-muted-foreground border-gray-600'
                                         }`}>
                                         ✓ {checkedCount}/{order.items.length}
@@ -260,7 +260,7 @@ export default function OrderDetailsModal({
                             {/* Group Order Kitchen Summary */}
                             {order.isGroupOrder && order.items?.length > 0 && (
                                 <div className="mb-4">
-                                    <h5 className="text-amber-400 font-medium text-sm mb-2">👨‍🍳 {t('modal.kitchenSummary')}</h5>
+                                    <h5 className="text-amber-800 dark:text-amber-400 font-medium text-sm mb-2">👨‍🍳 {t('modal.kitchenSummary')}</h5>
                                     <div className="bg-card/80 border border-gray-600 rounded-lg p-3 space-y-1 text-sm text-gray-200">
                                         {Object.values(
                                             order.items.reduce((acc: any, item: any) => {
@@ -274,7 +274,7 @@ export default function OrderDetailsModal({
                                             }, {})
                                         ).map((aggr: any, idx: number) => (
                                             <div key={idx} className="flex items-start">
-                                                <span className="font-bold text-white mr-2 whitespace-nowrap">{aggr.quantity}x</span> 
+                                                <span className="font-bold text-foreground mr-2 whitespace-nowrap">{aggr.quantity}x</span> 
                                                 <span>
                                                     {aggr.name}
                                                     {aggr.opts && aggr.opts.length > 0 && (
@@ -317,7 +317,7 @@ export default function OrderDetailsModal({
                                                     <span className={`flex-1 font-medium ${isChecked ? 'text-green-300 line-through opacity-70' : item.isFreeDrink ? 'text-emerald-300' : 'text-gray-200'}`}>
                                                         {item.quantity}x {item.productName || item.name}
                                                     </span>
-                                                    <span className={`${isChecked ? 'text-green-400 opacity-70' : item.isFreeDrink ? 'text-emerald-400 font-semibold' : 'text-white font-medium'}`}>
+                                                    <span className={`${isChecked ? 'text-green-800 dark:text-green-400 opacity-70' : item.isFreeDrink ? 'text-emerald-800 dark:text-emerald-400 font-semibold' : 'text-foreground font-medium'}`}>
                                                         {item.isFreeDrink ? (
                                                             <div className="flex flex-col items-end">
                                                                 <span className="line-through text-gray-500 text-[10px]">{formatCurrency(item.originalPrice || item.unitPrice || 0, order?.currency)}</span>
@@ -335,7 +335,7 @@ export default function OrderDetailsModal({
                                                             <div key={optIdx} className="flex justify-between text-xs">
                                                                 <span className={`${isChecked ? 'text-green-300/60 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
                                                                 {(opt.priceModifier || opt.price) ? (
-                                                                    <span className={`${isChecked ? 'text-green-400/60' : 'text-purple-400'} font-medium`}>+{formatCurrency(opt.priceModifier || opt.price, order?.currency)}</span>
+                                                                    <span className={`${isChecked ? 'text-green-800 dark:text-green-400/60' : 'text-purple-800 dark:text-purple-400'} font-medium`}>+{formatCurrency(opt.priceModifier || opt.price, order?.currency)}</span>
                                                                 ) : null}
                                                             </div>
                                                         ))}
@@ -362,8 +362,8 @@ export default function OrderDetailsModal({
                                         return Object.entries(groupedByParticipant).map(([pName, items]) => (
                                             <div key={pName} className="bg-card border border-gray-600 rounded-xl p-3 shadow-sm mb-3">
                                                 <div className="flex items-center gap-2 mb-3">
-                                                    <span className="text-purple-400 text-sm">👤</span>
-                                                    <span className="text-white text-sm font-semibold border-b border-gray-600 pb-0.5 w-full">{pName}</span>
+                                                    <span className="text-purple-800 dark:text-purple-400 text-sm">👤</span>
+                                                    <span className="text-foreground text-sm font-semibold border-b border-gray-600 pb-0.5 w-full">{pName}</span>
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     {items.map(info => renderItem(info.item, info.index))}
@@ -410,24 +410,24 @@ export default function OrderDetailsModal({
                         <div className="border-t border-border pt-5 space-y-2.5 bg-background/30 -mx-6 px-6 pb-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">{t('modal.subtotal')}</span>
-                                <span className="text-white font-medium">{formatCurrency(order.subtotal || 0, order.currency)}</span>
+                                <span className="text-foreground font-medium">{formatCurrency(order.subtotal || 0, order.currency)}</span>
                             </div>
                             {(order.deliveryFee ?? 0) > 0 && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">{t('modal.deliveryFee')}</span>
-                                    <span className="text-white font-medium">{formatCurrency(order.deliveryFee || 0, order.currency)}</span>
+                                    <span className="text-foreground font-medium">{formatCurrency(order.deliveryFee || 0, order.currency)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between text-xl font-bold pt-2 border-t border-border/50 mt-1">
-                                <span className="text-white">{t('modal.total')}</span>
-                                <span className="text-emerald-400 drop-shadow-sm">{formatCurrency(order.total || 0, order.currency)}</span>
+                                <span className="text-foreground">{t('modal.total')}</span>
+                                <span className="text-emerald-800 dark:text-emerald-400 drop-shadow-sm">{formatCurrency(order.total || 0, order.currency)}</span>
                             </div>
                         </div>
 
                         {/* Notes */}
                         {order.notes && (
                             <div className="border-t border-border pt-4 pb-1">
-                                <h4 className="text-amber-400 font-semibold text-sm mb-2 flex items-center gap-1">📝 {t('modal.notes')}</h4>
+                                <h4 className="text-amber-800 dark:text-amber-400 font-semibold text-sm mb-2 flex items-center gap-1">📝 {t('modal.notes')}</h4>
                                 <p className="text-yellow-50 bg-yellow-900/30 border border-yellow-500/40 rounded-xl p-3.5 shadow-sm leading-relaxed whitespace-pre-wrap">{order.notes}</p>
                             </div>
                         )}
@@ -444,7 +444,7 @@ export default function OrderDetailsModal({
                                         className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${order.status === key
                                             ? 'bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600'
                                             : key === 'cancelled'
-                                                ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-900/50'
+                                                ? 'bg-red-900/20 text-red-800 dark:text-red-400 hover:bg-red-900/40 border border-red-900/50'
                                                 : `bg-gray-700 text-white hover:bg-gray-600`
                                             }`}
                                     >
@@ -505,7 +505,7 @@ export default function OrderDetailsModal({
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
                     <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl border border-border">
                         <div className="p-5 border-b border-border flex items-center justify-between bg-card/50">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 ❌ {t('cancelModal.title')}
                             </h2>
                             <button
@@ -584,7 +584,7 @@ export default function OrderDetailsModal({
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
                     <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl border border-border">
                         <div className="p-5 border-b border-border flex items-center justify-between bg-card/50">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                                 ⚠️ {t('missingModal.title')}
                             </h2>
                             <button
@@ -608,7 +608,7 @@ export default function OrderDetailsModal({
                                     {unavailableItems.map((item, idx) => (
                                         <li key={idx} className="flex justify-between items-center group">
                                             <span>
-                                                <span className="text-yellow-400 font-medium">{item.quantity}x</span> {item.name}
+                                                <span className="text-yellow-800 dark:text-yellow-400 font-medium">{item.quantity}x</span> {item.name}
                                             </span>
                                             <span className="text-gray-500 text-xs font-medium">{formatCurrency(item.price, order.currency)}</span>
                                         </li>
@@ -616,7 +616,7 @@ export default function OrderDetailsModal({
                                 </ul>
                             </div>
                             
-                            <p className="text-amber-400/90 text-sm font-medium bg-amber-900/20 p-3 rounded-lg border border-amber-900/50 text-center flex items-center gap-2 justify-center">
+                            <p className="text-amber-800 dark:text-amber-400/90 text-sm font-medium bg-amber-900/20 p-3 rounded-lg border border-amber-900/50 text-center flex items-center gap-2 justify-center">
                                 <span>Tutar otomatik olarak iade edilecek veya ödemeden düşülecektir.</span>
                             </p>
 

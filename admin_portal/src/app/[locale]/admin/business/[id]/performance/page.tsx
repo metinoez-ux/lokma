@@ -225,7 +225,7 @@ const params = useParams();
             <header className="bg-purple-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                        <Link href={`/admin/business/${businessId}`} className="text-purple-200 hover:text-white text-sm">{t('i_sletmeye_don')}</Link>
+                        <Link href={`/admin/business/${businessId}`} className="text-purple-200 hover:text-foreground text-sm">{t('i_sletmeye_don')}</Link>
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                             <span className="text-2xl">📊</span>
                         </div>
@@ -270,27 +270,27 @@ const params = useParams();
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                     {/* Sipariş Sayısı */}
                     <div className="bg-card rounded-lg p-4">
-                        <div className="text-3xl font-bold text-white">{orderStats.totalOrders}</div>
+                        <div className="text-3xl font-bold text-foreground">{orderStats.totalOrders}</div>
                         <div className="text-sm text-muted-foreground">{t('toplam_siparis')}</div>
                     </div>
                     {/* Tamamlanan */}
                     <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
-                        <div className="text-3xl font-bold text-green-400">{orderStats.completedOrders}</div>
+                        <div className="text-3xl font-bold text-green-800 dark:text-green-400">{orderStats.completedOrders}</div>
                         <div className="text-sm text-green-300">Tamamlanan</div>
                     </div>
                     {/* Ortalama Hazırlama */}
                     <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
-                        <div className="text-3xl font-bold text-blue-400">{orderStats.avgPreparationTime}<span className="text-lg">dk</span></div>
+                        <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{orderStats.avgPreparationTime}<span className="text-lg">dk</span></div>
                         <div className="text-sm text-blue-300">{t('ort_hazirlama')}</div>
                     </div>
                     {/* 🆕 Ortalama Teslim Süresi */}
                     <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
-                        <div className="text-3xl font-bold text-purple-400">{orderStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
+                        <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{orderStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
                         <div className="text-sm text-purple-300">Ort. Teslim</div>
                     </div>
                     {/* Kurye Duraklama */}
                     <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
-                        <div className="text-3xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
+                        <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
                         <div className="text-sm text-amber-300">{t('kurye_durdurma')}</div>
                     </div>
                 </div>
@@ -302,28 +302,28 @@ const params = useParams();
                             <span className="text-xl">⏸️</span>
                             <span className="text-muted-foreground">{t('durdurma_sayisi')}</span>
                         </div>
-                        <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
+                        <div className="text-2xl font-bold text-amber-800 dark:text-amber-400">{pauseStats.pauseCount}</div>
                     </div>
                     <div className="bg-card rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">▶️</span>
                             <span className="text-muted-foreground">Devam Ettirme</span>
                         </div>
-                        <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
+                        <div className="text-2xl font-bold text-green-800 dark:text-green-400">{pauseStats.resumeCount}</div>
                     </div>
                     <div className="bg-card rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">⏱️</span>
                             <span className="text-muted-foreground">{t('toplam_durdurma_suresi')}</span>
                         </div>
-                        <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
+                        <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
                     </div>
                 </div>
 
                 {/* Delivery Pause Logs */}
                 <div className="bg-card rounded-lg overflow-hidden">
                     <div className="px-4 py-3 bg-gray-750 border-b border-border">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             <span>🛵</span> {t('kurye_acma_kapama_gecmisi')}
                         </h2>
                     </div>

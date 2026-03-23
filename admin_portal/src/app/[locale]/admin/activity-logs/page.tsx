@@ -93,7 +93,7 @@ export default function CustomerServicePage() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-indigo-900/50 p-6 rounded-2xl border border-indigo-500/30 backdrop-blur-sm">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                    <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
                         <span className="text-3xl">🎧</span>
                         {t('title')}
                     </h1>
@@ -176,7 +176,7 @@ export default function CustomerServicePage() {
                             {/* Businesses Row (Full Width) */}
                             {results.businesses && results.businesses.length > 0 && (
                                 <div className="col-span-1 lg:col-span-2 space-y-4 text-left">
-                                    <h2 className="text-xl font-semibold text-white flex items-center gap-2 border-b border-border pb-2">
+                                    <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 border-b border-border pb-2">
                                         <span>🏢</span> {t('businesses_found')} ({results.businesses.length})
                                     </h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -189,7 +189,7 @@ export default function CustomerServicePage() {
                                                                 {business.companyName?.charAt(0) || '?'}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors truncate">
+                                                                <h3 className="text-lg font-bold text-foreground group-hover:text-amber-800 dark:text-amber-400 transition-colors truncate">
                                                                     {business.companyName}
                                                                 </h3>
                                                                 <div className="flex items-center gap-2 mt-1">
@@ -238,7 +238,7 @@ export default function CustomerServicePage() {
 
                             {/* Users Column */}
                             <div className="space-y-4 text-left">
-                                <h2 className="text-xl font-semibold text-white flex items-center gap-2 border-b border-border pb-2">
+                                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 border-b border-border pb-2">
                                     <span>👤</span> {t('users_found')} ({results.users.length})
                                 </h2>
                                 {results.users.map(user => (
@@ -249,7 +249,7 @@ export default function CustomerServicePage() {
                                                     {user.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">
+                                                    <h3 className="text-lg font-bold text-foreground group-hover:text-indigo-800 dark:text-indigo-400 transition-colors">
                                                         {user.displayName || 'No Name'}
                                                     </h3>
                                                     <div className="flex items-center gap-2 mt-1">
@@ -300,7 +300,7 @@ export default function CustomerServicePage() {
                                                 <p className="text-gray-500 text-xs uppercase">{t('user_card.app_lang')}</p>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-gray-200 uppercase font-medium">{user.appLanguage || 'TR'}</span>
-                                                    {user.fcmToken && <span title="Push Enabled" className="text-green-400">📱</span>}
+                                                    {user.fcmToken && <span title="Push Enabled" className="text-green-800 dark:text-green-400">📱</span>}
                                                 </div>
                                             </div>
                                         </div>
@@ -310,7 +310,7 @@ export default function CustomerServicePage() {
                                             user.recentOrders && user.recentOrders.length > 0 && (
                                                 <div className="mt-4 border-t border-border/50 pt-4">
                                                     <details className="group/details">
-                                                        <summary className="text-sm font-medium text-blue-400 cursor-pointer list-none select-none flex items-center justify-between hover:text-blue-300 transition-colors">
+                                                        <summary className="text-sm font-medium text-blue-800 dark:text-blue-400 cursor-pointer list-none select-none flex items-center justify-between hover:text-blue-300 transition-colors">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-900/30 group-open/details:bg-blue-900/50">
                                                                     <svg className="w-4 h-4 transform transition-transform group-open/details:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -338,7 +338,7 @@ export default function CustomerServicePage() {
                                                                     </div>
                                                                     <div className="flex justify-between items-center text-xs mt-1.5 pt-1.5 border-t border-border/30">
                                                                         <span className="px-2 py-0.5 rounded bg-gray-700 text-foreground uppercase shrink-0 text-[10px]">{ro.type}</span>
-                                                                        <span className="text-emerald-400 font-bold shrink-0">{formatCurrency(ro.totalPrice, ro.currency)}</span>
+                                                                        <span className="text-emerald-800 dark:text-emerald-400 font-bold shrink-0">{formatCurrency(ro.totalPrice, ro.currency)}</span>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -358,7 +358,7 @@ export default function CustomerServicePage() {
 
                             {/* Orders Column */}
                             <div className="space-y-4 text-left">
-                                <h2 className="text-xl font-semibold text-white flex items-center gap-2 border-b border-border pb-2">
+                                <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 border-b border-border pb-2">
                                     <span>📦</span> {t('orders_found')} ({results.orders.length})
                                 </h2>
                                 {results.orders.map((order: any) => (
@@ -368,7 +368,7 @@ export default function CustomerServicePage() {
                                         </div>
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
-                                                <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
+                                                <h3 className="text-lg font-bold text-foreground group-hover:text-blue-800 dark:text-blue-400 transition-colors flex items-center gap-2">
                                                     #{order.orderNumber}
                                                     <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-foreground font-normal">
                                                         {order.id.substring(0, 6)}...
@@ -384,7 +384,7 @@ export default function CustomerServicePage() {
                                                     }`}>
                                                     {order.status.toUpperCase()}
                                                 </span>
-                                                <p className="text-lg font-bold text-emerald-400">{formatCurrency(order.totalPrice, order.currency)}</p>
+                                                <p className="text-lg font-bold text-emerald-800 dark:text-emerald-400">{formatCurrency(order.totalPrice, order.currency)}</p>
                                             </div>
                                         </div>
 
@@ -445,7 +445,7 @@ export default function CustomerServicePage() {
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-border bg-background">
                             <div>
-                                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                <h2 className="text-2xl font-bold text-foreground flex items-center gap-3">
                                     {t('order_details')} <span className="text-muted-foreground font-mono text-lg">#{selectedOrder.orderNumber}</span>
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">ID: {selectedOrder.id}</p>
@@ -464,17 +464,17 @@ export default function CustomerServicePage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-card/50 p-4 rounded-xl border border-border/50">
                                     <p className="text-xs text-gray-500 uppercase">{t('order_card.customer')}</p>
-                                    <p className="text-lg text-white font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
+                                    <p className="text-lg text-foreground font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
                                     <p className="text-sm text-muted-foreground mt-1">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
                                 </div>
                                 <div className="bg-card/50 p-4 rounded-xl border border-border/50">
                                     <p className="text-xs text-gray-500 uppercase">{t('order_card.business')}</p>
-                                    <p className="text-lg text-white font-medium">{selectedOrder.businessName || '-'}</p>
+                                    <p className="text-lg text-foreground font-medium">{selectedOrder.businessName || '-'}</p>
                                     <div className="flex justify-between items-center mt-1">
                                         <p className="text-sm text-muted-foreground">{selectedOrder.type.toUpperCase()}</p>
-                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${selectedOrder.status === 'completed' || selectedOrder.status === 'delivered' ? 'bg-green-900/40 text-green-400' :
-                                            selectedOrder.status === 'cancelled' || selectedOrder.status === 'rejected' ? 'bg-red-900/40 text-red-400' :
-                                                'bg-blue-900/40 text-blue-400'
+                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${selectedOrder.status === 'completed' || selectedOrder.status === 'delivered' ? 'bg-green-900/40 text-green-800 dark:text-green-400' :
+                                            selectedOrder.status === 'cancelled' || selectedOrder.status === 'rejected' ? 'bg-red-900/40 text-red-800 dark:text-red-400' :
+                                                'bg-blue-900/40 text-blue-800 dark:text-blue-400'
                                             }`}>
                                             {selectedOrder.status}
                                         </span>
@@ -490,7 +490,7 @@ export default function CustomerServicePage() {
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <p className="text-xs text-gray-600 mb-1">{t('order_card.total')}</p>
-                                        <p className="text-xl font-bold text-emerald-400">{formatCurrency(selectedOrder.totalPrice, selectedOrder.currency)}</p>
+                                        <p className="text-xl font-bold text-emerald-800 dark:text-emerald-400">{formatCurrency(selectedOrder.totalPrice, selectedOrder.currency)}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-600 mb-1">{t('payment_method')}</p>
@@ -531,7 +531,7 @@ export default function CustomerServicePage() {
                                     {selectedOrder.courierName && (
                                         <div className="mb-4">
                                             <p className="text-xs text-gray-500 mb-1">{t('kurier_name')}</p>
-                                            <p className="text-white">{selectedOrder.courierName}</p>
+                                            <p className="text-foreground">{selectedOrder.courierName}</p>
                                         </div>
                                     )}
                                     {selectedOrder.photoUrl && (
@@ -576,7 +576,7 @@ export default function CustomerServicePage() {
                                             placeholder={t('cancelModal.customReason')}
                                             value={cancelReason}
                                             onChange={(e) => setCancelReason(e.target.value)}
-                                            className="bg-card border border-red-900/50 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-red-500 flex-1 placeholder:text-gray-600"
+                                            className="bg-card border border-red-900/50 rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-red-500 flex-1 placeholder:text-gray-600"
                                         />
                                         <button
                                             onClick={handleCancelOrder}

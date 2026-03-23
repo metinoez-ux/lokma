@@ -111,7 +111,7 @@ export default function CompanySettingsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
                             🏢 LOKMA Firma Einstellungen
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -127,7 +127,7 @@ export default function CompanySettingsPage() {
                         <button
                             onClick={handleSave}
                             disabled={saving || !hasChanges}
-                            className={`px-6 py-2.5 rounded-lg font-medium text-white transition-all ${hasChanges
+                            className={`px-6 py-2.5 rounded-lg font-medium text-foreground transition-all ${hasChanges
                                 ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/30'
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                                 }`}
@@ -140,7 +140,7 @@ export default function CompanySettingsPage() {
                 {/* Unsaved changes warning */}
                 {hasChanges && (
                     <div className="bg-amber-600/20 border border-amber-600/40 rounded-xl p-3 mb-6 flex items-center gap-3">
-                        <span className="text-amber-400">⚠️</span>
+                        <span className="text-amber-800 dark:text-amber-400">⚠️</span>
                         <span className="text-amber-300 text-sm">{t('unsavedChanges')}</span>
                     </div>
                 )}
@@ -434,7 +434,7 @@ export default function CompanySettingsPage() {
                         <div className="flex items-start gap-3">
                             <span className="text-2xl">ℹ️</span>
                             <div>
-                                <h4 className="text-blue-400 font-medium text-sm">{t('dataUsageTitle')}</h4>
+                                <h4 className="text-blue-800 dark:text-blue-400 font-medium text-sm">{t('dataUsageTitle')}</h4>
                                 <p className="text-muted-foreground text-xs mt-1">
                                     {t('dataUsageDesc')}
                                 </p>
@@ -447,7 +447,7 @@ export default function CompanySettingsPage() {
                         <button
                             onClick={handleSave}
                             disabled={saving || !hasChanges}
-                            className={`px-8 py-3 rounded-xl font-medium text-white transition-all text-lg ${hasChanges
+                            className={`px-8 py-3 rounded-xl font-medium text-foreground transition-all text-lg ${hasChanges
                                 ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-600/30'
                                 : 'bg-gray-600 cursor-not-allowed opacity-50'
                                 }`}
@@ -500,7 +500,7 @@ function Section({ title, icon, description, children }: {
     return (
         <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="px-6 py-4 border-b border-border bg-card/80">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <span>{icon}</span> {title}
                 </h2>
                 <p className="text-muted-foreground text-xs mt-0.5">{description}</p>

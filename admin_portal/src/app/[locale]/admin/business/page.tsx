@@ -134,7 +134,7 @@ export default function BusinessesPage() {
             <div className="min-h-screen bg-background flex items-center justify-center p-6">
                 <div className="bg-card border border-red-500/30 rounded-2xl p-8 max-w-md text-center">
                     <div className="text-5xl mb-4">&#128274;</div>
-                    <h2 className="text-xl font-bold text-white mb-2">Zugriff verweigert</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-2">Zugriff verweigert</h2>
                     <p className="text-muted-foreground mb-6">
                         Diese Seite ist nur fur Super-Administratoren zugänglich.
                     </p>
@@ -885,7 +885,7 @@ export default function BusinessesPage() {
                 {/* Back Button */}
                 <Link
                     href="/admin/dashboard"
-                    className="inline-flex items-center gap-2 text-muted-foreground hover:text-white mb-4 transition"
+                    className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition"
                 >
                     <span>←</span>
                     <span>{t('admin_paneli')}</span>
@@ -893,7 +893,7 @@ export default function BusinessesPage() {
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {isKermesMode ? t('kermesyonetimi') : t('isletme_yonetimi')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -924,7 +924,7 @@ export default function BusinessesPage() {
 
             {/* Sector Modules */}
             <div className="max-w-7xl mx-auto mb-6">
-                <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+                <h3 className="text-foreground font-medium mb-3 flex items-center gap-2">
                     {t('sektor_modulleri')}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
@@ -948,7 +948,7 @@ export default function BusinessesPage() {
                                     }`}
                             >
                                 <span className="text-3xl">{type.icon}</span>
-                                <span className="text-white text-sm font-medium">{type.label}</span>
+                                <span className="text-foreground text-sm font-medium">{type.label}</span>
                                 <span className="text-muted-foreground text-xs">
                                     {type.value === 'kermes' ? `${count} kermes` : `${count} ${t('isletme1')}`}
                                 </span>
@@ -985,7 +985,7 @@ export default function BusinessesPage() {
                                             {businessTypes.find(t => t.value === rb.type)?.icon || '🏪'}
                                         </span>
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-white text-sm font-medium truncate group-hover:text-amber-300 transition-colors">
+                                            <div className="text-foreground text-sm font-medium truncate group-hover:text-amber-300 transition-colors">
                                                 {rb.name}
                                             </div>
                                             {rb.city && (
@@ -1116,7 +1116,7 @@ export default function BusinessesPage() {
                                                                     🎪
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-white font-medium">{event.title || t('isimsizKermes')}</p>
+                                                                    <p className="text-foreground font-medium">{event.title || t('isimsizKermes')}</p>
                                                                     {event.organizationName && (
                                                                         <p className="text-muted-foreground text-xs">🕌 {event.organizationName}</p>
                                                                     )}
@@ -1124,13 +1124,13 @@ export default function BusinessesPage() {
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-4">
-                                                            <p className="text-white">{formatDate(startDate)}</p>
+                                                            <p className="text-foreground">{formatDate(startDate)}</p>
                                                             {endDate && (
                                                                 <p className="text-muted-foreground text-xs">→ {formatDate(endDate)}</p>
                                                             )}
                                                         </td>
                                                         <td className="px-4 py-4">
-                                                            <p className="text-white">{event.location || event.city || '-'}</p>
+                                                            <p className="text-foreground">{event.location || event.city || '-'}</p>
                                                             {event.address && (
                                                                 <p className="text-muted-foreground text-xs">{event.address}</p>
                                                             )}
@@ -1142,8 +1142,8 @@ export default function BusinessesPage() {
                                                         </td>
                                                         <td className="px-4 py-4">
                                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${event.isActive !== false
-                                                                ? 'bg-green-900/30 text-green-400 border border-green-500/30'
-                                                                : 'bg-red-900/30 text-red-400 border border-red-500/30'
+                                                                ? 'bg-green-900/30 text-green-800 dark:text-green-400 border border-green-500/30'
+                                                                : 'bg-red-900/30 text-red-800 dark:text-red-400 border border-red-500/30'
                                                                 }`}>
                                                                 {event.isActive !== false ? t('aktif') : '⏸️ Bitti'}
                                                             </span>
@@ -1180,7 +1180,7 @@ export default function BusinessesPage() {
                                                                                     },
                                                                                 });
                                                                             }}
-                                                                            className="px-3 py-1.5 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/40 transition text-sm"
+                                                                            className="px-3 py-1.5 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg hover:bg-blue-600/40 transition text-sm"
                                                                         >
                                                                             {t('cikar')}
                                                                         </button>
@@ -1205,7 +1205,7 @@ export default function BusinessesPage() {
                                                                                     },
                                                                                 });
                                                                             }}
-                                                                            className="px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/40 transition text-sm"
+                                                                            className="px-3 py-1.5 bg-red-600/20 text-red-800 dark:text-red-400 rounded-lg hover:bg-red-600/40 transition text-sm"
                                                                         >
                                                                             {t('sil')}
                                                                         </button>
@@ -1232,7 +1232,7 @@ export default function BusinessesPage() {
                                                                                 },
                                                                             });
                                                                         }}
-                                                                        className="px-3 py-1.5 bg-yellow-600/20 text-yellow-400 rounded-lg hover:bg-yellow-600/40 transition text-sm"
+                                                                        className="px-3 py-1.5 bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 rounded-lg hover:bg-yellow-600/40 transition text-sm"
                                                                     >
                                                                         {t('arsivle')}
                                                                     </button>
@@ -1319,12 +1319,12 @@ export default function BusinessesPage() {
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-4">
-                                                            <p className="text-white font-medium">{business.companyName}</p>
+                                                            <p className="text-foreground font-medium">{business.companyName}</p>
                                                         </td>
                                                         {/* Brand Label Column */}
                                                         <td className="px-4 py-4">
                                                             {((business.brandLabel || (business as any).brand) === 'tuna') && (
-                                                                <span className="px-3 py-1.5 bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
+                                                                <span className="px-3 py-1.5 bg-red-600/30 text-red-800 dark:text-red-400 border border-red-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
                                                                     🔴 TUNA
                                                                 </span>
                                                             )}
@@ -1340,18 +1340,18 @@ export default function BusinessesPage() {
                                                         <td className="px-4 py-4">
                                                             <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-700 rounded-lg text-sm">
                                                                 <span>{typeInfo.icon}</span>
-                                                                <span className="text-white">{typeInfo.label}</span>
+                                                                <span className="text-foreground">{typeInfo.label}</span>
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-4">
-                                                            <p className="text-white">{business.address?.city || '-'}</p>
+                                                            <p className="text-foreground">{business.address?.city || '-'}</p>
                                                             <p className="text-sm text-muted-foreground">{business.address?.postalCode}</p>
                                                         </td>
                                                         <td className="px-4 py-4">
                                                             {business.rating ? (
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); setReviewModal({ open: true, business }); }}
-                                                                    className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-xs font-medium hover:bg-yellow-500/30 transition"
+                                                                    className="px-2 py-1 bg-yellow-500/20 text-yellow-800 dark:text-yellow-400 rounded text-xs font-medium hover:bg-yellow-500/30 transition"
                                                                 >
                                                                     ⭐ {business.rating}{business.reviewCount ? ` (${business.reviewCount})` : ''}
                                                                 </button>
@@ -1362,16 +1362,16 @@ export default function BusinessesPage() {
                                                         <td className="px-4 py-4">
                                                             <div className="flex gap-1">
                                                                 {business.services?.delivery && (
-                                                                    <span title={t('teslimat')} className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🛵</span>
+                                                                    <span title={t('teslimat')} className="px-2 py-1 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded text-xs">🛵</span>
                                                                 )}
                                                                 {business.services?.pickup && (
-                                                                    <span title={t('gelAl')} className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
+                                                                    <span title={t('gelAl')} className="px-2 py-1 bg-green-600/20 text-green-800 dark:text-green-400 rounded text-xs">🏃</span>
                                                                 )}
                                                                 {business.services?.dineIn && (
-                                                                    <span title={t('yerinde')} className="px-2 py-1 bg-amber-600/20 text-amber-400 rounded text-xs">🍽️</span>
+                                                                    <span title={t('yerinde')} className="px-2 py-1 bg-amber-600/20 text-amber-800 dark:text-amber-400 rounded text-xs">🍽️</span>
                                                                 )}
                                                                 {business.services?.reservation && (
-                                                                    <span title={t('rezervasyon')} className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">📅</span>
+                                                                    <span title={t('rezervasyon')} className="px-2 py-1 bg-purple-600/20 text-purple-800 dark:text-purple-400 rounded text-xs">📅</span>
                                                                 )}
                                                             </div>
                                                         </td>
@@ -1379,8 +1379,8 @@ export default function BusinessesPage() {
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleToggleStatus(business); }}
                                                                 className={`px-3 py-1 rounded-full text-xs font-medium ${business.isActive !== false
-                                                                    ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
-                                                                    : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                                                                    ? 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600/30'
+                                                                    : 'bg-red-600/20 text-red-800 dark:text-red-400 hover:bg-red-600/30'
                                                                     } transition`}
                                                             >
                                                                 {business.isActive !== false ? t('aktif') : t('pasif')}
@@ -1392,7 +1392,7 @@ export default function BusinessesPage() {
                                                                 onClick={(e) => { e.stopPropagation(); handleDelete(business); }}
                                                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition ${(business as any).isArchived
                                                                     ? 'bg-gray-600/20 text-muted-foreground cursor-not-allowed'
-                                                                    : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                                                                    : 'bg-red-600/20 text-red-800 dark:text-red-400 hover:bg-red-600/30'
                                                                     }`}
                                                                 disabled={(business as any).isArchived}
                                                                 title={(business as any).isArchived ? t('arsivde') : t('silArsivle')}
@@ -1466,7 +1466,7 @@ export default function BusinessesPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                     <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-border">
-                            <h2 className="text-xl font-bold text-white mb-4">
+                            <h2 className="text-xl font-bold text-foreground mb-4">
                                 {editingBusiness ? t('isletmeDuzenle') : t('yeniIsletmeEkle1')}
                             </h2>
 
@@ -1497,7 +1497,7 @@ export default function BusinessesPage() {
                             {/* Google Import Tab */}
                             {activeTab === 'google' && (
                                 <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
-                                    <h3 className="text-white font-medium mb-3">{t('googleMapstenIsletmeAra')}</h3>
+                                    <h3 className="text-foreground font-medium mb-3">{t('googleMapstenIsletmeAra')}</h3>
                                     <p className="text-muted-foreground text-sm mb-4">
                                         {t('isletmeAdiVeyaAdresiniGirinGoogledan')}
                                     </p>
@@ -1530,10 +1530,10 @@ export default function BusinessesPage() {
                                                     className="bg-card rounded-lg p-3 flex items-center justify-between hover:bg-gray-750 transition"
                                                 >
                                                     <div>
-                                                        <p className="text-white font-medium">{result.name}</p>
+                                                        <p className="text-foreground font-medium">{result.name}</p>
                                                         <p className="text-muted-foreground text-sm">{result.formatted_address}</p>
                                                         {result.rating && (
-                                                            <p className="text-yellow-400 text-sm mt-1">
+                                                            <p className="text-yellow-800 dark:text-yellow-400 text-sm mt-1">
                                                                 ⭐ {result.rating} ({result.user_ratings_total || 0} {t('degerlendirme')}
                                                             </p>
                                                         )}
@@ -1554,7 +1554,7 @@ export default function BusinessesPage() {
 
                             {/* Manual Form - Basic Info */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">📋 {t('temel_bilgiler', { defaultValue: 'Temel Bilgiler' })}</h3>
+                                <h3 className="text-foreground font-medium mb-3">📋 {t('temel_bilgiler', { defaultValue: 'Temel Bilgiler' })}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-muted-foreground text-sm mb-1">{t('isletmeAdi')}</label>
@@ -1587,11 +1587,11 @@ export default function BusinessesPage() {
 
                                     {/* Google Data Display (if imported) */}
                                     {formData.googlePlaceId && (
-                                        <div className="col-span-2 bg-green-900/20 rounded-xl p-4 border border-green-700/50">
+                                        <div className="col-span-2 bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-700/50">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-green-400 text-sm font-medium">{t('google_verisi_aktif')}</span>
+                                                <span className="text-green-800 dark:text-green-400 text-sm font-medium">{t('google_verisi_aktif')}</span>
                                                 {formData.rating > 0 && (
-                                                    <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm font-medium">
+                                                    <span className="px-3 py-1 bg-yellow-500/20 text-yellow-800 dark:text-yellow-400 rounded-full text-sm font-medium">
                                                         ⭐ {formData.rating} ({formData.reviewCount} {t('degerlendirme')}
                                                     </span>
                                                 )}
@@ -1607,7 +1607,7 @@ export default function BusinessesPage() {
 
                             {/* Address */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">📍 {t('adresBilgileri', { defaultValue: 'Adres Bilgileri' })}</h3>
+                                <h3 className="text-foreground font-medium mb-3">📍 {t('adresBilgileri', { defaultValue: 'Adres Bilgileri' })}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
                                         <label className="block text-muted-foreground text-sm mb-1">{t('sokakCadde', { defaultValue: 'Sokak/Cadde' })}</label>
@@ -1673,7 +1673,7 @@ export default function BusinessesPage() {
 
                             {/* Contact */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">{t('iletisim')}</h3>
+                                <h3 className="text-foreground font-medium mb-3">{t('iletisim')}</h3>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="block text-muted-foreground text-sm mb-1">{t('telefon')}</label>
@@ -1708,7 +1708,7 @@ export default function BusinessesPage() {
 
                             {/* Services */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">🛎️ {t('hizmetler')}</h3>
+                                <h3 className="text-foreground font-medium mb-3">🛎️ {t('hizmetler')}</h3>
                                 <div className="flex flex-wrap gap-3">
                                     {[
                                         { key: 'delivery', label: `🛵 ${t('teslimat')}`, desc: t('kuryeIleGonderim') },
@@ -1727,7 +1727,7 @@ export default function BusinessesPage() {
                                                 : 'border-gray-600 bg-gray-700'
                                                 }`}
                                         >
-                                            <span className="text-white">{service.label}</span>
+                                            <span className="text-foreground">{service.label}</span>
                                             <span className="text-xs text-muted-foreground">{service.desc}</span>
                                         </button>
                                     ))}
@@ -1737,7 +1737,7 @@ export default function BusinessesPage() {
                             {/* Masa & Kapasite - Rezervasyon için */}
                             {(formData.reservation || formData.dineIn) && (
                                 <div className="bg-card/50 rounded-xl border border-border p-4">
-                                    <h3 className="text-white font-medium mb-3">🪑 Masa & Kapasite</h3>
+                                    <h3 className="text-foreground font-medium mb-3">🪑 Masa & Kapasite</h3>
                                     <p className="text-muted-foreground text-sm mb-3">{t('restorankafeIcinOturmaKapasitesi0Fastfoodtakeaway')}</p>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
@@ -1769,13 +1769,13 @@ export default function BusinessesPage() {
                             {/* Opening Hours - Editable */}
                             <div className="bg-card/50 rounded-xl border border-border p-4">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-white font-medium">{t('calismaSaatleri1')}</h3>
+                                    <h3 className="text-foreground font-medium">{t('calismaSaatleri1')}</h3>
                                     {formData.googlePlaceId && (
                                         <button
                                             onClick={handleGoogleRefreshHours}
                                             disabled={isRefreshingHours}
                                             type="button"
-                                            className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2 transition disabled:opacity-50"
+                                            className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-800 dark:text-green-400 rounded-lg text-sm font-medium flex items-center gap-2 transition disabled:opacity-50"
                                         >
                                             {isRefreshingHours ? t('yukleniyor') : '🌍 Google\'dan Tazele'}
                                         </button>
@@ -1800,15 +1800,15 @@ export default function BusinessesPage() {
 
 
                             {/* === FINANCIAL DETAILS SECTION === */}
-                            <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-700/30 p-4 space-y-4">
-                                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                            <div className="bg-gradient-to-r from-blue-100 dark:from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700/30 p-4 space-y-4">
+                                <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
                                     💳 Finansal Bilgiler
                                 </h3>
 
                                 {/* Brand Label - SUPER ADMIN ONLY - Only for Kasap & Restoran */}
                                 {(formData.type === 'kasap' || formData.type === t('restoran')) && (
-                                    <div className="bg-gradient-to-r from-amber-900/30 to-red-900/30 rounded-lg p-3 border border-amber-600/40">
-                                        <h4 className="text-amber-400 text-sm font-bold mb-2 flex items-center gap-2">
+                                    <div className="bg-gradient-to-r from-amber-100 dark:from-amber-900/30 to-red-900/30 rounded-lg p-3 border border-amber-600/40">
+                                        <h4 className="text-amber-800 dark:text-amber-400 text-sm font-bold mb-2 flex items-center gap-2">
                                             🏷️ Marka Etiketi
                                             <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">{t('super_admin')}</span>
                                         </h4>
@@ -1957,15 +1957,15 @@ export default function BusinessesPage() {
                                         <h4 className="text-muted-foreground text-sm font-medium mb-2">{t('siparisIstatistikleri')}</h4>
                                         <div className="grid grid-cols-4 gap-3">
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-white">{editingBusiness.orderStats?.totalOrders || editingBusiness.orderCount || 0}</p>
+                                                <p className="text-2xl font-bold text-foreground">{editingBusiness.orderStats?.totalOrders || editingBusiness.orderCount || 0}</p>
                                                 <p className="text-gray-500 text-xs">{t('toplamSiparis')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-blue-400">{editingBusiness.orderStats?.dailyAverage?.toFixed(1) || '0.0'}</p>
+                                                <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{editingBusiness.orderStats?.dailyAverage?.toFixed(1) || '0.0'}</p>
                                                 <p className="text-gray-500 text-xs">{t('gunlukOrtalama')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-green-400">{formatCurrency(editingBusiness.orderStats?.totalRevenue || 0, editingBusiness.currency)}</p>
+                                                <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(editingBusiness.orderStats?.totalRevenue || 0, editingBusiness.currency)}</p>
                                                 <p className="text-gray-500 text-xs">{t('toplam_ciro')}</p>
                                             </div>
                                             <div className="text-center">
@@ -1991,11 +1991,11 @@ export default function BusinessesPage() {
                                                 <p className="text-gray-500 text-xs">{t('sonOdeme')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-xl font-bold text-white">{formatCurrency(editingBusiness.billing?.lastPaymentAmount || 0, editingBusiness.currency)}</p>
+                                                <p className="text-xl font-bold text-foreground">{formatCurrency(editingBusiness.billing?.lastPaymentAmount || 0, editingBusiness.currency)}</p>
                                                 <p className="text-gray-500 text-xs">{t('son_tutar')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className={`text-xl font-bold ${(editingBusiness.billing?.openBalance || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                                <p className={`text-xl font-bold ${(editingBusiness.billing?.openBalance || 0) > 0 ? 'text-red-800 dark:text-red-400' : 'text-green-800 dark:text-green-400'}`}>
                                                     {formatCurrency(editingBusiness.billing?.openBalance || 0, editingBusiness.currency)}
                                                 </p>
                                                 <p className="text-gray-500 text-xs">{t('acikBakiye')}</p>
@@ -2007,7 +2007,7 @@ export default function BusinessesPage() {
                                         </div>
                                         {(editingBusiness.billing?.openBalance || 0) > 0 && (
                                             <div className="mt-3 p-2 bg-red-900/30 rounded-lg border border-red-500/30">
-                                                <p className="text-red-400 text-sm text-center">{t('acikFaturaMevcut')}</p>
+                                                <p className="text-red-800 dark:text-red-400 text-sm text-center">{t('acikFaturaMevcut')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -2023,7 +2023,7 @@ export default function BusinessesPage() {
                                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                     className="w-5 h-5"
                                 />
-                                <label htmlFor="isActive" className="text-white">
+                                <label htmlFor="isActive" className="text-foreground">
                                     {t('isletmeAktifLokmadaGorunsun')}
                                 </label>
                             </div>
@@ -2059,14 +2059,14 @@ export default function BusinessesPage() {
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setReviewModal({ open: false, business: null })}>
                     <div className="bg-card rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-white">
+                            <h3 className="text-xl font-bold text-foreground">
                                 ⭐ {reviewModal.business.companyName} {t('googlePuanlari')}
                             </h3>
-                            <button onClick={() => setReviewModal({ open: false, business: null })} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
+                            <button onClick={() => setReviewModal({ open: false, business: null })} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
                         </div>
 
                         <div className="bg-yellow-500/20 rounded-xl p-4 mb-4 text-center">
-                            <div className="text-4xl font-bold text-yellow-400 mb-1">
+                            <div className="text-4xl font-bold text-yellow-800 dark:text-yellow-400 mb-1">
                                 ⭐ {reviewModal.business.rating}
                             </div>
                             <p className="text-muted-foreground">{reviewModal.business.reviewCount || 0} {t('degerlendirme1')}</p>
@@ -2077,8 +2077,8 @@ export default function BusinessesPage() {
                                 {(reviewModal.business as any).reviews.slice(0, 10).map((review: any, idx: number) => (
                                     <div key={idx} className="bg-gray-700/50 rounded-lg p-3">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-white font-medium">{review.author_name || t('anonim', { defaultValue: 'Anonim' })}</span>
-                                            <span className="text-yellow-400 text-sm">{'⭐'.repeat(review.rating || 0)}</span>
+                                            <span className="text-foreground font-medium">{review.author_name || t('anonim', { defaultValue: 'Anonim' })}</span>
+                                            <span className="text-yellow-800 dark:text-yellow-400 text-sm">{'⭐'.repeat(review.rating || 0)}</span>
                                         </div>
                                         <p className="text-foreground text-sm">{review.text || '-'}</p>
                                         {review.relative_time_description && (
@@ -2113,12 +2113,12 @@ export default function BusinessesPage() {
                         <div className="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">{t('organizasyonSec')}</h2>
+                                    <h2 className="text-xl font-bold text-foreground">{t('organizasyonSec')}</h2>
                                     <p className="text-pink-200 text-sm">{t('kermesAcmakIstediginizOrganizasyonuSecin')}</p>
                                 </div>
                                 <button
                                     onClick={() => { setShowOrgSearchModal(false); setOrgSearchQuery(''); }}
-                                    className="text-white/80 hover:text-white text-2xl"
+                                    className="text-white/80 hover:text-foreground text-2xl"
                                 >
                                     ×
                                 </button>
@@ -2162,12 +2162,12 @@ export default function BusinessesPage() {
                                                 🕌
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-white font-medium">{org.name}</p>
+                                                <p className="text-foreground font-medium">{org.name}</p>
                                                 <p className="text-muted-foreground text-sm">
                                                     📍 {org.postalCode} {org.city} {org.address ? `• ${org.address}` : ''}
                                                 </p>
                                             </div>
-                                            <div className="text-pink-400">
+                                            <div className="text-pink-800 dark:text-pink-400">
                                                 →
                                             </div>
                                         </Link>

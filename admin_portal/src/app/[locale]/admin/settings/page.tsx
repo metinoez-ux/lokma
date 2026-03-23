@@ -18,7 +18,7 @@ export default function SettingsPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-3xl mx-auto">
                 <h1 className="text-3xl font-bold mb-8">{admin?.adminType === 'super' ? 'IoT Einstellungen' : t('settings') || 'Ayarlar'}</h1>
 
@@ -43,10 +43,10 @@ export default function SettingsPage() {
                                     🍔
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-emerald-300 transition">{t('menu_ve_urunler')}</h3>
+                                    <h3 className="font-bold text-foreground group-hover:text-emerald-300 transition">{t('menu_ve_urunler')}</h3>
                                     <p className="text-xs text-gray-500">{t('urun_ve_kategori_yonetimi')}</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-emerald-400 transition text-xl">→</span>
+                                <span className="ml-auto text-gray-600 group-hover:text-emerald-800 dark:text-emerald-400 transition text-xl">→</span>
                             </Link>
 
                             {/* Personel */}
@@ -58,7 +58,7 @@ export default function SettingsPage() {
                                     👥
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-foreground transition">{t('personel') || 'Personel'}</h3>
+                                    <h3 className="font-bold text-foreground group-hover:text-foreground transition">{t('personel') || 'Personel'}</h3>
                                     <p className="text-xs text-gray-500">{t('personel_listesi_ve_yonetimi')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-muted-foreground transition text-xl">→</span>
@@ -73,7 +73,7 @@ export default function SettingsPage() {
                                     🪑
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-teal-300 transition">{t('masa') || 'Masa'}</h3>
+                                    <h3 className="font-bold text-foreground group-hover:text-teal-300 transition">{t('masa') || 'Masa'}</h3>
                                     <p className="text-xs text-gray-500">{t('masa_oturumlari_ve_gruplari')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-teal-400 transition text-xl">→</span>
@@ -88,10 +88,10 @@ export default function SettingsPage() {
                                     🚚
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-amber-300 transition">{t('teslimat') || 'Teslimat'}</h3>
+                                    <h3 className="font-bold text-foreground group-hover:text-amber-300 transition">{t('teslimat') || 'Teslimat'}</h3>
                                     <p className="text-xs text-gray-500">{t('kurye_teslimat_ucreti_ve_siparis_saatler')}</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition text-xl">→</span>
+                                <span className="ml-auto text-gray-600 group-hover:text-amber-800 dark:text-amber-400 transition text-xl">→</span>
                             </Link>
 
                             {/* Abonelik & Plan */}
@@ -103,7 +103,7 @@ export default function SettingsPage() {
                                     💳
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-violet-300 transition">{t('abonelik_plan') || 'Abonelik & Plan'}</h3>
+                                    <h3 className="font-bold text-foreground group-hover:text-violet-300 transition">{t('abonelik_plan') || 'Abonelik & Plan'}</h3>
                                     <p className="text-xs text-gray-500">{t('abonelik_plani_ve_ozellikler')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-violet-400 transition text-xl">→</span>
@@ -118,10 +118,10 @@ export default function SettingsPage() {
                                     🖨️
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-cyan-300 transition">Bon-Drucker</h3>
+                                    <h3 className="font-bold text-foreground group-hover:text-cyan-300 transition">Bon-Drucker</h3>
                                     <p className="text-xs text-gray-500">IP-Adresse, Port und Druckerverbindung</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-cyan-400 transition text-xl">→</span>
+                                <span className="ml-auto text-gray-600 group-hover:text-cyan-800 dark:text-cyan-400 transition text-xl">→</span>
                             </Link>
                         </div>
 
@@ -140,10 +140,10 @@ export default function SettingsPage() {
                                         📄
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-sm text-white group-hover:text-amber-300 transition">{t('faturalarim') || 'Faturalarım'}</h3>
+                                        <h3 className="font-bold text-sm text-foreground group-hover:text-amber-300 transition">{t('faturalarim') || 'Faturalarım'}</h3>
                                         <p className="text-xs text-gray-500">{t('platform_faturalari_ve_abonelik_odemeler') || 'Platform faturaları'}</p>
                                     </div>
-                                    <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition">→</span>
+                                    <span className="ml-auto text-gray-600 group-hover:text-amber-800 dark:text-amber-400 transition">→</span>
                                 </Link>
                             </div>
                         </div>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                 {/* SUPER ADMIN - IoT Einstellungen */}
                 {admin?.adminType === 'super' && (
                     <div className="mb-8">
-                        <h2 className="text-lg font-semibold text-white mb-1">IoT Einstellungen</h2>
+                        <h2 className="text-lg font-semibold text-foreground mb-1">IoT Einstellungen</h2>
                         <p className="text-gray-500 text-sm mb-6">IoT-Gateway, API, Drucker und Benachrichtigungen</p>
 
                         <div className="space-y-2">
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                                 className="flex items-center justify-between p-4 bg-card rounded-lg hover:bg-gray-750 transition-colors group"
                             >
                                 <div>
-                                    <h3 className="text-sm font-medium text-white">IoT-Gateway</h3>
+                                    <h3 className="text-sm font-medium text-foreground">IoT-Gateway</h3>
                                     <p className="text-xs text-gray-500 mt-0.5">Alexa, LED, Browser-Sound Einstellungen</p>
                                 </div>
                                 <span className="text-gray-600 group-hover:text-muted-foreground transition">&#8250;</span>
@@ -209,7 +209,7 @@ export default function SettingsPage() {
                                 className="flex items-center justify-between p-4 bg-card rounded-lg hover:bg-gray-750 transition-colors group"
                             >
                                 <div>
-                                    <h3 className="text-sm font-medium text-white">API-Schluessel</h3>
+                                    <h3 className="text-sm font-medium text-foreground">API-Schluessel</h3>
                                     <p className="text-xs text-gray-500 mt-0.5">Verschluesselte API-Schluesselverwaltung</p>
                                 </div>
                                 <span className="text-gray-600 group-hover:text-muted-foreground transition">&#8250;</span>
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                                 className="flex items-center justify-between p-4 bg-card rounded-lg hover:bg-gray-750 transition-colors group"
                             >
                                 <div>
-                                    <h3 className="text-sm font-medium text-white">Benachrichtigungston</h3>
+                                    <h3 className="text-sm font-medium text-foreground">Benachrichtigungston</h3>
                                     <p className="text-xs text-gray-500 mt-0.5">Push-Benachrichtigungston konfigurieren</p>
                                 </div>
                                 <span className="text-gray-600 group-hover:text-muted-foreground transition">&#8250;</span>
@@ -231,7 +231,7 @@ export default function SettingsPage() {
                                 className="flex items-center justify-between p-4 bg-card rounded-lg hover:bg-gray-750 transition-colors group"
                             >
                                 <div>
-                                    <h3 className="text-sm font-medium text-white">Bon-Drucker</h3>
+                                    <h3 className="text-sm font-medium text-foreground">Bon-Drucker</h3>
                                     <p className="text-xs text-gray-500 mt-0.5">IP-Adresse, Port und Druckerverbindung</p>
                                 </div>
                                 <span className="text-gray-600 group-hover:text-muted-foreground transition">&#8250;</span>

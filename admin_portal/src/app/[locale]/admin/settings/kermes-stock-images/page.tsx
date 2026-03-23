@@ -159,7 +159,7 @@ const { admin, loading: adminLoading } = useAdmin();
     if (!admin || admin.role !== 'super_admin') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>
+                <div className="text-foreground">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>
             </div>
         );
     }
@@ -168,12 +168,12 @@ const { admin, loading: adminLoading } = useAdmin();
         <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-6">
-                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-2">
                     {t('kermes_yonetimi')}
                 </Link>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                             {t('stok_gorsel_yonetimi')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -225,7 +225,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {filteredImages.length === 0 ? (
                     <div className="bg-card rounded-xl p-12 text-center">
                         <div className="text-6xl mb-4">🖼️</div>
-                        <h2 className="text-xl font-bold text-white mb-2">
+                        <h2 className="text-xl font-bold text-foreground mb-2">
                             {images.length === 0 ? t('henuz_stok_gorsel_yok') : t('bu_kategoride_gorsel_yok')}
                         </h2>
                         <p className="text-muted-foreground mb-6">
@@ -269,7 +269,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                     {/* Info */}
                                     <div className="p-3">
-                                        <h3 className="text-white font-medium truncate">{image.title}</h3>
+                                        <h3 className="text-foreground font-medium truncate">{image.title}</h3>
                                         <div className="flex items-center gap-2 mt-1">
                                             <span className="px-2 py-0.5 bg-gray-700 rounded text-xs text-foreground">
                                                 {category?.emoji} {category?.label}
@@ -283,7 +283,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 {image.tags.slice(0, 3).map((tag, idx) => (
                                                     <span
                                                         key={idx}
-                                                        className="px-1.5 py-0.5 bg-cyan-900/30 text-cyan-400 rounded text-xs"
+                                                        className="px-1.5 py-0.5 bg-cyan-900/30 text-cyan-800 dark:text-cyan-400 rounded text-xs"
                                                     >
                                                         #{tag}
                                                     </span>
@@ -303,10 +303,10 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-2xl w-full max-w-lg p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-white">{t('yeni_gorsel_yukle')}</h2>
+                            <h2 className="text-xl font-bold text-foreground">{t('yeni_gorsel_yukle')}</h2>
                             <button
                                 onClick={() => setShowUploadModal(false)}
-                                className="text-muted-foreground hover:text-white text-2xl"
+                                className="text-muted-foreground hover:text-foreground text-2xl"
                             >
                                 ×
                             </button>
@@ -330,8 +330,8 @@ const { admin, loading: adminLoading } = useAdmin();
                             >
                                 {newImage.file ? (
                                     <div className="text-center">
-                                        <span className="text-cyan-400 text-3xl">✅</span>
-                                        <p className="text-white mt-1">{newImage.file.name}</p>
+                                        <span className="text-cyan-800 dark:text-cyan-400 text-3xl">✅</span>
+                                        <p className="text-foreground mt-1">{newImage.file.name}</p>
                                         <p className="text-muted-foreground text-xs">
                                             {(newImage.file.size / 1024 / 1024).toFixed(2)} MB
                                         </p>
@@ -344,24 +344,24 @@ const { admin, loading: adminLoading } = useAdmin();
                                 )}
                             </button>
                             {/* Boyut ve Format Kılavuzu */}
-                            <div className="mt-3 p-3 bg-cyan-900/20 border border-cyan-700/50 rounded-lg">
-                                <h4 className="text-cyan-400 text-sm font-medium mb-2">{t('gorsel_boyut_kilavuzu')}</h4>
+                            <div className="mt-3 p-3 bg-cyan-900/20 border border-cyan-200 dark:border-cyan-700/50 rounded-lg">
+                                <h4 className="text-cyan-800 dark:text-cyan-400 text-sm font-medium mb-2">{t('gorsel_boyut_kilavuzu')}</h4>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div>
                                         <span className="text-muted-foreground">{t('onerilen_boyut')}</span>
-                                        <p className="text-white font-mono">1200 × 675 px</p>
+                                        <p className="text-foreground font-mono">1200 × 675 px</p>
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">{t('en_boy_orani')}</span>
-                                        <p className="text-white font-mono">16:9</p>
+                                        <p className="text-foreground font-mono">16:9</p>
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">Desteklenen Formatlar:</span>
-                                        <p className="text-white">JPG, PNG, WebP</p>
+                                        <p className="text-foreground">JPG, PNG, WebP</p>
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">Maksimum Dosya:</span>
-                                        <p className="text-white">5 MB</p>
+                                        <p className="text-foreground">5 MB</p>
                                     </div>
                                 </div>
                                 <p className="text-gray-500 text-xs mt-2">

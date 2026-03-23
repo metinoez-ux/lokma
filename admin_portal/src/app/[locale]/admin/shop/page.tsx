@@ -97,12 +97,12 @@ export default function ShopDashboard() {
     }
 
     const statusColors: Record<string, string> = {
-        pending: 'bg-yellow-600/20 text-yellow-400',
-        confirmed: 'bg-blue-600/20 text-blue-400',
-        preparing: 'bg-purple-600/20 text-purple-400',
-        shipped: 'bg-cyan-600/20 text-cyan-400',
-        delivered: 'bg-green-600/20 text-green-400',
-        cancelled: 'bg-red-600/20 text-red-400'
+        pending: 'bg-yellow-600/20 text-yellow-800 dark:text-yellow-400',
+        confirmed: 'bg-blue-600/20 text-blue-800 dark:text-blue-400',
+        preparing: 'bg-purple-600/20 text-purple-800 dark:text-purple-400',
+        shipped: 'bg-cyan-600/20 text-cyan-800 dark:text-cyan-400',
+        delivered: 'bg-green-600/20 text-green-800 dark:text-green-400',
+        cancelled: 'bg-red-600/20 text-red-800 dark:text-red-400'
     };
 
     const statusLabels: Record<string, string> = {
@@ -124,7 +124,7 @@ export default function ShopDashboard() {
                             ← {t('dashboard')}
                         </Link>
                         <div>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                                 🛍️ E-Commerce / Online Shop
                             </h1>
                             <p className="text-muted-foreground text-sm mt-1">
@@ -156,27 +156,27 @@ export default function ShopDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">📦</div>
-                        <div className="text-2xl font-bold text-white">{stats.totalProducts}</div>
+                        <div className="text-2xl font-bold text-foreground">{stats.totalProducts}</div>
                         <div className="text-muted-foreground text-sm">{t('toplam_urun')}</div>
                     </div>
                     <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">✅</div>
-                        <div className="text-2xl font-bold text-green-400">{stats.activeProducts}</div>
+                        <div className="text-2xl font-bold text-green-800 dark:text-green-400">{stats.activeProducts}</div>
                         <div className="text-muted-foreground text-sm">{t('aktif_urun')}</div>
                     </div>
                     <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">⏳</div>
-                        <div className="text-2xl font-bold text-yellow-400">{stats.pendingOrders}</div>
+                        <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{stats.pendingOrders}</div>
                         <div className="text-muted-foreground text-sm">{t('bekleyen_siparis')}</div>
                     </div>
                     <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">📅</div>
-                        <div className="text-2xl font-bold text-blue-400">{stats.todayOrders}</div>
+                        <div className="text-2xl font-bold text-blue-800 dark:text-blue-400">{stats.todayOrders}</div>
                         <div className="text-muted-foreground text-sm">{t('bugun')}</div>
                     </div>
                     <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">💰</div>
-                        <div className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.totalRevenue, 'EUR')}</div>
+                        <div className="text-2xl font-bold text-emerald-800 dark:text-emerald-400">{formatCurrency(stats.totalRevenue, 'EUR')}</div>
                         <div className="text-muted-foreground text-sm">{t('ciro')}</div>
                     </div>
                 </div>
@@ -186,7 +186,7 @@ export default function ShopDashboard() {
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Quick Actions */}
                 <div className="bg-card rounded-xl border border-border p-6">
-                    <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                         {t('hizli_i_slemler')}
                     </h2>
                     <div className="grid grid-cols-2 gap-3">
@@ -212,10 +212,10 @@ export default function ShopDashboard() {
                 {/* Recent Orders */}
                 <div className="bg-card rounded-xl border border-border p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             {t('son_siparisler')}
                         </h2>
-                        <Link href="/admin/shop/orders" className="text-blue-400 hover:text-blue-300 text-sm">
+                        <Link href="/admin/shop/orders" className="text-blue-800 dark:text-blue-400 hover:text-blue-300 text-sm">
                             {t('tumunu_gor')}
                         </Link>
                     </div>
@@ -233,11 +233,11 @@ export default function ShopDashboard() {
                                     className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition"
                                 >
                                     <div>
-                                        <div className="text-white font-medium">{order.orderNumber}</div>
+                                        <div className="text-foreground font-medium">{order.orderNumber}</div>
                                         <div className="text-muted-foreground text-sm">{order.customerName}</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-emerald-400 font-medium">{formatCurrency(order.total, 'EUR')}</div>
+                                        <div className="text-emerald-800 dark:text-emerald-400 font-medium">{formatCurrency(order.total, 'EUR')}</div>
                                         <span className={`text-xs px-2 py-0.5 rounded ${statusColors[order.status] || 'bg-gray-600 text-foreground'}`}>
                                             {statusLabels[order.status] || order.status}
                                         </span>
@@ -251,13 +251,13 @@ export default function ShopDashboard() {
 
             {/* Brand Cards */}
             <div className="max-w-7xl mx-auto mt-8">
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                     🏷️ {t('markalar')}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-gradient-to-br from-yellow-900/50 to-amber-900/50 border border-yellow-700/50 rounded-xl p-6 text-center">
+                    <div className="bg-gradient-to-br from-yellow-100 dark:from-yellow-900/50 to-amber-900/50 border border-yellow-200 dark:border-yellow-700/50 rounded-xl p-6 text-center">
                         <div className="text-4xl mb-3">🫒</div>
-                        <h3 className="text-white font-bold">Monte Bueno</h3>
+                        <h3 className="text-foreground font-bold">Monte Bueno</h3>
                         <p className="text-yellow-300/70 text-sm">{t('zeytinyagi_zeytin')}</p>
                     </div>
                     <div className="bg-card/50 border border-border/50 rounded-xl p-6 text-center opacity-50">

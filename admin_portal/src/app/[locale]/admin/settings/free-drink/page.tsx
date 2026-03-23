@@ -151,7 +151,7 @@ export default function FreeDrinkSettingsPage() {
     // ------------------------------------------------------------------
     if (!businessId) {
         return (
-            <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-2xl mb-2">⚠️</p>
                     <p className="text-muted-foreground">Bu ayar yalnızca işletmeye bağlı admin hesapları için geçerlidir.</p>
@@ -161,13 +161,13 @@ export default function FreeDrinkSettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-3xl mx-auto">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                     <Link href="/admin/settings" className="hover:text-white transition">⚙️ {t('settings') || 'Ayarlar'}</Link>
                     <span>›</span>
-                    <span className="text-white">🥤 {t('gratis_icecek') || 'Gratis İçecek'}</span>
+                    <span className="text-foreground">🥤 {t('gratis_icecek') || 'Gratis İçecek'}</span>
                 </div>
 
                 <div className="bg-card border border-border rounded-2xl p-8 space-y-6">
@@ -321,7 +321,7 @@ export default function FreeDrinkSettingsPage() {
                     <button
                         onClick={handleSave}
                         disabled={loading || !dataLoaded}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-emerald-900/20 disabled:opacity-50"
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-foreground font-bold py-4 rounded-xl transition shadow-lg shadow-emerald-900/20 disabled:opacity-50"
                     >
                         {loading
                             ? (t('kaydediliyor') || 'Kaydediliyor...')

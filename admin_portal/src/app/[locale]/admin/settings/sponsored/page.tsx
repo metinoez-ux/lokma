@@ -58,13 +58,13 @@ export default function SponsoredProductsSettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-3xl mx-auto">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                     <Link href="/admin/settings" className="hover:text-white transition">⚙️ {t('settings') || 'Ayarlar'}</Link>
                     <span>›</span>
-                    <span className="text-white">⭐ {t('one_cikan_urunler_sponsored')}</span>
+                    <span className="text-foreground">⭐ {t('one_cikan_urunler_sponsored')}</span>
                 </div>
 
                 <div className="bg-card border border-border rounded-2xl p-8">
@@ -153,7 +153,7 @@ export default function SponsoredProductsSettingsPage() {
                     <button
                         onClick={handleSaveSponsored}
                         disabled={sponsoredLoading || !sponsoredEnabled}
-                        className="w-full mt-6 bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-amber-900/20 disabled:opacity-50"
+                        className="w-full mt-6 bg-amber-600 hover:bg-amber-500 text-foreground font-bold py-4 rounded-xl transition shadow-lg shadow-amber-900/20 disabled:opacity-50"
                     >
                         {sponsoredLoading ? t('kaydediliyor') || 'Kaydediliyor...' : sponsoredSuccess ? '✅ Kaydedildi!' : t('sponsored_ayarlarini_kaydet')}
                     </button>

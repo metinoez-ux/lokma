@@ -165,7 +165,7 @@ const { admin, loading: authLoading } = useAdmin();
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">{t('kermes_ozellikleri')}</h1>
+                        <h1 className="text-2xl font-bold text-foreground">{t('kermes_ozellikleri')}</h1>
                         <p className="text-muted-foreground mt-1">{t('tum_kermeslerde_kullanilacak_etkinlik_oz')}</p>
                     </div>
                     <button
@@ -178,7 +178,7 @@ const { admin, loading: authLoading } = useAdmin();
 
                 {/* Yeni Özellik Ekle */}
                 <div className="bg-card rounded-xl p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">{t('yeni_ozellik_ekle')}</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">{t('yeni_ozellik_ekle')}</h2>
                     <div className="flex flex-wrap gap-4 items-end">
                         <div className="flex-1 min-w-[200px]">
                             <label className="block text-sm text-muted-foreground mb-1">{t('ozellik_adi')}</label>
@@ -195,7 +195,7 @@ const { admin, loading: authLoading } = useAdmin();
                             <select
                                 value={newFeature.icon}
                                 onChange={(e) => setNewFeature({ ...newFeature, icon: e.target.value })}
-                                className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-2xl focus:border-red-500 focus:outline-none"
+                                className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-2xl focus:border-red-500 focus:outline-none"
                             >
                                 {ICON_OPTIONS.map(icon => (
                                     <option key={icon} value={icon}>{icon}</option>
@@ -223,7 +223,7 @@ const { admin, loading: authLoading } = useAdmin();
 
                 {/* Mevcut Özellikler */}
                 <div className="bg-card rounded-xl p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">{t('mevcut_ozellikler')}{features.length})</h2>
+                    <h2 className="text-lg font-semibold text-foreground mb-4">{t('mevcut_ozellikler')}{features.length})</h2>
 
                     <div className="space-y-3">
                         {features.map((feature, index) => (
@@ -293,7 +293,7 @@ const { admin, loading: authLoading } = useAdmin();
                                             autoFocus
                                         />
                                     ) : (
-                                        <span className="text-white font-medium">{feature.label}</span>
+                                        <span className="text-foreground font-medium">{feature.label}</span>
                                     )}
 
                                     <span className="text-xs text-gray-500 font-mono">{feature.id}</span>
@@ -349,7 +349,7 @@ const { admin, loading: authLoading } = useAdmin();
                 </div>
 
                 {/* Bilgi */}
-                <div className="mt-6 p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+                <div className="mt-6 p-4 bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-lg">
                     <p className="text-blue-300 text-sm">
                         💡 <strong>İpucu:</strong> {t('bu_ozellikler_tum_kermeslerde_kullanilac')}
                     </p>

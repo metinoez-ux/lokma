@@ -75,7 +75,7 @@ export default function CustomersPage() {
     if (!admin || admin.adminType !== 'super') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <p className="text-red-400 text-lg">{t('accessDenied') || 'Zugriff verweigert'}</p>
+                <p className="text-red-800 dark:text-red-400 text-lg">{t('accessDenied') || 'Zugriff verweigert'}</p>
             </div>
         );
     }
@@ -109,7 +109,7 @@ export default function CustomersPage() {
                         placeholder="🔍 Kunde suchen (Name, E-Mail, Telefon, Stadt)..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                        className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                 </div>
 
@@ -156,7 +156,7 @@ export default function CustomersPage() {
                                                                 {(user.displayName || '?')[0]?.toUpperCase()}
                                                             </div>
                                                         )}
-                                                        <span className="text-white font-medium">
+                                                        <span className="text-foreground font-medium">
                                                             {user.displayName || 'Unbekannt'}
                                                         </span>
                                                     </div>

@@ -112,7 +112,7 @@ export default function BenutzerverwaltungPage() {
                                 className="group bg-card border border-border rounded-xl p-5 hover:border-red-500/50 hover:bg-card/80 transition-all"
                             >
                                 <div className="flex items-start justify-between mb-3">
-                                    <h3 className="text-white font-semibold text-sm group-hover:text-red-400 transition-colors">
+                                    <h3 className="text-foreground font-semibold text-sm group-hover:text-red-800 dark:text-red-400 transition-colors">
                                         {t(section.labelKey) || section.fallbackLabel}
                                     </h3>
                                     {count !== undefined && (

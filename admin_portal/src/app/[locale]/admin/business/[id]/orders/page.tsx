@@ -367,7 +367,7 @@ const params = useParams();
                     <div className="flex items-center space-x-3">
                         <Link
                             href={isVendorUser ? '/admin/businesses' : '/admin/businesses'}
-                            className="text-red-200 hover:text-white text-sm"
+                            className="text-red-200 hover:text-foreground text-sm"
                         >
                             ← {isVendorUser ? 'Dashboard' : t('i_sletmelere_don')}
                         </Link>
@@ -390,19 +390,19 @@ const params = useParams();
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
                     <div className="bg-card rounded-lg p-4">
-                        <div className="text-2xl font-bold text-white">{stats.total}</div>
+                        <div className="text-2xl font-bold text-foreground">{stats.total}</div>
                         <div className="text-sm text-muted-foreground">{t('toplam')}</div>
                     </div>
                     <div className="bg-yellow-600/20 rounded-lg p-4 border-l-4 border-yellow-500">
-                        <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
+                        <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">{stats.pending}</div>
                         <div className="text-sm text-yellow-300">{t('waiting')}</div>
                     </div>
                     <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
-                        <div className="text-2xl font-bold text-blue-400">{stats.preparing}</div>
+                        <div className="text-2xl font-bold text-blue-800 dark:text-blue-400">{stats.preparing}</div>
                         <div className="text-sm text-blue-300">{t('hazirlaniyor')}</div>
                     </div>
                     <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
-                        <div className="text-2xl font-bold text-green-400">{stats.ready}</div>
+                        <div className="text-2xl font-bold text-green-800 dark:text-green-400">{stats.ready}</div>
                         <div className="text-sm text-green-300">{t('hazir')}</div>
                     </div>
                     {/* Completed card with toggle for hidden orders */}
@@ -416,7 +416,7 @@ const params = useParams();
                         <div className="text-2xl font-bold text-foreground">
                             {stats.completed}
                             {stats.hiddenCompleted > 0 && !showCompletedOrders && (
-                                <span className="text-xs ml-1 text-yellow-400">+{stats.hiddenCompleted} gizli</span>
+                                <span className="text-xs ml-1 text-yellow-800 dark:text-yellow-400">+{stats.hiddenCompleted} gizli</span>
                             )}
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -557,13 +557,13 @@ const params = useParams();
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap"
                                                         onClick={() => setSelectedOrder(order)}
                                                     >
-                                                        <span className="font-mono font-bold text-red-400">{order.orderNumber}</span>
+                                                        <span className="font-mono font-bold text-red-800 dark:text-red-400">{order.orderNumber}</span>
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4"
                                                         onClick={() => setSelectedOrder(order)}
                                                     >
-                                                        <div className="text-sm font-medium text-white">{order.customerName}</div>
+                                                        <div className="text-sm font-medium text-foreground">{order.customerName}</div>
                                                         {/* Phone: Only visible during active orders */}
                                                         <div className="text-sm text-muted-foreground">
                                                             {['pending', 'preparing', 'ready'].includes(order.status)
@@ -583,9 +583,9 @@ const params = useParams();
                                                     >
                                                         <div className="text-sm">
                                                             {order.type === 'pickup' ? (
-                                                                <span className="text-blue-400">🏪 Gel Al</span>
+                                                                <span className="text-blue-800 dark:text-blue-400">🏪 Gel Al</span>
                                                             ) : (
-                                                                <span className="text-amber-400">{t('kurye')}</span>
+                                                                <span className="text-amber-800 dark:text-amber-400">{t('kurye')}</span>
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-muted-foreground">{formatDate(order.scheduledAt?.toDate())}</div>
@@ -594,13 +594,13 @@ const params = useParams();
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap"
                                                         onClick={() => setSelectedOrder(order)}
                                                     >
-                                                        <span className="text-sm font-semibold text-green-400">
+                                                        <span className="text-sm font-semibold text-green-800 dark:text-green-400">
                                                             {formatPrice(order.total)}
                                                         </span>
                                                         <div className="text-xs mt-1">
-                                                            {order.paymentMethod === 'card' && <span className="text-blue-400">💳 Kart</span>}
-                                                            {order.paymentMethod === 'cash' && <span className="text-yellow-400">💵 Nakit</span>}
-                                                            {order.paymentMethod === 'online' && <span className="text-purple-400">📱 Online</span>}
+                                                            {order.paymentMethod === 'card' && <span className="text-blue-800 dark:text-blue-400">💳 Kart</span>}
+                                                            {order.paymentMethod === 'cash' && <span className="text-yellow-800 dark:text-yellow-400">💵 Nakit</span>}
+                                                            {order.paymentMethod === 'online' && <span className="text-purple-800 dark:text-purple-400">📱 Online</span>}
                                                             {!order.paymentMethod && <span className="text-gray-500">💵 Nakit</span>}
                                                         </div>
                                                     </td>
@@ -618,7 +618,7 @@ const params = useParams();
                                                             {order.status === 'pending' && (
                                                                 <button
                                                                     onClick={() => updateOrderStatus(order.id, 'preparing')}
-                                                                    className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
+                                                                    className="flex-1 bg-green-600 hover:bg-green-500 text-foreground font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
                                                                 >
                                                                     {t('si_pari_si_baslat')}
                                                                 </button>
@@ -626,7 +626,7 @@ const params = useParams();
                                                             {order.status === 'preparing' && (
                                                                 <button
                                                                     onClick={() => updateOrderStatus(order.id, 'ready')}
-                                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
+                                                                    className="flex-1 bg-blue-600 hover:bg-blue-500 text-foreground font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
                                                                 >
                                                                     {t('hazir')}
                                                                 </button>
@@ -634,7 +634,7 @@ const params = useParams();
                                                             {order.status === 'ready' && (
                                                                 <button
                                                                     onClick={() => updateOrderStatus(order.id, 'completed')}
-                                                                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
+                                                                    className="flex-1 bg-purple-600 hover:bg-purple-500 text-foreground font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
                                                                 >
                                                                     🎉 TESLİM EDİLDİ
                                                                 </button>
@@ -643,7 +643,7 @@ const params = useParams();
                                                                 <span className="flex-1 text-center text-muted-foreground py-3 text-sm">{t('tamamlandi')}</span>
                                                             )}
                                                             {order.status === 'cancelled' && (
-                                                                <span className="flex-1 text-center text-red-400 py-3 text-sm">❌ İptal</span>
+                                                                <span className="flex-1 text-center text-red-800 dark:text-red-400 py-3 text-sm">❌ İptal</span>
                                                             )}
 
                                                             {/* Secondary actions - small icons, only for pending */}

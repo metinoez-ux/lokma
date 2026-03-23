@@ -230,13 +230,13 @@ export default function IoTSettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-3xl mx-auto">
                 {/* Breadcrumb */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                     <Link href="/admin/settings" className="hover:text-white transition">⚙️ {t('settings') || 'Ayarlar'}</Link>
                     <span>›</span>
-                    <span className="text-white">🔔 {t('akilli_bildirimler_iot_gateway')}</span>
+                    <span className="text-foreground">🔔 {t('akilli_bildirimler_iot_gateway')}</span>
                 </div>
 
                 <div className="bg-card border border-border rounded-2xl p-8">
@@ -363,9 +363,9 @@ export default function IoTSettingsPage() {
                                     {alexaStatusLoading ? (
                                         <span className="text-xs text-muted-foreground">⏳ Kontrol ediliyor...</span>
                                     ) : alexaStatus?.connected ? (
-                                        <span className="text-xs text-green-400 font-bold">{t('bagli')}</span>
+                                        <span className="text-xs text-green-800 dark:text-green-400 font-bold">{t('bagli')}</span>
                                     ) : (
-                                        <span className="text-xs text-red-400 font-bold">{t('bagli_degil')}</span>
+                                        <span className="text-xs text-red-800 dark:text-red-400 font-bold">{t('bagli_degil')}</span>
                                     )}
                                 </div>
 
@@ -385,7 +385,7 @@ export default function IoTSettingsPage() {
                                         </div>
                                         <button
                                             onClick={handleAlexaDisconnect}
-                                            className="text-sm text-red-400 hover:text-red-300 underline"
+                                            className="text-sm text-red-800 dark:text-red-400 hover:text-red-300 underline"
                                         >
                                             {t('baglantiyi_kaldir')}
                                         </button>
@@ -395,7 +395,7 @@ export default function IoTSettingsPage() {
                                         {!showAlexaSetup ? (
                                             <button
                                                 onClick={() => setShowAlexaSetup(true)}
-                                                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition text-sm"
+                                                className="w-full bg-purple-600 hover:bg-purple-500 text-foreground font-bold py-3 rounded-lg transition text-sm"
                                             >
                                                 {t('alexa_bagla')}
                                             </button>
@@ -422,7 +422,7 @@ export default function IoTSettingsPage() {
                                                     <button
                                                         onClick={handleAlexaConnect}
                                                         disabled={alexaConnecting || !alexaCookie.trim()}
-                                                        className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-lg transition text-sm disabled:opacity-50"
+                                                        className="flex-1 bg-purple-600 hover:bg-purple-500 text-foreground font-bold py-2.5 rounded-lg transition text-sm disabled:opacity-50"
                                                     >
                                                         {alexaConnecting ? t('baglaniyor') : t('bagla')}
                                                     </button>
@@ -439,7 +439,7 @@ export default function IoTSettingsPage() {
                                 )}
 
                                 {alexaMessage && (
-                                    <p className={`text-sm mt-3 ${alexaMessage.startsWith('✅') ? 'text-green-400' : alexaMessage.startsWith('🔌') ? 'text-yellow-400' : 'text-red-400'}`}>
+                                    <p className={`text-sm mt-3 ${alexaMessage.startsWith('✅') ? 'text-green-800 dark:text-green-400' : alexaMessage.startsWith('🔌') ? 'text-yellow-800 dark:text-yellow-400' : 'text-red-800 dark:text-red-400'}`}>
                                         {alexaMessage}
                                     </p>
                                 )}
@@ -452,12 +452,12 @@ export default function IoTSettingsPage() {
                                 <button
                                     onClick={handleTestNotification}
                                     disabled={testLoading}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
+                                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-foreground font-bold py-3 rounded-lg transition disabled:opacity-50"
                                 >
                                     {testLoading ? t('gonderiliyor') : t('test_bildirimi_gonder')}
                                 </button>
                                 {testResult && (
-                                    <p className={`text-sm mt-2 text-center ${testResult.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>
+                                    <p className={`text-sm mt-2 text-center ${testResult.startsWith('✅') ? 'text-green-800 dark:text-green-400' : 'text-red-800 dark:text-red-400'}`}>
                                         {testResult}
                                     </p>
                                 )}
@@ -530,12 +530,12 @@ export default function IoTSettingsPage() {
                                             <div className="flex items-center gap-3">
                                                 <button
                                                     onClick={() => setPrintCopies(Math.max(1, printCopies - 1))}
-                                                    className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold"
+                                                    className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 text-foreground font-bold"
                                                 >−</button>
                                                 <span className="text-xl font-bold font-mono w-8 text-center">{printCopies}</span>
                                                 <button
                                                     onClick={() => setPrintCopies(Math.min(5, printCopies + 1))}
-                                                    className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-bold"
+                                                    className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 text-foreground font-bold"
                                                 >+</button>
                                             </div>
                                         </div>
@@ -556,12 +556,12 @@ export default function IoTSettingsPage() {
                                                     setPrintTestLoading(false);
                                                 }}
                                                 disabled={printTestLoading}
-                                                className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
+                                                className="w-full bg-amber-600 hover:bg-amber-500 text-foreground font-bold py-3 rounded-lg transition disabled:opacity-50"
                                             >
                                                 {printTestLoading ? (t('yazici_test') || 'Test ediliyor...') : `🖨️ ${t('test_yazdir') || 'Test Yazdır'}`}
                                             </button>
                                             {printTestResult && (
-                                                <p className={`text-sm mt-2 text-center ${printTestResult.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>
+                                                <p className={`text-sm mt-2 text-center ${printTestResult.startsWith('✅') ? 'text-green-800 dark:text-green-400' : 'text-red-800 dark:text-red-400'}`}>
                                                     {printTestResult}
                                                 </p>
                                             )}
@@ -575,7 +575,7 @@ export default function IoTSettingsPage() {
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                        className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-foreground font-bold py-4 rounded-xl transition shadow-lg shadow-blue-900/20 disabled:opacity-50"
                     >
                         {loading ? t('kaydediliyor') || 'Kaydediliyor...' : success ? '✅ Kaydedildi!' : t('iot_ayarlarini_kaydet')}
                     </button>

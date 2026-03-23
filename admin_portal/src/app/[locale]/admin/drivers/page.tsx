@@ -238,15 +238,15 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                         <div className="text-sm text-muted-foreground">{t('surucu')}</div>
                     </div>
                     <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
-                        <div className="text-2xl font-bold text-green-400">{stats.activeDrivers}</div>
+                        <div className="text-2xl font-bold text-green-800 dark:text-green-400">{stats.activeDrivers}</div>
                         <div className="text-sm text-green-300">{t('aktif')}</div>
                     </div>
                     <div className="bg-blue-900/30 rounded-lg p-4 border-l-4 border-blue-500">
-                        <div className="text-2xl font-bold text-blue-400">{stats.availableStaff}</div>
+                        <div className="text-2xl font-bold text-blue-800 dark:text-blue-400">{stats.availableStaff}</div>
                         <div className="text-sm text-blue-300">👤 Atanabilir Personel</div>
                     </div>
                     <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
-                        <div className="text-2xl font-bold text-amber-400">{stats.totalAssignments}</div>
+                        <div className="text-2xl font-bold text-amber-800 dark:text-amber-400">{stats.totalAssignments}</div>
                         <div className="text-sm text-amber-300">{t('toplam_atama')}</div>
                     </div>
                 </div>
@@ -348,13 +348,13 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                         <>
                                             <button
                                                 onClick={() => openAssignModal(person)}
-                                                className="flex-1 text-sm text-blue-400 hover:text-blue-300 py-1"
+                                                className="flex-1 text-sm text-blue-800 dark:text-blue-400 hover:text-blue-300 py-1"
                                             >
                                                 {t('i_sletmeleri_duzenle')}
                                             </button>
                                             <button
                                                 onClick={() => setConfirmRemoveDriver(person)}
-                                                className="flex-1 text-sm text-red-400 hover:text-red-300 py-1"
+                                                className="flex-1 text-sm text-red-800 dark:text-red-400 hover:text-red-300 py-1"
                                             >
                                                 {t('surucu_yetkisini_kaldir')}
                                             </button>
@@ -362,7 +362,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                     ) : (
                                         <button
                                             onClick={() => openAssignModal(person)}
-                                            className="flex-1 text-sm text-green-400 hover:text-green-300 py-1"
+                                            className="flex-1 text-sm text-green-800 dark:text-green-400 hover:text-green-300 py-1"
                                         >
                                             {t('surucu_yap')}
                                         </button>
@@ -394,7 +394,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                         placeholder="🔍 Personel ara..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white mb-3"
+                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-foreground mb-3"
                                     />
                                     <div className="max-h-64 overflow-y-auto space-y-2">
                                         {availableStaff
@@ -431,7 +431,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                         </div>
                                                         {/* Business Name */}
                                                         {staff.businessName && (
-                                                            <div className="text-sm text-amber-400 mt-1">
+                                                            <div className="text-sm text-amber-800 dark:text-amber-400 mt-1">
                                                                 🏪 {staff.businessName}
                                                             </div>
                                                         )}
@@ -549,14 +549,14 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                             <div className="text-sm font-medium">{business.name}</div>
                                                             {(business.plz || business.city) && (
                                                                 <div className="text-xs text-muted-foreground">
-                                                                    {business.plz && <span className="text-amber-400">{business.plz}</span>}
+                                                                    {business.plz && <span className="text-amber-800 dark:text-amber-400">{business.plz}</span>}
                                                                     {business.plz && business.city && ' • '}
                                                                     {business.city}
                                                                 </div>
                                                             )}
                                                         </div>
                                                         {selectedBusinessIds.includes(business.id) && (
-                                                            <span className="text-green-400">✓</span>
+                                                            <span className="text-green-800 dark:text-green-400">✓</span>
                                                         )}
                                                     </button>
                                                 ))

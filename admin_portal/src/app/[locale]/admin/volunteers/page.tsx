@@ -20,7 +20,7 @@ export default function VolunteersPage() {
     if (!admin || admin.adminType !== 'super') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <p className="text-red-400 text-lg">Zugriff verweigert</p>
+                <p className="text-red-800 dark:text-red-400 text-lg">Zugriff verweigert</p>
             </div>
         );
     }

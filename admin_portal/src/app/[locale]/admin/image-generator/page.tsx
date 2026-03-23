@@ -365,7 +365,7 @@ export default function ImageGeneratorPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/40 border border-emerald-700/50 rounded-full text-emerald-400 font-bold">
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 rounded-full text-emerald-800 dark:text-emerald-400 font-bold">
                             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                             {gallery.length} {t('gorsel_kayitli')}
                         </span>
@@ -522,13 +522,13 @@ export default function ImageGeneratorPage() {
                                 </p>
                                 {backgroundPrompt.trim() && (
                                     <p className="text-xs text-gray-500">
-                                        <span className="text-emerald-400 font-bold">+ {t('hintergrund')}:</span>{' '}
+                                        <span className="text-emerald-800 dark:text-emerald-400 font-bold">+ {t('hintergrund')}:</span>{' '}
                                         {backgroundPrompt.trim().substring(0, 100)}{backgroundPrompt.trim().length > 100 ? '...' : ''}
                                     </p>
                                 )}
                                 {negativePrompt.trim() && (
                                     <p className="text-xs text-gray-500">
-                                        <span className="text-red-400 font-bold">{t('negativ')}:</span>{' '}
+                                        <span className="text-red-800 dark:text-red-400 font-bold">{t('negativ')}:</span>{' '}
                                         {negativePrompt.trim().substring(0, 100)}{negativePrompt.trim().length > 100 ? '...' : ''}
                                     </p>
                                 )}
@@ -545,7 +545,7 @@ export default function ImageGeneratorPage() {
                             <h2 className="text-xl font-bold">
                                 {t('gorsel_kutuphanesi')}
                                 {!isSuperAdmin && (
-                                    <span className="text-xs bg-blue-900/40 text-blue-300 px-2.5 py-1 rounded-full border border-blue-700/50 ml-2">
+                                    <span className="text-xs bg-blue-900/40 text-blue-300 px-2.5 py-1 rounded-full border border-blue-200 dark:border-blue-700/50 ml-2">
                                         {t('gorselleri_isletmenizde_kullanabilirsini')}
                                     </span>
                                 )}
@@ -565,7 +565,7 @@ export default function ImageGeneratorPage() {
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isUploading}
-                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-900/30"
+                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-foreground text-sm font-bold rounded-xl hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-900/30"
                                     >
                                         {isUploading ? (
                                             <>
@@ -621,7 +621,7 @@ export default function ImageGeneratorPage() {
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                     </svg>
                                 </div>
-                                <p className="text-sm font-bold text-white">{t('fircalar_hazirlaniyor')}</p>
+                                <p className="text-sm font-bold text-foreground">{t('fircalar_hazirlaniyor')}</p>
                                 <p className="text-xs text-gray-500 mt-2">"{keyword}{t('uretiliyor')}</p>
                             </div>
                         )}
@@ -687,14 +687,14 @@ export default function ImageGeneratorPage() {
 
                                 {/* Category badge */}
                                 <div className="absolute top-3 left-3">
-                                    <span className="px-2.5 py-1 bg-black/60 backdrop-blur-xl rounded-lg text-xs font-bold text-white border border-white/10">
+                                    <span className="px-2.5 py-1 bg-black/60 backdrop-blur-xl rounded-lg text-xs font-bold text-foreground border border-white/10">
                                         {categories.find((c) => c.id === image.category)?.name}
                                     </span>
                                 </div>
 
                                 {/* Info bar */}
                                 <div className="p-4 border-t border-border">
-                                    <p className="text-sm font-bold text-white truncate" title={image.keyword}>
+                                    <p className="text-sm font-bold text-foreground truncate" title={image.keyword}>
                                         {image.keyword}
                                     </p>
                                     <div className="flex items-center justify-between mt-1.5">
@@ -721,7 +721,7 @@ export default function ImageGeneratorPage() {
                                 <div className="bg-background p-8 rounded-3xl mb-6 text-gray-700 border border-border">
                                     <span className="text-4xl text-gray-600">{t('kutuphane_bos')}</span>
                                 </div>
-                                <h3 className="text-xl font-black text-white">{t('kutuphane_bos')}</h3>
+                                <h3 className="text-xl font-black text-foreground">{t('kutuphane_bos')}</h3>
                                 <p className="text-gray-500 mt-2 text-sm max-w-xs">
                                     {isSuperAdmin
                                         ? t('yukaridan_bir_kategori_sec_ve_anahtar_ke')
@@ -750,7 +750,7 @@ export default function ImageGeneratorPage() {
                         />
                         <div className="p-6 flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-bold text-white">{previewImage.keyword}</h3>
+                                <h3 className="text-lg font-bold text-foreground">{previewImage.keyword}</h3>
                                 <p className="text-xs text-gray-500 mt-1">
                                     {categories.find((c) => c.id === previewImage.category)?.name} •{' '}
                                     {previewImage.createdAt?.toDate?.().toLocaleDateString(locale)} •{' '}

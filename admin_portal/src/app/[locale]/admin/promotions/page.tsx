@@ -709,7 +709,7 @@ function PromotionsPageContent() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">{t('noAccess')}</h2>
+                    <h2 className="text-xl font-bold text-foreground mt-4">{t('noAccess')}</h2>
                     <p className="text-muted-foreground mt-2">{t('noAccessDesc')}</p>
                 </div>
             </div>
@@ -768,19 +768,19 @@ function PromotionsPageContent() {
 
                     {/* Plan Gating Warning */}
                     {mainTab === 'kampanya' && !hasCampaignFeature && (
-                        <div className="mt-3 flex items-center gap-2 text-amber-400 text-xs">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-700/40">
+                        <div className="mt-3 flex items-center gap-2 text-amber-800 dark:text-amber-400 text-xs">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-200 dark:border-amber-700/40">
                                 🔒 {businessPlanName}
                             </span>
-                            <span className="text-amber-400/60">{t('noCampaignFeatureShort')} · <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">{t('upgradePlan')}</a></span>
+                            <span className="text-amber-800 dark:text-amber-400/60">{t('noCampaignFeatureShort')} · <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">{t('upgradePlan')}</a></span>
                         </div>
                     )}
                     {mainTab === 'kampanya' && hasCampaignFeature && isAtCampaignLimit && (
-                        <div className="mt-3 flex items-center gap-2 text-amber-400 text-xs">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-700/40">
+                        <div className="mt-3 flex items-center gap-2 text-amber-800 dark:text-amber-400 text-xs">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-200 dark:border-amber-700/40">
                                 ⚠️ Limit: {activePromoCount}/{campaignLimit}
                             </span>
-                            <span className="text-amber-400/60">{t('deactivateOrUpgrade')} <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">{t('upgradeYourPlan')}</a>.</span>
+                            <span className="text-amber-800 dark:text-amber-400/60">{t('deactivateOrUpgrade')} <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">{t('upgradeYourPlan')}</a>.</span>
                         </div>
                     )}
                 </div>
@@ -800,7 +800,7 @@ function PromotionsPageContent() {
                                 key={tab.key}
                                 onClick={() => setMainTab(tab.key as any)}
                                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${mainTab === tab.key
-                                    ? 'border-blue-500 text-blue-400'
+                                    ? 'border-blue-500 text-blue-800 dark:text-blue-400'
                                     : 'border-transparent text-muted-foreground hover:text-gray-200 hover:border-gray-600'
                                     }`}
                             >
@@ -821,13 +821,13 @@ function PromotionsPageContent() {
                             <div className="flex items-center gap-3">
                                 <span className="text-2xl">🥤</span>
                                 <div>
-                                    <h2 className="text-white font-bold">{t('freeDrinkTitle')}</h2>
+                                    <h2 className="text-foreground font-bold">{t('freeDrinkTitle')}</h2>
                                     <p className="text-emerald-300/70 text-xs mt-0.5">{t('freeDrinkDesc')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 {freeDrinkToast && (
-                                    <span className="text-xs text-emerald-400 animate-pulse">{freeDrinkToast}</span>
+                                    <span className="text-xs text-emerald-800 dark:text-emerald-400 animate-pulse">{freeDrinkToast}</span>
                                 )}
                                 {/* Toggle */}
                                 <label className="relative inline-flex items-center cursor-pointer">
@@ -876,7 +876,7 @@ function PromotionsPageContent() {
                                         value={freeDrinkMinimumOrder}
                                         onChange={(e) => setFreeDrinkMinimumOrder(parseFloat(e.target.value) || 0)}
                                         onBlur={() => saveFreeDrinkField({ freeDrinkMinimumOrder })}
-                                        className="w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                        className="w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                                         placeholder="0"
                                     />
                                     <span className="text-gray-500 text-xs">
@@ -951,7 +951,7 @@ function PromotionsPageContent() {
                                                             {productCategory}{p.price != null ? ` · €${Number(p.price).toFixed(2)}` : ''}
                                                         </p>
                                                     </div>
-                                                    <span className={`text-lg flex-shrink-0 ${isSelected ? 'text-emerald-400' : 'text-gray-600'}`}>
+                                                    <span className={`text-lg flex-shrink-0 ${isSelected ? 'text-emerald-800 dark:text-emerald-400' : 'text-gray-600'}`}>
                                                         {isSelected ? '✓' : '○'}
                                                     </span>
                                                 </button>
@@ -1001,7 +1001,7 @@ function PromotionsPageContent() {
                         filteredPromos.length === 0 ? (
                             <div className="bg-card rounded-xl p-12 text-center">
                                 <span className="text-5xl">🎯</span>
-                                <h3 className="text-lg font-medium text-white mt-4">{t('noCampaignsYet')}</h3>
+                                <h3 className="text-lg font-medium text-foreground mt-4">{t('noCampaignsYet')}</h3>
                                 <p className="text-muted-foreground mt-2">{t('createCampaignsForCustomers')}</p>
                                 <button
                                     onClick={() => canCreateCampaign ? setShowTemplateSelector(true) : undefined}
@@ -1030,7 +1030,7 @@ function PromotionsPageContent() {
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl">{typeInfo?.icon || '🎯'}</span>
                                                     <div>
-                                                        <h3 className="text-white font-semibold text-sm">{promo.title}</h3>
+                                                        <h3 className="text-foreground font-semibold text-sm">{promo.title}</h3>
                                                         <span className="text-xs text-muted-foreground">{t(typeInfo?.labelKey || 'percentOff')}</span>
                                                     </div>
                                                 </div>
@@ -1118,13 +1118,13 @@ function PromotionsPageContent() {
                                                 </button>
                                                 <button
                                                     onClick={() => openEdit(promo)}
-                                                    className="p-1.5 bg-yellow-600 hover:bg-yellow-500 rounded-lg transition text-white text-sm"
+                                                    className="p-1.5 bg-yellow-600 hover:bg-yellow-500 rounded-lg transition text-foreground text-sm"
                                                 >
                                                     ✏️
                                                 </button>
                                                 <button
                                                     onClick={() => setConfirmDelete(promo)}
-                                                    className="p-1.5 bg-red-600 hover:bg-red-500 rounded-lg transition text-white text-sm"
+                                                    className="p-1.5 bg-red-600 hover:bg-red-500 rounded-lg transition text-foreground text-sm"
                                                 >
                                                     🗑️
                                                 </button>
@@ -1183,7 +1183,7 @@ function PromotionsPageContent() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                         <div className="bg-card rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold text-white">{`📋 ${t('campaignTemplates')}`}</h2>
+                                <h2 className="text-xl font-bold text-foreground">{`📋 ${t('campaignTemplates')}`}</h2>
                                 <button onClick={() => setShowTemplateSelector(false)} className="text-muted-foreground hover:text-white text-xl">✕</button>
                             </div>
                             <p className="text-muted-foreground text-sm mb-4">
@@ -1241,7 +1241,7 @@ function PromotionsPageContent() {
                                                             {tierLabel && (
                                                                 <span className={`text-xs px-2 py-0.5 rounded ${tierAllowed
                                                                     ? 'bg-amber-900/50 text-amber-300'
-                                                                    : 'bg-red-900/50 text-red-400'
+                                                                    : 'bg-red-900/50 text-red-800 dark:text-red-400'
                                                                     }`}>
                                                                     {tierAllowed ? tierLabel : `🔒 ${tierLabel} Gerekli`}
                                                                 </span>
@@ -1249,7 +1249,7 @@ function PromotionsPageContent() {
                                                         </div>
                                                     </div>
                                                     {tierAllowed ? (
-                                                        <span className="text-orange-400 text-lg">→</span>
+                                                        <span className="text-orange-800 dark:text-orange-400 text-lg">→</span>
                                                     ) : (
                                                         <span className="text-gray-600 text-lg">🔒</span>
                                                     )}
@@ -1269,7 +1269,7 @@ function PromotionsPageContent() {
                 showModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
                         <div className="bg-card rounded-xl p-6 w-full max-w-2xl my-8">
-                            <h2 className="text-xl font-bold text-white mb-4">
+                            <h2 className="text-xl font-bold text-foreground mb-4">
                                 {editingPromo ? t('editCampaign') : t('newCampaign')}
                             </h2>
 
@@ -1535,7 +1535,7 @@ function PromotionsPageContent() {
                                             value={formData.validCategories.join(', ')}
                                             onChange={(e) => setFormData({ ...formData, validCategories: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                             placeholder="et, tavuk, balik"
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                     <div>
@@ -1545,7 +1545,7 @@ function PromotionsPageContent() {
                                             value={formData.validProducts.join(', ')}
                                             onChange={(e) => setFormData({ ...formData, validProducts: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                             placeholder="urun_id_1, urun_id_2"
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                 </div>
@@ -1574,7 +1574,7 @@ function PromotionsPageContent() {
                                             value={formData.maxRedemptions || ''}
                                             onChange={(e) => setFormData({ ...formData, maxRedemptions: e.target.value ? Number(e.target.value) : undefined })}
                                             placeholder="∞"
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                     <div>
@@ -1584,7 +1584,7 @@ function PromotionsPageContent() {
                                             value={formData.perUserLimit || ''}
                                             onChange={(e) => setFormData({ ...formData, perUserLimit: e.target.value ? Number(e.target.value) : undefined })}
                                             placeholder="∞"
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                     <div>
@@ -1594,7 +1594,7 @@ function PromotionsPageContent() {
                                             value={formData.dailyLimit || ''}
                                             onChange={(e) => setFormData({ ...formData, dailyLimit: e.target.value ? Number(e.target.value) : undefined })}
                                             placeholder="∞"
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                     <div>
@@ -1604,7 +1604,7 @@ function PromotionsPageContent() {
                                             value={formData.weeklyLimit || ''}
                                             onChange={(e) => setFormData({ ...formData, weeklyLimit: e.target.value ? Number(e.target.value) : undefined })}
                                             placeholder="∞"
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                     <div className="col-span-2">
@@ -1614,7 +1614,7 @@ function PromotionsPageContent() {
                                             value={formData.perUserDailyLimit || ''}
                                             onChange={(e) => setFormData({ ...formData, perUserDailyLimit: e.target.value ? Number(e.target.value) : undefined })}
                                             placeholder={`∞ — ${t('perUserDailyPlaceholder')}`}
-                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-orange-500"
+                                            className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-orange-500"
                                         />
                                     </div>
                                 </div>

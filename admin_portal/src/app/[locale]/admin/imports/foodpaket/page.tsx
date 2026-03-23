@@ -285,7 +285,7 @@ export default function FoodpaketImportPage() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-xl p-8 text-center max-w-md border border-border">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">{t('erisim_yok')}</h2>
+                    <h2 className="text-xl font-bold text-foreground mt-4">{t('erisim_yok')}</h2>
                     <p className="text-muted-foreground mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
                     <p className="text-gray-500 text-xs mt-2">Admin: {admin?.email || t('yok')}</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg">
@@ -306,7 +306,7 @@ export default function FoodpaketImportPage() {
                             <span className="text-3xl">📦</span>
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white">{t('foodpaket_import')}</h1>
+                            <h1 className="text-2xl font-bold text-foreground">{t('foodpaket_import')}</h1>
                             <p className="text-emerald-200">{t('1019_urunu_master_katalog_a_aktar')}</p>
                         </div>
                     </div>
@@ -315,7 +315,7 @@ export default function FoodpaketImportPage() {
                 {/* Stats */}
                 <div className="bg-card rounded-xl p-6 mb-6 border border-border">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-medium text-white">{t('kategori_dagilimi')}</h2>
+                        <h2 className="text-lg font-medium text-foreground">{t('kategori_dagilimi')}</h2>
                         <button
                             onClick={calculateStats}
                             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
@@ -329,8 +329,8 @@ export default function FoodpaketImportPage() {
                                 .sort((a, b) => b[1] - a[1])
                                 .map(([cat, count]) => (
                                     <div key={cat} className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-white font-medium">{cat}</p>
-                                        <p className="text-emerald-400 text-lg font-bold">{count}</p>
+                                        <p className="text-foreground font-medium">{cat}</p>
+                                        <p className="text-emerald-800 dark:text-emerald-400 text-lg font-bold">{count}</p>
                                     </div>
                                 ))}
                         </div>
@@ -339,7 +339,7 @@ export default function FoodpaketImportPage() {
 
                 {/* Import */}
                 <div className="bg-card rounded-xl p-6 border border-border">
-                    <h2 className="text-lg font-medium text-white mb-4">{t('import')}</h2>
+                    <h2 className="text-lg font-medium text-foreground mb-4">{t('import')}</h2>
 
                     {/* Progress */}
                     {importing && (
@@ -370,7 +370,7 @@ export default function FoodpaketImportPage() {
                     <button
                         onClick={handleImport}
                         disabled={importing}
-                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl text-lg"
+                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-foreground font-bold rounded-xl text-lg"
                     >
                         {importing ? t('import_ediliyor') : t('1019_urunu_import_et')}
                     </button>
@@ -382,7 +382,7 @@ export default function FoodpaketImportPage() {
 
                 {/* Back Link */}
                 <div className="mt-6 text-center">
-                    <Link href="/admin/products" className="text-emerald-400 hover:text-emerald-300">
+                    <Link href="/admin/products" className="text-emerald-800 dark:text-emerald-400 hover:text-emerald-300">
                         {t('urun_yonetimine_don')}
                     </Link>
                 </div>

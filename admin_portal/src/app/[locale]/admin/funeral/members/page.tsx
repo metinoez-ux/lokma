@@ -137,12 +137,12 @@ export default function FuneralMembersPage() {
 
                 <div className="bg-card p-4 rounded-xl border border-border flex flex-col justify-center items-center">
                     <span className="text-muted-foreground text-sm">{t('toplam_uye')}</span>
-                    <span className="text-3xl font-bold text-white">{members.length}</span>
+                    <span className="text-3xl font-bold text-foreground">{members.length}</span>
                 </div>
 
                 <div className="bg-card p-4 rounded-xl border border-border flex flex-col justify-center items-center">
                     <span className="text-muted-foreground text-sm">{t('aktif_aileler')}</span>
-                    <span className="text-3xl font-bold text-green-400">
+                    <span className="text-3xl font-bold text-green-800 dark:text-green-400">
                         {members.filter(m => m.status === 'active').length}
                     </span>
                 </div>
@@ -170,9 +170,9 @@ export default function FuneralMembersPage() {
                                 <tr><td colSpan={7} className="text-center py-12 text-gray-500">{t('uye_bulunamadi')}</td></tr>
                             ) : filteredMembers.map((m) => (
                                 <tr key={m.id} className="hover:bg-gray-700/50 transition duration-150">
-                                    <td className="px-6 py-4 font-mono text-green-400">{m.memberNumber}</td>
+                                    <td className="px-6 py-4 font-mono text-green-800 dark:text-green-400">{m.memberNumber}</td>
                                     <td className="px-6 py-4">
-                                        <div className="font-medium text-white">{m.personalInfo.firstName} {m.personalInfo.lastName}</div>
+                                        <div className="font-medium text-foreground">{m.personalInfo.firstName} {m.personalInfo.lastName}</div>
                                         <div className="text-xs text-gray-500">{m.personalInfo.placeOfBirth}, {new Date(m.personalInfo.dateOfBirth).getFullYear()}</div>
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground">
@@ -188,7 +188,7 @@ export default function FuneralMembersPage() {
                                         }} />
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={m.balance < 0 ? 'text-red-400' : 'text-green-400'}>
+                                        <span className={m.balance < 0 ? 'text-red-800 dark:text-red-400' : 'text-green-800 dark:text-green-400'}>
                                             {formatCurrency(m.balance, m.subscription?.currency)}
                                         </span>
                                     </td>
@@ -198,7 +198,7 @@ export default function FuneralMembersPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="text-blue-400 hover:text-white transition text-sm font-medium">
+                                        <button className="text-blue-800 dark:text-blue-400 hover:text-white transition text-sm font-medium">
                                             {t('details')} &gt;
                                         </button>
                                     </td>
@@ -219,7 +219,7 @@ export default function FuneralMembersPage() {
                         <div className="space-y-4">
                             <input type="text" placeholder={t('vorname')} className="w-full bg-gray-700 p-3 rounded" />
                             <input type="text" placeholder={t('nachname')} className="w-full bg-gray-700 p-3 rounded" />
-                            <button className="w-full bg-green-600 py-3 rounded text-white font-bold hover:bg-green-500">
+                            <button className="w-full bg-green-600 py-3 rounded text-foreground font-bold hover:bg-green-500">
                                 {t('kaydet')}
                             </button>
                             <button
@@ -238,11 +238,11 @@ export default function FuneralMembersPage() {
 
 function StatusBadge({ status, labels }: { status: string; labels: Record<string, string> }) {
     const colors: Record<string, string> = {
-        active: 'bg-green-900/50 text-green-400 border-green-700',
-        pending: 'bg-yellow-900/50 text-yellow-400 border-yellow-700',
-        debtor: 'bg-red-900/50 text-red-400 border-red-700',
+        active: 'bg-green-900/50 text-green-800 dark:text-green-400 border-green-700',
+        pending: 'bg-yellow-900/50 text-yellow-800 dark:text-yellow-400 border-yellow-700',
+        debtor: 'bg-red-900/50 text-red-800 dark:text-red-400 border-red-700',
         passive: 'bg-gray-700 text-muted-foreground border-gray-600',
-        deceased: 'bg-purple-900/50 text-purple-400 border-purple-700',
+        deceased: 'bg-purple-900/50 text-purple-800 dark:text-purple-400 border-purple-700',
     };
 
     return (

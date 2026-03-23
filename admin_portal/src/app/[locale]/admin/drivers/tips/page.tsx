@@ -355,7 +355,7 @@ export default function DriverTipsOverviewPage() {
                                                     <div className="font-medium text-gray-900 dark:text-white">{driver.driverName}</div>
                                                     <div className="text-xs text-muted-foreground dark:text-gray-500">{driver.driverEmail}</div>
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-bold text-amber-400">
+                                                <td className="px-4 py-3 text-right font-bold text-amber-800 dark:text-amber-400">
                                                     {formatCurrency(driver.totalTips)}
                                                 </td>
                                                 <td className="px-4 py-3 text-center text-gray-600 dark:text-foreground">{driver.totalDeliveries}</td>
@@ -382,7 +382,7 @@ export default function DriverTipsOverviewPage() {
                                                 <td className="px-4 py-3 text-center">
                                                     <button
                                                         onClick={() => { setSelectedDriverId(driver.driverId); setActiveTab('details'); }}
-                                                        className="text-amber-400 hover:text-amber-300 text-xs font-medium"
+                                                        className="text-amber-800 dark:text-amber-400 hover:text-amber-300 text-xs font-medium"
                                                     >
                                                         {t('detail_btn')}
                                                     </button>
@@ -469,7 +469,7 @@ export default function DriverTipsOverviewPage() {
                                                 <tr key={entry.orderId} className="border-b border-gray-100 dark:border-border/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                                                     <td className="px-4 py-3 text-gray-600 dark:text-foreground">{formatDate(entry.deliveredAt)}</td>
                                                     <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground">{formatTime(entry.deliveredAt)}</td>
-                                                    <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{entry.driverName}</td>
+                                                    <td className="px-4 py-3 text-gray-900 dark:text-foreground font-medium">{entry.driverName}</td>
                                                     {isSuperAdminUser && <td className="px-4 py-3 text-gray-700 dark:text-gray-200 font-medium">{entry.customerName || '—'}</td>}
                                                     {isSuperAdminUser && <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground font-mono text-xs">{entry.orderId.substring(0, 12)}...</td>}
                                                     <td className="px-4 py-3 text-gray-600 dark:text-foreground">{entry.city || '—'}</td>

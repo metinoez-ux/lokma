@@ -503,7 +503,7 @@ function AIMenuPageContent() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">Sadece Super Admin</h2>
+                    <h2 className="text-xl font-bold text-foreground mt-4">Sadece Super Admin</h2>
                     <p className="text-muted-foreground mt-2">Bu özellik yalnızca Super Admin yetkisiyle kullanılabilir.</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
                         Dashboard&apos;a Git
@@ -552,7 +552,7 @@ function AIMenuPageContent() {
                         <div className="flex-1">
                             <p className="text-red-200 font-medium">{error}</p>
                         </div>
-                        <button onClick={() => setError(null)} className="text-red-400 hover:text-red-200 text-xl">×</button>
+                        <button onClick={() => setError(null)} className="text-red-800 dark:text-red-400 hover:text-red-200 text-xl">×</button>
                     </div>
                 )}
 
@@ -563,7 +563,7 @@ function AIMenuPageContent() {
                     <div className="space-y-6">
                         {/* Business Selector */}
                         <div className="bg-card rounded-xl p-6 border border-border">
-                            <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                            <h2 className="text-foreground font-bold text-lg mb-4 flex items-center gap-2">
                                 🏪 İşletme Seçin
                                 {businesses.length > 0 && (
                                     <span className="text-xs text-gray-500 font-normal">({businesses.length} işletme)</span>
@@ -603,7 +603,7 @@ function AIMenuPageContent() {
                                                             setBusinessSearch('');
                                                             setShowDropdown(false);
                                                         }}
-                                                        className="w-full text-left px-4 py-3 hover:bg-gray-600 transition text-sm text-white border-b border-gray-600/50 last:border-0"
+                                                        className="w-full text-left px-4 py-3 hover:bg-gray-600 transition text-sm text-foreground border-b border-gray-600/50 last:border-0"
                                                     >
                                                         <span className="font-medium">{biz.name}</span>
                                                         {(biz.city || biz.plz) && <span className="text-muted-foreground ml-2">• {biz.plz} {biz.city}</span>}
@@ -625,7 +625,7 @@ function AIMenuPageContent() {
 
                         {/* File Upload */}
                         <div className="bg-card rounded-xl p-6 border border-border">
-                            <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                            <h2 className="text-foreground font-bold text-lg mb-4 flex items-center gap-2">
                                 📄 Menü Dosyaları
                                 {files.length > 0 && <span className="text-xs text-gray-500 font-normal">({files.length} dosya)</span>}
                             </h2>
@@ -644,7 +644,7 @@ function AIMenuPageContent() {
                                                 <p className="text-teal-200 font-medium text-sm truncate">{f.name}</p>
                                                 <p className="text-muted-foreground text-xs">{(f.size / 1024).toFixed(1)} KB</p>
                                             </div>
-                                            <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="text-red-400 hover:text-red-300 text-lg">×</button>
+                                            <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="text-red-800 dark:text-red-400 hover:text-red-300 text-lg">×</button>
                                         </div>
                                     ))}
                                 </div>
@@ -688,13 +688,13 @@ function AIMenuPageContent() {
 
                         {/* AI Model Selector */}
                         <div className="bg-card rounded-xl p-6 border border-border">
-                            <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                            <h2 className="text-foreground font-bold text-lg mb-4 flex items-center gap-2">
                                 🧠 AI Model Seçimi
                             </h2>
                             <select
                                 value={selectedModel}
                                 onChange={e => setSelectedModel(e.target.value)}
-                                className="w-full bg-background border border-gray-600 rounded-lg px-4 py-3 text-white text-sm font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none"
+                                className="w-full bg-background border border-gray-600 rounded-lg px-4 py-3 text-foreground text-sm font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none"
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                             >
                                 {[...new Set(aiModels.map(m => m.group))].map(group => (
@@ -711,7 +711,7 @@ function AIMenuPageContent() {
                         <button
                             onClick={processWithAI}
                             disabled={files.length === 0 || !butcherId}
-                            className="w-full py-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold text-lg rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+                            className="w-full py-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-foreground font-bold text-lg rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
                         >
                             <span className="text-2xl">🤖</span>
                             {aiModels.find(m => m.id === selectedModel)?.name || 'AI'} ile Menuyu Analiz Et
@@ -731,7 +731,7 @@ function AIMenuPageContent() {
                             <div className="absolute inset-0 w-24 h-24 rounded-full border-4 border-teal-400/30 animate-spin border-t-teal-400"></div>
                         </div>
                         <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold text-white">Menü Analiz Ediliyor...</h2>
+                            <h2 className="text-2xl font-bold text-foreground">Menü Analiz Ediliyor...</h2>
                             <p className="text-muted-foreground">{aiModels.find(m => m.id === selectedModel)?.name || 'AI'} menünüzü okuyor ve yapılandırıyor</p>
                             <p className="text-gray-500 text-sm">{t('islem_surebilir')}</p>
                         </div>
@@ -784,7 +784,7 @@ function AIMenuPageContent() {
 
                         {/* Categories Section */}
                         <div className="bg-card rounded-xl p-5 border border-border">
-                            <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                            <h3 className="text-foreground font-bold text-lg mb-4 flex items-center gap-2">
                                 🗂️ Kategoriler
                                 <span className="text-gray-500 text-sm font-normal">({selectedCategoryCount} seçili)</span>
                             </h3>
@@ -826,7 +826,7 @@ function AIMenuPageContent() {
                                 <div key={catIdx} className="bg-card rounded-xl border border-border overflow-hidden">
                                     <div className="bg-gray-750 px-5 py-3 border-b border-border flex items-center gap-2">
                                         <span className="text-xl">{cat.icon}</span>
-                                        <h3 className="text-white font-bold">{cat.name}</h3>
+                                        <h3 className="text-foreground font-bold">{cat.name}</h3>
                                         <span className="text-gray-500 text-sm ml-2">({catProducts.length} ürün)</span>
                                     </div>
 
@@ -853,7 +853,7 @@ function AIMenuPageContent() {
                                                                 type="text"
                                                                 value={prod.name}
                                                                 onChange={e => updateProduct(prod._origIdx, { name: e.target.value })}
-                                                                className="bg-transparent border-none outline-none text-white font-semibold text-sm flex-1"
+                                                                className="bg-transparent border-none outline-none text-foreground font-semibold text-sm flex-1"
                                                                 placeholder="Ürün adı..."
                                                             />
                                                             <div className="flex items-center gap-1 shrink-0">
@@ -897,7 +897,7 @@ function AIMenuPageContent() {
                                                                                 className="bg-transparent border-none outline-none text-foreground text-xs font-medium flex-1"
                                                                                 placeholder="Grup adı..."
                                                                             />
-                                                                            {og.required && <span className="text-red-400 text-[10px]">zorunlu</span>}
+                                                                            {og.required && <span className="text-red-800 dark:text-red-400 text-[10px]">zorunlu</span>}
                                                                             <button
                                                                                 onClick={() => addOption(prod._origIdx, gIdx)}
                                                                                 className="text-teal-400 hover:text-teal-300 text-[10px]"
@@ -912,7 +912,7 @@ function AIMenuPageContent() {
                                                                                     newProducts[prod._origIdx] = { ...newProducts[prod._origIdx], optionGroups: groups };
                                                                                     setParsedMenu({ ...parsedMenu, products: newProducts });
                                                                                 }}
-                                                                                className="text-red-400 hover:text-red-300 text-[10px]"
+                                                                                className="text-red-800 dark:text-red-400 hover:text-red-300 text-[10px]"
                                                                                 title={t('delete_group_title')}
                                                                             >
                                                                                 🗑
@@ -951,7 +951,7 @@ function AIMenuPageContent() {
                                                                                             newProducts[prod._origIdx] = { ...newProducts[prod._origIdx], optionGroups: groups };
                                                                                             setParsedMenu({ ...parsedMenu, products: newProducts });
                                                                                         }}
-                                                                                        className="text-red-400/50 hover:text-red-300 text-[10px] opacity-0 group-hover/opt:opacity-100 transition-opacity ml-0.5"
+                                                                                        className="text-red-800 dark:text-red-400/50 hover:text-red-300 text-[10px] opacity-0 group-hover/opt:opacity-100 transition-opacity ml-0.5"
                                                                                         title="Seçeneği sil"
                                                                                     >
                                                                                         ×
@@ -978,7 +978,7 @@ function AIMenuPageContent() {
                                                     {/* Delete */}
                                                     <button
                                                         onClick={() => removeProduct(prod._origIdx)}
-                                                        className="text-red-400 hover:text-red-300 text-sm mt-1"
+                                                        className="text-red-800 dark:text-red-400 hover:text-red-300 text-sm mt-1"
                                                         title={t('delete_title')}
                                                     >
                                                         🗑️
@@ -995,7 +995,7 @@ function AIMenuPageContent() {
                         <button
                             onClick={saveToFirestore}
                             disabled={selectedProductCount === 0}
-                            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-lg rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
+                            className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-foreground font-bold text-lg rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
                         >
                             <span className="text-2xl">✅</span>
                             Onayla & Kaydet ({selectedCategoryCount} kategori, {selectedProductCount} ürün)
@@ -1014,7 +1014,7 @@ function AIMenuPageContent() {
                                     <span className="text-4xl animate-bounce">💾</span>
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <h2 className="text-2xl font-bold text-white">Kaydediliyor...</h2>
+                                    <h2 className="text-2xl font-bold text-foreground">Kaydediliyor...</h2>
                                     <p className="text-muted-foreground">
                                         {saveProgress.current} / {saveProgress.total} öğe
                                     </p>
@@ -1032,7 +1032,7 @@ function AIMenuPageContent() {
                                     <span className="text-5xl">🎉</span>
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <h2 className="text-2xl font-bold text-white">Menü Başarıyla Kaydedildi!</h2>
+                                    <h2 className="text-2xl font-bold text-foreground">Menü Başarıyla Kaydedildi!</h2>
                                     <p className="text-muted-foreground">
                                         {selectedCategoryCount} kategori ve {selectedProductCount} ürün eklendi
                                     </p>
@@ -1065,7 +1065,7 @@ function AIMenuPageContent() {
                             </>
                         ) : (
                             <div className="text-center">
-                                <p className="text-red-400 text-lg">Bir hata oluştu.</p>
+                                <p className="text-red-800 dark:text-red-400 text-lg">Bir hata oluştu.</p>
                                 <button
                                     onClick={() => setStep(3)}
                                     className="mt-4 px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition"

@@ -1299,7 +1299,7 @@ function GlobalProductsPageContent() {
                         )}
                         <button
                             onClick={openAdd}
-                            className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 text-white font-bold transition-colors flex items-center gap-2"
+                            className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 text-foreground font-bold transition-colors flex items-center gap-2"
                         >
                             <span>+</span> {t('yeniUrun')} {isBusinessContext ? 'Ekle' : t('tanimla')}
                         </button>
@@ -1339,7 +1339,7 @@ function GlobalProductsPageContent() {
                 {/* 🆕 KERMES MODU */}
                 {pageMode === 'kermes' ? (
                     <div className="bg-card rounded-xl border border-pink-500/30 p-6">
-                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                             {t('kermesMenuOlusturma')}
                             <span className="text-sm font-normal text-pink-300">
                                 {t('belirliBirOrganizasyonIcinOzelMenu')}
@@ -1355,7 +1355,7 @@ function GlobalProductsPageContent() {
                                 <div className="flex items-center gap-3 p-4 bg-pink-900/30 border border-pink-500 rounded-xl">
                                     <div className="text-3xl">🕌</div>
                                     <div className="flex-1">
-                                        <p className="text-white font-bold">{selectedOrganization.shortName || selectedOrganization.name}</p>
+                                        <p className="text-foreground font-bold">{selectedOrganization.shortName || selectedOrganization.name}</p>
                                         <p className="text-muted-foreground text-sm">📍 {selectedOrganization.city} • {selectedOrganization.postalCode}</p>
                                     </div>
                                     <button
@@ -1407,7 +1407,7 @@ function GlobalProductsPageContent() {
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-xl">🕌</span>
                                                             <div>
-                                                                <p className="text-white font-medium text-sm">{org.shortName || org.name}</p>
+                                                                <p className="text-foreground font-medium text-sm">{org.shortName || org.name}</p>
                                                                 <p className="text-muted-foreground text-xs">📍 {org.city}</p>
                                                             </div>
                                                         </div>
@@ -1429,7 +1429,7 @@ function GlobalProductsPageContent() {
                         {/* Kermes Ürünleri Seçimi */}
                         {selectedOrganization && (
                             <div>
-                                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
                                     {t('kermesMenusuHazirla')}
                                     <span className="text-sm font-normal text-muted-foreground">
                                         {t('mevcutKermesUrunlerindenSecinVeyaYeni')}
@@ -1470,7 +1470,7 @@ function GlobalProductsPageContent() {
                                                         : 'bg-gray-700 border-gray-600 hover:border-pink-400'
                                                         }`}
                                                 >
-                                                    <p className="text-white text-sm font-medium line-clamp-2">{getLocalizedText(product.name)}</p>
+                                                    <p className="text-foreground text-sm font-medium line-clamp-2">{getLocalizedText(product.name)}</p>
                                                     <p className="text-muted-foreground text-xs mt-1">
                                                         {product.defaultUnit === 'adet' ? '🔢' : '⚖️'} {product.defaultUnit}
                                                     </p>
@@ -1489,7 +1489,7 @@ function GlobalProductsPageContent() {
                                 {kermesMenuProducts.length > 0 && (
                                     <div className="bg-pink-900/30 border border-pink-500/50 rounded-xl p-4 mt-4">
                                         <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-white font-bold">
+                                            <h4 className="text-foreground font-bold">
                                                 🎪 {selectedOrganization.shortName || selectedOrganization.name} {t('kermesMenusu')}
                                             </h4>
                                             <span className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm">
@@ -1505,7 +1505,7 @@ function GlobalProductsPageContent() {
                                                     {getLocalizedText(product.name)}
                                                     <button
                                                         onClick={() => setKermesMenuProducts(prev => prev.filter(p => p.id !== product.id))}
-                                                        className="text-pink-400 hover:text-white"
+                                                        className="text-pink-800 dark:text-pink-400 hover:text-white"
                                                     >
                                                         ✕
                                                     </button>
@@ -1556,7 +1556,7 @@ function GlobalProductsPageContent() {
                             <div className="bg-card rounded-xl p-5 mb-6 border border-cyan-500/30">
                                 {/* Section Header with Title + View Mode Toggle */}
                                 <div className="flex items-center justify-between mb-5">
-                                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                                         {t('menuUrunler')}
                                         <span className="text-sm font-normal text-muted-foreground">
                                             — {businessInfo?.companyName || t('isletme')}
@@ -1623,7 +1623,7 @@ function GlobalProductsPageContent() {
                                                             }
                                                         }}
                                                         disabled={applyingCategoryTemplate}
-                                                        className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                                        className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
                                                     >
                                                         {applyingCategoryTemplate ? '⏳ Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
                                                     </button>
@@ -1688,7 +1688,7 @@ function GlobalProductsPageContent() {
 
                                                             {/* Name + Meta */}
                                                             <div className="flex-1 min-w-0">
-                                                                <h3 className="text-white font-bold text-base">{getLocalizedText(cat.name)}</h3>
+                                                                <h3 className="text-foreground font-bold text-base">{getLocalizedText(cat.name)}</h3>
                                                                 <p className="text-gray-500 text-xs">
                                                                     {productCount} {t('urun1')} {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
                                                                 </p>
@@ -1698,12 +1698,12 @@ function GlobalProductsPageContent() {
                                                             <div className="flex items-center gap-2">
                                                                 <button
                                                                     onClick={() => openCategoryEdit(cat)}
-                                                                    className="p-2 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-white text-sm"
+                                                                    className="p-2 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-foreground text-sm"
                                                                     title={t('duzenle')}
                                                                 >✏️</button>
                                                                 <button
                                                                     onClick={() => handleCategoryDelete(cat)}
-                                                                    className="p-2 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-white text-sm"
+                                                                    className="p-2 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-foreground text-sm"
                                                                     title={t('delete_title')}
                                                                 >🗑️</button>
                                                             </div>
@@ -1730,7 +1730,7 @@ function GlobalProductsPageContent() {
                                                         }
                                                     }}
                                                     disabled={applyingProductTemplate}
-                                                    className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                                    className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
                                                 >
                                                     {applyingProductTemplate ? '⏳ Yükleniyor...' : '📦 Ürün Şablonu Yükle'}
                                                 </button>
@@ -1859,7 +1859,7 @@ function GlobalProductsPageContent() {
                                                 <div className="space-y-3">
                                                     {/* 🆕 BULK ACTION BAR */}
                                                     {selectedBusinessProducts.size > 0 && (
-                                                        <div className="p-3 bg-gradient-to-r from-cyan-900/40 to-blue-900/30 rounded-xl border border-cyan-500/30 animate-in fade-in">
+                                                        <div className="p-3 bg-gradient-to-r from-cyan-100 dark:from-cyan-900/40 to-blue-900/30 rounded-xl border border-cyan-500/30 animate-in fade-in">
                                                             {/* Row 1: Count + Actions */}
                                                             <div className="flex items-center gap-2 flex-wrap">
                                                                 <span className="text-cyan-300 text-sm font-bold mr-1">
@@ -2130,8 +2130,8 @@ function GlobalProductsPageContent() {
                                                                             </td>
                                                                             <td className="py-3 pr-4">
                                                                                 <div className="flex items-center gap-2">
-                                                                                    <span className="text-white font-medium">{getLocalizedText(product.name)}</span>
-                                                                                    {isSponsoredProduct && <span className="text-amber-400 text-xs" title={t('featured_title')}>⭐</span>}
+                                                                                    <span className="text-foreground font-medium">{getLocalizedText(product.name)}</span>
+                                                                                    {isSponsoredProduct && <span className="text-amber-800 dark:text-amber-400 text-xs" title={t('featured_title')}>⭐</span>}
                                                                                 </div>
                                                                             </td>
                                                                             <td className="py-3 pr-2">
@@ -2154,7 +2154,7 @@ function GlobalProductsPageContent() {
                                                                                     if (!nettoPrice) return <span className="text-gray-500">-</span>;
                                                                                     return (
                                                                                         <div className="space-y-0.5">
-                                                                                            <div className="text-green-400 font-medium text-sm">{brutto?.toFixed(2)}€ <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
+                                                                                            <div className="text-green-800 dark:text-green-400 font-medium text-sm">{brutto?.toFixed(2)}€ <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
                                                                                             <div className="text-muted-foreground text-xs">{nettoPrice.toFixed(2)}€ <span className="text-gray-500 text-[10px]">netto</span></div>
                                                                                         </div>
                                                                                     );
@@ -2249,7 +2249,7 @@ function GlobalProductsPageContent() {
                                             <div className="flex items-center gap-2">
                                                 <span className="text-2xl">⭐</span>
                                                 <div>
-                                                    <h4 className="text-white font-bold">Öne Çıkan Ürünler</h4>
+                                                    <h4 className="text-foreground font-bold">Öne Çıkan Ürünler</h4>
                                                     <p className="text-muted-foreground text-xs">{t('one_cikan_aciklama')}</p>
                                                 </div>
                                             </div>
@@ -2262,8 +2262,8 @@ function GlobalProductsPageContent() {
                                                     Sponsored Ürün Kullanımı
                                                 </span>
                                                 <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
-                                                    ? 'text-red-400'
-                                                    : 'text-amber-400'
+                                                    ? 'text-red-800 dark:text-red-400'
+                                                    : 'text-amber-800 dark:text-amber-400'
                                                     }`}>
                                                     {sponsoredProducts.length} / {sponsoredSettings.maxProductsPerBusiness}
                                                 </span>
@@ -2340,7 +2340,7 @@ function GlobalProductsPageContent() {
                                                             )}
                                                             {/* Name */}
                                                             <div className="flex-1 min-w-0">
-                                                                <p className="text-white text-sm font-medium truncate">
+                                                                <p className="text-foreground text-sm font-medium truncate">
                                                                     {getLocalizedText(product.name)}
                                                                 </p>
                                                                 <p className="text-gray-500 text-xs truncate">
@@ -2350,14 +2350,14 @@ function GlobalProductsPageContent() {
                                                             {/* Price */}
                                                             <div className="text-right">
                                                                 {product.price != null && (
-                                                                    <span className="text-green-400 font-bold text-sm">
+                                                                    <span className="text-green-800 dark:text-green-400 font-bold text-sm">
                                                                         {product.price}€
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             {/* Star badge */}
                                                             {isSponsored && (
-                                                                <span className="text-amber-400 text-lg">⭐</span>
+                                                                <span className="text-amber-800 dark:text-amber-400 text-lg">⭐</span>
                                                             )}
                                                         </label>
                                                     );
@@ -2407,7 +2407,7 @@ function GlobalProductsPageContent() {
                         {showCategoryModal && (
                             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                                 <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border">
-                                    <h2 className="text-xl font-bold text-white mb-4">
+                                    <h2 className="text-xl font-bold text-foreground mb-4">
                                         {editingCategoryItem ? t('kategoriDuzenle') : '+ Yeni Kategori'}
                                     </h2>
 
@@ -2565,7 +2565,7 @@ function GlobalProductsPageContent() {
                                 {/* Bulk Action Bar */}
                                 {selectedProducts.size > 0 && (
                                     <div className="bg-blue-900/50 border border-blue-600 rounded-xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-                                        <div className="text-white">
+                                        <div className="text-foreground">
                                             <span className="font-bold">{selectedProducts.size}</span> {t('urunSecildi')}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
@@ -2764,23 +2764,23 @@ function GlobalProductsPageContent() {
                                                             <td className="px-4 py-4">
                                                                 <div className="flex flex-col gap-1">
                                                                     {product.isActive !== false ? (
-                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-900/50 text-green-400 border border-green-700">
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-900/50 text-green-800 dark:text-green-400 border border-green-700">
                                                                             ● Aktif
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-red-900/50 text-red-400 border border-red-700">
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-red-900/50 text-red-800 dark:text-red-400 border border-red-700">
                                                                             ○ Deaktif
                                                                         </span>
                                                                     )}
                                                                     {(product as any).outOfStock && (
-                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-orange-900/50 text-orange-400 border border-orange-700">
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-orange-900/50 text-orange-800 dark:text-orange-400 border border-orange-700">
                                                                             🚫 Stokta Yok
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-4 font-mono text-sm text-muted-foreground">{product.id}</td>
-                                                            <td className="px-4 py-4 font-bold text-white">{getLocalizedText(product.name)}</td>
+                                                            <td className="px-4 py-4 font-bold text-foreground">{getLocalizedText(product.name)}</td>
                                                             <td className="px-4 py-4">
                                                                 {(() => {
                                                                     const source = (product as any).sourcePlatform;
@@ -2803,7 +2803,7 @@ function GlobalProductsPageContent() {
                                                                             return (
                                                                                 <span
                                                                                     key={label}
-                                                                                    className={`px-2 py-0.5 rounded text-xs font-bold text-white ${brand?.color || 'bg-gray-600'}`}
+                                                                                    className={`px-2 py-0.5 rounded text-xs font-bold text-foreground ${brand?.color || 'bg-gray-600'}`}
                                                                                     title={brand?.label || label}
                                                                                 >
                                                                                     {brand?.icon} {brand?.label || label}
@@ -2915,15 +2915,15 @@ function GlobalProductsPageContent() {
                                         <div className="flex-shrink-0 p-6 pb-0 border-b border-border">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h2 className="text-xl font-bold">{editingProduct ? t('urunuDuzenle') : t('yeniUrunEkle')}</h2>
-                                                <button onClick={() => { setShowModal(false); setProductEditTab('general'); }} className="text-muted-foreground hover:text-white text-2xl leading-none">&times;</button>
+                                                <button onClick={() => { setShowModal(false); setProductEditTab('general'); }} className="text-muted-foreground hover:text-foreground text-2xl leading-none">&times;</button>
                                             </div>
 
                                             {/* Validation Errors Banner */}
                                             {Object.entries(validationErrors).filter(([, v]) => !!v).length > 0 && (
                                                 <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-xl">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-red-400">⚠️</span>
-                                                        <h4 className="text-red-400 font-semibold text-sm">{t('lutfenAsagidakiZorunluAlanlariDoldurun')}</h4>
+                                                        <span className="text-red-800 dark:text-red-400">⚠️</span>
+                                                        <h4 className="text-red-800 dark:text-red-400 font-semibold text-sm">{t('lutfenAsagidakiZorunluAlanlariDoldurun')}</h4>
                                                     </div>
                                                     <ul className="list-disc list-inside space-y-0.5">
                                                         {Object.entries(validationErrors).filter(([, v]) => !!v).map(([field, message]) => (
@@ -2966,7 +2966,7 @@ function GlobalProductsPageContent() {
                                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                                     {/* Temel Bilgiler */}
                                                     <div className="border-b border-border pb-4">
-                                                        <h3 className="text-sm font-medium text-blue-400 mb-3">📋 Temel Bilgiler</h3>
+                                                        <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400 mb-3">📋 Temel Bilgiler</h3>
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <label className="block text-sm text-muted-foreground mb-1">
@@ -2979,7 +2979,7 @@ function GlobalProductsPageContent() {
                                                                     className={`w-full bg-background border rounded-lg px-4 py-2 font-mono text-sm ${validationErrors.id ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
                                                                     placeholder="MIRA-MEAT-..."
                                                                 />
-                                                                {validationErrors.id && <p className="text-red-400 text-xs mt-1">{validationErrors.id}</p>}
+                                                                {validationErrors.id && <p className="text-red-800 dark:text-red-400 text-xs mt-1">{validationErrors.id}</p>}
                                                             </div>
                                                             <div>
                                                                 <label className="block text-sm text-muted-foreground mb-1">Barkod</label>
@@ -2997,7 +2997,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* Ürün Detay */}
                                                     <div className="border-b border-border pb-4">
-                                                        <h3 className="text-sm font-medium text-green-400 mb-4">🛍️ {t('urunDetaylari')}</h3>
+                                                        <h3 className="text-sm font-medium text-green-800 dark:text-green-400 mb-4">🛍️ {t('urunDetaylari')}</h3>
 
                                                         {/* Row 1: Ürün Adı + Üretici Markası */}
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -3103,7 +3103,7 @@ function GlobalProductsPageContent() {
                                                 <div className="space-y-6">
                                                     {/* Ürün Görselleri */}
                                                     <div className="border-b border-border pb-4">
-                                                        <h3 className="text-sm font-medium text-purple-400 mb-3">{t('urunGorselleriMax5')}</h3>
+                                                        <h3 className="text-sm font-medium text-purple-800 dark:text-purple-400 mb-3">{t('urunGorselleriMax5')}</h3>
                                                         <div className="space-y-3">
                                                             {/* Image Preview Grid */}
                                                             {((formData as any).images || []).length > 0 && (
@@ -3166,7 +3166,7 @@ function GlobalProductsPageContent() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setFormData(prev => ({ ...prev, _tedarikOpen: !(prev as any)._tedarikOpen } as any))}
-                                                            className="flex items-center justify-between w-full text-sm font-medium text-amber-400 mb-1 hover:text-amber-300 transition-colors"
+                                                            className="flex items-center justify-between w-full text-sm font-medium text-amber-800 dark:text-amber-400 mb-1 hover:text-amber-300 transition-colors"
                                                         >
                                                             <span>{t('tedarikIzlenebilirlik')}</span>
                                                             <span className="text-xs text-gray-500">{(formData as any)._tedarikOpen ? '▲ Kapat' : t('ac')}</span>
@@ -3224,7 +3224,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>📋</span> İçerik Listesi (Zutaten)
                                                         </h4>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3257,7 +3257,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>⚠️</span> Alerjenler — EU 1169/2011 Annex II (14 Pflichtallergen)
                                                         </h4>
                                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -3304,7 +3304,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-green-800 dark:text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>🥗</span> Besin Değerleri — Nährwerte pro 100g (Big 7 + Ek)
                                                         </h4>
                                                         <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
@@ -3348,7 +3348,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>🏅</span> Sertifikalar & Etiketler (Zertifikate)
                                                         </h4>
                                                         <div className="flex flex-wrap gap-2">
@@ -3398,7 +3398,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>📝</span> Dahili Notlar & Etiketler
                                                         </h4>
                                                         <div className="space-y-3">
@@ -3438,7 +3438,7 @@ function GlobalProductsPageContent() {
                                                                         {((formData as any).tags || []).map((tag: string, idx: number) => (
                                                                             <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-indigo-900/50 text-indigo-300 border border-indigo-700">
                                                                                 {tag}
-                                                                                <button type="button" onClick={() => { const current = [...((formData as any).tags || [])]; current.splice(idx, 1); setFormData({ ...formData, tags: current } as any); }} className="text-indigo-400 hover:text-red-400 ml-1">✕</button>
+                                                                                <button type="button" onClick={() => { const current = [...((formData as any).tags || [])]; current.splice(idx, 1); setFormData({ ...formData, tags: current } as any); }} className="text-indigo-800 dark:text-indigo-400 hover:text-red-800 dark:text-red-400 ml-1">✕</button>
                                                                             </span>
                                                                         ))}
                                                                     </div>
@@ -3451,7 +3451,7 @@ function GlobalProductsPageContent() {
 
                                                     {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>🕒</span> Denetim İzi
                                                         </h4>
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -3524,10 +3524,10 @@ function GlobalProductsPageContent() {
                                             {productEditTab === 'stock' && (
                                                 <div className="space-y-6">
                                                     {/* Stok Durumu - Hızlı Toggle */}
-                                                    <div className="bg-orange-900/20 border border-orange-700/30 rounded-xl p-4 mb-4">
+                                                    <div className="bg-orange-900/20 border border-orange-200 dark:border-orange-700/30 rounded-xl p-4 mb-4">
                                                         <div className="flex items-center justify-between">
                                                             <div>
-                                                                <h3 className="text-sm font-medium text-orange-400">🚫 Stokta Yok İşareti</h3>
+                                                                <h3 className="text-sm font-medium text-orange-800 dark:text-orange-400">🚫 Stokta Yok İşareti</h3>
                                                                 <p className="text-xs text-muted-foreground mt-1">Aktif edildiğinde ürün uygulamada gri tonla gösterilir, silinmez.</p>
                                                             </div>
                                                             <label className="relative inline-flex items-center cursor-pointer">
@@ -3538,7 +3538,7 @@ function GlobalProductsPageContent() {
                                                                     className="sr-only peer"
                                                                 />
                                                                 <div className="w-11 h-6 bg-gray-600 peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                                                <span className={`ml-2 text-sm font-medium ${(formData as any).outOfStock ? 'text-orange-400' : 'text-muted-foreground'}`}>
+                                                                <span className={`ml-2 text-sm font-medium ${(formData as any).outOfStock ? 'text-orange-800 dark:text-orange-400' : 'text-muted-foreground'}`}>
                                                                     {(formData as any).outOfStock ? 'Stokta Yok' : 'Stokta'}
                                                                 </span>
                                                             </label>
@@ -3546,7 +3546,7 @@ function GlobalProductsPageContent() {
                                                     </div>
                                                     {/* Stok Yönetimi */}
                                                     <div>
-                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3">{t('stokYonetimi')}</h3>
+                                                        <h3 className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-3">{t('stokYonetimi')}</h3>
                                                         <div className="grid grid-cols-3 gap-3 mb-3">
                                                             <div>
                                                                 <label className="block text-sm text-muted-foreground mb-1">Mevcut Stok</label>
@@ -3623,15 +3623,15 @@ function GlobalProductsPageContent() {
                                             {productEditTab === 'app' && (
                                                 <div className="space-y-6">
                                                     {/* App Ayarları Başlık */}
-                                                    <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4">
-                                                        <h3 className="text-sm font-medium text-indigo-400 mb-1">📱 Mobil Uygulama Ayarları</h3>
+                                                    <div className="bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/30 rounded-xl p-4">
+                                                        <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-400 mb-1">📱 Mobil Uygulama Ayarları</h3>
                                                         <p className="text-xs text-muted-foreground">Bu bölümdeki ayarlar doğrudan mobil uygulama görünümünü etkiler.</p>
                                                     </div>
 
                                                     {/* 🎛️ Ürün Seçenekleri (Lieferando-style Option Groups) */}
                                                     <div className="lg:col-span-2 border-t border-border pt-4">
                                                         <div className="flex items-center justify-between mb-3">
-                                                            <h3 className="text-sm font-medium text-amber-400">{t('urunSecenekleriVaryantlarEkstralar')}</h3>
+                                                            <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">{t('urunSecenekleriVaryantlarEkstralar')}</h3>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => {
@@ -3683,7 +3683,7 @@ function GlobalProductsPageContent() {
                                                                                     groups.splice(groupIdx, 1);
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
-                                                                                className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
+                                                                                className="text-red-800 dark:text-red-400 hover:text-red-300 text-sm px-2 py-1"
                                                                                 title={t('delete_group_title')}
                                                                             >
                                                                                 🗑️
@@ -3829,7 +3829,7 @@ function GlobalProductsPageContent() {
                                                                                             groups[groupIdx] = { ...groups[groupIdx], options: opts };
                                                                                             setFormData({ ...formData, optionGroups: groups } as any);
                                                                                         }}
-                                                                                        className="text-red-400 hover:text-red-300 text-xs px-1"
+                                                                                        className="text-red-800 dark:text-red-400 hover:text-red-300 text-xs px-1"
                                                                                         title={t('secenegiSil')}
                                                                                     >
                                                                                         ✕
@@ -3854,7 +3854,7 @@ function GlobalProductsPageContent() {
                                                                                     };
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
-                                                                                className="w-full py-1.5 border border-dashed border-gray-600 hover:border-amber-500 rounded-lg text-xs text-gray-500 hover:text-amber-400 transition-colors"
+                                                                                className="w-full py-1.5 border border-dashed border-gray-600 hover:border-amber-500 rounded-lg text-xs text-gray-500 hover:text-amber-800 dark:text-amber-400 transition-colors"
                                                                             >
                                                                                 {t('secenekEkle')}
                                                                             </button>
@@ -3866,7 +3866,7 @@ function GlobalProductsPageContent() {
                                                                                 <span>{group.options.length} {t('secenek')}</span>
                                                                                 <span>•</span>
                                                                                 <span>{group.type === 'radio' ? t('tekSecim') : t('cokluSecim')}</span>
-                                                                                {group.required && <><span>•</span><span className="text-red-400">Zorunlu</span></>}
+                                                                                {group.required && <><span>•</span><span className="text-red-800 dark:text-red-400">Zorunlu</span></>}
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -3891,7 +3891,7 @@ function GlobalProductsPageContent() {
                                                         {/* Vergi Oranı — Üstte */}
                                                         <div className="border-b border-border pb-4">
                                                             <div className="flex items-center justify-between mb-3">
-                                                                <h3 className="text-sm font-medium text-amber-400">🏦 Vergi Oranı</h3>
+                                                                <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">🏦 Vergi Oranı</h3>
                                                                 <span className="text-xs text-gray-500">Netto/Brutto hesaplaması bu orana göre yapılır</span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
@@ -3910,7 +3910,7 @@ function GlobalProductsPageContent() {
                                                         {/* Fiyatlandırma + Netto/Brutto Toggle */}
                                                         <div className="border-b border-border pb-4">
                                                             <div className="flex items-center justify-between mb-4">
-                                                                <h3 className="text-sm font-medium text-amber-400">💰 Fiyatlandırma</h3>
+                                                                <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">💰 Fiyatlandırma</h3>
                                                                 <div className="flex items-center bg-card rounded-lg p-0.5 border border-gray-600">
                                                                     <button type="button" onClick={() => setFormData({ ...formData, _priceInputMode: 'netto' } as any)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                                         Netto girişi
@@ -3980,7 +3980,7 @@ function GlobalProductsPageContent() {
                                                                 <div className="grid grid-cols-3 gap-3 text-center">
                                                                     <div>
                                                                         <span className="block text-xs text-gray-500 mb-1">Kar Marjı</span>
-                                                                        <span className="text-sm font-medium text-emerald-400">
+                                                                        <span className="text-sm font-medium text-emerald-800 dark:text-emerald-400">
                                                                             {(formData as any).sellingPrice && (formData as any).purchasePrice && (formData as any).purchasePrice > 0
                                                                                 ? `%${(((((formData as any).sellingPrice - (formData as any).purchasePrice) / (formData as any).purchasePrice) * 100)).toFixed(1)}`
                                                                                 : '--'}
@@ -3988,13 +3988,13 @@ function GlobalProductsPageContent() {
                                                                     </div>
                                                                     <div>
                                                                         <span className="block text-xs text-gray-500 mb-1">Vergi Tutarı</span>
-                                                                        <span className="text-sm font-medium text-amber-400">
+                                                                        <span className="text-sm font-medium text-amber-800 dark:text-amber-400">
                                                                             {(formData as any).sellingPrice ? `€${((formData as any).sellingPrice * taxRate / 100).toFixed(2)}` : '--'}
                                                                         </span>
                                                                     </div>
                                                                     <div>
                                                                         <span className="block text-xs text-gray-500 mb-1">Brutto Satış</span>
-                                                                        <span className="text-sm font-medium text-white">
+                                                                        <span className="text-sm font-medium text-foreground">
                                                                             {(formData as any).sellingPrice ? `€${calcBrutto((formData as any).sellingPrice).toFixed(2)}` : '--'}
                                                                         </span>
                                                                     </div>
@@ -4004,7 +4004,7 @@ function GlobalProductsPageContent() {
                                                             {/* 📱 App Satış Fiyatı (Kurye + Gel-Al) */}
                                                             <div className="border-b border-border pb-4">
                                                                 <div className="flex items-center justify-between mb-3">
-                                                                    <h3 className="text-sm font-medium text-blue-400">📱 App Satış Fiyatı</h3>
+                                                                    <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400">📱 App Satış Fiyatı</h3>
                                                                     <label className="flex items-center gap-2 cursor-pointer">
                                                                         <input
                                                                             type="checkbox"
@@ -4055,7 +4055,7 @@ function GlobalProductsPageContent() {
                                                             {/* 🏪 Market İçi Fiyatı (ESL) */}
                                                             <div className="pb-4">
                                                                 <div className="flex items-center justify-between mb-3">
-                                                                    <h3 className="text-sm font-medium text-emerald-400">🏪 Market İçi Fiyatı <span className="text-xs text-gray-500">(ESL)</span></h3>
+                                                                    <h3 className="text-sm font-medium text-emerald-800 dark:text-emerald-400">🏪 Market İçi Fiyatı <span className="text-xs text-gray-500">(ESL)</span></h3>
                                                                     <label className="flex items-center gap-2 cursor-pointer">
                                                                         <input
                                                                             type="checkbox"

@@ -30,7 +30,7 @@ export default function SubscriptionPage() {
     const ownershipMonth = 4; // Month 4 of 24
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-foreground">
             <div className="max-w-6xl mx-auto">
                 <h1 className="text-3xl font-bold mb-2">{t('abonelik_ve_odemeler')}</h1>
                 <p className="text-muted-foreground mb-8">{t('planinizi_ve_faturalarinizi_buradan_yone')}</p>
@@ -45,7 +45,7 @@ export default function SubscriptionPage() {
                                     {currentPlan}
                                 </h2>
                             </div>
-                            <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">AKTİF</span>
+                            <span className="bg-green-500/20 text-green-800 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">AKTİF</span>
                         </div>
 
                         <div className="flex items-baseline gap-1 mb-6">
@@ -55,17 +55,17 @@ export default function SubscriptionPage() {
 
                         <div className="space-y-3 mb-8">
                             <div className="flex items-center gap-3 text-sm text-foreground">
-                                <span className="text-green-400">✓</span> {t('sinirsiz_siparis')}
+                                <span className="text-green-800 dark:text-green-400">✓</span> {t('sinirsiz_siparis')}
                             </div>
                             <div className="flex items-center gap-3 text-sm text-foreground">
-                                <span className="text-green-400">✓</span> {t('b2b_toptanci_modulu')}
+                                <span className="text-green-800 dark:text-green-400">✓</span> {t('b2b_toptanci_modulu')}
                             </div>
                             <div className="flex items-center gap-3 text-sm text-foreground">
-                                <span className="text-green-400">✓</span> 7/24 Destek
+                                <span className="text-green-800 dark:text-green-400">✓</span> 7/24 Destek
                             </div>
                             {currentPlan === 'ULTRA' && (
                                 <div className="flex items-center gap-3 text-sm text-foreground">
-                                    <span className="text-purple-400">★</span> {t('ai_tahminleme')}
+                                    <span className="text-purple-800 dark:text-purple-400">★</span> {t('ai_tahminleme')}
                                 </div>
                             )}
                         </div>
@@ -101,7 +101,7 @@ export default function SubscriptionPage() {
                                     <div className="mb-6">
                                         <div className="flex justify-between text-xs mb-2">
                                             <span className="text-muted-foreground">Sahiplik İlerlemesi ({ownershipMonth}/24 Ay)</span>
-                                            <span className="text-green-400 font-bold">%16</span>
+                                            <span className="text-green-800 dark:text-green-400 font-bold">%16</span>
                                         </div>
                                         <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                                             <div className="h-full bg-green-500 w-[16%] relative">
@@ -116,7 +116,7 @@ export default function SubscriptionPage() {
                             ) : (
                                 <div className="text-center py-8">
                                     <p className="text-muted-foreground mb-4">{t('henuz_elektronik_etiket_kullanmiyorsunuz')}</p>
-                                    <button className="text-green-400 underline">ESL Paketlerini İncele</button>
+                                    <button className="text-green-800 dark:text-green-400 underline">ESL Paketlerini İncele</button>
                                 </div>
                             )}
                         </div>
@@ -151,12 +151,12 @@ export default function SubscriptionPage() {
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-sm">{formatCurrency(monthlyFee + eslTotal, admin?.currency)}</p>
-                                            <p className="text-xs text-green-400">{t('odendi')}</p>
+                                            <p className="text-xs text-green-800 dark:text-green-400">{t('odendi')}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <button className="w-full text-center text-sm text-gray-500 hover:text-white mt-4">{t('tumunu_gor')}</button>
+                            <button className="w-full text-center text-sm text-gray-500 hover:text-foreground mt-4">{t('tumunu_gor')}</button>
                         </div>
                     </div>
                 </div>

@@ -146,7 +146,7 @@ export default function EANEnrichmentPage() {
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="bg-card rounded-xl p-8 text-center max-w-md border border-border">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">{t('erisim_yok')}</h2>
+                    <h2 className="text-xl font-bold text-foreground mt-4">{t('erisim_yok')}</h2>
                     <p className="text-muted-foreground mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg">
                         Dashboard'a Git
@@ -166,7 +166,7 @@ export default function EANEnrichmentPage() {
                             <span className="text-3xl">🏷️</span>
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white">EAN Enrichment</h1>
+                            <h1 className="text-2xl font-bold text-foreground">EAN Enrichment</h1>
                             <p className="text-purple-200">{products.length} {t('urun_ean_bekliyor')}</p>
                         </div>
                     </div>
@@ -174,7 +174,7 @@ export default function EANEnrichmentPage() {
 
                 {/* Info */}
                 <div className="bg-card rounded-xl p-6 mb-6 border border-border">
-                    <h2 className="text-lg font-medium text-white mb-4">{t('bilgi')}</h2>
+                    <h2 className="text-lg font-medium text-foreground mb-4">{t('bilgi')}</h2>
                     <p className="text-muted-foreground text-sm">
                         {t('bu_islem_foodpaket_urun_sayfalarini_ziya')}
                     </p>
@@ -185,7 +185,7 @@ export default function EANEnrichmentPage() {
                     <div className="bg-card rounded-xl p-6 mb-6 border border-purple-600">
                         <div className="flex justify-between text-sm text-muted-foreground mb-2">
                             <span>{progress.current} / {progress.total}</span>
-                            <span className="text-emerald-400">{progress.found} EAN bulundu</span>
+                            <span className="text-emerald-800 dark:text-emerald-400">{progress.found} EAN bulundu</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-3 mb-3">
                             <div
@@ -215,7 +215,7 @@ export default function EANEnrichmentPage() {
                     <button
                         onClick={handleEnrich}
                         disabled={enriching || products.length === 0}
-                        className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded-xl text-lg"
+                        className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-foreground font-bold rounded-xl text-lg"
                     >
                         {enriching ? t('ean_cekiliyor') : `🏷️ ${products.length} Ürüne EAN Ekle`}
                     </button>
@@ -227,7 +227,7 @@ export default function EANEnrichmentPage() {
 
                 {/* Back Link */}
                 <div className="mt-6 text-center">
-                    <Link href="/admin/imports/foodpaket" className="text-purple-400 hover:text-purple-300">
+                    <Link href="/admin/imports/foodpaket" className="text-purple-800 dark:text-purple-400 hover:text-purple-300">
                         {t('foodpaket_import_a_don')}
                     </Link>
                 </div>

@@ -241,7 +241,7 @@ export default function PlansPage() {
                 {/* Back Button */}
                 <button
                     onClick={() => router.push('/admin/dashboard')}
-                    className="flex items-center text-muted-foreground hover:text-white mb-6 transition-colors group"
+                    className="flex items-center text-muted-foreground hover:text-foreground mb-6 transition-colors group"
                 >
                     <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
                     {t('panela_geri_don')}
@@ -291,7 +291,7 @@ export default function PlansPage() {
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-white text-lg tracking-tight">{plan.name}</h3>
+                                                <h3 className="font-bold text-foreground text-lg tracking-tight">{plan.name}</h3>
                                                 <div className={`w-2 h-2 rounded-full shrink-0 ${plan.isActive ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></div>
                                             </div>
                                             <p className="text-xs text-muted-foreground font-mono mt-1 bg-background/50 inline-block px-1.5 py-0.5 rounded-md">{plan.code}</p>
@@ -300,7 +300,7 @@ export default function PlansPage() {
                                         <div className="flex gap-0.5 -mt-1 -mr-2 bg-background/60 p-1 rounded-lg border border-border/50 opacity-80 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => handleEdit(plan)}
-                                                className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-md transition-colors"
+                                                className="p-1.5 text-blue-800 dark:text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-md transition-colors"
                                                 title={t('duzenle')}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -309,7 +309,7 @@ export default function PlansPage() {
                                             </button>
                                             <button
                                                 onClick={() => setConfirmDelete({ id: plan.id, name: plan.name })}
-                                                className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors"
+                                                className="p-1.5 text-red-800 dark:text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors"
                                                 title={t('sil')}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -321,19 +321,19 @@ export default function PlansPage() {
 
                                     {/* Price */}
                                     <div className="mb-6 flex items-baseline gap-1">
-                                        <span className="text-3xl font-extrabold text-white">{globalFormatCurrency(plan.monthlyFee, plan.currency || 'EUR')}</span>
+                                        <span className="text-3xl font-extrabold text-foreground">{globalFormatCurrency(plan.monthlyFee, plan.currency || 'EUR')}</span>
                                         <span className="text-base font-medium text-gray-500">/ay</span>
                                     </div>
 
                                     {/* Features Chips */}
                                     <div className="flex flex-wrap gap-1.5 mb-8 flex-1 content-start">
                                         {plan.features?.clickAndCollect && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-green-900/20 text-green-400 border border-green-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-green-900/20 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-700/30">
                                                 ✓ Gel-Al
                                             </span>
                                         )}
                                         {plan.features?.delivery && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-900/20 text-blue-400 border border-blue-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-900/20 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-700/30">
                                                 ✓ Teslimat
                                             </span>
                                         )}
@@ -349,18 +349,18 @@ export default function PlansPage() {
                                                 (plan.features as any)?.donationRoundUp,
                                             ].filter(Boolean).length;
                                             return promoCount > 0 ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-400 border border-orange-700/30">
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-700/30">
                                                     🎯 Promosyon {promoCount}/7
                                                 </span>
                                             ) : null;
                                         })()}
                                         {plan.features?.onlinePayment && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-400 border border-amber-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-700/30">
                                                 ✓ {t('odeme')}
                                             </span>
                                         )}
                                         {(plan.features as any)?.dineInQR && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-500 border border-amber-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-500 border border-amber-200 dark:border-amber-700/30">
                                                 ✓ {t('qr_siparis')}
                                             </span>
                                         )}
@@ -370,17 +370,17 @@ export default function PlansPage() {
                                             </span>
                                         )}
                                         {(plan.features as any)?.groupOrderLink && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-pink-900/20 text-pink-400 border border-pink-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-pink-900/20 text-pink-800 dark:text-pink-400 border border-pink-200 dark:border-pink-700/30">
                                                 ✓ Grup (L)
                                             </span>
                                         )}
                                         {(plan.features as any)?.groupOrderTable && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-400 border border-orange-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-700/30">
                                                 ✓ Grup (M)
                                             </span>
                                         )}
                                         {(plan.features as any)?.staffShiftTracking && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-900/20 text-cyan-400 border border-cyan-700/30">
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-900/20 text-cyan-800 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-700/30">
                                                 ✓ Vardiya
                                             </span>
                                         )}
@@ -440,7 +440,7 @@ export default function PlansPage() {
                                 {/* Modal Header */}
                                 <div className="p-6 border-b border-border flex justify-between items-center bg-background rounded-t-2xl">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-white">{editingPlan ? t('paketi_duzenle') : t('yeni_paket_olustur')}</h2>
+                                        <h2 className="text-2xl font-bold text-foreground">{editingPlan ? t('paketi_duzenle') : t('yeni_paket_olustur')}</h2>
                                         <p className="text-sm text-muted-foreground mt-1">
                                             <span className="bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded text-xs border border-blue-800 uppercase tracking-wide mr-2">
                                                 {(sectorCategories.find(t => t.id === formData.businessType)?.label || formData.businessType || selectedBusinessType)}
@@ -464,7 +464,7 @@ export default function PlansPage() {
 
                                             {/* 1. Identity & Pricing */}
                                             <div className="bg-card/50 p-5 rounded-xl border border-border/50">
-                                                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                                                <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
                                                     <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
                                                     {t('paket_kimligi_fiyatlandirma')}
                                                 </h3>
@@ -475,7 +475,7 @@ export default function PlansPage() {
                                                             type="text"
                                                             value={formData.name}
                                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                                                             placeholder={t('orn_gold_paket')}
                                                         />
                                                     </div>
@@ -485,7 +485,7 @@ export default function PlansPage() {
                                                             type="text"
                                                             value={formData.code}
                                                             onChange={e => setFormData({ ...formData, code: e.target.value })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm font-mono"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm font-mono"
                                                             placeholder="gold_pkg"
                                                         />
                                                     </div>
@@ -494,7 +494,7 @@ export default function PlansPage() {
                                                         <select
                                                             value={formData.color}
                                                             onChange={e => setFormData({ ...formData, color: e.target.value })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
                                                         >
                                                             {colorOptions.map(opt => (
                                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -534,7 +534,7 @@ export default function PlansPage() {
                                                             step="0.01"
                                                             value={formData.yearlyFee || ''}
                                                             onChange={e => setFormData({ ...formData, yearlyFee: parseFloat(e.target.value) })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
                                                             placeholder="Opsiyonel"
                                                         />
                                                     </div>
@@ -544,7 +544,7 @@ export default function PlansPage() {
                                                             type="text"
                                                             value={formData.description || ''}
                                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
                                                             placeholder={t('paket_aciklamasi')}
                                                         />
                                                     </div>
@@ -553,7 +553,7 @@ export default function PlansPage() {
 
                                             {/* 2. Limits & Rules */}
                                             <div className="bg-card/50 p-5 rounded-xl border border-border/50">
-                                                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                                                <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
                                                     <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
                                                     {t('limitler_hizmet_sartlari')}
                                                 </h3>
@@ -567,7 +567,7 @@ export default function PlansPage() {
                                                                 onChange={e => setFormData({ ...formData, productLimit: e.target.value ? parseInt(e.target.value) : null })}
                                                                 placeholder={t('sinirsiz')}
                                                                 disabled={formData.productLimit === null}
-                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50"
                                                             />
                                                             <button
                                                                 type="button"
@@ -587,7 +587,7 @@ export default function PlansPage() {
                                                                 onChange={e => setFormData({ ...formData, orderLimit: e.target.value ? parseInt(e.target.value) : null })}
                                                                 placeholder={t('sinirsiz')}
                                                                 disabled={formData.orderLimit === null}
-                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50"
                                                             />
                                                             <button
                                                                 type="button"
@@ -607,7 +607,7 @@ export default function PlansPage() {
                                                                 onChange={e => setFormData({ ...formData, personnelLimit: e.target.value ? parseInt(e.target.value) : null })}
                                                                 placeholder={t('sinirsiz')}
                                                                 disabled={formData.personnelLimit === null}
-                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm disabled:opacity-50"
                                                             />
                                                             <button
                                                                 type="button"
@@ -625,42 +625,42 @@ export default function PlansPage() {
                                                             step="0.01"
                                                             value={formData.personnelOverageFee ?? 0}
                                                             onChange={e => setFormData({ ...formData, personnelOverageFee: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
                                                             placeholder="Opsiyonel"
                                                         />
                                                     </div>
                                                     {/* Kurye Provizyon Sistemi */}
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
+                                                        <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
                                                         <div className="grid grid-cols-3 gap-3">
                                                             <div className="bg-background rounded-lg p-3 border border-green-600/40">
-                                                                <label className="block text-xs text-green-400 mb-1">🛒 Gel-Al</label>
+                                                                <label className="block text-xs text-green-800 dark:text-green-400 mb-1">🛒 Gel-Al</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).commissionClickCollect ?? 5}
                                                                     onChange={e => setFormData({ ...formData, commissionClickCollect: parseFloat(e.target.value) } as any)}
-                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm font-bold text-center"
+                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
                                                                 />
                                                             </div>
                                                             <div className="bg-background rounded-lg p-3 border border-blue-600/40">
-                                                                <label className="block text-xs text-blue-400 mb-1">{t('kendi_kurye')}</label>
+                                                                <label className="block text-xs text-blue-800 dark:text-blue-400 mb-1">{t('kendi_kurye')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).commissionOwnCourier ?? 4}
                                                                     onChange={e => setFormData({ ...formData, commissionOwnCourier: parseFloat(e.target.value) } as any)}
-                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm font-bold text-center"
+                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
                                                                 />
                                                             </div>
                                                             <div className="bg-background rounded-lg p-3 border border-purple-600/40">
-                                                                <label className="block text-xs text-purple-400 mb-1">{t('lokma_kurye')}</label>
+                                                                <label className="block text-xs text-purple-800 dark:text-purple-400 mb-1">{t('lokma_kurye')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).commissionLokmaCourier ?? 7}
                                                                     onChange={e => setFormData({ ...formData, commissionLokmaCourier: parseFloat(e.target.value) } as any)}
-                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm font-bold text-center"
+                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm font-bold text-center"
                                                                 />
                                                             </div>
                                                         </div>
@@ -671,7 +671,7 @@ export default function PlansPage() {
                                                             type="number"
                                                             value={(formData as any).freeOrderCount ?? 0}
                                                             onChange={e => setFormData({ ...formData, freeOrderCount: parseInt(e.target.value) || 0 } as any)}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
                                                             placeholder="0"
                                                         />
                                                     </div>
@@ -681,14 +681,14 @@ export default function PlansPage() {
                                                             type="number"
                                                             value={formData.campaignLimit || ''}
                                                             onChange={e => setFormData({ ...formData, campaignLimit: e.target.value ? parseInt(e.target.value) : null })}
-                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-foreground text-sm"
                                                             placeholder="Opsiyonel"
                                                         />
                                                     </div>
 
                                                     {/* Sipariş Başı Ücret */}
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
+                                                        <label className="block text-xs font-medium text-amber-800 dark:text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
                                                         <div className="flex gap-2">
                                                             <div className="relative flex bg-background rounded-lg border border-border overflow-hidden">
                                                                 {(['none', 'percentage', 'fixed'] as const).map(type => (
@@ -708,7 +708,7 @@ export default function PlansPage() {
                                                                     step={(formData as any).perOrderFeeType === 'percentage' ? '0.1' : '0.01'}
                                                                     value={(formData as any).perOrderFeeAmount ?? 0}
                                                                     onChange={e => setFormData({ ...formData, perOrderFeeAmount: parseFloat(e.target.value) } as any)}
-                                                                    className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                                    className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
                                                                     placeholder={(formData as any).perOrderFeeType === 'percentage' ? '5%' : `1.00 ${globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}`}
                                                                 />
                                                             )}
@@ -718,7 +718,7 @@ export default function PlansPage() {
                                                     {/* Masa Rezervasyonu */}
                                                     <div className="col-span-2">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <label className="text-xs font-medium text-pink-400">🍽️ Masa Rezervasyonu</label>
+                                                            <label className="text-xs font-medium text-pink-800 dark:text-pink-400">🍽️ Masa Rezervasyonu</label>
                                                             <label className="flex items-center cursor-pointer">
                                                                 <div className="relative">
                                                                     <input
@@ -744,7 +744,7 @@ export default function PlansPage() {
                                                                             value={(formData as any).tableReservationLimit === null ? '' : (formData as any).tableReservationLimit}
                                                                             onChange={e => setFormData({ ...formData, tableReservationLimit: e.target.value ? parseInt(e.target.value) : null } as any)}
                                                                             disabled={(formData as any).tableReservationLimit === null}
-                                                                            className="flex-1 bg-card border border-border rounded px-2 py-1.5 text-white text-sm disabled:opacity-50"
+                                                                            className="flex-1 bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm disabled:opacity-50"
                                                                             placeholder="Limit"
                                                                         />
                                                                         <button
@@ -763,7 +763,7 @@ export default function PlansPage() {
                                                                         step="0.01"
                                                                         value={(formData as any).tableReservationOverageFee ?? 0}
                                                                         onChange={e => setFormData({ ...formData, tableReservationOverageFee: parseFloat(e.target.value) } as any)}
-                                                                        className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm"
+                                                                        className="w-full bg-card border border-border rounded px-2 py-1.5 text-foreground text-sm"
                                                                         placeholder="0.50"
                                                                     />
                                                                 </div>
@@ -800,23 +800,23 @@ export default function PlansPage() {
 
                                             {/* 3. Features Grid */}
                                             <div className="bg-card/50 p-6 rounded-xl border border-border/50 h-full">
-                                                <h3 className="text-white font-semibold mb-6 flex items-center gap-2 border-b border-border pb-4">
+                                                <h3 className="text-foreground font-semibold mb-6 flex items-center gap-2 border-b border-border pb-4">
                                                     <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
                                                     {t('ozellikler_moduller')}
                                                 </h3>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     {[
-                                                        { key: 'clickAndCollect', label: 'Click & Collect (Gel-Al)', color: 'text-purple-400' },
-                                                        { key: 'delivery', label: t('kurye_teslimat'), color: 'text-purple-400' },
-                                                        { key: 'onlinePayment', label: t('online_odeme_kart_apple'), color: 'text-purple-400' },
-                                                        { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-400' },
-                                                        { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-400' },
-                                                        { key: 'dineInQR', label: t('masada_siparis_qr_kod'), color: 'text-amber-400' },
+                                                        { key: 'clickAndCollect', label: 'Click & Collect (Gel-Al)', color: 'text-purple-800 dark:text-purple-400' },
+                                                        { key: 'delivery', label: t('kurye_teslimat'), color: 'text-purple-800 dark:text-purple-400' },
+                                                        { key: 'onlinePayment', label: t('online_odeme_kart_apple'), color: 'text-purple-800 dark:text-purple-400' },
+                                                        { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-800 dark:text-purple-400' },
+                                                        { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-800 dark:text-purple-400' },
+                                                        { key: 'dineInQR', label: t('masada_siparis_qr_kod'), color: 'text-amber-800 dark:text-amber-400' },
                                                         { key: 'waiterOrder', label: t('garson_siparis'), color: 'text-teal-400' },
-                                                        { key: 'groupOrderLink', label: '🔗 Link ile Grup Siparişi', color: 'text-pink-400' },
-                                                        { key: 'groupOrderTable', label: '🪑 Masada Grup Siparişi', color: 'text-orange-400' },
-                                                        { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-400' },
+                                                        { key: 'groupOrderLink', label: '🔗 Link ile Grup Siparişi', color: 'text-pink-800 dark:text-pink-400' },
+                                                        { key: 'groupOrderTable', label: '🪑 Masada Grup Siparişi', color: 'text-orange-800 dark:text-orange-400' },
+                                                        { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-800 dark:text-cyan-400' },
                                                         { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-muted-foreground', invert: true },
                                                     ].map((feature) => (
                                                         <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
@@ -838,16 +838,16 @@ export default function PlansPage() {
                                                 </div>
 
                                                 {/* 🎯 PROMOSYON & PAZARLAMA — Collapsible Section */}
-                                                <div className="mt-6 border border-orange-700/30 rounded-xl overflow-hidden">
+                                                <div className="mt-6 border border-orange-200 dark:border-orange-700/30 rounded-xl overflow-hidden">
                                                     <button
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, _promoExpanded: !(formData as any)._promoExpanded } as any)}
-                                                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-900/20 to-amber-900/10 hover:from-orange-900/30 transition-all"
+                                                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-100 dark:from-orange-900/20 to-amber-900/10 hover:from-orange-100 dark:from-orange-900/30 transition-all"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <span className="text-lg">🎯</span>
                                                             <span className="text-sm font-bold text-orange-300 uppercase tracking-wide">Promosyon & Pazarlama</span>
-                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-600/20 text-orange-400 border border-orange-700/30">
+                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-600/20 text-orange-800 dark:text-orange-400 border border-orange-200 dark:border-orange-700/30">
                                                                 {[
                                                                     (formData.features as any)?.campaigns,
                                                                     (formData.features as any)?.sponsoredProducts,
@@ -859,22 +859,22 @@ export default function PlansPage() {
                                                                 ].filter(Boolean).length}/7 aktif
                                                             </span>
                                                         </div>
-                                                        <span className={`text-orange-400 text-sm transition-transform ${(formData as any)._promoExpanded ? 'rotate-180' : ''}`}>▼</span>
+                                                        <span className={`text-orange-800 dark:text-orange-400 text-sm transition-transform ${(formData as any)._promoExpanded ? 'rotate-180' : ''}`}>▼</span>
                                                     </button>
 
                                                     {(formData as any)._promoExpanded !== false && (
                                                         <div className="p-4 bg-background/50 space-y-3">
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                                 {[
-                                                                    { key: 'campaigns', label: '📢 Kampanya Yönetimi', color: 'text-purple-400', desc: 'İndirim/fırsat kampanyaları' },
-                                                                    { key: 'sponsoredProducts', label: '⭐ Sponsorlu Ürünler', color: 'text-yellow-400', desc: 'Öne çıkan ürünler', hasSubFields: true },
-                                                                    { key: 'couponSystem', label: '🎟️ Kupon Sistemi', color: 'text-blue-400', desc: 'Promo kodları & kuponlar' },
-                                                                    { key: 'referralSystem', label: '🤝 Referral (Davet Et)', color: 'text-pink-400', desc: 'Davet et kazan sistemi' },
-                                                                    { key: 'firstOrderDiscount', label: '🎁 İlk Sipariş İndirimi', color: 'text-green-400', desc: 'Yeni müşteri teşviki' },
-                                                                    { key: 'freeDrink', label: '🍺 Gratis İçecek', color: 'text-cyan-400', desc: 'Ücretsiz içecek modülü' },
-                                                                    { key: 'donationRoundUp', label: '💚 Bağış Yuvarlama', color: 'text-emerald-400', desc: 'Checkout bağış yuvarlama' },
+                                                                    { key: 'campaigns', label: '📢 Kampanya Yönetimi', color: 'text-purple-800 dark:text-purple-400', desc: 'İndirim/fırsat kampanyaları' },
+                                                                    { key: 'sponsoredProducts', label: '⭐ Sponsorlu Ürünler', color: 'text-yellow-800 dark:text-yellow-400', desc: 'Öne çıkan ürünler', hasSubFields: true },
+                                                                    { key: 'couponSystem', label: '🎟️ Kupon Sistemi', color: 'text-blue-800 dark:text-blue-400', desc: 'Promo kodları & kuponlar' },
+                                                                    { key: 'referralSystem', label: '🤝 Referral (Davet Et)', color: 'text-pink-800 dark:text-pink-400', desc: 'Davet et kazan sistemi' },
+                                                                    { key: 'firstOrderDiscount', label: '🎁 İlk Sipariş İndirimi', color: 'text-green-800 dark:text-green-400', desc: 'Yeni müşteri teşviki' },
+                                                                    { key: 'freeDrink', label: '🍺 Gratis İçecek', color: 'text-cyan-800 dark:text-cyan-400', desc: 'Ücretsiz içecek modülü' },
+                                                                    { key: 'donationRoundUp', label: '💚 Bağış Yuvarlama', color: 'text-emerald-800 dark:text-emerald-400', desc: 'Checkout bağış yuvarlama' },
                                                                 ].map((promo) => (
-                                                                    <label key={promo.key} className="flex items-start p-3 rounded-lg bg-card/50 border border-border/50 hover:border-orange-700/30 hover:bg-card transition-all cursor-pointer group">
+                                                                    <label key={promo.key} className="flex items-start p-3 rounded-lg bg-card/50 border border-border/50 hover:border-orange-200 dark:border-orange-700/30 hover:bg-card transition-all cursor-pointer group">
                                                                         <div className="relative flex items-center mt-0.5">
                                                                             <input
                                                                                 type="checkbox"
@@ -894,8 +894,8 @@ export default function PlansPage() {
 
                                                             {/* Sponsored Products Sub-Settings — inside promo accordion */}
                                                             {(formData.features as any)?.sponsoredProducts && (
-                                                                <div className="bg-yellow-900/10 border border-yellow-700/30 rounded-xl p-4">
-                                                                    <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">⭐ {t('one_cikan_urun_ayarlari')}</h4>
+                                                                <div className="bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-xl p-4">
+                                                                    <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-400 uppercase tracking-widest mb-3">⭐ {t('one_cikan_urun_ayarlari')}</h4>
                                                                     <div className="grid grid-cols-2 gap-4">
                                                                         <div>
                                                                             <label className="block text-xs text-muted-foreground mb-1.5">{t('siparis_basi_ucret')}</label>
@@ -905,7 +905,7 @@ export default function PlansPage() {
                                                                                 min="0"
                                                                                 value={(formData as any).sponsoredFeePerConversion ?? 0.40}
                                                                                 onChange={e => setFormData({ ...formData, sponsoredFeePerConversion: parseFloat(e.target.value) || 0 } as any)}
-                                                                                className="w-full bg-background border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                                className="w-full bg-background border border-yellow-200 dark:border-yellow-700/40 rounded-lg px-3 py-2.5 text-foreground text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
                                                                                 placeholder="0.40"
                                                                             />
                                                                             <p className="text-xs text-gray-500 mt-1">{t('0_bedava_bu_plan_icin_sponsored_ucretsiz')}</p>
@@ -918,7 +918,7 @@ export default function PlansPage() {
                                                                                 max="50"
                                                                                 value={(formData as any).sponsoredMaxProducts ?? 5}
                                                                                 onChange={e => setFormData({ ...formData, sponsoredMaxProducts: parseInt(e.target.value) || 5 } as any)}
-                                                                                className="w-full bg-background border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                                className="w-full bg-background border border-yellow-200 dark:border-yellow-700/40 rounded-lg px-3 py-2.5 text-foreground text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
                                                                                 placeholder="5"
                                                                             />
                                                                             <p className="text-xs text-gray-500 mt-1">{t('bu_plandaki_isletme_kac_urun_one_cikarab')}</p>
@@ -929,7 +929,7 @@ export default function PlansPage() {
                                                                             {t('bu_plandaki_isletmeler_max')} <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> {t('urun_secebilir')}
                                                                             {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
                                                                                 ? <> {t('her_siparis_basi')} <strong>{globalFormatCurrency((formData as any).sponsoredFeePerConversion ?? 0.40, formData.currency || 'EUR')}</strong> {t('ucretlendirilir')}</>
-                                                                                : <> {t('sponsored_urunler')} <strong className="text-green-400">{t('ucretsiz')}</strong> olarak sunulur.</>
+                                                                                : <> {t('sponsored_urunler')} <strong className="text-green-800 dark:text-green-400">{t('ucretsiz')}</strong> olarak sunulur.</>
                                                                             }
                                                                         </p>
                                                                     </div>
@@ -947,8 +947,8 @@ export default function PlansPage() {
                                                             { key: 'posIntegration', label: 'POS Entegrasyonu', color: 'text-muted-foreground' },
                                                             { key: 'scaleIntegration', label: t('akilli_kantar'), color: 'text-muted-foreground' },
                                                             { key: 'accountingIntegration', label: 'Muhasebe (Datev)', color: 'text-muted-foreground' },
-                                                            { key: 'aiSupplierOrdering', label: t('b2b_ai_siparis'), color: 'text-green-400' },
-                                                            { key: 'aiBestPrice', label: t('ai_fiyat_onerisi'), color: 'text-amber-400' },
+                                                            { key: 'aiSupplierOrdering', label: t('b2b_ai_siparis'), color: 'text-green-800 dark:text-green-400' },
+                                                            { key: 'aiBestPrice', label: t('ai_fiyat_onerisi'), color: 'text-amber-800 dark:text-amber-400' },
                                                         ].map((feature) => (
                                                             <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
                                                                 <div className="relative flex items-center">
@@ -968,7 +968,7 @@ export default function PlansPage() {
 
                                                 {/* Stripe ID Section (Compact) */}
                                                 <div className="mt-8 pt-6 border-t border-border/50">
-                                                    <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">{t('teknik_stripe_ids')}</h4>
+                                                    <h4 className="text-xs font-bold text-blue-800 dark:text-blue-400 uppercase tracking-widest mb-3">{t('teknik_stripe_ids')}</h4>
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <input
                                                             type="text"

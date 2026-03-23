@@ -77,7 +77,7 @@ export default function OrderCard({
                 }`}
         >
             <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium text-sm">
+                <span className="text-foreground font-medium text-sm">
                     #{order.orderNumber || order.id.slice(0, 6).toUpperCase()}
                 </span>
                 <div className="flex items-center gap-1">
@@ -110,7 +110,7 @@ export default function OrderCard({
                             </span>
                         )}
                         {order.paymentStatus === 'paid' && (
-                            <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
+                            <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-800 dark:text-green-400 text-xs">✓</span>
                         )}
                     </div>
                     <p className="text-muted-foreground text-xs pl-0.5">
@@ -124,10 +124,10 @@ export default function OrderCard({
                 </div>
             )}
             <div className="flex items-center justify-between">
-                <span className="text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
+                <span className="text-green-800 dark:text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
                 <div className="flex items-center gap-2">
                     {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-400' : 'bg-gray-600 text-muted-foreground'}`}>
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-gray-600 text-muted-foreground'}`}>
                             ✓{checkedCount}/{itemCount}
                         </span>
                     )}

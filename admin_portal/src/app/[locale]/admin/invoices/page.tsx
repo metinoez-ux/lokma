@@ -328,7 +328,7 @@ export default function InvoicesPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">{t('yukleniyor')}</div>
+                <div className="text-foreground">{t('yukleniyor')}</div>
             </div>
         );
     }
@@ -339,7 +339,7 @@ export default function InvoicesPage() {
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">📄 Faturalar</h1>
+                        <h1 className="text-2xl font-bold text-foreground">📄 Faturalar</h1>
                         <p className="text-muted-foreground text-sm">{t('b2b_abonelik_faturalari')}</p>
                     </div>
                     <div className="flex gap-2">
@@ -392,7 +392,7 @@ export default function InvoicesPage() {
                                     downloadDATEVExport(merchantInvoices);
                                 });
                             }}
-                            className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-500"
+                            className="px-3 py-2 bg-blue-600 text-foreground text-sm rounded-lg hover:bg-blue-500"
                             title={t('datev_format_title')}
                         >
                             📊 DATEV
@@ -440,27 +440,27 @@ export default function InvoicesPage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
                     <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-3xl font-bold text-white">{stats.total}</p>
+                        <p className="text-3xl font-bold text-foreground">{stats.total}</p>
                         <p className="text-muted-foreground text-sm">{t('toplam')}</p>
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
-                        <p className="text-3xl font-bold text-yellow-400">{stats.pending}</p>
+                        <p className="text-3xl font-bold text-yellow-800 dark:text-yellow-400">{stats.pending}</p>
                         <p className="text-muted-foreground text-sm">{t('bekleyen')}</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
-                        <p className="text-3xl font-bold text-green-400">{stats.paid}</p>
+                        <p className="text-3xl font-bold text-green-800 dark:text-green-400">{stats.paid}</p>
                         <p className="text-muted-foreground text-sm">{t('odenen')}</p>
                     </div>
                     <div className="bg-red-600/20 border border-red-600/30 rounded-xl p-4 text-center">
-                        <p className="text-3xl font-bold text-red-400">{stats.failed}</p>
+                        <p className="text-3xl font-bold text-red-800 dark:text-red-400">{stats.failed}</p>
                         <p className="text-muted-foreground text-sm">{t('basarisiz')}</p>
                     </div>
                     <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalAmount)}</p>
+                        <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalAmount)}</p>
                         <p className="text-muted-foreground text-sm">{t('toplam_tutar')}</p>
                     </div>
                     <div className="bg-card rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.paidAmount)}</p>
+                        <p className="text-2xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.paidAmount)}</p>
                         <p className="text-muted-foreground text-sm">Tahsil Edilen</p>
                     </div>
                 </div>
@@ -487,7 +487,7 @@ export default function InvoicesPage() {
                         <div className="flex-1" />
                         <button
                             onClick={() => { setFilterStatus('all'); setPeriodPreset('current_quarter'); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
-                            className="px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500"
+                            className="px-4 py-2 bg-gray-600 text-foreground text-sm rounded-lg hover:bg-gray-500"
                         >
                             ↺ Zurücksetzen
                         </button>
@@ -614,19 +614,19 @@ export default function InvoicesPage() {
                                 filteredInvoices.map((invoice) => (
                                     <tr key={invoice.id} className="hover:bg-gray-700/50">
                                         <td className="px-4 py-3">
-                                            <span className="text-white font-mono">{invoice.invoiceNumber}</span>
+                                            <span className="text-foreground font-mono">{invoice.invoiceNumber}</span>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div>
-                                                <p className="text-white">{invoice.butcherName}</p>
+                                                <p className="text-foreground">{invoice.butcherName}</p>
                                                 <p className="text-gray-500 text-xs">{invoice.butcherAddress}</p>
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-foreground">{invoice.period}</td>
                                         <td className="px-4 py-3 text-right">
-                                            <span className="text-white font-bold">{formatCurrency(invoice.grandTotal, invoice.currency)}</span>
+                                            <span className="text-foreground font-bold">{formatCurrency(invoice.grandTotal, invoice.currency)}</span>
                                             {invoice.surchargeAmount && invoice.surchargeAmount > 0 && (
-                                                <span className="text-amber-400 text-xs ml-1">(+{invoice.surchargeRate}%)</span>
+                                                <span className="text-amber-800 dark:text-amber-400 text-xs ml-1">(+{invoice.surchargeRate}%)</span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3 text-center">
@@ -824,7 +824,7 @@ export default function InvoicesPage() {
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
-                        <h2 className="text-xl font-bold text-white mb-4">{t('manuel_fatura_olustur')}</h2>
+                        <h2 className="text-xl font-bold text-foreground mb-4">{t('manuel_fatura_olustur')}</h2>
                         <p className="text-muted-foreground text-sm mb-4">{t('gobd_uyumlu_ardisik_fatura_numarasi_otom')}</p>
 
                         <div className="space-y-4">
@@ -888,7 +888,7 @@ export default function InvoicesPage() {
                                 <div className="bg-background rounded-lg p-3 text-sm">
                                     <div className="flex justify-between text-muted-foreground"><span>Net:</span><span>{formatCurrency(newInvoice.netAmount)}</span></div>
                                     <div className="flex justify-between text-muted-foreground"><span>KDV ({newInvoice.vatRate === 'REDUCED' ? '7%' : '19%'}):</span><span>{formatCurrency(newInvoice.netAmount * VAT_RATES[newInvoice.vatRate])}</span></div>
-                                    <div className="flex justify-between text-white font-bold border-t border-border mt-2 pt-2"><span>{t('toplam')}</span><span>{formatCurrency(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate]))}</span></div>
+                                    <div className="flex justify-between text-foreground font-bold border-t border-border mt-2 pt-2"><span>{t('toplam')}</span><span>{formatCurrency(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate]))}</span></div>
                                 </div>
                             )}
                         </div>
@@ -916,7 +916,7 @@ export default function InvoicesPage() {
             {showStornoModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
-                        <h2 className="text-xl font-bold text-red-400 mb-4">{t('fatura_storno_i_ptal')}</h2>
+                        <h2 className="text-xl font-bold text-red-800 dark:text-red-400 mb-4">{t('fatura_storno_i_ptal')}</h2>
                         <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-4">
                             <p className="text-red-200 text-sm">
                                 <strong>{t('gobd_uyarisi')}</strong> {t('almanya_mali_mevzuatina_gore_faturalar_s')}

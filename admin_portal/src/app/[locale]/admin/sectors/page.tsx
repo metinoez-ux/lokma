@@ -195,10 +195,10 @@ const [sectors, setSectors] = useState<Sector[]>([]);
     const getCategoryBadge = (category: string) => {
         const opt = CATEGORY_OPTIONS.find(c => c.value === category);
         const colors: Record<string, string> = {
-            yemek: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-            market: 'bg-green-500/20 text-green-400 border-green-500/30',
+            yemek: 'bg-amber-500/20 text-amber-800 dark:text-amber-400 border-amber-500/30',
+            market: 'bg-green-500/20 text-green-800 dark:text-green-400 border-green-500/30',
             kermes: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
-            hizmet: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+            hizmet: 'bg-purple-500/20 text-purple-800 dark:text-purple-400 border-purple-500/30',
         };
         return (
             <span className={`px-2 py-1 rounded-full text-xs border ${colors[category] || 'bg-gray-500/20'}`}>
@@ -417,7 +417,7 @@ const [sectors, setSectors] = useState<Sector[]>([]);
                                 {!isNewSector && (
                                     <button
                                         onClick={() => setDeleteConfirm(editingSector.id)}
-                                        className="px-4 py-2 border border-red-700 text-red-400 rounded-lg hover:bg-red-900/30"
+                                        className="px-4 py-2 border border-red-700 text-red-800 dark:text-red-400 rounded-lg hover:bg-red-900/30"
                                     >
                                         {t('sil')}
                                     </button>
@@ -451,7 +451,7 @@ const [sectors, setSectors] = useState<Sector[]>([]);
                 {deleteConfirm && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
                         <div className="bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-sm border border-red-800">
-                            <h3 className="text-lg font-bold mb-4 text-red-400">{t('sektoru_sil')}</h3>
+                            <h3 className="text-lg font-bold mb-4 text-red-800 dark:text-red-400">{t('sektoru_sil')}</h3>
                             <p className="text-muted-foreground mb-6">
                                 {t('bu_sektoru_silmek_istediginizden_emin_mi')}
                             </p>

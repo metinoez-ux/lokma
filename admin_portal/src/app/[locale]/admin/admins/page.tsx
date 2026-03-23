@@ -254,15 +254,15 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                     <div className="text-sm text-muted-foreground">{t('toplam_admin')}</div>
                 </div>
                 <div className="bg-red-900/30 rounded-lg p-4 border-l-4 border-red-500">
-                    <div className="text-2xl font-bold text-red-400">{stats.butcher}</div>
+                    <div className="text-2xl font-bold text-red-800 dark:text-red-400">{stats.butcher}</div>
                     <div className="text-sm text-red-300">🥩 {t('metzger')}</div>
                 </div>
                 <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
-                    <div className="text-2xl font-bold text-amber-400">{stats.restaurant}</div>
+                    <div className="text-2xl font-bold text-amber-800 dark:text-amber-400">{stats.restaurant}</div>
                     <div className="text-sm text-amber-300">{t('restoran')}</div>
                 </div>
                 <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
-                    <div className="text-2xl font-bold text-green-400">{stats.kermes}</div>
+                    <div className="text-2xl font-bold text-green-800 dark:text-green-400">{stats.kermes}</div>
                     <div className="text-sm text-green-300">🎪 Kermes</div>
                 </div>
             </div>
@@ -329,7 +329,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                         <button
                                             onClick={() => toggleAdminStatus(admin)}
                                             className={`px-2 py-1 rounded-full text-xs font-medium ${admin.isActive
-                                                ? 'bg-green-900/50 text-green-400'
+                                                ? 'bg-green-900/50 text-green-800 dark:text-green-400'
                                                 : 'bg-gray-700 text-muted-foreground'
                                                 }`}
                                         >
@@ -340,13 +340,13 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => openEditModal(admin)}
-                                                className="text-blue-400 hover:text-blue-300"
+                                                className="text-blue-800 dark:text-blue-400 hover:text-blue-300"
                                             >
                                                 ✏️
                                             </button>
                                             <button
                                                 onClick={() => setConfirmDeleteAdmin(admin)}
-                                                className="text-red-400 hover:text-red-300"
+                                                className="text-red-800 dark:text-red-400 hover:text-red-300"
                                             >
                                                 🗑️
                                             </button>

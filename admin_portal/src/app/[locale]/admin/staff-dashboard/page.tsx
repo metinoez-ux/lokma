@@ -678,7 +678,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
                             {t('personel_durumu')}
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -713,24 +713,24 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
                     <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 border border-border">
-                        <div className="text-3xl font-bold text-white">{stats.totalStaff}</div>
+                        <div className="text-3xl font-bold text-foreground">{stats.totalStaff}</div>
                         <div className="text-xs text-muted-foreground mt-1">{t('toplam_personel')}</div>
                     </div>
-                    <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 rounded-xl p-4 border border-emerald-700/30">
-                        <div className="text-3xl font-bold text-emerald-400">{stats.onShiftNow}</div>
-                        <div className="text-xs text-emerald-400/60 mt-1">{t('vardiyada')}</div>
+                    <div className="bg-gradient-to-br from-emerald-100 dark:from-emerald-900/40 to-emerald-950/40 rounded-xl p-4 border border-emerald-200 dark:border-emerald-700/30">
+                        <div className="text-3xl font-bold text-emerald-800 dark:text-emerald-400">{stats.onShiftNow}</div>
+                        <div className="text-xs text-emerald-800 dark:text-emerald-400/60 mt-1">{t('vardiyada')}</div>
                     </div>
-                    <div className="bg-gradient-to-br from-yellow-900/40 to-yellow-950/40 rounded-xl p-4 border border-yellow-700/30">
-                        <div className="text-3xl font-bold text-yellow-400">{stats.onBreakNow}</div>
-                        <div className="text-xs text-yellow-400/60 mt-1">{t('molada')}</div>
+                    <div className="bg-gradient-to-br from-yellow-100 dark:from-yellow-900/40 to-yellow-950/40 rounded-xl p-4 border border-yellow-200 dark:border-yellow-700/30">
+                        <div className="text-3xl font-bold text-yellow-800 dark:text-yellow-400">{stats.onBreakNow}</div>
+                        <div className="text-xs text-yellow-800 dark:text-yellow-400/60 mt-1">{t('molada')}</div>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-900/40 to-blue-950/40 rounded-xl p-4 border border-blue-700/30">
-                        <div className="text-3xl font-bold text-blue-400">{stats.activeDrivers}</div>
-                        <div className="text-xs text-blue-400/60 mt-1">{t('aktif_surucu')}</div>
+                    <div className="bg-gradient-to-br from-blue-100 dark:from-blue-900/40 to-blue-950/40 rounded-xl p-4 border border-blue-200 dark:border-blue-700/30">
+                        <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{stats.activeDrivers}</div>
+                        <div className="text-xs text-blue-800 dark:text-blue-400/60 mt-1">{t('aktif_surucu')}</div>
                     </div>
-                    <div className="bg-gradient-to-br from-amber-900/40 to-amber-950/40 rounded-xl p-4 border border-amber-700/30">
-                        <div className="text-3xl font-bold text-amber-400">{stats.deliveringNow}</div>
-                        <div className="text-xs text-amber-400/60 mt-1">{t('yolda_su_an')}</div>
+                    <div className="bg-gradient-to-br from-amber-100 dark:from-amber-900/40 to-amber-950/40 rounded-xl p-4 border border-amber-200 dark:border-amber-700/30">
+                        <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{stats.deliveringNow}</div>
+                        <div className="text-xs text-amber-800 dark:text-amber-400/60 mt-1">{t('yolda_su_an')}</div>
                     </div>
                 </div>
 
@@ -774,7 +774,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         {viewMode === 'active' && (
                             <button
                                 onClick={() => setViewMode('all')}
-                                className="mt-3 text-cyan-400 hover:text-cyan-300 text-sm underline"
+                                className="mt-3 text-cyan-800 dark:text-cyan-400 hover:text-cyan-300 text-sm underline"
                             >
                                 {t('tum_personeli_goruntule')}
                             </button>
@@ -816,7 +816,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         <div className="flex items-center gap-4">
                                             {/* Avatar */}
                                             <div className="relative">
-                                                <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-white font-bold text-lg ${member.activityStatus === 'on_shift'
+                                                <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-foreground font-bold text-lg ${member.activityStatus === 'on_shift'
                                                     ? 'bg-emerald-600'
                                                     : member.activityStatus === 'delivering'
                                                         ? 'bg-amber-600'
@@ -850,7 +850,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {/* Info */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <h3 className="text-white font-semibold truncate">{member.displayName}</h3>
+                                                    <h3 className="text-foreground font-semibold truncate">{member.displayName}</h3>
                                                     {/* Role Badge */}
                                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeClass(member.role)}`}>
                                                         {getRoleLabel(member.role, t)}
@@ -878,7 +878,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             <div className="text-right shrink-0">
                                                 {member.activityStatus === 'on_shift' && (
                                                     <div>
-                                                        <div className="text-emerald-400 font-bold text-sm flex items-center justify-end gap-1">
+                                                        <div className="text-emerald-800 dark:text-emerald-400 font-bold text-sm flex items-center justify-end gap-1">
                                                             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                                             {t('vardiyada')}
                                                         </div>
@@ -886,7 +886,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                             <ShiftTimer startedAt={member.shiftStartedAt} />
                                                         )}
                                                         {member.shiftAssignedTables && member.shiftAssignedTables.length > 0 && (
-                                                            <div className="text-cyan-400/70 text-xs mt-0.5">
+                                                            <div className="text-cyan-800 dark:text-cyan-400/70 text-xs mt-0.5">
                                                                 {t('masa_label')}: {member.shiftAssignedTables.join(', ')}
                                                             </div>
                                                         )}
@@ -894,7 +894,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 )}
                                                 {member.activityStatus === 'paused' && (
                                                     <div>
-                                                        <div className="text-yellow-400 font-bold text-sm">{t('mola')}</div>
+                                                        <div className="text-yellow-800 dark:text-yellow-400 font-bold text-sm">{t('mola')}</div>
                                                         {member.shiftStartedAt && (
                                                             <ShiftTimer startedAt={member.shiftStartedAt} />
                                                         )}
@@ -902,7 +902,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 )}
                                                 {member.activityStatus === 'delivering' && member.activeDelivery && (
                                                     <div className="animate-pulse">
-                                                        <div className="text-amber-400 font-bold text-sm">{t('yolda')}</div>
+                                                        <div className="text-amber-800 dark:text-amber-400 font-bold text-sm">{t('yolda')}</div>
                                                         <div className="text-amber-300/70 text-xs">
                                                             #{member.activeDelivery.orderNumber}
                                                         </div>
@@ -915,7 +915,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 )}
                                                 {member.activityStatus === 'active' && (
                                                     <div>
-                                                        <div className="text-emerald-400 font-bold text-sm">{t('aktif')}</div>
+                                                        <div className="text-emerald-800 dark:text-emerald-400 font-bold text-sm">{t('aktif')}</div>
                                                         <div className="text-emerald-300/70 text-xs">
                                                             {member.todayDeliveries.length} {t('teslimat_kaydi_yok').split(' ')[0] || 'delivery'}
                                                         </div>
@@ -930,7 +930,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                                 {/* Tables */}
                                                 {member.tablesServedToday.length > 0 && (
-                                                    <div className="mt-1 text-xs text-cyan-400">
+                                                    <div className="mt-1 text-xs text-cyan-800 dark:text-cyan-400">
                                                         {t('masa_label')}: {member.tablesServedToday.join(', ')}
                                                     </div>
                                                 )}
@@ -947,23 +947,23 @@ const { admin, loading: adminLoading } = useAdmin();
                                             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50">
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('bugun_teslimat')}</span>
-                                                    <span className="text-white font-medium">{member.todayDeliveries.length}</span>
+                                                    <span className="text-foreground font-medium">{member.todayDeliveries.length}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('bugun_calisma')}</span>
-                                                    <span className="text-white font-medium">{formatDurationRaw(member.todayHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
+                                                    <span className="text-foreground font-medium">{formatDurationRaw(member.todayHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('hafta_label')}</span>
-                                                    <span className="text-white font-medium">{formatDurationRaw(member.weekHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
+                                                    <span className="text-foreground font-medium">{formatDurationRaw(member.weekHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('ay_label')}</span>
-                                                    <span className="text-white font-medium">{formatDurationRaw(member.monthHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
+                                                    <span className="text-foreground font-medium">{formatDurationRaw(member.monthHours, t('dk_kisaltma'), t('sa_kisaltma'))}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('toplam')}</span>
-                                                    <span className="text-white font-medium">{member.totalDeliveries}</span>
+                                                    <span className="text-foreground font-medium">{member.totalDeliveries}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -998,7 +998,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                     return (
                                                                         <tr key={order.id} className="border-b border-border/30 hover:bg-gray-700/20">
                                                                             <td className="py-2 pr-4">
-                                                                                <span className="text-cyan-400 font-mono">#{order.orderNumber}</span>
+                                                                                <span className="text-cyan-800 dark:text-cyan-400 font-mono">#{order.orderNumber}</span>
                                                                             </td>
                                                                             <td className="py-2 pr-4">
                                                                                 <span className={`px-2 py-0.5 rounded-full text-xs ${order.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-300'
@@ -1021,7 +1021,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                             <td className="py-2 pr-4 text-muted-foreground">
                                                                                 {duration ? formatDurationRaw(duration, t('dk_kisaltma'), t('sa_kisaltma')) : '-'}
                                                                             </td>
-                                                                            <td className="py-2 text-white font-medium">
+                                                                            <td className="py-2 text-foreground font-medium">
                                                                                 {order.total?.toFixed(2)} €
                                                                             </td>
                                                                         </tr>
@@ -1064,7 +1064,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 {member.createdAt && (
                                                     <span>{t('kayit')} {member.createdAt.toLocaleDateString('de-DE')}</span>
                                                 )}
-                                                <span className={member.isActive ? 'text-emerald-400' : 'text-red-400'}>
+                                                <span className={member.isActive ? 'text-emerald-800 dark:text-emerald-400' : 'text-red-800 dark:text-red-400'}>
                                                     {member.isActive ? t('aktif_hesap') : t('pasif_hesap')}
                                                 </span>
                                                 {member.fcmToken && (
@@ -1086,15 +1086,15 @@ const { admin, loading: adminLoading } = useAdmin();
                         {/* Modal Header */}
                         <div className="p-6 border-b border-border">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-white">{t('yeni_personel_ekle')}</h2>
-                                <button onClick={() => setShowCreateModal(false)} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
+                                <h2 className="text-xl font-bold text-foreground">{t('yeni_personel_ekle')}</h2>
+                                <button onClick={() => setShowCreateModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
                             </div>
                             {/* Quota Info */}
                             {personnelQuota && (
                                 <div className={`mt-3 px-3 py-2 rounded-lg text-sm ${
                                     personnelQuota.allowed
-                                        ? 'bg-emerald-900/30 border border-emerald-700/30 text-emerald-300'
-                                        : 'bg-red-900/30 border border-red-700/30 text-red-300'
+                                        ? 'bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700/30 text-emerald-300'
+                                        : 'bg-red-900/30 border border-red-200 dark:border-red-700/30 text-red-300'
                                 }`}>
                                     {personnelQuota.limit !== null
                                         ? t('personel_quota').replace('{current}', String(personnelQuota.currentUsage)).replace('{limit}', String(personnelQuota.limit))
@@ -1119,7 +1119,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     type="text"
                                     value={createName}
                                     onChange={(e) => setCreateName(e.target.value)}
-                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
                                     placeholder="Max Mustermann"
                                 />
                             </div>
@@ -1131,7 +1131,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     type="email"
                                     value={createEmail}
                                     onChange={(e) => setCreateEmail(e.target.value)}
-                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
                                     placeholder="staff@example.com"
                                 />
                             </div>
@@ -1143,7 +1143,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     type="tel"
                                     value={createPhone}
                                     onChange={(e) => setCreatePhone(e.target.value)}
-                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
                                     placeholder="+49 170 1234567"
                                 />
                             </div>
@@ -1168,7 +1168,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 setCreatePasswordConfirm(pw);
                                                 setShowPassword(true);
                                             }}
-                                            className="px-2.5 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-md text-xs font-medium hover:bg-blue-600/30 transition flex items-center gap-1"
+                                            className="px-2.5 py-1 bg-blue-600/20 text-blue-800 dark:text-blue-400 border border-blue-500/30 rounded-md text-xs font-medium hover:bg-blue-600/30 transition flex items-center gap-1"
                                         >
                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                                             {t('sifre_olustur')}
@@ -1181,7 +1181,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             type={showPassword ? 'text' : 'password'}
                                             value={createPassword}
                                             onChange={(e) => setCreatePassword(e.target.value)}
-                                            className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
+                                            className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
                                             placeholder="******"
                                         />
                                     </div>
@@ -1191,13 +1191,13 @@ const { admin, loading: adminLoading } = useAdmin();
                                             type={showPassword ? 'text' : 'password'}
                                             value={createPasswordConfirm}
                                             onChange={(e) => setCreatePasswordConfirm(e.target.value)}
-                                            className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
+                                            className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
                                             placeholder="******"
                                         />
                                     </div>
                                 </div>
                                 {showPassword && createPassword && (
-                                    <p className="text-xs text-amber-400/80 mt-1.5">
+                                    <p className="text-xs text-amber-800 dark:text-amber-400/80 mt-1.5">
                                         {t('sifre_gonderilecek')}
                                     </p>
                                 )}
@@ -1209,7 +1209,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 <select
                                     value={createRole}
                                     onChange={(e) => setCreateRole(e.target.value)}
-                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-foreground text-sm focus:border-emerald-500 focus:outline-none transition"
                                 >
                                     {availableRoles.map(r => (
                                         <option key={r.value} value={r.value}>{r.label}</option>
@@ -1219,14 +1219,14 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Driver info - auto-detected from role */}
                             {createRole === 'teslimat' && (
-                                <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-700/30 rounded-lg px-4 py-3">
-                                    <span className="text-emerald-400 text-sm">{t('surucu_otomatik')}</span>
+                                <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 rounded-lg px-4 py-3">
+                                    <span className="text-emerald-800 dark:text-emerald-400 text-sm">{t('surucu_otomatik')}</span>
                                 </div>
                             )}
 
                             {/* Error */}
                             {createError && (
-                                <div className="bg-red-900/30 border border-red-700/30 text-red-300 text-sm px-4 py-3 rounded-lg">
+                                <div className="bg-red-900/30 border border-red-200 dark:border-red-700/30 text-red-300 text-sm px-4 py-3 rounded-lg">
                                     {createError}
                                 </div>
                             )}

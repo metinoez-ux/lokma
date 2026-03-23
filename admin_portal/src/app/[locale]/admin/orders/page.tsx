@@ -1030,7 +1030,7 @@ export default function OrdersPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                     <div className="flex flex-col gap-2">
-                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                             {t('siparis_merkezi')}
                         </h1>
                         {/* Filters inline */}
@@ -1038,7 +1038,7 @@ export default function OrdersPage() {
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                             >
                                 <option value="today">{t('bugun')}</option>
                                 <option value="week">📅 Bu Hafta</option>
@@ -1049,7 +1049,7 @@ export default function OrdersPage() {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                             >
                                 <option value="all">{t('filters.allStatuses')}</option>
                                 {Object.entries(orderStatuses).map(([key, value]) => (
@@ -1060,7 +1060,7 @@ export default function OrdersPage() {
                             <select
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
-                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                             >
                                 <option value="all">{t('filters.allTypes')}</option>
                                 {Object.entries(orderTypes).map(([key, value]) => (
@@ -1084,7 +1084,7 @@ export default function OrdersPage() {
                                             }}
                                             onFocus={() => setShowBusinessDropdown(true)}
                                             placeholder={t('i_sletme_ara')}
-                                            className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 w-48"
+                                            className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 w-48"
                                         />
                                         {businessFilter !== 'all' && (
                                             <button
@@ -1092,7 +1092,7 @@ export default function OrdersPage() {
                                                     setBusinessFilter('all');
                                                     setBusinessSearch('');
                                                 }}
-                                                className="ml-1 text-muted-foreground hover:text-white text-sm"
+                                                className="ml-1 text-muted-foreground hover:text-foreground text-sm"
                                             >
                                                 ✕
                                             </button>
@@ -1101,7 +1101,7 @@ export default function OrdersPage() {
                                     {showBusinessDropdown && (
                                         <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-card border border-gray-600 rounded-lg shadow-xl z-50">
                                             <div
-                                                className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
+                                                className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-800 dark:text-green-400 font-medium"
                                                 onClick={() => {
                                                     setBusinessFilter('all');
                                                     setBusinessSearch('');
@@ -1255,19 +1255,19 @@ export default function OrdersPage() {
                         {/* Quick Stats */}
                         <div className="flex gap-2">
                             <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-blue-400">{stats.total}</p>
+                                <p className="text-xl font-bold text-blue-800 dark:text-blue-400">{stats.total}</p>
                                 <p className="text-[10px] text-blue-300">{t('toplam')}</p>
                             </div>
                             <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-yellow-400">{stats.pending}</p>
+                                <p className="text-xl font-bold text-yellow-800 dark:text-yellow-400">{stats.pending}</p>
                                 <p className="text-[10px] text-yellow-300">{t('bekleyen')}</p>
                             </div>
                             <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-amber-400">{stats.preparing}</p>
+                                <p className="text-xl font-bold text-amber-800 dark:text-amber-400">{stats.preparing}</p>
                                 <p className="text-[10px] text-amber-300">{t('hazirlanan')}</p>
                             </div>
                             <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
-                                <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
+                                <p className="text-xl font-bold text-green-800 dark:text-green-400">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
                                 <p className="text-[10px] text-green-300">Ciro</p>
                             </div>
                         </div>
@@ -1286,7 +1286,7 @@ export default function OrdersPage() {
                             <p className="text-red-200 text-sm">
                                 Der Bon-Drucker ({printerSettings.printerIp}:{printerSettings.printerPort}) ist nicht erreichbar.
                                 Neue Bestellungen können NICHT gedruckt werden!
-                                {printerHealth.error && <span className="block text-red-400 text-xs mt-1">Fehler: {printerHealth.error}</span>}
+                                {printerHealth.error && <span className="block text-red-800 dark:text-red-400 text-xs mt-1">Fehler: {printerHealth.error}</span>}
                                 {retryQueueSize > 0 && <span className="block text-yellow-300 text-xs mt-1">📋 {retryQueueSize} Bon(s) in der Warteschlange</span>}
                             </p>
                         </div>
@@ -1307,14 +1307,14 @@ export default function OrdersPage() {
                 <div className="max-w-7xl mx-auto mb-4">
                     <div className="bg-card rounded-xl p-5 border border-border">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-white font-bold flex items-center gap-2">
+                            <h3 className="text-foreground font-bold flex items-center gap-2">
                                 🖨️ Bon-Drucker
                                 {/* Live Status Badge */}
                                 <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
                                     !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-600/20 text-muted-foreground border border-gray-500/40' :
-                                    printerHealth.status === 'online' ? 'bg-green-500/20 text-green-400 border border-green-500/40' :
-                                    printerHealth.status === 'offline' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
-                                    printerHealth.status === 'checking' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' :
+                                    printerHealth.status === 'online' ? 'bg-green-500/20 text-green-800 dark:text-green-400 border border-green-500/40' :
+                                    printerHealth.status === 'offline' ? 'bg-red-500/20 text-red-800 dark:text-red-400 border border-red-500/40' :
+                                    printerHealth.status === 'checking' ? 'bg-yellow-500/20 text-yellow-800 dark:text-yellow-400 border border-yellow-500/40' :
                                     'bg-gray-600/20 text-muted-foreground border border-gray-500/40'
                                 }`}>
                                     {!printerSettings.enabled || !printerSettings.printerIp ? '● Nicht konfiguriert' :
@@ -1345,24 +1345,24 @@ export default function OrdersPage() {
                                     <div className="flex items-center gap-4 text-sm">
                                         <div>
                                             <span className="text-gray-500">Drucker:</span>
-                                            <span className="ml-1 text-white font-mono">{printerSettings.printerIp}:{printerSettings.printerPort}</span>
+                                            <span className="ml-1 text-foreground font-mono">{printerSettings.printerIp}:{printerSettings.printerPort}</span>
                                         </div>
                                         {printerHealth.responseTimeMs > 0 && printerHealth.status === 'online' && (
                                             <div>
                                                 <span className="text-gray-500">Latenz:</span>
-                                                <span className="ml-1 text-green-400">{printerHealth.responseTimeMs}ms</span>
+                                                <span className="ml-1 text-green-800 dark:text-green-400">{printerHealth.responseTimeMs}ms</span>
                                             </div>
                                         )}
                                         {retryQueueSize > 0 && (
                                             <div>
                                                 <span className="text-gray-500">Warteschlange:</span>
-                                                <span className="ml-1 text-yellow-400 font-medium">{retryQueueSize} Bon(s)</span>
+                                                <span className="ml-1 text-yellow-800 dark:text-yellow-400 font-medium">{retryQueueSize} Bon(s)</span>
                                             </div>
                                         )}
                                     </div>
                                     <a
                                         href="/admin/settings/printer"
-                                        className="text-cyan-400 hover:text-cyan-300 text-xs transition"
+                                        className="text-cyan-800 dark:text-cyan-400 hover:text-cyan-300 text-xs transition"
                                     >
                                         ⚙️ Einstellungen
                                     </a>
@@ -1377,7 +1377,7 @@ export default function OrdersPage() {
                                             <select
                                                 value={printerSettings.printCopies}
                                                 onChange={(e) => savePrinterSettings({ ...printerSettings, printCopies: parseInt(e.target.value) })}
-                                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                                                className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                                                 title={t('copy_count_title')}
                                             >
                                                 <option value={1}>1</option>
@@ -1400,7 +1400,7 @@ export default function OrdersPage() {
                                     <button
                                         onClick={handleTestPrint}
                                         disabled={testingPrint}
-                                        className="px-4 py-2 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition text-sm disabled:opacity-50"
+                                        className="px-4 py-2 bg-amber-600/20 border border-amber-500/50 text-amber-800 dark:text-amber-400 rounded-lg hover:bg-amber-600/30 transition text-sm disabled:opacity-50"
                                     >
                                         {testingPrint ? '⏳ Druckt...' : '🖨️ Test-Bon drucken'}
                                     </button>
@@ -1415,7 +1415,7 @@ export default function OrdersPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="bg-card rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-white font-bold">
+                        <h3 className="text-foreground font-bold">
                             {t('siparis_durumlari_anlik')}
                         </h3>
                         <span className="text-muted-foreground text-sm">
@@ -1430,7 +1430,7 @@ export default function OrdersPage() {
                         >
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-500 rounded-full border-2 border-border"></div>
                             <p
-                                className={`text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? "animate-bounce" : ""}`}
+                                className={`text-yellow-800 dark:text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? "animate-bounce" : ""}`}
                             >
                                 {stats.pending}
                             </p>
@@ -1444,7 +1444,7 @@ export default function OrdersPage() {
                         {/* Hazırlanıyor */}
                         <div className="flex-1 min-w-[100px] bg-amber-600/20 border border-amber-600/30 rounded-lg p-4 text-center relative">
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-500 rounded-full border-2 border-border"></div>
-                            <p className="text-amber-400 text-3xl font-bold">
+                            <p className="text-amber-800 dark:text-amber-400 text-3xl font-bold">
                                 {stats.preparing}
                             </p>
                             <p className="text-muted-foreground text-sm">👨‍🍳 {t('workflow.preparing')}</p>
@@ -1455,7 +1455,7 @@ export default function OrdersPage() {
                         {/* Hazır */}
                         <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-border"></div>
-                            <p className="text-green-400 text-3xl font-bold">
+                            <p className="text-green-800 dark:text-green-400 text-3xl font-bold">
                                 {stats.ready}
                             </p>
                             <p className="text-muted-foreground text-sm">📦 {t('workflow.ready')}</p>
@@ -1466,7 +1466,7 @@ export default function OrdersPage() {
                         {/* Yolda */}
                         <div className="flex-1 min-w-[100px] bg-indigo-600/20 border border-indigo-600/30 rounded-lg p-4 text-center relative">
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-500 rounded-full border-2 border-border"></div>
-                            <p className="text-indigo-400 text-3xl font-bold">
+                            <p className="text-indigo-800 dark:text-indigo-400 text-3xl font-bold">
                                 {stats.inTransit}
                             </p>
                             <p className="text-muted-foreground text-sm">🛵 {t('workflow.inTransit')}</p>
@@ -1477,7 +1477,7 @@ export default function OrdersPage() {
                         {/* Tamamlanan */}
                         <div className="flex-1 min-w-[100px] bg-emerald-600/20 border border-emerald-600/30 rounded-lg p-4 text-center relative">
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-border"></div>
-                            <p className="text-emerald-400 text-3xl font-bold">
+                            <p className="text-emerald-800 dark:text-emerald-400 text-3xl font-bold">
                                 {stats.completed}
                             </p>
                             <p className="text-muted-foreground text-sm">✓ {t('workflow.completed')}</p>
@@ -1505,7 +1505,7 @@ export default function OrdersPage() {
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         {/* Pending Column */}
                         <div className="bg-card rounded-xl p-4">
-                            <h3 className="text-yellow-400 font-medium mb-4 flex items-center gap-2">
+                            <h3 className="text-yellow-800 dark:text-yellow-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
                                 {t('workflow.pending')} ({pendingOrders.length})
                             </h3>
@@ -1522,7 +1522,7 @@ export default function OrdersPage() {
                                     <>
                                         <div className="flex items-center gap-2 pt-3 pb-1">
                                             <div className="flex-1 h-px bg-purple-500/30"></div>
-                                            <span className="text-purple-400 text-xs font-medium whitespace-nowrap">🕐 {t('preOrders')} ({preOrders.length})</span>
+                                            <span className="text-purple-800 dark:text-purple-400 text-xs font-medium whitespace-nowrap">🕐 {t('preOrders')} ({preOrders.length})</span>
                                             <div className="flex-1 h-px bg-purple-500/30"></div>
                                         </div>
                                         {preOrders.slice(0, 10).map(order => (
@@ -1538,7 +1538,7 @@ export default function OrdersPage() {
 
                         {/* Preparing Column */}
                         <div className="bg-card rounded-xl p-4">
-                            <h3 className="text-amber-400 font-medium mb-4 flex items-center gap-2">
+                            <h3 className="text-amber-800 dark:text-amber-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-amber-400 rounded-full"></span>
                                 {t('workflow.preparing')} ({preparingOrders.length})
                             </h3>
@@ -1554,7 +1554,7 @@ export default function OrdersPage() {
 
                         {/* Ready Column */}
                         <div className="bg-card rounded-xl p-4">
-                            <h3 className="text-green-400 font-medium mb-4 flex items-center gap-2">
+                            <h3 className="text-green-800 dark:text-green-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-green-400 rounded-full"></span>
                                 {t('workflow.ready')} ({readyOrders.length})
                             </h3>
@@ -1573,7 +1573,7 @@ export default function OrdersPage() {
 
                         {/* In Transit Column */}
                         <div className="bg-card rounded-xl p-4">
-                            <h3 className="text-indigo-400 font-medium mb-4 flex items-center gap-2">
+                            <h3 className="text-indigo-800 dark:text-indigo-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-indigo-400 rounded-full"></span>
                                 {t('workflow.inTransit')} ({inTransitOrders.length})
                             </h3>
@@ -1589,7 +1589,7 @@ export default function OrdersPage() {
 
                         {/* Completed Column */}
                         <div className="bg-card rounded-xl p-4">
-                            <h3 className="text-emerald-400 font-medium mb-4 flex items-center gap-2">
+                            <h3 className="text-emerald-800 dark:text-emerald-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
                                 {t('workflow.completed')} ({completedOrders.length})
                             </h3>

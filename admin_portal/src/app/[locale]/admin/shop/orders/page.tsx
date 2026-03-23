@@ -53,12 +53,12 @@ export default function ShopOrdersPage() {
     const t = useTranslations('AdminShopOrders');
 
     const STATUS_OPTIONS = [
-        { value: 'pending', label: `⏳ ${t('bekleyen')}`, color: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30' },
-        { value: 'confirmed', label: `✅ ${t('onaylandi')}`, color: 'bg-blue-600/20 text-blue-400 border-blue-600/30' },
-        { value: 'preparing', label: `📦 ${t('hazirlaniyor')}`, color: 'bg-purple-600/20 text-purple-400 border-purple-600/30' },
-        { value: 'shipped', label: `🚚 ${t('gonderildi')}`, color: 'bg-cyan-600/20 text-cyan-400 border-cyan-600/30' },
-        { value: 'delivered', label: `🎉 ${t('teslim_edildi')}`, color: 'bg-green-600/20 text-green-400 border-green-600/30' },
-        { value: 'cancelled', label: `❌ ${t('iptal_edildi')}`, color: 'bg-red-600/20 text-red-400 border-red-600/30' },
+        { value: 'pending', label: `⏳ ${t('bekleyen')}`, color: 'bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 border-yellow-600/30' },
+        { value: 'confirmed', label: `✅ ${t('onaylandi')}`, color: 'bg-blue-600/20 text-blue-800 dark:text-blue-400 border-blue-600/30' },
+        { value: 'preparing', label: `📦 ${t('hazirlaniyor')}`, color: 'bg-purple-600/20 text-purple-800 dark:text-purple-400 border-purple-600/30' },
+        { value: 'shipped', label: `🚚 ${t('gonderildi')}`, color: 'bg-cyan-600/20 text-cyan-800 dark:text-cyan-400 border-cyan-600/30' },
+        { value: 'delivered', label: `🎉 ${t('teslim_edildi')}`, color: 'bg-green-600/20 text-green-800 dark:text-green-400 border-green-600/30' },
+        { value: 'cancelled', label: `❌ ${t('iptal_edildi')}`, color: 'bg-red-600/20 text-red-800 dark:text-red-400 border-red-600/30' },
     ];
 
     const CARRIER_OPTIONS = [
@@ -205,23 +205,23 @@ export default function ShopOrdersPage() {
                     <div className="flex items-center gap-4">
                         <Link href="/admin/shop" className="text-muted-foreground hover:text-white">← {t('e_commerce')}</Link>
                         <div>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">{t('siparis_yonetimi')}</h1>
+                            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">{t('siparis_yonetimi')}</h1>
                             <p className="text-muted-foreground text-sm mt-1">{filteredOrders.length} {t('siparis')}</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         {pendingCount > 0 && (
-                            <span className="bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-lg text-sm">
+                            <span className="bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 px-3 py-1 rounded-lg text-sm">
                                 ⏳ {pendingCount} {t('bekleyen')}
                             </span>
                         )}
                         {confirmedCount > 0 && (
-                            <span className="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-lg text-sm">
+                            <span className="bg-blue-600/20 text-blue-800 dark:text-blue-400 px-3 py-1 rounded-lg text-sm">
                                 ✅ {confirmedCount} {t('hazirlanacak')}
                             </span>
                         )}
                         {shippedCount > 0 && (
-                            <span className="bg-cyan-600/20 text-cyan-400 px-3 py-1 rounded-lg text-sm">
+                            <span className="bg-cyan-600/20 text-cyan-800 dark:text-cyan-400 px-3 py-1 rounded-lg text-sm">
                                 🚚 {shippedCount} {t('gonderildi')}
                             </span>
                         )}
@@ -255,7 +255,7 @@ export default function ShopOrdersPage() {
                 {filteredOrders.length === 0 ? (
                     <div className="bg-card rounded-xl p-12 text-center border border-border">
                         <div className="text-6xl mb-4">📭</div>
-                        <h2 className="text-xl font-bold text-white mb-2">{t('siparis_bulunamadi')}</h2>
+                        <h2 className="text-xl font-bold text-foreground mb-2">{t('siparis_bulunamadi')}</h2>
                         <p className="text-muted-foreground">{t('henuz_siparis_yok_veya_filtreye_uygun_si')}</p>
                     </div>
                 ) : (
@@ -266,14 +266,14 @@ export default function ShopOrdersPage() {
                                 <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
                                     <div className="flex items-center gap-4">
                                         <div>
-                                            <span className="text-white font-bold">{order.orderNumber || `#${order.id.slice(0, 6).toUpperCase()}`}</span>
+                                            <span className="text-foreground font-bold">{order.orderNumber || `#${order.id.slice(0, 6).toUpperCase()}`}</span>
                                             <span className="text-gray-500 text-sm ml-2">{formatDate(order.createdAt)}</span>
                                         </div>
                                         <span className={`px-3 py-1 rounded-lg text-sm border ${getStatusStyle(order.status)}`}>
                                             {getStatusLabel(order.status)}
                                         </span>
                                     </div>
-                                    <div className="text-emerald-400 font-bold text-lg">{formatCurrency(order.total, 'EUR')}</div>
+                                    <div className="text-emerald-800 dark:text-emerald-400 font-bold text-lg">{formatCurrency(order.total, 'EUR')}</div>
                                 </div>
 
                                 {/* Order Content */}
@@ -281,7 +281,7 @@ export default function ShopOrdersPage() {
                                     {/* Customer */}
                                     <div>
                                         <h4 className="text-muted-foreground text-sm mb-2">{t('musteri')}</h4>
-                                        <div className="text-white font-medium">{order.customerName}</div>
+                                        <div className="text-foreground font-medium">{order.customerName}</div>
                                         <div className="text-muted-foreground text-sm">{order.customerEmail}</div>
                                         <div className="text-muted-foreground text-sm">{order.customerPhone}</div>
                                     </div>
@@ -289,7 +289,7 @@ export default function ShopOrdersPage() {
                                     {/* Address */}
                                     <div>
                                         <h4 className="text-muted-foreground text-sm mb-2">📍 {t('teslimat_adresi')}</h4>
-                                        <div className="text-white text-sm">
+                                        <div className="text-foreground text-sm">
                                             {order.shippingAddress?.street}<br />
                                             {order.shippingAddress?.postalCode} {order.shippingAddress?.city}<br />
                                             {order.shippingAddress?.country}
@@ -318,17 +318,17 @@ export default function ShopOrdersPage() {
                                     <div className="px-4 pb-2">
                                         <div className="bg-cyan-600/10 border border-cyan-600/30 rounded-lg p-3 flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-cyan-400">🚚</span>
+                                                <span className="text-cyan-800 dark:text-cyan-400">🚚</span>
                                                 <div>
-                                                    <span className="text-white font-medium">{order.shipping.carrier}</span>
-                                                    <span className="text-cyan-400 ml-2 font-mono">{order.shipping.trackingNumber}</span>
+                                                    <span className="text-foreground font-medium">{order.shipping.carrier}</span>
+                                                    <span className="text-cyan-800 dark:text-cyan-400 ml-2 font-mono">{order.shipping.trackingNumber}</span>
                                                 </div>
                                             </div>
                                             <a
                                                 href={`https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?idc=${order.shipping.trackingNumber}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-cyan-400 hover:text-cyan-300 text-sm"
+                                                className="text-cyan-800 dark:text-cyan-400 hover:text-cyan-300 text-sm"
                                             >
                                                 {t('takip_et')} →
                                             </a>
@@ -373,7 +373,7 @@ export default function ShopOrdersPage() {
                                     {order.status !== 'cancelled' && order.status !== 'delivered' && (
                                         <button
                                             onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                                            className="px-4 py-2 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 text-sm font-medium"
+                                            className="px-4 py-2 bg-red-600/20 text-red-800 dark:text-red-400 rounded-lg hover:bg-red-600/30 text-sm font-medium"
                                         >
                                              ❌ {t('iptal_et')}
                                         </button>
@@ -390,14 +390,14 @@ export default function ShopOrdersPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-xl max-w-md w-full border border-border">
                         <div className="p-6 border-b border-border flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">🚚 {t('gonder')}</h2>
-                            <button onClick={() => setShowShippingModal(false)} className="text-muted-foreground hover:text-white text-2xl">×</button>
+                            <h2 className="text-xl font-bold text-foreground">🚚 {t('gonder')}</h2>
+                            <button onClick={() => setShowShippingModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">×</button>
                         </div>
 
                         <div className="p-6 space-y-4">
                             <div className="bg-gray-700/50 rounded-lg p-3">
                                 <div className="text-muted-foreground text-sm">{t('siparis')}</div>
-                                <div className="text-white font-bold">{selectedOrder.orderNumber}</div>
+                                <div className="text-foreground font-bold">{selectedOrder.orderNumber}</div>
                                 <div className="text-muted-foreground text-sm">{selectedOrder.customerName}</div>
                             </div>
 

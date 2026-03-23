@@ -287,7 +287,7 @@ export default function PermissionEditor({
         {!readOnly && hasChanges && (
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-foreground text-sm font-medium rounded-lg transition-colors shadow-sm"
           >
             {t('perm.save')}
           </button>

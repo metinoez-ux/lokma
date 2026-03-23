@@ -620,9 +620,9 @@ export default function BusinessDetailsPage() {
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="bg-card/95 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-6 text-center max-w-md shadow-2xl">
             <span className="text-4xl">🔒</span>
-            <h3 className="text-white font-bold mt-3 text-lg">{t('buFonksiyonPlaninizdaMevcutDegil')}</h3>
+            <h3 className="text-foreground font-bold mt-3 text-lg">{t('buFonksiyonPlaninizdaMevcutDegil')}</h3>
             <p className="text-muted-foreground text-sm mt-2">
-              {t('mevcutPlan')}: <strong className="text-white">{business?.subscriptionPlan || 'free'}</strong>
+              {t('mevcutPlan')}: <strong className="text-foreground">{business?.subscriptionPlan || 'free'}</strong>
             </p>
             <a
               href={`/${params.locale}/admin/plans`}
@@ -2506,7 +2506,7 @@ export default function BusinessDetailsPage() {
         <p>{t('isletmeBulunamadi')}</p>
         <Link
           href="/admin/business"
-          className="text-blue-400 hover:underline mt-4"
+          className="text-blue-800 dark:text-blue-400 hover:underline mt-4"
         >
           {t('isletmeListesi')}
         </Link>
@@ -2526,7 +2526,7 @@ export default function BusinessDetailsPage() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-2xl border ${toast.type === "success" ? "bg-green-600/95 border-green-500/50" : "bg-red-600/95 border-red-500/50"} text-white text-sm font-medium backdrop-blur-sm flex items-center gap-2`}
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-2xl border ${toast.type === "success" ? "bg-green-600/95 border-green-500/50" : "bg-red-600/95 border-red-500/50"} text-foreground text-sm font-medium backdrop-blur-sm flex items-center gap-2`}
         >
           <span>{toast.type === "success" ? "✓" : "✗"}</span>
           {toast.message}
@@ -2545,7 +2545,7 @@ export default function BusinessDetailsPage() {
                 {t('geri_buton')}
               </Link>
               <div>
-                <h1 className="text-lg font-bold text-white">
+                <h1 className="text-lg font-bold text-foreground">
                   {businessId === 'new' ? t('yeniIsletmeEkle2') : (business?.companyName || t('isletmeDetayi'))}
                 </h1>
                 {business && (
@@ -2639,7 +2639,7 @@ export default function BusinessDetailsPage() {
                           setShowSettingsDropdown(false);
                         }}
                         className={`flex items-center gap-3 px-4 py-2.5 text-sm transition w-full text-left ${activeTab === "settings" && settingsSubTab === item.key
-                          ? "bg-red-600/20 text-red-400 font-medium"
+                          ? "bg-red-600/20 text-red-800 dark:text-red-400 font-medium"
                           : "text-foreground hover:bg-gray-700 hover:text-white"
                           } ${isGated ? 'opacity-60' : ''}`}
                       >
@@ -2662,10 +2662,10 @@ export default function BusinessDetailsPage() {
             {/* Active Staff & Couriers Panel */}
             <div className="bg-card rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-bold">
+                <h3 className="text-foreground font-bold">
                   {t('aktif_personel_kuryeler')}
                 </h3>
-                <span className="text-green-400 text-sm flex items-center gap-1">
+                <span className="text-green-800 dark:text-green-400 text-sm flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   {staffList.filter((s) => s.isActive !== false).length} {t('online_label')}
                 </span>
@@ -2694,7 +2694,7 @@ export default function BusinessDetailsPage() {
                           >
                             <div className="flex items-center gap-2">
                               <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                              <span className="text-white text-sm">
+                              <span className="text-foreground text-sm">
                                 {staff.displayName}
                               </span>
                             </div>
@@ -2729,10 +2729,10 @@ export default function BusinessDetailsPage() {
                             <div className="flex items-center gap-2">
                               <span className="text-xl">🏍️</span>
                               <div>
-                                <span className="text-white text-sm">
+                                <span className="text-foreground text-sm">
                                   {(order as any).driverName || (order as any).claimedByName || `${t('kurye_label')} ${idx + 1}`}
                                 </span>
-                                <p className="text-amber-400 text-xs">
+                                <p className="text-amber-800 dark:text-amber-400 text-xs">
                                   #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || t('musteri')}
                                 </p>
                               </div>
@@ -2765,7 +2765,7 @@ export default function BusinessDetailsPage() {
             <div className="bg-card rounded-xl p-4">
               <div className="flex flex-col gap-3 mb-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-white font-bold text-lg">
+                  <h3 className="text-foreground font-bold text-lg">
                     {t('bestellzentrum')}
                   </h3>
                   <span className="text-muted-foreground text-sm">
@@ -2777,7 +2777,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderDateFilter}
                     onChange={(e) => setOrderDateFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                   >
                     <option value="today">{t('filter_heute')}</option>
                     <option value="week">{t('filter_diese_woche')}</option>
@@ -2788,7 +2788,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderStatusFilter}
                     onChange={(e) => setOrderStatusFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                   >
                     <option value="all">{t('filter_alle_status')}</option>
                     <option value="pending">{t('order_pending')}</option>
@@ -2804,7 +2804,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderTypeFilter}
                     onChange={(e) => setOrderTypeFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600"
                   >
                     <option value="all">{t('filter_alle_typen')}</option>
                     <option value="pickup">{t('pickup_label')}</option>
@@ -2830,7 +2830,7 @@ export default function BusinessDetailsPage() {
                 <div className="bg-background/50 rounded-xl p-3 border border-yellow-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-yellow-400 font-semibold text-sm">
+                    <span className="text-yellow-800 dark:text-yellow-400 font-semibold text-sm">
                       {t('order_pending')} ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
                     </span>
                   </div>
@@ -2838,8 +2838,8 @@ export default function BusinessDetailsPage() {
                     {filteredOrders.filter(o => o.status === 'pending' || o.status === 'accepted').map(order => (
                       <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-yellow-500">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-400' : 'bg-blue-600/30 text-blue-400'}`}>
+                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-blue-600/30 text-blue-800 dark:text-blue-400'}`}>
                             {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
@@ -2859,7 +2859,7 @@ export default function BusinessDetailsPage() {
                           </div>
                         )}
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
+                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2873,7 +2873,7 @@ export default function BusinessDetailsPage() {
                 <div className="bg-background/50 rounded-xl p-3 border border-blue-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-blue-400 font-semibold text-sm">
+                    <span className="text-blue-800 dark:text-blue-400 font-semibold text-sm">
                       {t('filter_in_zubereitung')} ({filteredOrders.filter(o => o.status === 'preparing').length})
                     </span>
                   </div>
@@ -2881,14 +2881,14 @@ export default function BusinessDetailsPage() {
                     {filteredOrders.filter(o => o.status === 'preparing').map(order => (
                       <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-blue-500">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-400' : 'bg-blue-600/30 text-blue-400'}`}>
+                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-blue-600/30 text-blue-800 dark:text-blue-400'}`}>
                             {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
                         <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
+                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2902,7 +2902,7 @@ export default function BusinessDetailsPage() {
                 <div className="bg-background/50 rounded-xl p-3 border border-green-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-green-400 font-semibold text-sm">
+                    <span className="text-green-800 dark:text-green-400 font-semibold text-sm">
                       {t('filter_bereit')} ({filteredOrders.filter(o => o.status === 'ready').length})
                     </span>
                   </div>
@@ -2910,11 +2910,11 @@ export default function BusinessDetailsPage() {
                     {filteredOrders.filter(o => o.status === 'ready').map(order => (
                       <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-green-500">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
                         <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
+                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2928,7 +2928,7 @@ export default function BusinessDetailsPage() {
                 <div className="bg-background/50 rounded-xl p-3 border border-amber-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-amber-400 font-semibold text-sm">
+                    <span className="text-amber-800 dark:text-amber-400 font-semibold text-sm">
                       {t('filter_auf_dem_weg')} ({filteredOrders.filter(o => o.status === 'onTheWay').length})
                     </span>
                   </div>
@@ -2936,11 +2936,11 @@ export default function BusinessDetailsPage() {
                     {filteredOrders.filter(o => o.status === 'onTheWay').map(order => (
                       <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-amber-500">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
                         <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
+                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2954,7 +2954,7 @@ export default function BusinessDetailsPage() {
                 <div className="bg-background/50 rounded-xl p-3 border border-green-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-green-400 font-semibold text-sm">
+                    <span className="text-green-800 dark:text-green-400 font-semibold text-sm">
                       {t('filter_abgeschlossen')} ({filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length})
                     </span>
                   </div>
@@ -2962,11 +2962,11 @@ export default function BusinessDetailsPage() {
                     {filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).map(order => (
                       <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-green-500">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
+                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
                         <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
+                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
                             {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
                           </span>
@@ -2982,10 +2982,10 @@ export default function BusinessDetailsPage() {
 
             {/* Revenue Summary */}
             <div className="bg-card rounded-xl p-4">
-              <h3 className="text-white font-bold mb-4">{t('gelirOzeti')}</h3>
+              <h3 className="text-foreground font-bold mb-4">{t('gelirOzeti')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-green-400 text-2xl font-bold">
+                  <p className="text-green-800 dark:text-green-400 text-2xl font-bold">
                     {formatCurrency(orders
                       .filter(o => o.status !== 'cancelled')
                       .reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
@@ -2993,13 +2993,13 @@ export default function BusinessDetailsPage() {
                   <p className="text-muted-foreground text-sm">{t('toplam_ciro')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-blue-400 text-2xl font-bold">
+                  <p className="text-blue-800 dark:text-blue-400 text-2xl font-bold">
                     {orders.length}
                   </p>
                   <p className="text-muted-foreground text-sm">{t('toplamSiparis')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-purple-400 text-2xl font-bold">
+                  <p className="text-purple-800 dark:text-purple-400 text-2xl font-bold">
                     {formatCurrency(orders.length > 0
                       ? (
                         orders.reduce(
@@ -3012,7 +3012,7 @@ export default function BusinessDetailsPage() {
                   <p className="text-muted-foreground text-sm">{t('ortalamaSiparis')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-yellow-400 text-2xl font-bold">
+                  <p className="text-yellow-800 dark:text-yellow-400 text-2xl font-bold">
                     {staffList.length}
                   </p>
                   <p className="text-muted-foreground text-sm">{t('personel_label')}</p>
@@ -3024,14 +3024,14 @@ export default function BusinessDetailsPage() {
             <div className="grid md:grid-cols-2 gap-4">
               {/* Contact Info */}
               <div className="bg-card rounded-xl p-4">
-                <h3 className="text-white font-bold mb-4">
+                <h3 className="text-foreground font-bold mb-4">
                   {t('iletisimBilgileri')}
                 </h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-muted-foreground text-sm">{t('yetkiliKisi')}</p>
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-medium">
                         {business?.contactPerson?.name
                           ? `${business?.contactPerson?.name} ${business?.contactPerson?.surname || ""}`
                           : t('belirtilmemis')}
@@ -3042,12 +3042,12 @@ export default function BusinessDetailsPage() {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-sm">{t('iletisim1')}</p>
-                      <p className="text-white">
+                      <p className="text-foreground">
                         {business?.contactPerson?.phone ||
                           business?.shopPhone ||
                           t('belirtilmemis')}
                       </p>
-                      <p className="text-xs text-blue-400 truncate">
+                      <p className="text-xs text-blue-800 dark:text-blue-400 truncate">
                         {business?.contactPerson?.email ||
                           business?.shopEmail ||
                           ""}
@@ -3063,8 +3063,8 @@ export default function BusinessDetailsPage() {
                         return (
                           <span
                             className={`text-xs px-2 py-0.5 rounded font-medium ${status.isOpen
-                              ? "bg-green-900/50 text-green-400 border border-green-800"
-                              : "bg-red-900/50 text-red-400 border border-red-800"
+                              ? "bg-green-900/50 text-green-800 dark:text-green-400 border border-green-800"
+                              : "bg-red-900/50 text-red-800 dark:text-red-400 border border-red-800"
                               }`}
                           >
                             {status.text}
@@ -3155,7 +3155,7 @@ export default function BusinessDetailsPage() {
                                   : "text-foreground"
                                   }`}
                               >
-                                <span className={isToday ? "text-green-400" : "font-medium text-muted-foreground"}>
+                                <span className={isToday ? "text-green-800 dark:text-green-400" : "font-medium text-muted-foreground"}>
                                   {line.split(": ")[0]}
                                 </span>
                                 <span>{line.split(": ")[1]}</span>
@@ -3172,7 +3172,7 @@ export default function BusinessDetailsPage() {
                   </div>
                   <div className="border-t border-border pt-3">
                     <p className="text-muted-foreground text-sm">{t('adres_label')}</p>
-                    <p className="text-white">
+                    <p className="text-foreground">
                       {business?.address?.street}, {business?.address?.postalCode}{" "}
                       {business?.address?.city}
                     </p>
@@ -3185,7 +3185,7 @@ export default function BusinessDetailsPage() {
 
               {/* Subscription & Membership Status */}
               <div className="bg-card rounded-xl p-4">
-                <h3 className="text-white font-bold mb-4">
+                <h3 className="text-foreground font-bold mb-4">
                   {t('uyelikAbonelik')}
                 </h3>
                 <div className="space-y-4">
@@ -3196,7 +3196,7 @@ export default function BusinessDetailsPage() {
                         <span
                           className={`w-3 h-3 rounded-full ${planInfo.color}`}
                         ></span>
-                        <span className="text-white font-medium">
+                        <span className="text-foreground font-medium">
                           {planInfo.label}
                         </span>
                       </div>
@@ -3209,7 +3209,7 @@ export default function BusinessDetailsPage() {
                     <div>
                       <p className="text-muted-foreground text-sm">{t('durum')}</p>
                       <span
-                        className={`inline-block mt-1 px-2 py-1 rounded text-xs ${business?.isActive ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"}`}
+                        className={`inline-block mt-1 px-2 py-1 rounded text-xs ${business?.isActive ? "bg-green-600/20 text-green-800 dark:text-green-400" : "bg-red-600/20 text-red-800 dark:text-red-400"}`}
                       >
                         {business?.isActive ? t('aktifMusteri') : t('pasifMusteri')}
                       </span>
@@ -3218,7 +3218,7 @@ export default function BusinessDetailsPage() {
                   <div className="grid grid-cols-2 gap-4 border-t border-border pt-3">
                     <div>
                       <p className="text-muted-foreground text-sm">{t('musteriTarihi')}</p>
-                      <p className="text-white">
+                      <p className="text-foreground">
                         {(business as any).createdAt?.toDate
                           ? (business as any).createdAt
                             .toDate()
@@ -3228,7 +3228,7 @@ export default function BusinessDetailsPage() {
                     </div>
                     <div>
                       <p className="text-muted-foreground text-sm">{t('planBaslangic')}</p>
-                      <p className="text-white">
+                      <p className="text-foreground">
                         {(business?.subscriptionStartDate as any)?.toDate
                           ? (business?.subscriptionStartDate as any)
                             .toDate()
@@ -3256,7 +3256,7 @@ export default function BusinessDetailsPage() {
             <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
               <div className="bg-card rounded-xl w-full max-w-lg overflow-hidden border border-border">
                 <div className="p-4 border-b border-border flex justify-between items-center">
-                  <h3 className="text-white font-bold">{t('urunEkle')}</h3>
+                  <h3 className="text-foreground font-bold">{t('urunEkle')}</h3>
                   <button onClick={() => setProductModalOpen(false)} className="text-muted-foreground hover:text-white">✕</button>
                 </div>
 
@@ -3389,10 +3389,10 @@ export default function BusinessDetailsPage() {
           activeTab === "orders" && (
             <div className="bg-card rounded-xl overflow-hidden">
               <div className="p-4 border-b border-border flex justify-between items-center">
-                <h3 className="text-white font-bold">{t('sonSiparisler')}</h3>
+                <h3 className="text-foreground font-bold">{t('sonSiparisler')}</h3>
                 <Link
                   href={`/admin/business/${business?.id}/orders`}
-                  className="text-blue-400 hover:underline text-sm"
+                  className="text-blue-800 dark:text-blue-400 hover:underline text-sm"
                 >
                   {t('tumunuGor')}
                 </Link>
@@ -3445,7 +3445,7 @@ export default function BusinessDetailsPage() {
               {procurementSubTab === 'suppliers' && (
                 <div className="bg-card rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-border flex justify-between items-center">
-                    <h3 className="text-white font-bold">{t('procurement_suppliers')}</h3>
+                    <h3 className="text-foreground font-bold">{t('procurement_suppliers')}</h3>
                     <button
                       onClick={() => {
                         setEditingSupplier(null);
@@ -3475,7 +3475,7 @@ export default function BusinessDetailsPage() {
                             <div className="flex items-center gap-3">
                               <span className="text-lg"></span>
                               <div>
-                                <p className="text-white font-semibold">{supplier.name}</p>
+                                <p className="text-foreground font-semibold">{supplier.name}</p>
                                 <div className="flex gap-4 text-xs text-muted-foreground mt-1">
                                   {supplier.contactPerson && <span>{supplier.contactPerson}</span>}
                                   {supplier.phone && <span>{supplier.phone}</span>}
@@ -3527,7 +3527,7 @@ export default function BusinessDetailsPage() {
               {procurementSubTab === 'orders' && (
                 <div className="bg-card rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-border flex justify-between items-center">
-                    <h3 className="text-white font-bold">{t('procurement_orders')}</h3>
+                    <h3 className="text-foreground font-bold">{t('procurement_orders')}</h3>
                     <button
                       onClick={() => {
                         if (suppliers.length === 0) {
@@ -3575,7 +3575,7 @@ export default function BusinessDetailsPage() {
                           <th className="px-4 py-3">{t('islem_th')}</th>
                         </tr>
                       </thead>
-                      <tbody className="text-white">
+                      <tbody className="text-foreground">
                         {supplierOrders.map((order: any) => {
                           const statusColors: any = {
                             draft: 'bg-gray-600 text-gray-200',
@@ -3593,7 +3593,7 @@ export default function BusinessDetailsPage() {
                           };
                           return (
                             <tr key={order.id} className="border-t border-border hover:bg-gray-750">
-                              <td className="px-4 py-3 font-mono text-sm text-blue-400">{order.orderNumber}</td>
+                              <td className="px-4 py-3 font-mono text-sm text-blue-800 dark:text-blue-400">{order.orderNumber}</td>
                               <td className="px-4 py-3">{order.supplierName}</td>
                               <td className="px-4 py-3 text-sm text-muted-foreground">{order.items?.length || 0} {t('procurement_items_count')}</td>
                               <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
@@ -3669,7 +3669,7 @@ export default function BusinessDetailsPage() {
             <div className="bg-card rounded-xl p-6">
               {/* Settings Sub-Tab Header */}
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-white font-bold text-xl">
+                <h3 className="text-foreground font-bold text-xl">
                   {settingsSubTab === "isletme" && t('isletmeAyarlari')}
                   {settingsSubTab === "menu" && t('menuUrunler1')}
                   {settingsSubTab === "personel" && t('personelYonetimi')}
@@ -3747,8 +3747,8 @@ export default function BusinessDetailsPage() {
                      <button
                        onClick={toggleActiveStatus}
                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${business.isActive
-                         ? "bg-gray-700 text-red-400 border border-red-500/30 hover:bg-red-900/30 hover:border-red-500/60"
-                         : "bg-gray-700 text-green-400 border border-green-500/30 hover:bg-green-900/30 hover:border-green-500/60"
+                         ? "bg-gray-700 text-red-800 dark:text-red-400 border border-red-500/30 hover:bg-red-900/30 hover:border-red-500/60"
+                         : "bg-gray-700 text-green-800 dark:text-green-400 border border-green-500/30 hover:bg-green-900/30 hover:border-green-500/60"
                          }`}
                      >
                        {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
@@ -3839,7 +3839,7 @@ export default function BusinessDetailsPage() {
                             );
                           })}
                         </div>
-                        {formData.types?.length > 0 && (<p className="text-xs text-green-400 mt-2">{formData.types.length} {t('modulAktifHerModulAyriUcretlendirilir')}</p>)}
+                        {formData.types?.length > 0 && (<p className="text-xs text-green-800 dark:text-green-400 mt-2">{formData.types.length} {t('modulAktifHerModulAyriUcretlendirilir')}</p>)}
                       </div>
                       {/* Müşteri No */}
                       <div>
@@ -3855,7 +3855,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Adres */}
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <h4 className="text-white font-medium pb-2"> {t('adres_baslik')}</h4>
+                        <h4 className="text-foreground font-medium pb-2"> {t('adres_baslik')}</h4>
                         <div>
                           <label className="text-muted-foreground text-sm">{t('sokakCadde')}</label>
                           <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
@@ -3873,7 +3873,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* İletişim */}
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <h4 className="text-white font-medium pb-2">{t('iletisim')}</h4>
+                        <h4 className="text-foreground font-medium pb-2">{t('iletisim')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('telefon_label')}</label>
@@ -3891,7 +3891,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Sosyal Medya */}
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <h4 className="text-white font-medium pb-2">📱 {t('sosyalMedya')}</h4>
+                        <h4 className="text-foreground font-medium pb-2">📱 {t('sosyalMedya')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('instagram')}</label>
@@ -3917,7 +3917,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* İrtibat Kişisi */}
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <h4 className="text-blue-400 font-medium text-sm">{t('lokmaYetkiliIrtibatKisisi')}</h4>
+                        <h4 className="text-blue-800 dark:text-blue-400 font-medium text-sm">{t('lokmaYetkiliIrtibatKisisi')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div><label className="text-muted-foreground text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
                           <div><label className="text-muted-foreground text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
@@ -3929,7 +3929,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Impressum / Rechtliche Angaben */}
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <h4 className="text-white font-medium pb-2">📜 {t('impressumBaslik')}</h4>
+                        <h4 className="text-foreground font-medium pb-2">📜 {t('impressumBaslik')}</h4>
                         <p className="text-gray-500 text-xs -mt-2">{t('impressumAciklama')}</p>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -3963,7 +3963,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Google Place */}
                       <div className="space-y-4 pt-4 border-t border-border">
-                        <h4 className="text-white font-medium pb-2">🗺️ Google Place</h4>
+                        <h4 className="text-foreground font-medium pb-2">🗺️ Google Place</h4>
                         <div className="relative">
                           <label className="text-muted-foreground text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
                           {isEditing && (
@@ -3978,16 +3978,16 @@ export default function BusinessDetailsPage() {
                             <div className="absolute z-50 mt-1 w-full bg-card border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               {googleSearchResults.map((place, index) => (
                                 <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-gray-700 border-b border-border last:border-0 transition">
-                                  <p className="text-white font-medium">{place.name}</p>
+                                  <p className="text-foreground font-medium">{place.name}</p>
                                   <p className="text-muted-foreground text-sm">{place.formatted_address}</p>
-                                  {place.rating && (<p className="text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
+                                  {place.rating && (<p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
                                 </button>
                               ))}
-                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-muted-foreground hover:text-white text-sm">✕ {t('kapat_button')}</button>
+                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-muted-foreground hover:text-foreground text-sm">✕ {t('kapat_button')}</button>
                             </div>
                           )}
                           <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
-                          {formData.googlePlaceId && (<p className="text-xs text-green-400 mt-1">{t('google_place_id_set')}</p>)}
+                          {formData.googlePlaceId && (<p className="text-xs text-green-800 dark:text-green-400 mt-1">{t('google_place_id_set')}</p>)}
                         </div>
                       </div>
                     </div>
@@ -3999,7 +3999,7 @@ export default function BusinessDetailsPage() {
                       <div className="bg-card/50 border border-border rounded-xl p-6">
                         <label className="flex items-center gap-3 cursor-pointer mb-4">
                           <input type="checkbox" checked={formData.hasDifferentBillingAddress || false} onChange={(e) => setFormData({ ...formData, hasDifferentBillingAddress: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-500" />
-                          <span className="text-white font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
+                          <span className="text-foreground font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-4">{t('geneldeIsletmeIsmiIleFaturaIsmi')}</p>
                         {formData.hasDifferentBillingAddress && (
@@ -4038,7 +4038,7 @@ export default function BusinessDetailsPage() {
                       {admin?.adminType === 'super' ? (
                         <>
                           <div className="bg-card/50 border border-border rounded-xl p-6">
-                            <label className="text-muted-foreground text-sm"> LOKMA Label <span className="text-xs text-purple-400">(Super Admin)</span></label>
+                            <label className="text-muted-foreground text-sm"> LOKMA Label <span className="text-xs text-purple-800 dark:text-purple-400">(Super Admin)</span></label>
                             <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
                               <option value="">{t('secilmedi')}</option>
                               <option value="tuna">🔴 TUNA</option>
@@ -4047,7 +4047,7 @@ export default function BusinessDetailsPage() {
                             <p className="text-xs text-gray-500 mt-1">{t('buAyarSadeceSuperAdminTarafindan')}</p>
                           </div>
                           <div className="bg-card/50 border border-border rounded-xl p-6">
-                            <label className="text-muted-foreground text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-400">{t('filtrelemeIcin')}</span></label>
+                            <label className="text-muted-foreground text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-800 dark:text-blue-400">{t('filtrelemeIcin')}</span></label>
                             <p className="text-xs text-gray-500 mb-3 mt-1">{t('buIsletmeHangiMarkalarinUrunleriniSatiyor')}</p>
                             <div className="flex flex-wrap gap-3">
                               <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-gray-700 border border-gray-600 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -4059,7 +4059,7 @@ export default function BusinessDetailsPage() {
                                 <span className="text-lg">🟢</span><span className="font-medium">{t('akdenizTorosUrunleri')}</span>
                               </label>
                             </div>
-                            {(formData.sellsTunaProducts || formData.sellsTorosProducts) && (<p className="text-xs text-green-400 mt-2">{t('secilenMarkalarMobilUygulamadaFiltrelemeIcin')}</p>)}
+                            {(formData.sellsTunaProducts || formData.sellsTorosProducts) && (<p className="text-xs text-green-800 dark:text-green-400 mt-2">{t('secilenMarkalarMobilUygulamadaFiltrelemeIcin')}</p>)}
                           </div>
                         </>
                       ) : (
@@ -4075,7 +4075,7 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {/* İşletme Kart Görseli */}
                       <div className="bg-card/50 border border-border rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-4">{t('isletmeKartGorseli')}</h4>
+                        <h4 className="text-foreground font-medium mb-4">{t('isletmeKartGorseli')}</h4>
                         <div className="flex items-start gap-4">
                           <div className="w-32 h-32 bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center border border-gray-600 shrink-0">
                             {formData.imageUrl ? (<img src={formData.imageUrl} alt="Business" className="w-full h-full object-cover" />) : (<span className="text-4xl">{getBusinessTypeLabel((business as any)?.types || (business as any)?.type).emoji}</span>)}
@@ -4087,14 +4087,14 @@ export default function BusinessDetailsPage() {
                               <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
                                 {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
                               </button>
-                              {!formData.googlePlaceId && (<p className="text-xs text-red-400">{t('google_id_gerekli')}</p>)}
+                              {!formData.googlePlaceId && (<p className="text-xs text-red-800 dark:text-red-400">{t('google_id_gerekli')}</p>)}
                             </div>
                           )}
                         </div>
                       </div>
                       {/* İşletme Logosu */}
                       <div className="bg-card/50 border border-border rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-4">{t('isletmeLogosuKare')}</h4>
+                        <h4 className="text-foreground font-medium mb-4">{t('isletmeLogosuKare')}</h4>
                         <div className="flex items-center gap-4">
                           {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-gray-600" />) : (<div className="w-20 h-20 rounded-lg bg-gray-700 border border-dashed border-gray-500 flex items-center justify-center text-gray-500 text-3xl">🏪</div>)}
                           {isEditing && (
@@ -4103,7 +4103,7 @@ export default function BusinessDetailsPage() {
                                 {t('logoYukle')}
                                 <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files && e.target.files[0]) { const file = e.target.files[0]; const logoRef = ref(storage, `business_logos/${businessId}/logo_${Date.now()}.jpg`); const uploadTask = uploadBytesResumable(logoRef, file); uploadTask.on('state_changed', () => { }, (error) => { console.error('Logo upload error:', error); showToast(t('logoYuklenirkenHataOlustu'), 'error'); }, async () => { const url = await getDownloadURL(uploadTask.snapshot.ref); setFormData({ ...formData, logoUrl: url }); showToast(t('logoYuklendi'), 'success'); }); } }} />
                               </label>
-                              {formData.logoUrl && (<button type="button" onClick={() => setFormData({ ...formData, logoUrl: '' })} className="text-red-400 text-xs hover:text-red-300">{t('logoyuKaldir')}</button>)}
+                              {formData.logoUrl && (<button type="button" onClick={() => setFormData({ ...formData, logoUrl: '' })} className="text-red-800 dark:text-red-400 text-xs hover:text-red-300">{t('logoyuKaldir')}</button>)}
                             </div>
                           )}
                         </div>
@@ -4128,7 +4128,7 @@ export default function BusinessDetailsPage() {
                               key={tab.id}
                               onClick={() => setSaatlerSubTab(tab.id)}
                               className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-border/50 last:border-0 ${saatlerSubTab === tab.id
-                                ? "bg-blue-600/20 text-blue-400 border-l-2 border-l-blue-500"
+                                ? "bg-blue-600/20 text-blue-800 dark:text-blue-400 border-l-2 border-l-blue-500"
                                 : "text-muted-foreground hover:bg-gray-700/50 hover:text-white border-l-2 border-l-transparent"
                                 }`}
                             >
@@ -4142,7 +4142,7 @@ export default function BusinessDetailsPage() {
                           {/* === Genel Açılış Saatleri === */}
                           {saatlerSubTab === "genel" && (
                             <div>
-                              <h4 className="text-white font-medium mb-4">{t('calismaSaatleri3')}</h4>
+                              <h4 className="text-foreground font-medium mb-4">{t('calismaSaatleri3')}</h4>
                               <div className="space-y-2">
                                 {(() => {
                                   const DAY_DEFS = [
@@ -4172,9 +4172,9 @@ export default function BusinessDetailsPage() {
                                   return (
                                     <div key={day.display} className="flex items-center gap-3">
                                       <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
-                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <span className="text-gray-500 font-bold">–</span>
-                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <label className="flex items-center cursor-pointer ml-auto relative">
                                         <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                         <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
@@ -4193,7 +4193,7 @@ export default function BusinessDetailsPage() {
                             <div>
                               <div className="flex items-center justify-between mb-4">
                                 <div>
-                                  <h4 className="text-white font-medium">{t('kuryeAcilisSaatleri')}</h4>
+                                  <h4 className="text-foreground font-medium">{t('kuryeAcilisSaatleri')}</h4>
                                   <p className="text-xs text-muted-foreground mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
                                 {formData.openingHours && (
@@ -4202,7 +4202,7 @@ export default function BusinessDetailsPage() {
                                       if (formData.deliveryHours && !confirm(t('procurement_delivery_hours_confirm'))) return;
                                       setFormData({ ...formData, deliveryHours: formData.openingHours });
                                     }}
-                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
+                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-800 dark:text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
                                   >
                                     <span>↻</span>
                                     {t('genelSaatleriKopyala')}
@@ -4210,7 +4210,7 @@ export default function BusinessDetailsPage() {
                                 )}
                               </div>
                               {!formData.deliveryHours && !formData.deliveryStartTime && !formData.deliveryEndTime && formData.openingHours && (
-                                <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-700/50">
+                                <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700/50">
                                   <p className="text-xs text-amber-300">{t('henuzOzelKuryeSaati')}</p>
                                 </div>
                               )}
@@ -4245,9 +4245,9 @@ export default function BusinessDetailsPage() {
                                     return (
                                       <div key={day.display} className="flex items-center gap-3">
                                         <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
-                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <span className="text-gray-500 font-bold">–</span>
-                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                           <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
@@ -4266,7 +4266,7 @@ export default function BusinessDetailsPage() {
                             <div>
                               <div className="flex items-center justify-between mb-4">
                                 <div>
-                                  <h4 className="text-white font-medium">{t('gelAlAcilisSaatleri')}</h4>
+                                  <h4 className="text-foreground font-medium">{t('gelAlAcilisSaatleri')}</h4>
                                   <p className="text-xs text-muted-foreground mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
                                 {formData.openingHours && (
@@ -4275,7 +4275,7 @@ export default function BusinessDetailsPage() {
                                       if (formData.pickupHours && !confirm(t('procurement_pickup_hours_confirm'))) return;
                                       setFormData({ ...formData, pickupHours: formData.openingHours });
                                     }}
-                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
+                                    className="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-800 dark:text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition flex items-center gap-1.5"
                                   >
                                     <span>↻</span>
                                     {t('genelSaatleriKopyala')}
@@ -4283,7 +4283,7 @@ export default function BusinessDetailsPage() {
                                 )}
                               </div>
                               {!formData.pickupHours && !formData.pickupStartTime && !formData.pickupEndTime && formData.openingHours && (
-                                <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-700/50">
+                                <div className="mb-4 p-2.5 bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700/50">
                                   <p className="text-xs text-amber-300">{t('henuzOzelGelAlSaati')}</p>
                                 </div>
                               )}
@@ -4318,9 +4318,9 @@ export default function BusinessDetailsPage() {
                                     return (
                                       <div key={day.display} className="flex items-center gap-3">
                                         <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
-                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <span className="text-gray-500 font-bold">–</span>
-                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                           <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
@@ -4343,12 +4343,12 @@ export default function BusinessDetailsPage() {
                     <LockedModuleOverlay featureKey="delivery">
                     <div className="space-y-6">
                       <div className="bg-card/50 border border-border rounded-xl p-6">
-                        <h4 className="text-white font-medium border-b border-border pb-2 mb-4">{t('teslimatAyarlari')}</h4>
+                        <h4 className="text-foreground font-medium border-b border-border pb-2 mb-4">{t('teslimatAyarlari')}</h4>
                         <div className="space-y-4">
                           {/* Kurye Desteği Checkbox */}
                           <div className="flex items-center gap-3">
                             <input type="checkbox" checked={formData.supportsDelivery} onChange={(e) => setFormData({ ...formData, supportsDelivery: e.target.checked })} disabled={!isEditing} className="w-5 h-5" />
-                            <span className="text-white">{t('kuryeDestegiVar')}</span>
+                            <span className="text-foreground">{t('kuryeDestegiVar')}</span>
                           </div>
                           {formData.supportsDelivery && (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -4381,7 +4381,7 @@ export default function BusinessDetailsPage() {
                           <div className="mt-3 flex items-center gap-3">
                             <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => setFormData({ ...formData, preOrderEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-amber-500" />
                             <div>
-                              <span className="text-white">{t('onSiparisKabulEt')}</span>
+                              <span className="text-foreground">{t('onSiparisKabulEt')}</span>
                               <p className="text-xs text-muted-foreground">{t('isletmeKapaliykenDeErtesiGunIcin')}</p>
                             </div>
                           </div>
@@ -4390,7 +4390,7 @@ export default function BusinessDetailsPage() {
                           <div className="mt-3 flex items-center gap-3">
                             <input type="checkbox" checked={formData.pickupEnabled !== false} onChange={(e) => setFormData({ ...formData, pickupEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-green-500" />
                             <div>
-                              <span className="text-white">{t('gelAlDestegiVar')}</span>
+                              <span className="text-foreground">{t('gelAlDestegiVar')}</span>
                               <p className="text-xs text-muted-foreground">{t('musterilerSiparisiKendisiAlabilir')}</p>
                             </div>
                           </div>
@@ -4445,7 +4445,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl">📂</span>
                             <div>
-                              <h4 className="text-white font-bold">{t('kategoriler')}</h4>
+                              <h4 className="text-foreground font-bold">{t('kategoriler')}</h4>
                               <p className="text-muted-foreground text-xs">{inlineCategories.length} {t('kategori')}</p>
                             </div>
                           </div>
@@ -4471,7 +4471,7 @@ export default function BusinessDetailsPage() {
                                     }
                                   }}
                                   disabled={applyingTemplate}
-                                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
                                 >
                                   {applyingTemplate ? ' Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
                                 </button>
@@ -4483,7 +4483,7 @@ export default function BusinessDetailsPage() {
                                 setCategoryForm({ name: { tr: '' }, icon: '', isActive: true });
                                 setShowCategoryModal(true);
                               }}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition"
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-foreground text-sm font-medium rounded-lg transition"
                             >
                               + Yeni Kategori
                             </button>
@@ -4501,7 +4501,7 @@ export default function BusinessDetailsPage() {
                         {!loadingCategories && inlineCategories.length === 0 && (
                           <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl">🗂️</span>
-                            <h4 className="text-white font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
+                            <h4 className="text-foreground font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
                             <p className="text-muted-foreground text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
                             <div className="flex items-center gap-3 mt-4">
                               <button
@@ -4546,7 +4546,7 @@ export default function BusinessDetailsPage() {
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="text-white font-bold text-sm">{typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name}</h5>
+                                  <h5 className="text-foreground font-bold text-sm">{typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name}</h5>
                                   <p className="text-gray-500 text-xs">
                                     {inlineProducts.filter((p: any) => p.category === (typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name) || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? ' Aktif' : t('pasif')}
                                   </p>
@@ -4578,7 +4578,7 @@ export default function BusinessDetailsPage() {
                         {showCategoryModal && (
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                             <div className="bg-card rounded-xl p-6 w-full max-w-md">
-                              <h2 className="text-xl font-bold text-white mb-4">
+                              <h2 className="text-xl font-bold text-foreground mb-4">
                                 {editingCategory ? t('kategoriDuzenle') : t('yeni_kategori')}
                               </h2>
 
@@ -4647,7 +4647,7 @@ export default function BusinessDetailsPage() {
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                             <div className="bg-card rounded-xl p-6 w-full max-w-sm text-center">
                               <span className="text-4xl">⚠️</span>
-                              <h3 className="text-lg font-bold text-white mt-3">{t('kategoriyi_sil')}</h3>
+                              <h3 className="text-lg font-bold text-foreground mt-3">{t('kategoriyi_sil')}</h3>
                               <p className="text-muted-foreground text-sm mt-2">
                                 {t('buKategoriyiKaliciOlarakSilmekIstediginizden')}
                               </p>
@@ -4675,7 +4675,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl"></span>
                             <div>
-                              <h4 className="text-white font-bold">{t('urunler1')}</h4>
+                              <h4 className="text-foreground font-bold">{t('urunler1')}</h4>
                               <p className="text-muted-foreground text-xs">{inlineProducts.length} {t('urun1')}</p>
                             </div>
                           </div>
@@ -4684,14 +4684,14 @@ export default function BusinessDetailsPage() {
                               <button
                                 onClick={() => applyProductTemplate()}
                                 disabled={applyingProductTemplate}
-                                className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-foreground text-sm font-medium rounded-lg transition disabled:opacity-50"
                               >
                                 {applyingProductTemplate ? ` ${t('yukleniyor')}` : `${t('urun_sablonu')} ${t('yukle')}`}
                               </button>
                             )}
                             <button
                               onClick={() => setProductModalOpen(true)}
-                              className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition inline-flex items-center gap-1"
+                              className="px-3 py-2 bg-green-600 hover:bg-green-500 text-foreground text-sm font-medium rounded-lg transition inline-flex items-center gap-1"
                             >
                               + Yeni Ürün Ekle
                             </button>
@@ -4709,7 +4709,7 @@ export default function BusinessDetailsPage() {
                                 setProductCurrentPage(1);
                               }}
                               placeholder={t('urun_ara_placeholder')}
-                              className="w-full px-4 py-2.5 pl-10 bg-card border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                              className="w-full px-4 py-2.5 pl-10 bg-card border border-gray-600 rounded-lg text-foreground text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                             />
                             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -4796,7 +4796,7 @@ export default function BusinessDetailsPage() {
                         {!loadingProducts && inlineProducts.length === 0 && (
                           <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl"></span>
-                            <h4 className="text-white font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
+                            <h4 className="text-foreground font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
                             <p className="text-muted-foreground text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
                             <button
                               onClick={() => setProductModalOpen(true)}
@@ -4882,7 +4882,7 @@ export default function BusinessDetailsPage() {
                               {/* Bulk Action Bar — Above Table */}
                               {selectedInlineProducts.size > 0 && (
                                 <div className="bg-gradient-to-r from-gray-800 to-gray-900 border border-amber-500/30 rounded-xl px-4 py-2.5 mb-2 flex items-center gap-2 flex-wrap shadow-lg">
-                                  <span className="text-green-400 text-sm font-bold flex items-center gap-1">
+                                  <span className="text-green-800 dark:text-green-400 text-sm font-bold flex items-center gap-1">
                                     ☑ {selectedInlineProducts.size} ürün seçili
                                   </span>
                                   <span className="w-px h-5 bg-gray-600"></span>
@@ -5038,7 +5038,7 @@ export default function BusinessDetailsPage() {
                                           </div>
                                           {/* Name + Description */}
                                           <div className="min-w-0">
-                                            <p className="text-white text-sm font-medium truncate">{productName}</p>
+                                            <p className="text-foreground text-sm font-medium truncate">{productName}</p>
                                             <p className="text-gray-500 text-xs truncate">
                                               {getLocalizedText(product.description) || ''}
                                             </p>
@@ -5049,7 +5049,7 @@ export default function BusinessDetailsPage() {
                                           <div className="text-right">
                                             {appPrice ? (
                                               <div className="space-y-0.5">
-                                                <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">{t('brutto')}</span></div>
+                                                <div className="text-green-800 dark:text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">{t('brutto')}</span></div>
                                                 <div className="text-muted-foreground text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">{t('netto')}</span></div>
                                               </div>
                                             ) : (
@@ -5062,13 +5062,13 @@ export default function BusinessDetailsPage() {
                                           <div className="flex flex-col items-center gap-0.5">
                                             <span
                                               onClick={() => toggleProductActive(product.id, isActive)}
-                                              className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-400' : 'bg-red-900/60 text-red-400'}`}
+                                              className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-800 dark:text-green-400' : 'bg-red-900/60 text-red-800 dark:text-red-400'}`}
                                               title={isActive ? t('pasif_yap') : t('aktif_yap')}
                                             >
                                               {isActive ? t('aktif') : t('pasif')}
                                             </span>
                                             {product.outOfStock && (
-                                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-400 font-medium">
+                                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-800 dark:text-yellow-400 font-medium">
                                                 {t('stokta_yok')}
                                               </span>
                                             )}
@@ -5197,11 +5197,11 @@ export default function BusinessDetailsPage() {
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('barkod')}</label>
-                                                      <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('kategori_label')}</label>
-                                                      <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none">
+                                                      <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none">
                                                         <option value="">{t('kategori_secin')}</option>
                                                         {inlineCategories.map((cat: any) => (
                                                           <option key={cat.id || cat.name} value={typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}>{typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}</option>
@@ -5214,24 +5214,24 @@ export default function BusinessDetailsPage() {
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('marka')}</label>
-                                                      <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div className="flex gap-2">
                                                       <div className="flex-1">
                                                         <label className="text-xs text-muted-foreground mb-1 block">{t('birim')}</label>
-                                                        <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                                                        <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                           <option value="kg">Kg</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
                                                         <label className="text-xs text-muted-foreground mb-1 block">{t('durum_label')}</label>
-                                                        <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                                                        <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                           <option value="active">{t('aktif')}</option><option value="passive">{t('pasif')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
                                                         <label className="text-xs text-muted-foreground mb-1 block">KDV</label>
-                                                        <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                                                        <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                           <option value="7">%7</option><option value="19">%19</option><option value="0">%0</option>
                                                         </select>
                                                       </div>
@@ -5260,11 +5260,11 @@ export default function BusinessDetailsPage() {
                                                       {/* Vergi Oranı */}
                                                       <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-3">
-                                                          <h3 className="text-sm font-medium text-amber-400">{t('vergi_orani')}</h3>
+                                                          <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">{t('vergi_orani')}</h3>
                                                           <span className="text-xs text-gray-500">{t('netto_brutto_hint')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm text-white">
+                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm text-foreground">
                                                             <option value="0">{t('tax_zero')}</option>
                                                             <option value="7">{t('tax_reduced')}</option>
                                                             <option value="19">{t('tax_standard')}</option>
@@ -5279,7 +5279,7 @@ export default function BusinessDetailsPage() {
                                                       {/*  {t('fiyatlandirma')} + Netto/Brutto Toggle */}
                                                       <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-4">
-                                                          <h3 className="text-sm font-medium text-amber-400"> {t('fiyatlandirma')}</h3>
+                                                          <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400"> {t('fiyatlandirma')}</h3>
                                                           <div className="flex items-center bg-card rounded-lg p-0.5 border border-gray-600">
                                                             <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                               {t('netto_input')}
@@ -5383,19 +5383,19 @@ export default function BusinessDetailsPage() {
                                                           <div className="grid grid-cols-3 gap-3 text-center">
                                                             <div>
                                                               <span className="block text-xs text-gray-500 mb-1">{t('kar_marji')}</span>
-                                                              <span className="text-sm font-medium text-emerald-400">
+                                                              <span className="text-sm font-medium text-emerald-800 dark:text-emerald-400">
                                                                 {sp > 0 && pp > 0 ? `%${(((sp - pp) / pp) * 100).toFixed(1)}` : '--'}
                                                               </span>
                                                             </div>
                                                             <div>
                                                               <span className="block text-xs text-gray-500 mb-1">{t('vergi_tutari')}</span>
-                                                              <span className="text-sm font-medium text-amber-400">
+                                                              <span className="text-sm font-medium text-amber-800 dark:text-amber-400">
                                                                 {sp > 0 ? `€${(sp * taxRate / 100).toFixed(2)}` : '--'}
                                                               </span>
                                                             </div>
                                                             <div>
                                                               <span className="block text-xs text-gray-500 mb-1">{t('brutto_satis')}</span>
-                                                              <span className="text-sm font-medium text-white">
+                                                              <span className="text-sm font-medium text-foreground">
                                                                 {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : '--'}
                                                               </span>
                                                             </div>
@@ -5406,7 +5406,7 @@ export default function BusinessDetailsPage() {
                                                       {/* 📱 App Satış Fiyatı */}
                                                       <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-3">
-                                                          <h3 className="text-sm font-medium text-blue-400">{t('app_sales_price')}</h3>
+                                                          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-400">{t('app_sales_price')}</h3>
                                                           <label className="flex items-center gap-2 cursor-pointer">
                                                             <input type="checkbox" checked={!!(editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0)} onChange={e => { if (!e.target.checked) { setEditFormFull((p: any) => ({ ...p, appPrice: '' })); } else { setEditFormFull((p: any) => ({ ...p, appPrice: editFormFull.sellingPrice || '0' })); } }} className="w-4 h-4 rounded accent-blue-500" />
                                                             <span className="text-xs text-muted-foreground">{t('farkli_fiyat_uygula')}</span>
@@ -5435,17 +5435,17 @@ export default function BusinessDetailsPage() {
 
                                                       {/*  Kanal Fiyatları (Konsolide) */}
                                                       <div className="pb-4">
-                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3"> {t('kanal_fiyatlari')}</h3>
+                                                        <h3 className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-3"> {t('kanal_fiyatlari')}</h3>
                                                         <p className="text-xs text-gray-500 mb-3">{t('esl_price_hint')}</p>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                           <div>
                                                             <label className="text-xs text-muted-foreground mb-1 block">{t('esl_store_pickup_price')} (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
                                                             <span className="text-[10px] text-gray-600 mt-1 block">{t('esl_price_hint')}</span>
                                                           </div>
                                                           <div>
                                                             <label className="text-xs text-muted-foreground mb-1 block">{t('courier_price_label')} (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
                                                             <span className="text-[10px] text-gray-600 mt-1 block">{t('kurye_fiyat_aciklama')}</span>
                                                           </div>
                                                         </div>
@@ -5458,29 +5458,29 @@ export default function BusinessDetailsPage() {
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('stok_durumu')}</label>
-                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                         <option value="in">{t('stokta')}</option><option value="out">{t('stokta_degil')}</option>
                                                       </select>
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('mevcut_stok')}</label>
-                                                      <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('min_stok')}</label>
-                                                      <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('tedarikci_label')}</label>
-                                                      <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('parti_no')}</label>
-                                                      <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('depo_konumu')}</label>
-                                                      <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                   </div>
                                                 )}
@@ -5552,7 +5552,7 @@ export default function BusinessDetailsPage() {
                                                           }
                                                           e.target.value = '';
                                                         }}
-                                                        className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
+                                                        className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
                                                       />
                                                       <p className="text-xs text-gray-500 mt-1">Birden fazla dosya seçebilirsiniz. JPG, PNG, WebP formatları desteklenir.</p>
                                                     </div>
@@ -5560,7 +5560,7 @@ export default function BusinessDetailsPage() {
                                                     {/* URL ile ekle */}
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">🔗 Görsel URL (opsiyonel)</label>
-                                                      <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                      <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                   </div>
                                                 )}
@@ -5570,25 +5570,25 @@ export default function BusinessDetailsPage() {
 
                                                     {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('ingredients_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         <div className="md:col-span-2">
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('ingredients_label')}</label>
-                                                          <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('consumption_info_label')}</label>
-                                                          <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('additives_label')}</label>
-                                                          <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">Herkunft / Menşe</label>
-                                                          <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                           <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -5603,7 +5603,7 @@ export default function BusinessDetailsPage() {
 
                                                     {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('allergens_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -5649,7 +5649,7 @@ export default function BusinessDetailsPage() {
 
                                                     {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-green-800 dark:text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('nutrition_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
@@ -5691,7 +5691,7 @@ export default function BusinessDetailsPage() {
 
                                                     {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('certificates_title')}
                                                       </h4>
                                                       <div className="flex flex-wrap gap-2">
@@ -5743,17 +5743,17 @@ export default function BusinessDetailsPage() {
 
                                                     {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('internal_notes_title')}
                                                       </h4>
                                                       <div className="space-y-3">
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">Dahili {t('notlar')}</label>
-                                                          <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
+                                                          <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('etiketler')}</label>
-                                                          <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                       </div>
                                                     </div>
@@ -5762,7 +5762,7 @@ export default function BusinessDetailsPage() {
 
                                                     {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('audit_trail_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -5792,32 +5792,32 @@ export default function BusinessDetailsPage() {
                                                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">Gewicht (Ağırlık)</label>
-                                                          <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">Packung (Ambalaj)</label>
-                                                          <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">Gehäusetemperatur (Saklama)</label>
-                                                          <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('mhd_label')}</label>
-                                                          <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2">
-                                                          <p className="text-xs text-amber-400/80 bg-amber-900/20 border border-amber-700/30 rounded px-3 py-2">
+                                                          <p className="text-xs text-amber-800 dark:text-amber-400/80 bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded px-3 py-2">
                                                             {t('mhd_note')}
                                                           </p>
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('artikelnummer')}</label>
-                                                          <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                                                          <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2 md:col-span-3 lg:col-span-4">
                                                           <label className="text-xs text-muted-foreground mb-1 block">{t('special_info_label')}</label>
-                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                       </div>
                                                     </div>
@@ -5829,14 +5829,14 @@ export default function BusinessDetailsPage() {
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">{t('one_cikan_urun')}</label>
-                                                      <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                                                      <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                         <option value="no">{t('hayir')}</option>
                                                         <option value="yes">Evet ⭐</option>
                                                       </select>
                                                     </div>
                                                     <div>
                                                       <label className="text-xs text-muted-foreground mb-1 block">Stok Durumu (App)</label>
-                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                         <option value="in">{t('stokta')}</option>
                                                         <option value="out">{t('stokta_yok')}</option>
                                                       </select>
@@ -5847,7 +5847,7 @@ export default function BusinessDetailsPage() {
                                                         <div className="space-y-2">
                                                           {(editFormFull.optionGroups || []).map((group: any, i: number) => (
                                                             <div key={i} className="bg-background/30 rounded p-2 border border-border/50 text-sm text-foreground">
-                                                              <span className="font-medium text-white">{group.name || `Grup ${i + 1}`}</span>
+                                                              <span className="font-medium text-foreground">{group.name || `Grup ${i + 1}`}</span>
                                                               {group.options?.length > 0 && (
                                                                 <span className="text-gray-500 ml-2">({group.options.length} seçenek)</span>
                                                               )}
@@ -5872,7 +5872,7 @@ export default function BusinessDetailsPage() {
                                                 <button onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }} className="px-6 py-2 text-sm text-muted-foreground hover:text-white transition">
                                                   {t('iptal')}
                                                 </button>
-                                                <button onClick={handleAddProduct} disabled={addingProduct} className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-500/20 transition active:scale-95 disabled:opacity-50">
+                                                <button onClick={handleAddProduct} disabled={addingProduct} className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-foreground text-sm font-medium rounded-lg shadow-lg shadow-blue-500/20 transition active:scale-95 disabled:opacity-50">
                                                   {addingProduct ? 'Kaydediliyor...' : 'Kaydet'}
                                                 </button>
                                               </div>
@@ -5892,7 +5892,7 @@ export default function BusinessDetailsPage() {
                                       <div className="text-muted-foreground text-xs">
                                         {startIdx + 1}–{Math.min(endIdx, totalFiltered)} / {totalFiltered} ürün
                                         {productSearchQuery.trim() && (
-                                          <span className="text-blue-400 ml-1">(arama sonuçları)</span>
+                                          <span className="text-blue-800 dark:text-blue-400 ml-1">(arama sonuçları)</span>
                                         )}
                                       </div>
 
@@ -5969,13 +5969,13 @@ export default function BusinessDetailsPage() {
                                 {
                                   totalFiltered === 0 && productSearchQuery.trim() && (
                                     <div className="px-4 py-8 text-center">
-                                      <p className="text-muted-foreground text-sm">{t('aranilan')} <span className="text-white font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
+                                      <p className="text-muted-foreground text-sm">{t('aranilan')} <span className="text-foreground font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
                                       <button
                                         onClick={() => {
                                           setProductSearchQuery('');
                                           setProductCurrentPage(1);
                                         }}
-                                        className="mt-2 text-blue-400 hover:text-blue-300 text-sm transition"
+                                        className="mt-2 text-blue-800 dark:text-blue-400 hover:text-blue-300 text-sm transition"
                                       >
                                         Aramayı temizle
                                       </button>
@@ -5998,7 +5998,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl">⭐</span>
                             <div>
-                              <h4 className="text-white font-bold">{t('one_cikan_urunler')}</h4>
+                              <h4 className="text-foreground font-bold">{t('one_cikan_urunler')}</h4>
                               <p className="text-muted-foreground text-xs">{t('one_cikan_aciklama')}</p>
                             </div>
                           </div>
@@ -6011,8 +6011,8 @@ export default function BusinessDetailsPage() {
                               {t('sponsored_kullanim')}
                             </span>
                             <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
-                              ? 'text-red-400'
-                              : 'text-amber-400'
+                              ? 'text-red-800 dark:text-red-400'
+                              : 'text-amber-800 dark:text-amber-400'
                               }`}>
                               {sponsoredProducts.length} / {sponsoredSettings.maxProductsPerBusiness}
                             </span>
@@ -6043,7 +6043,7 @@ export default function BusinessDetailsPage() {
                         ) : inlineProducts.length === 0 ? (
                           <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl"></span>
-                            <h4 className="text-white font-medium mt-3">{t('henuz_urun_eklenmemis')}</h4>
+                            <h4 className="text-foreground font-medium mt-3">{t('henuz_urun_eklenmemis')}</h4>
                             <p className="text-muted-foreground text-sm mt-1">{t('sponsored_urun_once_ekle')}</p>
                           </div>
                         ) : (
@@ -6089,7 +6089,7 @@ export default function BusinessDetailsPage() {
                                   )}
                                   {/* Name */}
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-white text-sm font-medium truncate">
+                                    <p className="text-foreground text-sm font-medium truncate">
                                       {typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}
                                     </p>
                                     <p className="text-gray-500 text-xs truncate">
@@ -6099,14 +6099,14 @@ export default function BusinessDetailsPage() {
                                   {/* Price */}
                                   <div className="text-right">
                                     {product.price != null && (
-                                      <span className="text-green-400 font-bold text-sm">
+                                      <span className="text-green-800 dark:text-green-400 font-bold text-sm">
                                         {typeof product.price === 'number' ? product.price.toFixed(2) : product.price}€
                                       </span>
                                     )}
                                   </div>
                                   {/* Star badge */}
                                   {isSponsored && (
-                                    <span className="text-amber-400 text-lg">⭐</span>
+                                    <span className="text-amber-800 dark:text-amber-400 text-lg">⭐</span>
                                   )}
                                 </label>
                               );
@@ -6162,7 +6162,7 @@ export default function BusinessDetailsPage() {
 
                     {/* ═══════ Aktif Vardiyalar Panel ═══════ */}
                     {activeShifts.length > 0 && (
-                      <div className="bg-gradient-to-br from-green-900/40 to-green-800/20 border border-green-600/30 rounded-xl p-5">
+                      <div className="bg-gradient-to-br from-green-100 dark:from-green-900/40 to-green-50 dark:to-green-800/20 border border-green-600/30 rounded-xl p-5">
                         <div className="flex items-center gap-2 mb-4">
                           <span className="text-2xl">🟢</span>
                           <h3 className="text-lg font-bold text-green-300">
@@ -6171,7 +6171,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-sm">
-                            <thead className="text-green-400/80 border-b border-green-700/50">
+                            <thead className="text-green-800 dark:text-green-400/80 border-b border-green-200 dark:border-green-700/50">
                               <tr>
                                 <th className="pb-2 pr-3">{t('personel_th')}</th>
                                 <th className="pb-2 pr-3">{t('baslangic')}</th>
@@ -6196,7 +6196,7 @@ export default function BusinessDetailsPage() {
                                 const isPaused = shift.shiftStatus === 'paused';
                                 return (
                                   <tr key={shift.id} className="border-b border-green-800/30">
-                                    <td className="py-2.5 pr-3 text-white font-medium">
+                                    <td className="py-2.5 pr-3 text-foreground font-medium">
                                       {shift.displayName || shift.email || t('isimsiz')}
                                     </td>
                                     <td className="py-2.5 pr-3 text-foreground">{startStr}</td>
@@ -6264,7 +6264,7 @@ export default function BusinessDetailsPage() {
 
                     {/* Staff Table */}
                     <div>
-                      <h3 className="text-white font-medium mb-3">
+                      <h3 className="text-foreground font-medium mb-3">
                         {t('personel_mevcut')} ({staffList.filter(s => {
                           const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
                           const matchesSearch = !staffSearchQuery ||
@@ -6290,7 +6290,7 @@ export default function BusinessDetailsPage() {
                               <th className="pb-3 py-2">{t('islemler')}</th>
                             </tr>
                           </thead>
-                          <tbody className="text-white">
+                          <tbody className="text-foreground">
                             {staffList.filter(s => {
                               const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
                               const matchesSearch = !staffSearchQuery ||
@@ -6378,8 +6378,8 @@ export default function BusinessDetailsPage() {
                                         });
                                       }}
                                       className={`text-xs px-2 py-1 rounded ${staff.isActive !== false
-                                        ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
-                                        : 'bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white'}`}
+                                        ? 'bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white'
+                                        : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600 hover:text-white'}`}
                                     >
                                       {staff.isActive !== false ? t('arsivle1') : t('aktiflestir')}
                                     </button>
@@ -6413,7 +6413,7 @@ export default function BusinessDetailsPage() {
                                           },
                                         });
                                       }}
-                                      className="text-xs px-2 py-1 rounded bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white"
+                                      className="text-xs px-2 py-1 rounded bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white"
                                     >
                                       {t('yetkiyiKaldir1')}
                                     </button>
@@ -6428,7 +6428,7 @@ export default function BusinessDetailsPage() {
 
                     {/* Invite New Staff */}
                     <div className="bg-background/50 rounded-xl p-6 border border-border">
-                      <h3 className="text-white font-bold text-lg mb-4">
+                      <h3 className="text-foreground font-bold text-lg mb-4">
                         {t('yeni_personel_ekle')}
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
@@ -6501,7 +6501,7 @@ export default function BusinessDetailsPage() {
                           <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
                           <div className="bg-card p-3 rounded text-sm">
                             <p className="text-muted-foreground">{t('geciciSifre')}</p>
-                            <p className="text-white font-mono text-lg">{inviteResult.tempPassword}</p>
+                            <p className="text-foreground font-mono text-lg">{inviteResult.tempPassword}</p>
                           </div>
                           {inviteResult.notifications && (
                             <div className="flex flex-wrap gap-2 text-xs">
@@ -6539,7 +6539,7 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {/* {t('masa_rezervasyonu')} */}
                       <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-border pb-2">
+                        <h4 className="text-foreground font-medium border-b border-border pb-2">
                           {t('masa_rezervasyonu')}
                         </h4>
                         <div className="flex items-center gap-3">
@@ -6556,7 +6556,7 @@ export default function BusinessDetailsPage() {
                             className="w-5 h-5 accent-amber-500"
                           />
                           <div>
-                            <span className="text-white">{t('masa_rezervasyonu_aktif')}</span>
+                            <span className="text-foreground">{t('masa_rezervasyonu_aktif')}</span>
                             <p className="text-xs text-muted-foreground">
                               {t('musterilerMobilUygulamadanMasaRezervasyonuYapabilir')}
                             </p>
@@ -6614,7 +6614,7 @@ export default function BusinessDetailsPage() {
 
                       {/*  Yerinde Sipariş Ayarları */}
                       <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-border pb-2">
+                        <h4 className="text-foreground font-medium border-b border-border pb-2">
                           {t('yerindeSiparisAyarlari')}
                         </h4>
 
@@ -6671,7 +6671,7 @@ export default function BusinessDetailsPage() {
                             className="w-5 h-5 accent-amber-500"
                           />
                           <div>
-                            <span className="text-white">{t('garson_servisi_aktif')}</span>
+                            <span className="text-foreground">{t('garson_servisi_aktif')}</span>
                             <p className="text-xs text-muted-foreground">
                               {formData.hasTableService
                                 ? t('siparisHazirOluncaMusteriyeSiparisinizMasaniza')
@@ -6694,7 +6694,7 @@ export default function BusinessDetailsPage() {
                       {/* Current Plan Display */}
                       <div className="bg-card/50 border border-border rounded-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                          <h4 className="text-white font-medium text-lg">{t('uyelikAbonelik')}</h4>
+                          <h4 className="text-foreground font-medium text-lg">{t('uyelikAbonelik')}</h4>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                             (formData.subscriptionPlan === 'enterprise') ? 'bg-purple-600 text-white' :
                             (formData.subscriptionPlan === 'premium') ? 'bg-amber-500 text-black' :
@@ -6775,7 +6775,7 @@ export default function BusinessDetailsPage() {
                               setSaving(false);
                             }
                           }}
-                          className={`${saving ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} w-full text-white font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-4`}
+                          className={`${saving ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} w-full text-foreground font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-4`}
                         >
                           {saving ? 'Kaydediliyor...' : 'Plan Kaydet'}
                         </button>
@@ -6790,15 +6790,15 @@ export default function BusinessDetailsPage() {
                             <p className="text-muted-foreground mt-1">Temel profil, sinirli siparis</p>
                           </div>
                           <div className="bg-card/50 rounded-lg p-3">
-                            <span className="text-green-400 font-bold">BASIC</span>
+                            <span className="text-green-800 dark:text-green-400 font-bold">BASIC</span>
                             <p className="text-muted-foreground mt-1">Siparis yonetimi, temel istatistik</p>
                           </div>
                           <div className="bg-card/50 rounded-lg p-3">
-                            <span className="text-blue-400 font-bold">STANDARD</span>
+                            <span className="text-blue-800 dark:text-blue-400 font-bold">STANDARD</span>
                             <p className="text-muted-foreground mt-1">Tam ERP, kurye, promosyon</p>
                           </div>
                           <div className="bg-card/50 rounded-lg p-3">
-                            <span className="text-amber-400 font-bold">PREMIUM</span>
+                            <span className="text-amber-800 dark:text-amber-400 font-bold">PREMIUM</span>
                             <p className="text-muted-foreground mt-1">AI analiz, sponsorlu gosterim</p>
                           </div>
                         </div>
@@ -6816,7 +6816,7 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {/* Bank Details (SEPA) */}
                       <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-border pb-2">
+                        <h4 className="text-foreground font-medium border-b border-border pb-2">
                           {t('banka_bilgileri_sepa')}
                         </h4>
                         <div>
@@ -6919,7 +6919,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center gap-3">
                           <span className="text-3xl">📢</span>
                           <div>
-                            <h3 className="text-xl font-bold text-white">{t('marketing_boost')}</h3>
+                            <h3 className="text-xl font-bold text-foreground">{t('marketing_boost')}</h3>
                             <p className="text-sm text-muted-foreground">{t('marketingBoostAciklama')}</p>
                           </div>
                         </div>
@@ -6932,7 +6932,7 @@ export default function BusinessDetailsPage() {
                       </div>
 
                       {/* How It Works Info Card */}
-                      <div className="bg-gradient-to-br from-purple-900/30 to-indigo-900/20 border border-purple-500/30 rounded-xl p-5">
+                      <div className="bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-indigo-900/20 border border-purple-500/30 rounded-xl p-5">
                         <h4 className="text-purple-300 font-bold text-sm mb-3 flex items-center gap-2">
                           <span>💡</span> {t('nasil_calisir')}
                         </h4>
@@ -6980,7 +6980,7 @@ export default function BusinessDetailsPage() {
                       {/* ==== New Campaign Form ==== */}
                       {showBoostForm && (
                         <div className="bg-card/60 border border-purple-500/30 rounded-xl p-5 space-y-5">
-                          <h4 className="text-white font-bold flex items-center gap-2">
+                          <h4 className="text-foreground font-bold flex items-center gap-2">
                             <span>🆕</span> {t('boost_yeni_kampanya')}
                           </h4>
 
@@ -6992,7 +6992,7 @@ export default function BusinessDetailsPage() {
                               placeholder={t('boost_kampanya_adi_placeholder')}
                               value={boostForm.campaignName}
                               onChange={e => setBoostForm(p => ({ ...p, campaignName: e.target.value }))}
-                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
                             />
                           </div>
 
@@ -7011,10 +7011,10 @@ export default function BusinessDetailsPage() {
                               >
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-lg">🔵</span>
-                                  <span className="text-white font-bold text-sm">CPC</span>
+                                  <span className="text-foreground font-bold text-sm">CPC</span>
                                 </div>
                                 <p className="text-muted-foreground text-xs">{t('boost_cpc_aciklama')}</p>
-                                <p className="text-blue-400 text-[10px] mt-1 font-medium">{t('boost_cpc_model_label')}</p>
+                                <p className="text-blue-800 dark:text-blue-400 text-[10px] mt-1 font-medium">{t('boost_cpc_model_label')}</p>
                               </button>
                               <button
                                 type="button"
@@ -7027,10 +7027,10 @@ export default function BusinessDetailsPage() {
                               >
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-lg">🟢</span>
-                                  <span className="text-white font-bold text-sm">Pay-per-Order</span>
+                                  <span className="text-foreground font-bold text-sm">Pay-per-Order</span>
                                 </div>
                                 <p className="text-muted-foreground text-xs">{t('boost_ppo_aciklama')}</p>
-                                <p className="text-green-400 text-[10px] mt-1 font-medium">{t('boost_ppo_model_label')}</p>
+                                <p className="text-green-800 dark:text-green-400 text-[10px] mt-1 font-medium">{t('boost_ppo_model_label')}</p>
                               </button>
                             </div>
                           </div>
@@ -7048,7 +7048,7 @@ export default function BusinessDetailsPage() {
                                   min="0.10"
                                   value={boostForm.bidAmount}
                                   onChange={e => setBoostForm(p => ({ ...p, bidAmount: e.target.value }))}
-                                  className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                  className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€</span>
                               </div>
@@ -7072,11 +7072,11 @@ export default function BusinessDetailsPage() {
                                   min="5"
                                   value={boostForm.budgetAmount}
                                   onChange={e => setBoostForm(p => ({ ...p, budgetAmount: e.target.value }))}
-                                  className="flex-1 bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                  className="flex-1 bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                                 />
                               </div>
                               {boostForm.model === 'cpc' && parseFloat(boostForm.bidAmount) > 0 && (
-                                <p className="text-purple-400 text-[10px] mt-1">
+                                <p className="text-purple-800 dark:text-purple-400 text-[10px] mt-1">
                                   ≈ {Math.floor(parseFloat(boostForm.budgetAmount) / parseFloat(boostForm.bidAmount))} {t('boost_per_tiklama')} / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}
                                 </p>
                               )}
@@ -7123,7 +7123,7 @@ export default function BusinessDetailsPage() {
                                 type="time"
                                 value={boostForm.activeHoursStart}
                                 onChange={e => setBoostForm(p => ({ ...p, activeHoursStart: e.target.value }))}
-                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                               />
                             </div>
                             <div>
@@ -7132,7 +7132,7 @@ export default function BusinessDetailsPage() {
                                 type="time"
                                 value={boostForm.activeHoursEnd}
                                 onChange={e => setBoostForm(p => ({ ...p, activeHoursEnd: e.target.value }))}
-                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                               />
                             </div>
                           </div>
@@ -7144,7 +7144,7 @@ export default function BusinessDetailsPage() {
                               type="date"
                               value={boostForm.endDate}
                               onChange={e => setBoostForm(p => ({ ...p, endDate: e.target.value }))}
-                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                               placeholder={t('boost_bitis_placeholder')}
                             />
                             <p className="text-gray-600 text-[10px] mt-1">{t('boost_bitis_aciklama')}</p>
@@ -7152,15 +7152,15 @@ export default function BusinessDetailsPage() {
 
                           {/* Summary Card */}
                           {boostForm.campaignName && (
-                            <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/30 border border-purple-500/40 rounded-xl p-4">
+                            <div className="bg-gradient-to-r from-purple-100 dark:from-purple-900/40 to-indigo-900/30 border border-purple-500/40 rounded-xl p-4">
                               <h5 className="text-purple-300 font-bold text-sm mb-2">{t('boost_kampanya_ozeti')}</h5>
                               <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div><span className="text-gray-500">{t('boost_ozet_ad')}</span> <span className="text-white">{boostForm.campaignName}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_model')}</span> <span className="text-white">{boostForm.model === 'cpc' ? t('boost_cpc_label') : t('boost_ppo_label')}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_bid')}</span> <span className="text-white">{boostForm.bidAmount}€ / {boostForm.model === 'cpc' ? t('boost_per_tiklama') : t('boost_per_siparis')}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_butce')}</span> <span className="text-white">{boostForm.budgetAmount}€ / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_gunler')}</span> <span className="text-white">{boostForm.activeDays.length === 7 ? t('boost_her_gun') : `${boostForm.activeDays.length} ${t('boost_gun')}`}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_saatler')}</span> <span className="text-white">{boostForm.activeHoursStart} - {boostForm.activeHoursEnd}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_ad')}</span> <span className="text-foreground">{boostForm.campaignName}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_model')}</span> <span className="text-foreground">{boostForm.model === 'cpc' ? t('boost_cpc_label') : t('boost_ppo_label')}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_bid')}</span> <span className="text-foreground">{boostForm.bidAmount}€ / {boostForm.model === 'cpc' ? t('boost_per_tiklama') : t('boost_per_siparis')}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_butce')}</span> <span className="text-foreground">{boostForm.budgetAmount}€ / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_gunler')}</span> <span className="text-foreground">{boostForm.activeDays.length === 7 ? t('boost_her_gun') : `${boostForm.activeDays.length} ${t('boost_gun')}`}</span></div>
+                                <div><span className="text-gray-500">{t('boost_ozet_saatler')}</span> <span className="text-foreground">{boostForm.activeHoursStart} - {boostForm.activeHoursEnd}</span></div>
                               </div>
                             </div>
                           )}
@@ -7235,7 +7235,7 @@ export default function BusinessDetailsPage() {
 
                       {/* ==== Active Campaigns List ==== */}
                       <div>
-                        <h4 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+                        <h4 className="text-foreground font-bold text-sm mb-3 flex items-center gap-2">
                           <span>📋</span> {t('boost_aktif_kampanyalar')}
                         </h4>
                         {loadingBoostCampaigns ? (
@@ -7245,7 +7245,7 @@ export default function BusinessDetailsPage() {
                         ) : boostCampaigns.length === 0 ? (
                           <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl">📭</span>
-                            <h4 className="text-white font-medium mt-3">{t('boost_kampanya_yok')}</h4>
+                            <h4 className="text-foreground font-medium mt-3">{t('boost_kampanya_yok')}</h4>
                             <p className="text-gray-500 text-sm mt-1">{t('boost_kampanya_yok_aciklama')}</p>
                           </div>
                         ) : (
@@ -7261,11 +7261,11 @@ export default function BusinessDetailsPage() {
                                       <span className={`w-2.5 h-2.5 rounded-full ${
                                         campaign.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'
                                       }`} />
-                                      <h5 className="text-white font-bold text-sm">{campaign.campaignName}</h5>
+                                      <h5 className="text-foreground font-bold text-sm">{campaign.campaignName}</h5>
                                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                         campaign.model === 'cpc'
-                                          ? 'bg-blue-900/50 text-blue-400 border border-blue-500/30'
-                                          : 'bg-green-900/50 text-green-400 border border-green-500/30'
+                                          ? 'bg-blue-900/50 text-blue-800 dark:text-blue-400 border border-blue-500/30'
+                                          : 'bg-green-900/50 text-green-800 dark:text-green-400 border border-green-500/30'
                                       }`}>
                                         {campaign.model === 'cpc' ? 'CPC' : 'Pay-per-Order'}
                                       </span>
@@ -7289,8 +7289,8 @@ export default function BusinessDetailsPage() {
                                       }}
                                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                                         campaign.status === 'active'
-                                          ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/40'
-                                          : 'bg-green-600/20 text-green-400 hover:bg-green-600/40'
+                                          ? 'bg-yellow-600/20 text-yellow-800 dark:text-yellow-400 hover:bg-yellow-600/40'
+                                          : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600/40'
                                       }`}
                                     >
                                       {campaign.status === 'active' ? t('boost_duraklat') : t('boost_aktiflestir')}
@@ -7300,19 +7300,19 @@ export default function BusinessDetailsPage() {
                                   <div className="grid grid-cols-4 gap-3 mb-3">
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">Bid</p>
-                                      <p className="text-white font-bold text-sm">{campaign.bidAmount}€</p>
+                                      <p className="text-foreground font-bold text-sm">{campaign.bidAmount}€</p>
                                     </div>
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">{t('boost_gosterim')}</p>
-                                      <p className="text-white font-bold text-sm">{campaign.metrics?.impressions || 0}</p>
+                                      <p className="text-foreground font-bold text-sm">{campaign.metrics?.impressions || 0}</p>
                                     </div>
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">{campaign.model === 'cpc' ? t('boost_tiklama') : t('boost_siparis')}</p>
-                                      <p className="text-white font-bold text-sm">{campaign.model === 'cpc' ? (campaign.metrics?.clicks || 0) : (campaign.metrics?.orders || 0)}</p>
+                                      <p className="text-foreground font-bold text-sm">{campaign.model === 'cpc' ? (campaign.metrics?.clicks || 0) : (campaign.metrics?.orders || 0)}</p>
                                     </div>
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">ROAS</p>
-                                      <p className="text-white font-bold text-sm">{campaign.metrics?.roas ? `${campaign.metrics.roas}x` : '—'}</p>
+                                      <p className="text-foreground font-bold text-sm">{campaign.metrics?.roas ? `${campaign.metrics.roas}x` : '—'}</p>
                                     </div>
                                   </div>
                                   {/* Budget Progress */}
@@ -7435,7 +7435,7 @@ export default function BusinessDetailsPage() {
                       {business && business.subscriptionHistory && business.subscriptionHistory.length > 0 && (
                         <div className="pt-6 border-t border-border">
                           <div className="flex items-center gap-2 mb-4">
-                            <History className="w-5 h-5 text-purple-400" />
+                            <History className="w-5 h-5 text-purple-800 dark:text-purple-400" />
                             <h3 className="font-semibold text-gray-200">{t('abonelikGecmisi')}</h3>
                           </div>
                           <div className="overflow-x-auto bg-card/30 rounded-lg border border-border/50">
@@ -7451,7 +7451,7 @@ export default function BusinessDetailsPage() {
                               <tbody className="divide-y divide-border">
                                 {(business?.subscriptionHistory || []).map((h: any, i: number) => (
                                   <tr key={i} className="hover:bg-card/30">
-                                    <td className="px-4 py-2 font-medium text-white uppercase">{h.plan}</td>
+                                    <td className="px-4 py-2 font-medium text-foreground uppercase">{h.plan}</td>
                                     <td className="px-4 py-2">{h.startDate?.seconds ? new Date(h.startDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.startDate).toLocaleDateString('de-DE')}</td>
                                     <td className="px-4 py-2">{h.endDate?.seconds ? new Date(h.endDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.endDate).toLocaleDateString('de-DE')}</td>
                                     <td className="px-4 py-2 text-gray-500">{h.changedBy?.split('@')[0]}</td>
@@ -7503,7 +7503,7 @@ export default function BusinessDetailsPage() {
               {/* ── Header Stats Row ── */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-background rounded-xl p-4 border border-border text-center">
-                  <p className="text-2xl font-bold text-amber-400">{formData.maxReservationTables || 0}</p>
+                  <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">{formData.maxReservationTables || 0}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('toplam_masa')}</p>
                 </div>
                 <div className="bg-background rounded-xl p-4 border border-border text-center">
@@ -7511,18 +7511,18 @@ export default function BusinessDetailsPage() {
                   <p className="text-xs text-muted-foreground mt-1">{t('oturma_kapasitesi')}</p>
                 </div>
                 <div className="bg-background rounded-xl p-4 border border-border text-center">
-                  <p className="text-2xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
+                  <p className="text-2xl font-bold text-green-800 dark:text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('qrSiparis')}</p>
                 </div>
                 <div className="bg-background rounded-xl p-4 border border-border text-center">
-                  <p className="text-2xl font-bold text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
+                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
                   <p className="text-xs text-muted-foreground mt-1">{t('garsonSiparis')}</p>
                 </div>
               </div>
 
               {/* ── Table Management: Masa Yönetimi ── */}
               <div className="bg-background rounded-2xl p-6 border border-border">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
                   {t('masaYonetimi')}
                 </h2>
 
@@ -7623,7 +7623,7 @@ export default function BusinessDetailsPage() {
                       )}
                       {formData.tableSections.map((section: string, idx: number) => (
                         <div key={idx} className="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-1.5 text-sm">
-                          <span className="text-white">{section}</span>
+                          <span className="text-foreground">{section}</span>
                           <span className="text-gray-500 text-xs ml-1">
                             ({formData.tables.filter((t: any) => t.section === section).length} masa)
                           </span>
@@ -7639,7 +7639,7 @@ export default function BusinessDetailsPage() {
                                 tables: updated,
                               });
                             }}
-                            className="ml-1 text-red-400 hover:text-red-300 transition text-xs"
+                            className="ml-1 text-red-800 dark:text-red-400 hover:text-red-300 transition text-xs"
                             title={t('bolumuSil')}
                           >
                             ✕
@@ -7673,7 +7673,7 @@ export default function BusinessDetailsPage() {
                           <div key={sec || '__nosection'} className="mb-4">
                             {sec && (
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-amber-400 text-sm font-bold"> {sec}</span>
+                                <span className="text-amber-800 dark:text-amber-400 text-sm font-bold"> {sec}</span>
                                 <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
@@ -7727,7 +7727,7 @@ export default function BusinessDetailsPage() {
                                       const updated = formData.tables.filter((_: any, i: number) => i !== table._idx);
                                       setFormData({ ...formData, tables: updated, maxReservationTables: updated.length });
                                     }}
-                                    className="text-red-500/60 hover:text-red-400 text-xs transition"
+                                    className="text-red-500/60 hover:text-red-800 dark:text-red-400 text-xs transition"
                                   >
                                     
                                   </button>
@@ -7745,7 +7745,7 @@ export default function BusinessDetailsPage() {
                 {formData.tables.length === 0 && (
                   <div className="bg-card/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
                     <span className="text-4xl">&#x1FA91;</span>
-                    <p className="text-white font-semibold mt-3">{t('henuzMasaTanimlanmadi')}</p>
+                    <p className="text-foreground font-semibold mt-3">{t('henuzMasaTanimlanmadi')}</p>
                     <p className="text-muted-foreground text-sm mt-1">
                       {t('yukaridanMasaSayisiniGirerekOtomatikOlusturun')}
                     </p>
@@ -7757,7 +7757,7 @@ export default function BusinessDetailsPage() {
               {(planFeatures.dineInQR || admin?.adminType === 'super') && formData.tables.length > 0 && (
                 <div className="bg-background rounded-2xl p-6 border border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                        {t('masaQrKodlari')}
                       <span className="text-sm font-normal text-muted-foreground">
                         · {formData.tables.length} masa
@@ -7826,7 +7826,7 @@ export default function BusinessDetailsPage() {
                                 loading="lazy"
                               />
                             </div>
-                            <span className="text-xs font-bold text-foreground group-hover:text-red-400 transition">
+                            <span className="text-xs font-bold text-foreground group-hover:text-red-800 dark:text-red-400 transition">
                               M{table.label}
                               {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
                             </span>
@@ -7847,7 +7847,7 @@ export default function BusinessDetailsPage() {
                       <span className="text-xl">👨‍🍳</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold">{t('garsonSiparisSistemi')}</h3>
+                      <h3 className="text-foreground font-semibold">{t('garsonSiparisSistemi')}</h3>
                       <p className="text-xs text-muted-foreground">{t('personelTablettelefonIleMasadaSiparisAlir')}</p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
@@ -7880,7 +7880,7 @@ export default function BusinessDetailsPage() {
                         <span className="text-xl">🔗</span>
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold">{t('linkIleGrupSiparisi')}</h3>
+                        <h3 className="text-foreground font-semibold">{t('linkIleGrupSiparisi')}</h3>
                         <p className="text-xs text-muted-foreground">{t('musterilerSiparisLinkiniPaylasarakOrtakSiparisVerebilir')}</p>
                       </div>
                     </div>
@@ -7897,12 +7897,12 @@ export default function BusinessDetailsPage() {
                             <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
                             <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
-                          <span className="ml-3 text-sm font-medium text-white">
+                          <span className="ml-3 text-sm font-medium text-foreground">
                             {formData.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
                           </span>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-foreground ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
                           {business?.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
                         </span>
                       )}
@@ -7920,7 +7920,7 @@ export default function BusinessDetailsPage() {
                         <span className="text-xl">👥</span>
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold">{t('masadaGrupSiparisi')}</h3>
+                        <h3 className="text-foreground font-semibold">{t('masadaGrupSiparisi')}</h3>
                         <p className="text-xs text-muted-foreground">{t('masadakiMusterilerQrOkutarakAyniSipariseUrunEkleyebilir')}</p>
                       </div>
                     </div>
@@ -7937,12 +7937,12 @@ export default function BusinessDetailsPage() {
                             <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
                             <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
-                          <span className="ml-3 text-sm font-medium text-white">
+                          <span className="ml-3 text-sm font-medium text-foreground">
                             {formData.groupOrderTableEnabled ? t('aktif') : t('kapali')}
                           </span>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-foreground ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
                           {business?.groupOrderTableEnabled ? t('aktif') : t('kapali')}
                         </span>
                       )}
@@ -7954,7 +7954,7 @@ export default function BusinessDetailsPage() {
               {/* ── Plan Info Footer ── */}
               <div className="p-4 bg-card/50 rounded-xl border border-border mt-6">
                 <p className="text-sm text-muted-foreground">
-                  {t('buOzelliklerIsletmenin')} <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> {t('planiUzerindenYonetilmektedirDegisiklikYapmakIcin')} <a href="/admin/plans" className="text-blue-400 hover:underline">{t('planYonetimi')}</a> {t('sayfasiniZiyaretEdin')}
+                  {t('buOzelliklerIsletmenin')} <strong className="text-foreground">{business?.subscriptionPlan || 'basic'}</strong> {t('planiUzerindenYonetilmektedirDegisiklikYapmakIcin')} <a href="/admin/plans" className="text-blue-800 dark:text-blue-400 hover:underline">{t('planYonetimi')}</a> {t('sayfasiniZiyaretEdin')}
                 </p>
               </div>
             </div>
@@ -7970,7 +7970,7 @@ export default function BusinessDetailsPage() {
         confirmModal.show && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div className="bg-card rounded-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 {confirmModal.title}
               </h3>
               <p className="text-foreground mb-6">{confirmModal.message}</p>
@@ -8022,7 +8022,7 @@ export default function BusinessDetailsPage() {
               <div className="p-5 border-b border-border flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                       {t('urun_sablonu')} — Ürün Seçimi
                     </h2>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -8043,13 +8043,13 @@ export default function BusinessDetailsPage() {
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, true])))}
-                    className="px-3 py-1.5 bg-green-600/20 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition border border-green-600/30"
+                    className="px-3 py-1.5 bg-green-600/20 text-green-800 dark:text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition border border-green-600/30"
                   >
                      Hepsini Seç
                   </button>
                   <button
                     onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, false])))}
-                    className="px-3 py-1.5 bg-red-600/20 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition border border-red-600/30"
+                    className="px-3 py-1.5 bg-red-600/20 text-red-800 dark:text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition border border-red-600/30"
                   >
                      Hiçbirini Seçme
                   </button>
@@ -8059,13 +8059,13 @@ export default function BusinessDetailsPage() {
                       value={templateSearch}
                       onChange={(e) => setTemplateSearch(e.target.value)}
                       placeholder="{t('urun_ara')}"
-                      className="w-full px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-foreground text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <select
                     value={templateFilter}
                     onChange={(e) => setTemplateFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
+                    className="px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="all"> {t('tum_kategoriler')}</option>
                     {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
@@ -8135,7 +8135,7 @@ export default function BusinessDetailsPage() {
 
                           {/* Product Info */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{prodName}</p>
+                            <p className="text-foreground text-sm font-medium truncate">{prodName}</p>
                             <p className="text-muted-foreground text-xs">
                               {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : ' Adet'}
                               {product.defaultPrice ? ` · €${product.defaultPrice.toFixed(2)}` : ''}
@@ -8174,7 +8174,7 @@ export default function BusinessDetailsPage() {
               {/* Footer */}
               <div className="p-4 border-t border-border flex items-center justify-between flex-shrink-0">
                 <div className="text-muted-foreground text-sm">
-                  🤖 <span className="text-amber-400">AI</span> kategorileri otomatik önerdi — istediğinizi değiştirebilirsiniz
+                  🤖 <span className="text-amber-800 dark:text-amber-400">AI</span> kategorileri otomatik önerdi — istediğinizi değiştirebilirsiniz
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -8213,8 +8213,8 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
             <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-border flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">{editingSupplier ? ' Tedarikçi Düzenle' : ' Yeni Tedarikçi Ekle'}</h2>
-                <button onClick={() => setShowSupplierModal(false)} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
+                <h2 className="text-xl font-bold text-foreground">{editingSupplier ? ' Tedarikçi Düzenle' : ' Yeni Tedarikçi Ekle'}</h2>
+                <button onClick={() => setShowSupplierModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -8222,60 +8222,60 @@ export default function BusinessDetailsPage() {
                     <label className="text-xs text-muted-foreground mb-1 block">Firma Adı *</label>
                     <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
                       placeholder={t('tedarikci_adi_placeholder')}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">{t('yetkili_kisi')}</label>
                     <input value={supplierForm.contactPerson} onChange={e => setSupplierForm((p: any) => ({ ...p, contactPerson: e.target.value }))}
                       placeholder={t('isim_soyisim_placeholder')}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">{t('telefon')}</label>
                     <input value={supplierForm.phone} onChange={e => setSupplierForm((p: any) => ({ ...p, phone: e.target.value }))}
                       placeholder="+49 ..."
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">E-Posta</label>
                     <input value={supplierForm.email} onChange={e => setSupplierForm((p: any) => ({ ...p, email: e.target.value }))}
                       placeholder="info@firma.de"
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Vergi No (USt-IdNr)</label>
                     <input value={supplierForm.taxId} onChange={e => setSupplierForm((p: any) => ({ ...p, taxId: e.target.value }))}
                       placeholder="DE123456789"
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-1 block">{t('adres')}</label>
                     <input value={supplierForm.address} onChange={e => setSupplierForm((p: any) => ({ ...p, address: e.target.value }))}
                       placeholder={t('adres_placeholder')}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">{t('odeme_kosullari')}</label>
                     <input value={supplierForm.paymentTerms} onChange={e => setSupplierForm((p: any) => ({ ...p, paymentTerms: e.target.value }))}
                       placeholder={t('odeme_kosullari_placeholder')}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Teslimat Süresi (gün)</label>
                     <input type="number" value={supplierForm.deliveryDays} onChange={e => setSupplierForm((p: any) => ({ ...p, deliveryDays: e.target.value }))}
                       placeholder="2"
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Min. Sipariş Tutarı (€)</label>
                     <input type="number" value={supplierForm.minOrderValue} onChange={e => setSupplierForm((p: any) => ({ ...p, minOrderValue: e.target.value }))}
                       placeholder="100"
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">{t('durum_label')}</label>
                     <select value={supplierForm.isActive ? 'active' : 'inactive'} onChange={e => setSupplierForm((p: any) => ({ ...p, isActive: e.target.value === 'active' }))}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                       <option value="active">{t('aktif')}</option>
                       <option value="inactive">{t('pasif')}</option>
                     </select>
@@ -8284,7 +8284,7 @@ export default function BusinessDetailsPage() {
                     <label className="text-xs text-muted-foreground mb-1 block">{t('notlar')}</label>
                     <textarea value={supplierForm.notes} onChange={e => setSupplierForm((p: any) => ({ ...p, notes: e.target.value }))}
                       rows={2} placeholder={t('ozel_kosullar_placeholder')}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                   </div>
                 </div>
               </div>
@@ -8308,8 +8308,8 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
             <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-border flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">{editingOrder ? ' Sipariş Düzenle' : ' Yeni Tedarik Siparişi'}</h2>
-                <button onClick={() => setShowOrderModal(false)} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
+                <h2 className="text-xl font-bold text-foreground">{editingOrder ? ' Sipariş Düzenle' : ' Yeni Tedarik Siparişi'}</h2>
+                <button onClick={() => setShowOrderModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-5">
                 {/* Supplier Selection */}
@@ -8322,7 +8322,7 @@ export default function BusinessDetailsPage() {
                         const s = suppliers.find((s: any) => s.id === e.target.value);
                         setOrderForm((p: any) => ({ ...p, supplierId: e.target.value, supplierName: s?.name || '' }));
                       }}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                       {suppliers.map((s: any) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
@@ -8331,20 +8331,20 @@ export default function BusinessDetailsPage() {
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">{t('beklenen_teslimat')}</label>
                     <input type="date" value={orderForm.expectedDeliveryDate} onChange={e => setOrderForm((p: any) => ({ ...p, expectedDeliveryDate: e.target.value }))}
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">{t('fatura_no')}</label>
                     <input value={orderForm.invoiceNumber} onChange={e => setOrderForm((p: any) => ({ ...p, invoiceNumber: e.target.value }))}
                       placeholder="RE-2026-001"
-                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                 </div>
 
                 {/* Order Lines */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-sm font-semibold text-white"> {t('siparis_kalemleri')}</h3>
+                    <h3 className="text-sm font-semibold text-foreground"> {t('siparis_kalemleri')}</h3>
                     <button
                       onClick={() => setOrderForm((p: any) => ({
                         ...p,
@@ -8363,7 +8363,7 @@ export default function BusinessDetailsPage() {
                           {orderForm.items.length > 1 && (
                             <button
                               onClick={() => setOrderForm((p: any) => ({ ...p, items: p.items.filter((_: any, i: number) => i !== idx) }))}
-                              className="text-red-400 hover:text-red-300 text-xs"
+                              className="text-red-800 dark:text-red-400 hover:text-red-300 text-xs"
                             >
                                Kaldır
                             </button>
@@ -8381,7 +8381,7 @@ export default function BusinessDetailsPage() {
                                   setOrderForm((p: any) => ({ ...p, items: newItems }));
                                 }}
                                 placeholder={t('urun_adi_sec_placeholder')}
-                                className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                                 list={`product-list-${idx}`}
                               />
                               <datalist id={`product-list-${idx}`}>
@@ -8403,7 +8403,7 @@ export default function BusinessDetailsPage() {
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
                               placeholder="Art.Nr."
-                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
@@ -8415,7 +8415,7 @@ export default function BusinessDetailsPage() {
                                 newItems[idx] = { ...newItems[idx], unit: e.target.value };
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
-                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600">
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600">
                               <option value="kg">kg</option>
                               <option value="adet">Adet (Stück)</option>
                               <option value="paket">{t('paket')}</option>
@@ -8434,7 +8434,7 @@ export default function BusinessDetailsPage() {
                                 newItems[idx] = { ...newItems[idx], orderedQuantity: e.target.value };
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
-                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
@@ -8449,12 +8449,12 @@ export default function BusinessDetailsPage() {
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
                               placeholder="€"
-                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
                             <label className="text-xs text-muted-foreground mb-1 block">{t('satir_toplam')}</label>
-                            <p className="text-white text-sm font-semibold py-2">
+                            <p className="text-foreground text-sm font-semibold py-2">
                               {formatCurrency(Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0), (business as any)?.currency || 'EUR')}
                             </p>
                           </div>
@@ -8465,7 +8465,7 @@ export default function BusinessDetailsPage() {
                   {/* Total */}
                   <div className="mt-4 text-right">
                     <span className="text-muted-foreground text-sm">Toplam: </span>
-                    <span className="text-white text-lg font-bold">
+                    <span className="text-foreground text-lg font-bold">
                       {formatCurrency(
                         orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0),
                         (business as any)?.currency || 'EUR'
@@ -8479,7 +8479,7 @@ export default function BusinessDetailsPage() {
                   <label className="text-xs text-muted-foreground mb-1 block">{t('notlar')}</label>
                   <textarea value={orderForm.notes} onChange={e => setOrderForm((p: any) => ({ ...p, notes: e.target.value }))}
                     rows={2} placeholder={t('siparis_notlari_placeholder')}
-                    className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
+                    className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                 </div>
               </div>
               <div className="p-6 border-t border-border flex justify-end gap-3">
@@ -8502,21 +8502,21 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowGoodsReceiptModal(false)}>
             <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-white">📥 Mal Kabul (Wareneingang)</h2>
+                <h2 className="text-xl font-bold text-foreground">📥 Mal Kabul (Wareneingang)</h2>
                 <p className="text-muted-foreground text-sm mt-1">
-                  Sipariş: <span className="text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
+                  Sipariş: <span className="text-blue-800 dark:text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
                 </p>
               </div>
               <div className="p-6 space-y-4">
                 {goodsReceiptOrder.items.map((item: any, idx: number) => (
-                  <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-700/50' : 'bg-background/50 border-border'}`}>
+                  <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-200 dark:border-green-700/50' : 'bg-background/50 border-border'}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <span className="text-white font-semibold">{item.productName}</span>
+                        <span className="text-foreground font-semibold">{item.productName}</span>
                         {item.sku && <span className="text-gray-500 text-xs ml-2">(#{item.sku})</span>}
                       </div>
                       <span className="text-muted-foreground text-sm">
-                        Sipariş: <strong className="text-white">{item.orderedQuantity} {item.unit}</strong>
+                        Sipariş: <strong className="text-foreground">{item.orderedQuantity} {item.unit}</strong>
                       </span>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -8531,7 +8531,7 @@ export default function BusinessDetailsPage() {
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
                           placeholder="0"
-                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -8544,7 +8544,7 @@ export default function BusinessDetailsPage() {
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
                           placeholder="LOT-001"
-                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -8557,7 +8557,7 @@ export default function BusinessDetailsPage() {
                             newItems[idx] = { ...newItems[idx], productionDate: e.target.value };
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
-                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -8570,7 +8570,7 @@ export default function BusinessDetailsPage() {
                             newItems[idx] = { ...newItems[idx], expirationDate: e.target.value };
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
-                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div className="flex items-end">

@@ -158,7 +158,7 @@ export default function SuperAdminsPage() {
     if (!admin || admin.adminType !== 'super') {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <p className="text-red-400">Zugriff verweigert</p>
+                <p className="text-red-800 dark:text-red-400">Zugriff verweigert</p>
             </div>
         );
     }
@@ -196,7 +196,7 @@ export default function SuperAdminsPage() {
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-white">{sa.displayName}</div>
+                                        <div className="font-semibold text-foreground">{sa.displayName}</div>
                                         <div className="text-xs text-muted-foreground">{sa.email}</div>
                                         {sa.title && <div className="text-xs text-gray-500 mt-0.5">{sa.title}</div>}
                                         {sa.bio && <div className="text-xs text-gray-500 mt-1 truncate">{sa.bio}</div>}
@@ -244,7 +244,7 @@ export default function SuperAdminsPage() {
                                 <div>
                                     <button
                                         onClick={() => photoInputRef.current?.click()}
-                                        className="text-sm text-blue-400 hover:text-blue-300"
+                                        className="text-sm text-blue-800 dark:text-blue-400 hover:text-blue-300"
                                     >
                                         Foto ändern
                                     </button>
@@ -328,7 +328,7 @@ export default function SuperAdminsPage() {
                             onChange={e => setAddEmail(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddSuperAdmin()}
                             placeholder="E-Mail-Adresse"
-                            className="flex-1 px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none"
+                            className="flex-1 px-3 py-2 bg-gray-700 text-foreground text-sm rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none"
                         />
                         <button
                             onClick={handleAddSuperAdmin}
@@ -342,10 +342,10 @@ export default function SuperAdminsPage() {
                     {addResult && (
                         <div className="mt-4 p-3 bg-gray-700 rounded-lg text-sm">
                             {addResult.mode === 'promoted' ? (
-                                <p className="text-green-400">Benutzer wurde zum Super Admin befördert.</p>
+                                <p className="text-green-800 dark:text-green-400">Benutzer wurde zum Super Admin befördert.</p>
                             ) : (
                                 <div>
-                                    <p className="text-blue-400 mb-2">Einladungslink erstellt:</p>
+                                    <p className="text-blue-800 dark:text-blue-400 mb-2">Einladungslink erstellt:</p>
                                     <code className="text-xs text-foreground break-all block bg-background p-2 rounded">
                                         {addResult.inviteLink}
                                     </code>
