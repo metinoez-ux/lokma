@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Mode (Ozsoft ERP System - Clean Soft Light) */
-  --background: #f8fafc; /* slate-50 */
+  /* Light Mode (Ozsoft ERP System - Soothing Icy Blue-Gray) */
+  --background: #eaf0f6; /* Soothing pale blue-gray to reduce glare */
   --foreground: #0f172a; /* slate-900 */
   --card: #ffffff;
   --card-foreground: #0f172a;
-  --border: #e2e8f0; /* slate-200 */
+  --border: #d1d9e6; /* Noticeable but soft border */
 }
 
 @theme inline {
