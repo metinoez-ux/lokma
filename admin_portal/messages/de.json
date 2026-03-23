@@ -4390,7 +4390,15 @@
         "turkiye": "Türkei",
         "ulke_kodu_secimi": "Auswahl des Ländercodes",
         "yanlis_dogrulama_kodu_tekrar_deneyin": "Falscher Bestätigungscode, versuchen Sie es erneut",
-        "yeni_bir_lokma_hesabi_olusturun": "Erstellen Sie ein neues Lokma-Konto"
+        "yeni_bir_lokma_hesabi_olusturun": "Erstellen Sie ein neues Lokma-Konto",
+        "hesabiniz_henuz_aktif_degil": "Ihr Konto ist noch nicht aktiv",
+        "isletmeci_hesabi_bulunamadi": "Geschaeftskonto nicht gefunden",
+        "hesabiniz_aktif_edilmemis_desc": "Ihr Geschaeftskonto wurde noch nicht aktiviert. Bitte kontaktieren Sie Ihren Administrator.",
+        "isletmeci_hesabi_yok_desc": "Es wurde kein Unternehmen gefunden, das mit diesem Konto verbunden ist. Wenn Sie ein Unternehmer sind, bewerben Sie sich bitte als LOKMA-Partner.",
+        "giris_yapilan_hesap": "Angemeldetes Konto",
+        "is_ortagi_basvurusu_yap": "Partnerantrag stellen",
+        "farkli_hesapla_giris_yap": "Mit einem anderen Konto anmelden",
+        "ana_sayfaya_don": "Zur Startseite"
     },
     "AdminNav": {
         "accounting": "Buchhaltung",

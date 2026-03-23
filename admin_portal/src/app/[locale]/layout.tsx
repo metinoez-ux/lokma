@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LOKMA | Mahalleni Keşfet",
-  description: "Yerel esnaf ve müşterileri bir araya getiren dijital pazar yeri. Kasap, market, çiçekçi, restoran ve daha fazlası tek platformda.",
-  keywords: "yemek siparişi, yerel esnaf, taze ürünler, kurye, restoran kayıt, lokma, lokma uygulamsı, lokma shop, ciftciden",
+  title: "LOKMA | Entdecke deine Nachbarschaft",
+  description: "Der digitale Marktplatz, der lokale Unternehmen und Kunden zusammenbringt. Metzger, Supermarkt, Blumenladen, Restaurant und mehr auf einer Plattform.",
+  keywords: "Essensbestellung, lokale Geschaefte, frische Produkte, Kurier, Restaurant, lokma, lokma app, lokma shop",
   openGraph: {
-    title: "LOKMA | Mahalleni Keşfet",
-    description: "Yerel esnaf ve müşterileri bir araya getiren dijital pazar yeri.",
+    title: "LOKMA | Entdecke deine Nachbarschaft",
+    description: "Der digitale Marktplatz, der lokale Unternehmen und Kunden zusammenbringt.",
     url: "https://lokma.shop",
     siteName: "LOKMA",
     images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         alt: "LOKMA Logo",
       },
     ],
-    locale: "tr_TR",
+    locale: "de_DE",
     type: "website",
   },
   icons: {

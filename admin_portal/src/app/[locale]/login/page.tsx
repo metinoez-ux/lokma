@@ -29,13 +29,13 @@ export default function LoginPage() {
 
     // Country codes for phone input
     const countryCodes = [
-        { code: '+49', country: '🇩🇪', name: 'Almanya' },
-        { code: '+90', country: '🇹🇷', name: tAdminLogin('turkiye') },
-        { code: '+43', country: '🇦🇹', name: 'Avusturya' },
-        { code: '+41', country: '🇨🇭', name: tAdminLogin('i̇svicre') },
-        { code: '+31', country: '🇳🇱', name: 'Hollanda' },
-        { code: '+32', country: '🇧🇪', name: tAdminLogin('belcika') },
-        { code: '+33', country: '🇫🇷', name: 'Fransa' },
+        { code: '+49', country: '🇩🇪' },
+        { code: '+90', country: '🇹🇷' },
+        { code: '+43', country: '🇦🇹' },
+        { code: '+41', country: '🇨🇭' },
+        { code: '+31', country: '🇳🇱' },
+        { code: '+32', country: '🇧🇪' },
+        { code: '+33', country: '🇫🇷' },
     ];
 
     // Email auth state
@@ -697,7 +697,7 @@ export default function LoginPage() {
 
                         {accessDenied.email && (
                             <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 mb-6">
-                                <p className="text-white/40 text-xs mb-1">Giriş yapılan hesap</p>
+                                <p className="text-white/40 text-xs mb-1">{tAdminLogin('giris_yapilan_hesap')}</p>
                                 <p className="text-white/80 text-sm font-medium">{accessDenied.email}</p>
                             </div>
                         )}
@@ -708,7 +708,7 @@ export default function LoginPage() {
                                 href="/partner/apply"
                                 className="block w-full bg-[#fb335b] hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-all"
                             >
-                                🤝 İş Ortağı Başvurusu Yap
+                                {tAdminLogin('is_ortagi_basvurusu_yap')}
                             </Link>
                             <button
                                 onClick={() => {
@@ -718,13 +718,13 @@ export default function LoginPage() {
                                 }}
                                 className="block w-full bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl font-medium text-sm transition-all"
                             >
-                                ← Farklı hesapla giriş yap
+                                {tAdminLogin('farkli_hesapla_giris_yap')}
                             </button>
                             <Link
                                 href="/"
                                 className="block w-full text-white/50 hover:text-white py-2 text-sm transition-colors"
                             >
-                                Ana sayfaya dön
+                                {tAdminLogin('ana_sayfaya_don')}
                             </Link>
                         </div>
                     </div>
@@ -897,7 +897,7 @@ export default function LoginPage() {
 
                                     {/* Phone Number with Country Code */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-white/70 mb-1">
                                             {tAdminLogin('telefon_numarasi')}
                                         </label>
                                         <div className="flex gap-2">
@@ -949,7 +949,7 @@ export default function LoginPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-white/70 mb-1">
                                             {tAdminLogin('6_haneli_dogrulama_kodu')}
                                         </label>
                                         <input

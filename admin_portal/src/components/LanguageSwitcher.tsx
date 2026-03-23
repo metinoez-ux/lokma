@@ -24,7 +24,7 @@ export function LanguageSwitcher() {
 
     const handleChange = (newLocale: Locale) => {
         router.replace(pathname, { locale: newLocale });
-        setIsOpen(false);
+        setTimeout(() => setIsOpen(false), 100);
     };
 
     return (

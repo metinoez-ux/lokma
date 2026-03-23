@@ -118,10 +118,11 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const handleLangChange = (lang: string) => {
         setCurrentLang(lang);
         localStorage.setItem('lokma_lang', lang);
-        setLangMenuOpen(false);
 
-        // next-intl routing
+        // Navigate first, then close dropdown with slight delay
+        // so the router.replace is not blocked by the re-render from closing
         router.replace(pathname, { locale: lang });
+        setTimeout(() => setLangMenuOpen(false), 100);
     };
 
     const handleCountryChange = (code: string) => {
