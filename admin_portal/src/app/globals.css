@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Mode (Ozsoft ERP System - Soothing Icy Blue-Gray) */
-  --background: #eaf0f6; /* Soothing pale blue-gray to reduce glare */
+  /* Light Mode (Ozsoft ERP System - Ultra Soft Blue-Gray) */
+  --background: #e2e8f0; /* Ultra-soft slate-200 to completely remove glare */
+  --header-bg: #1e3a8a; /* Compatible corporate blue (Tailwind blue-900) for Light Mode */
+  --header-border: #1e40af; /* Tailwind blue-800 */
   --foreground: #0f172a; /* slate-900 */
   --card: #ffffff;
   --card-foreground: #0f172a;
-  --border: #d1d9e6; /* Noticeable but soft border */
+  --border: #cbd5e1; /* Soft slate-300 border */
 }
 
 @theme inline {
@@ -22,6 +24,8 @@
 .dark {
   /* Dark Mode (Ozsoft Authentic Deep Navy) */
   --background: #0c1527; /* Very Deep Navy */
+  --header-bg: #0c1527;
+  --header-border: #1f3053;
   --foreground: #f8fafc;
   --card: #15223e; /* Slightly Lighter Navy Card */
   --card-foreground: #f8fafc;

@@ -345,7 +345,7 @@ export default function AdminHeader() {
             {admin?.adminType === 'super' && (
                 <>
                 {/* COMPACT TABLET BAR - visible only on tablet/mobile */}
-                <div className="min-[1921px]:hidden bg-[#0c1527] border-b border-[#1f3053] relative z-40">
+                <div className="min-[1921px]:hidden bg-[var(--header-bg)] border-b border-[var(--header-border)] relative z-40">
                     <div className="px-3 py-2 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button
@@ -453,7 +453,7 @@ export default function AdminHeader() {
                 </div>
 
                 {/* FULL DESKTOP BAR - hidden on tablet */}
-                <div className="hidden min-[1921px]:block bg-[#0c1527] border-b border-[#1f3053] shadow-md relative z-40">
+                <div className="hidden min-[1921px]:block bg-[var(--header-bg)] border-b border-[var(--header-border)] shadow-md relative z-40">
                     <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4">
 
                         <div className="flex flex-wrap items-center gap-1.5 flex-1">
@@ -461,8 +461,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/analytics"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/analytics')
-                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                    ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('analytics')}
@@ -473,8 +473,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/business"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes') || isActiveNav('/admin/benutzerverwaltung') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/drivers/tips') || isActiveNav('/admin/sponsored-ads')
-                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                        ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     Lokma Partner
@@ -514,8 +514,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/orders"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/orders')
-                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                    ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('orders')}
@@ -525,8 +525,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/reservations"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/reservations')
-                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                    ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('reservations')}
@@ -537,8 +537,8 @@ export default function AdminHeader() {
                                 <button
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                                         isActiveNav('/admin/products') || isActiveNav('/admin/ai-menu')
-                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                            : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                            : 'text-slate-300 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     {t('productsCategories')} <span className="text-[10px] opacity-70">&#9660;</span>
@@ -560,8 +560,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/invoices"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
-                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                        ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     {t('accounting')}
@@ -587,8 +587,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/promotions"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/promotions') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals') || isActiveNav('/admin/promotion-templates')
-                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                        ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     {t('promotions')}
@@ -617,8 +617,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/ameise"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/ameise')
-                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                    ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('ameise')}
@@ -629,8 +629,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/activity-logs"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/activity-logs') || isActiveNav('/admin/reports')
-                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                        ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     {t('service')}
@@ -659,8 +659,8 @@ export default function AdminHeader() {
                                         isActiveNav('/admin/settings') ||
                                         isActiveNav('/admin/ui-translations') || isActiveNav('/admin/image-generator') ||
                                         isActiveNav('/admin/ameise')
-                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
-                                            : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
+                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
+                                            : 'text-slate-300 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     {t('settings')}
@@ -1001,7 +1001,7 @@ export default function AdminHeader() {
                                         key={href}
                                         href={href}
                                         className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav(href)
-                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
                                             : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                             }`}
                                     >
@@ -1013,7 +1013,7 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/sponsored-ads"
                                     className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/sponsored-ads')
-                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                        ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
                                         : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                         }`}
                                 >
@@ -1025,7 +1025,7 @@ export default function AdminHeader() {
                                     <button
                                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/staff-dashboard') ||
                                             isActiveNav('/admin/staff-shifts')
-                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
                                             : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                             }`}
                                     >
@@ -1057,7 +1057,7 @@ export default function AdminHeader() {
                                     <button
                                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/settings') ||
                                             isActiveNav('/admin/delivery-settings')
-                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
                                             : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                             }`}
                                     >
