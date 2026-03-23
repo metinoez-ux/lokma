@@ -905,7 +905,7 @@ export default function BusinessesPage() {
                     {isKermesMode ? (
                         <button
                             onClick={() => setShowOrgSearchModal(true)}
-                            className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
+                            className="px-6 py-3 bg-pink-600 text-white rounded-xl font-medium hover:bg-pink-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>🎪</span>
                             {t('yeni_kermes_ekle')}
@@ -913,7 +913,7 @@ export default function BusinessesPage() {
                     ) : (
                         <Link
                             href="/admin/business/new?tab=settings"
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
+                            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>➕</span>
                             {t('yeni_isletme_ekle')}
@@ -1112,7 +1112,7 @@ export default function BusinessesPage() {
                                                     >
                                                         <td className="px-4 py-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 bg-gradient-to-br from-pink-600 to-purple-600 rounded-full flex items-center justify-center text-lg">
+                                                                <div className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-lg text-white">
                                                                     🎪
                                                                 </div>
                                                                 <div>
@@ -1800,15 +1800,15 @@ export default function BusinessesPage() {
 
 
                             {/* === FINANCIAL DETAILS SECTION === */}
-                            <div className="bg-gradient-to-r from-blue-100 dark:from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700/30 p-4 space-y-4">
+                            <div className="bg-card rounded-xl border border-border p-4 space-y-4">
                                 <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
                                     💳 Finansal Bilgiler
                                 </h3>
 
                                 {/* Brand Label - SUPER ADMIN ONLY - Only for Kasap & Restoran */}
                                 {(formData.type === 'kasap' || formData.type === t('restoran')) && (
-                                    <div className="bg-gradient-to-r from-amber-100 dark:from-amber-900/30 to-red-900/30 rounded-lg p-3 border border-amber-600/40">
-                                        <h4 className="text-amber-800 dark:text-amber-400 text-sm font-bold mb-2 flex items-center gap-2">
+                                    <div className="bg-card rounded-lg p-3 border border-border">
+                                        <h4 className="text-foreground text-sm font-bold mb-2 flex items-center gap-2">
                                             🏷️ Marka Etiketi
                                             <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">{t('super_admin')}</span>
                                         </h4>
@@ -2045,7 +2045,7 @@ export default function BusinessesPage() {
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-500 hover:to-purple-500 disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-500 disabled:opacity-50"
                             >
                                 {saving ? 'Kaydediliyor...' : (editingBusiness ? t('guncelle') : t('olustur'))}
                             </button>
@@ -2110,7 +2110,7 @@ export default function BusinessesPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
                         {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-4">
+                        <div className="bg-card border-b border-border px-6 py-4">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h2 className="text-xl font-bold text-foreground">{t('organizasyonSec')}</h2>
