@@ -91,20 +91,20 @@ export default function CustomerServicePage() {
     return (
         <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-indigo-900/50 p-6 rounded-2xl border border-indigo-500/30 backdrop-blur-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-2xl border border-border shadow-sm">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
                         <span className="text-3xl">🎧</span>
                         {t('title')}
                     </h1>
-                    <p className="text-indigo-200 mt-2 text-sm md:text-base">
+                    <p className="text-muted-foreground mt-2 text-sm md:text-base">
                         {t('subtitle')}
                     </p>
                 </div>
             </div>
 
             {/* Search Section */}
-            <div className="bg-card/80 rounded-2xl p-6 border border-border shadow-xl space-y-4">
+            <div className="bg-card rounded-2xl p-6 border border-border shadow-sm space-y-4">
                 <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -115,7 +115,7 @@ export default function CustomerServicePage() {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={t('search_placeholder')}
-                            className="w-full pl-12 pr-4 py-4 bg-background border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg transition-all"
+                            className="w-full pl-12 pr-4 py-4 bg-background border border-input rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-transparent text-lg transition-all"
                         />
                     </div>
 
@@ -125,7 +125,7 @@ export default function CustomerServicePage() {
                             onChange={(e) => {
                                 setDateFilter(e.target.value);
                             }}
-                            className="w-full h-full min-h-[56px] px-4 py-4 bg-background border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer"
+                            className="w-full h-full min-h-[56px] px-4 py-4 bg-background border border-input rounded-xl text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-all appearance-none cursor-pointer"
                         >
                             <option value="all">{t('date_filter_all')}</option>
                             <option value="today">{t('date_filter_today')}</option>
@@ -144,10 +144,10 @@ export default function CustomerServicePage() {
                     <button
                         type="submit"
                         disabled={loading || (query.length < 2 && dateFilter === 'all')}
-                        className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-medium text-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-indigo-500/20"
+                        className="px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium text-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap shadow-sm shadow-primary/20"
                     >
                         {loading ? (
-                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                         ) : (
                             t('search_button')
                         )}

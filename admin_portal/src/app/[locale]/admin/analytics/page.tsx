@@ -363,56 +363,39 @@ export default function UnifiedAnalyticsPage() {
 
                 {/* Main Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-                    <div className="bg-gradient-to-br from-blue-100 dark:from-blue-900/50 to-blue-50 dark:to-blue-800/30 rounded-xl p-3 border border-blue-200 dark:border-blue-700/50">
-                        <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">{userStats?.total || 0}</p>
-                        <p className="text-xs text-muted-foreground">{t('kullanici')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-100 dark:from-green-900/50 to-green-50 dark:to-green-800/30 rounded-xl p-3 border border-green-200 dark:border-green-700/50">
-                        <p className="text-2xl font-bold text-green-800 dark:text-green-400">+{userStats?.new || 0}</p>
-                        <p className="text-xs text-muted-foreground">{t('yeni_kayit')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-100 dark:from-purple-900/50 to-purple-50 dark:to-purple-800/30 rounded-xl p-3 border border-purple-200 dark:border-purple-700/50">
-                        <p className="text-2xl font-bold text-purple-800 dark:text-purple-400">{businessStats?.total || 0}</p>
-                        <p className="text-xs text-muted-foreground">{t('i_sletme')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-amber-100 dark:from-amber-900/50 to-amber-50 dark:to-amber-800/30 rounded-xl p-3 border border-amber-200 dark:border-amber-700/50">
-                        <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">{stats.total}</p>
-                        <p className="text-xs text-muted-foreground">{t('siparis')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-emerald-100 dark:from-emerald-900/50 to-emerald-50 dark:to-emerald-800/30 rounded-xl p-3 border border-emerald-200 dark:border-emerald-700/50">
-                        <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-400">{formatCurrency(stats.revenue)}</p>
-                        <p className="text-xs text-muted-foreground">{t('revenue')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-cyan-100 dark:from-cyan-900/50 to-cyan-50 dark:to-cyan-800/30 rounded-xl p-3 border border-cyan-200 dark:border-cyan-700/50">
-                        <p className="text-2xl font-bold text-cyan-800 dark:text-cyan-400">{formatCurrency(stats.avgOrderValue)}</p>
-                        <p className="text-xs text-muted-foreground">{t('ort_siparis')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-pink-100 dark:from-pink-900/50 to-pink-50 dark:to-pink-800/30 rounded-xl p-3 border border-pink-200 dark:border-pink-700/50">
-                        <p className="text-2xl font-bold text-pink-800 dark:text-pink-400">{masterProductCount}</p>
-                        <p className="text-xs text-muted-foreground">{t('urun')}</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-red-100 dark:from-red-900/50 to-red-50 dark:to-red-800/30 rounded-xl p-3 border border-red-200 dark:border-red-700/50">
-                        <p className="text-2xl font-bold text-red-800 dark:text-red-400">{stats.cancelled}</p>
-                        <p className="text-xs text-muted-foreground">{t('cancellation')}</p>
-                    </div>
+                    {[
+                        { val: userStats?.total || 0, label: t('kullanici') },
+                        { val: `+${userStats?.new || 0}`, label: t('yeni_kayit') },
+                        { val: businessStats?.total || 0, label: t('i_sletme') },
+                        { val: stats.total, label: t('siparis') },
+                        { val: formatCurrency(stats.revenue), label: t('revenue') },
+                        { val: formatCurrency(stats.avgOrderValue), label: t('ort_siparis') },
+                        { val: masterProductCount, label: t('urun') },
+                        { val: stats.cancelled, label: t('cancellation') }
+                    ].map((item, i) => (
+                        <div key={i} className="bg-card rounded-xl p-4 border border-border shadow-sm flex flex-col justify-center">
+                            <p className="text-2xl font-bold text-foreground">{item.val}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{item.label}</p>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Insights Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    <div className="bg-gradient-to-br from-green-100 dark:from-green-900/30 to-green-50 dark:to-green-800/20 border border-green-200 dark:border-green-700/30 rounded-xl p-3">
-                        <p className="text-green-800 dark:text-green-400 text-xs font-medium mb-1">{t('en_yogun_gun')}</p>
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                        <p className="text-muted-foreground text-xs font-medium mb-1">{t('en_yogun_gun')}</p>
                         <p className="text-foreground text-lg font-bold">{analytics.busiestDay}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-100 dark:from-blue-900/30 to-blue-50 dark:to-blue-800/20 border border-blue-200 dark:border-blue-700/30 rounded-xl p-3">
-                        <p className="text-blue-800 dark:text-blue-400 text-xs font-medium mb-1">{t('en_durgun_gun')}</p>
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                        <p className="text-muted-foreground text-xs font-medium mb-1">{t('en_durgun_gun')}</p>
                         <p className="text-foreground text-lg font-bold">{analytics.slowestDay}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-amber-100 dark:from-amber-900/30 to-amber-50 dark:to-amber-800/20 border border-amber-200 dark:border-amber-700/30 rounded-xl p-3">
-                        <p className="text-amber-800 dark:text-amber-400 text-xs font-medium mb-1">{t('en_yogun_saat')}</p>
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                        <p className="text-muted-foreground text-xs font-medium mb-1">{t('en_yogun_saat')}</p>
                         <p className="text-foreground text-lg font-bold">{analytics.peakHour}:00</p>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-100 dark:from-purple-900/30 to-purple-50 dark:to-purple-800/20 border border-purple-200 dark:border-purple-700/30 rounded-xl p-3">
-                        <p className="text-purple-800 dark:text-purple-400 text-xs font-medium mb-1">{t('siparis_orani')}</p>
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                        <p className="text-muted-foreground text-xs font-medium mb-1">{t('siparis_orani')}</p>
                         <p className="text-foreground text-sm font-bold">{analytics.deliveryRate}% {t('kurye_label')} | {analytics.dineInRate}% {t('masa_label')} | {analytics.pickupRate}% {t('gel_al_label')}</p>
                     </div>
                 </div>
@@ -611,39 +594,31 @@ export default function UnifiedAnalyticsPage() {
                         <div className="mb-6">
                             <h2 className="text-lg font-bold text-foreground mb-4">{t('platform_ozeti')}</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                                <div className="bg-card rounded-xl p-3 border border-border">
-                                    <p className="text-xl font-bold text-foreground">{orders.length.toLocaleString()}</p>
-                                    <p className="text-xs text-muted-foreground">{t('toplam_siparis_tum')}</p>
-                                </div>
-                                <div className="bg-card rounded-xl p-3 border border-border">
-                                    <p className="text-xl font-bold text-green-800 dark:text-green-400">{completionRate}%</p>
-                                    <p className="text-xs text-muted-foreground">{t('tamamlanma_orani')}</p>
-                                </div>
-                                <div className="bg-card rounded-xl p-3 border border-border">
-                                    <p className="text-xl font-bold text-emerald-800 dark:text-emerald-400">€{Number(avgRevenuePerDay).toLocaleString()}</p>
-                                    <p className="text-xs text-muted-foreground">{t('gunluk_ort_ciro')}</p>
-                                </div>
-                                <div className="bg-card rounded-xl p-3 border border-border">
-                                    <p className="text-xl font-bold text-cyan-800 dark:text-cyan-400">{avgPerDay}</p>
-                                    <p className="text-xs text-muted-foreground">{t('gunluk_ort_siparis')}</p>
-                                </div>
-                                <div className="bg-card rounded-xl p-3 border border-border">
-                                    <p className="text-xl font-bold text-purple-800 dark:text-purple-400">{uniqueBusinesses}</p>
-                                    <p className="text-xs text-muted-foreground">{t('aktif_i_sletme')}</p>
-                                </div>
-                                <div className="bg-card rounded-xl p-3 border border-border">
-                                    <p className="text-xl font-bold text-blue-800 dark:text-blue-400">{userStats?.total || 0}</p>
-                                    <p className="text-xs text-muted-foreground">{t('toplam_kullanici')}</p>
-                                </div>
+                                {[
+                                    { val: orders.length.toLocaleString(), label: t('toplam_siparis_tum') },
+                                    { val: `${completionRate}%`, label: t('tamamlanma_orani') },
+                                    { val: `€${Number(avgRevenuePerDay).toLocaleString()}`, label: t('gunluk_ort_ciro') },
+                                    { val: avgPerDay, label: t('gunluk_ort_siparis') },
+                                    { val: uniqueBusinesses, label: t('aktif_i_sletme') },
+                                    { val: userStats?.total || 0, label: t('toplam_kullanici') }
+                                ].map((item, i) => (
+                                    <div key={i} className="bg-card rounded-xl p-4 border border-border shadow-sm flex flex-col justify-center">
+                                        <p className="text-xl font-bold text-foreground">{item.val}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{item.label}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     );
                 })()}
 
                 {/* Info */}
-                <div className="bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-xl p-3">
-                    <p className="text-yellow-800 dark:text-yellow-400 text-xs">
-                        {t('gosterilen_donem')} <strong>{getDateLabel()}</strong> {t('veriler_firestore_dan_gercek_zamanli_cek')}
+                <div className="bg-muted border border-border rounded-xl p-3 shadow-sm">
+                    <p className="text-muted-foreground text-xs flex items-center gap-2">
+                        <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span>
+                            {t('gosterilen_donem')} <strong>{getDateLabel()}</strong> {t('veriler_firestore_dan_gercek_zamanli_cek')}
+                        </span>
                     </p>
                 </div>
             </main>
