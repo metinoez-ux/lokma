@@ -92,8 +92,8 @@ export default function UnifiedAnalyticsPage() {
             case 'yesterday': return t('dun');
             case 'week': return t('son_7_gun');
             case 'month': return t('son_30_gun');
-            case 'year': return `Bu Yıl (${new Date().getFullYear()})`;
-            case 'lastYear': return `Geçen Yıl (${new Date().getFullYear() - 1})`;
+            case 'year': return `${t('bu_yil')} (${new Date().getFullYear()})`;
+            case 'lastYear': return `${new Date().getFullYear() - 1}`;
             case 'all': return t('tum_zamanlar');
             default: return t('son_30_gun');
         }
@@ -212,14 +212,14 @@ export default function UnifiedAnalyticsPage() {
             count: filteredOrders.filter(o => o.createdAt?.toDate().getHours() === hour).length,
         }));
 
-        const dailyDistribution = ['Paz', 'Pzt', 'Sal', t('car'), 'Per', 'Cum', 'Cmt'].map((day, idx) => ({
+        const dailyDistribution = [t('paz'), t('pzt'), t('sal'), t('car'), t('per'), t('cum'), t('cmt')].map((day, idx) => ({
             day,
             count: filteredOrders.filter(o => o.createdAt?.toDate().getDay() === idx).length,
         }));
 
         const typeBreakdown = {
             pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl').length,
-            delivery: filteredOrders.filter(o => o.type === 'delivery' || o.type === t('kurye')).length,
+            delivery: filteredOrders.filter(o => o.type === 'delivery' || o.type === 'kurye').length,
             dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'masa').length,
         };
 
@@ -257,9 +257,23 @@ export default function UnifiedAnalyticsPage() {
         const sortedDays = [...dailyDistribution].sort((a, b) => b.count - a.count);
         const busiestDay = sortedDays[0]?.day || 'Cmt';
         const slowestDay = sortedDays[sortedDays.length - 1]?.day || 'Paz';
-        const deliveryRate = filteredOrders.length > 0 ? Math.round((typeBreakdown.delivery / filteredOrders.length) * 100) : 0;
-        const dineInRate = filteredOrders.length > 0 ? Math.round((typeBreakdown.dineIn / filteredOrders.length) * 100) : 0;
-        const pickupRate = filteredOrders.length > 0 ? Math.round((typeBreakdown.pickup / filteredOrders.length) * 100) : 0;
+        const deliveryRaw = filteredOrders.length > 0 ? (typeBreakdown.delivery / filteredOrders.length) * 100 : 0;
+        const dineInRaw = filteredOrders.length > 0 ? (typeBreakdown.dineIn / filteredOrders.length) * 100 : 0;
+        const pickupRaw = filteredOrders.length > 0 ? (typeBreakdown.pickup / filteredOrders.length) * 100 : 0;
+        // Ensure rates always total 100% by distributing rounding remainder
+        let deliveryRate = Math.round(deliveryRaw);
+        let dineInRate = Math.round(dineInRaw);
+        let pickupRate = Math.round(pickupRaw);
+        if (filteredOrders.length > 0) {
+            const sum = deliveryRate + dineInRate + pickupRate;
+            if (sum !== 100) {
+                const diff = 100 - sum;
+                // Add the difference to the largest category
+                if (deliveryRate >= dineInRate && deliveryRate >= pickupRate) deliveryRate += diff;
+                else if (dineInRate >= deliveryRate && dineInRate >= pickupRate) dineInRate += diff;
+                else pickupRate += diff;
+            }
+        }
 
         return { hourlyDistribution, dailyDistribution, topProducts, businessPerformance, peakHour, busiestDay, slowestDay, deliveryRate, dineInRate, pickupRate };
     }, [filteredOrders, businesses]);
@@ -482,17 +496,70 @@ export default function UnifiedAnalyticsPage() {
                     {/* Business Types */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('i_sletme_turleri')}</h3>
-                        <div className="space-y-2 text-sm">
-                            {businessStats && Object.entries(businessStats.byType).slice(0, 5).map(([type, count]) => (
-                                <div key={type} className="flex justify-between">
-                                    <span className="text-gray-400 capitalize">{type}</span>
-                                    <span className="text-cyan-400 font-bold">{count}</span>
+                        {businessStats && (() => {
+                            // Group business types into Yemek (Food) and Market categories
+                            const yemekTypes = ['restoran', 'restaurant', 'firin', 'cigkofte', 'doener', 'pizza', 'cafe', 'baeckerei', 'kebap', 'lokanta'];
+                            const marketTypes = ['market', 'kasap', 'metzgerei', 'supermarkt', 'online_shop', 'bakliyat', 'kuruyemis', 'sarkuteri', 'manav'];
+                            
+                            let yemekCount = 0;
+                            let marketCount = 0;
+                            const yemekSubs: [string, number][] = [];
+                            const marketSubs: [string, number][] = [];
+                            const otherSubs: [string, number][] = [];
+
+                            Object.entries(businessStats.byType).forEach(([type, count]) => {
+                                const lower = type.toLowerCase();
+                                if (yemekTypes.some(yt => lower.includes(yt))) {
+                                    yemekCount += count;
+                                    yemekSubs.push([type, count]);
+                                } else if (marketTypes.some(mt => lower.includes(mt))) {
+                                    marketCount += count;
+                                    marketSubs.push([type, count]);
+                                } else {
+                                    // Default to Yemek for unknown types
+                                    yemekCount += count;
+                                    yemekSubs.push([type, count]);
+                                }
+                            });
+
+                            return (
+                                <div className="space-y-2 text-sm">
+                                    {/* Yemek */}
+                                    <details className="group">
+                                        <summary className="flex justify-between cursor-pointer list-none">
+                                            <span className="text-orange-400 font-medium flex items-center gap-1">🍽 {t('yemek_segmenti') || 'Yemek'}</span>
+                                            <span className="text-orange-400 font-bold">{yemekCount}</span>
+                                        </summary>
+                                        <div className="pl-4 mt-1 space-y-1 border-l border-gray-700 ml-2">
+                                            {yemekSubs.sort((a, b) => b[1] - a[1]).map(([type, count]) => (
+                                                <div key={type} className="flex justify-between">
+                                                    <span className="text-gray-400 capitalize">{type}</span>
+                                                    <span className="text-cyan-400 font-bold">{count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </details>
+                                    {/* Market */}
+                                    <details className="group">
+                                        <summary className="flex justify-between cursor-pointer list-none">
+                                            <span className="text-green-400 font-medium flex items-center gap-1">🛒 {t('market_segmenti') || 'Market'}</span>
+                                            <span className="text-green-400 font-bold">{marketCount}</span>
+                                        </summary>
+                                        <div className="pl-4 mt-1 space-y-1 border-l border-gray-700 ml-2">
+                                            {marketSubs.sort((a, b) => b[1] - a[1]).map(([type, count]) => (
+                                                <div key={type} className="flex justify-between">
+                                                    <span className="text-gray-400 capitalize">{type}</span>
+                                                    <span className="text-cyan-400 font-bold">{count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </details>
+                                    <div className="border-t border-gray-700 pt-2">
+                                        <div className="flex justify-between"><span className="text-gray-300">{t('aktif')}</span><span className="text-green-400 font-bold">{businessStats?.active}</span></div>
+                                    </div>
                                 </div>
-                            ))}
-                            <div className="border-t border-gray-700 pt-2">
-                                <div className="flex justify-between"><span className="text-gray-300">{t('aktif')}</span><span className="text-green-400 font-bold">{businessStats?.active}</span></div>
-                            </div>
-                        </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Top Products */}

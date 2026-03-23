@@ -297,7 +297,15 @@
         "yeni_kayit": "Neue Registrierung",
         "yenile": "Aktualisieren",
         "revenue": "Umsatz",
-        "cancellation": "Stornierung"
+        "cancellation": "Stornierung",
+        "yemek_segmenti": "Gastronomie",
+        "market_segmenti": "Einzelhandel",
+        "paz": "So",
+        "pzt": "Mo",
+        "sal": "Di",
+        "per": "Do",
+        "cum": "Fr",
+        "cmt": "Sa"
     },
     "AdminApiKeys": {
         "title": "API-Schlüssel",
