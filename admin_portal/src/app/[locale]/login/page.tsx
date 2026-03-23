@@ -600,7 +600,7 @@ export default function LoginPage() {
         setLoading(true);
 
         if (!firstName.trim() || !lastName.trim()) {
-            setError('Ad ve Soyad gereklidir.');
+            setError(`${tAdminLogin('adiniz')} & ${tAdminLogin('soyadiniz')}`);
             setLoading(false);
             return;
         }
@@ -741,7 +741,7 @@ export default function LoginPage() {
                     {tAdminLogin('_ana_sayfaya_don')}
                 </Link>
 
-                <div className="bg-[#1a1010] border border-white/10 rounded-2xl shadow-xl p-8">
+                <div className="bg-[#111118] border border-white/5 rounded-2xl shadow-2xl p-8">
                     {/* Logo */}
                     <div className="text-center mb-6">
                         <img src="/lokma_logo.png" alt="LOKMA" className="w-16 h-16 mx-auto rounded-2xl mb-4" />
@@ -754,7 +754,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Login/Register Toggle - Pill Switch */}
-                    <div className="relative flex bg-white/10 rounded-full p-1 mb-6 border border-white/10">
+                    <div className="relative flex bg-[#0d0d14] rounded-full p-1 mb-6 border border-white/5">
                         {/* Sliding Background */}
                         <div
                             className={`absolute top-1 bottom-1 w-1/2 bg-[#fb335b] rounded-full transition-all duration-300 ease-in-out ${isRegister ? 'left-[calc(50%-2px)]' : 'left-1'}`}
@@ -832,7 +832,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Auth Method Toggle (Email/Phone) */}
-                    <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 mb-6">
+                    <div className="flex bg-[#0d0d14] border border-white/5 rounded-xl p-1 mb-6">
                         <button
                             onClick={() => { setAuthMethod('phone'); setError(''); setShowOtpInput(false); }}
                             className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2 ${authMethod === 'phone'
@@ -864,7 +864,7 @@ export default function LoginPage() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                        Ad
+                                                        {tAdminLogin('adiniz')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -877,7 +877,7 @@ export default function LoginPage() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-white/70 mb-1">
-                                                        Soyad
+                                                        {tAdminLogin('soyadiniz')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -1073,7 +1073,7 @@ export default function LoginPage() {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="block text-sm font-medium text-white/70 mb-1">
-                                                    Ad
+                                                    {tAdminLogin('adiniz')}
                                                 </label>
                                                 <input
                                                     type="text"
@@ -1086,7 +1086,7 @@ export default function LoginPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-white/70 mb-1">
-                                                    Soyad
+                                                    {tAdminLogin('soyadiniz')}
                                                 </label>
                                                 <input
                                                     type="text"
@@ -1168,7 +1168,7 @@ export default function LoginPage() {
 
                     {/* Footer */}
                     <p className="text-center text-white/40 text-xs mt-8">
-                        {tAdminLogin('giris_yaparak')} <Link href="/terms" className="text-[#fb335b] hover:underline">{tAdminLogin('kullanim_kosullarini')}</Link> ve{' '}
+                        {tAdminLogin('giris_yaparak')} <Link href="/terms" className="text-[#fb335b] hover:underline">{tAdminLogin('kullanim_kosullarini')}</Link>{' & '}
                         <Link href="/privacy" className="text-[#fb335b] hover:underline">{tAdminLogin('gizlilik_politikasini')}</Link> {tAdminLogin('kabul_etmis_olursunuz')}
                     </p>
                 </div>
