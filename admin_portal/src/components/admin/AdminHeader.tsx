@@ -345,7 +345,7 @@ export default function AdminHeader() {
             {admin?.adminType === 'super' && (
                 <>
                 {/* COMPACT TABLET BAR - visible only on tablet/mobile */}
-                <div className="min-[1921px]:hidden bg-background border-b border-border relative z-40">
+                <div className="min-[1921px]:hidden bg-[#0c1527] border-b border-[#1f3053] relative z-40">
                     <div className="px-3 py-2 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button
@@ -416,7 +416,7 @@ export default function AdminHeader() {
                                         </span>
                                     )}
                                 </div>
-                                <span className="text-muted-foreground text-[10px]">{`\u25BC`}</span>
+                                <span className="text-slate-400 text-[10px]">{`\u25BC`}</span>
                             </button>
                             {tabletProfileOpen && (
                             <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border z-50 min-w-[200px]">
@@ -453,7 +453,7 @@ export default function AdminHeader() {
                 </div>
 
                 {/* FULL DESKTOP BAR - hidden on tablet */}
-                <div className="hidden min-[1921px]:block bg-gradient-to-r from-red-800 via-rose-700 to-red-800 border-b border-red-900 shadow-sm relative z-40">
+                <div className="hidden min-[1921px]:block bg-[#0c1527] border-b border-[#1f3053] shadow-md relative z-40">
                     <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4">
 
                         <div className="flex flex-wrap items-center gap-1.5 flex-1">
@@ -461,8 +461,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/analytics"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/analytics')
-                                    ? 'bg-white/15 text-white'
-                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                     }`}
                             >
                                 {t('analytics')}
@@ -473,8 +473,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/business"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes') || isActiveNav('/admin/benutzerverwaltung') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/drivers/tips') || isActiveNav('/admin/sponsored-ads')
-                                        ? 'bg-white/15 text-white'
-                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                         }`}
                                 >
                                     Lokma Partner
@@ -514,8 +514,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/orders"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/orders')
-                                    ? 'bg-white/15 text-white'
-                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                     }`}
                             >
                                 {t('orders')}
@@ -525,8 +525,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/reservations"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/reservations')
-                                    ? 'bg-white/15 text-white'
-                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                     }`}
                             >
                                 {t('reservations')}
@@ -537,8 +537,8 @@ export default function AdminHeader() {
                                 <button
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                                         isActiveNav('/admin/products') || isActiveNav('/admin/ai-menu')
-                                            ? 'bg-white/15 text-white'
-                                            : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                            : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                     }`}
                                 >
                                     {t('productsCategories')} <span className="text-[10px] opacity-70">&#9660;</span>
@@ -560,8 +560,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/invoices"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
-                                        ? 'bg-white/15 text-white'
-                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                         }`}
                                 >
                                     {t('accounting')}
@@ -587,8 +587,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/promotions"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/promotions') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals') || isActiveNav('/admin/promotion-templates')
-                                        ? 'bg-white/15 text-white'
-                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                         }`}
                                 >
                                     {t('promotions')}
@@ -617,8 +617,8 @@ export default function AdminHeader() {
                             <Link
                                 href="/admin/ameise"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/ameise')
-                                    ? 'bg-white/15 text-white'
-                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                    ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                    : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                     }`}
                             >
                                 {t('ameise')}
@@ -629,8 +629,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/activity-logs"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/activity-logs') || isActiveNav('/admin/reports')
-                                        ? 'bg-white/15 text-white'
-                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                        : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                         }`}
                                 >
                                     {t('service')}
@@ -659,8 +659,8 @@ export default function AdminHeader() {
                                         isActiveNav('/admin/settings') ||
                                         isActiveNav('/admin/ui-translations') || isActiveNav('/admin/image-generator') ||
                                         isActiveNav('/admin/ameise')
-                                            ? 'bg-white/15 text-white'
-                                            : 'text-blue-100 hover:text-white hover:bg-white/10'
+                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
+                                            : 'text-slate-300 hover:text-white hover:bg-[#15223e]'
                                     }`}
                                 >
                                     {t('settings')}
@@ -706,11 +706,11 @@ export default function AdminHeader() {
                                         <span className="text-white text-xs font-medium max-w-[100px] truncate leading-tight">
                                             {admin.displayName || 'Super Admin'}
                                         </span>
-                                        <span className="text-blue-200 text-[10px] leading-tight font-medium">
+                                        <span className="text-slate-400 text-[10px] leading-tight font-medium">
                                             {t('superAdmin')}
                                         </span>
                                     </div>
-                                    <span className="text-blue-200 text-[10px] ml-1">▼</span>
+                                    <span className="text-slate-400 text-[10px] ml-1">▼</span>
                                 </button>
 
                                 {/* Dropdown Menu (including Settings) */}
@@ -765,7 +765,7 @@ export default function AdminHeader() {
                             />
                             <div className="min-[1921px]:hidden fixed top-0 left-0 h-full w-72 bg-background border-r border-border z-50 overflow-y-auto shadow-2xl">
                                 <div className="p-4 border-b border-border flex items-center justify-between">
-                                    <span className="text-foreground font-semibold text-sm">Menu</span>
+                                    <span className="text-white font-semibold text-sm">Menu</span>
                                     <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-white text-xl">{'\u2715'}</button>
                                 </div>
                                 <nav className="py-2">
@@ -1001,7 +1001,7 @@ export default function AdminHeader() {
                                         key={href}
                                         href={href}
                                         className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav(href)
-                                            ? 'bg-white/15 text-white'
+                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
                                             : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                             }`}
                                     >
@@ -1013,7 +1013,7 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/sponsored-ads"
                                     className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/sponsored-ads')
-                                        ? 'bg-white/15 text-white'
+                                        ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
                                         : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                         }`}
                                 >
@@ -1025,7 +1025,7 @@ export default function AdminHeader() {
                                     <button
                                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/staff-dashboard') ||
                                             isActiveNav('/admin/staff-shifts')
-                                            ? 'bg-white/15 text-white'
+                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
                                             : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                             }`}
                                     >
@@ -1057,7 +1057,7 @@ export default function AdminHeader() {
                                     <button
                                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/settings') ||
                                             isActiveNav('/admin/delivery-settings')
-                                            ? 'bg-white/15 text-white'
+                                            ? 'bg-[#15223e] border border-[#1f3053] text-white shadow-inner'
                                             : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
                                             }`}
                                     >
@@ -1146,7 +1146,7 @@ export default function AdminHeader() {
                                             )}
                                         </div>
                                         <div className="hidden md:flex flex-col items-start">
-                                            <span className="text-foreground text-xs font-medium max-w-[100px] truncate leading-tight">
+                                            <span className="text-white text-xs font-medium max-w-[100px] truncate leading-tight">
                                                 {admin.displayName || admin.email?.split('@')[0] || 'Admin'}
                                             </span>
                                             <span className="text-slate-500 text-[10px] leading-tight">
@@ -1208,7 +1208,7 @@ export default function AdminHeader() {
                             />
                             <div className="min-[1921px]:hidden fixed top-0 left-0 h-full w-72 bg-background border-r border-border z-50 overflow-y-auto shadow-2xl">
                                 <div className="p-4 border-b border-border flex items-center justify-between">
-                                    <span className="text-foreground font-semibold text-sm">Menu</span>
+                                    <span className="text-white font-semibold text-sm">Menu</span>
                                     <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-white text-xl">{`\u2715`}</button>
                                 </div>
                                 <nav className="py-2">

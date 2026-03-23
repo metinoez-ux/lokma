@@ -339,7 +339,7 @@ export default function UnifiedAnalyticsPage() {
                                     onClick={() => setDateFilter(item.value as DateFilter)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${dateFilter === item.value
                                         ? 'bg-amber-600 text-white'
-                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     {item.label}
