@@ -1191,7 +1191,7 @@ export default function OrdersPage() {
                                     >
                                         <span>{t(deliveryPaused ? 'status_paused' : 'type_delivery')}</span>
                                         {deliveryPaused && deliveryCountdown && (
-                                            <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
+                                            <span className="ml-1 bg-card dark:bg-slate-800/20 px-2 py-0.5 rounded-full text-xs font-mono">
                                                 {deliveryCountdown}
                                             </span>
                                         )}
@@ -1226,7 +1226,7 @@ export default function OrdersPage() {
                                     >
                                         <span>{t(pickupPaused ? 'status_paused' : 'pickup_label')}</span>
                                         {pickupPaused && pickupCountdown && (
-                                            <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
+                                            <span className="ml-1 bg-card dark:bg-slate-800/20 px-2 py-0.5 rounded-full text-xs font-mono">
                                                 {pickupCountdown}
                                             </span>
                                         )}
@@ -1392,7 +1392,7 @@ export default function OrdersPage() {
                                                 onClick={() => savePrinterSettings({ ...printerSettings, autoPrint: !printerSettings.autoPrint })}
                                                 className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.autoPrint ? 'bg-amber-500' : 'bg-gray-600'}`}
                                             >
-                                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${printerSettings.autoPrint ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                                                <div className={`absolute top-0.5 w-5 h-5 bg-card dark:bg-slate-800 rounded-full shadow transition-transform ${printerSettings.autoPrint ? 'translate-x-6' : 'translate-x-0.5'}`} />
                                             </button>
                                         </div>
                                     </div>

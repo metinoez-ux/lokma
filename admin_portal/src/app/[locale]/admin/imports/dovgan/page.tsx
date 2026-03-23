@@ -321,7 +321,7 @@ export default function DovganImportPage() {
             </div>
 
             {/* Category Selection */}
-            <div className="bg-white rounded-lg border p-6 mb-8">
+            <div className="bg-card rounded-lg border p-6 mb-8">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">{t('kategoriler')}</h2>
                     <div className="flex gap-2">

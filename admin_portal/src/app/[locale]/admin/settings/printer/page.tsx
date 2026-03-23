@@ -105,7 +105,7 @@ export default function PrinterSettingsPage() {
                             onClick={() => save({ ...settings, enabled: !settings.enabled })}
                             className={`relative w-14 h-7 rounded-full transition-colors ${settings.enabled ? 'bg-green-500' : 'bg-gray-600'}`}
                         >
-                            <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${settings.enabled ? 'translate-x-7' : 'translate-x-0.5'}`} />
+                            <div className={`absolute top-0.5 w-6 h-6 bg-card dark:bg-slate-800 rounded-full shadow transition-transform ${settings.enabled ? 'translate-x-7' : 'translate-x-0.5'}`} />
                         </button>
                     </div>
 

@@ -585,7 +585,7 @@ export default function ImageGeneratorPage() {
                             <button
                                 onClick={() => setFilterCategory('all')}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterCategory === 'all'
-                                    ? 'bg-white text-gray-900'
+                                    ? 'bg-card dark:bg-slate-800 text-gray-900'
                                     : 'bg-card text-muted-foreground hover:bg-gray-700'
                                     }`}
                             >
@@ -656,7 +656,7 @@ export default function ImageGeneratorPage() {
                                             }}
                                             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${copiedId === image.id
                                                 ? 'bg-emerald-600 text-white'
-                                                : 'bg-white/10 backdrop-blur-xl text-white hover:bg-white/20'
+                                                : 'bg-card dark:bg-slate-800/10 backdrop-blur-xl text-white hover:bg-card dark:bg-slate-800/20'
                                                 }`}
                                         >
                                             {copiedId === image.id ? t('kopyalandi') : t('url_kopieren')}
@@ -670,7 +670,7 @@ export default function ImageGeneratorPage() {
                                                     deleteImage(image);
                                                 }}
                                                 disabled={deletingId === image.id}
-                                                className="flex items-center justify-center p-2.5 rounded-xl bg-white/10 backdrop-blur-xl text-white hover:bg-red-600 transition-all"
+                                                className="flex items-center justify-center p-2.5 rounded-xl bg-card dark:bg-slate-800/10 backdrop-blur-xl text-white hover:bg-red-600 transition-all"
                                             >
                                                 {deletingId === image.id ? (
                                                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

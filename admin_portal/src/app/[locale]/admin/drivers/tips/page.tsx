@@ -209,7 +209,7 @@ export default function DriverTipsOverviewPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white dark:bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-card dark:bg-slate-800 dark:bg-background flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
                     <p className="text-gray-500 dark:text-muted-foreground">{t('loading')}</p>
@@ -259,7 +259,7 @@ export default function DriverTipsOverviewPage() {
                             onClick={() => setPeriodFilter(p.key as 'week' | 'month' | 'all')}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                 periodFilter === p.key
-                                    ? 'bg-amber-500 text-black'
+                                    ? 'bg-amber-500 text-foreground'
                                     : 'bg-gray-200 dark:bg-card text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-700'
                             }`}
                         >
@@ -297,7 +297,7 @@ export default function DriverTipsOverviewPage() {
                     <button
                         onClick={() => { setActiveTab('overview'); setSelectedDriverId(null); }}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            activeTab === 'overview' ? 'bg-amber-500 text-black' : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white'
+                            activeTab === 'overview' ? 'bg-amber-500 text-foreground' : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white'
                         }`}
                     >
                         {t('tab_drivers')}
@@ -305,7 +305,7 @@ export default function DriverTipsOverviewPage() {
                     <button
                         onClick={() => setActiveTab('details')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            activeTab === 'details' ? 'bg-amber-500 text-black' : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white'
+                            activeTab === 'details' ? 'bg-amber-500 text-foreground' : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white'
                         }`}
                     >
                         {t('tab_details')}
@@ -319,13 +319,13 @@ export default function DriverTipsOverviewPage() {
                         placeholder={t('search_placeholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full max-w-md bg-white dark:bg-card border border-gray-300 dark:border-border rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                        className="w-full max-w-md bg-card dark:bg-slate-800 dark:bg-card border border-gray-300 dark:border-border rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500"
                     />
                 </div>
 
                 {/* ---- TAB: OVERVIEW (Driver Summary Table) ---- */}
                 {activeTab === 'overview' && (
-                    <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-card dark:bg-slate-800 dark:bg-card rounded-xl overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
@@ -404,7 +404,7 @@ export default function DriverTipsOverviewPage() {
                             <button
                                 onClick={() => setSelectedDriverId(null)}
                                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                                    !selectedDriverId ? 'bg-amber-500 text-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
+                                    !selectedDriverId ? 'bg-amber-500 text-foreground' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
                                 }`}
                             >
                                 {t('all_drivers')}
@@ -414,7 +414,7 @@ export default function DriverTipsOverviewPage() {
                                     key={d.driverId}
                                     onClick={() => setSelectedDriverId(d.driverId)}
                                     className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                                        selectedDriverId === d.driverId ? 'bg-amber-500 text-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        selectedDriverId === d.driverId ? 'bg-amber-500 text-foreground' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
                                     {d.driverName} ({formatCurrency(d.totalTips)})
@@ -441,7 +441,7 @@ export default function DriverTipsOverviewPage() {
                         )}
 
                         {/* Tip entries table */}
-                        <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-card dark:bg-slate-800 dark:bg-card rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>

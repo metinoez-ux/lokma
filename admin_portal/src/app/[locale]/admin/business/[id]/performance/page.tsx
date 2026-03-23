@@ -226,7 +226,7 @@ const params = useParams();
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                         <Link href={`/admin/business/${businessId}`} className="text-purple-200 hover:text-foreground text-sm">{t('i_sletmeye_don')}</Link>
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-card rounded-full flex items-center justify-center">
                             <span className="text-2xl">📊</span>
                         </div>
                         <div>

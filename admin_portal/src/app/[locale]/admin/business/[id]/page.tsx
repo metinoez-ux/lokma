@@ -626,7 +626,7 @@ export default function BusinessDetailsPage() {
             </p>
             <a
               href={`/${params.locale}/admin/plans`}
-              className="mt-4 inline-block px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-semibold rounded-xl hover:from-amber-400 hover:to-amber-500 transition shadow-lg"
+              className="mt-4 inline-block px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-foreground font-semibold rounded-xl hover:from-amber-400 hover:to-amber-500 transition shadow-lg"
             >
               {t('planlariIncele')}
             </a>
@@ -4084,7 +4084,7 @@ export default function BusinessDetailsPage() {
                             <div className="flex flex-col gap-2 w-full">
                               <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
                               <div className="flex items-center gap-2 my-1"><span className="text-gray-600 text-xs">{t('veya')}</span></div>
-                              <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
+                              <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-card text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
                                 {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
                               </button>
                               {!formData.googlePlaceId && (<p className="text-xs text-red-800 dark:text-red-400">{t('google_id_gerekli')}</p>)}
@@ -4177,7 +4177,7 @@ export default function BusinessDetailsPage() {
                                       <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <label className="flex items-center cursor-pointer ml-auto relative">
                                         <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                                         <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                       </label>
                                     </div>
@@ -4250,7 +4250,7 @@ export default function BusinessDetailsPage() {
                                         <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                                           <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                       </div>
@@ -4323,7 +4323,7 @@ export default function BusinessDetailsPage() {
                                         <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                                           <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                       </div>
@@ -6697,7 +6697,7 @@ export default function BusinessDetailsPage() {
                           <h4 className="text-foreground font-medium text-lg">{t('uyelikAbonelik')}</h4>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                             (formData.subscriptionPlan === 'enterprise') ? 'bg-purple-600 text-white' :
-                            (formData.subscriptionPlan === 'premium') ? 'bg-amber-500 text-black' :
+                            (formData.subscriptionPlan === 'premium') ? 'bg-amber-500 text-foreground' :
                             (formData.subscriptionPlan === 'standard') ? 'bg-blue-500 text-white' :
                             (formData.subscriptionPlan === 'basic') ? 'bg-green-600 text-white' :
                             (formData.subscriptionPlan === 'free') ? 'bg-gray-500 text-white' :
@@ -7818,7 +7818,7 @@ export default function BusinessDetailsPage() {
                             className="bg-card rounded-lg border border-border p-2 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
                             title={`Masa ${table.label} PDF kart indir`}
                           >
-                            <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
+                            <div className="w-full aspect-square bg-card rounded flex items-center justify-center overflow-hidden">
                               <img
                                 src={qrImageUrl}
                                 alt={`Masa ${table.label}`}
@@ -7895,7 +7895,7 @@ export default function BusinessDetailsPage() {
                               onChange={(e) => setFormData({ ...formData, groupOrderLinkEnabled: e.target.checked })}
                             />
                             <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
-                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
+                            <div className={`absolute left-1 top-1 bg-card dark:bg-slate-800 w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                           <span className="ml-3 text-sm font-medium text-foreground">
                             {formData.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
@@ -7935,7 +7935,7 @@ export default function BusinessDetailsPage() {
                               onChange={(e) => setFormData({ ...formData, groupOrderTableEnabled: e.target.checked })}
                             />
                             <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
-                            <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
+                            <div className={`absolute left-1 top-1 bg-card dark:bg-slate-800 w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                           <span className="ml-3 text-sm font-medium text-foreground">
                             {formData.groupOrderTableEnabled ? t('aktif') : t('kapali')}

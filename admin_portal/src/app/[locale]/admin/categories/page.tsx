@@ -249,7 +249,7 @@ function CategoriesPageContent() {
                         </div>
                         <button
                             onClick={openAdd}
-                            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition"
+                            className="px-4 py-2 bg-card dark:bg-slate-800/20 hover:bg-card dark:bg-slate-800/30 rounded-lg font-medium transition"
                         >
                             + {t('new_category')}
                         </button>

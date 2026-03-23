@@ -20,7 +20,7 @@ export default function StaffRedirectPage() {
     }, [router]);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 transition-colors duration-200">
+        <div className="min-h-screen bg-card dark:bg-slate-800 dark:bg-gray-950 flex flex-col items-center justify-center p-4 transition-colors duration-200">
             <div className="text-center max-w-sm w-full bg-gray-50 dark:bg-background border border-gray-200 dark:border-border rounded-2xl p-8 shadow-xl">
                 {/* Modern Theme-Aware Logo */}
                 <div className="flex items-center justify-center gap-2 mb-8">

@@ -205,7 +205,7 @@ export default function FreeDrinkSettingsPage() {
                 after:absolute
                 after:top-[4px]
                 after:left-[4px]
-                after:bg-white
+                after:bg-card dark:bg-slate-800
                 after:border-gray-300
                 after:border
                 after:rounded-full

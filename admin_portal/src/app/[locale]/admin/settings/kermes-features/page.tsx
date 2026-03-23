@@ -264,7 +264,7 @@ const { admin, loading: authLoading } = useAdmin();
                                         className={`w-12 h-6 rounded-full transition-colors relative ${feature.isActive ? 'bg-green-500' : 'bg-gray-600'
                                             }`}
                                     >
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${feature.isActive ? 'left-7' : 'left-1'
+                                        <div className={`absolute top-1 w-4 h-4 bg-card dark:bg-slate-800 rounded-full transition-transform ${feature.isActive ? 'left-7' : 'left-1'
                                             }`} />
                                     </button>
 

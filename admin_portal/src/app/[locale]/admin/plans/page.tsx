@@ -728,7 +728,7 @@ export default function PlansPage() {
                                                                         onChange={e => setFormData({ ...formData, features: { ...formData.features!, tableReservation: e.target.checked } })}
                                                                     />
                                                                     <div className={`w-9 h-5 rounded-full transition-colors ${formData.features?.tableReservation ? 'bg-pink-600' : 'bg-gray-700'}`}>
-                                                                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${formData.features?.tableReservation ? 'left-4' : 'left-0.5'}`}></div>
+                                                                        <div className={`absolute top-0.5 w-4 h-4 bg-card dark:bg-slate-800 rounded-full transition-all ${formData.features?.tableReservation ? 'left-4' : 'left-0.5'}`}></div>
                                                                     </div>
                                                                 </div>
                                                                 <span className="ml-2 text-xs text-muted-foreground">{formData.features?.tableReservation ? t('aktif') : t('kapali')}</span>
@@ -778,7 +778,7 @@ export default function PlansPage() {
                                                 <label className="flex items-center cursor-pointer p-3 bg-background rounded-lg border border-border hover:border-gray-500 transition-all">
                                                     <div className="mr-3">
                                                         <div className={`w-10 h-5 rounded-full relative transition-colors ${formData.isActive ? 'bg-green-600' : 'bg-gray-600'}`}>
-                                                            <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.isActive ? 'left-6' : 'left-1'}`}></div>
+                                                            <div className={`absolute top-1 w-3 h-3 bg-card dark:bg-slate-800 rounded-full transition-all ${formData.isActive ? 'left-6' : 'left-1'}`}></div>
                                                         </div>
                                                     </div>
                                                     <span className={`text-sm font-medium ${formData.isActive ? 'text-white' : 'text-muted-foreground'}`}>
@@ -830,7 +830,7 @@ export default function PlansPage() {
                                                                         setFormData({ ...formData, features: { ...formData.features!, [feature.key]: val } });
                                                                     }}
                                                                 />
-                                                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                                                             </div>
                                                             <span className={`ml-3 text-sm font-medium ${feature.color} group-hover:text-white transition-colors`}>{feature.label}</span>
                                                         </label>
@@ -882,7 +882,7 @@ export default function PlansPage() {
                                                                                 checked={(formData.features as any)?.[promo.key]}
                                                                                 onChange={e => setFormData({ ...formData, features: { ...formData.features!, [promo.key]: e.target.checked } })}
                                                                             />
-                                                                            <div className="w-10 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+                                                                            <div className="w-10 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
                                                                         </div>
                                                                         <div className="ml-3">
                                                                             <span className={`text-sm font-medium ${promo.color} group-hover:text-white transition-colors`}>{promo.label}</span>
@@ -958,7 +958,7 @@ export default function PlansPage() {
                                                                         checked={(formData.features as any)?.[feature.key]}
                                                                         onChange={e => setFormData({ ...formData, features: { ...formData.features!, [feature.key]: e.target.checked } })}
                                                                     />
-                                                                    <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                                    <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                                                                 </div>
                                                                 <span className={`ml-3 text-xs font-medium ${feature.color} group-hover:text-white transition-colors`}>{feature.label}</span>
                                                             </label>

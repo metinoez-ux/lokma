@@ -192,26 +192,26 @@ export default function AsiaExpressImportPage() {
 
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-blue-800 dark:text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
                         <div className="text-sm text-foreground">{t('toplam_urun')}</div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-purple-800 dark:text-purple-400">{CATEGORIES.length}</div>
                         <div className="text-sm text-foreground">{t('kategori')}</div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-green-800 dark:text-green-400">{scrapedProducts.length}</div>
                         <div className="text-sm text-foreground">Scraped</div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-amber-800 dark:text-amber-400">{stats.imported}</div>
                         <div className="text-sm text-foreground">İmported</div>
                     </div>
                 </div>
 
                 {/* Categories */}
-                <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6">
+                <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-6 mb-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold text-foreground">📦 Kategoriler</h2>
                         <div className="flex gap-2">
@@ -225,7 +225,7 @@ export default function AsiaExpressImportPage() {
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         {CATEGORIES.map(cat => (
-                            <label key={cat.id} className="flex items-center gap-2 p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10">
+                            <label key={cat.id} className="flex items-center gap-2 p-3 bg-card dark:bg-slate-800/5 rounded-lg cursor-pointer hover:bg-card dark:bg-slate-800/10">
                                 <input
                                     type="checkbox"
                                     checked={selectedCategories.includes(cat.id)}
@@ -291,13 +291,13 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
 
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4">
                         <h3 className="text-lg font-bold text-foreground mb-3">{t('scraped_data_yukle')}</h3>
                         <input
                             type="file"
                             accept=".json"
                             onChange={handleFileUpload}
-                            className="w-full p-2 bg-white/10 rounded-lg text-white"
+                            className="w-full p-2 bg-card dark:bg-slate-800/10 rounded-lg text-white"
                         />
                         <button
                             onClick={showScrapingInstructions}
@@ -306,7 +306,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                             {t('nasil_scrape_edilir')}
                         </button>
                     </div>
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4">
                         <h3 className="text-lg font-bold text-foreground mb-3">🚀 Firestore'a Aktar</h3>
                         <button
                             onClick={importToFirestore}
@@ -323,7 +323,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
 
                 {/* Progress */}
                 {(isImporting || progress > 0) && (
-                    <div className="bg-white/10 backdrop-blur rounded-xl p-4 mb-6">
+                    <div className="bg-card dark:bg-slate-800/10 backdrop-blur rounded-xl p-4 mb-6">
                         <div className="flex justify-between text-foreground mb-2">
                             <span>{currentCategory}</span>
                             <span>{progress}%</span>

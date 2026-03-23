@@ -163,21 +163,21 @@ export default function SettingsPage() {
                         <div className="flex flex-wrap gap-4">
                             <button
                                 onClick={() => setTheme('system')}
-                                className={`flex-1 min-w-[120px] p-4 rounded-xl border-2 transition-all ${theme === 'system' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-white/5 text-foreground'}`}
+                                className={`flex-1 min-w-[120px] p-4 rounded-xl border-2 transition-all ${theme === 'system' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-card dark:bg-slate-800/5 text-foreground'}`}
                             >
                                 <div className="text-2xl mb-2">⚙️</div>
                                 <div className="font-semibold">{t('otomatik') || 'Otomatik'}</div>
                             </button>
                             <button
                                 onClick={() => setTheme('light')}
-                                className={`flex-1 min-w-[120px] p-4 rounded-xl border-2 transition-all ${theme === 'light' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-white/5 text-foreground'}`}
+                                className={`flex-1 min-w-[120px] p-4 rounded-xl border-2 transition-all ${theme === 'light' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-card dark:bg-slate-800/5 text-foreground'}`}
                             >
                                 <div className="text-2xl mb-2">☀️</div>
                                 <div className="font-semibold">{t('aydinlik') || 'Gündüz'}</div>
                             </button>
                             <button
                                 onClick={() => setTheme('dark')}
-                                className={`flex-1 min-w-[120px] p-4 rounded-xl border-2 transition-all ${theme === 'dark' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-white/5 text-foreground'}`}
+                                className={`flex-1 min-w-[120px] p-4 rounded-xl border-2 transition-all ${theme === 'dark' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background hover:bg-card dark:bg-slate-800/5 text-foreground'}`}
                             >
                                 <div className="text-2xl mb-2">🌙</div>
                                 <div className="font-semibold">{t('karanlik') || 'Gece'}</div>

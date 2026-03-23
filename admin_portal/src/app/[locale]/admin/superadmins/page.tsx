@@ -21,7 +21,7 @@ interface SuperAdminProfile {
 
 /* ── Component ── */
 export default function SuperAdminsPage() {
-    const t = useTranslations('AdminNav');
+    const t = useTranslations('SuperAdmins');
     const { admin, loading } = useAdmin();
 
     /* Super admin list */
@@ -169,13 +169,13 @@ export default function SuperAdminsPage() {
 
                 {/* ── Header ── */}
                 <div>
-                    <h1 className="text-2xl font-bold">Super Admins</h1>
-                    <p className="text-muted-foreground text-sm mt-1">Plattform-Administratoren verwalten</p>
+                    <h1 className="text-2xl font-bold">{t('super_admins_title')}</h1>
+                    <p className="text-muted-foreground text-sm mt-1">{t('plattform_adminleri_yonet')}</p>
                 </div>
 
                 {/* ── Profile Cards ── */}
                 <section>
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Aktive Super Admins</h2>
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t('aktif_super_adminler')}</h2>
 
                     {loadingAdmins ? (
                         <div className="animate-pulse h-24 bg-card rounded-xl" />
@@ -207,15 +207,13 @@ export default function SuperAdminsPage() {
                                         <button
                                             onClick={() => openEdit(sa)}
                                             className="shrink-0 px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                                        >
-                                            Bearbeiten
-                                        </button>
+                                        >{t('duzenle')}</button>
                                     )}
                                 </div>
                             ))}
 
                             {superAdmins.length === 0 && (
-                                <p className="text-gray-500 text-sm">Keine Super Admins gefunden</p>
+                                <p className="text-gray-500 text-sm">{t('super_admin_bulunamadi')}</p>
                             )}
                         </div>
                     )}
@@ -225,7 +223,7 @@ export default function SuperAdminsPage() {
                 {editingUid && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
                         <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
-                            <h3 className="text-lg font-bold">Profil bearbeiten</h3>
+                            <h3 className="text-lg font-bold">{t('profili_duzenle')}</h3>
 
                             {/* Photo */}
                             <div className="flex items-center gap-4">
@@ -236,18 +234,14 @@ export default function SuperAdminsPage() {
                                     {photoPreview ? (
                                         <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs text-center leading-tight px-1">
-                                            Foto<br/>hinzufügen
-                                        </div>
+                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs text-center leading-tight px-1" dangerouslySetInnerHTML={{ __html: t('foto_ekle') }}></div>
                                     )}
                                 </div>
                                 <div>
                                     <button
                                         onClick={() => photoInputRef.current?.click()}
                                         className="text-sm text-blue-800 dark:text-blue-400 hover:text-blue-300"
-                                    >
-                                        Foto ändern
-                                    </button>
+                                    >{t('fotografi_degistir')}</button>
                                     <p className="text-xs text-gray-500 mt-0.5">JPG, PNG, max 2 MB</p>
                                 </div>
                                 <input
@@ -261,7 +255,7 @@ export default function SuperAdminsPage() {
 
                             {/* Name */}
                             <div>
-                                <label className="block text-xs text-muted-foreground mb-1">Name</label>
+                                <label className="block text-xs text-muted-foreground mb-1">{t('isim')}</label>
                                 <input
                                     type="text"
                                     value={editForm.displayName}
@@ -272,7 +266,7 @@ export default function SuperAdminsPage() {
 
                             {/* Title */}
                             <div>
-                                <label className="block text-xs text-muted-foreground mb-1">Titel / Position</label>
+                                <label className="block text-xs text-muted-foreground mb-1">{t('unvan_pozisyon')}</label>
                                 <input
                                     type="text"
                                     value={editForm.title}
@@ -284,7 +278,7 @@ export default function SuperAdminsPage() {
 
                             {/* Bio */}
                             <div>
-                                <label className="block text-xs text-muted-foreground mb-1">Bio</label>
+                                <label className="block text-xs text-muted-foreground mb-1">{t('biyografi')}</label>
                                 <textarea
                                     value={editForm.bio}
                                     onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
@@ -298,16 +292,14 @@ export default function SuperAdminsPage() {
                                 <button
                                     onClick={handleSaveProfile}
                                     disabled={saving}
-                                    className="flex-1 py-2 bg-white text-gray-900 font-medium rounded-lg text-sm hover:bg-gray-100 disabled:opacity-50 transition"
+                                    className="flex-1 py-2 bg-card text-gray-900 font-medium rounded-lg text-sm hover:bg-gray-100 disabled:opacity-50 transition"
                                 >
-                                    {saving ? 'Speichern...' : 'Speichern'}
+                                    {saving ? t('kaydediliyor') : t('kaydet')}
                                 </button>
                                 <button
                                     onClick={() => setEditingUid(null)}
                                     className="flex-1 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600 transition"
-                                >
-                                    Abbrechen
-                                </button>
+                                >{t('iptal_et')}</button>
                             </div>
                         </div>
                     </div>
@@ -315,7 +307,7 @@ export default function SuperAdminsPage() {
 
                 {/* ── Add Super Admin ── */}
                 <section className="bg-card rounded-xl p-6">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Neuen Super Admin hinzufügen</h2>
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t('yeni_super_admin_ekle')}</h2>
                     <p className="text-xs text-gray-500 mb-4">
                         Wenn die E-Mail bereits registriert ist, wird der Benutzer sofort zum Super Admin befördert.
                         Sonst wird ein Einladungslink erstellt (72 Std. gültig).
@@ -327,25 +319,25 @@ export default function SuperAdminsPage() {
                             value={addEmail}
                             onChange={e => setAddEmail(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddSuperAdmin()}
-                            placeholder="E-Mail-Adresse"
+                            placeholder={t('eposta_adresi')}
                             className="flex-1 px-3 py-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none"
                         />
                         <button
                             onClick={handleAddSuperAdmin}
                             disabled={adding || !addEmail.trim()}
-                            className="px-4 py-2 bg-white text-gray-900 font-medium rounded-lg text-sm hover:bg-gray-100 disabled:opacity-40 transition"
+                            className="px-4 py-2 bg-card text-gray-900 font-medium rounded-lg text-sm hover:bg-gray-100 disabled:opacity-40 transition"
                         >
-                            {adding ? 'Lädt...' : 'Hinzufügen'}
+                            {adding ? t('yukleniyor') : t('ekle')}
                         </button>
                     </div>
 
                     {addResult && (
                         <div className="mt-4 p-3 bg-gray-700 rounded-lg text-sm">
                             {addResult.mode === 'promoted' ? (
-                                <p className="text-green-800 dark:text-green-400">Benutzer wurde zum Super Admin befördert.</p>
+                                <p className="text-green-800 dark:text-green-400">{t('kullanici_super_admin_yapildi')}</p>
                             ) : (
                                 <div>
-                                    <p className="text-blue-800 dark:text-blue-400 mb-2">Einladungslink erstellt:</p>
+                                    <p className="text-blue-800 dark:text-blue-400 mb-2">{t('davet_linki_olusturuldu')}</p>
                                     <code className="text-xs text-foreground break-all block bg-background p-2 rounded">
                                         {addResult.inviteLink}
                                     </code>

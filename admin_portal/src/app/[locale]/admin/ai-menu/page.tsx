@@ -530,7 +530,7 @@ function AIMenuPageContent() {
                         <div className="flex items-center gap-2">
                             {[1, 2, 3, 4].map(s => (
                                 <div key={s} className="flex items-center gap-1">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step === s ? 'bg-white text-teal-800 scale-110' :
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step === s ? 'bg-card dark:bg-slate-800 text-teal-800 scale-110' :
                                         step > s ? 'bg-teal-500 text-white' :
                                             'bg-teal-900/50 text-teal-400'
                                         }`}>

@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { auth } from '@/lib/firebase';
+import { useTranslations } from 'next-intl';
 
 /* ── Types ── */
 interface CleanupStats {
@@ -28,6 +29,7 @@ interface CleanupStats {
 
 export default function AmeisePage() {
     const { admin, loading } = useAdmin();
+    const t = useTranslations('Ameise');
 
     /* ── Cleanup State ── */
     const CONFIRM_PHRASE = 'ALLE DATEN LOSCHEN';
@@ -321,14 +323,14 @@ export default function AmeisePage() {
 
                 {/* ── Header ── */}
                 <div>
-                    <h1 className="text-2xl font-bold">Ameise</h1>
-                    <p className="text-muted-foreground text-sm mt-1">Datenimport, Export und Bereinigung</p>
+                    <h1 className="text-2xl font-bold">{t('ameise_title')}</h1>
+                    <p className="text-muted-foreground text-sm mt-1">{t('datenimport_export_und_bereinigung')}</p>
                 </div>
 
                 {/* ── Betriebe Export / Import ── */}
                 <section className="bg-card rounded-xl border border-emerald-900/40 p-6">
                     <div className="mb-4">
-                        <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">Betriebe Export / Import</h2>
+                        <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">{t('betriebe_export_import')}</h2>
                         <p className="text-xs text-muted-foreground mt-1">
                             Alle Betriebe mit Kategorien, Produkten, Offnungszeiten und allen Daten als JSON sichern oder wiederherstellen.
                         </p>
@@ -342,9 +344,7 @@ export default function AmeisePage() {
                         >
                             {exporting ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-3.5 w-3.5 border-t-2 border-white" />
-                                    Exportiere...
-                                </>
+                                    <div className="animate-spin rounded-full h-3.5 w-3.5 border-t-2 border-white" />{t('exportiere')}</>
                             ) : (
                                 'JSON Export'
                             )}
@@ -354,9 +354,7 @@ export default function AmeisePage() {
                             onClick={() => importInputRef.current?.click()}
                             disabled={importing}
                             className="px-5 py-2 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
-                        >
-                            JSON Import
-                        </button>
+                        >{t('json_import')}</button>
                         <input
                             ref={importInputRef}
                             type="file"
@@ -370,7 +368,7 @@ export default function AmeisePage() {
                     {importPreview && (
                         <div className="space-y-3">
                             <div className="bg-background/60 rounded-lg p-4">
-                                <p className="text-sm text-foreground font-medium mb-2">Import-Vorschau</p>
+                                <p className="text-sm text-foreground font-medium mb-2">{t('import_vorschau')}</p>
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="bg-card rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-foreground">{importPreview.businessCount || importPreview.businesses?.length || 0}</div>
@@ -413,9 +411,7 @@ export default function AmeisePage() {
                                 <button
                                     onClick={() => { setImportFile(null); setImportPreview(null); }}
                                     className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
-                                >
-                                    Abbrechen
-                                </button>
+                                >{t('abbrechen')}</button>
                             </div>
                         </div>
                     )}
@@ -445,9 +441,7 @@ export default function AmeisePage() {
                             <button
                                 onClick={() => setImportResult(null)}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
-                            >
-                                Schliessen
-                            </button>
+                            >{t('schliessen')}</button>
                         </div>
                     )}
                 </section>
@@ -502,9 +496,7 @@ export default function AmeisePage() {
                                         onClick={handleDemoSearch}
                                         disabled={false}
                                         className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
-                                    >
-                                        Suchen
-                                    </button>
+                                    >{t('suchen')}</button>
                                 </div>
                             </div>
                             {/* Demo cleanup button */}
@@ -620,9 +612,7 @@ export default function AmeisePage() {
                             <button
                                 onClick={() => { setDemoPhase('idle'); setDemoSavedBusinesses([]); }}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
-                            >
-                                Schliessen
-                            </button>
+                            >{t('schliessen')}</button>
                         </div>
                     )}
 
@@ -653,9 +643,7 @@ export default function AmeisePage() {
                             <button
                                 onClick={() => { setDemoPhase('idle'); setDemoCleanupStats(null); }}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
-                            >
-                                Schliessen
-                            </button>
+                            >{t('schliessen')}</button>
                         </div>
                     )}
 
@@ -676,7 +664,7 @@ export default function AmeisePage() {
                 {/* ── Test Data Cleanup ── */}
                 <section className="bg-card rounded-xl border border-red-900/40 p-6">
                     <div className="mb-4">
-                        <h2 className="text-sm font-semibold text-red-800 dark:text-red-400 uppercase tracking-wider">Test Verilerini Temizle</h2>
+                        <h2 className="text-sm font-semibold text-red-800 dark:text-red-400 uppercase tracking-wider">{t('test_verilerini_temizle')}</h2>
                         <p className="text-xs text-muted-foreground mt-1">
                             metin.oez@gmail.com haric secilen kategorilerdeki test verilerini siler.
                         </p>
@@ -782,9 +770,7 @@ export default function AmeisePage() {
                                 <button
                                     onClick={() => { setPhase('idle'); setConfirmText(''); }}
                                     className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
-                                >
-                                    Abbrechen
-                                </button>
+                                >{t('abbrechen')}</button>
                             </div>
                         </div>
                     )}
@@ -839,9 +825,7 @@ export default function AmeisePage() {
                             <button
                                 onClick={() => { setPhase('idle'); setStats(null); setConfirmText(''); setSelectedCategories(new Set()); }}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
-                            >
-                                Schliessen
-                            </button>
+                            >{t('schliessen')}</button>
                         </div>
                     )}
 

@@ -342,7 +342,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                     <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                         {t('rezervasyon_yonetimi')}
                         {pendingCount > 0 && (
-                            <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                            <span className="bg-yellow-500 text-foreground text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
                                 {pendingCount} bekliyor
                             </span>
                         )}

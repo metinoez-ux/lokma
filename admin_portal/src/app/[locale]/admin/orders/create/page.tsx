@@ -247,7 +247,7 @@ const { admin } = useAdmin();
                 {/* STEP 3: PREVIEW & SEND */}
                 {step === 3 && selectedSupplier && (
                     <div className="space-y-8">
-                        <div className="bg-white text-black p-8 rounded-xl shadow-2xl relative" id="print-area">
+                        <div className="bg-card text-foreground p-8 rounded-xl shadow-2xl relative" id="print-area">
                             {/* Print Header */}
                             <div className="border-b-2 border-black pb-4 mb-4 flex justify-between items-start">
                                 <div>

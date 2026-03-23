@@ -263,7 +263,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                 </div>
                 <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
                     <div className="text-2xl font-bold text-green-800 dark:text-green-400">{stats.kermes}</div>
-                    <div className="text-sm text-green-300">🎪 Kermes</div>
+                    <div className="text-sm text-green-300">🎪 {t('kermes')}</div>
                 </div>
             </div>
 
@@ -296,11 +296,11 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                 <table className="min-w-full divide-y divide-border">
                     <thead className="bg-gray-700">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">Admin</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">Rolle</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('admin')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('rol')}</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('atandigi_yer')}</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('durum')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">Aktion</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('aksiyon')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">

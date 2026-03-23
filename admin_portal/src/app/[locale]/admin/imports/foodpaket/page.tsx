@@ -302,7 +302,7 @@ export default function FoodpaketImportPage() {
                 {/* Header */}
                 <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 rounded-xl p-6 mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                        <div className="w-16 h-16 bg-card dark:bg-slate-800/20 rounded-xl flex items-center justify-center">
                             <span className="text-3xl">📦</span>
                         </div>
                         <div>

@@ -105,7 +105,7 @@ export default function SubscriptionPage() {
                                         </div>
                                         <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                                             <div className="h-full bg-green-500 w-[16%] relative">
-                                                <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-white/50"></div>
+                                                <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-card dark:bg-slate-800/50"></div>
                                             </div>
                                         </div>
                                         <p className="text-xs text-gray-500 mt-2">
@@ -126,7 +126,7 @@ export default function SubscriptionPage() {
                     <div className="bg-card border border-border rounded-2xl p-8 shadow-xl flex flex-col">
                         <p className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-2">{t('odeme_yontemi')}</p>
                         <div className="flex items-center gap-4 mb-8 bg-background p-4 rounded-xl border border-border">
-                            <div className="bg-white p-2 rounded w-12 h-8 flex items-center justify-center">
+                            <div className="bg-card p-2 rounded w-12 h-8 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full bg-amber-500 translate-x-2 opacity-80"></div>
                                 <div className="w-8 h-8 rounded-full bg-red-500 -translate-x-2 opacity-80"></div>
                             </div>

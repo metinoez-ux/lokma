@@ -3517,7 +3517,7 @@ export default function SuperAdminDashboard() {
                                                             }`}
                                                     >
                                                         <span
-                                                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${editIsPrimaryAdmin ? 'translate-x-8' : 'translate-x-1'
+                                                            className={`inline-block h-5 w-5 transform rounded-full bg-card dark:bg-slate-800 shadow-lg transition-transform ${editIsPrimaryAdmin ? 'translate-x-8' : 'translate-x-1'
                                                                 }`}
                                                         />
                                                     </button>
@@ -4270,7 +4270,7 @@ export default function SuperAdminDashboard() {
                                                             }`}
                                                     >
                                                         <span
-                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${editingUserProfile.isActive !== false
+                                                            className={`inline-block h-4 w-4 transform rounded-full bg-card dark:bg-slate-800 shadow-lg transition-transform duration-200 ease-in-out ${editingUserProfile.isActive !== false
                                                                 ? 'translate-x-6'
                                                                 : 'translate-x-1'
                                                                 }`}
@@ -4785,7 +4785,7 @@ export default function SuperAdminDashboard() {
                                                                     }`}
                                                             >
                                                                 <span
-                                                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${(editingUserProfile as any).isPrimaryAdmin ? 'translate-x-8' : 'translate-x-1'
+                                                                    className={`inline-block h-5 w-5 transform rounded-full bg-card dark:bg-slate-800 shadow-lg transition-transform ${(editingUserProfile as any).isPrimaryAdmin ? 'translate-x-8' : 'translate-x-1'
                                                                         }`}
                                                                 />
                                                             </button>
@@ -4822,7 +4822,7 @@ export default function SuperAdminDashboard() {
                                                                     }`}
                                                             >
                                                                 <span
-                                                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${(editingUserProfile as any).isDriver ? 'translate-x-8' : 'translate-x-1'
+                                                                    className={`inline-block h-5 w-5 transform rounded-full bg-card dark:bg-slate-800 shadow-lg transition-transform ${(editingUserProfile as any).isDriver ? 'translate-x-8' : 'translate-x-1'
                                                                         }`}
                                                                 />
                                                             </button>

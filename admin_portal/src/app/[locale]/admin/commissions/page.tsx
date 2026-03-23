@@ -290,7 +290,7 @@ const router = useRouter();
                     </div>
                     <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-foreground">€{stats.totalOrderAmount.toFixed(0)}</p>
-                        <p className="text-muted-foreground text-xs">Ciro</p>
+                        <p className="text-muted-foreground text-xs">{t('ciro')}</p>
                     </div>
                     <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-amber-800 dark:text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
@@ -298,7 +298,7 @@ const router = useRouter();
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-green-800 dark:text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">Tahsil Edilen</p>
+                        <p className="text-muted-foreground text-xs">{t('tahsil_edilen')}</p>
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-yellow-800 dark:text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
@@ -306,11 +306,11 @@ const router = useRouter();
                     </div>
                     <div className="bg-blue-600/20 border border-blue-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-blue-800 dark:text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">Kart Provizyon</p>
+                        <p className="text-muted-foreground text-xs">{t('kart_provizyon')}</p>
                     </div>
                     <div className="bg-purple-600/20 border border-purple-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-purple-800 dark:text-purple-400">€{stats.cashCommission.toFixed(2)}</p>
-                        <p className="text-muted-foreground text-xs">Nakit Provizyon</p>
+                        <p className="text-muted-foreground text-xs">{t('nakit_provizyon')}</p>
                     </div>
                     <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-foreground">€{stats.vatTotal.toFixed(2)}</p>
@@ -361,7 +361,7 @@ const router = useRouter();
                             onClick={() => { setFilterPeriod(''); setFilterBusiness('all'); setFilterStatus('all'); }}
                             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 mt-5"
                         >
-                            Temizle
+                            {t('temizle')}
                         </button>
                     </div>
                 </div>
@@ -373,12 +373,12 @@ const router = useRouter();
                             <thead className="bg-gray-700">
                                 <tr>
                                     <th className="px-4 py-3 text-left text-foreground text-sm">{t('i_sletme')}</th>
-                                    <th className="px-4 py-3 text-left text-foreground text-sm">Plan</th>
+                                    <th className="px-4 py-3 text-left text-foreground text-sm">{t('plan')}</th>
                                     <th className="px-4 py-3 text-right text-foreground text-sm">{t('siparis')}</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">Ciro</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">Provizyon</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">Kart</th>
-                                    <th className="px-4 py-3 text-right text-foreground text-sm">Nakit</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('ciro')}</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('provizyon')}</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('kart')}</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('nakit')}</th>
                                     <th className="px-4 py-3 text-right text-foreground text-sm">{t('bekleyen')}</th>
                                 </tr>
                             </thead>
@@ -448,11 +448,11 @@ const router = useRouter();
                                 <tr>
                                     <th className="px-3 py-3 text-left text-foreground text-xs">{t('siparis')}</th>
                                     <th className="px-3 py-3 text-left text-foreground text-xs">{t('i_sletme')}</th>
-                                    <th className="px-3 py-3 text-center text-foreground text-xs">Teslimat</th>
+                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('teslimat')}</th>
                                     <th className="px-3 py-3 text-right text-foreground text-xs">{t('tutar')}</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">Oran</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">Provizyon</th>
-                                    <th className="px-3 py-3 text-right text-foreground text-xs">Net + KDV</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('oran')}</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('provizyon')}</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('net_kdv')}</th>
                                     <th className="px-3 py-3 text-center text-foreground text-xs">{t('odeme')}</th>
                                     <th className="px-3 py-3 text-center text-foreground text-xs">{t('durum')}</th>
                                     <th className="px-3 py-3 text-center text-foreground text-xs">{t('tarih')}</th>
@@ -573,20 +573,20 @@ const router = useRouter();
                                         <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('musteri_bilgileri')}</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
-                                                <p className="text-gray-500 text-xs">Ad Soyad</p>
+                                                <p className="text-gray-500 text-xs">{t('ad_soyad')}</p>
                                                 <p className="text-foreground text-sm font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500 text-xs">Telefon</p>
+                                                <p className="text-gray-500 text-xs">{t('telefon')}</p>
                                                 <p className="text-foreground text-sm">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500 text-xs">E-posta</p>
+                                                <p className="text-gray-500 text-xs">{t('eposta')}</p>
                                                 <p className="text-foreground text-sm">{selectedOrder.userEmail || '-'}</p>
                                             </div>
                                             {selectedOrder.deliveryAddress && (
                                                 <div>
-                                                    <p className="text-gray-500 text-xs">Teslimat Adresi</p>
+                                                    <p className="text-gray-500 text-xs">{t('teslimat_adresi')}</p>
                                                     <p className="text-foreground text-sm">{selectedOrder.deliveryAddress}</p>
                                                 </div>
                                             )}
@@ -596,7 +596,7 @@ const router = useRouter();
                                     {/* Order Items */}
                                     {selectedOrder.items && selectedOrder.items.length > 0 && (
                                         <div className="bg-background/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_i_cerigi')}</h4>
+                                            <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_icerigi')}</h4>
                                             <div className="space-y-2">
                                                 {selectedOrder.items.map((item: any, idx: number) => (
                                                     <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">

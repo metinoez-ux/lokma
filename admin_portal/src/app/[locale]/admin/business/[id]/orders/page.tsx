@@ -371,7 +371,7 @@ const params = useParams();
                         >
                             ← {isVendorUser ? 'Dashboard' : t('i_sletmelere_don')}
                         </Link>
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 bg-card rounded-full flex items-center justify-center">
                             <span className="text-2xl">📦</span>
                         </div>
                         <div>
@@ -682,7 +682,7 @@ const params = useParams();
                 {/* Reject Order Modal */}
                 {rejectingOrder && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full m-4">
+                        <div className="bg-card rounded-lg shadow-xl max-w-md w-full m-4">
                             <div className="p-6">
                                 <h2 className="text-lg font-bold text-red-600 mb-4">
                                     {t('siparis_reddet')} {rejectingOrder.orderNumber}
@@ -804,7 +804,7 @@ function EditOrderModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+            <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-bold text-gray-900">

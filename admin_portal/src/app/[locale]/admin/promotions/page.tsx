@@ -749,7 +749,7 @@ function PromotionsPageContent() {
                                 <button
                                     onClick={() => setShowTemplateSelector(true)}
                                     disabled={!canCreateCampaign}
-                                    className={`px-4 py-2 rounded-lg font-medium transition ${canCreateCampaign ? 'bg-white/20 hover:bg-white/30' : 'bg-white/10 opacity-50 cursor-not-allowed'}`}
+                                    className={`px-4 py-2 rounded-lg font-medium transition ${canCreateCampaign ? 'bg-card dark:bg-slate-800/20 hover:bg-card dark:bg-slate-800/30' : 'bg-card dark:bg-slate-800/10 opacity-50 cursor-not-allowed'}`}
                                     title={!hasCampaignFeature ? t('noCampaignFeature') : isAtCampaignLimit ? t('campaignLimitReached') : ''}
                                 >
                                     📋 {t('createFromTemplate')}
@@ -757,7 +757,7 @@ function PromotionsPageContent() {
                                 <button
                                     onClick={() => { setEditingPromo(null); setFormData(defaultForm); setShowModal(true); }}
                                     disabled={!canCreateCampaign}
-                                    className={`px-4 py-2 rounded-lg font-medium transition ${canCreateCampaign ? 'bg-white/20 hover:bg-white/30' : 'bg-white/10 opacity-50 cursor-not-allowed'}`}
+                                    className={`px-4 py-2 rounded-lg font-medium transition ${canCreateCampaign ? 'bg-card dark:bg-slate-800/20 hover:bg-card dark:bg-slate-800/30' : 'bg-card dark:bg-slate-800/10 opacity-50 cursor-not-allowed'}`}
                                     title={!hasCampaignFeature ? t('noCampaignFeature') : isAtCampaignLimit ? t('campaignLimitReached') : ''}
                                 >
                                     + {t('customCampaign')}
@@ -841,7 +841,7 @@ function PromotionsPageContent() {
                                             await saveFreeDrinkField({ freeDrinkEnabled: val });
                                         }}
                                     />
-                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                                 </label>
                             </div>
                         </div>

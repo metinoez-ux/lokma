@@ -406,7 +406,7 @@ const [sectors, setSectors] = useState<Sector[]>([]);
                                         className={`w-12 h-6 rounded-full transition-colors ${editingSector.isActive ? 'bg-green-500' : 'bg-gray-600'
                                             }`}
                                     >
-                                        <div className={`w-5 h-5 rounded-full bg-white transition-transform m-0.5 ${editingSector.isActive ? 'translate-x-6' : 'translate-x-0'
+                                        <div className={`w-5 h-5 rounded-full bg-card dark:bg-slate-800 transition-transform m-0.5 ${editingSector.isActive ? 'translate-x-6' : 'translate-x-0'
                                             }`} />
                                     </div>
                                 </label>
