@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Mode (Ozsoft ERP System) */
-  --background: #ffffff;
-  --foreground: #1d1d1f;
-  --card: #f9fafb;
-  --card-foreground: #1d1d1f;
-  --border: #e5e7eb;
+  /* Light Mode (Ozsoft ERP System - Clean Soft Slate) */
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a; /* slate-900 */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0; /* slate-200 */
 }
 
 @theme inline {
@@ -20,12 +20,12 @@
 }
 
 .dark {
-  /* Dark Mode */
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card: #171717;
-  --card-foreground: #ededed;
-  --border: #262626;
+  /* Dark Mode (Ozsoft Deep Blue / Slate) */
+  --background: #0f172a; /* Custom Deep Blue */
+  --foreground: #f8fafc;
+  --card: #1e293b; /* Deep Indigo Card */
+  --card-foreground: #f8fafc;
+  --border: #334155; /* Blue-ish Border */
 }
 
 body {

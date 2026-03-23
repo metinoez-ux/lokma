@@ -462,7 +462,7 @@ export default function AdminHeader() {
                                 href="/admin/analytics"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/analytics')
                                     ? 'bg-white/15 text-white'
-                                    : 'text-red-100 hover:text-white hover:bg-white/10'
+                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('analytics')}
@@ -474,7 +474,7 @@ export default function AdminHeader() {
                                     href="/admin/business"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes') || isActiveNav('/admin/benutzerverwaltung') || isActiveNav('/admin/customers') || isActiveNav('/admin/partners') || isActiveNav('/admin/drivers') || isActiveNav('/admin/volunteers') || isActiveNav('/admin/staff-shifts') || isActiveNav('/admin/superadmins') || isActiveNav('/admin/drivers/tips') || isActiveNav('/admin/sponsored-ads')
                                         ? 'bg-white/15 text-white'
-                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     Lokma Partner
@@ -515,7 +515,7 @@ export default function AdminHeader() {
                                 href="/admin/orders"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/orders')
                                     ? 'bg-white/15 text-white'
-                                    : 'text-red-100 hover:text-white hover:bg-white/10'
+                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('orders')}
@@ -526,7 +526,7 @@ export default function AdminHeader() {
                                 href="/admin/reservations"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/reservations')
                                     ? 'bg-white/15 text-white'
-                                    : 'text-red-100 hover:text-white hover:bg-white/10'
+                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('reservations')}
@@ -538,7 +538,7 @@ export default function AdminHeader() {
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                                         isActiveNav('/admin/products') || isActiveNav('/admin/ai-menu')
                                             ? 'bg-white/15 text-white'
-                                            : 'text-red-100 hover:text-white hover:bg-white/10'
+                                            : 'text-blue-100 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     {t('productsCategories')} <span className="text-[10px] opacity-70">&#9660;</span>
@@ -561,7 +561,7 @@ export default function AdminHeader() {
                                     href="/admin/invoices"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
                                         ? 'bg-white/15 text-white'
-                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     {t('accounting')}
@@ -588,7 +588,7 @@ export default function AdminHeader() {
                                     href="/admin/promotions"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/promotions') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals') || isActiveNav('/admin/promotion-templates')
                                         ? 'bg-white/15 text-white'
-                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     {t('promotions')}
@@ -618,7 +618,7 @@ export default function AdminHeader() {
                                 href="/admin/ameise"
                                 className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/ameise')
                                     ? 'bg-white/15 text-white'
-                                    : 'text-red-100 hover:text-white hover:bg-white/10'
+                                    : 'text-blue-100 hover:text-white hover:bg-white/10'
                                     }`}
                             >
                                 {t('ameise')}
@@ -630,7 +630,7 @@ export default function AdminHeader() {
                                     href="/admin/activity-logs"
                                     className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/activity-logs') || isActiveNav('/admin/reports')
                                         ? 'bg-white/15 text-white'
-                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        : 'text-blue-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
                                     {t('service')}
@@ -660,7 +660,7 @@ export default function AdminHeader() {
                                         isActiveNav('/admin/ui-translations') || isActiveNav('/admin/image-generator') ||
                                         isActiveNav('/admin/ameise')
                                             ? 'bg-white/15 text-white'
-                                            : 'text-red-100 hover:text-white hover:bg-white/10'
+                                            : 'text-blue-100 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
                                     {t('settings')}
@@ -706,11 +706,11 @@ export default function AdminHeader() {
                                         <span className="text-white text-xs font-medium max-w-[100px] truncate leading-tight">
                                             {admin.displayName || 'Super Admin'}
                                         </span>
-                                        <span className="text-red-200 text-[10px] leading-tight font-medium">
+                                        <span className="text-blue-200 text-[10px] leading-tight font-medium">
                                             {t('superAdmin')}
                                         </span>
                                     </div>
-                                    <span className="text-red-200 text-[10px] ml-1">▼</span>
+                                    <span className="text-blue-200 text-[10px] ml-1">▼</span>
                                 </button>
 
                                 {/* Dropdown Menu (including Settings) */}
