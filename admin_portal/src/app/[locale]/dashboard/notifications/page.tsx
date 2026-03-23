@@ -140,7 +140,7 @@ export default function NotificationsPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Title */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Başlık *
                             </label>
                             <input
@@ -156,7 +156,7 @@ export default function NotificationsPage() {
 
                         {/* Body */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 İçerik *
                             </label>
                             <textarea
@@ -172,7 +172,7 @@ export default function NotificationsPage() {
 
                         {/* Target Audience */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Hedef Kitle
                             </label>
 

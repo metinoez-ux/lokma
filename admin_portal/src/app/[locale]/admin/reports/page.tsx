@@ -139,14 +139,14 @@ export default function ReportsPage() {
 
     // Delete report (Super Admin only)
     const handleDeleteReport = async (reportId: string) => {
-        if (!confirm('Meldung endgueltig loschen?')) return;
+        if (!confirm(t('confirmDelete'))) return;
         try {
             await deleteDoc(doc(db, 'legal_reports', reportId));
-            showToast('Meldung geloscht', 'success');
+            showToast(t('reportDeleted'), 'success');
             setSelectedReport(null);
         } catch (error) {
             console.error('Error deleting report:', error);
-            showToast('Loschen fehlgeschlagen', 'error');
+            showToast(t('deleteError'), 'error');
         }
     };
 
@@ -401,7 +401,7 @@ export default function ReportsPage() {
                                         onClick={() => handleDeleteReport(selectedReport.id)}
                                         className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-sm rounded-xl transition-colors"
                                     >
-                                        Meldung loschen
+                                        {t('deleteReport')}
                                     </button>
                                 </div>
                             )}

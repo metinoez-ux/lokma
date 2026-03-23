@@ -581,7 +581,7 @@ export default function VendorPage() {
                             <p className="text-gray-500 text-lg mb-8 leading-relaxed">{tx.posSub}</p>
                             <ul className="space-y-4 mb-10">
                                 {[tx.posF1, tx.posF2, tx.posF3, tx.posF4].map((f, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-gray-700">
+                                    <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                                         <span className="w-6 h-6 bg-emerald-500/20 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                                             <span className="material-symbols-outlined text-[14px]">check</span>
                                         </span>
@@ -622,7 +622,7 @@ export default function VendorPage() {
                             <p className="text-gray-500 text-lg mb-8 leading-relaxed">{tx.eslSub}</p>
                             <ul className="space-y-4 mb-10">
                                 {[tx.eslF1, tx.eslF2, tx.eslF3, tx.eslF4].map((f, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-gray-700">
+                                    <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                                         <span className="w-6 h-6 bg-blue-500/20 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                                             <span className="material-symbols-outlined text-[14px]">check</span>
                                         </span>
@@ -651,7 +651,7 @@ export default function VendorPage() {
                             <p className="text-gray-500 text-lg mb-8 leading-relaxed">{tx.deliverySub}</p>
                             <ul className="space-y-4 mb-10">
                                 {[tx.deliveryF1, tx.deliveryF2, tx.deliveryF3, tx.deliveryF4].map((f, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-gray-700">
+                                    <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                                         <span className="w-6 h-6 bg-emerald-500/20 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                                             <span className="material-symbols-outlined text-[14px]">check</span>
                                         </span>

@@ -444,7 +444,7 @@ export default function UnifiedAnalyticsPage() {
                                                         cursor: 'pointer',
                                                         transition: 'background 0.2s',
                                                     }}
-                                                    title={`${h.hour}:00 - ${h.count} sipariş`}
+                                                    title={`${h.hour}:00 - ${h.count} ${t('siparis')}`}
                                                     onMouseEnter={e => { if (h.count > 0) (e.target as HTMLDivElement).style.background = '#60a5fa'; }}
                                                     onMouseLeave={e => { if (h.count > 0) (e.target as HTMLDivElement).style.background = '#3b82f6'; }}
                                                 />
@@ -488,7 +488,7 @@ export default function UnifiedAnalyticsPage() {
                             <div className="border-t border-gray-700 pt-2">
                                 <div className="flex justify-between"><span className="text-gray-400">👑 Super Admin</span><span className="text-red-400 font-bold">{userStats?.superAdmins}</span></div>
                                 <div className="flex justify-between"><span className="text-gray-400">{t('i_sletme_sahibi')}</span><span className="text-amber-400 font-bold">{userStats?.owners}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-400">👤 Personel</span><span className="text-purple-400 font-bold">{userStats?.staff}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-400">&#x1f464; {t('personel') || 'Personel'}</span><span className="text-purple-400 font-bold">{userStats?.staff}</span></div>
                             </div>
                         </div>
                     </div>

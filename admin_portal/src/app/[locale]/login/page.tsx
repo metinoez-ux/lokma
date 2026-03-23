@@ -863,7 +863,7 @@ export default function LoginPage() {
                                         <div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    <label className="block text-sm font-medium text-white/70 mb-1">
                                                         {tAdminLogin('adiniz')}
                                                     </label>
                                                     <input

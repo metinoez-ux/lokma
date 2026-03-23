@@ -246,7 +246,9 @@
         "daha_fazla_dosya": "Klicken oder ziehen Sie, um weitere Dateien hinzuzufuegen",
         "menu_dosya_surukleme": "Menudateien per Drag-and-Drop hierher ziehen",
         "birden_fazla": "Sie koennen mehrere Dateien auswaehlen",
-        "islem_surebilir": "Dieser Vorgang kann einige Sekunden dauern"
+        "islem_surebilir": "Dieser Vorgang kann einige Sekunden dauern",
+        "ai_isleme_hatasi": "KI-Verarbeitungsfehler",
+        "kaydetme_hatasi": "Speicherfehler"
     },
     "AdminAnalytics": {
         "30_gun": "30 Tage",
@@ -3103,7 +3105,17 @@
         "tumunu_kaldir": "Alle entfernen",
         "tumunu_sec": "Wählen Sie „Alle“ aus",
         "urun": "Produkt",
-        "urunler_yukleniyor": "Produkte werden geladen..."
+        "urunler_yukleniyor": "Produkte werden geladen...",
+        "urunler_yuklenemedi": "Produkte konnten nicht geladen werden",
+        "urun_yuklenecek": "Produkte werden importiert",
+        "secilen_kategoriler": "Ausgewaehlte Kategorien",
+        "atlanan": "Uebersprungen",
+        "import_tamamlandi": "Import abgeschlossen!",
+        "kategoriler": "Kategorien",
+        "import_ediliyor": "Import laeuft",
+        "urunu_import_et": "Produkte importieren",
+        "ilerleme": "Fortschritt",
+        "ean_mevcut": "EAN vorhanden"
     },
     "AdminImportsEanenrichment": {
         "adminimportseanenrichment": "AdminImportsEanenrichment",
@@ -5154,6 +5166,7 @@
         "asagiTasi": "Aşağı Taşı",
         "belirliBirOrganizasyonIcinOzelMenu": "(Belirli bir organizasyon için özel menü hazırla)",
         "bilinmeyen_hata": "unbekannter Fehler",
+        "henuz_kaydedilmedi": "Noch nicht gespeichert",
         "boyutSecimiEkstralarVeyaSonderwunschEklemek": "Boyut seçimi, ekstralar veya Sonderwunsch eklemek için \"Grup Ekle\" butonuna tıklayın",
         "buIsletme": "Bu işletme",
         "buIsletmeyeHenuzUrunAtanmamis": "Bu işletmeye henüz ürün atanmamış",
@@ -5380,7 +5393,11 @@
         "resolved": "Erledigt",
         "dismiss": "Ablehnen",
         "statusUpdated": "Status aktualisiert",
-        "updateError": "Fehler beim Aktualisieren"
+        "updateError": "Fehler beim Aktualisieren",
+        "confirmDelete": "Diese Meldung endgueltig loeschen?",
+        "reportDeleted": "Meldung geloescht",
+        "deleteError": "Loeschen fehlgeschlagen",
+        "deleteReport": "Meldung loeschen"
     },
     "AdminReservations": {
         "bekleyen": "🔔 Warten",
@@ -6016,7 +6033,23 @@
         "net": "Netto",
         "tables": "Tische",
         "status": "Status",
-        "role": "Rolle"
+        "role": "Rolle",
+        "bilinmiyor": "Unbekannt",
+        "servis": "Service",
+        "csv_raporu_indirildi": "CSV-Bericht heruntergeladen.",
+        "vardiya_kaydi": "Schichteintraege",
+        "januar": "Januar",
+        "februar": "Februar",
+        "maerz": "Maerz",
+        "april": "April",
+        "mai": "Mai",
+        "juni": "Juni",
+        "juli": "Juli",
+        "august": "August",
+        "september": "September",
+        "oktober": "Oktober",
+        "november": "November",
+        "dezember": "Dezember"
     },
     "AdminStatistics": {
         "adet": "Menge",

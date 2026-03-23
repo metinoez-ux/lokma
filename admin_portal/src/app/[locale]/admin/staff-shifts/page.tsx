@@ -82,7 +82,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 return {
                     id: doc.id,
                     staffId: d.staffId || '',
-                    staffName: d.staffName || 'Bilinmiyor',
+                    staffName: d.staffName || t('bilinmiyor'),
                     date: d.date || '',
                     status: d.status || '',
                     startedAt: d.startedAt?.toDate ? d.startedAt.toDate() : null,
@@ -121,17 +121,17 @@ const { admin, loading: adminLoading } = useAdmin();
     const formatMinutes = (m: number) => {
         const h = Math.floor(m / 60);
         const min = m % 60;
-        return `${h}s ${min}dk`;
+        return `${h}h ${min}m`;
     };
 
     const formatDate = (d: Date | null) => {
         if (!d) return '-';
-        return d.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     };
 
     const monthLabel = useMemo(() => {
         const [y, m] = selectedMonth.split('-').map(Number);
-        const months = ['Ocak', t('subat'), 'Mart', 'Nisan', t('mayis'), 'Haziran', 'Temmuz', t('agustos'), t('eylul'), 'Ekim', t('kasim'), t('aralik')];
+        const months = [t('januar'), t('februar'), t('maerz'), t('april'), t('mai'), t('juni'), t('juli'), t('august'), t('september'), t('oktober'), t('november'), t('dezember')];
         return `${months[m - 1]} ${y}`;
     }, [selectedMonth]);
 
@@ -139,24 +139,24 @@ const { admin, loading: adminLoading } = useAdmin();
     const exportCSV = () => {
         setExporting(true);
         try {
-            const headers = ['Personel', t('tarih'), t('baslangic'), t('bitis'), t('toplam_dk'), 'Mola (dk)', 'Net (dk)', 'Masalar', 'Kurye', t('durum')];
+            const headers = [t('staff'), t('tarih'), t('baslangic'), t('bitis'), t('toplam_dk'), t('break_col') + ' (min)', 'Net (min)', t('tables'), t('courier'), t('durum')];
             const rows = shifts.map(s => [
                 s.staffName,
                 s.date,
-                s.startedAt ? s.startedAt.toLocaleString('tr-TR') : '-',
-                s.endedAt ? s.endedAt.toLocaleString('tr-TR') : '-',
+                s.startedAt ? s.startedAt.toLocaleString('de-DE') : '-',
+                s.endedAt ? s.endedAt.toLocaleString('de-DE') : '-',
                 String(s.totalMinutes),
                 String(s.pauseMinutes),
                 String(s.totalMinutes - s.pauseMinutes),
                 s.assignedTables.join(', ') || '-',
-                s.isDeliveryDriver ? 'Kurye' : (s.isOtherRole ? 'Diğer' : 'Servis'),
+                s.isDeliveryDriver ? t('kurye') : (s.isOtherRole ? t('diger') : t('servis')),
                 s.status,
             ]);
 
             // Add summary section
             rows.push([]);
             rows.push([t('ozet')]);
-            rows.push(['Personel', t('toplam_vardiya'), t('toplam_sure'), t('toplam_mola'), t('net_calisma'), t('kurye_vardiya')]);
+            rows.push([t('staff'), t('toplam_vardiya'), t('toplam_sure'), t('toplam_mola'), t('net_calisma'), t('kurye_vardiya')]);
             staffSummary.forEach(s => {
                 rows.push([
                     s.name,
@@ -177,7 +177,7 @@ const { admin, loading: adminLoading } = useAdmin();
             a.download = `vardiya_raporu_${selectedMonth}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            toast.success('CSV raporu indirildi.');
+            toast.success(t('csv_raporu_indirildi'));
         } catch (error) {
             toast.error(t('export_hatasi'));
         } finally {
@@ -217,8 +217,8 @@ const { admin, loading: adminLoading } = useAdmin();
     </style>
 </head>
 <body>
-    <h1>📋 Vardiya Raporu</h1>
-    <p class="subtitle">${monthLabel} — Toplam ${shifts.length} vardiya kaydı</p>
+    <h1>${t('shift_report')}</h1>
+    <p class="subtitle">${monthLabel} — ${shifts.length} ${t('vardiya_kaydi')}</p>
 
     <div class="section-title">${t('staff_summary')}</div>
     <table class="summary-table">
@@ -255,7 +255,7 @@ const { admin, loading: adminLoading } = useAdmin();
     </table>
 
     <div class="footer">
-        LOKMA — Vardiya Raporu oluşturulma tarihi: ${new Date().toLocaleString('tr-TR')}
+        LOKMA — ${t('shift_report')} ${new Date().toLocaleString('de-DE')}
     </div>
 </body>
 </html>`;
@@ -446,7 +446,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 ) : s.isOtherRole ? (
                                                     <span className="bg-purple-900/40 text-purple-400 border border-purple-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('diger')}</span>
                                                 ) : (
-                                                    <span className="bg-gray-700/40 text-gray-400 border border-gray-600/40 px-2 py-0.5 rounded-full text-[10px] font-medium">🍽 Servis</span>
+                                                    <span className="bg-gray-700/40 text-gray-400 border border-gray-600/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('servis')}</span>
                                                 )}
                                             </td>
                                             <td className="px-3 py-2.5 text-center">
@@ -454,7 +454,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     ? 'bg-green-900/40 text-green-400 border border-green-700/40'
                                                     : 'bg-gray-700/40 text-gray-400 border border-gray-600/40'
                                                     }`}>
-                                                    {s.status === 'active' ? t('aktif') : '✓ Bitti'}
+                                                    {s.status === 'active' ? t('aktif') : t('tamamlandi')}
                                                 </span>
                                             </td>
                                         </tr>

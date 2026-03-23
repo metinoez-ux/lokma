@@ -182,7 +182,7 @@ export default function ProfileEditPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vorname *</label>
                             <input
                                 type="text"
                                 value={profile.firstName}
@@ -192,7 +192,7 @@ export default function ProfileEditPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nachname *</label>
                             <input
                                 type="text"
                                 value={profile.lastName}
@@ -204,7 +204,7 @@ export default function ProfileEditPage() {
                     </div>
 
                     <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-posta</label>
                         <input
                             type="email"
                             value={profile.email}
@@ -222,7 +222,7 @@ export default function ProfileEditPage() {
 
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefon</label>
                             <div className="flex gap-2">
                                 <select
                                     value={profile.dialCode || '+49'}
@@ -248,7 +248,7 @@ export default function ProfileEditPage() {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geburtsdatum</label>
                             <input
                                 type="date"
                                 value={profile.dateOfBirth}
@@ -265,7 +265,7 @@ export default function ProfileEditPage() {
 
                     <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Straße</label>
                             <input
                                 type="text"
                                 value={profile.address?.street}
@@ -275,7 +275,7 @@ export default function ProfileEditPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Hausnr.</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hausnr.</label>
                             <input
                                 type="text"
                                 value={profile.address?.houseNumber}
@@ -287,7 +287,7 @@ export default function ProfileEditPage() {
                     </div>
 
                     <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Wohnungsnr. (Optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Wohnungsnr. (Optional)</label>
                         <input
                             type="text"
                             value={profile.address?.apartmentNumber}
@@ -299,7 +299,7 @@ export default function ProfileEditPage() {
 
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Posta Kodu (PLZ)</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Posta Kodu (PLZ)</label>
                             <input
                                 type="text"
                                 value={profile.address?.postalCode}
@@ -309,7 +309,7 @@ export default function ProfileEditPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stadt</label>
                             <input
                                 type="text"
                                 value={profile.address?.city}
@@ -322,7 +322,7 @@ export default function ProfileEditPage() {
 
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Eyalet (Bundesland)</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Eyalet (Bundesland)</label>
                             <select
                                 value={profile.address?.state}
                                 onChange={(e) => updateAddress('state', e.target.value)}
@@ -348,7 +348,7 @@ export default function ProfileEditPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Land</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Land</label>
                             <select
                                 value={profile.address?.country}
                                 onChange={(e) => updateAddress('country', e.target.value)}
@@ -370,7 +370,7 @@ export default function ProfileEditPage() {
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Einstellungen</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Sprache</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprache</label>
                         <select
                             value={profile.language}
                             onChange={(e) => setProfile({ ...profile, language: e.target.value as 'de' | 'tr' | 'en' })}

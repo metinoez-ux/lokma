@@ -719,7 +719,7 @@ export default function ImageGeneratorPage() {
                         {filteredGallery.length === 0 && !isGenerating && (
                             <div className="col-span-full py-24 flex flex-col items-center text-center">
                                 <div className="bg-gray-900 p-8 rounded-3xl mb-6 text-gray-700 border border-gray-800">
-                                    <span className="text-4xl text-gray-600">Keine Bilder</span>
+                                    <span className="text-4xl text-gray-600">{t('kutuphane_bos')}</span>
                                 </div>
                                 <h3 className="text-xl font-black text-white">{t('kutuphane_bos')}</h3>
                                 <p className="text-gray-500 mt-2 text-sm max-w-xs">

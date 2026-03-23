@@ -252,7 +252,7 @@ function RegisterContent() {
                         {/* Password */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Passwort *</label>
                                 <input
                                     type="password"
                                     value={password}
@@ -263,7 +263,7 @@ function RegisterContent() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Passwort wiederholen *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Passwort wiederholen *</label>
                                 <input
                                     type="password"
                                     value={confirmPassword}
@@ -280,7 +280,7 @@ function RegisterContent() {
                             <h3 className="font-semibold text-gray-900 mb-4">Persönliche Daten</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vorname *</label>
                                     <input
                                         type="text"
                                         value={firstName}
@@ -290,7 +290,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nachname *</label>
                                     <input
                                         type="text"
                                         value={lastName}
@@ -302,7 +302,7 @@ function RegisterContent() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mt-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Telefon *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefon *</label>
                                     <input
                                         type="tel"
                                         value={phone}
@@ -313,7 +313,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geburtsdatum</label>
                                     <input
                                         type="date"
                                         value={dateOfBirth}
@@ -329,7 +329,7 @@ function RegisterContent() {
                             <h3 className="font-semibold text-gray-900 mb-4">Adressdaten</h3>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Straße</label>
                                     <input
                                         type="text"
                                         value={street}
@@ -338,7 +338,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Hausnr.</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hausnr.</label>
                                     <input
                                         type="text"
                                         value={houseNumber}
@@ -349,7 +349,7 @@ function RegisterContent() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mt-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PLZ</label>
                                     <input
                                         type="text"
                                         value={postalCode}
@@ -358,7 +358,7 @@ function RegisterContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stadt</label>
                                     <input
                                         type="text"
                                         value={city}
@@ -369,7 +369,7 @@ function RegisterContent() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mt-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Bundesland</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bundesland</label>
                                     <select
                                         value={state}
                                         onChange={(e) => setState(e.target.value)}
@@ -395,7 +395,7 @@ function RegisterContent() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Land</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Land</label>
                                     <select
                                         value={country}
                                         onChange={(e) => setCountry(e.target.value)}

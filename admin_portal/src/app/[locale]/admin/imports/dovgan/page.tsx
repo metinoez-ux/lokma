@@ -88,7 +88,7 @@ export default function DovganImportPage() {
             .catch(err => {
                 console.error('Failed to load products:', err);
                 setLoadingProducts(false);
-                addLog(`❌ Ürünler yüklenemedi: ${err.message}`);
+                addLog(`${t('urunler_yuklenemedi')}: ${err.message}`);
             });
     }, []);
 
@@ -202,13 +202,13 @@ export default function DovganImportPage() {
         setLogs([]);
 
         addLog(t('dovgan_import_baslatiliyor'));
-        addLog(`📦 ${products.length} ürün yüklenecek`);
+        addLog(`${products.length} ${t('urun_yuklenecek')}`);
 
         const filteredProducts = products.filter(p =>
             selectedCategories.has(p.lokmaCategory || t('diger'))
         );
 
-        addLog(`🔍 Seçilen kategoriler: ${filteredProducts.length} ürün`);
+        addLog(`${t('secilen_kategoriler')}: ${filteredProducts.length} ${t('urun')}`);
 
         let success = 0;
         let errors = 0;
@@ -231,6 +231,7 @@ export default function DovganImportPage() {
             } catch (error: unknown) {
                 errors++;
                 const errMessage = error instanceof Error ? error.message : String(error);
+
                 addLog(`❌ Hata: ${product.name} - ${errMessage}`);
             }
 
@@ -238,8 +239,8 @@ export default function DovganImportPage() {
             setResults({ success, errors, skipped });
         }
 
-        addLog(`\n✅ Import tamamlandı!`);
-        addLog(`📊 Başarılı: ${success}, Hata: ${errors}, Atlanan: ${skipped}`);
+        addLog(`\n${t('import_tamamlandi')}`);
+        addLog(`${t('basarili')}: ${success}, ${t('hata')}: ${errors}, ${t('atlanan')}: ${skipped}`);
 
         setImporting(false);
     };
@@ -303,7 +304,7 @@ export default function DovganImportPage() {
                     <div className="text-3xl font-bold text-green-700">
                         {products.filter(p => p.ean).length}
                     </div>
-                    <div className="text-sm text-green-600">EAN Mevcut</div>
+                    <div className="text-sm text-green-600">{t('ean_mevcut')}</div>
                 </div>
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                     <div className="text-3xl font-bold text-purple-700">
@@ -322,7 +323,7 @@ export default function DovganImportPage() {
             {/* Category Selection */}
             <div className="bg-white rounded-lg border p-6 mb-8">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Kategoriler</h2>
+                    <h2 className="text-xl font-semibold">{t('kategoriler')}</h2>
                     <div className="flex gap-2">
                         <button
                             onClick={selectAllCategories}
@@ -383,10 +384,10 @@ export default function DovganImportPage() {
                     {importing ? (
                         <span className="flex items-center justify-center gap-2">
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                            İmport Ediliyor... {progress}%
+                            {t('import_ediliyor')}... {progress}%
                         </span>
                     ) : (
-                        `🚀 ${getSelectedProductCount()} Ürünü Import Et`
+                        `${getSelectedProductCount()} ${t('urunu_import_et')}`
                     )}
                 </button>
             </div>
@@ -401,7 +402,7 @@ export default function DovganImportPage() {
                         ></div>
                     </div>
                     <div className="flex justify-between mt-2 text-sm text-gray-600">
-                        <span>İlerleme: {progress}%</span>
+                        <span>{t('ilerleme')}: {progress}%</span>
                         <span>
                             ✅ {results.success} | ❌ {results.errors}
                         </span>
@@ -422,7 +423,7 @@ export default function DovganImportPage() {
                     </div>
                     <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-gray-700">{results.skipped}</div>
-                        <div className="text-sm text-gray-600">Atlanan</div>
+                        <div className="text-sm text-gray-600">{t('atlanan')}</div>
                     </div>
                 </div>
             )}

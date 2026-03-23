@@ -309,7 +309,7 @@ function AIMenuPageContent() {
             setStep(3);
         } catch (err: any) {
             console.error('AI processing error:', err);
-            setError(`AI işleme hatası: ${err.message || 'Bilinmeyen hata'}`);
+            setError(`${t('ai_isleme_hatasi')}: ${err.message || t('bilinmeyen_hata')}`);
             setStep(1);
         } finally {
             setProcessing(false);
@@ -398,7 +398,7 @@ function AIMenuPageContent() {
             setSaveComplete(true);
         } catch (err: any) {
             console.error('Firestore save error:', err);
-            setError(`Kaydetme hatası: ${err.message || 'Bilinmeyen hata'}`);
+            setError(`${t('kaydetme_hatasi')}: ${err.message || t('bilinmeyen_hata')}`);
         } finally {
             setSaving(false);
         }

@@ -792,7 +792,7 @@ function GlobalProductsPageContent() {
             }
         } catch (error: any) {
             console.error("Error saving product:", error);
-            alert(`${t('urunKaydedilirkenHataOlustu')} ${error?.message || 'Bilinmeyen hata'}`);
+            alert(`${t('urunKaydedilirkenHataOlustu')} ${error?.message || t('bilinmeyen_hata')}`);
         }
     };
 
@@ -3457,11 +3457,11 @@ function GlobalProductsPageContent() {
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                                             <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Oluşturulma</p>
-                                                                <p className="text-xs text-gray-300">{(formData as any).createdAt ? new Date((formData as any).createdAt).toLocaleString('tr-TR') : 'Henüz kaydedilmedi'}</p>
+                                                                <p className="text-xs text-gray-300">{(formData as any).createdAt ? new Date((formData as any).createdAt).toLocaleString('de-DE') : t('henuz_kaydedilmedi')}</p>
                                                             </div>
                                                             <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Son Güncelleme</p>
-                                                                <p className="text-xs text-gray-300">{(formData as any).updatedAt ? new Date((formData as any).updatedAt).toLocaleString('tr-TR') : '--'}</p>
+                                                                <p className="text-xs text-gray-300">{(formData as any).updatedAt ? new Date((formData as any).updatedAt).toLocaleString('de-DE') : '--'}</p>
                                                             </div>
                                                             <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Son Düzenleyen</p>
