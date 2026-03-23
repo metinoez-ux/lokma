@@ -1681,7 +1681,7 @@ export default function KermesDetailPage() {
                                 onClick={() => setSelectedCategory('')}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${selectedCategory === ''
                                     ? 'bg-pink-600 text-white'
-                                    : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                     }`}>
                                 {t('tumu')}{products.length})
                             </button>
@@ -1694,7 +1694,7 @@ export default function KermesDetailPage() {
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${selectedCategory === category
                                             ? 'bg-pink-600 text-white'
                                             : count > 0
-                                                ? 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                                 : 'bg-card text-gray-500 hover:bg-gray-700 border border-gray-600 border-dashed'
                                             }`}>
                                         {getCategoryEmoji(category)} {category} ({count})

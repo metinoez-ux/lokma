@@ -512,7 +512,7 @@ export default function InvoicesPage() {
                                     onClick={() => { setPeriodPreset(key); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${periodPreset === key
                                             ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     {label}
@@ -531,7 +531,7 @@ export default function InvoicesPage() {
                                     onClick={() => { setPeriodPreset(q); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
                                     className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${periodPreset === q
                                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     {q.toUpperCase()} ({q === 'q1' ? 'Jan–Mär' : q === 'q2' ? 'Apr–Jun' : q === 'q3' ? 'Jul–Sep' : 'Okt–Dez'})

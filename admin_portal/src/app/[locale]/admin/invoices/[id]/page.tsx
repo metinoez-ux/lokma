@@ -603,7 +603,7 @@ export default function InvoiceDetailPage() {
                                                 </span>
                                                 <span className={`px-2 py-0.5 rounded text-xs ${log.action === 'storno' ? 'bg-red-900 text-red-300' :
                                                     log.action === 'payment_received' ? 'bg-green-900 text-green-300' :
-                                                        'bg-gray-700 text-foreground'
+                                                        'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
                                                     }`}>
                                                     {log.action}
                                                 </span>

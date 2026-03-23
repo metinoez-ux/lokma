@@ -428,7 +428,7 @@ export default function IoTSettingsPage() {
                                                     </button>
                                                     <button
                                                         onClick={() => { setShowAlexaSetup(false); setAlexaCookie(''); }}
-                                                        className="px-4 bg-gray-700 hover:bg-gray-600 text-foreground font-bold py-2.5 rounded-lg transition text-sm"
+                                                        className="px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 font-bold py-2.5 rounded-lg transition text-sm"
                                                     >
                                                         {t('iptal') || 'İptal'}
                                                     </button>
@@ -530,12 +530,12 @@ export default function IoTSettingsPage() {
                                             <div className="flex items-center gap-3">
                                                 <button
                                                     onClick={() => setPrintCopies(Math.max(1, printCopies - 1))}
-                                                    className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 text-foreground font-bold"
+                                                    className="w-8 h-8 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 font-bold"
                                                 >−</button>
                                                 <span className="text-xl font-bold font-mono w-8 text-center">{printCopies}</span>
                                                 <button
                                                     onClick={() => setPrintCopies(Math.min(5, printCopies + 1))}
-                                                    className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 text-foreground font-bold"
+                                                    className="w-8 h-8 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 font-bold"
                                                 >+</button>
                                             </div>
                                         </div>

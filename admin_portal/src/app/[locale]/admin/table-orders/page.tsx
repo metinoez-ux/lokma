@@ -515,7 +515,7 @@ export default function TableOrdersPage() {
                                                     key={p.participantId}
                                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${p.paymentStatus === 'paid'
                                                         ? 'bg-green-600/20 text-green-800 dark:text-green-400'
-                                                        : 'bg-gray-700 text-foreground'
+                                                        : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
                                                         } ${p.isHost ? 'ring-1 ring-amber-400/50' : ''}`}
                                                 >
                                                     {p.isHost && '👑'} {p.name}
@@ -809,7 +809,7 @@ export default function TableOrdersPage() {
                             <button
                                 onClick={() => setCancelConfirm(null)}
                                 disabled={cancelLoading}
-                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg font-medium transition disabled:opacity-50"
+                                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 rounded-lg font-medium transition disabled:opacity-50"
                             >
                                 {t('vazgec')}
                             </button>

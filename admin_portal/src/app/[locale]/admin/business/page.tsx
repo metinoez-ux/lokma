@@ -1438,7 +1438,7 @@ export default function BusinessesPage() {
                                                         onClick={() => setCurrentPage(pageNum)}
                                                         className={`px-3 py-1 rounded-lg ${currentPage === pageNum
                                                             ? 'bg-blue-600 text-white'
-                                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                                             }`}
                                                     >
                                                         {pageNum}
@@ -1476,7 +1476,7 @@ export default function BusinessesPage() {
                                     onClick={() => setActiveTab('manual')}
                                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'manual'
                                         ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     {t('manuelGiris')}
@@ -1485,7 +1485,7 @@ export default function BusinessesPage() {
                                     onClick={() => setActiveTab('google')}
                                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'google'
                                         ? 'bg-green-600 text-white'
-                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                        : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     🌍 {editingBusiness ? t('googleGuncelle') : t('googledanCek')}
@@ -1575,7 +1575,7 @@ export default function BusinessesPage() {
                                                     onClick={() => setFormData({ ...formData, type: type.value })}
                                                     className={`px-3 py-2 rounded-lg border text-left flex items-center gap-2 ${formData.type === type.value
                                                         ? 'border-blue-500 bg-blue-600/20 text-white'
-                                                        : 'border-gray-600 bg-gray-700 text-foreground hover:bg-gray-600'
+                                                        : 'border-gray-600 bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                                         }`}
                                                 >
                                                     <span>{type.icon}</span>

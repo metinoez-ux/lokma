@@ -976,7 +976,7 @@ function NewKermesContent() {
                                 onClick={() => toggleFeature(feature.id)}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition ${selectedFeatures.includes(feature.id)
                                     ? 'text-white border-2'
-                                    : 'bg-gray-700 text-foreground border-2 border-gray-600 hover:border-gray-500'
+                                    : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 border-2 border-gray-600 hover:border-gray-500'
                                     }`}
                                 style={selectedFeatures.includes(feature.id) ? { backgroundColor: feature.color, borderColor: feature.color } : {}}
                             >

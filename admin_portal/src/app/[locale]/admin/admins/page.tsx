@@ -276,7 +276,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                             onClick={() => setRoleFilter(role)}
                             className={`px-3 py-1 rounded-full text-sm ${roleFilter === role
                                 ? 'bg-purple-600 text-white'
-                                : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                 }`}
                         >
                             {role === 'all' ? t('tumu') : ROLE_LABELS[role]}

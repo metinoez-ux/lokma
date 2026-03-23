@@ -2506,7 +2506,7 @@ function GlobalProductsPageContent() {
                                             <select
                                                 value={wholesalerFilter}
                                                 onChange={(e) => setWholesalerFilter(e.target.value)}
-                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${wholesalerFilter !== 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-foreground'}`}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${wholesalerFilter !== 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'}`}
                                             >
                                                 {WHOLESALER_OPTIONS.map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
@@ -2516,7 +2516,7 @@ function GlobalProductsPageContent() {
                                             <select
                                                 value={countryFilter}
                                                 onChange={(e) => setCountryFilter(e.target.value)}
-                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${countryFilter !== 'all' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-foreground'}`}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${countryFilter !== 'all' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'}`}
                                             >
                                                 {COUNTRY_OPTIONS.map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
@@ -2526,7 +2526,7 @@ function GlobalProductsPageContent() {
                                             <select
                                                 value={brandFilter}
                                                 onChange={(e) => setBrandFilter(e.target.value)}
-                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${brandFilter !== 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-foreground'}`}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${brandFilter !== 'all' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'}`}
                                             >
                                                 <option value="all">{t('tumMarkalar')}</option>
                                                 {BRAND_LABELS.map(brand => (
@@ -2873,7 +2873,7 @@ function GlobalProductsPageContent() {
                                                                         onClick={() => setCurrentPage(pageNum)}
                                                                         className={`w-8 h-8 rounded text-sm font-medium ${currentPage === pageNum
                                                                             ? 'bg-green-600 text-white'
-                                                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                                                            : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                                                             }`}
                                                                     >
                                                                         {pageNum}

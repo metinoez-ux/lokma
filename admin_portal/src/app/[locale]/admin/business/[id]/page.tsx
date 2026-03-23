@@ -2574,7 +2574,7 @@ export default function BusinessDetailsPage() {
             {/* Main Navigation Tabs */}
             <button
               onClick={() => { setActiveTab("overview"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
             >
                {t('dashboard')}
             </button>
@@ -2588,19 +2588,19 @@ export default function BusinessDetailsPage() {
             )}
             <button
               onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
             >
               {t('siparisler')}{orders.length})
             </button>
             <button
               onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
             >
                {t('tedarik')} ({supplierOrders.length})
             </button>
             <button
               onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
             >
               {!planFeatures.reservations && admin?.adminType !== 'super' && '🔒 '}{t('masaRezervasyonlari')}
             </button>
@@ -2609,7 +2609,7 @@ export default function BusinessDetailsPage() {
             <div className="relative settings-dropdown-container">
               <button
                 onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
               >
                 {t('ayarlar')}
                 <svg className={`w-3.5 h-3.5 transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3429,13 +3429,13 @@ export default function BusinessDetailsPage() {
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setProcurementSubTab('orders')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-foreground hover:bg-gray-600'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'}`}
                 >
                    {t('procurement_orders')} ({supplierOrders.length})
                 </button>
                 <button
                   onClick={() => setProcurementSubTab('suppliers')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-foreground hover:bg-gray-600'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'}`}
                 >
                    {t('procurement_suppliers')} ({suppliers.length})
                 </button>
@@ -3804,7 +3804,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setIsletmeInternalTab(tab.id)}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${isletmeInternalTab === tab.id
                           ? "bg-red-600 text-white"
-                          : "bg-gray-700 text-foreground hover:bg-gray-600"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                           }`}
                       >
                         {tab.label}
@@ -4412,7 +4412,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("kategoriler")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "kategoriler"
                           ? "bg-red-600 text-white"
-                          : "bg-gray-700 text-foreground hover:bg-gray-600"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                           }`}
                       >
                         {t('kategoriler')} ({inlineCategories.length})
@@ -4421,7 +4421,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("urunler")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "urunler"
                           ? "bg-red-600 text-white"
-                          : "bg-gray-700 text-foreground hover:bg-gray-600"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                           }`}
                       >
                         {t('urunler')}{inlineProducts.length})
@@ -4430,7 +4430,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("sponsored")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
                           ? "bg-amber-600 text-white"
-                          : "bg-gray-700 text-foreground hover:bg-gray-600"
+                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                           } ${!planFeatures.sponsoredProducts && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
                       >
                         {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
@@ -5921,7 +5921,7 @@ export default function BusinessDetailsPage() {
                                               onClick={() => setProductCurrentPage(pg)}
                                               className={`px-2.5 py-1 rounded text-xs font-medium transition ${pg === safeCurrentPage
                                                 ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                                 }`}
                                             >
                                               {pg}
@@ -7170,7 +7170,7 @@ export default function BusinessDetailsPage() {
                             <button
                               type="button"
                               onClick={() => setShowBoostForm(false)}
-                              className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-foreground rounded-xl text-sm transition-all"
+                              className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 rounded-xl text-sm transition-all"
                             >
                               {t('boost_iptal')}
                             </button>
@@ -7612,7 +7612,7 @@ export default function BusinessDetailsPage() {
                           }
                           setFormData({ ...formData, tableSections: [...formData.tableSections, name.trim()] });
                         }}
-                        className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-foreground rounded-md transition"
+                        className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 rounded-md transition"
                       >
                         {t('bolumEkle')}
                       </button>

@@ -198,7 +198,7 @@ export default function NotificationSoundPage() {
                                             <div className="flex items-center gap-2 mt-3">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handlePlay(sound); }}
-                                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-foreground px-3 py-1.5 rounded-lg transition"
+                                                    className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 px-3 py-1.5 rounded-lg transition"
                                                 >
                                                     ▶ {t('ns_anhoeren')}
                                                 </button>

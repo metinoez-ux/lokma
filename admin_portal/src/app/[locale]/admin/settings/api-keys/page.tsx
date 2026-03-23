@@ -495,7 +495,7 @@ export default function ApiKeysPage() {
                                                     setFeedback(null);
                                                 }}
                                                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${stored
-                                                        ? 'bg-gray-700 text-foreground hover:bg-gray-600'
+                                                        ? 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                                         : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-400 hover:to-orange-500'
                                                     }`}
                                             >
