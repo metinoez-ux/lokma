@@ -127,6 +127,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   // ❄️ Cold Chain Banner
   bool _showColdChainBanner = false; // true = show full expanded banner
 
+  // Cart listener subscription (listenManual)
+  ProviderSubscription<CartState>? _cartSubscription;
+
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
     final brandColorHex = _butcherData?['brandColor']?.toString();
@@ -180,8 +183,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _fetchSponsoredProducts();
       _fetchFreeDrinkProducts();
 
-      // 🎯 M-3: Listen to cart changes and refresh promo preview
-      ref.listen<CartState>(cartProvider, (prev, next) {
+      // M-3: Listen to cart changes and refresh promo preview
+      _cartSubscription = ref.listenManual<CartState>(cartProvider, (prev, next) {
         final prevCount = prev?.items.length ?? 0;
         final nextCount = next.items.length;
         final prevTotal = prev?.totalAmount ?? 0;
@@ -962,6 +965,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   @override
   void dispose() {
+    _cartSubscription?.close();
     _pulseController.dispose();
     _tableNumberController.dispose();
     super.dispose();

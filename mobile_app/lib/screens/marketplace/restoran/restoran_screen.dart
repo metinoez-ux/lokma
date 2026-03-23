@@ -1904,17 +1904,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.inverseSurface,
+                          color: lokmaPink.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
+                            Icon(Icons.shopping_bag_outlined, color: lokmaPink, size: 14),
                             const SizedBox(width: 6),
                             Text(
                               tr('marketplace.pre_order_active'),
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 12),
+                              style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w500, fontSize: 12),
                             ),
                           ],
                         ),
@@ -2114,15 +2114,176 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       distance: distanceKm ?? 0.0,
       onTap: () {
         HapticFeedback.lightImpact();
+        // Cart conflict check FIRST -- regardless of isAvailable
+        final cartState = ref.read(cartProvider);
+        if (cartState.isNotEmpty && cartState.butcherId != null && cartState.butcherId != id) {
+          _showCartConflictSheet(
+            existingBusinessId: cartState.butcherId!,
+            existingBusinessName: cartState.butcherName ?? '',
+            existingItemCount: cartState.items.length,
+            targetBusinessId: id,
+            targetBusinessName: name,
+            targetIsAvailable: isAvailable,
+            targetUnavailableReason: unavailableReason,
+            targetData: data,
+          );
+          return;
+        }
+        // No conflict -- proceed with normal flow
         if (!isAvailable) {
           _currentBusinessIdForDialog = id;
           _showClosedBusinessDialog(context, name, unavailableReason ?? tr('marketplace.currently_closed'), data);
         } else {
-          final encodedName = Uri.encodeComponent(name);
-          context.push('/kasap/$id?mode=$_deliveryMode&businessName=$encodedName');
+          _navigateOrShowConflict(id, name);
         }
       },
       showClosedDialog: _showClosedBusinessDialog,
+    );
+  }
+
+  /// Check for cart conflict before navigating to a business
+  void _navigateOrShowConflict(String targetBusinessId, String targetBusinessName) {
+    final cartState = ref.read(cartProvider);
+    debugPrint('[CART-CONFLICT] targetId=$targetBusinessId, cartButcherId=${cartState.butcherId}, cartItems=${cartState.items.length}, isNotEmpty=${cartState.isNotEmpty}');
+    if (cartState.isNotEmpty && cartState.butcherId != null && cartState.butcherId != targetBusinessId) {
+      debugPrint('[CART-CONFLICT] CONFLICT DETECTED -> showing sheet');
+      _showCartConflictSheet(
+        existingBusinessId: cartState.butcherId!,
+        existingBusinessName: cartState.butcherName ?? '',
+        existingItemCount: cartState.items.length,
+        targetBusinessId: targetBusinessId,
+        targetBusinessName: targetBusinessName,
+      );
+    } else {
+      debugPrint('[CART-CONFLICT] No conflict -> navigating directly');
+      final encodedName = Uri.encodeComponent(targetBusinessName);
+      context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName');
+    }
+  }
+
+  /// Lieferando-style cart conflict bottom sheet
+  void _showCartConflictSheet({
+    required String existingBusinessId,
+    required String existingBusinessName,
+    required int existingItemCount,
+    required String targetBusinessId,
+    required String targetBusinessName,
+    bool targetIsAvailable = true,
+    String? targetUnavailableReason,
+    Map<String, dynamic>? targetData,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        final onSurface = theme.colorScheme.onSurface;
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: onSurface.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Title
+                  Text(
+                    tr('cart.existing_order_title'),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Body text
+                  Text(
+                    tr('cart.existing_order_body', namedArgs: {
+                      'businessName': existingBusinessName,
+                      'count': '$existingItemCount',
+                    }),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: onSurface.withValues(alpha: 0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  // Continue existing order button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        final encodedName = Uri.encodeComponent(existingBusinessName);
+                        context.push('/kasap/$existingBusinessId?mode=$_deliveryMode&businessName=$encodedName');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: lokmaPink,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        tr('cart.continue_existing'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Start new order button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        ref.read(cartProvider.notifier).clearCart();
+                        Navigator.pop(ctx);
+                        // After clearing cart, respect target's availability
+                        if (!targetIsAvailable && targetData != null) {
+                          _currentBusinessIdForDialog = targetBusinessId;
+                          _showClosedBusinessDialog(
+                            context,
+                            targetBusinessName,
+                            targetUnavailableReason ?? tr('marketplace.currently_closed'),
+                            targetData!,
+                          );
+                        } else {
+                          final encodedName = Uri.encodeComponent(targetBusinessName);
+                          context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName');
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: onSurface,
+                        side: BorderSide(color: onSurface.withValues(alpha: 0.2)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(
+                        tr('cart.start_new_order'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
