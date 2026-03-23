@@ -483,7 +483,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     // Format date
     const formatDate = (date: Date) => {
-        return date.toLocaleDateString('tr-TR', {
+        return date.toLocaleDateString('de-DE', {
             weekday: 'short',
             day: '2-digit',
             month: '2-digit',
@@ -492,7 +492,7 @@ const { admin, loading: adminLoading } = useAdmin();
     };
 
     const formatTime = (date: Date) => {
-        return date.toLocaleTimeString('tr-TR', {
+        return date.toLocaleTimeString('de-DE', {
             hour: '2-digit',
             minute: '2-digit',
         });

@@ -229,7 +229,7 @@ export default function StatisticsPage() {
         return { pauseCount: significantPauses, resumeCount, totalPausedHours: Math.round(totalMs / 3600000) };
     }, [pauseLogs, perfDateRange]);
 
-    const formatPerfDate = (date: Date) => new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+    const formatPerfDate = (date: Date) => new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 
     // Filter orders by date range and business
     const { startDate: currentStart, endDate: currentEnd } = getDateRange(dateFilter, customStartDate, customEndDate);
@@ -512,7 +512,7 @@ export default function StatisticsPage() {
                     {compareMode !== 'none' && comparisonRange && (
                         <div className="flex items-center gap-3 px-3 py-2 bg-purple-900/30 border border-purple-600 rounded-lg">
                             <span className="text-purple-300 text-sm">
-                                {t('karsilastirma_donemi')} {comparisonRange.startDate.toLocaleDateString('tr-TR')} - {comparisonRange.endDate.toLocaleDateString('tr-TR')}
+                                {t('karsilastirma_donemi')} {comparisonRange.startDate.toLocaleDateString('de-DE')} - {comparisonRange.endDate.toLocaleDateString('de-DE')}
                             </span>
                             <span className="text-gray-400 text-sm">
                                 ({comparisonOrders.length} {t('siparis')}
@@ -686,7 +686,7 @@ export default function StatisticsPage() {
                             for (let i = 6; i >= 0; i--) {
                                 const d = new Date(now);
                                 d.setDate(d.getDate() - i);
-                                const dayStr = d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric' });
+                                const dayStr = d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric' });
                                 const dayOrders = orders.filter(o => {
                                     if (!o.createdAt) return false;
                                     const od = o.createdAt.toDate();

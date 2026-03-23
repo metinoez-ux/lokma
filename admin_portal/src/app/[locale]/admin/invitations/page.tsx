@@ -133,7 +133,7 @@ export default function InvitationsPage() {
             // In production, send email via Firebase Functions or similar
             // For now, show the invite link
             const inviteLink = `${window.location.origin}/register?token=${token}`;
-            alert(`Davetiye oluşturuldu!\n\nLink:\n${inviteLink}\n\n(Bu linki davet edilen kişiye gönderin. 48 saat geçerlidir.)`);
+            alert(`${t('davetiye_olusturuldu')}\n\nLink:\n${inviteLink}\n\n(${t('davetiye_link_aciklama')})`);
 
             setNewEmail('');
             await loadInvitations();
@@ -244,7 +244,7 @@ export default function InvitationsPage() {
                         className={`px-6 py-3 rounded-lg font-medium transition relative ${activeTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        ⏳ Onay Bekleyenler
+                        {t('onay_bekleyenler')}
                         {pendingApprovals.length > 0 && (
                             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                                 {pendingApprovals.length}
@@ -256,7 +256,7 @@ export default function InvitationsPage() {
                         className={`px-6 py-3 rounded-lg font-medium transition ${activeTab === 'superadmins' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        👑 Mevcut Super Adminler
+                        {t('mevcut_super_adminler')}
                     </button>
                 </div>
             </div>
@@ -272,7 +272,7 @@ export default function InvitationsPage() {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-gray-300 text-sm mb-2">E-posta Adresi</label>
+                                <label className="block text-gray-300 text-sm mb-2">{t('eposta_adresi')}</label>
                                 <input
                                     type="email"
                                     value={newEmail}
@@ -313,7 +313,7 @@ export default function InvitationsPage() {
                                             <div>
                                                 <p className="text-white">{inv.email}</p>
                                                 <p className="text-gray-400 text-xs">
-                                                    {inv.createdAt?.toLocaleDateString('tr-TR')} • {inv.role}
+                                                    {inv.createdAt?.toLocaleDateString('de-DE')} • {inv.role}
                                                 </p>
                                             </div>
                                             <span className={`px-2 py-1 rounded text-xs ${inv.status === 'approved' ? 'bg-green-600' :
@@ -321,9 +321,9 @@ export default function InvitationsPage() {
                                                     inv.status === 'registered' ? 'bg-yellow-600' :
                                                         'bg-gray-600'
                                                 } text-white`}>
-                                                {inv.status === 'pending' ? 'Bekliyor' :
+                                                {inv.status === 'pending' ? t('bekliyor') :
                                                     inv.status === 'registered' ? t('kayit_oldu') :
-                                                        inv.status === 'approved' ? t('onaylandi') : 'Reddedildi'}
+                                                        inv.status === 'approved' ? t('onaylandi') : t('reddedildi')}
                                             </span>
                                         </div>
                                     ))}
@@ -351,11 +351,11 @@ export default function InvitationsPage() {
                                             <div>
                                                 <p className="text-white font-semibold text-lg">{inv.email}</p>
                                                 <p className="text-gray-400 text-sm">
-                                                    Davet eden: {inv.invitedByEmail} • {inv.createdAt?.toLocaleDateString('tr-TR')}
+                                                    {t('davet_eden')}: {inv.invitedByEmail} • {inv.createdAt?.toLocaleDateString('de-DE')}
                                                 </p>
                                             </div>
                                             <span className="px-3 py-1 bg-yellow-600 text-white rounded text-sm">
-                                                Onay Bekliyor
+                                                {t('onay_bekliyor')}
                                             </span>
                                         </div>
 
@@ -399,7 +399,7 @@ export default function InvitationsPage() {
                                                 onClick={() => handleReject(inv)}
                                                 className="flex-1 bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700"
                                             >
-                                                ✗ Reddet
+                                                {t('reddet')}
                                             </button>
                                         </div>
                                     </div>
@@ -454,7 +454,7 @@ export default function InvitationsPage() {
                 itemName={confirmReject?.email}
                 variant="danger"
                 confirmText={t('evet_reddet')}
-                loadingText="Reddediliyor..."
+                loadingText={t('reddediliyor')}
             />
         </div>
     );

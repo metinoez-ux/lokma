@@ -202,7 +202,7 @@ const params = useParams();
     }, [pauseLogs, dateRange]);
 
     const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat('tr-TR', {
+        return new Intl.DateTimeFormat('de-DE', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',

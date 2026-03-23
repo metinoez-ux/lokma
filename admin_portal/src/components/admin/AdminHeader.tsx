@@ -361,7 +361,7 @@ export default function AdminHeader() {
                                 </svg>
                             </button>
                             <span className="text-sm font-light tabular-nums tracking-wider text-white">
-                                {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                {currentTime.toLocaleTimeString(localeToBcp47[currentLocale] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                             <span className="text-gray-500 text-xs">|</span>
                             <span className="text-xs text-gray-400">
@@ -496,13 +496,13 @@ export default function AdminHeader() {
                                         </Link>
                                         <div className="border-t border-gray-700 my-1" />
                                         <Link href="/admin/drivers/tips" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            Trinkgeld
+                                            {t('trinkgeld')}
                                         </Link>
                                         <Link href="/admin/staff-shifts" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            Arbeitszeiten
+                                            {t('arbeitszeiten')}
                                         </Link>
                                         <Link href="/admin/sponsored-ads" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            Sponsored Ads
+                                            {t('sponsoredAds')}
                                         </Link>
                                     </div>
                                 </div>
@@ -620,7 +620,7 @@ export default function AdminHeader() {
                                     : 'text-red-100 hover:text-white hover:bg-white/10'
                                     }`}
                             >
-                                Ameise
+                                {t('ameise')}
                             </Link>
 
                             {/* 8. Service */}
@@ -661,14 +661,14 @@ export default function AdminHeader() {
                                             : 'text-red-100 hover:text-white hover:bg-white/10'
                                     }`}
                                 >
-                                    Einstellungen
+                                    {t('settings')}
                                     <span className="text-[10px]">&#9660;</span>
                                 </button>
                                 <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[240px] overflow-hidden">
                                     <div className="py-1">
-                                        <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">Einstellungen</p>
+                                        <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">{t('settings')}</p>
                                         <Link href="/admin/settings" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
-                                            IOT Einstellungen
+                                            {t('iotSettings')}
                                         </Link>
                                         <Link href="/admin/settings/company" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
                                             {t('companySettings')}
@@ -680,7 +680,7 @@ export default function AdminHeader() {
                                             {t('imageGen')}
                                         </Link>
                                         <Link href="/admin/ameise" className="px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white block">
-                                            Ameise
+                                            {t('ameise')}
                                         </Link>
                                     </div>
                                 </div>
@@ -783,7 +783,7 @@ export default function AdminHeader() {
                                                 <Link href="/admin/benutzerverwaltung" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('benutzerverwaltung')}</Link>
                                                 <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('sectors')}</Link>
                                                 <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('kermes')}</Link>
-                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">Sponsored Ads</Link>
+                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('sponsoredAds')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -857,16 +857,16 @@ export default function AdminHeader() {
                                     {/* 9. Einstellungen */}
                                     <div className="border-t border-gray-700 mt-1 pt-1">
                                         <button onClick={() => toggleSection('platform')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">
-                                            Einstellungen
+                                            {t('settings')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'platform' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'platform' && (
                                             <div className="bg-gray-800/50 py-1">
-                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">IOT Einstellungen</Link>
+                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('iotSettings')}</Link>
                                                 <Link href="/admin/settings/company" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('companySettings')}</Link>
                                                 <Link href="/admin/ui-translations" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('uiTranslations')}</Link>
                                                 <Link href="/admin/image-generator" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('imageGen')}</Link>
-                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">Ameise</Link>
+                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-gray-400 hover:text-white hover:bg-gray-700">{t('ameise')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -938,7 +938,7 @@ export default function AdminHeader() {
                             {/* Tablet-only status info */}
                             <div className="min-[1921px]:hidden flex items-center gap-2 flex-1 justify-center">
                                 <span className="text-sm font-light tabular-nums tracking-wider text-white">
-                                    {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                    {currentTime.toLocaleTimeString(localeToBcp47[currentLocale] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                                 <span className="text-gray-500 text-xs">|</span>
                                 <span className="text-xs text-gray-400">
@@ -1015,7 +1015,7 @@ export default function AdminHeader() {
                                         : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                                         }`}
                                 >
-                                    Sponsored Ads
+                                    {t('sponsoredAds')}
                                 </Link>
 
                                 {/* Personel Dropdown for Regular Admin */}
@@ -1218,7 +1218,7 @@ export default function AdminHeader() {
                                     <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('productsCategories')}</Link>
                                     <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('promotions')}</Link>
                                     <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('reports')}</Link>
-                                    <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">Sponsored Ads</Link>
+                                    <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-gray-800">{t('sponsoredAds')}</Link>
 
                                     {/* Personel section */}
                                     <div className="border-t border-gray-700 mt-1 pt-1">
@@ -1319,7 +1319,7 @@ export default function AdminHeader() {
                                                     <div>
                                                         <span className="text-gray-500">{t('dateLabel')}:</span>
                                                         <span className="text-gray-300 ml-2">
-                                                            {invitation.createdAt.toLocaleDateString('tr-TR')}
+                                                            {invitation.createdAt.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE')}
                                                         </span>
                                                     </div>
                                                 </div>

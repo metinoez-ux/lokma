@@ -15,6 +15,7 @@ interface MetricCardProps {
 }
 
 function MetricCard({ title, value, limit, percentage, icon, unit = '', subtitle }: MetricCardProps) {
+    const t = useTranslations('AdminComponentFirebaseMetricsWidget');
     const getColorClass = (pct?: number) => {
         if (!pct) return 'bg-gray-700';
         if (pct >= 90) return 'bg-red-600';
@@ -42,7 +43,7 @@ function MetricCard({ title, value, limit, percentage, icon, unit = '', subtitle
                         />
                     </div>
                     <p className={`text-xs ${percentage >= 90 ? 'text-red-400' : percentage >= 70 ? 'text-yellow-400' : 'text-green-400'}`}>
-                        {(percentage ?? 0).toFixed(1)}% kullanıldı
+                        {(percentage ?? 0).toFixed(1)}% {t('kullanildi')}
                     </p>
                 </div>
             )}
@@ -124,7 +125,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                     onClick={fetchMetrics}
                     className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm"
                 >
-                    Tekrar Dene
+                    {t('tekrar_dene')}
                 </button>
             </div>
         );
@@ -139,14 +140,14 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                 <div>
                     <h2 className="text-xl font-bold text-white">{t('firebase_kullanim_metrikleri')}</h2>
                     <p className="text-sm text-gray-400">
-                        📅 {getDateLabel()} | {lastUpdate && `Son güncelleme: ${lastUpdate.toLocaleTimeString('tr-TR')}`}
+                        {getDateLabel()} | {lastUpdate && `${t('son_guncelleme')}: ${lastUpdate.toLocaleTimeString('de-DE')}`}
                     </p>
                 </div>
                 <button
                     onClick={fetchMetrics}
                     className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-gray-300"
                 >
-                    🔄 Yenile
+                    {t('yenile')}
                 </button>
             </div>
 
@@ -155,7 +156,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                 <h3 className="text-sm font-semibold text-gray-400 mb-3">{t('firestore_gunluk_limitler')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
-                        title="Okuma (Reads)"
+                        title={t('okuma_reads')}
                         value={metrics.firestore.reads.today}
                         limit={metrics.firestore.reads.limit}
                         percentage={metrics.firestore.reads.percentage}
@@ -163,7 +164,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                         subtitle={getDateLabel()}
                     />
                     <MetricCard
-                        title="Yazma (Writes)"
+                        title={t('yazma_writes')}
                         value={metrics.firestore.writes.today}
                         limit={metrics.firestore.writes.limit}
                         percentage={metrics.firestore.writes.percentage}
@@ -171,7 +172,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                         subtitle={getDateLabel()}
                     />
                     <MetricCard
-                        title="Silme (Deletes)"
+                        title={t('silme_deletes')}
                         value={metrics.firestore.deletes.today}
                         limit={metrics.firestore.deletes.limit}
                         percentage={metrics.firestore.deletes.percentage}
@@ -179,7 +180,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                         subtitle={getDateLabel()}
                     />
                     <MetricCard
-                        title="Depolama"
+                        title={t('depolama')}
                         value={metrics.firestore.storage.current}
                         limit={metrics.firestore.storage.limit}
                         percentage={metrics.firestore.storage.percentage}
@@ -235,7 +236,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                         value={metrics.functions.errors.count}
                         percentage={metrics.functions.errors.percentage}
                         icon="❌"
-                        subtitle={`%${(metrics.functions.errors.percentage ?? 0).toFixed(1)} hata oranı`}
+                        subtitle={`%${(metrics.functions.errors.percentage ?? 0).toFixed(1)} ${t('hata_orani')}`}
                     />
                     <MetricCard
                         title={t('storage_bant_genisligi')}
@@ -247,7 +248,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
                         subtitle={getDateLabel()}
                     />
                     <MetricCard
-                        title="Storage Boyutu"
+                        title={t('storage_boyutu')}
                         value={metrics.storage.totalSize.current}
                         icon="📦"
                         unit="GB"

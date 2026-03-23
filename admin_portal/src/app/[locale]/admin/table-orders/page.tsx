@@ -270,7 +270,7 @@ export default function TableOrdersPage() {
     const formatDate = (timestamp: Timestamp | undefined) => {
         if (!timestamp) return '-';
         const date = timestamp.toDate();
-        return date.toLocaleDateString('tr-TR', {
+        return date.toLocaleDateString('de-DE', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',

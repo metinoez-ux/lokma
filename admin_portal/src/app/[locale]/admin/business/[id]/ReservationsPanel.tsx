@@ -323,10 +323,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
     };
 
     const formatDate = (d: Date) =>
-        d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+        d.toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" });
 
     const formatTime = (d: Date) =>
-        d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+        d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
     // Counters
     const pendingCount = reservations.filter((r) => r.status === "pending").length;

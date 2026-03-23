@@ -3142,7 +3142,7 @@ export default function BusinessDetailsPage() {
                       return hoursList.length > 0 && hoursList[0] !== "" ? (
                         <ul className="space-y-1">
                           {hoursList.map((line: string, i: number) => {
-                            const today = new Date().toLocaleDateString("tr-TR", { weekday: "long" });
+                            const today = new Date().toLocaleDateString("de-DE", { weekday: "long" });
                             const dayName = line.split(":")[0]?.trim();
                             // Simple match check, can be improved if needed
                             const isToday = dayName === today || (today === "Pazar" && dayName === "Pazar");
@@ -3222,7 +3222,7 @@ export default function BusinessDetailsPage() {
                         {(business as any).createdAt?.toDate
                           ? (business as any).createdAt
                             .toDate()
-                            .toLocaleDateString("tr-TR")
+                            .toLocaleDateString("de-DE")
                           : t('belirtilmemis')}
                       </p>
                     </div>
@@ -3232,11 +3232,11 @@ export default function BusinessDetailsPage() {
                         {(business?.subscriptionStartDate as any)?.toDate
                           ? (business?.subscriptionStartDate as any)
                             .toDate()
-                            .toLocaleDateString("tr-TR")
+                            .toLocaleDateString("de-DE")
                           : business?.subscriptionStartDate
                             ? new Date(
                               business?.subscriptionStartDate,
-                            ).toLocaleDateString("tr-TR")
+                            ).toLocaleDateString("de-DE")
                             : t('belirtilmemis')}
                       </p>
                     </div>
@@ -5768,11 +5768,11 @@ export default function BusinessDetailsPage() {
                                                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
                                                           <p className="text-xs text-gray-500 mb-1">{t('olusturulma')}</p>
-                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
+                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
                                                         </div>
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
                                                           <p className="text-xs text-gray-500 mb-1">{t('guncelleme')}</p>
-                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
+                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
                                                         </div>
                                                         <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
                                                           <p className="text-xs text-gray-500 mb-1">SKU / Master ID</p>
@@ -6185,7 +6185,7 @@ export default function BusinessDetailsPage() {
                               {activeShifts.map(shift => {
                                 const startTime = shift.shiftStartedAt?.toDate?.() || shift.shiftStartedAt;
                                 const startStr = startTime
-                                  ? new Date(startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                                  ? new Date(startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
                                   : '—';
                                 const elapsed = startTime
                                   ? Math.floor((Date.now() - new Date(startTime).getTime()) / 60000)
@@ -7452,8 +7452,8 @@ export default function BusinessDetailsPage() {
                                 {(business?.subscriptionHistory || []).map((h: any, i: number) => (
                                   <tr key={i} className="hover:bg-gray-800/30">
                                     <td className="px-4 py-2 font-medium text-white uppercase">{h.plan}</td>
-                                    <td className="px-4 py-2">{h.startDate?.seconds ? new Date(h.startDate.seconds * 1000).toLocaleDateString('tr-TR') : new Date(h.startDate).toLocaleDateString('tr-TR')}</td>
-                                    <td className="px-4 py-2">{h.endDate?.seconds ? new Date(h.endDate.seconds * 1000).toLocaleDateString('tr-TR') : new Date(h.endDate).toLocaleDateString('tr-TR')}</td>
+                                    <td className="px-4 py-2">{h.startDate?.seconds ? new Date(h.startDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.startDate).toLocaleDateString('de-DE')}</td>
+                                    <td className="px-4 py-2">{h.endDate?.seconds ? new Date(h.endDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.endDate).toLocaleDateString('de-DE')}</td>
                                     <td className="px-4 py-2 text-gray-500">{h.changedBy?.split('@')[0]}</td>
                                   </tr>
                                 ))}
@@ -8613,7 +8613,7 @@ export default function BusinessDetailsPage() {
           t={t}
           businesses={{ [business?.id || '']: business?.companyName || '' }}
           checkedItems={checkedItems[selectedOrder.id] || {}}
-          dateLocale="tr-TR"
+          dateLocale="de-DE"
           onUpdateOrderStatus={updateOrderStatus}
           onToggleItemChecked={toggleItemChecked}
         />

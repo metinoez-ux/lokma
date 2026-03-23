@@ -335,7 +335,7 @@ const params = useParams();
     };
 
     const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat('tr-TR', {
+        return new Intl.DateTimeFormat('de-DE', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -751,7 +751,7 @@ const params = useParams();
                         t={t}
                         businesses={{ [butcher?.id || '']: butcher?.companyName || '' }}
                         checkedItems={checkedItems[selectedOrder.id] || {}}
-                        dateLocale="tr-TR"
+                        dateLocale="de-DE"
                         onUpdateOrderStatus={updateOrderStatus}
                         onToggleItemChecked={toggleItemChecked}
                     />

@@ -166,7 +166,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
     }, [driverStats]);
 
     const formatDate = (date: Date) =>
-        date.toLocaleDateString('tr-TR', {
+        date.toLocaleDateString('de-DE', {
             day: '2-digit',
             month: '2-digit',
             hour: '2-digit',
