@@ -53,7 +53,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
   double _currentZoom = 13;
 
   static const Color openGreen = Color(0xFF2E7D32);
-  static const Color lokmaPink = Color(0xFFFB335B);
+  static const Color lokmaPink = Color(0xFFEA184A);
 
   // Distance ring radii in meters
   static const List<double> _ringRadiiM = [5000, 10000, 15000];

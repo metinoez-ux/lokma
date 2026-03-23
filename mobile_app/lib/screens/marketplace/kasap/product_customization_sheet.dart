@@ -165,7 +165,7 @@ class _ProductCustomizationSheetState
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = const Color(0xFFFB335B);
+    final accent = const Color(0xFFEA184A);
     final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white54 : Colors.black45;

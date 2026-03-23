@@ -105,7 +105,7 @@ export default function KuryePage() {
                     {/* Steps */}
                     <div className="p-4 md:p-8">
                         <div className="flex items-center gap-5 mb-12">
-                            <div className="w-14 h-14 bg-[#fb335b]/10 text-[#fb335b] flex items-center justify-center rounded-2xl">
+                            <div className="w-14 h-14 bg-[#ea184a]/10 text-[#ea184a] flex items-center justify-center rounded-2xl">
                                 <span className="material-symbols-outlined text-3xl">route</span>
                             </div>
                             <h2 className="text-3xl md:text-4xl font-black tracking-tight">{t('stepsTitle')}</h2>
@@ -113,7 +113,7 @@ export default function KuryePage() {
                         <div className="space-y-10 relative before:absolute before:inset-0 before:ml-7 before:-translate-x-px before:w-1 before:bg-white/10 before:z-0">
                             {steps.map((step, i) => (
                                 <div key={i} className="relative z-10 flex items-start gap-8 group">
-                                    <div className="w-14 h-14 shrink-0 bg-white dark:bg-[#0a0a0f] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#fb335b] transition-colors rounded-full flex items-center justify-center font-black text-2xl text-gray-900 dark:text-white group-hover:text-[#fb335b]">
+                                    <div className="w-14 h-14 shrink-0 bg-white dark:bg-[#0a0a0f] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#ea184a] transition-colors rounded-full flex items-center justify-center font-black text-2xl text-gray-900 dark:text-white group-hover:text-[#ea184a]">
                                         {step.num}
                                     </div>
                                     <div className="pt-2">

@@ -32,7 +32,7 @@ class LegalReportSheet extends StatefulWidget {
 
 class _LegalReportSheetState extends State<LegalReportSheet> {
   // 🎨 LOKMA brand color
-  static const Color _brandColor = Color(0xFFFB335B);
+  static const Color _brandColor = Color(0xFFEA184A);
   String? _selectedTopic;
   String? _selectedReason;
   final _descriptionController = TextEditingController();

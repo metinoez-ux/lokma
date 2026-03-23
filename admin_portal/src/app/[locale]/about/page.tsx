@@ -138,8 +138,8 @@ export default function AboutPage() {
 
                         <div className="grid md:grid-cols-2 gap-6">
                             {(['v1', 'v2', 'v3', 'v4'] as const).map(v => (
-                                <div key={v} className="bg-[#fb335b]/10 border border-[#fb335b]/20 rounded-xl p-6">
-                                    <h3 className="font-bold text-[#fb335b] mb-2">{t(v)}</h3>
+                                <div key={v} className="bg-[#ea184a]/10 border border-[#ea184a]/20 rounded-xl p-6">
+                                    <h3 className="font-bold text-[#ea184a] mb-2">{t(v)}</h3>
                                     <p className="text-sm">{t(`${v}d`)}</p>
                                 </div>
                             ))}
@@ -148,7 +148,7 @@ export default function AboutPage() {
                         <div className="mt-12 text-center">
                             <Link
                                 href="/partner"
-                                className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
+                                className="inline-block bg-[#ea184a] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
                             >
                                 {t('cta')}
                             </Link>

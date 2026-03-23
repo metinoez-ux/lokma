@@ -155,7 +155,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     }
   }
 
-  static const Color _brandColor = Color(0xFFFB335B);
+  static const Color _brandColor = Color(0xFFEA184A);
 
   @override
   Widget build(BuildContext context) {

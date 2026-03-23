@@ -107,7 +107,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
               child: Text(tr('staff.end_break_and_take'), style: const TextStyle(color: Colors.white)),
             ),
           ],
@@ -146,7 +146,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
             child: Text(tr('driver.take_delivery_btn'), style: const TextStyle(color: Colors.white)),
           ),
         ],
@@ -200,7 +200,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('driver.pending_deliveries')),
-        backgroundColor: const Color(0xFFFB335B),
+        backgroundColor: const Color(0xFFEA184A),
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -296,7 +296,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
           child: ExpansionTile(
             backgroundColor: Colors.grey[100],
             collapsedBackgroundColor: Colors.grey[100],
-            leading: const Icon(Icons.history, color: Color(0xFFFB335B)),
+            leading: const Icon(Icons.history, color: Color(0xFFEA184A)),
             title: Row(
               children: [
                 Text(
@@ -504,14 +504,14 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFB335B).withValues(alpha: 0.1),
+                    color: const Color(0xFFEA184A).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFFFB335B),
+                      color: Color(0xFFEA184A),
                     ),
                   ),
                 ),
@@ -809,18 +809,18 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFB335B).withValues(alpha: 0.15),
+                  color: const Color(0xFFEA184A).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFB335B), width: 2),
+                  border: Border.all(color: const Color(0xFFEA184A), width: 2),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.payments, color: Color(0xFFFB335B), size: 32),
+                    const Icon(Icons.payments, color: Color(0xFFEA184A), size: 32),
                     const SizedBox(width: 12),
                     Text(
                       '$amount${CurrencyUtils.getCurrencySymbol()}',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFFFB335B)),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFFEA184A)),
                     ),
                   ],
                 ),
@@ -833,7 +833,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('common.cancel'))),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
               child: const Text('✓ Evet, Tahsil Ettim', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -944,7 +944,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
             child: Text('staff.yes_on_my_way'.tr(), 
                               style: TextStyle(color: Colors.white)),
           ),
@@ -959,7 +959,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(tr('driver.you_are_on_the_way')),
-            backgroundColor: const Color(0xFFFB335B),
+            backgroundColor: const Color(0xFFEA184A),
           ),
         );
       }
@@ -1946,7 +1946,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFB335B),
+                                  backgroundColor: const Color(0xFFEA184A),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                                 ),
                               )

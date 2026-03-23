@@ -26,7 +26,7 @@ class _MarketplaceGroupShareSheetState
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
 
-  static const Color _accent = Color(0xFFFB335B);
+  static const Color _accent = Color(0xFFEA184A);
 
   String get shareLink => widget.session.generatedShareLink;
 

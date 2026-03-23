@@ -35,14 +35,14 @@ export default function CategoriesPage() {
                             <Link
                                 key={cat.name}
                                 href={cat.href}
-                                className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:border-[#fb335b]/50 hover:bg-gray-100 dark:hover:bg-white/10 transition-all group"
+                                className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:border-[#ea184a]/50 hover:bg-gray-100 dark:hover:bg-white/10 transition-all group"
                             >
                                 <div className="text-4xl mb-4">{cat.icon}</div>
-                                <h3 className="text-xl font-bold mb-2 group-hover:text-[#fb335b] transition-colors">{cat.name}</h3>
+                                <h3 className="text-xl font-bold mb-2 group-hover:text-[#ea184a] transition-colors">{cat.name}</h3>
                                 <p className="text-sm text-gray-500 dark:text-white/60 mb-4">{cat.desc}</p>
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-gray-400 dark:text-white/40">{cat.count} isletme</span>
-                                    <span className="material-symbols-outlined text-gray-400 dark:text-white/40 group-hover:text-[#fb335b] transition-colors">arrow_forward</span>
+                                    <span className="material-symbols-outlined text-gray-400 dark:text-white/40 group-hover:text-[#ea184a] transition-colors">arrow_forward</span>
                                 </div>
                             </Link>
                         ))}

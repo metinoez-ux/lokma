@@ -62,7 +62,7 @@ class RestoranScreen extends ConsumerStatefulWidget {
 class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   // Theme colors
   // Theme colors
-  static const Color lokmaPink = Color(0xFFFB335B); // Rose-500 brand color
+  static const Color lokmaPink = Color(0xFFEA184A); // Rose-500 brand color
   static const Color tunaGreen = Color(0xFF4CAF50);
 
   // Dynamic card background getter for theme-aware colors
@@ -3102,7 +3102,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               width: double.infinity,
               height: cardH,
               decoration: gradientDeco(
-                const [Color(0xFFFB335B), Color(0xFFD1184A)],
+                const [Color(0xFFEA184A), Color(0xFFD1184A)],
                 lokmaPink,
               ),
               child: cardContent(
@@ -3299,13 +3299,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFB335B).withValues(alpha: 0.08),
+                      color: const Color(0xFFEA184A).withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.qr_code_scanner,
                       size: 36,
-                      color: Color(0xFFFB335B),
+                      color: Color(0xFFEA184A),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -3334,7 +3334,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFB335B),
+                      color: const Color(0xFFEA184A),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(

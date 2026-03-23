@@ -44,7 +44,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   double _donationAmount = 0.0;
   
   // Renkler
-  static const Color lokmaPink = Color(0xFFFB335B);
+  static const Color lokmaPink = Color(0xFFEA184A);
   Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
   Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
   

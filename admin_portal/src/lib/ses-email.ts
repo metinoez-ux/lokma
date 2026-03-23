@@ -276,7 +276,7 @@ export const EmailTemplates = {
         subject: '🔐 Şifre Sıfırlama Talebi',
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #fb335b, #d4223f); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <div style="background: linear-gradient(135deg, #ea184a, #d4223f); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
                     <h1 style="margin: 0;">🔐 Şifre Sıfırlama</h1>
                     <p style="margin: 10px 0 0 0; opacity: 0.9;">MIRA Hesap Güvenliği</p>
                 </div>
@@ -287,7 +287,7 @@ export const EmailTemplates = {
                         Aşağıdaki butona tıklayarak yeni şifrenizi belirleyebilirsiniz.
                     </p>
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="${resetLink}" style="background: #fb335b; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                        <a href="${resetLink}" style="background: #ea184a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
                             Şifremi Sıfırla
                         </a>
                     </div>

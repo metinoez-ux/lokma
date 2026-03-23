@@ -58,7 +58,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
   Timer? _debounceTimer;
 
   // Brand color
-  static const Color brandOrange = Color(0xFFFB335B);
+  static const Color brandOrange = Color(0xFFEA184A);
 
   @override
   void initState() {

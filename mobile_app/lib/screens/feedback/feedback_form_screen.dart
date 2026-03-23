@@ -12,7 +12,7 @@ class FeedbackFormScreen extends StatefulWidget {
 }
 
 class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
-  static const Color lokmaRed = Color(0xFFFB335B);
+  static const Color lokmaRed = Color(0xFFEA184A);
   static const Color blackPure = Color(0xFF000000);
   static const Color surfaceCard = Color(0xFF181818);
   static const Color borderSubtle = Color(0xFF262626);

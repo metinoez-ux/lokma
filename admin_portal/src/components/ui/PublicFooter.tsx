@@ -20,7 +20,7 @@ export default function PublicFooter({ themeAware = false }: { themeAware?: bool
     const footerBg = themeAware ? 'bg-gray-50 dark:bg-[#0a0505] border-gray-200 dark:border-white/5' : 'bg-gray-50 border-gray-200';
     const textColor = themeAware ? 'text-gray-600 dark:text-white/40' : 'text-gray-500';
     const headingColor = themeAware ? 'text-gray-900 dark:text-white' : 'text-gray-900';
-    const linkColor = themeAware ? 'text-gray-600 dark:text-white/50 hover:text-[#fb335b] dark:hover:text-[#fb335b]' : 'text-gray-600 hover:text-[#fb335b]';
+    const linkColor = themeAware ? 'text-gray-600 dark:text-white/50 hover:text-[#ea184a] dark:hover:text-[#ea184a]' : 'text-gray-600 hover:text-[#ea184a]';
 
     return (
         <footer className={`${footerBg} border-t py-12 px-4 md:px-20 lg:px-40`}>

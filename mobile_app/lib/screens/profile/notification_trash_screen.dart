@@ -119,7 +119,7 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               'notifications.delete'.tr(),
-              style: const TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.w600),
+              style: const TextStyle(color: Color(0xFFEA184A), fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -274,17 +274,17 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 24),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFB335B).withValues(alpha: 0.15),
+                        color: const Color(0xFFEA184A).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.delete_forever_rounded, color: Color(0xFFFB335B), size: 24),
+                          const Icon(Icons.delete_forever_rounded, color: Color(0xFFEA184A), size: 24),
                           const SizedBox(height: 2),
                           Text(
                             'notifications.delete'.tr(),
-                            style: const TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
+                            style: const TextStyle(color: Color(0xFFEA184A), fontSize: 11, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -354,7 +354,7 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
                           // Delete permanently
                           IconButton(
                             onPressed: _deleteSelected,
-                            icon: const Icon(Icons.delete_forever_rounded, color: Color(0xFFFB335B), size: 22),
+                            icon: const Icon(Icons.delete_forever_rounded, color: Color(0xFFEA184A), size: 22),
                             tooltip: 'notifications.delete_permanently'.tr(),
                           ),
                         ],
@@ -387,9 +387,9 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
             height: 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: selected ? const Color(0xFFFB335B) : Colors.transparent,
+              color: selected ? const Color(0xFFEA184A) : Colors.transparent,
               border: Border.all(
-                color: selected ? const Color(0xFFFB335B) : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                color: selected ? const Color(0xFFEA184A) : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                 width: 2,
               ),
             ),

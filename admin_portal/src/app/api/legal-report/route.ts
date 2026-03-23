@@ -49,10 +49,10 @@ export async function POST(req: NextRequest) {
                 
                 <!-- Content -->
                 <div style="padding: 30px;">
-                    <h2 style="color: #fb335b; margin: 0 0 20px 0; font-size: 20px;">Meldung #${reportId.slice(0, 8).toUpperCase()}</h2>
+                    <h2 style="color: #ea184a; margin: 0 0 20px 0; font-size: 20px;">Meldung #${reportId.slice(0, 8).toUpperCase()}</h2>
                     
                     <!-- Report Details -->
-                    <div style="background: #2a2a2a; border-radius: 12px; padding: 20px; border-left: 4px solid #fb335b;">
+                    <div style="background: #2a2a2a; border-radius: 12px; padding: 20px; border-left: 4px solid #ea184a;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Geschäft:</td>
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
                             </tr>` : ''}
                             <tr style="border-top: 1px solid #444;">
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Thema:</td>
-                                <td style="padding: 10px 0; color: #fb335b; font-weight: bold; text-align: right;">${topicLabel}</td>
+                                <td style="padding: 10px 0; color: #ea184a; font-weight: bold; text-align: right;">${topicLabel}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Grund:</td>
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
                             </tr>
                             <tr>
                                 <td style="padding: 5px 0; color: #888; font-size: 14px;">E-Mail:</td>
-                                <td style="padding: 5px 0; color: #fb335b; text-align: right;">${reporterEmail}</td>
+                                <td style="padding: 5px 0; color: #ea184a; text-align: right;">${reporterEmail}</td>
                             </tr>
                         </table>
                     </div>

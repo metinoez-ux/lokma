@@ -164,10 +164,10 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
 
                 {/* Desktop Nav */}
                 <nav className="hidden md:flex items-center gap-8">
-                    <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/">{t('home')}</Link>
-                    <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/about">{t('about')}</Link>
-                    <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/vendor">{t('vendorPortal')}</Link>
-                    <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/support">{t('support')}</Link>
+                    <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/">{t('home')}</Link>
+                    <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/about">{t('about')}</Link>
+                    <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/vendor">{t('vendorPortal')}</Link>
+                    <Link className="text-sm font-medium hover:text-[#ea184a] transition-colors" href="/support">{t('support')}</Link>
                 </nav>
 
                 <div className="flex items-center gap-3">
@@ -194,7 +194,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                                             <button
                                                 key={lang.code}
                                                 className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
-                                                    ? 'bg-[#fb335b]/10 text-[#fb335b] font-semibold'
+                                                    ? 'bg-[#ea184a]/10 text-[#ea184a] font-semibold'
                                                     : `${itemHover} ${themeAware ? 'text-gray-900 dark:text-gray-200' : 'text-gray-900'} font-medium`
                                                     }`}
                                                 onClick={() => handleLangChange(lang.code)}
@@ -202,7 +202,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                                                 <span className="text-base">{lang.flag}</span>
                                                 <span className="text-sm">{lang.name}</span>
                                                 {currentLang === lang.code && (
-                                                    <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px]">check_circle</span>
+                                                    <span className="material-symbols-outlined text-[#ea184a] ml-auto text-[14px]">check_circle</span>
                                                 )}
                                             </button>
                                         ))}
@@ -223,7 +223,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                                             <button
                                                 key={country.code}
                                                 className={`flex items-center gap-2 px-2.5 py-2 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
-                                                    ? 'bg-[#fb335b]/10 text-[#fb335b] font-semibold'
+                                                    ? 'bg-[#ea184a]/10 text-[#ea184a] font-semibold'
                                                     : `${itemHover} ${themeAware ? 'text-gray-900 dark:text-gray-200' : 'text-gray-900'} font-medium`
                                                     }`}
                                                 onClick={() => handleCountryChange(country.code)}
@@ -231,7 +231,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                                                 <span className="text-base">{country.flag}</span>
                                                 <span className="text-sm truncate">{country.name}</span>
                                                 {currentCountry === country.code && (
-                                                    <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px] flex-shrink-0">check_circle</span>
+                                                    <span className="material-symbols-outlined text-[#ea184a] ml-auto text-[14px] flex-shrink-0">check_circle</span>
                                                 )}
                                             </button>
                                         ))}

@@ -140,7 +140,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.table_restaurant, color: const Color(0xFFFB335B)),
+            Icon(Icons.table_restaurant, color: const Color(0xFFEA184A)),
             const SizedBox(width: 8),
             Text(tr('staff.table_number', args: ['$tableNumber'])),
           ],
@@ -156,7 +156,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEA184A)),
             child: Text(tr('staff.yes_start')),
           ),
         ],
@@ -254,7 +254,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
 
   /// Shows a bottom sheet with the table's current order summary and payment status
   void _showTableOverviewSheet(TableSession session, int tableNumber) {
-    const brandColor = Color(0xFFFB335B);
+    const brandColor = Color(0xFFEA184A);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -580,7 +580,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.lock_outline, color: const Color(0xFFFB335B)),
+            Icon(Icons.lock_outline, color: const Color(0xFFEA184A)),
             const SizedBox(width: 8),
             Text(tr('staff.table_pin_code')),
           ],
@@ -596,9 +596,9 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFB335B).withValues(alpha: 0.08),
+                color: const Color(0xFFEA184A).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFB335B).withValues(alpha: 0.3)),
+                border: Border.all(color: const Color(0xFFEA184A).withValues(alpha: 0.3)),
               ),
               child: Text(
                 pin,
@@ -606,7 +606,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 12,
-                  color: const Color(0xFFFB335B),
+                  color: const Color(0xFFEA184A),
                 ),
               ),
             ),
@@ -631,7 +631,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFB335B),
+              backgroundColor: const Color(0xFFEA184A),
             ),
             child: Text('common.ok'.tr()),
           ),
@@ -787,7 +787,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFEA184A)))
           : _businessId == null
               ? _buildNoBusinessView()
               : _currentStep == _WaiterStep.selectTable
@@ -826,7 +826,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
   Widget _buildTableSelection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    const brandColor = Color(0xFFFB335B);
+    const brandColor = Color(0xFFEA184A);
     
     return Padding(
       padding: const EdgeInsets.all(20),

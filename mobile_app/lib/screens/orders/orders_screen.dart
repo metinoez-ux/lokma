@@ -29,7 +29,7 @@ class OrdersScreen extends ConsumerStatefulWidget {
 }
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
-  static const Color lokmaRed = Color(0xFFFB335B);
+  static const Color lokmaRed = Color(0xFFEA184A);
 
   bool _isActiveOrder(OrderStatus status) {
     return status == OrderStatus.pending ||
@@ -414,7 +414,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               Navigator.pop(ctx, text);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFB335B),
+              backgroundColor: const Color(0xFFEA184A),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -1141,7 +1141,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFB335B),
+                            color: const Color(0xFFEA184A),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
@@ -1240,7 +1240,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       onTap: _toggleFavorite,
                       child: Icon(
                         _isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                        color: _isFavorite ? const Color(0xFFFB335B) : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                        color: _isFavorite ? const Color(0xFFEA184A) : (isDark ? Colors.grey[500] : Colors.grey[400]),
                         size: 24,
                       ),
                     ),
@@ -1250,7 +1250,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         child: Text(
                           _favoriteName!,
                           style: TextStyle(
-                            color: const Color(0xFFFB335B),
+                            color: const Color(0xFFEA184A),
                             fontSize: 9,
                             fontWeight: FontWeight.w500,
                           ),

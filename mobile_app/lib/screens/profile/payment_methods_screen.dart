@@ -13,7 +13,7 @@ class PaymentMethodsScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
-  static const Color lokmaRed = Color(0xFFFB335B);
+  static const Color lokmaRed = Color(0xFFEA184A);
   static const Color blackPure = Color(0xFF000000);
   static const Color surfaceCard = Color(0xFF181818);
   static const Color textSubtle = Color(0xFF888888);

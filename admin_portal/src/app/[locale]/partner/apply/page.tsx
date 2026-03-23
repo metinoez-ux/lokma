@@ -133,7 +133,7 @@ export default function PartnerApplyPage() {
                     </div>
                     <h1 className="text-3xl font-bold mb-4">{t('successTitle')}</h1>
                     <p className="text-gray-500 dark:text-white/60 mb-8">{t('successDesc')}</p>
-                    <Link href="/" className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all">
+                    <Link href="/" className="inline-block bg-[#ea184a] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all">
                         {t('backHome')}
                     </Link>
                 </div>
@@ -154,12 +154,12 @@ export default function PartnerApplyPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('businessName')}</label>
-                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                 placeholder={t('businessNamePh')} value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('businessType')}</label>
-                            <select required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <select required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                 value={formData.businessType} onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}>
                                 <option value="">{t('selectType')}</option>
                                 {businessTypes.map((type) => (<option key={type} value={type}>{type}</option>))}
@@ -167,37 +167,37 @@ export default function PartnerApplyPage() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('ownerName')}</label>
-                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                 placeholder={t('ownerNamePh')} value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} />
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2">{t('email')}</label>
-                                <input type="email" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                                <input type="email" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                     placeholder="ornek@email.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2">{t('phone')}</label>
-                                <input type="tel" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                                <input type="tel" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                     placeholder="+49 176 123 456 78" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('city')}</label>
-                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" required className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                 placeholder={t('cityPh')} value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('address')}</label>
-                            <input type="text" className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
+                            <input type="text" className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all"
                                 placeholder={t('addressPh')} value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t('about')}</label>
-                            <textarea rows={3} className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all resize-none"
+                            <textarea rows={3} className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 focus:border-[#ea184a] focus:outline-none transition-all resize-none"
                                 placeholder={t('aboutPh')} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
                         </div>
-                        <button type="submit" className="w-full bg-[#fb335b] hover:bg-red-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-[#fb335b]/20">
+                        <button type="submit" className="w-full bg-[#ea184a] hover:bg-red-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-[#ea184a]/20">
                             {t('submit')}
                         </button>
                         <p className="text-center text-gray-400 dark:text-white/40 text-sm">

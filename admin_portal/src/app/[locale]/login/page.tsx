@@ -663,7 +663,7 @@ export default function LoginPage() {
     if (checkingAuth) {
         return (
             <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fb335b]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ea184a]"></div>
             </div>
         );
     }
@@ -706,7 +706,7 @@ export default function LoginPage() {
                         <div className="space-y-3">
                             <Link
                                 href="/partner/apply"
-                                className="block w-full bg-[#fb335b] hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-all"
+                                className="block w-full bg-[#ea184a] hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-all"
                             >
                                 {tAdminLogin('is_ortagi_basvurusu_yap')}
                             </Link>
@@ -757,7 +757,7 @@ export default function LoginPage() {
                     <div className="relative flex bg-[#0d0d14] rounded-full p-1 mb-6 border border-white/5">
                         {/* Sliding Background */}
                         <div
-                            className={`absolute top-1 bottom-1 w-1/2 bg-[#fb335b] rounded-full transition-all duration-300 ease-in-out ${isRegister ? 'left-[calc(50%-2px)]' : 'left-1'}`}
+                            className={`absolute top-1 bottom-1 w-1/2 bg-[#ea184a] rounded-full transition-all duration-300 ease-in-out ${isRegister ? 'left-[calc(50%-2px)]' : 'left-1'}`}
                         />
                         <button
                             onClick={() => { setIsRegister(false); setError(''); }}
@@ -870,7 +870,7 @@ export default function LoginPage() {
                                                         type="text"
                                                         value={firstName}
                                                         onChange={(e) => setFirstName(e.target.value)}
-                                                        className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                                        className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                                         placeholder={tAdminLogin('adiniz')}
                                                         required
                                                     />
@@ -883,7 +883,7 @@ export default function LoginPage() {
                                                         type="text"
                                                         value={lastName}
                                                         onChange={(e) => setLastName(e.target.value)}
-                                                        className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                                        className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                                         placeholder={tAdminLogin('soyadiniz')}
                                                         required
                                                     />
@@ -904,7 +904,7 @@ export default function LoginPage() {
                                             <select
                                                 value={countryCode}
                                                 onChange={(e) => setCountryCode(e.target.value)}
-                                                className="px-3 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white"
+                                                className="px-3 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white"
                                                 title={tAdminLogin('ulke_kodu_secimi')}
                                             >
                                                 {countryCodes.map((c) => (
@@ -917,7 +917,7 @@ export default function LoginPage() {
                                                 type="tel"
                                                 value={phoneNumber}
                                                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                                                className="flex-1 px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                                className="flex-1 px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                                 placeholder="178 444 3475"
                                                 required
                                             />
@@ -927,7 +927,7 @@ export default function LoginPage() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#fb335b] text-white hover:bg-[#d4223f]"
+                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#ea184a] text-white hover:bg-[#d4223f]"
                                     >
                                         {loading ? (
                                             <span className="flex items-center justify-center">
@@ -956,7 +956,7 @@ export default function LoginPage() {
                                             type="text"
                                             value={otpCode}
                                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                            className="w-full px-4 py-4 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition text-center text-2xl tracking-widest font-mono bg-white/5 text-white"
+                                            className="w-full px-4 py-4 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition text-center text-2xl tracking-widest font-mono bg-white/5 text-white"
                                             placeholder="• • • • • •"
                                             maxLength={6}
                                             required
@@ -967,7 +967,7 @@ export default function LoginPage() {
                                     <button
                                         type="submit"
                                         disabled={loading || otpCode.length !== 6}
-                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#fb335b] text-white hover:bg-[#d4223f]"
+                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#ea184a] text-white hover:bg-[#d4223f]"
                                     >
                                         {loading ? (
                                             <span className="flex items-center justify-center">
@@ -1016,7 +1016,7 @@ export default function LoginPage() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                            className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                             placeholder="ornek@email.com"
                                             required
                                             autoFocus
@@ -1038,7 +1038,7 @@ export default function LoginPage() {
                                         type="button"
                                         onClick={handleForgotPassword}
                                         disabled={loading || !email.trim()}
-                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#fb335b] text-white hover:bg-[#d4223f]"
+                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#ea184a] text-white hover:bg-[#d4223f]"
                                     >
                                         {loading ? (
                                             <span className="flex items-center justify-center">
@@ -1079,7 +1079,7 @@ export default function LoginPage() {
                                                     type="text"
                                                     value={firstName}
                                                     onChange={(e) => setFirstName(e.target.value)}
-                                                    className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                                    className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                                     placeholder={tAdminLogin('adiniz')}
                                                     required
                                                 />
@@ -1092,7 +1092,7 @@ export default function LoginPage() {
                                                     type="text"
                                                     value={lastName}
                                                     onChange={(e) => setLastName(e.target.value)}
-                                                    className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                                    className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                                     placeholder={tAdminLogin('soyadiniz')}
                                                     required
                                                 />
@@ -1108,7 +1108,7 @@ export default function LoginPage() {
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                            className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                             placeholder="ornek@email.com"
                                             required
                                         />
@@ -1122,7 +1122,7 @@ export default function LoginPage() {
                                             type="password"
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
+                                            className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#ea184a] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
                                             placeholder="••••••••"
                                             required
                                         />
@@ -1136,7 +1136,7 @@ export default function LoginPage() {
                                                         setForgotPasswordMode(true);
                                                         setError('');
                                                     }}
-                                                    className="text-xs text-[#fb335b] hover:text-[#ff6b7a] hover:underline"
+                                                    className="text-xs text-[#ea184a] hover:text-[#ff6b7a] hover:underline"
                                                 >
                                                     {tAdminLogin('sifremi_unuttum')}
                                                 </button>
@@ -1147,7 +1147,7 @@ export default function LoginPage() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#fb335b] text-white hover:bg-[#d4223f]"
+                                        className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-[#ea184a] text-white hover:bg-[#d4223f]"
                                     >
                                         {loading ? (
                                             <span className="flex items-center justify-center">
@@ -1168,8 +1168,8 @@ export default function LoginPage() {
 
                     {/* Footer */}
                     <p className="text-center text-white/40 text-xs mt-8">
-                        {tAdminLogin('giris_yaparak')} <Link href="/terms" className="text-[#fb335b] hover:underline">{tAdminLogin('kullanim_kosullarini')}</Link>{' & '}
-                        <Link href="/privacy" className="text-[#fb335b] hover:underline">{tAdminLogin('gizlilik_politikasini')}</Link> {tAdminLogin('kabul_etmis_olursunuz')}
+                        {tAdminLogin('giris_yaparak')} <Link href="/terms" className="text-[#ea184a] hover:underline">{tAdminLogin('kullanim_kosullarini')}</Link>{' & '}
+                        <Link href="/privacy" className="text-[#ea184a] hover:underline">{tAdminLogin('gizlilik_politikasini')}</Link> {tAdminLogin('kabul_etmis_olursunuz')}
                     </p>
                 </div>
             </div>

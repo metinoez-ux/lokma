@@ -224,7 +224,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
           if (_state == _PayState.error)
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFB335B),
+                backgroundColor: const Color(0xFFEA184A),
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -254,7 +254,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
                   height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFB335B), width: 2),
+                    border: Border.all(color: const Color(0xFFEA184A), width: 2),
                   ),
                 ),
               ),
@@ -265,10 +265,10 @@ class _TapToPaySheetState extends State<TapToPaySheet>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFFB335B).withValues(alpha: 0.15),
-                border: Border.all(color: const Color(0xFFFB335B), width: 2),
+                color: const Color(0xFFEA184A).withValues(alpha: 0.15),
+                border: Border.all(color: const Color(0xFFEA184A), width: 2),
               ),
-              child: const Icon(Icons.contactless, color: Color(0xFFFB335B), size: 36),
+              child: const Icon(Icons.contactless, color: Color(0xFFEA184A), size: 36),
             ),
           ],
         );

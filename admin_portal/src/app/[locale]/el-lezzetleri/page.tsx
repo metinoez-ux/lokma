@@ -202,7 +202,7 @@ export default function ElLezzetleriPage() {
                         <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
                             <span className="material-symbols-outlined text-[18px]">smartphone</span>{t('appBadge')}
                         </div>
-                        <h2 className="text-2xl md:text-3xl font-bold mb-4">{t('appTitle')} <span className="text-[#fb335b]">LOKMA</span> {t('appTitle2')}</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold mb-4">{t('appTitle')} <span className="text-[#ea184a]">LOKMA</span> {t('appTitle2')}</h2>
                         <p className="text-gray-500 dark:text-white/60 mb-8 max-w-xl mx-auto">{t('appDesc')}</p>
                         <div className="flex flex-wrap items-center justify-center gap-4">
                             <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all">App Store</a>

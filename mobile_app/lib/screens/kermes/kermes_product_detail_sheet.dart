@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import '../../utils/currency_utils.dart';
 
-const Color lokmaPink = Color(0xFFFB335B);
+const Color lokmaPink = Color(0xFFEA184A);
 Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
 Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
 

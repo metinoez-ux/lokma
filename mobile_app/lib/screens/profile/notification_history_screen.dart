@@ -315,8 +315,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
     'delivered': {'labelKey': 'notifications.delivered',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
     'served':    {'labelKey': 'notifications.served',          'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.restaurant_rounded},
     'completed': {'labelKey': 'notifications.completed',       'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.verified_rounded},
-    'rejected':  {'labelKey': 'notifications.rejected',        'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.cancel_outlined},
-    'cancelled': {'labelKey': 'notifications.cancelled',       'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.block_rounded},
+    'rejected':  {'labelKey': 'notifications.rejected',        'icon': '', 'color': 0xFFEA184A, 'iconData': Icons.cancel_outlined},
+    'cancelled': {'labelKey': 'notifications.cancelled',       'icon': '', 'color': 0xFFEA184A, 'iconData': Icons.block_rounded},
   };
 
   Map<String, dynamic> _meta(String status) {
@@ -402,7 +402,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                   icon: Badge(
                     isLabelVisible: trashCount > 0,
                     label: Text('$trashCount', style: const TextStyle(fontSize: 10)),
-                    backgroundColor: const Color(0xFFFB335B),
+                    backgroundColor: const Color(0xFFEA184A),
                     child: Icon(Icons.delete_outline_rounded, color: Theme.of(context).iconTheme.color),
                   ),
                   onPressed: () => Navigator.push(
@@ -789,7 +789,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                               DropdownMenuItem(value: 'favorites', child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.favorite_rounded, size: 14, color: const Color(0xFFFB335B)),
+                                  Icon(Icons.favorite_rounded, size: 14, color: const Color(0xFFEA184A)),
                                   const SizedBox(width: 5),
                                   Text('Favoriler'),
                                 ],
@@ -939,7 +939,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                 showCloseIcon: true,
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFFFB335B),
+                                  textColor: const Color(0xFFEA184A),
                                   onPressed: () => _undoTrashReservationGroup(item),
                                 ),
                                 behavior: SnackBarBehavior.floating,
@@ -991,7 +991,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                   showCloseIcon: true,
                                   action: SnackBarAction(
                                     label: 'notifications.undo'.tr(),
-                                    textColor: const Color(0xFFFB335B),
+                                    textColor: const Color(0xFFEA184A),
                                     onPressed: () => _undoTrashOrderGroup(item),
                                   ),
                                   behavior: SnackBarBehavior.floating,
@@ -1040,7 +1040,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                                 showCloseIcon: true,
                                 action: SnackBarAction(
                                   label: 'notifications.undo'.tr(),
-                                  textColor: const Color(0xFFFB335B),
+                                  textColor: const Color(0xFFEA184A),
                                   onPressed: () => _undoTrashGeneric(docId),
                                 ),
                                 behavior: SnackBarBehavior.floating,
@@ -1088,10 +1088,10 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                           const Spacer(),
                           TextButton.icon(
                             onPressed: () => _trashSelected(combined),
-                            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFFB335B), size: 20),
+                            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEA184A), size: 20),
                             label: Text(
                               'notifications.trash_selected'.tr(),
-                              style: const TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.w600),
+                              style: const TextStyle(color: Color(0xFFEA184A), fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
@@ -1207,7 +1207,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                   // Title
                   Row(
                     children: [
-                      Icon(Icons.favorite_rounded, color: const Color(0xFFFB335B), size: 24),
+                      Icon(Icons.favorite_rounded, color: const Color(0xFFEA184A), size: 24),
                       const SizedBox(width: 10),
                       Text(
                         'Favoriye Ekle',
@@ -1249,12 +1249,12 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFFFB335B)
+                                ? const Color(0xFFEA184A)
                                 : (isDark ? const Color(0xFF2C2C2E) : Colors.grey[100]),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
-                                  ? const Color(0xFFFB335B)
+                                  ? const Color(0xFFEA184A)
                                   : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
                             ),
                           ),
@@ -1332,7 +1332,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFB335B),
+                        backgroundColor: const Color(0xFFEA184A),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
@@ -1394,17 +1394,17 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFB335B).withValues(alpha: 0.15),
+        color: const Color(0xFFEA184A).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.delete_outline_rounded, color: Color(0xFFFB335B), size: 24),
+          const Icon(Icons.delete_outline_rounded, color: Color(0xFFEA184A), size: 24),
           const SizedBox(height: 2),
           Text(
             'notifications.trash'.tr(),
-            style: const TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: Color(0xFFEA184A), fontSize: 11, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -1415,17 +1415,17 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFB335B).withValues(alpha: 0.12),
+        color: const Color(0xFFEA184A).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.favorite_rounded, color: Color(0xFFFB335B), size: 24),
+          Icon(Icons.favorite_rounded, color: Color(0xFFEA184A), size: 24),
           SizedBox(height: 2),
           Text(
             'Favori',
-            style: TextStyle(color: Color(0xFFFB335B), fontSize: 11, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Color(0xFFEA184A), fontSize: 11, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -1518,9 +1518,9 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
             height: 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: selected ? const Color(0xFFFB335B) : Colors.transparent,
+              color: selected ? const Color(0xFFEA184A) : Colors.transparent,
               border: Border.all(
-                color: selected ? const Color(0xFFFB335B) : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                color: selected ? const Color(0xFFEA184A) : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                 width: 2,
               ),
             ),
@@ -2102,18 +2102,18 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFB335B).withValues(alpha: 0.12),
+                            color: const Color(0xFFEA184A).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.favorite_rounded, size: 13, color: Color(0xFFFB335B)),
+                              const Icon(Icons.favorite_rounded, size: 13, color: Color(0xFFEA184A)),
                               const SizedBox(width: 3),
                               Text(
                                 widget.favoriteName!,
                                 style: const TextStyle(
-                                  color: Color(0xFFFB335B),
+                                  color: Color(0xFFEA184A),
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -2417,7 +2417,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: isDark
-                            ? const Color(0xFFFB335B).withValues(alpha: 0.85)
+                            ? const Color(0xFFEA184A).withValues(alpha: 0.85)
                             : const Color(0xFF3A3A3C),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         shape: RoundedRectangleBorder(
@@ -3472,7 +3472,7 @@ class _OrderStatusRow extends StatelessWidget {
       OrderStatus.onTheWay: const Color(0xFF00BCD4),
       OrderStatus.delivered: const Color(0xFF4CAF50),
       OrderStatus.served: const Color(0xFF4CAF50),
-      OrderStatus.cancelled: const Color(0xFFFB335B),
+      OrderStatus.cancelled: const Color(0xFFEA184A),
     }[order.status] ?? Colors.grey;
 
     final statusIcon = {
@@ -3997,7 +3997,7 @@ class _ReservationCard extends StatelessWidget {
   static const _statusConfig = <String, Map<String, dynamic>>{
     'pending':   {'labelKey': 'reservation.status_pending',   'color': 0xFFFF9800, 'icon': Icons.schedule_rounded},
     'confirmed': {'labelKey': 'reservation.status_confirmed', 'color': 0xFF4CAF50, 'icon': Icons.check_circle_rounded},
-    'rejected':  {'labelKey': 'reservation.status_rejected',  'color': 0xFFFB335B, 'icon': Icons.cancel_rounded},
+    'rejected':  {'labelKey': 'reservation.status_rejected',  'color': 0xFFEA184A, 'icon': Icons.cancel_rounded},
     'cancelled': {'labelKey': 'reservation.status_cancelled', 'color': 0xFF9E9E9E, 'icon': Icons.block_rounded},
   };
 
@@ -4243,7 +4243,7 @@ class _HeartOverlayWidgetState extends State<_HeartOverlayWidget>
               scale: _scaleAnim.value,
               child: const Icon(
                 Icons.favorite_rounded,
-                color: Color(0xFFFB335B),
+                color: Color(0xFFEA184A),
                 size: 80,
               ),
             ),

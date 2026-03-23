@@ -46,7 +46,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
   bool _isLoadingSlots = true;
 
   // Accent color (butonlar icin)
-  static const Color _accent = Color(0xFFFB335B);
+  static const Color _accent = Color(0xFFEA184A);
   // Section ve summary ikonlari icin koyu gri
   static const Color _iconGrey = Color(0xFF555555);
 
@@ -367,7 +367,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Icon(Icons.table_restaurant, color: const Color(0xFFFB335B), size: 52),
+              Icon(Icons.table_restaurant, color: const Color(0xFFEA184A), size: 52),
               Positioned(
                 right: 0,
                 bottom: 0,
@@ -377,7 +377,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                     color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.access_time, color: Color(0xFFFB335B), size: 22),
+                  child: const Icon(Icons.access_time, color: Color(0xFFEA184A), size: 22),
                 ),
               ),
             ],

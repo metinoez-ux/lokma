@@ -42,7 +42,7 @@ class TipBottomSheet extends StatefulWidget {
 }
 
 class _TipBottomSheetState extends State<TipBottomSheet> {
-  static const Color accent = Color(0xFFFB335B);
+  static const Color accent = Color(0xFFEA184A);
 
   double? _selectedTip;
   bool _isCustom = false;

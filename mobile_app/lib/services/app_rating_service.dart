@@ -51,7 +51,7 @@ class AppRatingService {
 
   static void _showRatingDialog(BuildContext context, SharedPreferences prefs) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const accent = Color(0xFFFB335B);
+    const accent = Color(0xFFEA184A);
     
     showDialog(
       context: context,

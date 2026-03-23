@@ -389,7 +389,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                         _isEditing ? tr('address.done') : tr('address.edit'),
                         style: TextStyle(
                           fontSize: 14,
-                          color: const Color(0xFFFB335B),
+                          color: const Color(0xFFEA184A),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -411,7 +411,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
                       leading: Icon(
                         Icons.location_on, 
-                        color: const Color(0xFFFB335B), // LOKMA brand color
+                        color: const Color(0xFFEA184A), // LOKMA brand color
                          size: 22
                       ),
                       title: Padding(
@@ -454,7 +454,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                             },
                             child: const Icon(
                               Icons.delete_outline,
-                              color: Color(0xFFFB335B),
+                              color: Color(0xFFEA184A),
                               size: 22,
                             ),
                           )
@@ -525,7 +525,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                 labelColor = const Color(0xFF2196F3);
               } else {
                 labelIcon = Icons.location_on_outlined;
-                labelColor = const Color(0xFFFB335B);
+                labelColor = const Color(0xFFEA184A);
               }
 
               return ListTile(

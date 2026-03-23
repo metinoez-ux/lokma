@@ -15,7 +15,7 @@ class CateringScreen extends ConsumerStatefulWidget {
 
 class _CateringScreenState extends ConsumerState<CateringScreen> {
   // Theme colors
-  static const accent = Color(0xFFFB335B); // Pink/celebration accent
+  static const accent = Color(0xFFEA184A); // Pink/celebration accent
 
   List<DocumentSnapshot> _businesses = [];
   bool _isLoading = true;

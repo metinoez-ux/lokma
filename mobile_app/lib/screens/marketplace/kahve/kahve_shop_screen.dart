@@ -45,7 +45,7 @@ class KahveShopScreen extends ConsumerWidget {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFB335B),
+                          color: Color(0xFFEA184A),
                           shape: BoxShape.circle,
                         ),
                         constraints: const BoxConstraints(

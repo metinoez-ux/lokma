@@ -158,7 +158,7 @@ function FeedbackContent() {
                         <h1 className="text-2xl font-bold mb-2">{t('thanks')}</h1>
                         <p className="text-gray-500 dark:text-white/60 mb-6">{t('thanksSub')}</p>
                         <div className="space-y-3">
-                            <Link href="/" className="block w-full bg-[#fb335b] text-white py-3 rounded-xl font-semibold hover:bg-red-600">{t('home')}</Link>
+                            <Link href="/" className="block w-full bg-[#ea184a] text-white py-3 rounded-xl font-semibold hover:bg-red-600">{t('home')}</Link>
                             <button onClick={() => { setSent(false); setMessage(''); setSubject(''); }} className="block w-full bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white py-3 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-white/20">
                                 {t('newMsg')}
                             </button>
@@ -198,7 +198,7 @@ function FeedbackContent() {
                                 <div className="grid grid-cols-3 gap-2">
                                     {typeButtons.map(b => (
                                         <button key={b.key} type="button" onClick={() => setFeedbackType(b.key)}
-                                            className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === b.key ? 'border-[#fb335b] bg-[#fb335b]/20 text-[#fb335b] dark:text-white' : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/30'}`}>
+                                            className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === b.key ? 'border-[#ea184a] bg-[#ea184a]/20 text-[#ea184a] dark:text-white' : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/30'}`}>
                                             <span className="text-xl">{b.emoji}</span>
                                             <p className="text-sm font-medium mt-1">{t(b.key)}</p>
                                         </button>
@@ -209,23 +209,23 @@ function FeedbackContent() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-600 dark:text-white/80 mb-1">{t('email')}</label>
                                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('emailPh')}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#ea184a] focus:border-transparent" />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-white/80 mb-1">{t('subject')}</label>
                                 <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder={t('subjectPh')}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#ea184a] focus:border-transparent" />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-white/80 mb-1">{t('message')}</label>
                                 <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} placeholder={getPlaceholder()}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent resize-none" required />
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/40 focus:ring-2 focus:ring-[#ea184a] focus:border-transparent resize-none" required />
                             </div>
 
                             <button type="submit" disabled={sending || !message.trim()}
-                                className="w-full bg-[#fb335b] text-white py-4 rounded-xl font-semibold hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                className="w-full bg-[#ea184a] text-white py-4 rounded-xl font-semibold hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                 {sending ? t('sending') : t('send')}
                             </button>
                         </form>
@@ -244,7 +244,7 @@ export default function FeedbackPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fb335b]" />
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ea184a]" />
             </div>
         }>
             <FeedbackContent />

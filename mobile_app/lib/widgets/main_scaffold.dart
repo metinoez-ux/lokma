@@ -344,7 +344,7 @@ class GlassBottomBar extends StatelessWidget {
   }
 
   Widget _buildItemContent(NavItemData item, bool isActive, BuildContext context, bool isDark) {
-    const activeColor = Color(0xFFFB335B);
+    const activeColor = Color(0xFFEA184A);
     final inactiveColor = isDark 
         ? Colors.white.withValues(alpha: 0.55) 
         : Colors.black.withValues(alpha: 0.55);

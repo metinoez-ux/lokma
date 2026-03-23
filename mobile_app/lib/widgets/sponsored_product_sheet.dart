@@ -311,7 +311,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                     child: ElevatedButton(
                       onPressed: _isAddingToCart ? null : _onBuyFromMarket,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFB335B),
+                        backgroundColor: const Color(0xFFEA184A),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),

@@ -34,14 +34,14 @@ export default function HardwarePage() {
                 </div>
 
                 <div className="relative z-10 max-w-5xl mx-auto text-center px-4 py-20">
-                    <span className="inline-flex items-center gap-2 bg-[#fb335b]/10 text-[#fb335b] px-5 py-2.5 rounded-full text-sm font-bold mb-8 tracking-widest uppercase border border-[#fb335b]/30 backdrop-blur-sm">
+                    <span className="inline-flex items-center gap-2 bg-[#ea184a]/10 text-[#ea184a] px-5 py-2.5 rounded-full text-sm font-bold mb-8 tracking-widest uppercase border border-[#ea184a]/30 backdrop-blur-sm">
                         <span className="material-symbols-outlined text-[18px]">devices</span>
                         {t('ecosystemTag')}
                     </span>
 
                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight mb-8">
                         {t('heroTitle1')}{' '}
-                        <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b35] bg-clip-text text-transparent">
                             {t('heroTitle2')}
                         </span>
                         <br />
@@ -55,7 +55,7 @@ export default function HardwarePage() {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
                             href="/partner/apply"
-                            className="inline-flex items-center justify-center gap-3 bg-[#fb335b] hover:bg-red-600 text-white px-10 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-[#fb335b]/25 transition-all hover:scale-105 active:scale-95"
+                            className="inline-flex items-center justify-center gap-3 bg-[#ea184a] hover:bg-red-600 text-white px-10 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-[#ea184a]/25 transition-all hover:scale-105 active:scale-95"
                         >
                             {t('ctaDemo')}
                             <span className="material-symbols-outlined animate-bounce">arrow_forward</span>
@@ -78,7 +78,7 @@ export default function HardwarePage() {
                             { value: t('stat4'), label: t('stat4Label') },
                         ].map((stat, i) => (
                             <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4">
-                                <div className="text-2xl md:text-3xl font-black text-[#fb335b]">{stat.value}</div>
+                                <div className="text-2xl md:text-3xl font-black text-[#ea184a]">{stat.value}</div>
                                 <div className="text-xs text-white/50 font-medium mt-1">{stat.label}</div>
                             </div>
                         ))}
@@ -94,7 +94,7 @@ export default function HardwarePage() {
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
                             {t('whyTitle1')}{' '}
-                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">
+                            <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b35] bg-clip-text text-transparent">
                                 {t('whyTitle2')}
                             </span>
                         </h2>
@@ -163,7 +163,7 @@ export default function HardwarePage() {
                     {/* Flow diagram */}
                     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12">
                         <h3 className="text-2xl font-black text-center mb-10">
-                            <span className="material-symbols-outlined text-[#fb335b] text-3xl align-middle mr-2">sync</span>
+                            <span className="material-symbols-outlined text-[#ea184a] text-3xl align-middle mr-2">sync</span>
                             {t('syncTitle')}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
@@ -484,7 +484,7 @@ export default function HardwarePage() {
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
                             {t('fullIntTitle1')}{' '}
-                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">{t('fullIntTitle2')}</span>
+                            <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b35] bg-clip-text text-transparent">{t('fullIntTitle2')}</span>
                         </h2>
                         <p className="text-xl text-white/50 max-w-3xl mx-auto">
                             {t('fullIntSub')}
@@ -566,7 +566,7 @@ export default function HardwarePage() {
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">
                             {t('sectorTitle1')}{' '}
-                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">{t('sectorTitle2')}</span>
+                            <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b35] bg-clip-text text-transparent">{t('sectorTitle2')}</span>
                         </h2>
                     </div>
 
@@ -603,13 +603,13 @@ export default function HardwarePage() {
                                 features: tArr('sector6F'),
                             },
                         ].map((sector, i) => (
-                            <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:border-[#fb335b]/30 hover:scale-[1.02] transition-all duration-300">
+                            <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:border-[#ea184a]/30 hover:scale-[1.02] transition-all duration-300">
                                 <div className="text-4xl mb-4">{sector.emoji}</div>
                                 <h4 className="font-bold text-xl mb-4">{sector.title}</h4>
                                 <ul className="space-y-2">
                                     {sector.features.map((f, j) => (
                                         <li key={j} className="flex items-center gap-2 text-white/60 text-sm">
-                                            <span className="material-symbols-outlined text-[#fb335b] text-sm">check</span>
+                                            <span className="material-symbols-outlined text-[#ea184a] text-sm">check</span>
                                             {f}
                                         </li>
                                     ))}
@@ -624,13 +624,13 @@ export default function HardwarePage() {
             {/* CTA SECTION                             */}
             {/* ═══════════════════════════════════════ */}
             <section className="py-24 px-4 md:px-20 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#fb335b]/10 via-[#ff6b35]/5 to-[#fb335b]/10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#ea184a]/10 via-[#ff6b35]/5 to-[#ea184a]/10" />
                 <div className="absolute inset-0 bg-[url('/images/hardware/ecosystem-hero.png')] bg-cover bg-center opacity-5" />
 
                 <div className="relative z-10 max-w-4xl mx-auto text-center">
                     <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-8">
                         {t('ctaTitle1')}{' '}
-                        <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b35] bg-clip-text text-transparent">
                             {t('ctaTitle2')}
                         </span>
                     </h2>
@@ -641,7 +641,7 @@ export default function HardwarePage() {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
                         <Link
                             href="/partner/apply"
-                            className="inline-flex items-center justify-center gap-3 bg-[#fb335b] hover:bg-red-600 text-white px-12 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-[#fb335b]/25 transition-all hover:scale-105 active:scale-95"
+                            className="inline-flex items-center justify-center gap-3 bg-[#ea184a] hover:bg-red-600 text-white px-12 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-[#ea184a]/25 transition-all hover:scale-105 active:scale-95"
                         >
                             {t('ctaApply')}
                             <span className="material-symbols-outlined">rocket_launch</span>

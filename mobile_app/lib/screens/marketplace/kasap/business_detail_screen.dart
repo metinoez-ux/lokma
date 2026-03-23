@@ -45,7 +45,7 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
 class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Theme-aware colors (resolved in build method)
   // 🎨 BRAND COLOUR: Fallback when no brandColor in Firestore
-  static const Color _defaultBrandColor = Color(0xFFFB335B);  // LOKMA brand color
+  static const Color _defaultBrandColor = Color(0xFFEA184A);  // LOKMA brand color
   
   // 🎨 BRAND COLOUR: Get merchant's brand color from Firestore
   // Reads 'brandColor' field (hex string like '#FF5733') from business document
@@ -69,7 +69,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Check for legacy brand field
     final brand = data?['brand']?.toString().toLowerCase();
     if (brand == 'tuna') {
-      return const Color(0xFFFB335B); // 🎨 BRAND COLOUR: TUNA pink/magenta
+      return const Color(0xFFEA184A); // 🎨 BRAND COLOUR: TUNA pink/magenta
     } else if (brand == 'akdeniz_toros') {
       return const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
     }
@@ -1117,7 +1117,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 width: double.infinity,
                 padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
                 decoration: BoxDecoration(
-                  color: Color(0xFFFB335B), // Deep Red
+                  color: Color(0xFFEA184A), // Deep Red
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: Column(
@@ -2298,7 +2298,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
     if (brand?.toString().toLowerCase() == 'tuna') {
-      accent = const Color(0xFFFB335B); // 🎨 BRAND COLOUR: TUNA pink/magenta
+      accent = const Color(0xFFEA184A); // 🎨 BRAND COLOUR: TUNA pink/magenta
     } else if (brand?.toString().toLowerCase() == 'akdeniz_toros') {
       accent = const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
     } else {
@@ -2490,10 +2490,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [const Color(0xFFFB335B).withValues(alpha: 0.08), const Color(0xFFFF6B6B).withValues(alpha: 0.04)],
+                                  colors: [const Color(0xFFEA184A).withValues(alpha: 0.08), const Color(0xFFFF6B6B).withValues(alpha: 0.04)],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFFB335B).withValues(alpha: 0.25)),
+                                border: Border.all(color: const Color(0xFFEA184A).withValues(alpha: 0.25)),
                               ),
                               child: Row(
                                 children: [
@@ -2503,7 +2503,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     child: Text(
                                       deals.map((d) => d.badgeText).join(' \u2022 '),
                                       style: const TextStyle(
-                                        color: Color(0xFFFB335B),
+                                        color: Color(0xFFEA184A),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -3507,12 +3507,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFB335B).withValues(alpha: 0.12),
+                    color: const Color(0xFFEA184A).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(36),
                   ),
                   child: const Icon(
                     Icons.restaurant_menu_rounded,
-                    color: Color(0xFFFB335B),
+                    color: Color(0xFFEA184A),
                     size: 36,
                   ),
                 ),
@@ -3570,7 +3570,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     width: double.infinity,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFB335B),
+                      color: const Color(0xFFEA184A),
                       borderRadius: BorderRadius.circular(26),
                     ),
                     alignment: Alignment.center,
@@ -3753,7 +3753,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               const SizedBox(width: 4),
                               Icon(
                                 Icons.favorite_rounded,
-                                color: const Color(0xFFFB335B),
+                                color: const Color(0xFFEA184A),
                                 size: 14,
                               ),
                             ],
@@ -4285,7 +4285,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             const SizedBox(width: 3),
                             Icon(
                               Icons.favorite_rounded,
-                              color: const Color(0xFFFB335B),
+                              color: const Color(0xFFEA184A),
                               size: 12,
                             ),
                           ],
@@ -4671,7 +4671,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final scaffoldBg = isDark ? const Color(0xFF121212) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.grey[400] : Colors.grey[600];
-    final accent = const Color(0xFFFB335B); // Brand color
+    final accent = const Color(0xFFEA184A); // Brand color
     final topPadding = MediaQuery.of(context).padding.top;
     final filtered = _filteredProducts;
 

@@ -100,7 +100,7 @@ export default function PressPage() {
                     <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8 mb-12">
                         <h2 className="text-xl font-bold mb-4">{t('contactTitle')}</h2>
                         <p className="text-gray-500 dark:text-white/60 mb-6">{t('contactDesc')}</p>
-                        <a href="mailto:presse@lokma.shop" className="inline-flex items-center gap-2 bg-[#fb335b] hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                        <a href="mailto:presse@lokma.shop" className="inline-flex items-center gap-2 bg-[#ea184a] hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all">
                             <span className="material-symbols-outlined">mail</span>presse@lokma.shop
                         </a>
                     </div>
@@ -109,10 +109,10 @@ export default function PressPage() {
                     <div className="grid md:grid-cols-2 gap-6 mb-12">
                         {(['k1', 'k2'] as const).map(k => (
                             <div key={k} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-6">
-                                <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-4 block">{k === 'k1' ? 'image' : 'description'}</span>
+                                <span className="material-symbols-outlined text-[#ea184a] text-3xl mb-4 block">{k === 'k1' ? 'image' : 'description'}</span>
                                 <h3 className="font-bold mb-2">{t(k)}</h3>
                                 <p className="text-sm text-gray-500 dark:text-white/60 mb-4">{t(`${k}d`)}</p>
-                                <button className="text-[#fb335b] font-bold text-sm">{t('download')}</button>
+                                <button className="text-[#ea184a] font-bold text-sm">{t('download')}</button>
                             </div>
                         ))}
                     </div>

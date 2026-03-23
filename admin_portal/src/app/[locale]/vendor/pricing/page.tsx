@@ -388,13 +388,13 @@ export default function VendorPricingPage() {
             {/* ── Hero ─────────────────────────────────────────── */}
             <section className="pt-32 pb-12 px-4 md:px-8">
                 <div className="max-w-5xl mx-auto text-center">
-                    <span className="inline-flex items-center gap-2 bg-[#fb335b]/10 text-[#fb335b] px-4 py-1.5 rounded-full text-sm font-bold mb-6 tracking-widest uppercase border border-[#fb335b]/20">
+                    <span className="inline-flex items-center gap-2 bg-[#ea184a]/10 text-[#ea184a] px-4 py-1.5 rounded-full text-sm font-bold mb-6 tracking-widest uppercase border border-[#ea184a]/20">
                         <span className="material-symbols-outlined text-[16px]">payments</span>
                         {t('title')}
                     </span>
                     <h1 className="text-4xl md:text-6xl font-black leading-tight tracking-tight mb-6">
                         {t('heroTitle')}<br />
-                        <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b6b] bg-clip-text text-transparent">{t('heroHighlight')}</span>
+                        <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b6b] bg-clip-text text-transparent">{t('heroHighlight')}</span>
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
                         {t('heroSub')}
@@ -412,7 +412,7 @@ export default function VendorPricingPage() {
                                 onClick={() => setSelectedSegment(seg.id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
                                     selectedSegment === seg.id
-                                        ? 'bg-[#fb335b] text-white shadow-lg shadow-[#fb335b]/25'
+                                        ? 'bg-[#ea184a] text-white shadow-lg shadow-[#ea184a]/25'
                                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                                 }`}
                             >
@@ -430,7 +430,7 @@ export default function VendorPricingPage() {
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
                             <div className="flex items-center gap-3 text-gray-400">
-                                <div className="w-6 h-6 border-2 border-[#fb335b] border-t-transparent rounded-full animate-spin" />
+                                <div className="w-6 h-6 border-2 border-[#ea184a] border-t-transparent rounded-full animate-spin" />
                                 {t('loading')}
                             </div>
                         </div>
@@ -454,14 +454,14 @@ export default function VendorPricingPage() {
                                         key={plan.id}
                                         className={`relative rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col ${
                                             plan.highlighted
-                                                ? 'border-[#fb335b]/50 shadow-2xl shadow-[#fb335b]/10 dark:shadow-[#fb335b]/5 scale-[1.02]'
+                                                ? 'border-[#ea184a]/50 shadow-2xl shadow-[#ea184a]/10 dark:shadow-[#ea184a]/5 scale-[1.02]'
                                                 : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20'
                                         } bg-white dark:bg-white/[0.02]`}
                                     >
                                         {/* Popular badge */}
                                         {plan.highlighted && (
                                             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
-                                                <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b6b] text-white text-[11px] font-black px-4 py-1.5 rounded-full tracking-wider shadow-lg">
+                                                <span className="bg-gradient-to-r from-[#ea184a] to-[#ff6b6b] text-white text-[11px] font-black px-4 py-1.5 rounded-full tracking-wider shadow-lg">
                                                     {t('popular')}
                                                 </span>
                                             </div>
@@ -559,7 +559,7 @@ export default function VendorPricingPage() {
                                                 href="/partner/apply"
                                                 className={`w-full text-center py-3.5 rounded-xl font-bold transition-all duration-300 block ${
                                                     plan.highlighted
-                                                        ? 'bg-[#fb335b] hover:bg-red-600 text-white shadow-lg shadow-[#fb335b]/20 hover:shadow-xl hover:shadow-[#fb335b]/30'
+                                                        ? 'bg-[#ea184a] hover:bg-red-600 text-white shadow-lg shadow-[#ea184a]/20 hover:shadow-xl hover:shadow-[#ea184a]/30'
                                                         : isFree
                                                             ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
                                                             : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'
@@ -691,11 +691,11 @@ export default function VendorPricingPage() {
             {/* ── Bottom CTA ───────────────────────────────────── */}
             <section className="py-20 px-4 md:px-8">
                 <div className="max-w-4xl mx-auto relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#fb335b]/10 to-purple-500/10 rounded-3xl blur-xl" />
-                    <div className="relative bg-gradient-to-br from-[#fb335b]/5 to-purple-500/5 border border-gray-200 dark:border-white/10 rounded-3xl p-12 md:p-16 text-center">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#ea184a]/10 to-purple-500/10 rounded-3xl blur-xl" />
+                    <div className="relative bg-gradient-to-br from-[#ea184a]/5 to-purple-500/5 border border-gray-200 dark:border-white/10 rounded-3xl p-12 md:p-16 text-center">
                         <h2 className="text-3xl md:text-4xl font-black mb-4">{t('ctaTitle')}</h2>
                         <p className="text-gray-500 dark:text-gray-400 text-lg mb-8 max-w-2xl mx-auto">{t('ctaSub')}</p>
-                        <Link href="/partner/apply" className="inline-flex items-center justify-center gap-3 bg-[#fb335b] hover:bg-red-600 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-2xl shadow-[#fb335b]/25 transition-all hover:scale-105 active:scale-95">
+                        <Link href="/partner/apply" className="inline-flex items-center justify-center gap-3 bg-[#ea184a] hover:bg-red-600 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-2xl shadow-[#ea184a]/25 transition-all hover:scale-105 active:scale-95">
                             {t('ctaBtn')}
                             <span className="material-symbols-outlined">arrow_forward</span>
                         </Link>

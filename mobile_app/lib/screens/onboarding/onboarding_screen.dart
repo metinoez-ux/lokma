@@ -31,7 +31,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<_OnboardingSlide> _slides = [
     _OnboardingSlide(
       icon: Icons.storefront_rounded,
-      gradient: [Color(0xFFFB335B), Color(0xFFFF6B6B)],
+      gradient: [Color(0xFFEA184A), Color(0xFFFF6B6B)],
       titleKey: 'Yerel İşletmeleri Keşfet',
       subtitleKey: 'Restoranlar, marketler ve kasaplar — hepsi tek uygulamada. En sevdiğin lezzetler kapında.',
       emoji: '🛍️',

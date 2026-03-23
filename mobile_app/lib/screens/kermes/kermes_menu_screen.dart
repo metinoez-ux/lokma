@@ -9,7 +9,7 @@ import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
 import '../../utils/currency_utils.dart';
 
-const Color lokmaPink = Color(0xFFFB335B);
+const Color lokmaPink = Color(0xFFEA184A);
 
 Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
 Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -499,7 +499,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     decoration: BoxDecoration(
                       gradient: isSelected
                           ? const LinearGradient(
-                              colors: [lokmaPink, Color(0xFFFB335B)],
+                              colors: [lokmaPink, Color(0xFFEA184A)],
                             )
                           : null,
                        color: isSelected ? null : cardColor,
@@ -562,7 +562,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           ? Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [lokmaPink.withValues(alpha: 0.9), Color(0xFFFB335B)],
+                  colors: [lokmaPink.withValues(alpha: 0.9), Color(0xFFEA184A)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -840,7 +840,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [lokmaPink, Color(0xFFFB335B)],
+                          colors: [lokmaPink, Color(0xFFEA184A)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [

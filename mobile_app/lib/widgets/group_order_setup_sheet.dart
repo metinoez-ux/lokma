@@ -29,7 +29,7 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
   bool _isCreating = false;
 
   // LOKMA brand accent (Rose-500)
-  static const Color _accent = Color(0xFFFB335B);
+  static const Color _accent = Color(0xFFEA184A);
 
   final List<int> _deadlineOptions = [10, 15, 20, 30, 45, 60];
 

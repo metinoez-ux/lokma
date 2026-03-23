@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
-  static const Color lokmaRed = Color(0xFFFB335B);
+  static const Color lokmaRed = Color(0xFFEA184A);
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +162,7 @@ class _FAQItem extends StatefulWidget {
 class _FAQItemState extends State<_FAQItem> {
   bool _isExpanded = false;
 
-  static const Color lokmaRed = Color(0xFFFB335B);
+  static const Color lokmaRed = Color(0xFFEA184A);
 
   @override
   Widget build(BuildContext context) {

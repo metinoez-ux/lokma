@@ -607,10 +607,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                   _buildSectionTitle('Kayıtlı Adreslerim', textColor),
                   TextButton.icon(
                     onPressed: () => _showAddAddressDialog(isDark, cardBg, textColor, hintColor, borderColor),
-                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFFFB335B), size: 18),
-                    label: const Text('Yeni Ekle', style: TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.w600, fontSize: 13)),
+                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFFEA184A), size: 18),
+                    label: const Text('Yeni Ekle', style: TextStyle(color: Color(0xFFEA184A), fontWeight: FontWeight.w600, fontSize: 13)),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFFB335B).withValues(alpha: 0.08),
+                      backgroundColor: const Color(0xFFEA184A).withValues(alpha: 0.08),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
@@ -641,11 +641,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   }
   
   Color _getLabelColor(String? label) {
-    if (label == null || label.isEmpty) return const Color(0xFFFB335B);
+    if (label == null || label.isEmpty) return const Color(0xFFEA184A);
     final lower = label.toLowerCase();
     if (lower.contains('ev') || lower.contains('home')) return const Color(0xFF4CAF50);
     if (lower.contains('iş') || lower.contains('is') || lower.contains('work') || lower.contains('office')) return const Color(0xFF2196F3);
-    return const Color(0xFFFB335B);
+    return const Color(0xFFEA184A);
   }
   
   Widget _buildSavedAddressesList(bool isDark, Color cardBg, Color textColor, Color hintColor, Color borderColor) {
@@ -928,7 +928,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                           labelCtrl.text = val;
                         }),
                         const SizedBox(width: 8),
-                        _buildLabelChip('Diğer', Icons.location_on_outlined, const Color(0xFFFB335B), selectedLabel, (val) {
+                        _buildLabelChip('Diğer', Icons.location_on_outlined, const Color(0xFFEA184A), selectedLabel, (val) {
                           setFormState(() => selectedLabel = val);
                           labelCtrl.text = val;
                         }),
@@ -946,7 +946,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
                                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
-                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFFB335B))),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFEA184A))),
                                 filled: true,
                                 fillColor: cardBg,
                                 isDense: true,
@@ -1013,7 +1013,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                           if (ctx.mounted) Navigator.pop(ctx);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFB335B),
+                          backgroundColor: const Color(0xFFEA184A),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(
@@ -1068,7 +1068,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         prefixIcon: icon != null ? Icon(icon, color: hintColor, size: 18) : null,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFFB335B))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEA184A))),
         filled: true,
         fillColor: cardBg,
         labelStyle: TextStyle(color: hintColor, fontSize: 13),

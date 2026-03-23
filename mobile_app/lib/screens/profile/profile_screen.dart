@@ -259,14 +259,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFB335B), Color(0xFFE91E63)],
+                        colors: [Color(0xFFEA184A), Color(0xFFE91E63)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFB335B).withValues(alpha: 0.3),
+                          color: const Color(0xFFEA184A).withValues(alpha: 0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -694,7 +694,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? const Color(0xFFFB335B) : primaryColor)
+                ? (isDark ? const Color(0xFFEA184A) : primaryColor)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12), // Pill inner
           ),
@@ -790,7 +790,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? const Color(0xFFFB335B) : primaryColor)
+                ? (isDark ? const Color(0xFFEA184A) : primaryColor)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),

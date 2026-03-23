@@ -48,7 +48,7 @@ class MarketScreen extends ConsumerStatefulWidget {
 class _MarketScreenState extends ConsumerState<MarketScreen> {
   // Theme colors
   // Theme colors
-  static const Color lokmaPink = Color(0xFFFB335B); // Rose-500 brand color
+  static const Color lokmaPink = Color(0xFFEA184A); // Rose-500 brand color
   static const Color tunaGreen = Color(0xFF4CAF50);
   
   // Dynamic card background getter for theme-aware colors
@@ -130,7 +130,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFB335B),
+                  color: Color(0xFFEA184A),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: Column(

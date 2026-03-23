@@ -143,7 +143,7 @@ export default function CookiesPage() {
                                     </div>
                                     <button
                                         onClick={() => setPreferences({ ...preferences, [key]: !preferences[key] })}
-                                        className={`w-12 h-6 rounded-full transition-all ${preferences[key] ? 'bg-[#fb335b]' : 'bg-white/20'}`}
+                                        className={`w-12 h-6 rounded-full transition-all ${preferences[key] ? 'bg-[#ea184a]' : 'bg-white/20'}`}
                                     >
                                         <div className={`w-5 h-5 bg-white rounded-full transition-all ${preferences[key] ? 'ml-6' : 'ml-0.5'}`} />
                                     </button>
@@ -154,7 +154,7 @@ export default function CookiesPage() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <button onClick={handleSave} className="bg-[#fb335b] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all">
+                        <button onClick={handleSave} className="bg-[#ea184a] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all">
                             {t('save')}
                         </button>
                         <button onClick={() => {

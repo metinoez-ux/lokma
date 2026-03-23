@@ -211,7 +211,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                     Text(
                       '${widget.ad.productPrice!.toStringAsFixed(2)} \u20AC',
                       style: TextStyle(
-                        color: const Color(0xFFFB335B),
+                        color: const Color(0xFFEA184A),
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
@@ -223,12 +223,12 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFB335B).withOpacity(0.1),
+                      color: const Color(0xFFEA184A).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.arrow_forward_rounded,
-                      color: Color(0xFFFB335B),
+                      color: Color(0xFFEA184A),
                       size: 16,
                     ),
                   ),

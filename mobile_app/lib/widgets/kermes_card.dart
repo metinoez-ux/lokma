@@ -39,7 +39,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   late Animation<double> _expandAnimation;
   
   // Colors from HTML/Tailwind config
-  static const Color primaryRose = Color(0xFFFB335B);
+  static const Color primaryRose = Color(0xFFEA184A);
   static const Color cardLight = Colors.white;
   static const Color cardDark = Color(0xFF1F2937);
   static const Color textDark = Color(0xFF111827);

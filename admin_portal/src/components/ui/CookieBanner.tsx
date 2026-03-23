@@ -176,7 +176,7 @@ export default function CookieBanner() {
                                 width: '40px',
                                 height: '40px',
                                 borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #fb335b, #ff6b6b)',
+                                background: 'linear-gradient(135deg, #ea184a, #ff6b6b)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -282,7 +282,7 @@ export default function CookieBanner() {
                                             border: 'none',
                                             cursor: 'pointer',
                                             background: preferences.analytics
-                                                ? 'linear-gradient(135deg, #fb335b, #ff6b6b)'
+                                                ? 'linear-gradient(135deg, #ea184a, #ff6b6b)'
                                                 : 'rgba(255, 255, 255, 0.1)',
                                             position: 'relative',
                                             transition: 'background 0.3s ease',
@@ -334,7 +334,7 @@ export default function CookieBanner() {
                                             border: 'none',
                                             cursor: 'pointer',
                                             background: preferences.marketing
-                                                ? 'linear-gradient(135deg, #fb335b, #ff6b6b)'
+                                                ? 'linear-gradient(135deg, #ea184a, #ff6b6b)'
                                                 : 'rgba(255, 255, 255, 0.1)',
                                             position: 'relative',
                                             transition: 'background 0.3s ease',
@@ -378,7 +378,7 @@ export default function CookieBanner() {
                                         padding: '13px 20px',
                                         borderRadius: '12px',
                                         border: 'none',
-                                        background: 'linear-gradient(135deg, #fb335b, #e6294f)',
+                                        background: 'linear-gradient(135deg, #ea184a, #e6294f)',
                                         color: '#fff',
                                         fontSize: '14px',
                                         fontWeight: 600,
@@ -417,7 +417,7 @@ export default function CookieBanner() {
                                         padding: '13px 20px',
                                         borderRadius: '12px',
                                         border: 'none',
-                                        background: 'linear-gradient(135deg, #fb335b, #e6294f)',
+                                        background: 'linear-gradient(135deg, #ea184a, #e6294f)',
                                         color: '#fff',
                                         fontSize: '14px',
                                         fontWeight: 600,

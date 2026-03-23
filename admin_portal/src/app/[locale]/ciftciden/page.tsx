@@ -186,7 +186,7 @@ export default function CiftcidenPage() {
                             {t('appBadge')}
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                            {t('appTitle')} <span className="text-[#fb335b]">LOKMA</span> {t('appTitle2')}
+                            {t('appTitle')} <span className="text-[#ea184a]">LOKMA</span> {t('appTitle2')}
                         </h2>
                         <p className="text-gray-500 dark:text-white/60 mb-8 max-w-xl mx-auto">{t('appDesc')}</p>
                         <div className="flex flex-wrap items-center justify-center gap-4">

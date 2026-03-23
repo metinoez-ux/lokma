@@ -1365,7 +1365,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFB335B),
+              backgroundColor: const Color(0xFFEA184A),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -1495,7 +1495,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFB335B),
+                                        color: const Color(0xFFEA184A),
                                         borderRadius: const BorderRadius.only(
                                           bottomLeft: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
@@ -2030,7 +2030,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   /// Fetch brand color from Firestore
   Future<Color> _fetchBrandColor(String businessId) async {
     // Provide a default color during initialization or if missing
-    if (businessId.isEmpty) return const Color(0xFFFB335B);
+    if (businessId.isEmpty) return const Color(0xFFEA184A);
     try {
       final doc = await FirebaseFirestore.instance
           .collection('businesses')
@@ -2048,7 +2048,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       debugPrint('Error fetching brand color: $e');
     }
     // Fallback if network icon doesn't contain a clear dominant color
-    return const Color(0xFFFB335B); // Default LOKMA red
+    return const Color(0xFFEA184A); // Default LOKMA red
   }
   
   /// Open maps for business location
@@ -3674,10 +3674,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         // 🔢 Quantity Pill — Lieferando style: single beige pill with flat text
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFFFB335B).withValues(alpha: 0.15) : const Color(0xFFF5F0E8),
+                            color: isDark ? const Color(0xFFEA184A).withValues(alpha: 0.15) : const Color(0xFFF5F0E8),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: isDark ? const Color(0xFFFB335B).withValues(alpha: 0.4) : const Color(0xFFE8E0D0),
+                              color: isDark ? const Color(0xFFEA184A).withValues(alpha: 0.4) : const Color(0xFFE8E0D0),
                               width: 0.5,
                             ),
                           ),

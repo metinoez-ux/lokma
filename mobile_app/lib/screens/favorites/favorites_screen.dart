@@ -23,7 +23,7 @@ class FavoritesScreen extends ConsumerStatefulWidget {
 
 class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTickerProviderStateMixin {
   // LOKMA Design Tokens - Brand color stays constant
-  static const Color lokmaRed = Color(0xFFFB335B);
+  static const Color lokmaRed = Color(0xFFEA184A);
 
   late TabController _tabController;
   int _selectedIndex = 0;
@@ -361,7 +361,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFB335B),
+                              color: const Color(0xFFEA184A),
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: const Text(
@@ -475,7 +475,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                     padding: const EdgeInsets.only(top: 4),
                     child: Icon(
                       Icons.bookmark,
-                      color: const Color(0xFFFB335B),
+                      color: const Color(0xFFEA184A),
                       size: 28,
                     ),
                   ),
@@ -543,7 +543,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                       DropdownMenuItem(value: 'tuna', child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.verified, size: 14, color: const Color(0xFFFB335B)),
+                          Icon(Icons.verified, size: 14, color: const Color(0xFFEA184A)),
                           const SizedBox(width: 5),
                           const Text('TUNA'),
                         ],

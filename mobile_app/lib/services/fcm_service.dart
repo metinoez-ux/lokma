@@ -279,7 +279,7 @@ class FCMService {
         break;
       case 'new_delivery':
         emoji = '🚚';
-        accentColor = const Color(0xFFFB335B);
+        accentColor = const Color(0xFFEA184A);
         break;
       case 'order_ready':
         emoji = '✅';

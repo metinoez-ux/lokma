@@ -970,12 +970,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               duration: const Duration(milliseconds: 200),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFFFB335B)
+                                    ? const Color(0xFFEA184A)
                                     : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isSelected
-                                      ? const Color(0xFFFB335B)
+                                      ? const Color(0xFFEA184A)
                                       : Colors.grey.withValues(alpha: 0.3),
                                   width: isSelected ? 2 : 1,
                                 ),
@@ -3350,7 +3350,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               spacing: 10,
               runSpacing: 4,
               children: [
-                _tableLegend(const Color(0xFFFB335B), 'Siparisli'),
+                _tableLegend(const Color(0xFFEA184A), 'Siparisli'),
                 _tableLegend(Colors.blue, 'Servis Edildi'),
                 _tableLegend(Colors.green, 'Odendi'),
                 _tableLegend(Colors.amber, 'Rezerveli'),
@@ -3817,7 +3817,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
   Widget _buildTableDashboard(bool isDark) {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    const brandColor = Color(0xFFFB335B);
+    const brandColor = Color(0xFFEA184A);
 
     return StreamBuilder<QuerySnapshot>(
       stream: _businessId != null
@@ -4185,7 +4185,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   /// Shows a bottom sheet with existing orders for a table (admin-created / session-less orders)
   void _showTableOrdersSheet(int tableNum) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const brandColor = Color(0xFFFB335B);
+    const brandColor = Color(0xFFEA184A);
     final sheetBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
@@ -4616,7 +4616,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   /// If confirmed, creates a session and navigates directly to menu.
   Future<void> _handleEmptyTableTap(int tableNum) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const brandColor = Color(0xFFFB335B);
+    const brandColor = Color(0xFFEA184A);
 
     showModalBottomSheet(
       context: context,
@@ -5599,7 +5599,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   }
 
   void _showTableOverview(TableSession session, int tableNumber) {
-    const brandColor = Color(0xFFFB335B);
+    const brandColor = Color(0xFFEA184A);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

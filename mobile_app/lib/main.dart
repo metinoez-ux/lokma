@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -152,11 +153,15 @@ class LokmaApp extends ConsumerWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.white, // Pure white background for modern aesthetic
         colorScheme: ColorScheme.light(
-          primary: const Color(0xFFFB335B), // LOKMA Brand Color
+          primary: const Color(0xFFEA184A), // LOKMA Brand Color
           secondary: const Color(0xFFFFB347),
           surface: Colors.white,
           error: Colors.redAccent,
           onSurface: Colors.black87,
+        ),
+        cupertinoOverrideTheme: const CupertinoThemeData(
+          primaryColor: Color(0xFFEA184A), // LOKMA Brand Color (Cupertino)
+          brightness: Brightness.light,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent, // Modern transparent look
@@ -171,7 +176,7 @@ class LokmaApp extends ConsumerWidget {
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFFFB335B), // LOKMA Brand Color
+          selectedItemColor: Color(0xFFEA184A), // LOKMA Brand Color
           unselectedItemColor: Colors.grey,
         ),
       ),
@@ -180,10 +185,14 @@ class LokmaApp extends ConsumerWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF1C1B18),
         colorScheme: ColorScheme.dark(
-          primary: const Color(0xFFFB335B), // LOKMA Brand Color
+          primary: const Color(0xFFEA184A), // LOKMA Brand Color
           secondary: const Color(0xFFFFB347),
           surface: const Color(0xFF2A2A28),
           error: Colors.redAccent,
+        ),
+        cupertinoOverrideTheme: const CupertinoThemeData(
+          primaryColor: Color(0xFFEA184A), // LOKMA Brand Color (Cupertino)
+          brightness: Brightness.dark,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF1C1B18),
@@ -197,7 +206,7 @@ class LokmaApp extends ConsumerWidget {
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Color(0xFF1C1B18),
-          selectedItemColor: Color(0xFFFB335B), // LOKMA Brand Color
+          selectedItemColor: Color(0xFFEA184A), // LOKMA Brand Color
           unselectedItemColor: Colors.grey,
         ),
       ),

@@ -98,7 +98,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: const Color(0xFFFB335B).withValues(alpha: 0.1),
+            color: const Color(0xFFEA184A).withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Center(
@@ -107,7 +107,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen> {
               height: 36,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                color: Color(0xFFFB335B),
+                color: Color(0xFFEA184A),
               ),
             ),
           ),
@@ -159,7 +159,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen> {
           child: FilledButton(
             onPressed: () => context.go('/restoran'),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFB335B),
+              backgroundColor: const Color(0xFFEA184A),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),

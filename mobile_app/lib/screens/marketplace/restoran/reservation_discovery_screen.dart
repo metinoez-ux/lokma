@@ -10,7 +10,7 @@ import '../kasap/reservation_booking_screen.dart';
 import '../../../utils/currency_utils.dart';
 import 'restoran_screen.dart' show getBusinessTypeLabel;
 
-const Color _lokmaPink = Color(0xFFFB335B);
+const Color _lokmaPink = Color(0xFFEA184A);
 
 /// Reservation Discovery Screen
 /// Gel-Al style page with distance slider, filters, and business list

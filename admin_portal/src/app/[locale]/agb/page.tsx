@@ -21,7 +21,7 @@ export default function AGBPage() {
         <div className="min-h-screen bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white pt-32 pb-20 px-4 md:px-20 lg:px-40 font-['Plus_Jakarta_Sans',sans-serif]">
             <PublicHeader themeAware={true} />
             <div className="max-w-4xl mx-auto bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[2rem] p-8 md:p-16 shadow-2xl">
-                <h1 className="text-4xl md:text-5xl font-black mb-10 tracking-tight text-[#fb335b]">{title}</h1>
+                <h1 className="text-4xl md:text-5xl font-black mb-10 tracking-tight text-[#ea184a]">{title}</h1>
 
                 <div className="space-y-6 text-gray-600 dark:text-white/70 leading-relaxed text-lg">
                     <p className="italic text-gray-900 dark:text-white/50 mb-8">Zuletzt aktualisiert: [Datum einfügen]</p>
