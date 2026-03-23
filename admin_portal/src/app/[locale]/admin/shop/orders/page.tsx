@@ -178,7 +178,7 @@ export default function ShopOrdersPage() {
     };
 
     const getStatusStyle = (status: string) => {
-        return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-gray-600/20 text-gray-400';
+        return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-gray-600/20 text-muted-foreground';
     };
 
     const getStatusLabel = (status: string) => {
@@ -187,7 +187,7 @@ export default function ShopOrdersPage() {
 
     if (adminLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
         );
@@ -198,15 +198,15 @@ export default function ShopOrdersPage() {
     const shippedCount = orders.filter(o => o.status === 'shipped').length;
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/shop" className="text-gray-400 hover:text-white">← {t('e_commerce')}</Link>
+                        <Link href="/admin/shop" className="text-muted-foreground hover:text-white">← {t('e_commerce')}</Link>
                         <div>
                             <h1 className="text-2xl font-bold text-white flex items-center gap-2">{t('siparis_yonetimi')}</h1>
-                            <p className="text-gray-400 text-sm mt-1">{filteredOrders.length} {t('siparis')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{filteredOrders.length} {t('siparis')}</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
@@ -237,12 +237,12 @@ export default function ShopOrdersPage() {
                         placeholder={t('siparis_ara')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+                        className="bg-card border border-border rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
                     />
                     <select
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
+                        className="bg-card border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
                     >
                         <option value="all">{t('tum_durumlar')}</option>
                         {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -253,17 +253,17 @@ export default function ShopOrdersPage() {
             {/* Orders List */}
             <div className="max-w-7xl mx-auto">
                 {filteredOrders.length === 0 ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center border border-gray-700">
+                    <div className="bg-card rounded-xl p-12 text-center border border-border">
                         <div className="text-6xl mb-4">📭</div>
                         <h2 className="text-xl font-bold text-white mb-2">{t('siparis_bulunamadi')}</h2>
-                        <p className="text-gray-400">{t('henuz_siparis_yok_veya_filtreye_uygun_si')}</p>
+                        <p className="text-muted-foreground">{t('henuz_siparis_yok_veya_filtreye_uygun_si')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {filteredOrders.map(order => (
-                            <div key={order.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                            <div key={order.id} className="bg-card rounded-xl border border-border overflow-hidden">
                                 {/* Order Header */}
-                                <div className="p-4 border-b border-gray-700 flex flex-wrap items-center justify-between gap-3">
+                                <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
                                     <div className="flex items-center gap-4">
                                         <div>
                                             <span className="text-white font-bold">{order.orderNumber || `#${order.id.slice(0, 6).toUpperCase()}`}</span>
@@ -280,15 +280,15 @@ export default function ShopOrdersPage() {
                                 <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Customer */}
                                     <div>
-                                        <h4 className="text-gray-400 text-sm mb-2">{t('musteri')}</h4>
+                                        <h4 className="text-muted-foreground text-sm mb-2">{t('musteri')}</h4>
                                         <div className="text-white font-medium">{order.customerName}</div>
-                                        <div className="text-gray-400 text-sm">{order.customerEmail}</div>
-                                        <div className="text-gray-400 text-sm">{order.customerPhone}</div>
+                                        <div className="text-muted-foreground text-sm">{order.customerEmail}</div>
+                                        <div className="text-muted-foreground text-sm">{order.customerPhone}</div>
                                     </div>
 
                                     {/* Address */}
                                     <div>
-                                        <h4 className="text-gray-400 text-sm mb-2">📍 {t('teslimat_adresi')}</h4>
+                                        <h4 className="text-muted-foreground text-sm mb-2">📍 {t('teslimat_adresi')}</h4>
                                         <div className="text-white text-sm">
                                             {order.shippingAddress?.street}<br />
                                             {order.shippingAddress?.postalCode} {order.shippingAddress?.city}<br />
@@ -298,12 +298,12 @@ export default function ShopOrdersPage() {
 
                                     {/* Items */}
                                     <div>
-                                        <h4 className="text-gray-400 text-sm mb-2">{t('urunler')}{order.items?.length || 0})</h4>
+                                        <h4 className="text-muted-foreground text-sm mb-2">{t('urunler')}{order.items?.length || 0})</h4>
                                         <div className="space-y-1 text-sm">
                                             {order.items?.slice(0, 3).map((item, i) => (
                                                 <div key={i} className="text-white flex justify-between">
                                                     <span>{item.quantity}x {item.name}</span>
-                                                    <span className="text-gray-400">{formatCurrency(item.price * item.quantity, 'EUR')}</span>
+                                                    <span className="text-muted-foreground">{formatCurrency(item.price * item.quantity, 'EUR')}</span>
                                                 </div>
                                             ))}
                                             {(order.items?.length || 0) > 3 && (
@@ -337,7 +337,7 @@ export default function ShopOrdersPage() {
                                 )}
 
                                 {/* Actions */}
-                                <div className="p-4 bg-gray-900/50 flex flex-wrap gap-2">
+                                <div className="p-4 bg-background/50 flex flex-wrap gap-2">
                                     {order.status === 'pending' && (
                                         <button
                                             onClick={() => updateOrderStatus(order.id, 'confirmed')}
@@ -388,21 +388,21 @@ export default function ShopOrdersPage() {
             {/* Shipping Modal */}
             {showShippingModal && selectedOrder && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 rounded-xl max-w-md w-full border border-gray-700">
-                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+                    <div className="bg-card rounded-xl max-w-md w-full border border-border">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">🚚 {t('gonder')}</h2>
-                            <button onClick={() => setShowShippingModal(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
+                            <button onClick={() => setShowShippingModal(false)} className="text-muted-foreground hover:text-white text-2xl">×</button>
                         </div>
 
                         <div className="p-6 space-y-4">
                             <div className="bg-gray-700/50 rounded-lg p-3">
-                                <div className="text-gray-400 text-sm">{t('siparis')}</div>
+                                <div className="text-muted-foreground text-sm">{t('siparis')}</div>
                                 <div className="text-white font-bold">{selectedOrder.orderNumber}</div>
-                                <div className="text-gray-400 text-sm">{selectedOrder.customerName}</div>
+                                <div className="text-muted-foreground text-sm">{selectedOrder.customerName}</div>
                             </div>
 
                             <div>
-                                <label className="text-gray-300 text-sm font-medium mb-2 block">{t('kargo_sirketi')}</label>
+                                <label className="text-foreground text-sm font-medium mb-2 block">{t('kargo_sirketi')}</label>
                                 <select
                                     value={shippingCarrier}
                                     onChange={(e) => setShippingCarrier(e.target.value)}
@@ -413,7 +413,7 @@ export default function ShopOrdersPage() {
                             </div>
 
                             <div>
-                                <label className="text-gray-300 text-sm font-medium mb-2 block">{t('takip_numarasi')}</label>
+                                <label className="text-foreground text-sm font-medium mb-2 block">{t('takip_numarasi')}</label>
                                 <input
                                     type="text"
                                     value={trackingNumber}
@@ -424,8 +424,8 @@ export default function ShopOrdersPage() {
                             </div>
                         </div>
 
-                        <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                            <button onClick={() => setShowShippingModal(false)} className="px-6 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">
+                        <div className="p-6 border-t border-border flex justify-end gap-3">
+                            <button onClick={() => setShowShippingModal(false)} className="px-6 py-2 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600">
                                 {t('iptal')}
                             </button>
                             <button

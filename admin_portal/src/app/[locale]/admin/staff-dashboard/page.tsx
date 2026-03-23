@@ -75,7 +75,7 @@ function getRoleBadgeClass(role: string): string {
     if (role.includes('staff')) return 'bg-green-500/20 text-green-300 border-green-500/30';
     if (role.includes('waiter')) return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
     if (role === 'driver') return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-    return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+    return 'bg-gray-500/20 text-foreground border-gray-500/30';
 }
 
 function formatDurationRaw(minutes: number, minLabel: string, hourLabel: string): string {
@@ -652,7 +652,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin text-4xl">⏳</div>
             </div>
         );
@@ -660,10 +660,10 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (!admin || !businessId) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-3xl mb-2">🔒</p>
-                    <p className="text-gray-400">{t('bu_sayfaya_erisim_yetkiniz_yok')}</p>
+                    <p className="text-muted-foreground">{t('bu_sayfaya_erisim_yetkiniz_yok')}</p>
                 </div>
             </div>
         );
@@ -672,7 +672,7 @@ const { admin, loading: adminLoading } = useAdmin();
     // ─── Render ─────────────────────────────────────────────────────────
 
     return (
-        <div className="min-h-screen bg-gray-900 p-4 md:p-6">
+        <div className="min-h-screen bg-background p-4 md:p-6">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header */}
@@ -681,14 +681,14 @@ const { admin, loading: adminLoading } = useAdmin();
                         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
                             {t('personel_durumu')}
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('i_sletmenize_atanmis_personelin_aktuel_d')}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Quota Indicator */}
                         {personnelQuota && (
-                            <div className="text-xs text-gray-400 bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-700">
+                            <div className="text-xs text-muted-foreground bg-card px-3 py-1.5 rounded-lg border border-border">
                                 {personnelQuota.limit !== null
                                     ? `${personnelQuota.currentUsage}/${personnelQuota.limit}`
                                     : `${personnelQuota.currentUsage} / ${t('quota_sinirsiz')}`
@@ -712,9 +712,9 @@ const { admin, loading: adminLoading } = useAdmin();
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-700">
+                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 border border-border">
                         <div className="text-3xl font-bold text-white">{stats.totalStaff}</div>
-                        <div className="text-xs text-gray-400 mt-1">{t('toplam_personel')}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{t('toplam_personel')}</div>
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 rounded-xl p-4 border border-emerald-700/30">
                         <div className="text-3xl font-bold text-emerald-400">{stats.onShiftNow}</div>
@@ -740,7 +740,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         onClick={() => setViewMode('active')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition border ${viewMode === 'active'
                             ? 'bg-emerald-600/20 border-emerald-500/40 text-emerald-300'
-                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
+                            : 'bg-card border-border text-muted-foreground hover:bg-gray-700'
                             }`}
                     >
                         {t('aktif_personel')}{staffWithActivity.filter(s => s.activityStatus !== 'offline' || s.todayDeliveries.length > 0 || s.isOnShift).length})
@@ -749,7 +749,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         onClick={() => setViewMode('all')}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition border ${viewMode === 'all'
                             ? 'bg-cyan-600/20 border-cyan-500/40 text-cyan-300'
-                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
+                            : 'bg-card border-border text-muted-foreground hover:bg-gray-700'
                             }`}
                     >
                         {t('tum_personel')}{staff.length})
@@ -760,12 +760,12 @@ const { admin, loading: adminLoading } = useAdmin();
                 {(loadingStaff || loadingOrders) ? (
                     <div className="flex items-center justify-center py-16">
                         <div className="animate-spin h-10 w-10 border-4 border-cyan-500 border-t-transparent rounded-full"></div>
-                        <span className="ml-4 text-gray-400">{t('personel_bilgileri_yukleniyor')}</span>
+                        <span className="ml-4 text-muted-foreground">{t('personel_bilgileri_yukleniyor')}</span>
                     </div>
                 ) : filteredStaff.length === 0 ? (
-                    <div className="text-center py-16 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
+                    <div className="text-center py-16 bg-card/30 rounded-xl border border-dashed border-border">
                         <p className="text-4xl mb-3">📭</p>
-                        <p className="text-gray-400">
+                        <p className="text-muted-foreground">
                             {viewMode === 'active'
                                 ? t('bugun_aktif_personel_bulunamadi')
                                 : t('bu_isletmeye_atanmis_personel_bulunamadi')
@@ -795,7 +795,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             .map(member => (
                                 <div
                                     key={member.id}
-                                    className={`bg-gray-800 rounded-xl border transition-all ${member.activityStatus === 'on_shift'
+                                    className={`bg-card rounded-xl border transition-all ${member.activityStatus === 'on_shift'
                                         ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/10'
                                         : member.activityStatus === 'delivering'
                                             ? 'border-amber-500/40 shadow-lg shadow-amber-500/10'
@@ -805,7 +805,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     ? 'border-emerald-500/30'
                                                     : member.activityStatus === 'idle'
                                                         ? 'border-gray-600'
-                                                        : 'border-gray-700/50 opacity-70'
+                                                        : 'border-border/50 opacity-70'
                                         }`}
                                 >
                                     {/* Main Card */}
@@ -833,7 +833,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     )}
                                                 </div>
                                                 {/* Status dot */}
-                                                <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-gray-800 ${member.activityStatus === 'on_shift'
+                                                <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-border ${member.activityStatus === 'on_shift'
                                                     ? 'bg-emerald-400 animate-pulse'
                                                     : member.activityStatus === 'delivering'
                                                         ? 'bg-amber-400 animate-pulse'
@@ -868,7 +868,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                                                     {member.phone && <span>📞 {member.phone}</span>}
                                                     {member.email && <span className="truncate">✉️ {member.email}</span>}
                                                 </div>
@@ -922,7 +922,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     </div>
                                                 )}
                                                 {member.activityStatus === 'idle' && (
-                                                    <div className="text-gray-400 text-sm">{t('bosta')}</div>
+                                                    <div className="text-muted-foreground text-sm">{t('bosta')}</div>
                                                 )}
                                                 {member.activityStatus === 'offline' && (
                                                     <div className="text-gray-500 text-sm">{t('pasif')}</div>
@@ -944,7 +944,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                         {/* Quick Stats Row */}
                                         {(member.isDriver || member.totalDeliveries > 0) && (
-                                            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-700/50">
+                                            <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50">
                                                 <div className="flex items-center gap-1.5 text-xs">
                                                     <span className="text-gray-500">{t('bugun_teslimat')}</span>
                                                     <span className="text-white font-medium">{member.todayDeliveries.length}</span>
@@ -971,17 +971,17 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                     {/* Expanded Details */}
                                     {expandedStaff === member.id && (
-                                        <div className="border-t border-gray-700 p-4 bg-gray-850/50">
+                                        <div className="border-t border-border p-4 bg-gray-850/50">
                                             {/* Delivery History */}
                                             {member.deliveryOrders.length > 0 ? (
                                                 <div>
-                                                    <h4 className="text-sm font-semibold text-gray-300 mb-3">
+                                                    <h4 className="text-sm font-semibold text-foreground mb-3">
                                                         {t('teslimat_gecmisi')}{dateRange === 'today' ? t('bugun') : dateRange === 'week' ? t('bu_hafta') : t('bu_ay')})
                                                     </h4>
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-sm">
                                                             <thead>
-                                                                <tr className="text-left text-gray-500 border-b border-gray-700">
+                                                                <tr className="text-left text-gray-500 border-b border-border">
                                                                     <th className="pb-2 pr-4">{t('siparis')}</th>
                                                                     <th className="pb-2 pr-4">{t('durum')}</th>
                                                                     <th className="pb-2 pr-4">{t('alis')}</th>
@@ -996,7 +996,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                         ? (order.completedAt.getTime() - order.claimedAt.getTime()) / 60000
                                                                         : null;
                                                                     return (
-                                                                        <tr key={order.id} className="border-b border-gray-700/30 hover:bg-gray-700/20">
+                                                                        <tr key={order.id} className="border-b border-border/30 hover:bg-gray-700/20">
                                                                             <td className="py-2 pr-4">
                                                                                 <span className="text-cyan-400 font-mono">#{order.orderNumber}</span>
                                                                             </td>
@@ -1004,7 +1004,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                                 <span className={`px-2 py-0.5 rounded-full text-xs ${order.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-300'
                                                                                     : order.status === 'onTheWay' ? 'bg-amber-500/20 text-amber-300'
                                                                                         : order.status === 'cancelled' ? 'bg-red-500/20 text-red-300'
-                                                                                            : 'bg-gray-500/20 text-gray-300'
+                                                                                            : 'bg-gray-500/20 text-foreground'
                                                                                     }`}>
                                                                                     {order.status === 'delivered' ? t('teslim_edildi') :
                                                                                         order.status === 'onTheWay' ? t('yolda') :
@@ -1012,13 +1012,13 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                                                 order.status}
                                                                                 </span>
                                                                             </td>
-                                                                            <td className="py-2 pr-4 text-gray-400">
+                                                                            <td className="py-2 pr-4 text-muted-foreground">
                                                                                 {order.claimedAt?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || '-'}
                                                                             </td>
-                                                                            <td className="py-2 pr-4 text-gray-400">
+                                                                            <td className="py-2 pr-4 text-muted-foreground">
                                                                                 {order.startedAt?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || '-'}
                                                                             </td>
-                                                                            <td className="py-2 pr-4 text-gray-400">
+                                                                            <td className="py-2 pr-4 text-muted-foreground">
                                                                                 {duration ? formatDurationRaw(duration, t('dk_kisaltma'), t('sa_kisaltma')) : '-'}
                                                                             </td>
                                                                             <td className="py-2 text-white font-medium">
@@ -1041,8 +1041,8 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                             {/* Table Service History */}
                                             {member.tablesServedToday.length > 0 && (
-                                                <div className="mt-4 pt-4 border-t border-gray-700/50">
-                                                    <h4 className="text-sm font-semibold text-gray-300 mb-2">
+                                                <div className="mt-4 pt-4 border-t border-border/50">
+                                                    <h4 className="text-sm font-semibold text-foreground mb-2">
                                                         {t('bugun_servis_edilen_masalar')}
                                                     </h4>
                                                     <div className="flex flex-wrap gap-2">
@@ -1059,7 +1059,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             )}
 
                                             {/* Staff Info Footer */}
-                                            <div className="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                                            <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap items-center gap-4 text-xs text-gray-500">
                                                 <span>🆔 {member.id.slice(0, 8)}...</span>
                                                 {member.createdAt && (
                                                     <span>{t('kayit')} {member.createdAt.toLocaleDateString('de-DE')}</span>
@@ -1082,12 +1082,12 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* ═══ Create Staff Modal ═══ */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowCreateModal(false)}>
-                    <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-background border border-border rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-gray-700">
+                        <div className="p-6 border-b border-border">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-white">{t('yeni_personel_ekle')}</h2>
-                                <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+                                <button onClick={() => setShowCreateModal(false)} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
                             </div>
                             {/* Quota Info */}
                             {personnelQuota && (
@@ -1114,36 +1114,36 @@ const { admin, loading: adminLoading } = useAdmin();
                         <div className="p-6 space-y-4">
                             {/* Name */}
                             <div>
-                                <label className="text-gray-400 text-xs block mb-1">{t('ad_soyad')} *</label>
+                                <label className="text-muted-foreground text-xs block mb-1">{t('ad_soyad')} *</label>
                                 <input
                                     type="text"
                                     value={createName}
                                     onChange={(e) => setCreateName(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
                                     placeholder="Max Mustermann"
                                 />
                             </div>
 
                             {/* Email */}
                             <div>
-                                <label className="text-gray-400 text-xs block mb-1">{t('eposta_adresi')}</label>
+                                <label className="text-muted-foreground text-xs block mb-1">{t('eposta_adresi')}</label>
                                 <input
                                     type="email"
                                     value={createEmail}
                                     onChange={(e) => setCreateEmail(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
                                     placeholder="staff@example.com"
                                 />
                             </div>
 
                             {/* Phone */}
                             <div>
-                                <label className="text-gray-400 text-xs block mb-1">{t('telefon_numarasi')}</label>
+                                <label className="text-muted-foreground text-xs block mb-1">{t('telefon_numarasi')}</label>
                                 <input
                                     type="tel"
                                     value={createPhone}
                                     onChange={(e) => setCreatePhone(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
                                     placeholder="+49 170 1234567"
                                 />
                             </div>
@@ -1151,12 +1151,12 @@ const { admin, loading: adminLoading } = useAdmin();
                             {/* Password */}
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-gray-400 text-xs">{t('sifre_belirle')} *</label>
+                                    <label className="text-muted-foreground text-xs">{t('sifre_belirle')} *</label>
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="text-gray-500 hover:text-gray-300 text-xs transition"
+                                            className="text-gray-500 hover:text-foreground text-xs transition"
                                         >
                                             {showPassword ? t('sifre_gizle') : t('sifre_goster')}
                                         </button>
@@ -1181,17 +1181,17 @@ const { admin, loading: adminLoading } = useAdmin();
                                             type={showPassword ? 'text' : 'password'}
                                             value={createPassword}
                                             onChange={(e) => setCreatePassword(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
+                                            className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
                                             placeholder="******"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-400 text-xs block mb-1">{t('sifre_tekrar')} *</label>
+                                        <label className="text-muted-foreground text-xs block mb-1">{t('sifre_tekrar')} *</label>
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={createPasswordConfirm}
                                             onChange={(e) => setCreatePasswordConfirm(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
+                                            className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition font-mono"
                                             placeholder="******"
                                         />
                                     </div>
@@ -1205,11 +1205,11 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Role */}
                             <div>
-                                <label className="text-gray-400 text-xs block mb-1">{t('rol_sec')} *</label>
+                                <label className="text-muted-foreground text-xs block mb-1">{t('rol_sec')} *</label>
                                 <select
                                     value={createRole}
                                     onChange={(e) => setCreateRole(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
+                                    className="w-full bg-card border border-gray-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-emerald-500 focus:outline-none transition"
                                 >
                                     {availableRoles.map(r => (
                                         <option key={r.value} value={r.value}>{r.label}</option>
@@ -1233,10 +1233,10 @@ const { admin, loading: adminLoading } = useAdmin();
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 border-t border-gray-700 flex gap-3">
+                        <div className="p-6 border-t border-border flex gap-3">
                             <button
                                 onClick={() => setShowCreateModal(false)}
-                                className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition"
+                                className="flex-1 px-4 py-2.5 bg-card border border-gray-600 text-foreground rounded-lg text-sm font-medium hover:bg-gray-700 transition"
                             >
                                 {t('iptal')}
                             </button>

@@ -58,7 +58,7 @@ export default function NewKermesPage() {
   const t = useTranslations('AdminKermesNew');
 return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white text-lg">{t('yukleniyor')}</div>
             </div>
         }>
@@ -345,17 +345,17 @@ function NewKermesContent() {
 
     if (orgLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white text-lg">Organizasyon yükleniyor...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-6">
-                <Link href="/admin/kermes" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
                     ← Geri
                 </Link>
                 <h1 className="text-2xl font-bold text-pink-400 mt-2">🎪 Yeni Kermes Oluştur</h1>
@@ -369,7 +369,7 @@ function NewKermesContent() {
                             <span className="text-2xl">🕌</span>
                             <div>
                                 <h2 className="font-bold text-white">{organization.name}</h2>
-                                <p className="text-gray-300 text-sm">
+                                <p className="text-foreground text-sm">
                                     {organization.address}, {organization.postalCode} {organization.city}
                                 </p>
                             </div>
@@ -378,7 +378,7 @@ function NewKermesContent() {
                 )}
 
                 {/* 📍 Konum Bilgileri */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <h2 className="text-lg font-bold text-white mb-4">📍 Konum Bilgileri</h2>
 
                     {/* Dernek Seç Button */}
@@ -398,12 +398,12 @@ function NewKermesContent() {
 
                     {/* Selected Organization Display */}
                     {organization && (
-                        <div className="mb-4 p-4 bg-gray-900 border border-blue-500 rounded-lg">
+                        <div className="mb-4 p-4 bg-background border border-blue-500 rounded-lg">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                    <p className="text-sm text-gray-400 mb-1">Seçilen Dernek:</p>
+                                    <p className="text-sm text-muted-foreground mb-1">Seçilen Dernek:</p>
                                     <h3 className="text-white font-medium">{organization.name}</h3>
-                                    <div className="flex items-center gap-2 mt-1 text-sm text-gray-400">
+                                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                                         <span>📍</span>
                                         <span>
                                             {organization.postalCode && `${organization.postalCode} `}
@@ -417,7 +417,7 @@ function NewKermesContent() {
                                 <button
                                     type="button"
                                     onClick={() => setOrganization(null)}
-                                    className="text-gray-400 hover:text-white transition ml-2"
+                                    className="text-muted-foreground hover:text-white transition ml-2"
                                     title={t('clear_selection_title')}
                                 >
                                     ✕
@@ -429,7 +429,7 @@ function NewKermesContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Konum Adı */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Konum Adı *
                             </label>
                             <input
@@ -444,7 +444,7 @@ function NewKermesContent() {
 
                         {/* Ülke - Google Places'tan otomatik algılanır */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Ülke
                             </label>
                             <input
@@ -459,7 +459,7 @@ function NewKermesContent() {
 
                         {/* Ana Adres - Google Places */}
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Ana Adres
                             </label>
                             <PlacesAutocomplete
@@ -479,7 +479,7 @@ function NewKermesContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Posta Kodu
                             </label>
                             <input
@@ -492,7 +492,7 @@ function NewKermesContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Şehir
                             </label>
                             <input
@@ -505,8 +505,8 @@ function NewKermesContent() {
                         </div>
 
                         {/* 2. Sokak Adı (Opsiyonel) */}
-                        <div className="md:col-span-2 pt-4 border-t border-gray-700">
-                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                        <div className="md:col-span-2 pt-4 border-t border-border">
+                            <label className="block text-sm font-medium text-muted-foreground mb-2">
                                 📍 2. Sokak Adı (Opsiyonel)
                             </label>
                             <input
@@ -521,13 +521,13 @@ function NewKermesContent() {
                 </div>
 
                 {/* 📝 Etkinlik Bilgileri */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <h2 className="text-lg font-bold text-white mb-4">📝 Etkinlik Bilgileri</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Birincil Dil - Etkinlik Adı */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Etkinlik Adı (Türkçe) *
                             </label>
                             <input
@@ -542,7 +542,7 @@ function NewKermesContent() {
 
                         {/* İkincil Dil - Etkinlik Adı */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Etkinlik Adı ({getSecondaryLanguageName()})
                             </label>
                             <input
@@ -556,7 +556,7 @@ function NewKermesContent() {
 
                         {/* Birincil Dil - Açıklama */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Açıklama / Kermes Sloganı (Türkçe)
                             </label>
                             <textarea
@@ -570,7 +570,7 @@ function NewKermesContent() {
 
                         {/* İkincil Dil - Açıklama */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Açıklama / Kermes Sloganı ({getSecondaryLanguageName()})
                             </label>
                             <textarea
@@ -583,7 +583,7 @@ function NewKermesContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Başlangıç Tarihi *
                             </label>
                             <input
@@ -596,7 +596,7 @@ function NewKermesContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Bitiş Tarihi
                             </label>
                             <input
@@ -608,7 +608,7 @@ function NewKermesContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Açılış Saati
                             </label>
                             <input
@@ -620,7 +620,7 @@ function NewKermesContent() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Kapanış Saati
                             </label>
                             <input
@@ -634,13 +634,13 @@ function NewKermesContent() {
                 </div>
 
                 {/* 👤 Yetkili Kişi */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <h2 className="text-lg font-bold text-white mb-4">👤 Yetkili Kişi</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Ad */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Ad
                             </label>
                             <input
@@ -654,7 +654,7 @@ function NewKermesContent() {
 
                         {/* Soyad */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Soyad
                             </label>
                             <input
@@ -668,7 +668,7 @@ function NewKermesContent() {
 
                         {/* Telefon Numarası - Ülke Kodu + Numara */}
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Telefon Numarası
                             </label>
                             <div className="flex gap-2">
@@ -701,7 +701,7 @@ function NewKermesContent() {
                 </div>
 
                 {/* 🚚 Kurye/Nakliyat Servisi */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-white">🚚 Kurye / Nakliyat Servisi</h2>
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -716,9 +716,9 @@ function NewKermesContent() {
                     </div>
 
                     {hasDelivery && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground mb-1">
                                     Nakliyat Ücreti (€)
                                 </label>
                                 <input
@@ -730,7 +730,7 @@ function NewKermesContent() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground mb-1">
                                     Minimum Sipariş Tutarı (€)
                                     <span className="text-yellow-400 text-xs ml-2">(Bu tutarın altında kurye kabul edilmez)</span>
                                 </label>
@@ -743,7 +743,7 @@ function NewKermesContent() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">
+                                <label className="block text-sm font-medium text-foreground mb-1">
                                     Ücretsiz Teslimat İçin Min. (€)
                                     <span className="text-green-400 text-xs ml-2">(Bu tutardan sonra teslimat ücretsiz)</span>
                                 </label>
@@ -761,7 +761,7 @@ function NewKermesContent() {
                 </div>
 
                 {/* ⚙️ Genel Ayarlar (Pfand + KDV) */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <h2 className="text-lg font-bold text-white mb-4">⚙️ Genel Ayarlar</h2>
 
                     {/* Checkbox'lar Yan Yana */}
@@ -776,7 +776,7 @@ function NewKermesContent() {
                             />
                             <div>
                                 <span className="text-white font-medium">💰 Pfand / Depozito Sistemi</span>
-                                <p className="text-gray-400 text-xs">Bardak/tabak için depozito</p>
+                                <p className="text-muted-foreground text-xs">Bardak/tabak için depozito</p>
                             </div>
                         </label>
 
@@ -790,18 +790,18 @@ function NewKermesContent() {
                             />
                             <div>
                                 <span className="text-white font-medium">📊 KDV / Vergi Göster</span>
-                                <p className="text-gray-400 text-xs">Fişlerde KDV ayrı gösterilsin</p>
+                                <p className="text-muted-foreground text-xs">Fişlerde KDV ayrı gösterilsin</p>
                             </div>
                         </label>
                     </div>
 
                     {/* Detay Alanları - Aktifse Göster */}
                     {(hasPfandSystem || showKdv) && (
-                        <div className="pt-4 border-t border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="pt-4 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Pfand Detayları */}
                             {hasPfandSystem && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                                    <label className="block text-sm font-medium text-foreground mb-1">
                                         💰 Varsayılan Pfand Tutarı (€)
                                     </label>
                                     <input
@@ -811,7 +811,7 @@ function NewKermesContent() {
                                         onChange={(e) => setPfandAmount(parseFloat(e.target.value) || 0)}
                                         className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
                                     />
-                                    <p className="text-gray-400 text-xs mt-1">
+                                    <p className="text-muted-foreground text-xs mt-1">
                                         Ürün bazında değiştirilebilir
                                     </p>
                                 </div>
@@ -820,7 +820,7 @@ function NewKermesContent() {
                             {/* KDV Detayları */}
                             {showKdv && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                                    <label className="block text-sm font-medium text-foreground mb-1">
                                         📊 KDV Oranı
                                     </label>
                                     <select
@@ -839,7 +839,7 @@ function NewKermesContent() {
                                                 onChange={() => setPricesIncludeKdv(true)}
                                                 className="text-pink-600 focus:ring-pink-500"
                                             />
-                                            <span className="text-gray-300">Brüt (dahil)</span>
+                                            <span className="text-foreground">Brüt (dahil)</span>
                                         </label>
                                         <label className="flex items-center gap-2 cursor-pointer text-sm">
                                             <input
@@ -848,7 +848,7 @@ function NewKermesContent() {
                                                 onChange={() => setPricesIncludeKdv(false)}
                                                 className="text-pink-600 focus:ring-pink-500"
                                             />
-                                            <span className="text-gray-300">Net (hariç)</span>
+                                            <span className="text-foreground">Net (hariç)</span>
                                         </label>
                                     </div>
                                 </div>
@@ -858,7 +858,7 @@ function NewKermesContent() {
                 </div>
 
                 {/* 🅿️ Park İmkanları */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-white">🅿️ Park İmkanları</h2>
                         <button
@@ -871,7 +871,7 @@ function NewKermesContent() {
                     </div>
 
                     {parkingLocations.length === 0 ? (
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-muted-foreground text-sm">
                             Henüz park alanı eklenmedi. "Park Alanı Ekle" butonuyla başlayın.
                         </p>
                     ) : (
@@ -895,7 +895,7 @@ function NewKermesContent() {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div className="md:col-span-2">
-                                            <label className="block text-xs text-gray-400 mb-1">Sokak / Cadde Adresi</label>
+                                            <label className="block text-xs text-muted-foreground mb-1">Sokak / Cadde Adresi</label>
                                             <PlacesAutocomplete
                                                 value={parking.street}
                                                 onChange={(val) => updateParkingLocation(index, 'street', val)}
@@ -914,7 +914,7 @@ function NewKermesContent() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-400 mb-1">Şehir</label>
+                                            <label className="block text-xs text-muted-foreground mb-1">Şehir</label>
                                             <input
                                                 type="text"
                                                 value={parking.city}
@@ -923,7 +923,7 @@ function NewKermesContent() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-gray-400 mb-1">Posta Kodu</label>
+                                            <label className="block text-xs text-muted-foreground mb-1">Posta Kodu</label>
                                             <input
                                                 type="text"
                                                 value={parking.postalCode}
@@ -932,7 +932,7 @@ function NewKermesContent() {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-xs text-gray-400 mb-1">Açıklama / Not</label>
+                                            <label className="block text-xs text-muted-foreground mb-1">Açıklama / Not</label>
                                             <input
                                                 type="text"
                                                 value={parking.note}
@@ -948,7 +948,7 @@ function NewKermesContent() {
                     )}
 
                     <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             Genel Park Notu (Opsiyonel)
                         </label>
                         <input
@@ -962,9 +962,9 @@ function NewKermesContent() {
                 </div>
 
                 {/* ✨ Etkinlik Özellikleri */}
-                <div className="bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700">
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <h2 className="text-lg font-bold text-white mb-2">✨ Etkinlik Özellikleri</h2>
-                    <p className="text-gray-400 text-sm mb-4">Bu kermeste hangi özellikler mevcut?</p>
+                    <p className="text-muted-foreground text-sm mb-4">Bu kermeste hangi özellikler mevcut?</p>
 
                     <div className="flex flex-wrap gap-3">
                         {eventFeatures.length === 0 ? (
@@ -976,7 +976,7 @@ function NewKermesContent() {
                                 onClick={() => toggleFeature(feature.id)}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition ${selectedFeatures.includes(feature.id)
                                     ? 'text-white border-2'
-                                    : 'bg-gray-700 text-gray-300 border-2 border-gray-600 hover:border-gray-500'
+                                    : 'bg-gray-700 text-foreground border-2 border-gray-600 hover:border-gray-500'
                                     }`}
                                 style={selectedFeatures.includes(feature.id) ? { backgroundColor: feature.color, borderColor: feature.color } : {}}
                             >
@@ -986,8 +986,8 @@ function NewKermesContent() {
                     </div>
 
                     {/* Özel Özellikler */}
-                    <div className="mt-6 pt-4 border-t border-gray-700">
-                        <h3 className="text-sm font-medium text-gray-300 mb-2">Özel Özellikler (Max 3)</h3>
+                    <div className="mt-6 pt-4 border-t border-border">
+                        <h3 className="text-sm font-medium text-foreground mb-2">Özel Özellikler (Max 3)</h3>
                         <div className="flex gap-2 mb-3">
                             <input
                                 type="text"

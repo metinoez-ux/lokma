@@ -99,14 +99,14 @@ export default function CompanySettingsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             <div className="max-w-4xl mx-auto px-4 py-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
@@ -114,7 +114,7 @@ export default function CompanySettingsPage() {
                         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
                             🏢 LOKMA Firma Einstellungen
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('subtitle')}
                         </p>
                     </div>
@@ -435,7 +435,7 @@ export default function CompanySettingsPage() {
                             <span className="text-2xl">ℹ️</span>
                             <div>
                                 <h4 className="text-blue-400 font-medium text-sm">{t('dataUsageTitle')}</h4>
-                                <p className="text-gray-400 text-xs mt-1">
+                                <p className="text-muted-foreground text-xs mt-1">
                                     {t('dataUsageDesc')}
                                 </p>
                             </div>
@@ -498,12 +498,12 @@ function Section({ title, icon, description, children }: {
     children: React.ReactNode;
 }) {
     return (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-700 bg-gray-800/80">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border bg-card/80">
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                     <span>{icon}</span> {title}
                 </h2>
-                <p className="text-gray-400 text-xs mt-0.5">{description}</p>
+                <p className="text-muted-foreground text-xs mt-0.5">{description}</p>
             </div>
             <div className="p-6 space-y-4">
                 {children}
@@ -520,7 +520,7 @@ function Field({ label, children, required, full }: {
 }) {
     return (
         <div className={full ? 'col-span-full' : ''}>
-            <label className="block text-gray-300 text-sm font-medium mb-1.5">
+            <label className="block text-foreground text-sm font-medium mb-1.5">
                 {label}
             </label>
             {children}

@@ -301,7 +301,7 @@ export default function AmeisePage() {
     /* ── Guards ── */
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-500" />
             </div>
         );
@@ -309,27 +309,27 @@ export default function AmeisePage() {
 
     if (!admin || admin.adminType !== 'super') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <p className="text-red-400">Zugriff verweigert</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-background text-white">
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
 
                 {/* ── Header ── */}
                 <div>
                     <h1 className="text-2xl font-bold">Ameise</h1>
-                    <p className="text-gray-400 text-sm mt-1">Datenimport, Export und Bereinigung</p>
+                    <p className="text-muted-foreground text-sm mt-1">Datenimport, Export und Bereinigung</p>
                 </div>
 
                 {/* ── Betriebe Export / Import ── */}
-                <section className="bg-gray-800 rounded-xl border border-emerald-900/40 p-6">
+                <section className="bg-card rounded-xl border border-emerald-900/40 p-6">
                     <div className="mb-4">
                         <h2 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Betriebe Export / Import</h2>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             Alle Betriebe mit Kategorien, Produkten, Offnungszeiten und allen Daten als JSON sichern oder wiederherstellen.
                         </p>
                     </div>
@@ -369,24 +369,24 @@ export default function AmeisePage() {
                     {/* Import Preview */}
                     {importPreview && (
                         <div className="space-y-3">
-                            <div className="bg-gray-900/60 rounded-lg p-4">
+                            <div className="bg-background/60 rounded-lg p-4">
                                 <p className="text-sm text-white font-medium mb-2">Import-Vorschau</p>
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="bg-gray-800 rounded-lg p-2.5 text-center">
+                                    <div className="bg-card rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-white">{importPreview.businessCount || importPreview.businesses?.length || 0}</div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">Betriebe</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">Betriebe</div>
                                     </div>
-                                    <div className="bg-gray-800 rounded-lg p-2.5 text-center">
+                                    <div className="bg-card rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-white">
                                             {(importPreview.businesses || []).reduce((s: number, b: any) => s + (b.categories?.length || 0), 0)}
                                         </div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">Kategorien</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">Kategorien</div>
                                     </div>
-                                    <div className="bg-gray-800 rounded-lg p-2.5 text-center">
+                                    <div className="bg-card rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-white">
                                             {(importPreview.businesses || []).reduce((s: number, b: any) => s + (b.products?.length || 0), 0)}
                                         </div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">Produkte</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">Produkte</div>
                                     </div>
                                 </div>
                                 {importPreview.exportedAt && (
@@ -431,9 +431,9 @@ export default function AmeisePage() {
                                     { label: 'Kategorien', value: importResult.categoriesCreated },
                                     { label: 'Produkte', value: importResult.productsCreated },
                                 ].map(item => (
-                                    <div key={item.label} className="bg-gray-900 rounded-lg p-2.5 text-center">
+                                    <div key={item.label} className="bg-background rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-white">{item.value}</div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">{item.label}</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">{item.label}</div>
                                     </div>
                                 ))}
                             </div>
@@ -453,10 +453,10 @@ export default function AmeisePage() {
                 </section>
 
                 {/* ── Demo-Daten (Betrieb Import) ── */}
-                <section className="bg-gray-800 rounded-xl border border-blue-900/40 p-6">
+                <section className="bg-card rounded-xl border border-blue-900/40 p-6">
                     <div className="mb-4">
                         <h2 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">Betrieb Import (Google Places)</h2>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             Google Places uzerinden gercek isletmeleri ara, sec ve sisteme ekle.
                             Her isletme icin otomatik menu olusturulur.
                         </p>
@@ -529,7 +529,7 @@ export default function AmeisePage() {
                     {demoPhase === 'results' && demoFoundPlaces.length > 0 && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm text-gray-400">
+                                <p className="text-sm text-muted-foreground">
                                     {demoFoundPlaces.length} Betriebe gefunden, {demoSelectedIds.size} ausgewahlt
                                 </p>
                                 <button onClick={toggleAllDemoPlaces} className="text-xs text-blue-400 hover:text-blue-300">
@@ -546,7 +546,7 @@ export default function AmeisePage() {
                                                 ? 'bg-gray-700/30 text-gray-600 cursor-not-allowed'
                                                 : demoSelectedIds.has(p.placeId)
                                                     ? 'bg-blue-950/40 border border-blue-600/40 text-white'
-                                                    : 'bg-gray-700/40 border border-transparent text-gray-400 hover:text-white hover:border-gray-600'
+                                                    : 'bg-gray-700/40 border border-transparent text-muted-foreground hover:text-white hover:border-gray-600'
                                         }`}
                                     >
                                         <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
@@ -566,7 +566,7 @@ export default function AmeisePage() {
                                         </div>
                                         <div className="shrink-0 text-right">
                                             <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                                                p.alreadyAdded ? 'bg-green-900/30 text-green-600' : 'bg-gray-600/30 text-gray-400'
+                                                p.alreadyAdded ? 'bg-green-900/30 text-green-600' : 'bg-gray-600/30 text-muted-foreground'
                                             }`}>
                                                 {p.alreadyAdded ? 'Vorhanden' : (BUSINESS_TYPE_LABELS[p.businessType] || p.businessType)}
                                             </span>
@@ -610,7 +610,7 @@ export default function AmeisePage() {
                             )}
                             <div className="max-h-[200px] overflow-y-auto space-y-1">
                                 {demoSavedBusinesses.map((b: any, i: number) => (
-                                    <div key={i} className="text-xs text-gray-400 flex items-center gap-2">
+                                    <div key={i} className="text-xs text-muted-foreground flex items-center gap-2">
                                         <span className="text-green-500">+</span>
                                         <span className="text-white font-medium">{b.companyName}</span>
                                         <span className="text-gray-600">({BUSINESS_TYPE_LABELS[b.businessType] || b.businessType})</span>
@@ -644,9 +644,9 @@ export default function AmeisePage() {
                                     { label: 'Kategorien', value: demoCleanupStats.categoriesDeleted },
                                     { label: 'Produkte', value: demoCleanupStats.productsDeleted },
                                 ].map(item => (
-                                    <div key={item.label} className="bg-gray-900 rounded-lg p-2.5 text-center">
+                                    <div key={item.label} className="bg-background rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-white">{item.value}</div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">{item.label}</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">{item.label}</div>
                                     </div>
                                 ))}
                             </div>
@@ -674,10 +674,10 @@ export default function AmeisePage() {
                 </section>
 
                 {/* ── Test Data Cleanup ── */}
-                <section className="bg-gray-800 rounded-xl border border-red-900/40 p-6">
+                <section className="bg-card rounded-xl border border-red-900/40 p-6">
                     <div className="mb-4">
                         <h2 className="text-sm font-semibold text-red-400 uppercase tracking-wider">Test Verilerini Temizle</h2>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             metin.oez@gmail.com haric secilen kategorilerdeki test verilerini siler.
                         </p>
                     </div>
@@ -691,7 +691,7 @@ export default function AmeisePage() {
                     {(phase === 'idle' || phase === 'confirm') && (
                         <>
                             <div className="flex items-center justify-between mb-3">
-                                <p className="text-xs text-gray-400">Temizlenecek verileri secin:</p>
+                                <p className="text-xs text-muted-foreground">Temizlenecek verileri secin:</p>
                                 <button onClick={toggleAll} className="text-xs text-blue-400 hover:text-blue-300">
                                     {selectedCategories.size === CLEANUP_CATEGORIES.length ? 'Keine' : 'Alle'} auswahlen
                                 </button>
@@ -706,12 +706,12 @@ export default function AmeisePage() {
                                             className={`text-left rounded-lg px-3 py-2.5 border transition-all duration-150 ${
                                                 isSelected
                                                     ? 'bg-red-950/40 border-red-600/60 text-white'
-                                                    : 'bg-gray-900/60 border-gray-700/40 text-gray-500 hover:border-gray-600'
+                                                    : 'bg-background/60 border-border/40 text-gray-500 hover:border-gray-600'
                                             }`}
                                         >
                                             <div className="flex items-center gap-2 mb-0.5">
                                                 <span className="text-sm">{cat.icon}</span>
-                                                <span className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+                                                <span className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-muted-foreground'}`}>
                                                     {cat.label}
                                                 </span>
                                             </div>
@@ -723,15 +723,15 @@ export default function AmeisePage() {
 
                             {/* Date filter for businesses */}
                             {selectedCategories.has('businesses') && (
-                                <div className="bg-gray-900/60 rounded-lg px-4 py-3 mb-5 flex items-center gap-4">
-                                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <div className="bg-background/60 rounded-lg px-4 py-3 mb-5 flex items-center gap-4">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                         <span>Betriebe-Filter:</span>
                                     </div>
                                     <select
                                         title="Betriebe Datumsfilter"
                                         value={businessDateFilter}
                                         onChange={e => setBusinessDateFilter(e.target.value)}
-                                        className="px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
+                                        className="px-3 py-1.5 bg-card text-white text-xs rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
                                     >
                                         <option value="today">Heute hinzugefuegt</option>
                                         <option value="yesterday">Gestern hinzugefuegt</option>
@@ -761,7 +761,7 @@ export default function AmeisePage() {
                     {/* Confirm */}
                     {phase === 'confirm' && (
                         <div className="space-y-3">
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                                 Zum Bestatigen <span className="font-mono text-red-400">{CONFIRM_PHRASE}</span> eingeben:
                             </p>
                             <div className="flex gap-3">
@@ -819,15 +819,15 @@ export default function AmeisePage() {
                                     { label: 'Betriebe gelöscht', value: stats.businessesDeleted },
                                     { label: 'Arbeitszeiten', value: stats.shiftsDeleted },
                                 ].filter(item => item.value > 0).map(item => (
-                                    <div key={item.label} className="bg-gray-900 rounded-lg p-2.5 text-center">
+                                    <div key={item.label} className="bg-background rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-white">{item.value}</div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">{item.label}</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">{item.label}</div>
                                     </div>
                                 ))}
                                 {stats.errors.length > 0 && (
-                                    <div className="bg-gray-900 rounded-lg p-2.5 text-center">
+                                    <div className="bg-background rounded-lg p-2.5 text-center">
                                         <div className="text-lg font-bold text-red-400">{stats.errors.length}</div>
-                                        <div className="text-[10px] text-gray-400 mt-0.5">Fehler</div>
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">Fehler</div>
                                     </div>
                                 )}
                             </div>

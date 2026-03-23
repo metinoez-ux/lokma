@@ -396,14 +396,14 @@ export default function StatisticsPage() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -411,7 +411,7 @@ export default function StatisticsPage() {
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             📊 İstatistikler
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('platform_siparis_ve_performans_analitigi')}
                         </p>
                     </div>
@@ -420,7 +420,7 @@ export default function StatisticsPage() {
 
             {/* Global Filters */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-4 space-y-4">
+                <div className="bg-card rounded-xl p-4 space-y-4">
                     {/* First Row - Date & Business Filters */}
                     <div className="flex flex-wrap gap-4 items-center">
                         {/* Date Filter */}
@@ -452,7 +452,7 @@ export default function StatisticsPage() {
                                     max={customEndDate || new Date().toISOString().split('T')[0]}
                                     className="bg-gray-700 text-white rounded px-2 py-1 text-sm border border-gray-600"
                                 />
-                                <span className="text-gray-400">→</span>
+                                <span className="text-muted-foreground">→</span>
                                 <input
                                     type="date"
                                     value={customEndDate}
@@ -514,7 +514,7 @@ export default function StatisticsPage() {
                             <span className="text-purple-300 text-sm">
                                 {t('karsilastirma_donemi')} {comparisonRange.startDate.toLocaleDateString('de-DE')} - {comparisonRange.endDate.toLocaleDateString('de-DE')}
                             </span>
-                            <span className="text-gray-400 text-sm">
+                            <span className="text-muted-foreground text-sm">
                                 ({comparisonOrders.length} {t('siparis')}
                             </span>
                         </div>
@@ -523,67 +523,67 @@ export default function StatisticsPage() {
             </div>
 
             {loading ? (
-                <div className="max-w-7xl mx-auto bg-gray-800 rounded-xl p-12 text-center">
+                <div className="max-w-7xl mx-auto bg-card rounded-xl p-12 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="text-gray-400 mt-4">{t('veriler_yukleniyor')}</p>
+                    <p className="text-muted-foreground mt-4">{t('veriler_yukleniyor')}</p>
                 </div>
             ) : (
                 <div className="max-w-7xl mx-auto space-y-6">
                     {/* Summary Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        <div className="bg-gray-800 rounded-xl p-4 text-center">
+                        <div className="bg-card rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-blue-400">
                                 {stats.total}
                                 {changes && formatChange(changes.total)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">{t('toplam_siparis')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('toplam_siparis')}</p>
                             {compStats && (
                                 <p className="text-xs text-gray-500">{t('onceki')} {compStats.total}</p>
                             )}
                         </div>
-                        <div className="bg-gray-800 rounded-xl p-4 text-center">
+                        <div className="bg-card rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-green-400">
                                 {formatCurrency(stats.revenue)}
                                 {changes && formatChange(changes.revenue)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">{t('toplam_ciro')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('toplam_ciro')}</p>
                             {compStats && (
                                 <p className="text-xs text-gray-500">{t('onceki')} {formatCurrency(compStats.revenue)}</p>
                             )}
                         </div>
-                        <div className="bg-gray-800 rounded-xl p-4 text-center">
+                        <div className="bg-card rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-purple-400">
                                 {formatCurrency(stats.avgOrderValue)}
                                 {changes && formatChange(changes.avgOrderValue)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">{t('ort_siparis')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('ort_siparis')}</p>
                             {compStats && (
                                 <p className="text-xs text-gray-500">{t('onceki')} {formatCurrency(compStats.avgOrderValue)}</p>
                             )}
                         </div>
-                        <div className="bg-gray-800 rounded-xl p-4 text-center">
+                        <div className="bg-card rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-emerald-400">
                                 {stats.completed}
                                 {changes && formatChange(changes.completed)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">{t('completed_label')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('completed_label')}</p>
                             {compStats && (
                                 <p className="text-xs text-gray-500">{t('onceki')} {compStats.completed}</p>
                             )}
                         </div>
-                        <div className="bg-gray-800 rounded-xl p-4 text-center">
+                        <div className="bg-card rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-red-400">
                                 {stats.cancelled}
                                 {changes && formatChange(changes.cancelled)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">İptal</p>
+                            <p className="text-xs text-muted-foreground mt-1">İptal</p>
                             {compStats && (
                                 <p className="text-xs text-gray-500">{t('onceki')} {compStats.cancelled}</p>
                             )}
                         </div>
-                        <div className="bg-gray-800 rounded-xl p-4 text-center">
+                        <div className="bg-card rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-amber-400">{analytics.peakHour}:00</p>
-                            <p className="text-xs text-gray-400 mt-1">{t('en_yogun_saat')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('en_yogun_saat')}</p>
                         </div>
                     </div>
 
@@ -614,7 +614,7 @@ export default function StatisticsPage() {
                     {/* Charts Row */}
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Hourly Distribution */}
-                        <div className="bg-gray-800 rounded-xl p-6">
+                        <div className="bg-card rounded-xl p-6">
                             <h3 className="text-white font-bold mb-4">{t('saatlik_siparis_dagilimi')}</h3>
                             {(() => {
                                 const hourData = analytics.hourlyDistribution.slice(8, 22);
@@ -652,7 +652,7 @@ export default function StatisticsPage() {
                         </div>
 
                         {/* Daily Distribution */}
-                        <div className="bg-gray-800 rounded-xl p-6">
+                        <div className="bg-card rounded-xl p-6">
                             <h3 className="text-white font-bold mb-4">{t('gunluk_siparis_dagilimi')}</h3>
                             <div className="space-y-2">
                                 {analytics.dailyDistribution.map((d) => {
@@ -660,7 +660,7 @@ export default function StatisticsPage() {
                                     const width = (d.count / maxCount) * 100;
                                     return (
                                         <div key={d.day} className="flex items-center gap-3">
-                                            <span className="text-gray-400 text-sm w-20">{d.day.slice(0, 3)}</span>
+                                            <span className="text-muted-foreground text-sm w-20">{d.day.slice(0, 3)}</span>
                                             <div className="flex-1 h-6 bg-gray-700 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
@@ -732,7 +732,7 @@ export default function StatisticsPage() {
                         const maxRevenue = Math.max(...periodData.map(d => d.revenue), 1);
 
                         return (
-                            <div className="bg-gray-800 rounded-xl p-6">
+                            <div className="bg-card rounded-xl p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-white font-bold">{t('siparis_ciro_trendi')}</h3>
                                     <div className="flex bg-gray-700 rounded-lg overflow-hidden">
@@ -742,7 +742,7 @@ export default function StatisticsPage() {
                                                 onClick={() => setPeriodTab(tab)}
                                                 className={`px-3 py-1 text-xs font-medium transition ${periodTab === tab
                                                     ? 'bg-blue-600 text-white'
-                                                    : 'text-gray-400 hover:text-white'
+                                                    : 'text-muted-foreground hover:text-white'
                                                     }`}
                                             >
                                                 {tab === 'weekly' ? t('haftalik') : tab === 'monthly' ? t('aylik') : t('yillik')}
@@ -753,7 +753,7 @@ export default function StatisticsPage() {
 
                                 {/* Order Count Bars */}
                                 <div className="mb-4">
-                                    <p className="text-gray-400 text-xs mb-2">{t('siparis_sayisi')}</p>
+                                    <p className="text-muted-foreground text-xs mb-2">{t('siparis_sayisi')}</p>
                                     <div className="flex items-end gap-1" style={{ height: 120 }}>
                                         {periodData.map((d, i) => {
                                             const h = (d.count / maxCount) * 100;
@@ -782,7 +782,7 @@ export default function StatisticsPage() {
 
                                 {/* Revenue Bars */}
                                 <div>
-                                    <p className="text-gray-400 text-xs mb-2">Ciro (€)</p>
+                                    <p className="text-muted-foreground text-xs mb-2">Ciro (€)</p>
                                     <div className="flex items-end gap-1" style={{ height: 120 }}>
                                         {periodData.map((d, i) => {
                                             const h = (d.revenue / maxRevenue) * 100;
@@ -815,16 +815,16 @@ export default function StatisticsPage() {
                     {/* Tables Row */}
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Top Products */}
-                        <div className="bg-gray-800 rounded-xl p-6">
+                        <div className="bg-card rounded-xl p-6">
                             <h3 className="text-white font-bold mb-4">{t('en_cok_satan_urunler')}</h3>
                             {analytics.topProducts.length === 0 ? (
                                 <p className="text-gray-500 text-center py-8">{t('urun_verisi_bulunamadi')}</p>
                             ) : (
                                 <div className="space-y-2">
                                     {analytics.topProducts.slice(0, 5).map((p, idx) => (
-                                        <div key={p.name} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                                        <div key={p.name} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                             <div className="flex items-center gap-3">
-                                                <span className={`text-lg ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
+                                                <span className={`text-lg ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-foreground' : idx === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
                                                     {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
                                                 </span>
                                                 <span className="text-white">{p.name}</span>
@@ -841,14 +841,14 @@ export default function StatisticsPage() {
 
                         {/* Business Performance - ONLY for Super Admin when viewing all businesses */}
                         {admin?.adminType === 'super' && (
-                            <div className="bg-gray-800 rounded-xl p-6">
+                            <div className="bg-card rounded-xl p-6">
                                 <h3 className="text-white font-bold mb-4">{t('i_sletme_performansi')}</h3>
                                 {analytics.businessPerformance.length === 0 ? (
                                     <p className="text-gray-500 text-center py-8">{t('i_sletme_verisi_bulunamadi')}</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {analytics.businessPerformance.slice(0, 5).map((b) => (
-                                            <div key={b.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                                            <div key={b.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                                 <div>
                                                     <p className="text-white font-medium">{b.name}</p>
                                                     <p className="text-xs text-gray-500">{b.orders} {t('siparis')}</p>
@@ -870,7 +870,7 @@ export default function StatisticsPage() {
             {/* 📊 STAFF PERFORMANCE SECTION — Only for non-super admins */}
             {admin?.adminType !== 'super' && staffBusinessId && (
                 <div className="max-w-7xl mx-auto mt-6">
-                    <div className="bg-gray-800 rounded-xl p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-bold text-lg flex items-center gap-2">{t('i_sletme_performansi')}</h3>
                             <select value={perfDateRange} onChange={e => setPerfDateRange(e.target.value as any)} className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none">
@@ -882,9 +882,9 @@ export default function StatisticsPage() {
 
                         {/* Performance Stats Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                            <div className="bg-gray-900 rounded-lg p-4">
+                            <div className="bg-background rounded-lg p-4">
                                 <div className="text-3xl font-bold text-white">{perfStats.totalOrders}</div>
-                                <div className="text-sm text-gray-400">{t('toplam_siparis')}</div>
+                                <div className="text-sm text-muted-foreground">{t('toplam_siparis')}</div>
                             </div>
                             <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
                                 <div className="text-3xl font-bold text-green-400">{perfStats.completedOrders}</div>
@@ -906,47 +906,47 @@ export default function StatisticsPage() {
 
                         {/* Pause Statistics Row */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div className="bg-gray-900 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-gray-400">{t('durdurma_sayisi')}</span></div>
+                            <div className="bg-background rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-muted-foreground">{t('durdurma_sayisi')}</span></div>
                                 <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
                             </div>
-                            <div className="bg-gray-900 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2"><span className="text-gray-400">{t('retention_label')}</span></div>
+                            <div className="bg-background rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2"><span className="text-muted-foreground">{t('retention_label')}</span></div>
                                 <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
                             </div>
-                            <div className="bg-gray-900 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-gray-400">{t('toplam_durdurma_suresi')}</span></div>
+                            <div className="bg-background rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-muted-foreground">{t('toplam_durdurma_suresi')}</span></div>
                                 <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
                             </div>
                         </div>
 
                         {/* Delivery Pause Log Table */}
-                        <div className="bg-gray-900 rounded-lg overflow-hidden">
-                            <div className="px-4 py-3 border-b border-gray-700">
+                        <div className="bg-background rounded-lg overflow-hidden">
+                            <div className="px-4 py-3 border-b border-border">
                                 <h4 className="text-white font-bold flex items-center gap-2">{t('kurye_acma_kapama_gecmisi')}</h4>
                             </div>
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-700">
-                                    <thead className="bg-gray-800">
+                                <table className="min-w-full divide-y divide-border">
+                                    <thead className="bg-card">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('tarih')}</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('i_slem')}</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Admin</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{t('tarih')}</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{t('i_slem')}</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Admin</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-700">
+                                    <tbody className="divide-y divide-border">
                                         {pauseLogs.length === 0 ? (
-                                            <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">{t('henuz_kurye_acma_kapama_kaydi_yok')}</td></tr>
+                                            <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">{t('henuz_kurye_acma_kapama_kaydi_yok')}</td></tr>
                                         ) : (
                                             pauseLogs.slice(0, 20).map(log => (
                                                 <tr key={log.id} className={log.action === 'paused' ? 'bg-amber-900/20' : 'bg-green-900/20'}>
-                                                    <td className="px-4 py-3 text-sm text-gray-300">{formatPerfDate(log.timestamp)}</td>
+                                                    <td className="px-4 py-3 text-sm text-foreground">{formatPerfDate(log.timestamp)}</td>
                                                     <td className="px-4 py-3">
                                                         {log.action === 'paused'
                                                             ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-600 text-white text-xs font-medium">⏸️ Durduruldu</span>
                                                             : <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs font-medium">▶️ Devam Etti</span>}
                                                     </td>
-                                                    <td className="px-4 py-3 text-sm text-gray-300">{log.adminName || log.adminEmail}</td>
+                                                    <td className="px-4 py-3 text-sm text-foreground">{log.adminName || log.adminEmail}</td>
                                                 </tr>
                                             ))
                                         )}

@@ -58,27 +58,27 @@ export default function SponsoredProductsSettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                     <Link href="/admin/settings" className="hover:text-white transition">⚙️ {t('settings') || 'Ayarlar'}</Link>
                     <span>›</span>
                     <span className="text-white">⭐ {t('one_cikan_urunler_sponsored')}</span>
                 </div>
 
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8">
+                <div className="bg-card border border-border rounded-2xl p-8">
                     <div className="flex items-center gap-3 mb-6">
                         <span className="text-3xl">⭐</span>
                         <div>
                             <h2 className="text-xl font-bold">{t('one_cikan_urunler_sponsored')}</h2>
-                            <p className="text-gray-400 text-sm">{t('i_sletmelerin_sepette_urunlerini_tanitma')}</p>
+                            <p className="text-muted-foreground text-sm">{t('i_sletmelerin_sepette_urunlerini_tanitma')}</p>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         {/* Global Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
+                        <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border">
                             <div>
                                 <h3 className="font-bold">{t('ozelligi_aktif_et')}</h3>
                                 <p className="text-xs text-gray-500">{t('tum_isletmeler_icin_bir_sey_mi_unuttun_b')}</p>
@@ -99,10 +99,10 @@ export default function SponsoredProductsSettingsPage() {
                                     min="0"
                                     value={feePerConversion}
                                     onChange={e => setFeePerConversion(parseFloat(e.target.value) || 0)}
-                                    className="w-32 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
+                                    className="w-32 bg-background border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
                                     disabled={!sponsoredEnabled}
                                 />
-                                <span className="text-gray-400 text-sm">€ / {t('siparis')}</span>
+                                <span className="text-muted-foreground text-sm">€ / {t('siparis')}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-2">
                                 {t('sponsored_urun_uzerinden_siparis_geldigi')}
@@ -119,10 +119,10 @@ export default function SponsoredProductsSettingsPage() {
                                     max="20"
                                     value={maxProductsPerBusiness}
                                     onChange={e => setMaxProductsPerBusiness(parseInt(e.target.value) || 5)}
-                                    className="w-24 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
+                                    className="w-24 bg-background border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
                                     disabled={!sponsoredEnabled}
                                 />
-                                <span className="text-gray-400 text-sm">{t('urun')}</span>
+                                <span className="text-muted-foreground text-sm">{t('urun')}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-2">
                                 {t('bir_isletmenin_one_cikan_olarak_secebile')}

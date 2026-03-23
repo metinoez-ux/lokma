@@ -230,27 +230,27 @@ export default function IoTSettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                     <Link href="/admin/settings" className="hover:text-white transition">⚙️ {t('settings') || 'Ayarlar'}</Link>
                     <span>›</span>
                     <span className="text-white">🔔 {t('akilli_bildirimler_iot_gateway')}</span>
                 </div>
 
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8">
+                <div className="bg-card border border-border rounded-2xl p-8">
                     <div className="flex items-center gap-3 mb-6">
                         <span className="text-3xl">🔔</span>
                         <div>
                             <h2 className="text-xl font-bold">{t('akilli_bildirimler_iot_gateway')}</h2>
-                            <p className="text-gray-400 text-sm">{t('siparis_geldiginde_alexa_dan_ses_led_den')}</p>
+                            <p className="text-muted-foreground text-sm">{t('siparis_geldiginde_alexa_dan_ses_led_den')}</p>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         {/* Master Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
+                        <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border">
                             <div>
                                 <h3 className="font-bold">{t('sistemi_aktif_et')}</h3>
                                 <p className="text-xs text-gray-500">{t('tum_iot_bildirimlerini_acar_kapatir')}</p>
@@ -268,7 +268,7 @@ export default function IoTSettingsPage() {
                                 type="text"
                                 value={gatewayUrl}
                                 onChange={e => setGatewayUrl(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
+                                className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
                                 placeholder="https://iot.lokma.shop"
                                 disabled={!smartEnabled}
                             />
@@ -282,20 +282,20 @@ export default function IoTSettingsPage() {
                                 type="password"
                                 value={gatewayApiKey}
                                 onChange={e => setGatewayApiKey(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
+                                className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
                                 placeholder="gizli-api-anahtari"
                                 disabled={!smartEnabled}
                             />
                         </div>
 
                         {/* Divider */}
-                        <div className="border-t border-gray-700 pt-4">
-                            <p className="text-sm font-bold text-gray-300 mb-3">{t('cihaz_ayarlari')}</p>
+                        <div className="border-t border-border pt-4">
+                            <p className="text-sm font-bold text-foreground mb-3">{t('cihaz_ayarlari')}</p>
                         </div>
 
                         {/* Device Toggles — 2x2 Grid */}
                         <div className="grid grid-cols-2 gap-4">
-                            <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
+                            <label className={`flex items-center justify-between p-4 bg-background rounded-xl border border-border cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                 <div>
                                     <span className="font-bold text-sm">📢 Alexa Duyuru</span>
                                     <p className="text-xs text-gray-500">{t('tts_ile_sesli_siparis_bildirimi')}</p>
@@ -303,7 +303,7 @@ export default function IoTSettingsPage() {
                                 <input type="checkbox" checked={alexaEnabled} onChange={e => setAlexaEnabled(e.target.checked)} disabled={!smartEnabled} className="accent-blue-500 w-5 h-5" />
                             </label>
 
-                            <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
+                            <label className={`flex items-center justify-between p-4 bg-background rounded-xl border border-border cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                 <div>
                                     <span className="font-bold text-sm">{t('led_serit')}</span>
                                     <p className="text-xs text-gray-500">{t('wled_kayitli_led_flash')}</p>
@@ -311,7 +311,7 @@ export default function IoTSettingsPage() {
                                 <input type="checkbox" checked={ledEnabled} onChange={e => setLedEnabled(e.target.checked)} disabled={!smartEnabled} className="accent-green-500 w-5 h-5" />
                             </label>
 
-                            <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
+                            <label className={`flex items-center justify-between p-4 bg-background rounded-xl border border-border cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                 <div>
                                     <span className="font-bold text-sm">{t('tarayici_sesi')}</span>
                                     <p className="text-xs text-gray-500">{t('admin_panelde_gong_calar')}</p>
@@ -319,7 +319,7 @@ export default function IoTSettingsPage() {
                                 <input type="checkbox" checked={soundEnabled} onChange={e => setSoundEnabled(e.target.checked)} disabled={!smartEnabled} className="accent-green-500 w-5 h-5" />
                             </label>
 
-                            <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
+                            <label className={`flex items-center justify-between p-4 bg-background rounded-xl border border-border cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                 <div>
                                     <span className="font-bold text-sm">🚨 Ekran Flash</span>
                                     <p className="text-xs text-gray-500">{t('kirmizi_ekran_yanip_soner')}</p>
@@ -330,18 +330,18 @@ export default function IoTSettingsPage() {
 
                         {/* Alexa Language Selector */}
                         {alexaEnabled && smartEnabled && (
-                            <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
+                            <div className="p-4 bg-background rounded-xl border border-border">
                                 <label className="block text-sm font-bold mb-2">🗣️ Alexa Duyuru Dili</label>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setAlexaLanguage('de')}
-                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition ${alexaLanguage === 'de' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition ${alexaLanguage === 'de' ? 'bg-blue-600 text-white' : 'bg-card text-muted-foreground hover:bg-gray-700'}`}
                                     >
                                         🇩🇪 Almanca
                                     </button>
                                     <button
                                         onClick={() => setAlexaLanguage('tr')}
-                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition ${alexaLanguage === 'tr' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition ${alexaLanguage === 'tr' ? 'bg-blue-600 text-white' : 'bg-card text-muted-foreground hover:bg-gray-700'}`}
                                     >
                                         {t('turkce')}
                                     </button>
@@ -357,11 +357,11 @@ export default function IoTSettingsPage() {
 
                         {/* Alexa Connection Manager */}
                         {alexaEnabled && smartEnabled && gatewayUrl && gatewayApiKey && (
-                            <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
+                            <div className="p-4 bg-background rounded-xl border border-border">
                                 <div className="flex items-center justify-between mb-3">
                                     <label className="block text-sm font-bold">{t('alexa_baglantisi')}</label>
                                     {alexaStatusLoading ? (
-                                        <span className="text-xs text-gray-400">⏳ Kontrol ediliyor...</span>
+                                        <span className="text-xs text-muted-foreground">⏳ Kontrol ediliyor...</span>
                                     ) : alexaStatus?.connected ? (
                                         <span className="text-xs text-green-400 font-bold">{t('bagli')}</span>
                                     ) : (
@@ -416,7 +416,7 @@ export default function IoTSettingsPage() {
                                                     value={alexaCookie}
                                                     onChange={e => setAlexaCookie(e.target.value)}
                                                     placeholder={t('amazon_cookie_string_ini_buraya_yapistir')}
-                                                    className="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 text-white text-xs font-mono h-24 focus:border-purple-500 outline-none resize-none"
+                                                    className="w-full bg-card border border-gray-600 rounded-lg p-3 text-white text-xs font-mono h-24 focus:border-purple-500 outline-none resize-none"
                                                 />
                                                 <div className="flex gap-2">
                                                     <button
@@ -428,7 +428,7 @@ export default function IoTSettingsPage() {
                                                     </button>
                                                     <button
                                                         onClick={() => { setShowAlexaSetup(false); setAlexaCookie(''); }}
-                                                        className="px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-2.5 rounded-lg transition text-sm"
+                                                        className="px-4 bg-gray-700 hover:bg-gray-600 text-foreground font-bold py-2.5 rounded-lg transition text-sm"
                                                     >
                                                         {t('iptal') || 'İptal'}
                                                     </button>
@@ -465,17 +465,17 @@ export default function IoTSettingsPage() {
                         )}
 
                         {/* ═══════════ PRINTER SECTION ═══════════ */}
-                        <div className="border-t border-gray-700 pt-6 mt-6">
+                        <div className="border-t border-border pt-6 mt-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <span className="text-3xl">🖨️</span>
                                 <div>
                                     <h2 className="text-xl font-bold">{t('yazici_ayarlari') || 'Yazıcı Ayarları'}</h2>
-                                    <p className="text-gray-400 text-sm">{t('termal_bondrucker_wifi_uzerinden') || 'Termal bon yazıcı (WiFi üzerinden)'}</p>
+                                    <p className="text-muted-foreground text-sm">{t('termal_bondrucker_wifi_uzerinden') || 'Termal bon yazıcı (WiFi üzerinden)'}</p>
                                 </div>
                             </div>
 
                             {/* Printer Enable */}
-                            <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 mb-4">
+                            <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border mb-4">
                                 <div>
                                     <h3 className="font-bold">{t('yazici_aktif') || 'Yazıcıyı Aktif Et'}</h3>
                                     <p className="text-xs text-gray-500">{t('siparisler_icin_bon_yazdirma') || 'Siparişler için bon yazdırma'}</p>
@@ -495,7 +495,7 @@ export default function IoTSettingsPage() {
                                             type="text"
                                             value={printerIp}
                                             onChange={e => setPrinterIp(e.target.value)}
-                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
+                                            className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
                                             placeholder="192.168.1.100"
                                         />
                                         <p className="text-xs text-gray-500 mt-1">{t('yazici_wifi_ip') || 'Yazıcının WiFi ağındaki IP adresi (Yazıcı ayarlarından öğrenebilirsiniz)'}</p>
@@ -508,7 +508,7 @@ export default function IoTSettingsPage() {
                                             type="number"
                                             value={printerPort}
                                             onChange={e => setPrinterPort(parseInt(e.target.value) || 9100)}
-                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
+                                            className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
                                             placeholder="9100"
                                         />
                                         <p className="text-xs text-gray-500 mt-1">{t('standart_port_9100') || 'Standart ESC/POS port: 9100'}</p>
@@ -516,7 +516,7 @@ export default function IoTSettingsPage() {
 
                                     {/* Auto Print & Copies Grid */}
                                     <div className="grid grid-cols-2 gap-4">
-                                        <label className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer">
+                                        <label className="flex items-center justify-between p-4 bg-background rounded-xl border border-border cursor-pointer">
                                             <div>
                                                 <span className="font-bold text-sm">⚡ {t('otomatik_yazdir') || 'Otomatik Yazdır'}</span>
                                                 <p className="text-xs text-gray-500">{t('yeni_siparis_gelince_otomatik') || 'Yeni sipariş gelince otomatik bas'}</p>
@@ -524,7 +524,7 @@ export default function IoTSettingsPage() {
                                             <input type="checkbox" checked={autoPrint} onChange={e => setAutoPrint(e.target.checked)} className="accent-blue-500 w-5 h-5" />
                                         </label>
 
-                                        <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
+                                        <div className="p-4 bg-background rounded-xl border border-border">
                                             <span className="font-bold text-sm">📋 {t('kopya_sayisi') || 'Kopya Sayısı'}</span>
                                             <p className="text-xs text-gray-500 mb-2">{t('mutfak_surucü_kasa') || 'Mutfak + Sürücü + Kasa'}</p>
                                             <div className="flex items-center gap-3">

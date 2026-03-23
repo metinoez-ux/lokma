@@ -272,7 +272,7 @@ export default function FoodpaketImportPage() {
     // Loading state
     if (adminLoading || loadingProducts) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
             </div>
         );
@@ -282,11 +282,11 @@ export default function FoodpaketImportPage() {
     const isSuper = admin?.role === 'super_admin' || admin?.adminType === 'super';
     if (!isSuper) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md border border-gray-700">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="bg-card rounded-xl p-8 text-center max-w-md border border-border">
                     <span className="text-5xl">🔒</span>
                     <h2 className="text-xl font-bold text-white mt-4">{t('erisim_yok')}</h2>
-                    <p className="text-gray-400 mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
+                    <p className="text-muted-foreground mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
                     <p className="text-gray-500 text-xs mt-2">Admin: {admin?.email || t('yok')}</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg">
                         {t('zum_dashboard')}
@@ -297,7 +297,7 @@ export default function FoodpaketImportPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 rounded-xl p-6 mb-6">
@@ -313,7 +313,7 @@ export default function FoodpaketImportPage() {
                 </div>
 
                 {/* Stats */}
-                <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+                <div className="bg-card rounded-xl p-6 mb-6 border border-border">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-medium text-white">{t('kategori_dagilimi')}</h2>
                         <button
@@ -338,13 +338,13 @@ export default function FoodpaketImportPage() {
                 </div>
 
                 {/* Import */}
-                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <div className="bg-card rounded-xl p-6 border border-border">
                     <h2 className="text-lg font-medium text-white mb-4">{t('import')}</h2>
 
                     {/* Progress */}
                     {importing && (
                         <div className="mb-4">
-                            <div className="flex justify-between text-sm text-gray-400 mb-2">
+                            <div className="flex justify-between text-sm text-muted-foreground mb-2">
                                 <span>{progress.current} / {progress.total}</span>
                                 <span>{progress.skipped} {t('atlandi')}</span>
                             </div>

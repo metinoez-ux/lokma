@@ -135,21 +135,21 @@ export default function NotificationSoundPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-2">
-                    <a href="/admin/settings" className="text-gray-400 hover:text-white transition">← {t('ns_zurueck')}</a>
+                    <a href="/admin/settings" className="text-muted-foreground hover:text-white transition">← {t('ns_zurueck')}</a>
                 </div>
                 <h1 className="text-3xl font-bold mb-2">🔔 {t('ns_title')}</h1>
-                <p className="text-gray-400 mb-8">{t('ns_subtitle')}</p>
+                <p className="text-muted-foreground mb-8">{t('ns_subtitle')}</p>
 
                 {/* Current Selection */}
                 {activeSound && (
@@ -170,7 +170,7 @@ export default function NotificationSoundPage() {
                     return (
                         <div key={cat.key} className="mb-8">
                             <div className="flex items-center gap-2 mb-4">
-                                <h2 className="text-lg font-bold text-gray-300">{cat.label}</h2>
+                                <h2 className="text-lg font-bold text-foreground">{cat.label}</h2>
                                 {cat.key === 'restaurant' && activeSound.startsWith('lokma_order') && (
                                     <span className="bg-rose-500/20 text-rose-400 text-xs px-2 py-0.5 rounded-full font-semibold">{t('ns_aktiv')}</span>
                                 )}
@@ -182,10 +182,10 @@ export default function NotificationSoundPage() {
                                     return (
                                         <div
                                             key={sound.id}
-                                            className={`relative bg-gray-800 border rounded-xl p-5 cursor-pointer transition-all hover:scale-[1.01] ${
+                                            className={`relative bg-card border rounded-xl p-5 cursor-pointer transition-all hover:scale-[1.01] ${
                                                 isActive
                                                     ? 'border-rose-500 bg-rose-950/20 shadow-lg shadow-rose-500/10'
-                                                    : 'border-gray-700 hover:border-gray-500'
+                                                    : 'border-border hover:border-gray-500'
                                             } ${isPlaying ? 'ring-2 ring-rose-400/50' : ''}`}
                                             onClick={() => handlePlay(sound)}
                                         >
@@ -198,7 +198,7 @@ export default function NotificationSoundPage() {
                                             <div className="flex items-center gap-2 mt-3">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handlePlay(sound); }}
-                                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded-lg transition"
+                                                    className="text-xs bg-gray-700 hover:bg-gray-600 text-foreground px-3 py-1.5 rounded-lg transition"
                                                 >
                                                     ▶ {t('ns_anhoeren')}
                                                 </button>
@@ -224,9 +224,9 @@ export default function NotificationSoundPage() {
                 })}
 
                 {/* Info Box */}
-                <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 mt-4">
+                <div className="bg-card border border-border rounded-xl p-5 mt-4">
                     <h3 className="font-bold text-yellow-400 mb-2">⚡ {t('ns_wie_funktioniert')}</h3>
-                    <ul className="text-sm text-gray-400 space-y-1.5">
+                    <ul className="text-sm text-muted-foreground space-y-1.5">
                         <li>• {t('ns_info_1')}</li>
                         <li>• {t('ns_info_2')}</li>
                         <li>• {t('ns_info_3')}</li>

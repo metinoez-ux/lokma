@@ -300,18 +300,18 @@ export default function ApiKeysPage() {
     // ── Guard: super admin only ──────────────────────────
     if (admin?.adminType !== 'super') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
                     <span className="text-6xl block mb-4">🔒</span>
                     <h1 className="text-2xl font-bold text-white mb-2">{t('accessDenied')}</h1>
-                    <p className="text-gray-400">{t('superAdminOnly')}</p>
+                    <p className="text-muted-foreground">{t('superAdminOnly')}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -320,7 +320,7 @@ export default function ApiKeysPage() {
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold">{t('title')}</h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('subtitle')}
                         </p>
                     </div>
@@ -360,7 +360,7 @@ export default function ApiKeysPage() {
                 {loading ? (
                     <div className="text-center py-16">
                         <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-400 text-sm">{t('loading')}</p>
+                        <p className="text-muted-foreground text-sm">{t('loading')}</p>
                     </div>
                 ) : (
                     /* Key Cards */
@@ -373,9 +373,9 @@ export default function ApiKeysPage() {
                             return (
                                 <div
                                     key={svc.keyId}
-                                    className={`bg-gray-800 border rounded-2xl p-6 transition-all ${isEditing
+                                    className={`bg-card border rounded-2xl p-6 transition-all ${isEditing
                                             ? 'border-amber-600 shadow-lg shadow-amber-900/20'
-                                            : 'border-gray-700 hover:border-gray-600'
+                                            : 'border-border hover:border-gray-600'
                                         }`}
                                 >
                                     {/* Card Header */}
@@ -412,16 +412,16 @@ export default function ApiKeysPage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-gray-400 text-sm mt-0.5">{t(svc.descKey)}</p>
+                                            <p className="text-muted-foreground text-sm mt-0.5">{t(svc.descKey)}</p>
                                         </div>
                                     </div>
 
                                     {/* Stored Key Info */}
                                     {stored && !isEditing && (
-                                        <div className="mt-4 bg-gray-900/80 rounded-xl p-4 border border-gray-700/50">
+                                        <div className="mt-4 bg-background/80 rounded-xl p-4 border border-border/50">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-gray-500 text-xs font-medium">{t('keyLabel')}</span>
-                                                <code className="text-amber-400 font-mono text-sm bg-gray-800 px-2 py-0.5 rounded">
+                                                <code className="text-amber-400 font-mono text-sm bg-card px-2 py-0.5 rounded">
                                                     {stored.masked}
                                                 </code>
                                             </div>
@@ -446,7 +446,7 @@ export default function ApiKeysPage() {
                                     {/* Edit Form */}
                                     {isEditing && (
                                         <div className="mt-4">
-                                            <label className="block text-xs text-gray-400 font-medium mb-2">
+                                            <label className="block text-xs text-muted-foreground font-medium mb-2">
                                                 {stored ? t('enterNewKey') : t('enterKey')}
                                             </label>
                                             <input
@@ -454,7 +454,7 @@ export default function ApiKeysPage() {
                                                 value={newKeyValue}
                                                 onChange={(e) => setNewKeyValue(e.target.value)}
                                                 placeholder={svc.placeholder}
-                                                className="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 font-mono text-sm transition-all"
+                                                className="w-full bg-background border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 font-mono text-sm transition-all"
                                                 autoFocus
                                             />
                                             <div className="flex gap-2 mt-3">
@@ -477,7 +477,7 @@ export default function ApiKeysPage() {
                                                         setEditingKey(null);
                                                         setNewKeyValue('');
                                                     }}
-                                                    className="px-4 py-2 bg-gray-700 text-gray-300 rounded-xl text-sm hover:bg-gray-600 transition-all"
+                                                    className="px-4 py-2 bg-gray-700 text-foreground rounded-xl text-sm hover:bg-gray-600 transition-all"
                                                 >
                                                     {t('cancel')}
                                                 </button>
@@ -495,7 +495,7 @@ export default function ApiKeysPage() {
                                                     setFeedback(null);
                                                 }}
                                                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${stored
-                                                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                        ? 'bg-gray-700 text-foreground hover:bg-gray-600'
                                                         : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-400 hover:to-orange-500'
                                                     }`}
                                             >
@@ -523,8 +523,8 @@ export default function ApiKeysPage() {
                 )}
 
                 {/* Additional Info */}
-                <div className="mt-8 bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
-                    <h3 className="text-sm font-bold text-gray-300 mb-3 flex items-center gap-2">
+                <div className="mt-8 bg-card/50 border border-border/50 rounded-2xl p-6">
+                    <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                         <span>ℹ️</span> {t('notes')}
                     </h3>
                     <ul className="space-y-2 text-xs text-gray-500">

@@ -492,7 +492,7 @@ function AIMenuPageContent() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
             </div>
         );
@@ -500,11 +500,11 @@ function AIMenuPageContent() {
 
     if (!isSuperAdmin) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
                     <h2 className="text-xl font-bold text-white mt-4">Sadece Super Admin</h2>
-                    <p className="text-gray-400 mt-2">Bu özellik yalnızca Super Admin yetkisiyle kullanılabilir.</p>
+                    <p className="text-muted-foreground mt-2">Bu özellik yalnızca Super Admin yetkisiyle kullanılabilir.</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
                         Dashboard&apos;a Git
                     </Link>
@@ -514,7 +514,7 @@ function AIMenuPageContent() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* ═══ Header ═══ */}
             <header className="bg-gradient-to-r from-cyan-800 via-teal-800 to-emerald-800 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -562,7 +562,7 @@ function AIMenuPageContent() {
                 {step === 1 && (
                     <div className="space-y-6">
                         {/* Business Selector */}
-                        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div className="bg-card rounded-xl p-6 border border-border">
                             <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                                 🏪 İşletme Seçin
                                 {businesses.length > 0 && (
@@ -578,7 +578,7 @@ function AIMenuPageContent() {
                                     <button onClick={() => { setSelectedBusinessId(null); setShowDropdown(true); }} className="ml-auto text-teal-400 hover:text-teal-200 text-sm">Değiştir</button>
                                 </div>
                             ) : businessesLoading ? (
-                                <div className="flex items-center gap-3 text-gray-400 py-3">
+                                <div className="flex items-center gap-3 text-muted-foreground py-3">
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-500"></div>
                                     <span className="text-sm">İşletmeler yükleniyor...</span>
                                 </div>
@@ -606,14 +606,14 @@ function AIMenuPageContent() {
                                                         className="w-full text-left px-4 py-3 hover:bg-gray-600 transition text-sm text-white border-b border-gray-600/50 last:border-0"
                                                     >
                                                         <span className="font-medium">{biz.name}</span>
-                                                        {(biz.city || biz.plz) && <span className="text-gray-400 ml-2">• {biz.plz} {biz.city}</span>}
+                                                        {(biz.city || biz.plz) && <span className="text-muted-foreground ml-2">• {biz.plz} {biz.city}</span>}
                                                         <span className="text-gray-500 ml-2 text-xs">({biz.id})</span>
                                                     </button>
                                                 ))
                                             ) : businesses.length === 0 ? (
-                                                <div className="px-4 py-3 text-gray-400 text-sm">İşletme bulunamadı. Yükleniyor olabilir...</div>
+                                                <div className="px-4 py-3 text-muted-foreground text-sm">İşletme bulunamadı. Yükleniyor olabilir...</div>
                                             ) : (
-                                                <div className="px-4 py-3 text-gray-400 text-sm">"{businessSearch}" için sonuç bulunamadı.</div>
+                                                <div className="px-4 py-3 text-muted-foreground text-sm">"{businessSearch}" için sonuç bulunamadı.</div>
                                             )}
                                         </div>
                                     )}
@@ -624,7 +624,7 @@ function AIMenuPageContent() {
                         {/* API Key — handled server-side, no input needed */}
 
                         {/* File Upload */}
-                        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div className="bg-card rounded-xl p-6 border border-border">
                             <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                                 📄 Menü Dosyaları
                                 {files.length > 0 && <span className="text-xs text-gray-500 font-normal">({files.length} dosya)</span>}
@@ -642,7 +642,7 @@ function AIMenuPageContent() {
                                             )}
                                             <div className="flex-1 text-left min-w-0">
                                                 <p className="text-teal-200 font-medium text-sm truncate">{f.name}</p>
-                                                <p className="text-gray-400 text-xs">{(f.size / 1024).toFixed(1)} KB</p>
+                                                <p className="text-muted-foreground text-xs">{(f.size / 1024).toFixed(1)} KB</p>
                                             </div>
                                             <button onClick={(e) => { e.stopPropagation(); removeFile(i); }} className="text-red-400 hover:text-red-300 text-lg">×</button>
                                         </div>
@@ -669,16 +669,16 @@ function AIMenuPageContent() {
                                 {files.length > 0 ? (
                                     <div className="space-y-1">
                                         <span className="text-2xl">➕</span>
-                                        <p className="text-gray-400 text-sm">{t('daha_fazla_dosya')}</p>
+                                        <p className="text-muted-foreground text-sm">{t('daha_fazla_dosya')}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
                                         <span className="text-5xl">📤</span>
-                                        <p className="text-gray-300 font-medium">{t('menu_dosya_surukleme')}</p>
+                                        <p className="text-foreground font-medium">{t('menu_dosya_surukleme')}</p>
                                         <p className="text-gray-500 text-sm">{t('birden_fazla')}</p>
                                         <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
                                             {['PDF', 'JPG', 'PNG', 'CSV', 'Excel'].map(fmt => (
-                                                <span key={fmt} className="px-3 py-1 bg-gray-700 rounded-full text-gray-400 text-xs">{fmt}</span>
+                                                <span key={fmt} className="px-3 py-1 bg-gray-700 rounded-full text-muted-foreground text-xs">{fmt}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -687,14 +687,14 @@ function AIMenuPageContent() {
                         </div>
 
                         {/* AI Model Selector */}
-                        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                        <div className="bg-card rounded-xl p-6 border border-border">
                             <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                                 🧠 AI Model Seçimi
                             </h2>
                             <select
                                 value={selectedModel}
                                 onChange={e => setSelectedModel(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white text-sm font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none"
+                                className="w-full bg-background border border-gray-600 rounded-lg px-4 py-3 text-white text-sm font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none cursor-pointer appearance-none"
                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                             >
                                 {[...new Set(aiModels.map(m => m.group))].map(group => (
@@ -732,7 +732,7 @@ function AIMenuPageContent() {
                         </div>
                         <div className="text-center space-y-2">
                             <h2 className="text-2xl font-bold text-white">Menü Analiz Ediliyor...</h2>
-                            <p className="text-gray-400">{aiModels.find(m => m.id === selectedModel)?.name || 'AI'} menünüzü okuyor ve yapılandırıyor</p>
+                            <p className="text-muted-foreground">{aiModels.find(m => m.id === selectedModel)?.name || 'AI'} menünüzü okuyor ve yapılandırıyor</p>
                             <p className="text-gray-500 text-sm">{t('islem_surebilir')}</p>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -753,23 +753,23 @@ function AIMenuPageContent() {
                             <div className="flex items-center gap-6">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-teal-300">{parsedMenu.categories.length}</p>
-                                    <p className="text-gray-400 text-xs">Kategori</p>
+                                    <p className="text-muted-foreground text-xs">Kategori</p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-cyan-300">{parsedMenu.products.length}</p>
-                                    <p className="text-gray-400 text-xs">Ürün</p>
+                                    <p className="text-muted-foreground text-xs">Ürün</p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-emerald-300">
                                         {parsedMenu.products.reduce((sum, p) => sum + p.optionGroups.length, 0)}
                                     </p>
-                                    <p className="text-gray-400 text-xs">Seçenek Grubu</p>
+                                    <p className="text-muted-foreground text-xs">Seçenek Grubu</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => { setStep(1); setParsedMenu(null); setFiles([]); }}
-                                    className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition text-sm"
+                                    className="px-4 py-2 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition text-sm"
                                 >
                                     ← Yeniden Yükle
                                 </button>
@@ -783,7 +783,7 @@ function AIMenuPageContent() {
                         </div>
 
                         {/* Categories Section */}
-                        <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+                        <div className="bg-card rounded-xl p-5 border border-border">
                             <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                                 🗂️ Kategoriler
                                 <span className="text-gray-500 text-sm font-normal">({selectedCategoryCount} seçili)</span>
@@ -794,7 +794,7 @@ function AIMenuPageContent() {
                                         key={i}
                                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition cursor-pointer ${cat._selected
                                             ? 'bg-teal-900/40 border-teal-600 text-white'
-                                            : 'bg-gray-900/50 border-gray-700 text-gray-500 opacity-60'
+                                            : 'bg-background/50 border-border text-gray-500 opacity-60'
                                             }`}
                                         onClick={() => updateCategory(i, { _selected: !cat._selected })}
                                     >
@@ -823,14 +823,14 @@ function AIMenuPageContent() {
                             if (catProducts.length === 0) return null;
 
                             return (
-                                <div key={catIdx} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-                                    <div className="bg-gray-750 px-5 py-3 border-b border-gray-700 flex items-center gap-2">
+                                <div key={catIdx} className="bg-card rounded-xl border border-border overflow-hidden">
+                                    <div className="bg-gray-750 px-5 py-3 border-b border-border flex items-center gap-2">
                                         <span className="text-xl">{cat.icon}</span>
                                         <h3 className="text-white font-bold">{cat.name}</h3>
                                         <span className="text-gray-500 text-sm ml-2">({catProducts.length} ürün)</span>
                                     </div>
 
-                                    <div className="divide-y divide-gray-700/50">
+                                    <div className="divide-y divide-border/50">
                                         {catProducts.map((prod) => (
                                             <div
                                                 key={prod._origIdx}
@@ -873,7 +873,7 @@ function AIMenuPageContent() {
                                                             type="text"
                                                             value={prod.description}
                                                             onChange={e => updateProduct(prod._origIdx, { description: e.target.value })}
-                                                            className="bg-transparent border-none outline-none text-gray-400 text-xs w-full"
+                                                            className="bg-transparent border-none outline-none text-muted-foreground text-xs w-full"
                                                             placeholder="Açıklama..."
                                                         />
 
@@ -881,7 +881,7 @@ function AIMenuPageContent() {
                                                         {prod.optionGroups.length > 0 && (
                                                             <div className="space-y-2 mt-2">
                                                                 {prod.optionGroups.map((og, gIdx) => (
-                                                                    <div key={gIdx} className="bg-gray-900/50 rounded-lg p-3 border border-gray-700/50">
+                                                                    <div key={gIdx} className="bg-background/50 rounded-lg p-3 border border-border/50">
                                                                         <div className="flex items-center gap-2 mb-2">
                                                                             <span className="text-xs text-gray-600">{og.type === 'radio' ? '🔘' : '☑️'}</span>
                                                                             <input
@@ -894,7 +894,7 @@ function AIMenuPageContent() {
                                                                                     newProducts[prod._origIdx] = { ...newProducts[prod._origIdx], optionGroups: groups };
                                                                                     setParsedMenu({ ...parsedMenu, products: newProducts });
                                                                                 }}
-                                                                                className="bg-transparent border-none outline-none text-gray-300 text-xs font-medium flex-1"
+                                                                                className="bg-transparent border-none outline-none text-foreground text-xs font-medium flex-1"
                                                                                 placeholder="Grup adı..."
                                                                             />
                                                                             {og.required && <span className="text-red-400 text-[10px]">zorunlu</span>}
@@ -920,7 +920,7 @@ function AIMenuPageContent() {
                                                                         </div>
                                                                         <div className="flex flex-wrap gap-1.5">
                                                                             {og.options.map((opt, oIdx) => (
-                                                                                <div key={oIdx} className="flex items-center gap-1 bg-gray-800 rounded px-2 py-1 group/opt">
+                                                                                <div key={oIdx} className="flex items-center gap-1 bg-card rounded px-2 py-1 group/opt">
                                                                                     <input
                                                                                         type="text"
                                                                                         value={opt.name}
@@ -933,7 +933,7 @@ function AIMenuPageContent() {
                                                                                             newProducts[prod._origIdx] = { ...newProducts[prod._origIdx], optionGroups: groups };
                                                                                             setParsedMenu({ ...parsedMenu, products: newProducts });
                                                                                         }}
-                                                                                        className="bg-transparent border-none outline-none text-gray-300 text-[11px] w-20"
+                                                                                        className="bg-transparent border-none outline-none text-foreground text-[11px] w-20"
                                                                                         placeholder="Seçenek..."
                                                                                     />
                                                                                     {opt.priceModifier !== 0 && (
@@ -1015,11 +1015,11 @@ function AIMenuPageContent() {
                                 </div>
                                 <div className="text-center space-y-2">
                                     <h2 className="text-2xl font-bold text-white">Kaydediliyor...</h2>
-                                    <p className="text-gray-400">
+                                    <p className="text-muted-foreground">
                                         {saveProgress.current} / {saveProgress.total} öğe
                                     </p>
                                 </div>
-                                <div className="w-full max-w-md bg-gray-800 rounded-full h-3 overflow-hidden">
+                                <div className="w-full max-w-md bg-card rounded-full h-3 overflow-hidden">
                                     <div
                                         className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-300"
                                         style={{ width: `${saveProgress.total > 0 ? (saveProgress.current / saveProgress.total) * 100 : 0}%` }}
@@ -1033,7 +1033,7 @@ function AIMenuPageContent() {
                                 </div>
                                 <div className="text-center space-y-2">
                                     <h2 className="text-2xl font-bold text-white">Menü Başarıyla Kaydedildi!</h2>
-                                    <p className="text-gray-400">
+                                    <p className="text-muted-foreground">
                                         {selectedCategoryCount} kategori ve {selectedProductCount} ürün eklendi
                                     </p>
                                 </div>
@@ -1087,7 +1087,7 @@ export default function AIMenuPage() {
   const t = useTranslations('AdminAimenu');
 return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-white flex items-center justify-center">
                 <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>

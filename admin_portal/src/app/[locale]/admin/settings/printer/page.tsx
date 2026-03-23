@@ -78,25 +78,25 @@ export default function PrinterSettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-2xl mx-auto">
                 {/* Back Link */}
                 <div className="flex items-center gap-3 mb-2">
-                    <a href="/admin/settings" className="text-gray-400 hover:text-white transition">← Zurück</a>
+                    <a href="/admin/settings" className="text-muted-foreground hover:text-white transition">← Zurück</a>
                 </div>
 
                 <h1 className="text-3xl font-bold mb-2">🖨️ Bon-Drucker Einstellungen</h1>
-                <p className="text-gray-400 mb-8">Konfigurieren Sie Ihren Bondrucker für den automatischen Belegdruck.</p>
+                <p className="text-muted-foreground mb-8">Konfigurieren Sie Ihren Bondrucker für den automatischen Belegdruck.</p>
 
                 {/* ─── Main Config Card ─── */}
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 mb-6">
+                <div className="bg-card border border-border rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                         ⚙️ Verbindungseinstellungen
                         {saved && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">✓ Gespeichert</span>}
                     </h2>
 
                     {/* Enable Toggle */}
-                    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 mb-4">
+                    <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border mb-4">
                         <div>
                             <h3 className="font-semibold text-white">Drucker aktivieren</h3>
                             <p className="text-xs text-gray-500 mt-0.5">Bon-Drucker für die Bestellverarbeitung aktivieren</p>
@@ -112,23 +112,23 @@ export default function PrinterSettingsPage() {
                     {/* IP Address */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label className="text-gray-400 text-sm font-medium block mb-2">IP-Adresse</label>
+                            <label className="text-muted-foreground text-sm font-medium block mb-2">IP-Adresse</label>
                             <input
                                 type="text"
                                 value={settings.printerIp}
                                 onChange={(e) => save({ ...settings, printerIp: e.target.value })}
                                 placeholder="z.B. 192.168.188.177"
-                                className="w-full px-4 py-3 bg-gray-900 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600"
+                                className="w-full px-4 py-3 bg-background text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600"
                             />
                             <p className="text-xs text-gray-600 mt-1">Die lokale Netzwerkadresse Ihres Druckers</p>
                         </div>
                         <div>
-                            <label className="text-gray-400 text-sm font-medium block mb-2">Port</label>
+                            <label className="text-muted-foreground text-sm font-medium block mb-2">Port</label>
                             <input
                                 type="number"
                                 value={settings.printerPort}
                                 onChange={(e) => save({ ...settings, printerPort: parseInt(e.target.value) || 9100 })}
-                                className="w-full px-4 py-3 bg-gray-900 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+                                className="w-full px-4 py-3 bg-background text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
                             />
                             <p className="text-xs text-gray-600 mt-1">Standard: 9100 (ESC/POS)</p>
                         </div>
@@ -136,7 +136,7 @@ export default function PrinterSettingsPage() {
 
                     {/* Print Server URL (Local Relay) */}
                     <div className="mb-4">
-                        <label className="text-gray-400 text-sm font-medium block mb-2">
+                        <label className="text-muted-foreground text-sm font-medium block mb-2">
                             🔗 Print-Server (Lokal Relay)
                         </label>
                         <div className="flex gap-2">
@@ -145,11 +145,11 @@ export default function PrinterSettingsPage() {
                                 value={settings.printServerUrl || ''}
                                 onChange={(e) => save({ ...settings, printServerUrl: e.target.value })}
                                 placeholder="z.B. http://192.168.x.x:3000"
-                                className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600 font-mono text-sm"
+                                className="flex-1 px-4 py-3 bg-background text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition placeholder:text-gray-600 font-mono text-sm"
                             />
                             <button
                                 onClick={() => save({ ...settings, printServerUrl: 'http://localhost:3000' })}
-                                className="px-4 py-3 bg-gray-800 text-gray-300 rounded-xl border border-gray-600 hover:bg-gray-700 hover:text-white transition whitespace-nowrap text-sm font-medium"
+                                className="px-4 py-3 bg-card text-foreground rounded-xl border border-gray-600 hover:bg-gray-700 hover:text-white transition whitespace-nowrap text-sm font-medium"
                                 title="Localhost 3000 einfügen"
                             >
                                 localhost:3000
@@ -187,13 +187,13 @@ export default function PrinterSettingsPage() {
                             ? 'bg-green-950/30 border-green-500/40'
                             : health.status === 'offline'
                             ? 'bg-red-950/30 border-red-500/40'
-                            : 'bg-gray-800 border-gray-700'
+                            : 'bg-card border-border'
                     }`}>
                         <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                             📡 Verbindungsstatus
                         </h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-gray-900/50 rounded-xl p-4">
+                            <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Status</p>
                                 <div className="flex items-center gap-2">
                                     <span className={`w-3 h-3 rounded-full ${
@@ -206,7 +206,7 @@ export default function PrinterSettingsPage() {
                                         health.status === 'online' ? 'text-green-400' :
                                         health.status === 'offline' ? 'text-red-400' :
                                         health.status === 'checking' ? 'text-yellow-400' :
-                                        'text-gray-400'
+                                        'text-muted-foreground'
                                     }`}>
                                         {health.status === 'online' ? 'Verbunden' :
                                          health.status === 'offline' ? 'OFFLINE' :
@@ -214,17 +214,17 @@ export default function PrinterSettingsPage() {
                                     </span>
                                 </div>
                             </div>
-                            <div className="bg-gray-900/50 rounded-xl p-4">
+                            <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Antwortzeit</p>
                                 <p className="font-bold text-sm text-white">{health.responseTimeMs ? `${health.responseTimeMs}ms` : '—'}</p>
                             </div>
-                            <div className="bg-gray-900/50 rounded-xl p-4">
+                            <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Letzte Prüfung</p>
                                 <p className="font-bold text-sm text-white">
                                     {health.lastChecked ? health.lastChecked.toLocaleTimeString('de-DE') : '—'}
                                 </p>
                             </div>
-                            <div className="bg-gray-900/50 rounded-xl p-4">
+                            <div className="bg-background/50 rounded-xl p-4">
                                 <p className="text-xs text-gray-500 mb-1">Adresse</p>
                                 <p className="font-bold text-sm text-white font-mono">{settings.printerIp}:{settings.printerPort}</p>
                             </div>
@@ -239,9 +239,9 @@ export default function PrinterSettingsPage() {
                 )}
 
                 {/* ─── Test Print Card ─── */}
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 mb-6">
+                <div className="bg-card border border-border rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-bold text-white mb-4">🧪 Druckertest</h2>
-                    <p className="text-gray-400 text-sm mb-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                         Senden Sie einen Test-Bon, um die Verbindung und Druckqualität zu überprüfen.
                     </p>
                     <button
@@ -249,7 +249,7 @@ export default function PrinterSettingsPage() {
                         disabled={testing || !settings.enabled || !settings.printerIp}
                         className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                             testing
-                                ? 'bg-gray-700 text-gray-400 cursor-wait'
+                                ? 'bg-gray-700 text-muted-foreground cursor-wait'
                                 : !settings.enabled || !settings.printerIp
                                 ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                 : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20'
@@ -265,9 +265,9 @@ export default function PrinterSettingsPage() {
                 </div>
 
                 {/* ─── Info Box ─── */}
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
+                <div className="bg-card border border-border rounded-2xl p-6">
                     <h3 className="font-bold text-yellow-400 mb-3">💡 Hinweise</h3>
-                    <ul className="text-sm text-gray-400 space-y-2">
+                    <ul className="text-sm text-muted-foreground space-y-2">
                         <li>• Unterstützt werden ESC/POS-kompatible Thermodrucker (Epson, Star, etc.)</li>
                         <li>• Der Drucker muss im gleichen WLAN-Netzwerk wie dieses Gerät sein</li>
                         <li>• Der Drucker-Status wird alle 30 Sekunden automatisch geprüft</li>

@@ -149,7 +149,7 @@ const { admin, loading: authLoading } = useAdmin();
 
     if (authLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
             </div>
         );
@@ -160,13 +160,13 @@ const { admin, loading: authLoading } = useAdmin();
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{t('kermes_ozellikleri')}</h1>
-                        <p className="text-gray-400 mt-1">{t('tum_kermeslerde_kullanilacak_etkinlik_oz')}</p>
+                        <p className="text-muted-foreground mt-1">{t('tum_kermeslerde_kullanilacak_etkinlik_oz')}</p>
                     </div>
                     <button
                         onClick={() => router.back()}
@@ -177,11 +177,11 @@ const { admin, loading: authLoading } = useAdmin();
                 </div>
 
                 {/* Yeni Özellik Ekle */}
-                <div className="bg-gray-800 rounded-xl p-6 mb-6">
+                <div className="bg-card rounded-xl p-6 mb-6">
                     <h2 className="text-lg font-semibold text-white mb-4">{t('yeni_ozellik_ekle')}</h2>
                     <div className="flex flex-wrap gap-4 items-end">
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm text-gray-400 mb-1">{t('ozellik_adi')}</label>
+                            <label className="block text-sm text-muted-foreground mb-1">{t('ozellik_adi')}</label>
                             <input
                                 type="text"
                                 value={newFeature.label}
@@ -191,7 +191,7 @@ const { admin, loading: authLoading } = useAdmin();
                             />
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-400 mb-1">İkon</label>
+                            <label className="block text-sm text-muted-foreground mb-1">İkon</label>
                             <select
                                 value={newFeature.icon}
                                 onChange={(e) => setNewFeature({ ...newFeature, icon: e.target.value })}
@@ -203,7 +203,7 @@ const { admin, loading: authLoading } = useAdmin();
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm text-gray-400 mb-1">Renk</label>
+                            <label className="block text-sm text-muted-foreground mb-1">Renk</label>
                             <input
                                 type="color"
                                 value={newFeature.color}
@@ -222,7 +222,7 @@ const { admin, loading: authLoading } = useAdmin();
                 </div>
 
                 {/* Mevcut Özellikler */}
-                <div className="bg-gray-800 rounded-xl p-6">
+                <div className="bg-card rounded-xl p-6">
                     <h2 className="text-lg font-semibold text-white mb-4">{t('mevcut_ozellikler')}{features.length})</h2>
 
                     <div className="space-y-3">
@@ -231,7 +231,7 @@ const { admin, loading: authLoading } = useAdmin();
                                 key={feature.id}
                                 className={`flex items-center justify-between p-4 rounded-lg border transition-all ${feature.isActive
                                     ? 'bg-gray-700/50 border-gray-600'
-                                    : 'bg-gray-800/50 border-gray-700 opacity-50'
+                                    : 'bg-card/50 border-border opacity-50'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
@@ -240,7 +240,7 @@ const { admin, loading: authLoading } = useAdmin();
                                         <button
                                             onClick={() => moveFeature(index, 'up')}
                                             disabled={index === 0 || saving}
-                                            className="p-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            className="p-1 text-muted-foreground hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                             title={t('yukari_tasi')}
                                         >
                                             ▲
@@ -248,7 +248,7 @@ const { admin, loading: authLoading } = useAdmin();
                                         <button
                                             onClick={() => moveFeature(index, 'down')}
                                             disabled={index === features.length - 1 || saving}
-                                            className="p-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            className="p-1 text-muted-foreground hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                             title={t('asagi_tasi')}
                                         >
                                             ▼
@@ -322,7 +322,7 @@ const { admin, loading: authLoading } = useAdmin();
                                     {/* Düzenle */}
                                     <button
                                         onClick={() => setEditingId(editingId === feature.id ? null : feature.id)}
-                                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                                        className="p-2 text-muted-foreground hover:text-white transition-colors"
                                         title={t('duzenle')}
                                     >
                                         ✏️
@@ -331,7 +331,7 @@ const { admin, loading: authLoading } = useAdmin();
                                     {/* Sil */}
                                     <button
                                         onClick={() => deleteFeature(feature.id)}
-                                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
                                         title={t('sil')}
                                     >
                                         🗑️

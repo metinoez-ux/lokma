@@ -11,7 +11,7 @@ export default function VolunteersPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
         );
@@ -19,14 +19,14 @@ export default function VolunteersPage() {
 
     if (!admin || admin.adminType !== 'super') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <p className="text-red-400 text-lg">Zugriff verweigert</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-background text-white">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
@@ -34,7 +34,7 @@ export default function VolunteersPage() {
                         <span className="text-3xl">🤝</span>
                         <div>
                             <h1 className="text-2xl font-bold">{t('volunteers')}</h1>
-                            <p className="text-gray-400 text-sm">Kermes gönüllüleri ve çalışanları</p>
+                            <p className="text-muted-foreground text-sm">Kermes gönüllüleri ve çalışanları</p>
                         </div>
                     </div>
                     <Link
@@ -46,10 +46,10 @@ export default function VolunteersPage() {
                 </div>
 
                 {/* Placeholder Content */}
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
+                <div className="bg-card rounded-xl border border-border p-12 text-center">
                     <span className="text-6xl mb-4 block">🤝</span>
                     <h2 className="text-xl font-semibold mb-2">Gönüllü-Verwaltung</h2>
-                    <p className="text-gray-400 max-w-md mx-auto">
+                    <p className="text-muted-foreground max-w-md mx-auto">
                         Hier werden alle Gönüllüler (Freiwillige / Kermes-Mitarbeiter) verwaltet.
                         Gönüllüler können als reguläre Mitarbeiter oder als Kermes-Administratoren mit erweiterten Rechten arbeiten.
                     </p>

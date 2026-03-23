@@ -131,11 +131,11 @@ export default function BusinessesPage() {
     // RBAC Guard: Only super admins can access the platform-level business management page
     if (!adminLoading && admin && admin.adminType !== 'super') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-                <div className="bg-gray-800 border border-red-500/30 rounded-2xl p-8 max-w-md text-center">
+            <div className="min-h-screen bg-background flex items-center justify-center p-6">
+                <div className="bg-card border border-red-500/30 rounded-2xl p-8 max-w-md text-center">
                     <div className="text-5xl mb-4">&#128274;</div>
                     <h2 className="text-xl font-bold text-white mb-2">Zugriff verweigert</h2>
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-muted-foreground mb-6">
                         Diese Seite ist nur fur Super-Administratoren zugänglich.
                     </p>
                     <button
@@ -863,14 +863,14 @@ export default function BusinessesPage() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
@@ -885,7 +885,7 @@ export default function BusinessesPage() {
                 {/* Back Button */}
                 <Link
                     href="/admin/dashboard"
-                    className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition"
+                    className="inline-flex items-center gap-2 text-muted-foreground hover:text-white mb-4 transition"
                 >
                     <span>←</span>
                     <span>{t('admin_paneli')}</span>
@@ -896,7 +896,7 @@ export default function BusinessesPage() {
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             {isKermesMode ? t('kermesyonetimi') : t('isletme_yonetimi')}
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {isKermesMode
                                 ? `${t('aktifkermesleriyonetin')} ${filteredKermesEvents.length} kermes`
                                 : `${t('tum_kayitli_isletmeleri_yonetin')} ${filteredBusinesses.length} ${t('isletme1')}`}
@@ -944,12 +944,12 @@ export default function BusinessesPage() {
                                 }}
                                 className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${typeFilter === type.value
                                     ? type.value === 'kermes' ? 'bg-pink-600/30 border-pink-500 ring-2 ring-pink-500' : 'bg-blue-600/30 border-blue-500 ring-2 ring-blue-500'
-                                    : 'bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600'
+                                    : 'bg-card border-border hover:bg-gray-700 hover:border-gray-600'
                                     }`}
                             >
                                 <span className="text-3xl">{type.icon}</span>
                                 <span className="text-white text-sm font-medium">{type.label}</span>
-                                <span className="text-gray-400 text-xs">
+                                <span className="text-muted-foreground text-xs">
                                     {type.value === 'kermes' ? `${count} kermes` : `${count} ${t('isletme1')}`}
                                 </span>
                             </button>
@@ -964,7 +964,7 @@ export default function BusinessesPage() {
                             onClick={() => setShowRecent(!showRecent)}
                             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all text-sm font-medium ${showRecent
                                 ? 'bg-amber-600/30 border-amber-500 ring-2 ring-amber-500 text-amber-300'
-                                : 'bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600 text-gray-300'
+                                : 'bg-card border-border hover:bg-gray-700 hover:border-gray-600 text-foreground'
                                 }`}
                         >
                             <span>🕐</span>
@@ -979,7 +979,7 @@ export default function BusinessesPage() {
                                     <Link
                                         key={rb.id}
                                         href={`/admin/business/${rb.id}`}
-                                        className="flex items-center gap-3 px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-amber-600/50 rounded-xl transition-all group"
+                                        className="flex items-center gap-3 px-4 py-3 bg-card hover:bg-gray-700 border border-border hover:border-amber-600/50 rounded-xl transition-all group"
                                     >
                                         <span className="text-xl">
                                             {businessTypes.find(t => t.value === rb.type)?.icon || '🏪'}
@@ -1003,7 +1003,7 @@ export default function BusinessesPage() {
 
             {/* Filters */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-card rounded-xl p-4">
                     <div className="flex flex-col md:flex-row gap-4">
                         {/* Search */}
                         <div className="flex-1 relative">
@@ -1014,7 +1014,7 @@ export default function BusinessesPage() {
                                 placeholder={t('isletmeAdiSehirVeyaPostaKodu')}
                                 className="w-full px-4 py-3 pl-12 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                             />
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
                         </div>
 
                         {/* Type Filter */}
@@ -1060,18 +1060,18 @@ export default function BusinessesPage() {
 
             {/* Business List / Organizations List */}
             <div className="max-w-7xl mx-auto">
-                <div className="bg-gray-800 rounded-xl overflow-hidden">
+                <div className="bg-card rounded-xl overflow-hidden">
                     {/* 🆕 KERMES MODU - Kermes Events Listesi */}
                     {isKermesMode ? (
                         loadingKermesEvents ? (
                             <div className="p-12 text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
-                                <p className="text-gray-400 mt-4">{t('kermeslerYukleniyor')}</p>
+                                <p className="text-muted-foreground mt-4">{t('kermeslerYukleniyor')}</p>
                             </div>
                         ) : filteredKermesEvents.length === 0 ? (
                             <div className="p-12 text-center">
                                 <p className="text-4xl mb-4">🎪</p>
-                                <p className="text-gray-400">{t('henuzKermesOlusturulmamis')}</p>
+                                <p className="text-muted-foreground">{t('henuzKermesOlusturulmamis')}</p>
                                 <p className="text-gray-500 text-sm mt-2">
                                     {t('yeniKermesEkleButonunaTiklayarakIlk')}
                                 </p>
@@ -1095,7 +1095,7 @@ export default function BusinessesPage() {
                                             <th className="px-4 py-3 text-center">{t('islemler')}</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-700">
+                                    <tbody className="divide-y divide-border">
                                         {filteredKermesEvents
                                             .slice((orgPage - 1) * ORGS_PER_PAGE, orgPage * ORGS_PER_PAGE)
                                             .map((event) => {
@@ -1118,7 +1118,7 @@ export default function BusinessesPage() {
                                                                 <div>
                                                                     <p className="text-white font-medium">{event.title || t('isimsizKermes')}</p>
                                                                     {event.organizationName && (
-                                                                        <p className="text-gray-400 text-xs">🕌 {event.organizationName}</p>
+                                                                        <p className="text-muted-foreground text-xs">🕌 {event.organizationName}</p>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -1126,13 +1126,13 @@ export default function BusinessesPage() {
                                                         <td className="px-4 py-4">
                                                             <p className="text-white">{formatDate(startDate)}</p>
                                                             {endDate && (
-                                                                <p className="text-gray-400 text-xs">→ {formatDate(endDate)}</p>
+                                                                <p className="text-muted-foreground text-xs">→ {formatDate(endDate)}</p>
                                                             )}
                                                         </td>
                                                         <td className="px-4 py-4">
                                                             <p className="text-white">{event.location || event.city || '-'}</p>
                                                             {event.address && (
-                                                                <p className="text-gray-400 text-xs">{event.address}</p>
+                                                                <p className="text-muted-foreground text-xs">{event.address}</p>
                                                             )}
                                                         </td>
                                                         <td className="px-4 py-4">
@@ -1247,8 +1247,8 @@ export default function BusinessesPage() {
 
                                 {/* Pagination Controls */}
                                 {filteredKermesEvents.length > ORGS_PER_PAGE && (
-                                    <div className="flex items-center justify-between px-4 py-3 bg-gray-700/50 border-t border-gray-700">
-                                        <div className="text-gray-400 text-sm">
+                                    <div className="flex items-center justify-between px-4 py-3 bg-gray-700/50 border-t border-border">
+                                        <div className="text-muted-foreground text-sm">
                                             {(orgPage - 1) * ORGS_PER_PAGE + 1} - {Math.min(orgPage * ORGS_PER_PAGE, filteredKermesEvents.length)} / {filteredKermesEvents.length} kermes
                                         </div>
                                         <div className="flex gap-2">
@@ -1279,18 +1279,18 @@ export default function BusinessesPage() {
                         loading ? (
                             <div className="p-12 text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                                <p className="text-gray-400 mt-4">{t('isletmelerYukleniyor')}</p>
+                                <p className="text-muted-foreground mt-4">{t('isletmelerYukleniyor')}</p>
                             </div>
                         ) : filteredBusinesses.length === 0 ? (
                             <div className="p-12 text-center">
                                 <p className="text-4xl mb-4">🏪</p>
-                                <p className="text-gray-400">{t('isletmeBulunamadi')}</p>
+                                <p className="text-muted-foreground">{t('isletmeBulunamadi')}</p>
                             </div>
                         ) : (
                             <>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
-                                        <thead className="bg-gray-700/50 text-gray-400 text-sm">
+                                        <thead className="bg-gray-700/50 text-muted-foreground text-sm">
                                             <tr>
                                                 <th className="px-4 py-3 w-20">{t('id')}</th>
                                                 <th className="px-4 py-3">{t('isletme')}</th>
@@ -1304,7 +1304,7 @@ export default function BusinessesPage() {
 
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-700">
+                                        <tbody className="divide-y divide-border">
                                             {paginatedBusinesses.map((business) => {
                                                 // Get business type from multiple possible fields
                                                 const businessData = business as any;
@@ -1314,7 +1314,7 @@ export default function BusinessesPage() {
                                                     <tr key={business.id} className="hover:bg-gray-700/30 transition cursor-pointer" onClick={() => window.location.href = `/admin/business/${business.id}`}>
                                                         {/* ID Column */}
                                                         <td className="px-4 py-4">
-                                                            <span className="text-gray-400 font-mono text-xs bg-gray-700/50 px-2 py-1 rounded">
+                                                            <span className="text-muted-foreground font-mono text-xs bg-gray-700/50 px-2 py-1 rounded">
                                                                 {(business as any).customerId || business.id?.slice(-6).toUpperCase()}
                                                             </span>
                                                         </td>
@@ -1329,7 +1329,7 @@ export default function BusinessesPage() {
                                                                 </span>
                                                             )}
                                                             {((business.brandLabel || (business as any).brand) === 'akdeniz_toros') && (
-                                                                <span className="px-3 py-1.5 bg-gray-800/50 text-gray-300 border border-gray-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
+                                                                <span className="px-3 py-1.5 bg-card/50 text-foreground border border-gray-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
                                                                     ⚫ TOROS
                                                                 </span>
                                                             )}
@@ -1345,7 +1345,7 @@ export default function BusinessesPage() {
                                                         </td>
                                                         <td className="px-4 py-4">
                                                             <p className="text-white">{business.address?.city || '-'}</p>
-                                                            <p className="text-sm text-gray-400">{business.address?.postalCode}</p>
+                                                            <p className="text-sm text-muted-foreground">{business.address?.postalCode}</p>
                                                         </td>
                                                         <td className="px-4 py-4">
                                                             {business.rating ? (
@@ -1391,7 +1391,7 @@ export default function BusinessesPage() {
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); handleDelete(business); }}
                                                                 className={`px-3 py-1 rounded-lg text-xs font-medium transition ${(business as any).isArchived
-                                                                    ? 'bg-gray-600/20 text-gray-400 cursor-not-allowed'
+                                                                    ? 'bg-gray-600/20 text-muted-foreground cursor-not-allowed'
                                                                     : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
                                                                     }`}
                                                                 disabled={(business as any).isArchived}
@@ -1410,14 +1410,14 @@ export default function BusinessesPage() {
                                 {/* Pagination Controls */}
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-4 px-4">
-                                        <p className="text-sm text-gray-400">
+                                        <p className="text-sm text-muted-foreground">
                                             {t('toplam')} {filteredBusinesses.length} {t('isletmeden')} {(currentPage - 1) * BUSINESSES_PER_PAGE + 1}-{Math.min(currentPage * BUSINESSES_PER_PAGE, filteredBusinesses.length)} {t('gosteriliyor')}
                                         </p>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                                 disabled={currentPage === 1}
-                                                className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-1 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 ←
                                             </button>
@@ -1438,7 +1438,7 @@ export default function BusinessesPage() {
                                                         onClick={() => setCurrentPage(pageNum)}
                                                         className={`px-3 py-1 rounded-lg ${currentPage === pageNum
                                                             ? 'bg-blue-600 text-white'
-                                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                                             }`}
                                                     >
                                                         {pageNum}
@@ -1448,7 +1448,7 @@ export default function BusinessesPage() {
                                             <button
                                                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                                 disabled={currentPage === totalPages}
-                                                className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-1 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 →
                                             </button>
@@ -1464,8 +1464,8 @@ export default function BusinessesPage() {
             {/* Add/Edit Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-700">
+                    <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-border">
                             <h2 className="text-xl font-bold text-white mb-4">
                                 {editingBusiness ? t('isletmeDuzenle') : t('yeniIsletmeEkle1')}
                             </h2>
@@ -1476,7 +1476,7 @@ export default function BusinessesPage() {
                                     onClick={() => setActiveTab('manual')}
                                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'manual'
                                         ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {t('manuelGiris')}
@@ -1485,7 +1485,7 @@ export default function BusinessesPage() {
                                     onClick={() => setActiveTab('google')}
                                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'google'
                                         ? 'bg-green-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     🌍 {editingBusiness ? t('googleGuncelle') : t('googledanCek')}
@@ -1498,7 +1498,7 @@ export default function BusinessesPage() {
                             {activeTab === 'google' && (
                                 <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
                                     <h3 className="text-white font-medium mb-3">{t('googleMapstenIsletmeAra')}</h3>
-                                    <p className="text-gray-400 text-sm mb-4">
+                                    <p className="text-muted-foreground text-sm mb-4">
                                         {t('isletmeAdiVeyaAdresiniGirinGoogledan')}
                                     </p>
 
@@ -1523,15 +1523,15 @@ export default function BusinessesPage() {
                                     {/* Search Results */}
                                     {searchResults.length > 0 && (
                                         <div className="mt-4 space-y-2">
-                                            <p className="text-sm text-gray-400">{searchResults.length} {t('sonucBulundu')}</p>
+                                            <p className="text-sm text-muted-foreground">{searchResults.length} {t('sonucBulundu')}</p>
                                             {searchResults.map((result: any, idx: number) => (
                                                 <div
                                                     key={idx}
-                                                    className="bg-gray-800 rounded-lg p-3 flex items-center justify-between hover:bg-gray-750 transition"
+                                                    className="bg-card rounded-lg p-3 flex items-center justify-between hover:bg-gray-750 transition"
                                                 >
                                                     <div>
                                                         <p className="text-white font-medium">{result.name}</p>
-                                                        <p className="text-gray-400 text-sm">{result.formatted_address}</p>
+                                                        <p className="text-muted-foreground text-sm">{result.formatted_address}</p>
                                                         {result.rating && (
                                                             <p className="text-yellow-400 text-sm mt-1">
                                                                 ⭐ {result.rating} ({result.user_ratings_total || 0} {t('degerlendirme')}
@@ -1557,7 +1557,7 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">📋 {t('temel_bilgiler', { defaultValue: 'Temel Bilgiler' })}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('isletmeAdi')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('isletmeAdi')}</label>
                                         <input
                                             type="text"
                                             value={formData.companyName}
@@ -1567,7 +1567,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="block text-gray-400 text-sm mb-1">{t('isletmeTuru')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('isletmeTuru')}</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {businessTypes.map(type => (
                                                 <button
@@ -1575,7 +1575,7 @@ export default function BusinessesPage() {
                                                     onClick={() => setFormData({ ...formData, type: type.value })}
                                                     className={`px-3 py-2 rounded-lg border text-left flex items-center gap-2 ${formData.type === type.value
                                                         ? 'border-blue-500 bg-blue-600/20 text-white'
-                                                        : 'border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                        : 'border-gray-600 bg-gray-700 text-foreground hover:bg-gray-600'
                                                         }`}
                                                 >
                                                     <span>{type.icon}</span>
@@ -1596,9 +1596,9 @@ export default function BusinessesPage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-gray-400 text-xs">{t('place_id')} {formData.googlePlaceId}</p>
+                                            <p className="text-muted-foreground text-xs">{t('place_id')} {formData.googlePlaceId}</p>
                                             {formData.openingHours && (
-                                                <p className="text-gray-400 text-xs mt-1">{t('calismaSaatleri')} {formData.openingHours.substring(0, 50)}...</p>
+                                                <p className="text-muted-foreground text-xs mt-1">{t('calismaSaatleri')} {formData.openingHours.substring(0, 50)}...</p>
                                             )}
                                         </div>
                                     )}
@@ -1610,7 +1610,7 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">📍 {t('adresBilgileri', { defaultValue: 'Adres Bilgileri' })}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
-                                        <label className="block text-gray-400 text-sm mb-1">{t('sokakCadde', { defaultValue: 'Sokak/Cadde' })}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('sokakCadde', { defaultValue: 'Sokak/Cadde' })}</label>
                                         <input
                                             type="text"
                                             value={formData.street}
@@ -1619,7 +1619,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('sehir')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('sehir')}</label>
                                         <input
                                             type="text"
                                             value={formData.city}
@@ -1628,7 +1628,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('postaKodu')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('postaKodu')}</label>
                                         <input
                                             type="text"
                                             value={formData.postalCode}
@@ -1637,7 +1637,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('ulke')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('ulke')}</label>
                                         <select
                                             value={formData.country}
                                             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
@@ -1655,7 +1655,7 @@ export default function BusinessesPage() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('paraBirimi', { defaultValue: 'Para Birimi' })}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('paraBirimi', { defaultValue: 'Para Birimi' })}</label>
                                         <select
                                             value={formData.currency}
                                             onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
@@ -1676,7 +1676,7 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">{t('iletisim')}</h3>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('telefon')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('telefon')}</label>
                                         <input
                                             type="tel"
                                             value={formData.phone}
@@ -1686,7 +1686,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('eposta')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('eposta')}</label>
                                         <input
                                             type="email"
                                             value={formData.email}
@@ -1695,7 +1695,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{t('website')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{t('website')}</label>
                                         <input
                                             type="url"
                                             value={formData.website}
@@ -1728,7 +1728,7 @@ export default function BusinessesPage() {
                                                 }`}
                                         >
                                             <span className="text-white">{service.label}</span>
-                                            <span className="text-xs text-gray-400">{service.desc}</span>
+                                            <span className="text-xs text-muted-foreground">{service.desc}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -1736,12 +1736,12 @@ export default function BusinessesPage() {
 
                             {/* Masa & Kapasite - Rezervasyon için */}
                             {(formData.reservation || formData.dineIn) && (
-                                <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+                                <div className="bg-card/50 rounded-xl border border-border p-4">
                                     <h3 className="text-white font-medium mb-3">🪑 Masa & Kapasite</h3>
-                                    <p className="text-gray-400 text-sm mb-3">{t('restorankafeIcinOturmaKapasitesi0Fastfoodtakeaway')}</p>
+                                    <p className="text-muted-foreground text-sm mb-3">{t('restorankafeIcinOturmaKapasitesi0Fastfoodtakeaway')}</p>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">{t('masaSayisi')}</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">{t('masaSayisi')}</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -1752,7 +1752,7 @@ export default function BusinessesPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">{t('toplam_koltuk_kapasitesi')}</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">{t('toplam_koltuk_kapasitesi')}</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -1767,7 +1767,7 @@ export default function BusinessesPage() {
                             )}
 
                             {/* Opening Hours - Editable */}
-                            <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+                            <div className="bg-card/50 rounded-xl border border-border p-4">
                                 <div className="flex items-center justify-between mb-3">
                                     <h3 className="text-white font-medium">{t('calismaSaatleri1')}</h3>
                                     {formData.googlePlaceId && (
@@ -1790,7 +1790,7 @@ export default function BusinessesPage() {
                                         setFormData(prev => ({ ...prev, openingHours: formatted }));
                                     }}
                                     placeholder="Monday: 09:00 – 18:00\nTuesday: 09:00 – 18:00\n..."
-                                    className="w-full bg-gray-900/50 px-4 py-3 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none text-sm font-mono"
+                                    className="w-full bg-background/50 px-4 py-3 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none resize-none text-sm font-mono"
                                     rows={7}
                                 />
                                 <p className="text-gray-500 text-xs mt-2">
@@ -1812,14 +1812,14 @@ export default function BusinessesPage() {
                                             🏷️ Marka Etiketi
                                             <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">{t('super_admin')}</span>
                                         </h4>
-                                        <p className="text-gray-400 text-xs mb-3">{t('buEtiketSadeceSuperAdminTarafindan')}</p>
+                                        <p className="text-muted-foreground text-xs mb-3">{t('buEtiketSadeceSuperAdminTarafindan')}</p>
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, brandLabel: null })}
                                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${formData.brandLabel === null
                                                     ? 'bg-gray-600 text-white ring-2 ring-gray-400'
-                                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                                    : 'bg-card text-muted-foreground hover:bg-gray-700'
                                                     }`}
                                             >
                                                 ❌ Etiketsiz
@@ -1829,7 +1829,7 @@ export default function BusinessesPage() {
                                                 onClick={() => setFormData({ ...formData, brandLabel: 'tuna' })}
                                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${formData.brandLabel === 'tuna'
                                                     ? 'bg-blue-600 text-white ring-2 ring-blue-400 shadow-lg shadow-blue-500/30'
-                                                    : 'bg-gray-800 text-gray-400 hover:bg-blue-900/50'
+                                                    : 'bg-card text-muted-foreground hover:bg-blue-900/50'
                                                     }`}
                                             >
                                                 🐟 TUNA <span className="text-xs opacity-70">(Avrupa)</span>
@@ -1839,7 +1839,7 @@ export default function BusinessesPage() {
                                                 onClick={() => setFormData({ ...formData, brandLabel: 'akdeniz_toros' })}
                                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${formData.brandLabel === 'akdeniz_toros'
                                                     ? 'bg-amber-600 text-white ring-2 ring-amber-400 shadow-lg shadow-amber-500/30'
-                                                    : 'bg-gray-800 text-gray-400 hover:bg-amber-900/50'
+                                                    : 'bg-card text-muted-foreground hover:bg-amber-900/50'
                                                     }`}
                                             >
                                                 {t('akdenizToros')} <span className="text-xs opacity-70">{t('turkiye1')}</span>
@@ -1849,8 +1849,8 @@ export default function BusinessesPage() {
                                 )}
 
                                 {/* Bank Info - EDITABLE */}
-                                <div className="bg-gray-800/50 rounded-lg p-3">
-                                    <h4 className="text-gray-400 text-sm font-medium mb-2">🏦 {t('bankaBilgileri', { defaultValue: 'Banka Bilgileri' })}</h4>
+                                <div className="bg-card/50 rounded-lg p-3">
+                                    <h4 className="text-muted-foreground text-sm font-medium mb-2">🏦 {t('bankaBilgileri', { defaultValue: 'Banka Bilgileri' })}</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-gray-500 text-xs mb-1">{t('hesap_sahibi')}</label>
@@ -1859,7 +1859,7 @@ export default function BusinessesPage() {
                                                 value={formData.bankAccountHolder}
                                                 onChange={(e) => setFormData({ ...formData, bankAccountHolder: e.target.value })}
                                                 placeholder={t('hesapSahibiAdi')}
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none text-sm"
                                             />
                                         </div>
                                         <div>
@@ -1869,7 +1869,7 @@ export default function BusinessesPage() {
                                                 value={formData.bankName}
                                                 onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
                                                 placeholder={t('bankaAdi')}
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none text-sm"
                                             />
                                         </div>
                                         <div className="col-span-2">
@@ -1879,7 +1879,7 @@ export default function BusinessesPage() {
                                                 value={formData.bankIban}
                                                 onChange={(e) => setFormData({ ...formData, bankIban: e.target.value })}
                                                 placeholder="DE89 3704 0044 0532 0130 00"
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm font-mono"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none text-sm font-mono"
                                             />
                                         </div>
                                         <div>
@@ -1889,22 +1889,22 @@ export default function BusinessesPage() {
                                                 value={formData.bankBic}
                                                 onChange={(e) => setFormData({ ...formData, bankBic: e.target.value })}
                                                 placeholder="COBADEFFXXX"
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm font-mono"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none text-sm font-mono"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Subscription Info - EDITABLE */}
-                                <div className="bg-gray-800/50 rounded-lg p-3">
-                                    <h4 className="text-gray-400 text-sm font-medium mb-2">📋 {t('abonelikBilgileri', { defaultValue: 'Abonelik Bilgileri' })}</h4>
+                                <div className="bg-card/50 rounded-lg p-3">
+                                    <h4 className="text-muted-foreground text-sm font-medium mb-2">📋 {t('abonelikBilgileri', { defaultValue: 'Abonelik Bilgileri' })}</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-gray-500 text-xs mb-1">{t('plan', { defaultValue: 'Plan' })}</label>
                                             <select
                                                 value={formData.subscriptionPlan}
                                                 onChange={(e) => setFormData({ ...formData, subscriptionPlan: e.target.value })}
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white border border-border focus:border-blue-500 focus:outline-none text-sm"
                                             >
                                                 <option value="none">{t('plan_yok')}</option>
                                                 {availablePlans.map(plan => (
@@ -1917,7 +1917,7 @@ export default function BusinessesPage() {
                                             <select
                                                 value={formData.subscriptionStatus}
                                                 onChange={(e) => setFormData({ ...formData, subscriptionStatus: e.target.value as any })}
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white border border-border focus:border-blue-500 focus:outline-none text-sm"
                                             >
                                                 <option value="active">{t('aktif')}</option>
                                                 <option value="trial">🎁 {t('deneme', { defaultValue: 'Deneme' })}</option>
@@ -1933,7 +1933,7 @@ export default function BusinessesPage() {
                                                 value={formData.subscriptionMonthlyFee}
                                                 onChange={(e) => setFormData({ ...formData, subscriptionMonthlyFee: parseFloat(e.target.value) || 0 })}
                                                 placeholder="0.00"
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none text-sm"
                                             />
                                         </div>
                                         <div>
@@ -1944,7 +1944,7 @@ export default function BusinessesPage() {
                                                 value={formData.subscriptionCommissionRate}
                                                 onChange={(e) => setFormData({ ...formData, subscriptionCommissionRate: parseFloat(e.target.value) || 0 })}
                                                 placeholder="0"
-                                                className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
+                                                className="w-full bg-background/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-border focus:border-blue-500 focus:outline-none text-sm"
                                             />
                                         </div>
                                     </div>
@@ -1953,8 +1953,8 @@ export default function BusinessesPage() {
 
                                 {/* Order Stats - Only show when editing */}
                                 {editingBusiness && (
-                                    <div className="bg-gray-800/50 rounded-lg p-3">
-                                        <h4 className="text-gray-400 text-sm font-medium mb-2">{t('siparisIstatistikleri')}</h4>
+                                    <div className="bg-card/50 rounded-lg p-3">
+                                        <h4 className="text-muted-foreground text-sm font-medium mb-2">{t('siparisIstatistikleri')}</h4>
                                         <div className="grid grid-cols-4 gap-3">
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-white">{editingBusiness.orderStats?.totalOrders || editingBusiness.orderCount || 0}</p>
@@ -1969,7 +1969,7 @@ export default function BusinessesPage() {
                                                 <p className="text-gray-500 text-xs">{t('toplam_ciro')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-sm text-gray-300">
+                                                <p className="text-sm text-foreground">
                                                     {editingBusiness.orderStats?.lastOrderDate?.toDate?.()?.toLocaleDateString('de-DE') || '-'}
                                                 </p>
                                                 <p className="text-gray-500 text-xs">{t('sonSiparis')}</p>
@@ -1981,11 +1981,11 @@ export default function BusinessesPage() {
 
                                 {/* Billing Summary - Only show when editing */}
                                 {editingBusiness && (
-                                    <div className="bg-gray-800/50 rounded-lg p-3">
-                                        <h4 className="text-gray-400 text-sm font-medium mb-2">{t('fatura_durumu')}</h4>
+                                    <div className="bg-card/50 rounded-lg p-3">
+                                        <h4 className="text-muted-foreground text-sm font-medium mb-2">{t('fatura_durumu')}</h4>
                                         <div className="grid grid-cols-4 gap-3">
                                             <div className="text-center">
-                                                <p className="text-sm text-gray-300">
+                                                <p className="text-sm text-foreground">
                                                     {editingBusiness.billing?.lastPaymentDate?.toDate?.()?.toLocaleDateString('de-DE') || '-'}
                                                 </p>
                                                 <p className="text-gray-500 text-xs">{t('sonOdeme')}</p>
@@ -2001,7 +2001,7 @@ export default function BusinessesPage() {
                                                 <p className="text-gray-500 text-xs">{t('acikBakiye')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-xl font-bold text-gray-300">{editingBusiness.billing?.invoiceCount || 0}</p>
+                                                <p className="text-xl font-bold text-foreground">{editingBusiness.billing?.invoiceCount || 0}</p>
                                                 <p className="text-gray-500 text-xs">{t('faturaSayisi')}</p>
                                             </div>
                                         </div>
@@ -2030,7 +2030,7 @@ export default function BusinessesPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="p-6 border-t border-gray-700 flex gap-3">
+                        <div className="p-6 border-t border-border flex gap-3">
                             <button
                                 onClick={() => {
                                     setShowAddModal(false);
@@ -2057,19 +2057,19 @@ export default function BusinessesPage() {
             {/* Review Modal Popup */}
             {reviewModal.open && reviewModal.business && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setReviewModal({ open: false, business: null })}>
-                    <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-card rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-white">
                                 ⭐ {reviewModal.business.companyName} {t('googlePuanlari')}
                             </h3>
-                            <button onClick={() => setReviewModal({ open: false, business: null })} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+                            <button onClick={() => setReviewModal({ open: false, business: null })} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
                         </div>
 
                         <div className="bg-yellow-500/20 rounded-xl p-4 mb-4 text-center">
                             <div className="text-4xl font-bold text-yellow-400 mb-1">
                                 ⭐ {reviewModal.business.rating}
                             </div>
-                            <p className="text-gray-400">{reviewModal.business.reviewCount || 0} {t('degerlendirme1')}</p>
+                            <p className="text-muted-foreground">{reviewModal.business.reviewCount || 0} {t('degerlendirme1')}</p>
                         </div>
 
                         {(reviewModal.business as any).reviews && (reviewModal.business as any).reviews.length > 0 ? (
@@ -2080,7 +2080,7 @@ export default function BusinessesPage() {
                                             <span className="text-white font-medium">{review.author_name || t('anonim', { defaultValue: 'Anonim' })}</span>
                                             <span className="text-yellow-400 text-sm">{'⭐'.repeat(review.rating || 0)}</span>
                                         </div>
-                                        <p className="text-gray-300 text-sm">{review.text || '-'}</p>
+                                        <p className="text-foreground text-sm">{review.text || '-'}</p>
                                         {review.relative_time_description && (
                                             <p className="text-gray-500 text-xs mt-1">{review.relative_time_description}</p>
                                         )}
@@ -2088,7 +2088,7 @@ export default function BusinessesPage() {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-400 text-center py-4">{t('henuzYorumBulunmuyor')}</p>
+                            <p className="text-muted-foreground text-center py-4">{t('henuzYorumBulunmuyor')}</p>
                         )}
 
                         {reviewModal.business.googlePlaceId && (
@@ -2108,7 +2108,7 @@ export default function BusinessesPage() {
             {/* 🆕 ORGANİZASYON ARAMA MODALI */}
             {showOrgSearchModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+                    <div className="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
                         {/* Modal Header */}
                         <div className="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-4">
                             <div className="flex items-center justify-between">
@@ -2126,7 +2126,7 @@ export default function BusinessesPage() {
                         </div>
 
                         {/* Search Box */}
-                        <div className="p-4 border-b border-gray-700">
+                        <div className="p-4 border-b border-border">
                             <input
                                 type="text"
                                 value={orgSearchQuery}
@@ -2142,15 +2142,15 @@ export default function BusinessesPage() {
                             {loadingOrganizations ? (
                                 <div className="p-8 text-center">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
-                                    <p className="text-gray-400 mt-3">{t('organizasyonlarYukleniyor')}</p>
+                                    <p className="text-muted-foreground mt-3">{t('organizasyonlarYukleniyor')}</p>
                                 </div>
                             ) : filteredOrgsForModal.length === 0 ? (
                                 <div className="p-8 text-center">
                                     <p className="text-4xl mb-3">🔍</p>
-                                    <p className="text-gray-400">{t('aramaylaEslesenOrganizasyonBulunamadi')}</p>
+                                    <p className="text-muted-foreground">{t('aramaylaEslesenOrganizasyonBulunamadi')}</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-gray-700">
+                                <div className="divide-y divide-border">
                                     {filteredOrgsForModal.slice(0, 20).map((org) => (
                                         <Link
                                             key={org.id}
@@ -2163,7 +2163,7 @@ export default function BusinessesPage() {
                                             </div>
                                             <div className="flex-1">
                                                 <p className="text-white font-medium">{org.name}</p>
-                                                <p className="text-gray-400 text-sm">
+                                                <p className="text-muted-foreground text-sm">
                                                     📍 {org.postalCode} {org.city} {org.address ? `• ${org.address}` : ''}
                                                 </p>
                                             </div>
@@ -2182,7 +2182,7 @@ export default function BusinessesPage() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-4 border-t border-gray-700 bg-gray-800/50">
+                        <div className="p-4 border-t border-border bg-card/50">
                             <button
                                 onClick={() => { setShowOrgSearchModal(false); setOrgSearchQuery(''); }}
                                 className="w-full py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition"

@@ -103,7 +103,7 @@ const { admin, loading: adminLoading } = useAdmin();
     const getStatusConfig = (status: TimeStatus) => {
         switch (status) {
             case 'past':
-                return { label: 'Geçmiş', color: 'bg-gray-600', border: 'border-gray-500', text: 'text-gray-300', bg: 'bg-gray-800/50' };
+                return { label: 'Geçmiş', color: 'bg-gray-600', border: 'border-gray-500', text: 'text-foreground', bg: 'bg-card/50' };
             case 'active':
                 return { label: t('aktif'), color: 'bg-green-600', border: 'border-green-500', text: 'text-green-400', bg: 'bg-green-900/20' };
             case 'future':
@@ -307,7 +307,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (adminLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         );
@@ -315,17 +315,17 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (!admin) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white">{t('erisim_reddedildi')}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-6xl mx-auto mb-6">
-                <Link href="/admin/dashboard" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/dashboard" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
                     ← Admin Paneli
                 </Link>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
@@ -333,7 +333,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             {t('kermes_yonetimi')}
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('tum_kermesleri_yonetin')} {filteredEvents.length} kermes
                         </p>
                     </div>
@@ -387,11 +387,11 @@ const { admin, loading: adminLoading } = useAdmin();
 
             {/* Search and Filters */}
             <div className="max-w-6xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-card rounded-xl p-4">
                     <div className="flex flex-col sm:flex-row gap-4">
                         {/* Search */}
                         <div className="flex-1 relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
                             <input
                                 type="text"
                                 placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
@@ -422,12 +422,12 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Cards Grid */}
             <div className="max-w-6xl mx-auto">
                 {filteredEvents.length === 0 ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <div className="text-6xl mb-4">🎪</div>
                         <h2 className="text-xl font-bold text-white mb-2">
                             {events.length === 0 ? t('henuz_kermes_yok') : t('sonuc_bulunamadi')}
                         </h2>
-                        <p className="text-gray-400 mb-6">
+                        <p className="text-muted-foreground mb-6">
                             {events.length === 0 ? t('i_lk_kermes_etkinliginizi_olusturun') : t('arama_kriterlerinize_uygun_kermes_buluna')}
                         </p>
                         {events.length === 0 && (admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
@@ -473,7 +473,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     {event.title || 'İsimsiz Kermes'}
                                                 </h3>
                                                 {event.organizationName && (
-                                                    <p className="text-gray-400 text-sm truncate">{event.organizationName}</p>
+                                                    <p className="text-muted-foreground text-sm truncate">{event.organizationName}</p>
                                                 )}
                                             </div>
 
@@ -527,7 +527,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             </Link>
                                             <button
                                                 onClick={(ev) => handleArchive(event.id, ev)}
-                                                className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-amber-600 hover:text-white transition text-sm"
+                                                className="px-3 py-2 bg-gray-700 text-foreground rounded-lg hover:bg-amber-600 hover:text-white transition text-sm"
                                             >
                                                 📦
                                             </button>
@@ -535,7 +535,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </div>
 
                                     {/* Mobile Details */}
-                                    <div className="md:hidden mt-3 pt-3 border-t border-gray-700/50 grid grid-cols-2 gap-2 text-xs">
+                                    <div className="md:hidden mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-2 text-xs">
                                         <div><span className="text-gray-500">📅</span> {formatDateRange(event)}</div>
                                         <div><span className="text-gray-500">📍</span> {getLocationDisplay(event)}</div>
                                         <div><span className="text-gray-500">📞</span> {contactPhone || '-'}</div>

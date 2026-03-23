@@ -319,7 +319,7 @@ export default function TranslationsPage() {
         return (
             <div className="p-8 text-center max-w-7xl mx-auto">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                <p className="text-gray-400">{t('ceviriler_yukleniyor')}</p>
+                <p className="text-muted-foreground">{t('ceviriler_yukleniyor')}</p>
             </div>
         );
     }
@@ -329,7 +329,7 @@ export default function TranslationsPage() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-white">{t('arayuz_cevirileri_cms')}</h1>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-muted-foreground text-sm mt-1">
                         {t('uygulama_genelindeki_tum_sabit_metinleri')}
                     </p>
                 </div>
@@ -375,18 +375,18 @@ export default function TranslationsPage() {
                 </div>
             </div>
 
-            <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-slate-700 bg-slate-800/80 flex flex-wrap gap-4 items-center">
+                <div className="p-4 border-b border-border bg-card/80 flex flex-wrap gap-4 items-center">
                     <div className="flex-1 min-w-[250px]">
                         <div className="relative">
-                            <span className="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                            <span className="absolute left-3 top-2.5 text-muted-foreground">🔍</span>
                             <input
                                 type="text"
                                 placeholder={t('anahtar_key_veya_metin_icinde_ara')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                                className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors"
                             />
                         </div>
                     </div>
@@ -394,7 +394,7 @@ export default function TranslationsPage() {
                         <select
                             value={selectedNamespace}
                             onChange={(e) => setSelectedNamespace(e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
+                            className="w-full px-3 py-2 bg-background border border-border rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
                         >
                             <option value="All">{t('tum_alanlar_namespaces')}</option>
                             <optgroup label={t('optgroup_admin')}>
@@ -414,15 +414,15 @@ export default function TranslationsPage() {
                             </optgroup>
                         </select>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 bg-background border border-border rounded-lg px-3 py-2">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={filterMissingOnly}
                                 onChange={(e) => setFilterMissingOnly(e.target.checked)}
-                                className="w-4 h-4 rounded bg-slate-800 border-slate-600 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
+                                className="w-4 h-4 rounded bg-card border-slate-600 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
                             />
-                            <span className="text-sm text-slate-300 font-medium select-none">{t('sadece_eksik_ceviriler')}</span>
+                            <span className="text-sm text-foreground font-medium select-none">{t('sadece_eksik_ceviriler')}</span>
                         </label>
                     </div>
                 </div>
@@ -430,7 +430,7 @@ export default function TranslationsPage() {
                 {/* Translations Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-900/50 text-slate-400 border-b border-slate-700">
+                        <thead className="bg-background/50 text-muted-foreground border-b border-border">
                             <tr>
                                 <th className="px-4 py-3 font-semibold uppercase text-xs w-64 min-w-[250px]">{t('key_arahtari')}</th>
                                 {LANGUAGES.map(lang => (
@@ -446,10 +446,10 @@ export default function TranslationsPage() {
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-700 bg-slate-800">
+                        <tbody className="divide-y divide-border bg-card">
                             {paginatedKeys.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
+                                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                                         {t('bu_kriterlere_uygun_ceviri_bulunamadi')}
                                     </td>
                                 </tr>
@@ -459,18 +459,18 @@ export default function TranslationsPage() {
                                     const originalIndex = translationKeys.findIndex(k => k.namespace === item.namespace && k.key === item.key);
                                     return (
                                         <tr key={`${item.namespace}.${item.key}`} className="hover:bg-slate-700/30 transition-colors">
-                                            <td className="px-4 py-3 border-r border-slate-700/50">
+                                            <td className="px-4 py-3 border-r border-border/50">
                                                 <div className="flex flex-col">
                                                     <span className="text-xs text-indigo-400 font-mono mb-1">{item.namespace}</span>
                                                     <span className="text-white font-medium">{item.key}</span>
                                                 </div>
                                             </td>
                                             {LANGUAGES.map(lang => (
-                                                <td key={lang} className="px-2 py-2 border-r border-slate-700/50 last:border-0 relative group">
+                                                <td key={lang} className="px-2 py-2 border-r border-border/50 last:border-0 relative group">
                                                     <textarea
                                                         value={item.translations[lang] || ''}
                                                         onChange={(e) => handleTranslationChange(originalIndex, lang, e.target.value)}
-                                                        className="w-full bg-slate-900/50 hover:bg-slate-900 focus:bg-slate-900 border border-transparent hover:border-slate-600 focus:border-indigo-500 rounded px-3 py-2 text-sm text-slate-200 transition-colors resize-y min-h-[42px] focus:outline-none"
+                                                        className="w-full bg-background/50 hover:bg-background focus:bg-background border border-transparent hover:border-slate-600 focus:border-indigo-500 rounded px-3 py-2 text-sm text-slate-200 transition-colors resize-y min-h-[42px] focus:outline-none"
                                                         rows={1}
                                                         placeholder={`${lang} çevirisi...`}
                                                     />
@@ -486,25 +486,25 @@ export default function TranslationsPage() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                    <div className="bg-slate-900/80 px-4 py-3 border-t border-slate-700 flex items-center justify-between">
-                        <div className="text-sm text-slate-400 select-none">
+                    <div className="bg-background/80 px-4 py-3 border-t border-border flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground select-none">
                             {t('toplam')} <span className="font-semibold text-white">{filteredKeys.length}</span> {t('kayittan')} <span className="font-semibold text-white">{(currentPage - 1) * ROWS_PER_PAGE + 1} - {Math.min(currentPage * ROWS_PER_PAGE, filteredKeys.length)}</span> {t('arasi_gosteriliyor')}
                         </div>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="px-3 py-1.5 rounded bg-slate-800 border border-slate-600 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
+                                className="px-3 py-1.5 rounded bg-card border border-slate-600 text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
                             >
                                 {t('onceki')}
                             </button>
-                            <div className="px-3 py-1.5 rounded bg-slate-800 border border-slate-600 text-white font-medium select-none text-sm flex items-center">
+                            <div className="px-3 py-1.5 rounded bg-card border border-slate-600 text-white font-medium select-none text-sm flex items-center">
                                 {currentPage} / {totalPages}
                             </div>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="px-3 py-1.5 rounded bg-slate-800 border border-slate-600 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
+                                className="px-3 py-1.5 rounded bg-card border border-slate-600 text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
                             >
                                 Sonraki
                             </button>

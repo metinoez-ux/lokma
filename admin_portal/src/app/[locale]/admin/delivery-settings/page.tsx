@@ -254,7 +254,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (adminLoading || loadingData) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin text-4xl">⏳</div>
             </div>
         );
@@ -262,21 +262,21 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (!admin || !businessId) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <p className="text-gray-400">{t('bu_sayfaya_erisim_yetkiniz_yok')}</p>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <p className="text-muted-foreground">{t('bu_sayfaya_erisim_yetkiniz_yok')}</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-4 md:p-6">
+        <div className="min-h-screen bg-background p-4 md:p-6">
             <div className="max-w-4xl mx-auto">
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <a href="/admin/settings" className="text-gray-400 hover:text-white text-sm transition">← Ayarlar</a>
+                            <a href="/admin/settings" className="text-muted-foreground hover:text-white text-sm transition">← Ayarlar</a>
                         </div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-3">
                             {t('teslimat_saat_ayarlari')}
@@ -302,7 +302,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setIsEditing(false)}
-                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition"
+                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg transition"
                                 >
                                     İptal
                                 </button>
@@ -326,7 +326,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 )}
 
                 {/* ═══════ Section 1: Açılış Saatleri ═══════ */}
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+                <div className="bg-card rounded-xl border border-border p-6 mb-6">
                     <h4 className="text-white font-medium mb-4 flex items-center gap-2">
                         {t('calisma_saatleri')}
                     </h4>
@@ -337,13 +337,13 @@ const { admin, loading: adminLoading } = useAdmin();
                                 const { isClosed, startTime, endTime } = parseDayTime(currentLine);
                                 return (
                                     <div key={dayObj.tr} className="flex items-center gap-3">
-                                        <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
+                                        <span className="w-24 text-sm text-muted-foreground font-medium">{dayObj.tr}</span>
                                         <input
                                             type="time"
                                             value={formatTo24h(startTime)}
                                             disabled={isClosed}
                                             onChange={(e) => updateDayHours(dayObj, e.target.value, endTime, false)}
-                                            className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
+                                            className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
                                         />
                                         <span className="text-gray-500 font-bold">–</span>
                                         <input
@@ -351,7 +351,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             value={formatTo24h(endTime)}
                                             disabled={isClosed}
                                             onChange={(e) => updateDayHours(dayObj, startTime, e.target.value, false)}
-                                            className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
+                                            className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`}
                                         />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                             <input
@@ -361,7 +361,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 className="sr-only peer"
                                             />
                                             <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                            <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                            <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                     </div>
                                 );
@@ -375,9 +375,9 @@ const { admin, loading: adminLoading } = useAdmin();
                                 const content = parts.length > 1 ? parts.slice(1).join(': ').trim() : '';
                                 const isClosed = content.toLowerCase().includes('kapalı') || content.toLowerCase().includes('closed');
                                 return (
-                                    <li key={i} className="flex justify-between items-center border-b border-gray-700/50 pb-1.5 last:border-0">
-                                        <span className="font-medium text-gray-400 text-sm w-24">{dayName}</span>
-                                        <span className={`font-mono text-sm ${isClosed ? 'text-red-400' : 'text-gray-300'}`}>
+                                    <li key={i} className="flex justify-between items-center border-b border-border/50 pb-1.5 last:border-0">
+                                        <span className="font-medium text-muted-foreground text-sm w-24">{dayName}</span>
+                                        <span className={`font-mono text-sm ${isClosed ? 'text-red-400' : 'text-foreground'}`}>
                                             {isClosed ? t('kapali') : content || '-'}
                                         </span>
                                     </li>
@@ -400,11 +400,11 @@ const { admin, loading: adminLoading } = useAdmin();
                 </div>
 
                 {/* ═══════ Section 2: Teslimat Ayarları ═══════ */}
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-6">
+                <div className="bg-card rounded-xl border border-border p-6 space-y-6">
 
                     {/* Kurye Desteği */}
                     <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2">
+                        <h4 className="text-white font-medium border-b border-border pb-2">
                             {t('teslimat_ayarlari')}
                         </h4>
 
@@ -432,14 +432,14 @@ const { admin, loading: adminLoading } = useAdmin();
                             />
                             <span className={`text-white ${!planHasDelivery ? 'opacity-50' : ''}`}>{t('kurye_destegi_var')}</span>
                             {!planHasDelivery && (
-                                <span className="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded-full">🔒 Plan Gerekli</span>
+                                <span className="px-2 py-0.5 bg-gray-700 text-muted-foreground text-xs rounded-full">🔒 Plan Gerekli</span>
                             )}
                         </div>
 
                         {formData.supportsDelivery && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm">{t('min_siparis')}</label>
+                                    <label className="text-muted-foreground text-sm">{t('min_siparis')}</label>
                                     <input
                                         type="number"
                                         value={formData.minDeliveryOrder}
@@ -449,7 +449,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm">{t('teslimat_ucreti')}</label>
+                                    <label className="text-muted-foreground text-sm">{t('teslimat_ucreti')}</label>
                                     <input
                                         type="number"
                                         value={formData.deliveryFee}
@@ -463,19 +463,19 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
 
                     {/* Gelişmiş Sipariş Saatleri */}
-                    <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                    <div className="p-4 bg-background/50 rounded-lg border border-border">
                         <h5 className="text-white font-medium mb-3 flex items-center gap-2">
                             {t('gelismis_siparis_saatleri')}
                             <span className="text-xs text-gray-500">(Opsiyonel)</span>
                         </h5>
-                        <p className="text-xs text-gray-400 mb-4">
+                        <p className="text-xs text-muted-foreground mb-4">
                             {t('i_sletme_acik_olsa_bile_kurye_gel_al_hiz')}
                         </p>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {/* Kurye Başlangıç */}
                             <div>
-                                <label className="text-gray-400 text-sm flex items-center gap-1">{t('kurye_baslangic')}</label>
+                                <label className="text-muted-foreground text-sm flex items-center gap-1">{t('kurye_baslangic')}</label>
                                 <input
                                     type="time"
                                     value={formData.deliveryStartTime || ''}
@@ -488,7 +488,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Kurye Bitiş */}
                             <div>
-                                <label className="text-gray-400 text-sm flex items-center gap-1">{t('kurye_bitis')}</label>
+                                <label className="text-muted-foreground text-sm flex items-center gap-1">{t('kurye_bitis')}</label>
                                 <input
                                     type="time"
                                     value={formData.deliveryEndTime || ''}
@@ -501,7 +501,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Gel Al Başlangıç */}
                             <div>
-                                <label className="text-gray-400 text-sm flex items-center gap-1">{t('gel_al_baslangic')}</label>
+                                <label className="text-muted-foreground text-sm flex items-center gap-1">{t('gel_al_baslangic')}</label>
                                 <input
                                     type="time"
                                     value={formData.pickupStartTime || ''}
@@ -514,7 +514,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Gel Al Bitiş */}
                             <div>
-                                <label className="text-gray-400 text-sm flex items-center gap-1">{t('gel_al_bitis')}</label>
+                                <label className="text-muted-foreground text-sm flex items-center gap-1">{t('gel_al_bitis')}</label>
                                 <input
                                     type="time"
                                     value={formData.pickupEndTime || ''}
@@ -528,7 +528,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                         {/* Ücretsiz Teslimat Eşiği */}
                         <div className="mt-4">
-                            <label className="text-gray-400 text-sm flex items-center gap-1">
+                            <label className="text-muted-foreground text-sm flex items-center gap-1">
                                 {t('ucretsiz_teslimat_esigi')}
                             </label>
                             <div className="flex items-center gap-2 mt-1">
@@ -541,7 +541,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     min="0"
                                     step="0.01"
                                 />
-                                <span className="text-gray-400 text-sm">{t('uzeri_siparislerde_teslimat_ucretsiz')}</span>
+                                <span className="text-muted-foreground text-sm">{t('uzeri_siparislerde_teslimat_ucretsiz')}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-1">{t('0_her_zaman_teslimat_ucreti_uygulanir')}</p>
                         </div>
@@ -557,7 +557,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             />
                             <div>
                                 <span className="text-white">{t('on_siparis_kabul_et')}</span>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-muted-foreground">
                                     {t('i_sletme_kapaliyken_de_ertesi_gun_icin_s')}
                                 </p>
                             </div>
@@ -576,16 +576,16 @@ const { admin, loading: adminLoading } = useAdmin();
                 </div>
 
                 {/* ═══════ Section 3: Kurye Yapılandırması ═══════ */}
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mt-6 space-y-6">
-                    <h4 className="text-white font-medium border-b border-gray-700 pb-2 flex items-center gap-2">
+                <div className="bg-card rounded-xl border border-border p-6 mt-6 space-y-6">
+                    <h4 className="text-white font-medium border-b border-border pb-2 flex items-center gap-2">
                         {t('kurye_yapilandirmasi')}
                     </h4>
 
                     {/* Kendi Kuryem Var */}
-                    <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                    <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-border">
                         <div>
                             <p className="text-white font-medium flex items-center gap-2">{t('kendi_kuryem_var')}</p>
-                            <p className="text-xs text-gray-400 mt-1">{t('i_sletmenizin_kendi_teslimat_personeli_v')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('i_sletmenizin_kendi_teslimat_personeli_v')}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -596,17 +596,17 @@ const { admin, loading: adminLoading } = useAdmin();
                                 className="sr-only peer"
                             />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600 peer-disabled:opacity-50"></div>
-                            <span className={`ml-2 text-sm font-medium ${formData.hasOwnCourier ? 'text-emerald-300' : 'text-gray-400'}`}>
+                            <span className={`ml-2 text-sm font-medium ${formData.hasOwnCourier ? 'text-emerald-300' : 'text-muted-foreground'}`}>
                                 {formData.hasOwnCourier ? t('evet') : t('hayir')}
                             </span>
                         </label>
                     </div>
 
                     {/* LOKMA Sürücü Desteği */}
-                    <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg border border-blue-700/30">
+                    <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-blue-700/30">
                         <div>
                             <p className="text-white font-medium flex items-center gap-2">{t('lokma_surucu_destegi')}</p>
-                            <p className="text-xs text-gray-400 mt-1">LOKMA platform kuryelerinden destek almak ister misiniz?</p>
+                            <p className="text-xs text-muted-foreground mt-1">LOKMA platform kuryelerinden destek almak ister misiniz?</p>
                             <p className="text-xs text-blue-400/70 mt-0.5">{t('aktiflestiginde_lokma_kuryelerine_sipari')}</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
@@ -618,7 +618,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 className="sr-only peer"
                             />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 peer-disabled:opacity-50"></div>
-                            <span className={`ml-2 text-sm font-medium ${formData.lokmaDriverEnabled ? 'text-blue-300' : 'text-gray-400'}`}>
+                            <span className={`ml-2 text-sm font-medium ${formData.lokmaDriverEnabled ? 'text-blue-300' : 'text-muted-foreground'}`}>
                                 {formData.lokmaDriverEnabled ? t('aktif') : t('kapali')}
                             </span>
                         </label>
@@ -626,11 +626,11 @@ const { admin, loading: adminLoading } = useAdmin();
 
                     {/* Teslimat Tercihi */}
                     {(formData.hasOwnCourier && formData.lokmaDriverEnabled) && (
-                        <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                        <div className="p-4 bg-background/50 rounded-lg border border-border">
                             <label className="text-white font-medium flex items-center gap-2 mb-2">
                                 ⚡ Bildirim Tercihi
                             </label>
-                            <p className="text-xs text-gray-400 mb-3">{t('yeni_teslimat_siparislerinde_kimlere_bil')}</p>
+                            <p className="text-xs text-muted-foreground mb-3">{t('yeni_teslimat_siparislerinde_kimlere_bil')}</p>
                             <select
                                 value={formData.deliveryPreference}
                                 onChange={(e) => setFormData({ ...formData, deliveryPreference: e.target.value as any })}
@@ -645,22 +645,22 @@ const { admin, loading: adminLoading } = useAdmin();
                     )}
 
                     {/* Komisyon Bilgisi (Read-only) */}
-                    <div className="p-4 bg-gray-900/30 rounded-lg border border-gray-700/50">
-                        <h5 className="text-gray-300 font-medium mb-3 flex items-center gap-2">
+                    <div className="p-4 bg-background/30 rounded-lg border border-border/50">
+                        <h5 className="text-foreground font-medium mb-3 flex items-center gap-2">
                             {t('komisyon_oranlari')}
                             <span className="text-xs text-gray-500">({planName} {t('planiniza_gore')}</span>
                         </h5>
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
-                                <p className="text-xs text-gray-400 mb-1">🟢 Gel-Al</p>
+                            <div className="text-center p-3 bg-card rounded-lg border border-border">
+                                <p className="text-xs text-muted-foreground mb-1">🟢 Gel-Al</p>
                                 <p className="text-lg font-bold text-emerald-400">%{commissionRates.clickCollect}</p>
                             </div>
-                            <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
-                                <p className="text-xs text-gray-400 mb-1">{t('kendi_kurye')}</p>
+                            <div className="text-center p-3 bg-card rounded-lg border border-border">
+                                <p className="text-xs text-muted-foreground mb-1">{t('kendi_kurye')}</p>
                                 <p className="text-lg font-bold text-amber-400">%{commissionRates.ownCourier}</p>
                             </div>
-                            <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
-                                <p className="text-xs text-gray-400 mb-1">{t('lokma_kurye')}</p>
+                            <div className="text-center p-3 bg-card rounded-lg border border-border">
+                                <p className="text-xs text-muted-foreground mb-1">{t('lokma_kurye')}</p>
                                 <p className="text-lg font-bold text-blue-400">%{commissionRates.lokmaCourier}</p>
                             </div>
                         </div>

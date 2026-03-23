@@ -289,7 +289,7 @@ export default function UnifiedAnalyticsPage() {
 
     if (adminLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
@@ -300,19 +300,19 @@ export default function UnifiedAnalyticsPage() {
     const formatCurrency = (amount: number, currencyCode?: string) => globalFormatCurrency(amount, currencyCode);
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             <main className="max-w-7xl mx-auto px-4 py-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-muted-foreground text-sm">
                             {lastUpdate && `${t('son_guncelleme')}: ${lastUpdate.toLocaleTimeString()}`}
                         </p>
                     </div>
                     <button
                         onClick={() => setLastUpdate(new Date())}
-                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition flex items-center gap-2 text-sm"
+                        className="px-4 py-2 bg-card border border-border rounded-lg text-muted-foreground hover:text-white hover:bg-gray-700 transition flex items-center gap-2 text-sm"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -322,7 +322,7 @@ export default function UnifiedAnalyticsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-gray-800 rounded-xl p-4 mb-6">
+                <div className="bg-card rounded-xl p-4 mb-6">
                     <div className="flex flex-wrap gap-3 items-center">
                         {/* Date Filters */}
                         <div className="flex flex-wrap gap-2">
@@ -339,7 +339,7 @@ export default function UnifiedAnalyticsPage() {
                                     onClick={() => setDateFilter(item.value as DateFilter)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${dateFilter === item.value
                                         ? 'bg-amber-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {item.label}
@@ -365,35 +365,35 @@ export default function UnifiedAnalyticsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
                     <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-xl p-3 border border-blue-700/50">
                         <p className="text-2xl font-bold text-blue-400">{userStats?.total || 0}</p>
-                        <p className="text-xs text-gray-400">{t('kullanici')}</p>
+                        <p className="text-xs text-muted-foreground">{t('kullanici')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 rounded-xl p-3 border border-green-700/50">
                         <p className="text-2xl font-bold text-green-400">+{userStats?.new || 0}</p>
-                        <p className="text-xs text-gray-400">{t('yeni_kayit')}</p>
+                        <p className="text-xs text-muted-foreground">{t('yeni_kayit')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 rounded-xl p-3 border border-purple-700/50">
                         <p className="text-2xl font-bold text-purple-400">{businessStats?.total || 0}</p>
-                        <p className="text-xs text-gray-400">{t('i_sletme')}</p>
+                        <p className="text-xs text-muted-foreground">{t('i_sletme')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-amber-900/50 to-amber-800/30 rounded-xl p-3 border border-amber-700/50">
                         <p className="text-2xl font-bold text-amber-400">{stats.total}</p>
-                        <p className="text-xs text-gray-400">{t('siparis')}</p>
+                        <p className="text-xs text-muted-foreground">{t('siparis')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 rounded-xl p-3 border border-emerald-700/50">
                         <p className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.revenue)}</p>
-                        <p className="text-xs text-gray-400">{t('revenue')}</p>
+                        <p className="text-xs text-muted-foreground">{t('revenue')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 rounded-xl p-3 border border-cyan-700/50">
                         <p className="text-2xl font-bold text-cyan-400">{formatCurrency(stats.avgOrderValue)}</p>
-                        <p className="text-xs text-gray-400">{t('ort_siparis')}</p>
+                        <p className="text-xs text-muted-foreground">{t('ort_siparis')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-pink-900/50 to-pink-800/30 rounded-xl p-3 border border-pink-700/50">
                         <p className="text-2xl font-bold text-pink-400">{masterProductCount}</p>
-                        <p className="text-xs text-gray-400">{t('urun')}</p>
+                        <p className="text-xs text-muted-foreground">{t('urun')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-red-900/50 to-red-800/30 rounded-xl p-3 border border-red-700/50">
                         <p className="text-2xl font-bold text-red-400">{stats.cancelled}</p>
-                        <p className="text-xs text-gray-400">{t('cancellation')}</p>
+                        <p className="text-xs text-muted-foreground">{t('cancellation')}</p>
                     </div>
                 </div>
 
@@ -420,7 +420,7 @@ export default function UnifiedAnalyticsPage() {
                 {/* Charts Row */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                     {/* Hourly Distribution */}
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('saatlik_dagilim')}</h3>
                         {(() => {
                             const hourData = analytics.hourlyDistribution.slice(8, 22);
@@ -458,7 +458,7 @@ export default function UnifiedAnalyticsPage() {
                     </div>
 
                     {/* Daily Distribution */}
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('gunluk_dagilim')}</h3>
                         <div className="space-y-1.5">
                             {analytics.dailyDistribution.map((d) => {
@@ -466,7 +466,7 @@ export default function UnifiedAnalyticsPage() {
                                 const width = (d.count / maxCount) * 100;
                                 return (
                                     <div key={d.day} className="flex items-center gap-2">
-                                        <span className="text-gray-400 text-xs w-8">{d.day}</span>
+                                        <span className="text-muted-foreground text-xs w-8">{d.day}</span>
                                         <div className="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
                                             <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full" style={{ width: `${width}%` }} />
                                         </div>
@@ -481,20 +481,20 @@ export default function UnifiedAnalyticsPage() {
                 {/* Details Row */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {/* User Breakdown */}
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('kullanici_dagilimi')}</h3>
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between"><span className="text-gray-400">{t('musteriler')}</span><span className="text-blue-400 font-bold">{userStats?.customers}</span></div>
-                            <div className="border-t border-gray-700 pt-2">
-                                <div className="flex justify-between"><span className="text-gray-400">👑 Super Admin</span><span className="text-red-400 font-bold">{userStats?.superAdmins}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-400">{t('i_sletme_sahibi')}</span><span className="text-amber-400 font-bold">{userStats?.owners}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-400">&#x1f464; {t('personel') || 'Personel'}</span><span className="text-purple-400 font-bold">{userStats?.staff}</span></div>
+                            <div className="flex justify-between"><span className="text-muted-foreground">{t('musteriler')}</span><span className="text-blue-400 font-bold">{userStats?.customers}</span></div>
+                            <div className="border-t border-border pt-2">
+                                <div className="flex justify-between"><span className="text-muted-foreground">👑 Super Admin</span><span className="text-red-400 font-bold">{userStats?.superAdmins}</span></div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">{t('i_sletme_sahibi')}</span><span className="text-amber-400 font-bold">{userStats?.owners}</span></div>
+                                <div className="flex justify-between"><span className="text-muted-foreground">&#x1f464; {t('personel') || 'Personel'}</span><span className="text-purple-400 font-bold">{userStats?.staff}</span></div>
                             </div>
                         </div>
                     </div>
 
                     {/* Business Types */}
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('i_sletme_turleri')}</h3>
                         {businessStats && (() => {
                             // Group business types into Yemek (Food) and Market categories
@@ -530,10 +530,10 @@ export default function UnifiedAnalyticsPage() {
                                             <span className="text-orange-400 font-medium flex items-center gap-1">🍽 {t('yemek_segmenti') || 'Yemek'}</span>
                                             <span className="text-orange-400 font-bold">{yemekCount}</span>
                                         </summary>
-                                        <div className="pl-4 mt-1 space-y-1 border-l border-gray-700 ml-2">
+                                        <div className="pl-4 mt-1 space-y-1 border-l border-border ml-2">
                                             {yemekSubs.sort((a, b) => b[1] - a[1]).map(([type, count]) => (
                                                 <div key={type} className="flex justify-between">
-                                                    <span className="text-gray-400 capitalize">{type}</span>
+                                                    <span className="text-muted-foreground capitalize">{type}</span>
                                                     <span className="text-cyan-400 font-bold">{count}</span>
                                                 </div>
                                             ))}
@@ -545,17 +545,17 @@ export default function UnifiedAnalyticsPage() {
                                             <span className="text-green-400 font-medium flex items-center gap-1">🛒 {t('market_segmenti') || 'Market'}</span>
                                             <span className="text-green-400 font-bold">{marketCount}</span>
                                         </summary>
-                                        <div className="pl-4 mt-1 space-y-1 border-l border-gray-700 ml-2">
+                                        <div className="pl-4 mt-1 space-y-1 border-l border-border ml-2">
                                             {marketSubs.sort((a, b) => b[1] - a[1]).map(([type, count]) => (
                                                 <div key={type} className="flex justify-between">
-                                                    <span className="text-gray-400 capitalize">{type}</span>
+                                                    <span className="text-muted-foreground capitalize">{type}</span>
                                                     <span className="text-cyan-400 font-bold">{count}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </details>
-                                    <div className="border-t border-gray-700 pt-2">
-                                        <div className="flex justify-between"><span className="text-gray-300">{t('aktif')}</span><span className="text-green-400 font-bold">{businessStats?.active}</span></div>
+                                    <div className="border-t border-border pt-2">
+                                        <div className="flex justify-between"><span className="text-foreground">{t('aktif')}</span><span className="text-green-400 font-bold">{businessStats?.active}</span></div>
                                     </div>
                                 </div>
                             );
@@ -563,14 +563,14 @@ export default function UnifiedAnalyticsPage() {
                     </div>
 
                     {/* Top Products */}
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('en_cok_satan')}</h3>
                         <div className="space-y-2 text-sm">
                             {analytics.topProducts.length === 0 ? (
                                 <p className="text-gray-500 text-center py-4">{t('veri_yok')}</p>
                             ) : analytics.topProducts.slice(0, 4).map((p, idx) => (
                                 <div key={p.name} className="flex justify-between items-center">
-                                    <span className="text-gray-400 truncate max-w-[60%]">
+                                    <span className="text-muted-foreground truncate max-w-[60%]">
                                         {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`} {p.name}
                                     </span>
                                     <span className="text-green-400 font-bold">{formatCurrency(p.revenue)}</span>
@@ -580,7 +580,7 @@ export default function UnifiedAnalyticsPage() {
                     </div>
 
                     {/* Business Performance */}
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <h3 className="text-white font-bold mb-3 text-sm">{t('i_sletme_performansi')}</h3>
                         <div className="space-y-2 text-sm">
                             {analytics.businessPerformance.length === 0 ? (
@@ -588,7 +588,7 @@ export default function UnifiedAnalyticsPage() {
                             ) : analytics.businessPerformance.slice(0, 4).map((b) => (
                                 <div key={b.id} className="flex justify-between items-center">
                                     <div className="truncate max-w-[60%]">
-                                        <p className="text-gray-300 truncate">{b.name}</p>
+                                        <p className="text-foreground truncate">{b.name}</p>
                                         <p className="text-xs text-gray-500">{b.orders} {t('siparis')}</p>
                                     </div>
                                     <span className="text-emerald-400 font-bold">{formatCurrency(b.revenue)}</span>
@@ -611,29 +611,29 @@ export default function UnifiedAnalyticsPage() {
                         <div className="mb-6">
                             <h2 className="text-lg font-bold text-white mb-4">{t('platform_ozeti')}</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                <div className="bg-card rounded-xl p-3 border border-border">
                                     <p className="text-xl font-bold text-white">{orders.length.toLocaleString()}</p>
-                                    <p className="text-xs text-gray-400">{t('toplam_siparis_tum')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('toplam_siparis_tum')}</p>
                                 </div>
-                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                <div className="bg-card rounded-xl p-3 border border-border">
                                     <p className="text-xl font-bold text-green-400">{completionRate}%</p>
-                                    <p className="text-xs text-gray-400">{t('tamamlanma_orani')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('tamamlanma_orani')}</p>
                                 </div>
-                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                <div className="bg-card rounded-xl p-3 border border-border">
                                     <p className="text-xl font-bold text-emerald-400">€{Number(avgRevenuePerDay).toLocaleString()}</p>
-                                    <p className="text-xs text-gray-400">{t('gunluk_ort_ciro')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('gunluk_ort_ciro')}</p>
                                 </div>
-                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                <div className="bg-card rounded-xl p-3 border border-border">
                                     <p className="text-xl font-bold text-cyan-400">{avgPerDay}</p>
-                                    <p className="text-xs text-gray-400">{t('gunluk_ort_siparis')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('gunluk_ort_siparis')}</p>
                                 </div>
-                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                <div className="bg-card rounded-xl p-3 border border-border">
                                     <p className="text-xl font-bold text-purple-400">{uniqueBusinesses}</p>
-                                    <p className="text-xs text-gray-400">{t('aktif_i_sletme')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('aktif_i_sletme')}</p>
                                 </div>
-                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                <div className="bg-card rounded-xl p-3 border border-border">
                                     <p className="text-xl font-bold text-blue-400">{userStats?.total || 0}</p>
-                                    <p className="text-xs text-gray-400">{t('toplam_kullanici')}</p>
+                                    <p className="text-xs text-muted-foreground">{t('toplam_kullanici')}</p>
                                 </div>
                             </div>
                         </div>

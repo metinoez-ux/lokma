@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 import Script from 'next/script';
 import { Toaster } from 'react-hot-toast';
 import CookieBanner from '@/components/ui/CookieBanner';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 export default async function RootLayout({
   children,
@@ -85,8 +86,10 @@ export default async function RootLayout({
           }}
         />
         <NextIntlClientProvider messages={messages}>
-          {children}
-          <CookieBanner />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            {children}
+            <CookieBanner />
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

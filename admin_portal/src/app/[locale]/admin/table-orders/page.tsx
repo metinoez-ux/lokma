@@ -13,7 +13,7 @@ const sessionStatuses = {
     ordering: { label: 'Sipariş', icon: '🔵', badge: 'bg-blue-600/20 text-blue-400 border-blue-500/30', cardBorder: 'border-blue-500/40 hover:border-blue-400', headerBg: 'bg-blue-600/10' },
     paying: { label: 'Ödeme', icon: '🟡', badge: 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30', cardBorder: 'border-yellow-500/40 hover:border-yellow-400', headerBg: 'bg-yellow-600/10' },
     cancelled: { label: 'İptal', icon: '🔴', badge: 'bg-red-600/20 text-red-400 border-red-500/30', cardBorder: 'border-red-500/40 hover:border-red-400', headerBg: 'bg-red-600/10' },
-    closed: { label: 'Kapandı', icon: '⚫', badge: 'bg-gray-600/20 text-gray-400 border-gray-600/30', cardBorder: 'border-gray-600/40 hover:border-gray-500', headerBg: 'bg-gray-700/30' },
+    closed: { label: 'Kapandı', icon: '⚫', badge: 'bg-gray-600/20 text-muted-foreground border-gray-600/30', cardBorder: 'border-gray-600/40 hover:border-gray-500', headerBg: 'bg-gray-700/30' },
 } as const;
 
 type SessionStatus = keyof typeof sessionStatuses;
@@ -281,14 +281,14 @@ export default function TableOrdersPage() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
@@ -304,7 +304,7 @@ export default function TableOrdersPage() {
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             {t('masa_grup_siparisleri')}
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {admin?.adminType === 'super'
                                 ? t('tum_isletmelerin_grup_masa_oturumlarini_')
                                 : t('i_sletmenizin_masa_oturumlarini_takip_ed')}
@@ -335,7 +335,7 @@ export default function TableOrdersPage() {
 
             {/* Filters */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-card rounded-xl p-4">
                     <div className="flex flex-wrap gap-4">
                         {/* Status Filter */}
                         <select
@@ -371,14 +371,14 @@ export default function TableOrdersPage() {
                                                 setBusinessFilter('all');
                                                 setBusinessSearch('');
                                             }}
-                                            className="ml-2 text-gray-400 hover:text-white"
+                                            className="ml-2 text-muted-foreground hover:text-white"
                                         >
                                             ✕
                                         </button>
                                     )}
                                 </div>
                                 {showBusinessDropdown && (
-                                    <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+                                    <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-card border border-gray-600 rounded-lg shadow-xl z-50">
                                         <div
                                             className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
                                             onClick={() => {
@@ -417,7 +417,7 @@ export default function TableOrdersPage() {
 
             {/* Status Flow */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-6">
+                <div className="bg-card rounded-xl p-6">
                     <div className="flex items-center gap-2">
                         <div
                             className={`flex-1 min-w-[100px] rounded-lg p-4 text-center cursor-pointer transition border-2 ${statusFilter === 'active' ? 'bg-green-600/30 border-green-500' : 'bg-green-600/10 border-green-600/30 hover:bg-green-600/20'}`}
@@ -432,7 +432,7 @@ export default function TableOrdersPage() {
                             onClick={() => setStatusFilter(statusFilter === 'ordering' ? 'all' : 'ordering')}
                         >
                             <p className="text-blue-400 text-3xl font-bold">{stats.ordering}</p>
-                            <p className="text-gray-400 text-sm">{t('siparis')}</p>
+                            <p className="text-muted-foreground text-sm">{t('siparis')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
                         <div
@@ -440,14 +440,14 @@ export default function TableOrdersPage() {
                             onClick={() => setStatusFilter(statusFilter === 'paying' ? 'all' : 'paying')}
                         >
                             <p className="text-yellow-400 text-3xl font-bold">{stats.paying}</p>
-                            <p className="text-gray-400 text-sm">{t('odeme')}</p>
+                            <p className="text-muted-foreground text-sm">{t('odeme')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
                         <div
                             className={`flex-1 min-w-[100px] rounded-lg p-4 text-center cursor-pointer transition border-2 ${statusFilter === 'closed' ? 'bg-gray-500/30 border-gray-400' : 'bg-gray-600/10 border-gray-600/30 hover:bg-gray-600/20'}`}
                             onClick={() => setStatusFilter(statusFilter === 'closed' ? 'all' : 'closed')}
                         >
-                            <p className="text-gray-400 text-3xl font-bold">{sessions.filter(s => s.status === 'closed').length}</p>
+                            <p className="text-muted-foreground text-3xl font-bold">{sessions.filter(s => s.status === 'closed').length}</p>
                             <p className="text-gray-500 text-sm">{t('kapandi')}</p>
                         </div>
                     </div>
@@ -457,14 +457,14 @@ export default function TableOrdersPage() {
             {/* Sessions Grid */}
             <div className="max-w-7xl mx-auto">
                 {loading ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
-                        <p className="text-gray-400 mt-4">{t('masa_oturumlari_yukleniyor')}</p>
+                        <p className="text-muted-foreground mt-4">{t('masa_oturumlari_yukleniyor')}</p>
                     </div>
                 ) : sessions.length === 0 ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <p className="text-4xl mb-4">🪑</p>
-                        <p className="text-gray-400">{t('oturum_bulunamadi')}</p>
+                        <p className="text-muted-foreground">{t('oturum_bulunamadi')}</p>
                         <p className="text-gray-500 text-sm mt-1">{t('filtreleri_degistirmeyi_deneyin')}</p>
                     </div>
                 ) : (
@@ -478,7 +478,7 @@ export default function TableOrdersPage() {
                             return (
                                 <div
                                     key={session.id}
-                                    className={`bg-gray-800 rounded-xl overflow-hidden border transition hover:shadow-lg cursor-pointer ${statusInfo.cardBorder}`}
+                                    className={`bg-card rounded-xl overflow-hidden border transition hover:shadow-lg cursor-pointer ${statusInfo.cardBorder}`}
                                     onClick={() => setSelectedSession(session)}
                                 >
                                     {/* Card Header */}
@@ -491,7 +491,7 @@ export default function TableOrdersPage() {
                                                 <p className="text-white font-medium text-sm truncate max-w-[140px]">
                                                     {session.businessName || businesses[session.businessId] || ''}
                                                 </p>
-                                                <p className="text-gray-400 text-xs">
+                                                <p className="text-muted-foreground text-xs">
                                                     {formatDate(session.createdAt)}
                                                 </p>
                                             </div>
@@ -502,9 +502,9 @@ export default function TableOrdersPage() {
                                     </div>
 
                                     {/* Participants */}
-                                    <div className="px-4 py-3 border-b border-gray-700/50">
+                                    <div className="px-4 py-3 border-b border-border/50">
                                         <div className="flex items-center gap-1 mb-2">
-                                            <span className="text-gray-400 text-xs">{t('katilimcilar')}{session.participants.length})</span>
+                                            <span className="text-muted-foreground text-xs">{t('katilimcilar')}{session.participants.length})</span>
                                             <span className="text-gray-600 text-xs ml-auto">
                                                 {paidCount}/{session.participants.length} {t('odedi')}
                                             </span>
@@ -515,7 +515,7 @@ export default function TableOrdersPage() {
                                                     key={p.participantId}
                                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${p.paymentStatus === 'paid'
                                                         ? 'bg-green-600/20 text-green-400'
-                                                        : 'bg-gray-700 text-gray-300'
+                                                        : 'bg-gray-700 text-foreground'
                                                         } ${p.isHost ? 'ring-1 ring-amber-400/50' : ''}`}
                                                 >
                                                     {p.isHost && '👑'} {p.name}
@@ -527,14 +527,14 @@ export default function TableOrdersPage() {
 
                                     {/* Aggregated Items */}
                                     {aggregatedItems.length > 0 && (
-                                        <div className="px-4 py-2 border-b border-gray-700/50">
+                                        <div className="px-4 py-2 border-b border-border/50">
                                             <div className="space-y-1">
                                                 {aggregatedItems.slice(0, 4).map((item, idx) => (
                                                     <div key={idx} className="flex items-center justify-between text-xs">
-                                                        <span className="text-gray-300 truncate max-w-[60%]">
+                                                        <span className="text-foreground truncate max-w-[60%]">
                                                             {item.productName} <span className="text-gray-500">×{item.quantity}</span>
                                                         </span>
-                                                        <span className="text-gray-400 font-medium">{formatCurrency(item.totalPrice, session.currency)}</span>
+                                                        <span className="text-muted-foreground font-medium">{formatCurrency(item.totalPrice, session.currency)}</span>
                                                     </div>
                                                 ))}
                                                 {aggregatedItems.length > 4 && (
@@ -549,7 +549,7 @@ export default function TableOrdersPage() {
                                     {/* Totals */}
                                     <div className="px-4 py-3 flex items-center justify-between">
                                         <div>
-                                            <span className="text-gray-400 text-xs">{t('toplam')}</span>
+                                            <span className="text-muted-foreground text-xs">{t('toplam')}</span>
                                             <p className="text-white font-bold text-lg">{formatCurrency(session.grandTotal, session.currency)}</p>
                                         </div>
                                         {session.paidTotal > 0 && (
@@ -575,16 +575,16 @@ export default function TableOrdersPage() {
             {/* Session Detail Modal */}
             {selectedSession && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={() => setSelectedSession(null)}>
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-gray-700 flex items-center justify-between sticky top-0 bg-gray-800 z-10">
+                        <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
                             <div className="flex items-center gap-3">
                                 <span className="text-3xl">🪑</span>
                                 <div>
                                     <h2 className="text-xl font-bold text-white">
                                         Masa {selectedSession.tableNumber}
                                     </h2>
-                                    <p className="text-gray-400 text-sm">
+                                    <p className="text-muted-foreground text-sm">
                                         {selectedSession.businessName || businesses[selectedSession.businessId] || ''}
                                     </p>
                                 </div>
@@ -595,7 +595,7 @@ export default function TableOrdersPage() {
                                 </span>
                                 <button
                                     onClick={() => setSelectedSession(null)}
-                                    className="text-gray-400 hover:text-white text-xl ml-2"
+                                    className="text-muted-foreground hover:text-white text-xl ml-2"
                                 >
                                     ✕
                                 </button>
@@ -606,11 +606,11 @@ export default function TableOrdersPage() {
                             {/* Session Info */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-700/30 rounded-lg p-3">
-                                    <span className="text-gray-400 text-xs">{t('host')}</span>
+                                    <span className="text-muted-foreground text-xs">{t('host')}</span>
                                     <p className="text-white font-medium">👑 {selectedSession.hostName}</p>
                                 </div>
                                 <div className="bg-gray-700/30 rounded-lg p-3">
-                                    <span className="text-gray-400 text-xs">{t('acilis')}</span>
+                                    <span className="text-muted-foreground text-xs">{t('acilis')}</span>
                                     <p className="text-white font-medium">{formatDate(selectedSession.createdAt)}</p>
                                 </div>
                             </div>
@@ -621,7 +621,7 @@ export default function TableOrdersPage() {
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
                                         <p className="text-2xl font-bold text-white">{formatCurrency(selectedSession.grandTotal, selectedSession.currency)}</p>
-                                        <p className="text-gray-400 text-xs">{t('toplam')}</p>
+                                        <p className="text-muted-foreground text-xs">{t('toplam')}</p>
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-green-400">{formatCurrency(selectedSession.paidTotal, selectedSession.currency)}</p>
@@ -651,13 +651,13 @@ export default function TableOrdersPage() {
                                     <div>
                                         <h3 className="text-white font-bold text-sm mb-3">{t('siparis_ozeti')}{items.length} {t('urun')}</h3>
                                         <div className="bg-gray-700/20 rounded-xl overflow-hidden">
-                                            <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/40 text-gray-400 text-xs font-medium">
+                                            <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/40 text-muted-foreground text-xs font-medium">
                                                 <div className="col-span-6">{t('urun')}</div>
                                                 <div className="col-span-2 text-center">{t('adet')}</div>
                                                 <div className="col-span-2 text-right">{t('unit_price')}</div>
                                                 <div className="col-span-2 text-right">{t('toplam')}</div>
                                             </div>
-                                            <div className="divide-y divide-gray-700/50">
+                                            <div className="divide-y divide-border/50">
                                                 {items.map((item, idx) => (
                                                     <div key={idx} className="grid grid-cols-12 gap-2 px-4 py-2 items-center">
                                                         <div className="col-span-6 text-white text-sm truncate">{item.productName}</div>
@@ -666,7 +666,7 @@ export default function TableOrdersPage() {
                                                                 ×{item.quantity}
                                                             </span>
                                                         </div>
-                                                        <div className="col-span-2 text-right text-gray-400 text-sm">{formatCurrency(item.unitPrice, selectedSession.currency)}</div>
+                                                        <div className="col-span-2 text-right text-muted-foreground text-sm">{formatCurrency(item.unitPrice, selectedSession.currency)}</div>
                                                         <div className="col-span-2 text-right text-white font-medium text-sm">{formatCurrency(item.totalPrice, selectedSession.currency)}</div>
                                                     </div>
                                                 ))}
@@ -711,11 +711,11 @@ export default function TableOrdersPage() {
                                                 <div className="mt-2 space-y-1">
                                                     {p.items.map((item, idx) => (
                                                         <div key={idx} className="flex items-center justify-between text-xs">
-                                                            <span className="text-gray-400">
+                                                            <span className="text-muted-foreground">
                                                                 {item.productName} <span className="text-gray-500">×{item.quantity}</span>
                                                                 {item.itemNote && <span className="text-yellow-400 ml-1">📝 {item.itemNote}</span>}
                                                             </span>
-                                                            <span className="text-gray-300">{formatCurrency(item.totalPrice, selectedSession.currency)}</span>
+                                                            <span className="text-foreground">{formatCurrency(item.totalPrice, selectedSession.currency)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -730,15 +730,15 @@ export default function TableOrdersPage() {
                                 <div className="bg-red-600/10 border border-red-500/30 rounded-xl p-4">
                                     <h3 className="text-red-400 font-bold text-sm mb-2">🔴 İptal Bilgisi</h3>
                                     <div className="space-y-1 text-sm">
-                                        <p className="text-gray-300">
+                                        <p className="text-foreground">
                                             <span className="text-gray-500">{t('cancelled_by')}</span>{' '}
                                             {selectedSession.cancelledBy || '-'}
                                         </p>
-                                        <p className="text-gray-300">
+                                        <p className="text-foreground">
                                             <span className="text-gray-500">{t('reason')}</span>{' '}
                                             {selectedSession.cancelReason || '-'}
                                         </p>
-                                        <p className="text-gray-300">
+                                        <p className="text-foreground">
                                             <span className="text-gray-500">{t('tarih')}</span>{' '}
                                             {formatDate(selectedSession.cancelledAt)}
                                         </p>
@@ -748,7 +748,7 @@ export default function TableOrdersPage() {
 
                             {/* Actions */}
                             {selectedSession.status !== 'closed' && selectedSession.status !== 'cancelled' && (
-                                <div className="border-t border-gray-700 pt-4 space-y-3">
+                                <div className="border-t border-border pt-4 space-y-3">
                                     <button
                                         onClick={() => setCancelConfirm({ session: selectedSession, reason: '' })}
                                         className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
@@ -777,13 +777,13 @@ export default function TableOrdersPage() {
             {/* Cancel Confirmation Modal */}
             {cancelConfirm && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60]" onClick={() => !cancelLoading && setCancelConfirm(null)}>
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-card rounded-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
                         <div className="text-center mb-6">
                             <span className="text-4xl">⚠️</span>
                             <h3 className="text-xl font-bold text-white mt-3">
                                 Oturumu İptal Et
                             </h3>
-                            <p className="text-gray-400 text-sm mt-2">
+                            <p className="text-muted-foreground text-sm mt-2">
                                 Masa {cancelConfirm.session.tableNumber} — {cancelConfirm.session.businessName || ''}
                             </p>
                             <p className="text-gray-500 text-xs mt-1">
@@ -792,7 +792,7 @@ export default function TableOrdersPage() {
                         </div>
 
                         <div className="mb-6">
-                            <label className="text-gray-400 text-sm font-medium block mb-2">
+                            <label className="text-muted-foreground text-sm font-medium block mb-2">
                                 İptal Sebebi (opsiyonel)
                             </label>
                             <textarea
@@ -809,7 +809,7 @@ export default function TableOrdersPage() {
                             <button
                                 onClick={() => setCancelConfirm(null)}
                                 disabled={cancelLoading}
-                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition disabled:opacity-50"
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg font-medium transition disabled:opacity-50"
                             >
                                 {t('vazgec')}
                             </button>

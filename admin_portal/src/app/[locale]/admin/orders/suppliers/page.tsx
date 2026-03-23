@@ -136,7 +136,7 @@ const { admin, loading: adminLoading } = useAdmin();
             <div className="p-8 text-white text-center">
                 <h2 className="text-2xl font-bold mb-4">{t('yetki_yok')}</h2>
                 <p>{t('bu_sayfayi_goruntulemek_icin_yetkiniz_bu')}</p>
-                <div className="mt-4 p-4 bg-gray-800 rounded inline-block text-left text-sm text-gray-400">
+                <div className="mt-4 p-4 bg-card rounded inline-block text-left text-sm text-muted-foreground">
                     <p>{t('debug_info')}</p>
                     <p>Admin Type: {admin?.adminType}</p>
                     <p>{t('butcher_id')} {admin?.butcherId || t('yok')}</p>
@@ -146,14 +146,14 @@ const { admin, loading: adminLoading } = useAdmin();
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">{t('siparis_paneline_don')}</Link>
+                        <Link href="/admin/orders" className="text-muted-foreground text-sm hover:text-white mb-2 inline-block">{t('siparis_paneline_don')}</Link>
                         <h1 className="text-3xl font-bold text-white tracking-tight">{t('tedarikcilerim')}</h1>
-                        <p className="text-gray-400">{t('toptanci_listenizi_yonetin')}</p>
+                        <p className="text-muted-foreground">{t('toptanci_listenizi_yonetin')}</p>
                     </div>
                     <button
                         onClick={() => handleOpenModal()}
@@ -167,16 +167,16 @@ const { admin, loading: adminLoading } = useAdmin();
                 {loading ? (
                     <div className="text-center py-12 text-gray-500">{t('yukleniyor')}</div>
                 ) : suppliers.length === 0 ? (
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-12 text-center">
+                    <div className="bg-card/50 border border-border rounded-2xl p-12 text-center">
                         <div className="text-4xl mb-4">🚛</div>
                         <h3 className="text-xl font-bold text-white mb-2">{t('henuz_tedarikci_yok')}</h3>
-                        <p className="text-gray-400 mb-6">{t('i_lk_toptancinizi_ekleyerek_baslayin')}</p>
+                        <p className="text-muted-foreground mb-6">{t('i_lk_toptancinizi_ekleyerek_baslayin')}</p>
                         <button onClick={() => handleOpenModal()} className="text-green-400 hover:text-green-300 underline">{t('simdi_ekle')}</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {suppliers.map(supplier => (
-                            <div key={supplier.id} className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-gray-600 transition group">
+                            <div key={supplier.id} className="bg-card border border-border rounded-xl p-6 hover:border-gray-600 transition group">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="bg-gray-700/50 p-3 rounded-lg text-2xl">
                                         {supplier.category === 'meat' ? '🥩' :
@@ -190,9 +190,9 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </div>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-1">{supplier.name}</h3>
-                                {supplier.companyName && <p className="text-sm text-gray-400 mb-4">{supplier.companyName}</p>}
+                                {supplier.companyName && <p className="text-sm text-muted-foreground mb-4">{supplier.companyName}</p>}
 
-                                <div className="space-y-2 text-sm text-gray-300">
+                                <div className="space-y-2 text-sm text-foreground">
                                     {supplier.contactName && (
                                         <div className="flex items-center gap-2">
                                             <span>👤</span> {supplier.contactName}
@@ -216,32 +216,32 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-700">
-                        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                    <div className="bg-card rounded-2xl w-full max-w-lg shadow-2xl border border-border">
+                        <div className="p-6 border-b border-border flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white">
                                 {editingId ? t('tedarikciyi_duzenle') : t('yeni_tedarikci_ekle')}
                             </h2>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">✕</button>
+                            <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-white">✕</button>
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-gray-400 text-xs mb-1">{t('tedarikci_adi_orn_ahmet_et')}</label>
+                                <label className="block text-muted-foreground text-xs mb-1">{t('tedarikci_adi_orn_ahmet_et')}</label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-green-500 outline-none"
+                                    className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-green-500 outline-none"
                                     placeholder={t('firma_veya_kisi_adi')}
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">{t('kategori')}</label>
+                                    <label className="block text-muted-foreground text-xs mb-1">{t('kategori')}</label>
                                     <select
                                         value={formData.category}
                                         onChange={e => setFormData({ ...formData, category: e.target.value as SupplierCategory })}
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white outline-none"
+                                        className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white outline-none"
                                     >
                                         {Object.entries(categoryLabels).map(([key, label]) => (
                                             <option key={key} value={key}>{label}</option>
@@ -249,12 +249,12 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">{t('phone_whatsapp')}</label>
+                                    <label className="block text-muted-foreground text-xs mb-1">{t('phone_whatsapp')}</label>
                                     <input
                                         type="tel"
                                         value={formData.phone}
                                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white outline-none"
+                                        className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white outline-none"
                                         placeholder="+49..."
                                     />
                                 </div>
@@ -262,38 +262,38 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">{t('yetkili_kisi_opsiyonel')}</label>
+                                    <label className="block text-muted-foreground text-xs mb-1">{t('yetkili_kisi_opsiyonel')}</label>
                                     <input
                                         type="text"
                                         value={formData.contactName}
                                         onChange={e => setFormData({ ...formData, contactName: e.target.value })}
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white outline-none"
+                                        className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white outline-none"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">{t('email_optional')}</label>
+                                    <label className="block text-muted-foreground text-xs mb-1">{t('email_optional')}</label>
                                     <input
                                         type="email"
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white outline-none"
+                                        className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white outline-none"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-gray-400 text-xs mb-1">{t('address_notes')}</label>
+                                <label className="block text-muted-foreground text-xs mb-1">{t('address_notes')}</label>
                                 <textarea
                                     rows={3}
                                     value={formData.notes}
                                     onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white outline-none"
+                                    className="w-full bg-background border border-gray-600 rounded-lg p-3 text-white outline-none"
                                     placeholder={t('adres_banka_bilgileri_veya_ozel_notlar')}
                                 />
                             </div>
                         </div>
-                        <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-300 hover:text-white">{t('cancel')}</button>
+                        <div className="p-6 border-t border-border flex justify-end gap-3">
+                            <button onClick={() => setShowModal(false)} className="px-4 py-2 text-foreground hover:text-white">{t('cancel')}</button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving || !formData.name}

@@ -240,18 +240,18 @@ const [admins, setAdmins] = useState<Admin[]>([]);
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="min-h-screen bg-background text-white p-6">
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-2xl font-bold">{t('admin_yonetimi')}</h1>
-                <p className="text-gray-400 text-sm">{t('her_bolum_icin_admin_ekle_ve_yonet')}</p>
+                <p className="text-muted-foreground text-sm">{t('her_bolum_icin_admin_ekle_ve_yonet')}</p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-800 rounded-lg p-4">
+                <div className="bg-card rounded-lg p-4">
                     <div className="text-2xl font-bold">{stats.total}</div>
-                    <div className="text-sm text-gray-400">{t('toplam_admin')}</div>
+                    <div className="text-sm text-muted-foreground">{t('toplam_admin')}</div>
                 </div>
                 <div className="bg-red-900/30 rounded-lg p-4 border-l-4 border-red-500">
                     <div className="text-2xl font-bold text-red-400">{stats.butcher}</div>
@@ -276,7 +276,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                             onClick={() => setRoleFilter(role)}
                             className={`px-3 py-1 rounded-full text-sm ${roleFilter === role
                                 ? 'bg-purple-600 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                 }`}
                         >
                             {role === 'all' ? t('tumu') : ROLE_LABELS[role]}
@@ -292,21 +292,21 @@ const [admins, setAdmins] = useState<Admin[]>([]);
             </div>
 
             {/* Admins Table */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-700">
+            <div className="bg-card rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-border">
                     <thead className="bg-gray-700">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Admin</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Rolle</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">{t('atandigi_yer')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">{t('durum')}</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Aktion</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">Admin</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">Rolle</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('atandigi_yer')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('durum')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">Aktion</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-700">
+                    <tbody className="divide-y divide-border">
                         {filteredAdmins.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                                     {t('henuz_admin_eklenmemis')}
                                 </td>
                             </tr>
@@ -315,7 +315,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                 <tr key={admin.id} className={`hover:bg-gray-700/50 ${!admin.isActive ? 'opacity-50' : ''}`}>
                                     <td className="px-6 py-4">
                                         <div className="font-medium">{admin.name}</div>
-                                        <div className="text-sm text-gray-400">{admin.email}</div>
+                                        <div className="text-sm text-muted-foreground">{admin.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[admin.role]}`}>
@@ -330,7 +330,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                             onClick={() => toggleAdminStatus(admin)}
                                             className={`px-2 py-1 rounded-full text-xs font-medium ${admin.isActive
                                                 ? 'bg-green-900/50 text-green-400'
-                                                : 'bg-gray-700 text-gray-400'
+                                                : 'bg-gray-700 text-muted-foreground'
                                                 }`}
                                         >
                                             {admin.isActive ? t('aktif') : t('pasif')}
@@ -362,7 +362,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
             {/* Add/Edit Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full m-4">
+                    <div className="bg-card rounded-lg shadow-xl max-w-md w-full m-4">
                         <div className="p-6">
                             <h2 className="text-lg font-bold mb-4">
                                 {editingAdmin ? t('admin_duzenle') : t('yeni_admin_ekle')}
@@ -371,7 +371,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                             <div className="space-y-4">
                                 {/* Name */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">{t('ad_soyad')}</label>
+                                    <label className="block text-sm text-muted-foreground mb-1">{t('ad_soyad')}</label>
                                     <input
                                         type="text"
                                         value={formData.name}
@@ -383,7 +383,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
 
                                 {/* Email */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">{t('eposta')}</label>
+                                    <label className="block text-sm text-muted-foreground mb-1">{t('eposta')}</label>
                                     <input
                                         type="email"
                                         value={formData.email}
@@ -395,7 +395,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
 
                                 {/* Role */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">{t('rol')}</label>
+                                    <label className="block text-sm text-muted-foreground mb-1">{t('rol')}</label>
                                     <select
                                         value={formData.role}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value as Admin['role'], assignedTo: '' })}
@@ -410,7 +410,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
                                 {/* Assigned Business */}
                                 {(formData.role === 'butcher_admin' || formData.role === 'restaurant_admin') && (
                                     <div>
-                                        <label className="block text-sm text-gray-400 mb-1">{t('atanan_isletme')}</label>
+                                        <label className="block text-sm text-muted-foreground mb-1">{t('atanan_isletme')}</label>
                                         <select
                                             value={formData.assignedTo}
                                             onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
@@ -428,7 +428,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
 
                                 {/* Permissions */}
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-2">{t('yetkiler')}</label>
+                                    <label className="block text-sm text-muted-foreground mb-2">{t('yetkiler')}</label>
                                     <div className="flex flex-wrap gap-2">
                                         {['orders', 'products', 'customers', 'reports'].map(perm => (
                                             <label key={perm} className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-lg cursor-pointer">

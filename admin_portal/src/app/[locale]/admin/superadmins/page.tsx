@@ -149,7 +149,7 @@ export default function SuperAdminsPage() {
     /* ── Guards ── */
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-500" />
             </div>
         );
@@ -157,38 +157,38 @@ export default function SuperAdminsPage() {
 
     if (!admin || admin.adminType !== 'super') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <p className="text-red-400">Zugriff verweigert</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-background text-white">
             <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
 
                 {/* ── Header ── */}
                 <div>
                     <h1 className="text-2xl font-bold">Super Admins</h1>
-                    <p className="text-gray-400 text-sm mt-1">Plattform-Administratoren verwalten</p>
+                    <p className="text-muted-foreground text-sm mt-1">Plattform-Administratoren verwalten</p>
                 </div>
 
                 {/* ── Profile Cards ── */}
                 <section>
-                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Aktive Super Admins</h2>
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Aktive Super Admins</h2>
 
                     {loadingAdmins ? (
-                        <div className="animate-pulse h-24 bg-gray-800 rounded-xl" />
+                        <div className="animate-pulse h-24 bg-card rounded-xl" />
                     ) : (
                         <div className="space-y-3">
                             {superAdmins.map(sa => (
-                                <div key={sa.uid} className="bg-gray-800 rounded-xl p-4 flex items-center gap-4">
+                                <div key={sa.uid} className="bg-card rounded-xl p-4 flex items-center gap-4">
                                     {/* Avatar */}
                                     <div className="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-gray-700">
                                         {sa.photoURL ? (
                                             <img src={sa.photoURL} alt={sa.displayName} className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">
+                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm font-bold">
                                                 {sa.displayName.charAt(0).toUpperCase()}
                                             </div>
                                         )}
@@ -197,7 +197,7 @@ export default function SuperAdminsPage() {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="font-semibold text-white">{sa.displayName}</div>
-                                        <div className="text-xs text-gray-400">{sa.email}</div>
+                                        <div className="text-xs text-muted-foreground">{sa.email}</div>
                                         {sa.title && <div className="text-xs text-gray-500 mt-0.5">{sa.title}</div>}
                                         {sa.bio && <div className="text-xs text-gray-500 mt-1 truncate">{sa.bio}</div>}
                                     </div>
@@ -224,7 +224,7 @@ export default function SuperAdminsPage() {
                 {/* ── Edit Profile Modal ── */}
                 {editingUid && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-                        <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+                        <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
                             <h3 className="text-lg font-bold">Profil bearbeiten</h3>
 
                             {/* Photo */}
@@ -236,7 +236,7 @@ export default function SuperAdminsPage() {
                                     {photoPreview ? (
                                         <img src={photoPreview} alt="preview" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs text-center leading-tight px-1">
+                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs text-center leading-tight px-1">
                                             Foto<br/>hinzufügen
                                         </div>
                                     )}
@@ -261,7 +261,7 @@ export default function SuperAdminsPage() {
 
                             {/* Name */}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Name</label>
+                                <label className="block text-xs text-muted-foreground mb-1">Name</label>
                                 <input
                                     type="text"
                                     value={editForm.displayName}
@@ -272,7 +272,7 @@ export default function SuperAdminsPage() {
 
                             {/* Title */}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Titel / Position</label>
+                                <label className="block text-xs text-muted-foreground mb-1">Titel / Position</label>
                                 <input
                                     type="text"
                                     value={editForm.title}
@@ -284,7 +284,7 @@ export default function SuperAdminsPage() {
 
                             {/* Bio */}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Bio</label>
+                                <label className="block text-xs text-muted-foreground mb-1">Bio</label>
                                 <textarea
                                     value={editForm.bio}
                                     onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
@@ -314,8 +314,8 @@ export default function SuperAdminsPage() {
                 )}
 
                 {/* ── Add Super Admin ── */}
-                <section className="bg-gray-800 rounded-xl p-6">
-                    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Neuen Super Admin hinzufügen</h2>
+                <section className="bg-card rounded-xl p-6">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Neuen Super Admin hinzufügen</h2>
                     <p className="text-xs text-gray-500 mb-4">
                         Wenn die E-Mail bereits registriert ist, wird der Benutzer sofort zum Super Admin befördert.
                         Sonst wird ein Einladungslink erstellt (72 Std. gültig).
@@ -346,7 +346,7 @@ export default function SuperAdminsPage() {
                             ) : (
                                 <div>
                                     <p className="text-blue-400 mb-2">Einladungslink erstellt:</p>
-                                    <code className="text-xs text-gray-300 break-all block bg-gray-900 p-2 rounded">
+                                    <code className="text-xs text-foreground break-all block bg-background p-2 rounded">
                                         {addResult.inviteLink}
                                     </code>
                                 </div>

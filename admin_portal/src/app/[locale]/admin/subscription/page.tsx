@@ -30,17 +30,17 @@ export default function SubscriptionPage() {
     const ownershipMonth = 4; // Month 4 of 24
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-6xl mx-auto">
                 <h1 className="text-3xl font-bold mb-2">{t('abonelik_ve_odemeler')}</h1>
-                <p className="text-gray-400 mb-8">{t('planinizi_ve_faturalarinizi_buradan_yone')}</p>
+                <p className="text-muted-foreground mb-8">{t('planinizi_ve_faturalarinizi_buradan_yone')}</p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
                     {/* CURRENT PLAN CARD */}
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-8 shadow-xl">
+                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
                             <div>
-                                <p className="text-sm text-gray-400 uppercase font-bold tracking-wider">MEVCUT PLAN</p>
+                                <p className="text-sm text-muted-foreground uppercase font-bold tracking-wider">MEVCUT PLAN</p>
                                 <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mt-2">
                                     {currentPlan}
                                 </h2>
@@ -50,21 +50,21 @@ export default function SubscriptionPage() {
 
                         <div className="flex items-baseline gap-1 mb-6">
                             <span className="text-3xl font-bold">{formatCurrency(monthlyFee, admin?.currency)}</span>
-                            <span className="text-gray-400">/ay</span>
+                            <span className="text-muted-foreground">/ay</span>
                         </div>
 
                         <div className="space-y-3 mb-8">
-                            <div className="flex items-center gap-3 text-sm text-gray-300">
+                            <div className="flex items-center gap-3 text-sm text-foreground">
                                 <span className="text-green-400">✓</span> {t('sinirsiz_siparis')}
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-300">
+                            <div className="flex items-center gap-3 text-sm text-foreground">
                                 <span className="text-green-400">✓</span> {t('b2b_toptanci_modulu')}
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-300">
+                            <div className="flex items-center gap-3 text-sm text-foreground">
                                 <span className="text-green-400">✓</span> 7/24 Destek
                             </div>
                             {currentPlan === 'ULTRA' && (
-                                <div className="flex items-center gap-3 text-sm text-gray-300">
+                                <div className="flex items-center gap-3 text-sm text-foreground">
                                     <span className="text-purple-400">★</span> {t('ai_tahminleme')}
                                 </div>
                             )}
@@ -76,22 +76,22 @@ export default function SubscriptionPage() {
                     </div>
 
                     {/* ESL HARDWARE RENTAL CARD */}
-                    <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+                    <div className="bg-card border border-border rounded-2xl p-8 shadow-xl relative overflow-hidden">
                         {/* Background Decoration */}
                         <div className="absolute -right-8 -top-8 text-9xl text-gray-700/20 rotate-12">🏷️</div>
 
                         <div className="relative z-10">
-                            <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">{t('donanim_ki_ralama_esl')}</p>
+                            <p className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-2">{t('donanim_ki_ralama_esl')}</p>
                             <h3 className="text-2xl font-bold mb-6">Elektronik Etiketler</h3>
 
                             {eslEnabled ? (
                                 <>
                                     <div className="grid grid-cols-2 gap-4 mb-6">
-                                        <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                                        <div className="bg-background p-4 rounded-xl border border-border">
                                             <p className="text-xs text-gray-500 mb-1">{t('adet')}</p>
                                             <p className="text-2xl font-bold">{eslCount}</p>
                                         </div>
-                                        <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                                        <div className="bg-background p-4 rounded-xl border border-border">
                                             <p className="text-xs text-gray-500 mb-1">{t('aylik')}</p>
                                             <p className="text-2xl font-bold">{formatCurrency(eslTotal, admin?.currency)}</p>
                                         </div>
@@ -100,7 +100,7 @@ export default function SubscriptionPage() {
                                     {/* Rent-to-Own Progress */}
                                     <div className="mb-6">
                                         <div className="flex justify-between text-xs mb-2">
-                                            <span className="text-gray-400">Sahiplik İlerlemesi ({ownershipMonth}/24 Ay)</span>
+                                            <span className="text-muted-foreground">Sahiplik İlerlemesi ({ownershipMonth}/24 Ay)</span>
                                             <span className="text-green-400 font-bold">%16</span>
                                         </div>
                                         <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
@@ -115,7 +115,7 @@ export default function SubscriptionPage() {
                                 </>
                             ) : (
                                 <div className="text-center py-8">
-                                    <p className="text-gray-400 mb-4">{t('henuz_elektronik_etiket_kullanmiyorsunuz')}</p>
+                                    <p className="text-muted-foreground mb-4">{t('henuz_elektronik_etiket_kullanmiyorsunuz')}</p>
                                     <button className="text-green-400 underline">ESL Paketlerini İncele</button>
                                 </div>
                             )}
@@ -123,18 +123,18 @@ export default function SubscriptionPage() {
                     </div>
 
                     {/* BILLING & INVOICES */}
-                    <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl flex flex-col">
-                        <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">{t('odeme_yontemi')}</p>
-                        <div className="flex items-center gap-4 mb-8 bg-gray-900 p-4 rounded-xl border border-gray-700">
+                    <div className="bg-card border border-border rounded-2xl p-8 shadow-xl flex flex-col">
+                        <p className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-2">{t('odeme_yontemi')}</p>
+                        <div className="flex items-center gap-4 mb-8 bg-background p-4 rounded-xl border border-border">
                             <div className="bg-white p-2 rounded w-12 h-8 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full bg-amber-500 translate-x-2 opacity-80"></div>
                                 <div className="w-8 h-8 rounded-full bg-red-500 -translate-x-2 opacity-80"></div>
                             </div>
                             <div>
                                 <p className="font-bold">Mastercard •••• 4242</p>
-                                <p className="text-xs text-gray-400">Son kullanma: 12/28</p>
+                                <p className="text-xs text-muted-foreground">Son kullanma: 12/28</p>
                             </div>
-                            <button className="ml-auto text-sm text-gray-400 hover:text-white">{t('degistir')}</button>
+                            <button className="ml-auto text-sm text-muted-foreground hover:text-white">{t('degistir')}</button>
                         </div>
 
                         <div className="flex-1">
@@ -143,7 +143,7 @@ export default function SubscriptionPage() {
                                 {[1, 2, 3].map(i => (
                                     <div key={i} className="flex justify-between items-center p-3 hover:bg-gray-700 rounded-lg transition cursor-pointer group">
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-gray-700 group-hover:bg-gray-600 p-2 rounded text-gray-300">📄</div>
+                                            <div className="bg-gray-700 group-hover:bg-gray-600 p-2 rounded text-foreground">📄</div>
                                             <div>
                                                 <p className="font-bold text-sm">Ocak 2026</p>
                                                 <p className="text-xs text-gray-500">{t('mira_2026_00')}{i}</p>

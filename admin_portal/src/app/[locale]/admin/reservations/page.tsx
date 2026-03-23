@@ -500,14 +500,14 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
@@ -523,7 +523,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             🍽️ Rezervasyon Merkezi
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {admin?.adminType === 'super'
                                 ? t('tum_isletmelerin_rezervasyonlarini_yonet')
                                 : t('i_sletmenizin_rezervasyonlarini_yonetin')}
@@ -555,7 +555,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ${
                                     showTableManagement
                                         ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600'
+                                        : 'bg-gray-700 hover:bg-gray-600 text-foreground border border-gray-600'
                                 }`}
                             >
                                 Masa Yonetimi
@@ -584,7 +584,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
             {/* Filters */}
             <div className="max-w-6xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-4">
+                <div className="bg-card rounded-xl p-4">
                     <div className="flex flex-wrap gap-4">
                         {/* Date Filter */}
                         <select
@@ -635,14 +635,14 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 setBusinessFilter('all');
                                                 setBusinessSearch('');
                                             }}
-                                            className="ml-2 text-gray-400 hover:text-white"
+                                            className="ml-2 text-muted-foreground hover:text-white"
                                         >
                                             ✕
                                         </button>
                                     )}
                                 </div>
                                 {showBusinessDropdown && (
-                                    <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+                                    <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-card border border-gray-600 rounded-lg shadow-xl z-50">
                                         <div
                                             className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
                                             onClick={() => {
@@ -681,7 +681,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
             {/* Status Flow */}
             <div className="max-w-6xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-6">
+                <div className="bg-card rounded-xl p-6">
                     <div className="flex items-center gap-2">
                         <div className={`flex-1 min-w-[100px] bg-yellow-600/20 border-2 border-yellow-500 rounded-lg p-4 text-center ${stats.pending > 0 ? 'animate-pulse' : ''}`}>
                             <p className={`text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? 'animate-bounce' : ''}`}>{stats.pending}</p>
@@ -690,16 +690,16 @@ const { admin, loading: adminLoading } = useAdmin();
                         <div className="text-gray-500 text-xl">→</div>
                         <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center">
                             <p className="text-green-400 text-3xl font-bold">{stats.confirmed}</p>
-                            <p className="text-gray-400 text-sm">{t('onayli')}</p>
+                            <p className="text-muted-foreground text-sm">{t('onayli')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">|</div>
                         <div className="flex-1 min-w-[100px] bg-red-600/20 border border-red-600/30 rounded-lg p-4 text-center">
                             <p className="text-red-400 text-3xl font-bold">{stats.rejected}</p>
-                            <p className="text-gray-400 text-sm">❌ Reddedilen</p>
+                            <p className="text-muted-foreground text-sm">❌ Reddedilen</p>
                         </div>
                         <div className="text-gray-500 text-xl">|</div>
                         <div className="flex-1 min-w-[100px] bg-gray-600/20 border border-gray-600/30 rounded-lg p-4 text-center">
-                            <p className="text-gray-400 text-3xl font-bold">{stats.cancelled}</p>
+                            <p className="text-muted-foreground text-3xl font-bold">{stats.cancelled}</p>
                             <p className="text-gray-500 text-sm">🚫 İptal</p>
                         </div>
                     </div>
@@ -709,14 +709,14 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Reservations List - Date Grouped & Collapsible */}
             <div className="max-w-6xl mx-auto">
                 {loading ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                        <p className="text-gray-400 mt-4">{t('rezervasyonlar_yukleniyor')}</p>
+                        <p className="text-muted-foreground mt-4">{t('rezervasyonlar_yukleniyor')}</p>
                     </div>
                 ) : filteredReservations.length === 0 ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <p className="text-4xl mb-4">🍽️</p>
-                        <p className="text-gray-400">{t('rezervasyon_bulunamadi')}</p>
+                        <p className="text-muted-foreground">{t('rezervasyon_bulunamadi')}</p>
                     </div>
                 ) : (() => {
                     // Group by date, sort pending first within each group
@@ -778,7 +778,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         : formatDate(dateObj);
 
                                 return (
-                                    <div key={dateKey} className="bg-gray-800 rounded-xl overflow-hidden">
+                                    <div key={dateKey} className="bg-card rounded-xl overflow-hidden">
                                         {/* Date Group Header */}
                                         <button
                                             onClick={() => toggleGroup(dateKey)}
@@ -786,7 +786,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         >
                                             <div className="flex items-center gap-3">
                                                 <span className={`transition-transform ${open ? 'rotate-90' : ''}`}>
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-gray-400">
+                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-muted-foreground">
                                                         <path d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"/>
                                                     </svg>
                                                 </span>
@@ -815,7 +815,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                         {/* Expanded Content */}
                                         {open && (
-                                            <div className="border-t border-gray-700">
+                                            <div className="border-t border-border">
                                                 {/* Compact Table Header */}
                                                 <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/30 text-gray-500 text-xs font-medium">
                                                     <div className="col-span-3">{t('musteri')}</div>
@@ -824,7 +824,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     <div className="col-span-2">{t('durum')}</div>
                                                     <div className="col-span-4">{t('i_slemler')}</div>
                                                 </div>
-                                                <div className="divide-y divide-gray-700/50">
+                                                <div className="divide-y divide-border/50">
                                                     {groupReservations.map((reservation) => {
                                                         const statusInfo = reservationStatuses[reservation.status] || reservationStatuses.pending;
                                                         return (
@@ -911,7 +911,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                     )}
                                                                     <button
                                                                         onClick={() => setSelectedReservation(reservation)}
-                                                                        className="px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-xs transition"
+                                                                        className="px-2.5 py-1 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg text-xs transition"
                                                                     >
                                                                         {t('detay')}
                                                                     </button>
@@ -919,7 +919,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                         <button
                                                                             onClick={() => handlePrintReservation(reservation)}
                                                                             disabled={printingId === reservation.id}
-                                                                            className={`px-2 py-1 rounded-lg text-xs font-medium transition ${printingId === reservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                                                            className={`px-2 py-1 rounded-lg text-xs font-medium transition ${printingId === reservation.id ? 'bg-gray-600 text-muted-foreground' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
                                                                         >
                                                                             {printingId === reservation.id ? '...' : '🖨️'}
                                                                         </button>
@@ -945,14 +945,14 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Reservation Detail Modal */}
             {selectedReservation && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+                    <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">
                                 {t('rezervasyon_detayi')}
                             </h2>
                             <button
                                 onClick={() => setSelectedReservation(null)}
-                                className="text-gray-400 hover:text-white text-xl"
+                                className="text-muted-foreground hover:text-white text-xl"
                             >
                                 ✕
                             </button>
@@ -961,7 +961,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         <div className="p-6 space-y-4">
                             {/* Status */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('durum')}</span>
+                                <span className="text-muted-foreground">{t('durum')}</span>
                                 <span className={`px-3 py-1 rounded-full text-sm bg-${reservationStatuses[selectedReservation.status].color}-600/20 text-${reservationStatuses[selectedReservation.status].color}-400`}>
                                     {reservationStatuses[selectedReservation.status].icon} {reservationStatuses[selectedReservation.status].label}
                                 </span>
@@ -969,7 +969,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Customer */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('musteri')}</span>
+                                <span className="text-muted-foreground">{t('musteri')}</span>
                                 <div className="text-right">
                                     <p className="text-white font-medium">{selectedReservation.customerName}</p>
                                     {selectedReservation.customerPhone && (
@@ -982,7 +982,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Business */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('i_sletme')}</span>
+                                <span className="text-muted-foreground">{t('i_sletme')}</span>
                                 <span className="text-white">
                                     {selectedReservation.businessName || businesses[selectedReservation.businessId] || ''}
                                 </span>
@@ -990,19 +990,19 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Date */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('tarih')}</span>
+                                <span className="text-muted-foreground">{t('tarih')}</span>
                                 <span className="text-white">{formatDate(selectedReservation.reservationDate)}</span>
                             </div>
 
                             {/* Time */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('saat')}</span>
+                                <span className="text-muted-foreground">{t('saat')}</span>
                                 <span className="text-white">{selectedReservation.timeSlot || formatTime(selectedReservation.reservationDate)}</span>
                             </div>
 
                             {/* Party Size */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">{t('kisi_sayisi')}</span>
+                                <span className="text-muted-foreground">{t('kisi_sayisi')}</span>
                                 <span className="text-white font-bold text-lg">👥 {selectedReservation.partySize}</span>
                             </div>
 
@@ -1022,7 +1022,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                             {/* Notes */}
                             {selectedReservation.notes && (
-                                <div className="border-t border-gray-700 pt-4">
+                                <div className="border-t border-border pt-4">
                                     <h4 className="text-yellow-400 font-medium text-sm mb-1 flex items-center gap-1">{t('musteri_notu')}</h4>
                                     <p className="text-white bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">{selectedReservation.notes}</p>
                                 </div>
@@ -1031,13 +1031,13 @@ const { admin, loading: adminLoading } = useAdmin();
                             {/* Confirmed By */}
                             {selectedReservation.confirmedBy && selectedReservation.status !== 'pending' && (
                                 <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">{t('i_slem_yapan')}</span>
-                                    <span className="text-gray-300">{selectedReservation.confirmedBy}</span>
+                                    <span className="text-muted-foreground">{t('i_slem_yapan')}</span>
+                                    <span className="text-foreground">{selectedReservation.confirmedBy}</span>
                                 </div>
                             )}
 
                             {/* Actions */}
-                            <div className="border-t border-gray-700 pt-4 flex gap-3">
+                            <div className="border-t border-border pt-4 flex gap-3">
                                 {selectedReservation.status === 'pending' && (
                                     <>
                                         <button
@@ -1060,7 +1060,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             <button
                                                 onClick={() => handlePrintReservation(selectedReservation)}
                                                 disabled={printingId === selectedReservation.id}
-                                                className={`flex-1 py-3 rounded-lg font-medium transition ${printingId === selectedReservation.id ? 'bg-gray-600 text-gray-400' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
+                                                className={`flex-1 py-3 rounded-lg font-medium transition ${printingId === selectedReservation.id ? 'bg-gray-600 text-muted-foreground' : 'bg-orange-600 hover:bg-orange-500 text-white'}`}
                                             >
                                                 {printingId === selectedReservation.id ? 'Yazdiriliyor...' : 'Yazdir'}
                                             </button>
@@ -1090,10 +1090,10 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Cancel Confirmation Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-700">
+                    <div className="bg-card rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-border">
                             <h2 className="text-xl font-bold text-white">Rezervasyonu Iptal Et</h2>
-                            <p className="text-gray-400 text-sm mt-1">Iptal sebebini secin</p>
+                            <p className="text-muted-foreground text-sm mt-1">Iptal sebebini secin</p>
                         </div>
                         <div className="p-6 space-y-3">
                             {CANCEL_REASONS.map((reason) => (
@@ -1124,10 +1124,10 @@ const { admin, loading: adminLoading } = useAdmin();
                                 className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
                             />
                         </div>
-                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                        <div className="p-4 border-t border-border flex gap-3">
                             <button
                                 onClick={() => { setShowCancelModal(null); setCancelReason(''); setCancelNote(''); }}
-                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg font-medium transition"
                             >
                                 Vazgec
                             </button>
@@ -1150,10 +1150,10 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Card Number Selection Modal */}
             {showCardModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-700">
+                    <div className="bg-card rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-border">
                             <h2 className="text-xl font-bold text-white">{t('masa_kart_numarasi_secin')}</h2>
-                            <p className="text-gray-400 text-sm mt-1">{t('musteriye_verilecek_masa_kartini_secin')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{t('musteriye_verilecek_masa_kartini_secin')}</p>
                             <div className="flex items-center gap-4 mt-3 text-xs">
                                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> {t('secili')}</span>
                                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600 inline-block" /> {t('bos')}</span>
@@ -1164,7 +1164,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             {cardModalLoading ? (
                                 <div className="text-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" />
-                                    <p className="text-gray-400 mt-3 text-sm">{t('checking_table_status')}</p>
+                                    <p className="text-muted-foreground mt-3 text-sm">{t('checking_table_status')}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-3">
@@ -1187,7 +1187,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     ? 'bg-red-900/30 border border-red-500/30 text-red-400/50 cursor-not-allowed'
                                                     : isSelected
                                                         ? 'bg-green-500 border-2 border-green-400 text-white shadow-lg shadow-green-500/30 scale-105'
-                                                        : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500'
+                                                        : 'bg-gray-700 border border-gray-600 text-foreground hover:bg-gray-600 hover:border-gray-500'
                                                     }`}
                                             >
                                                 {num}
@@ -1197,10 +1197,10 @@ const { admin, loading: adminLoading } = useAdmin();
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                        <div className="p-4 border-t border-border flex gap-3">
                             <button
                                 onClick={() => { setShowCardModal(null); setSelectedCards(new Set()); }}
-                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg font-medium transition"
                             >
                                 İptal
                             </button>

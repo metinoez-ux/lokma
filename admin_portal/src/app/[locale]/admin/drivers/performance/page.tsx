@@ -174,22 +174,22 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
         });
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-white">
                         {t('surucu_performans_raporu')}
                     </h1>
-                    <p className="text-gray-400 mt-1">
+                    <p className="text-muted-foreground mt-1">
                         {t('teslimat_sayisi_km_nakit_ve_kart_tahsila')}
                     </p>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-gray-800 rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center border border-gray-700">
+                <div className="bg-card rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center border border-border">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             {t('tarih')}
                         </label>
                         <input
@@ -200,7 +200,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             {t('gorunum')}
                         </label>
                         <div className="flex rounded-lg overflow-hidden border border-gray-600">
@@ -210,7 +210,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                                     onClick={() => setViewMode(mode)}
                                     className={`px-4 py-2 text-sm font-medium ${viewMode === mode
                                         ? 'bg-amber-500 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {mode === 'daily' && t('gunluk')}
@@ -232,26 +232,26 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
-                        <div className="text-sm text-gray-400">{t('toplam_teslimat')}</div>
+                    <div className="bg-card rounded-lg shadow p-4 border border-border">
+                        <div className="text-sm text-muted-foreground">{t('toplam_teslimat')}</div>
                         <div className="text-2xl font-bold text-white">
                             {totals.deliveries}
                         </div>
                     </div>
-                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
-                        <div className="text-sm text-gray-400">{t('toplam_km')}</div>
+                    <div className="bg-card rounded-lg shadow p-4 border border-border">
+                        <div className="text-sm text-muted-foreground">{t('toplam_km')}</div>
                         <div className="text-2xl font-bold text-blue-600">
                             🛣️ {totals.km.toFixed(1)} km
                         </div>
                     </div>
-                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
-                        <div className="text-sm text-gray-400">Nakit Tahsilat</div>
+                    <div className="bg-card rounded-lg shadow p-4 border border-border">
+                        <div className="text-sm text-muted-foreground">Nakit Tahsilat</div>
                         <div className="text-2xl font-bold text-green-600">
                             💰 {totals.cash.toFixed(2)}€
                         </div>
                     </div>
-                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
-                        <div className="text-sm text-gray-400">Kart Tahsilat</div>
+                    <div className="bg-card rounded-lg shadow p-4 border border-border">
+                        <div className="text-sm text-muted-foreground">Kart Tahsilat</div>
                         <div className="text-2xl font-bold text-purple-600">
                             💳 {totals.card.toFixed(2)}€
                         </div>
@@ -259,40 +259,40 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                 </div>
 
                 {/* Driver Stats Table */}
-                <div className="bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-700">
+                <div className="bg-card rounded-lg shadow overflow-hidden border border-border">
                     <table className="min-w-full">
                         <thead className="bg-gray-700/50 border-b border-gray-600">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     {t('surucu')}
                                 </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">
+                                <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">
                                     Teslimat
                                 </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">
+                                <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">
                                     KM
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Nakit
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Kart
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Son Teslimat
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700">
+                        <tbody className="divide-y divide-border">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                                         {t('yukleniyor')}
                                     </td>
                                 </tr>
                             ) : driverStats.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                                         {t('bu_donemde_teslimat_bulunamadi')}
                                     </td>
                                 </tr>
@@ -322,7 +322,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                                                 ? `${driver.cardTotal.toFixed(2)}€`
                                                 : '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-right text-gray-400 text-sm">
+                                        <td className="px-4 py-3 text-right text-muted-foreground text-sm">
                                             {driver.lastDeliveryAt
                                                 ? formatDate(driver.lastDeliveryAt)
                                                 : '-'}
@@ -335,7 +335,7 @@ const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
                 </div>
 
                 {/* Privacy Notice */}
-                <div className="mt-4 text-center text-xs text-gray-400">
+                <div className="mt-4 text-center text-xs text-muted-foreground">
                     {t('gizlilik_musteri_adres_ve_telefon_bilgil')}
                 </div>
             </div>

@@ -207,13 +207,13 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="min-h-screen bg-background text-white p-6">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold">{t('surucu_yonetimi')}</h1>
-                        <p className="text-gray-400 text-sm">{t('personeli_surucu_olarak_ata_ve_isletmele')}</p>
+                        <p className="text-muted-foreground text-sm">{t('personeli_surucu_olarak_ata_ve_isletmele')}</p>
                     </div>
                     <div className="flex gap-3">
                         <a
@@ -233,9 +233,9 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
 
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gray-800 rounded-lg p-4">
+                    <div className="bg-card rounded-lg p-4">
                         <div className="text-2xl font-bold">{stats.totalDrivers}</div>
-                        <div className="text-sm text-gray-400">{t('surucu')}</div>
+                        <div className="text-sm text-muted-foreground">{t('surucu')}</div>
                     </div>
                     <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
                         <div className="text-2xl font-bold text-green-400">{stats.activeDrivers}</div>
@@ -259,12 +259,12 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                             placeholder="🔍 Ara..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-64 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500"
+                            className="w-64 bg-card border border-border rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500"
                         />
                         <select
                             value={filterMode}
                             onChange={(e) => setFilterMode(e.target.value as 'drivers' | 'all')}
-                            className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                            className="bg-card border border-border rounded-lg px-3 py-2 text-white"
                         >
                             <option value="drivers">{t('sadece_suruculer')}</option>
                             <option value="all">{t('tum_personel')}</option>
@@ -281,14 +281,14 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                 {/* Drivers/Staff Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredDrivers.length === 0 ? (
-                        <div className="col-span-full text-center py-12 text-gray-400">
+                        <div className="col-span-full text-center py-12 text-muted-foreground">
                             {searchQuery ? t('arama_sonucu_bulunamadi') : t('henuz_surucu_atanmamis')}
                         </div>
                     ) : (
                         filteredDrivers.map(person => (
                             <div
                                 key={person.id}
-                                className={`bg-gray-800 rounded-lg p-4 border-l-4 ${person.isDriver || person.role === 'driver'
+                                className={`bg-card rounded-lg p-4 border-l-4 ${person.isDriver || person.role === 'driver'
                                     ? 'border-green-500'
                                     : 'border-gray-600'
                                     }`}
@@ -296,7 +296,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
                                         <div className="font-bold text-lg">{person.name}</div>
-                                        <div className="text-sm text-gray-400">{person.email}</div>
+                                        <div className="text-sm text-muted-foreground">{person.email}</div>
                                         <div className="flex gap-1 mt-1">
                                             <span className={`px-2 py-0.5 text-xs rounded-full ${person.role === 'admin' ? 'bg-purple-900/50 text-purple-300' :
                                                 person.role === 'staff' ? 'bg-blue-900/50 text-blue-300' :
@@ -343,7 +343,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                 )}
 
                                 {/* Actions */}
-                                <div className="flex gap-2 pt-2 border-t border-gray-700">
+                                <div className="flex gap-2 pt-2 border-t border-border">
                                     {(person.isDriver || person.role === 'driver') ? (
                                         <>
                                             <button
@@ -377,7 +377,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
             {/* Assign Driver Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-lg shadow-xl max-w-lg w-full m-4 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-card rounded-lg shadow-xl max-w-lg w-full m-4 max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <h2 className="text-lg font-bold mb-4">
                                 {selectedStaff ? `🚗 ${selectedStaff.name} - Sürücü Ataması` : t('personel_sec')}
@@ -386,7 +386,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                             {/* If no staff selected, show staff list */}
                             {!selectedStaff ? (
                                 <div>
-                                    <div className="text-sm text-gray-400 mb-3">
+                                    <div className="text-sm text-muted-foreground mb-3">
                                         {t('surucu_olarak_atamak_istediginiz_persone')}
                                     </div>
                                     <input
@@ -426,7 +426,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                         <div className="flex justify-between items-start">
                                                             <div>
                                                                 <div className="font-medium">{staff.name || 'İsimsiz'}</div>
-                                                                <div className="text-sm text-gray-400">{staff.email}</div>
+                                                                <div className="text-sm text-muted-foreground">{staff.email}</div>
                                                             </div>
                                                         </div>
                                                         {/* Business Name */}
@@ -460,12 +460,12 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                 <div>
                                     <div className="bg-gray-700 rounded-lg p-3 mb-4">
                                         <div className="font-medium">{selectedStaff.name}</div>
-                                        <div className="text-sm text-gray-400">{selectedStaff.email}</div>
+                                        <div className="text-sm text-muted-foreground">{selectedStaff.email}</div>
                                     </div>
 
                                     {/* Driver Type Selection */}
                                     <div className="mb-4">
-                                        <label className="block text-sm text-gray-400 mb-2">{t('surucu_tipi')}</label>
+                                        <label className="block text-sm text-muted-foreground mb-2">{t('surucu_tipi')}</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
                                                 type="button"
@@ -476,7 +476,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                     }`}
                                             >
                                                 <div className="font-medium text-sm">{t('i_sletme_kuryesi')}</div>
-                                                <div className="text-xs text-gray-400 mt-1">{t('i_sletmenin_kendi_calisani')}</div>
+                                                <div className="text-xs text-muted-foreground mt-1">{t('i_sletmenin_kendi_calisani')}</div>
                                             </button>
                                             <button
                                                 type="button"
@@ -487,7 +487,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                     }`}
                                             >
                                                 <div className="font-medium text-sm">🔵 LOKMA Kuryesi</div>
-                                                <div className="text-xs text-gray-400 mt-1">LOKMA platformu kuryesi</div>
+                                                <div className="text-xs text-muted-foreground mt-1">LOKMA platformu kuryesi</div>
                                             </button>
                                         </div>
                                     </div>
@@ -495,7 +495,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                     {/* Selected Businesses */}
                                     {selectedBusinessIds.length > 0 && (
                                         <div className="mb-4">
-                                            <div className="text-sm text-gray-400 mb-2">
+                                            <div className="text-sm text-muted-foreground mb-2">
                                                 {t('secili_i_sletmeler')}{selectedBusinessIds.length}):
                                             </div>
                                             <div className="flex flex-wrap gap-2">
@@ -522,7 +522,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
 
                                     {/* Business Search */}
                                     <div>
-                                        <label className="block text-sm text-gray-400 mb-2">
+                                        <label className="block text-sm text-muted-foreground mb-2">
                                             {t('i_sletme_ara_ve_ekle')}
                                         </label>
                                         <input
@@ -548,7 +548,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                         <div>
                                                             <div className="text-sm font-medium">{business.name}</div>
                                                             {(business.plz || business.city) && (
-                                                                <div className="text-xs text-gray-400">
+                                                                <div className="text-xs text-muted-foreground">
                                                                     {business.plz && <span className="text-amber-400">{business.plz}</span>}
                                                                     {business.plz && business.city && ' • '}
                                                                     {business.city}

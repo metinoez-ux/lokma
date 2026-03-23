@@ -86,7 +86,7 @@ export default function OrderCard({
                     </span>
                 </div>
             </div>
-            <p className="text-gray-400 text-xs mb-1">
+            <p className="text-muted-foreground text-xs mb-1">
                 {businesses[order.businessId] || t('modal.business')}
             </p>
             {/* Pre-order scheduled time badge */}
@@ -113,7 +113,7 @@ export default function OrderCard({
                             <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
                         )}
                     </div>
-                    <p className="text-gray-400 text-xs pl-0.5">
+                    <p className="text-muted-foreground text-xs pl-0.5">
                         {order.waiterName ? `👤 ${order.waiterName}` : `📱 ${t('kanban.customerApp')}`}
                     </p>
                     {order.servedByName && (order.status === 'served' || order.status === 'delivered' || order.status === 'completed') && (
@@ -127,7 +127,7 @@ export default function OrderCard({
                 <span className="text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
                 <div className="flex items-center gap-2">
                     {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-400' : 'bg-gray-600 text-gray-400'}`}>
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-400' : 'bg-gray-600 text-muted-foreground'}`}>
                             ✓{checkedCount}/{itemCount}
                         </span>
                     )}

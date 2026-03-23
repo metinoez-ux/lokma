@@ -213,14 +213,14 @@ const params = useParams();
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Header */}
             <header className="bg-purple-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -269,9 +269,9 @@ const params = useParams();
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                     {/* Sipariş Sayısı */}
-                    <div className="bg-gray-800 rounded-lg p-4">
+                    <div className="bg-card rounded-lg p-4">
                         <div className="text-3xl font-bold text-white">{orderStats.totalOrders}</div>
-                        <div className="text-sm text-gray-400">{t('toplam_siparis')}</div>
+                        <div className="text-sm text-muted-foreground">{t('toplam_siparis')}</div>
                     </div>
                     {/* Tamamlanan */}
                     <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
@@ -297,56 +297,56 @@ const params = useParams();
 
                 {/* Pause Statistics Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gray-800 rounded-lg p-4">
+                    <div className="bg-card rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">⏸️</span>
-                            <span className="text-gray-400">{t('durdurma_sayisi')}</span>
+                            <span className="text-muted-foreground">{t('durdurma_sayisi')}</span>
                         </div>
                         <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-4">
+                    <div className="bg-card rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">▶️</span>
-                            <span className="text-gray-400">Devam Ettirme</span>
+                            <span className="text-muted-foreground">Devam Ettirme</span>
                         </div>
                         <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-4">
+                    <div className="bg-card rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">⏱️</span>
-                            <span className="text-gray-400">{t('toplam_durdurma_suresi')}</span>
+                            <span className="text-muted-foreground">{t('toplam_durdurma_suresi')}</span>
                         </div>
                         <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
                     </div>
                 </div>
 
                 {/* Delivery Pause Logs */}
-                <div className="bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 bg-gray-750 border-b border-gray-700">
+                <div className="bg-card rounded-lg overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-750 border-b border-border">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                             <span>🛵</span> {t('kurye_acma_kapama_gecmisi')}
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-700">
+                        <table className="min-w-full divide-y divide-border">
                             <thead className="bg-gray-750">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('tarih')}</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('i_slem')}</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Admin</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{t('tarih')}</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">{t('i_slem')}</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Admin</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-700">
+                            <tbody className="divide-y divide-border">
                                 {pauseLogs.length === 0 ? (
                                     <tr>
-                                        <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
+                                        <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
                                             {t('henuz_kurye_acma_kapama_kaydi_yok')}
                                         </td>
                                     </tr>
                                 ) : (
                                     pauseLogs.map((log) => (
                                         <tr key={log.id} className={log.action === 'paused' ? 'bg-amber-900/20' : 'bg-green-900/20'}>
-                                            <td className="px-4 py-3 text-sm text-gray-300">
+                                            <td className="px-4 py-3 text-sm text-foreground">
                                                 {formatDate(log.timestamp)}
                                             </td>
                                             <td className="px-4 py-3">
@@ -360,7 +360,7 @@ const params = useParams();
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-gray-300">
+                                            <td className="px-4 py-3 text-sm text-foreground">
                                                 {log.adminEmail}
                                             </td>
                                         </tr>

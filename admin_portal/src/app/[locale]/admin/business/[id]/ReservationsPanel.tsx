@@ -307,7 +307,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
             confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
             rejected: "bg-red-500/20 text-red-400 border-red-500/30",
-            cancelled: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+            cancelled: "bg-gray-500/20 text-muted-foreground border-gray-500/30",
         };
         const labels: Record<string, string> = {
             pending: t('bekleyen'),
@@ -347,13 +347,13 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                             </span>
                         )}
                     </h3>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                         {t('bugun')} {todayCount} {t('aktif_rezervasyon')}
                     </p>
                 </div>
                 <button
                     onClick={fetchReservations}
-                    className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 text-sm transition"
+                    className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 text-sm transition"
                 >
                     Aktualisieren
                 </button>
@@ -372,12 +372,12 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             {/* Filters */}
             <div className="flex flex-wrap gap-2">
                 {/* Date filter */}
-                <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+                <div className="flex gap-1 bg-card rounded-lg p-1">
                     {(["today", "tomorrow", "week", "all"] as const).map((d) => (
                         <button
                             key={d}
                             onClick={() => setDateFilter(d)}
-                            className={`px-3 py-1 text-xs rounded-md transition ${dateFilter === d ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                            className={`px-3 py-1 text-xs rounded-md transition ${dateFilter === d ? "bg-blue-600 text-white" : "text-muted-foreground hover:text-white"
                                 }`}
                         >
                             {d === "today" ? t('bugun') : d === "tomorrow" ? t('yarin') : d === "week" ? "Bu Hafta" : t('tumu')}
@@ -386,12 +386,12 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                 </div>
 
                 {/* Status filter */}
-                <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+                <div className="flex gap-1 bg-card rounded-lg p-1">
                     {(["pending", "confirmed", "rejected", "cancelled", "all"] as const).map((s) => (
                         <button
                             key={s}
                             onClick={() => setFilter(s)}
-                            className={`px-3 py-1 text-xs rounded-md transition ${filter === s ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                            className={`px-3 py-1 text-xs rounded-md transition ${filter === s ? "bg-blue-600 text-white" : "text-muted-foreground hover:text-white"
                                 }`}
                         >
                             {s === "pending"
@@ -426,7 +426,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                         return (
                             <div
                                 key={res.id}
-                                className={`bg-gray-800 rounded-xl border ${res.status === "pending" ? "border-yellow-500/30" : "border-gray-700"
+                                className={`bg-card rounded-xl border ${res.status === "pending" ? "border-yellow-500/30" : "border-border"
                                     } p-4 transition hover:border-gray-600`}
                             >
                                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -444,7 +444,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                                 <p className="text-gray-500 text-xs">{t('musteri')}</p>
                                                 <p className="text-white font-medium truncate">{res.userName}</p>
                                                 {res.userPhone && (
-                                                    <p className="text-gray-400 text-xs">{res.userPhone}</p>
+                                                    <p className="text-muted-foreground text-xs">{res.userPhone}</p>
                                                 )}
                                             </div>
                                             <div>
@@ -463,8 +463,8 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
 
                                         {res.notes && (
                                             <div className="mt-2 bg-gray-700/50 rounded-lg px-3 py-2">
-                                                <p className="text-xs text-gray-400">Not:</p>
-                                                <p className="text-sm text-gray-300">{res.notes}</p>
+                                                <p className="text-xs text-muted-foreground">Not:</p>
+                                                <p className="text-sm text-foreground">{res.notes}</p>
                                             </div>
                                         )}
 
@@ -538,10 +538,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             {/* Card Number Selection Modal */}
             {showCardModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-700">
+                    <div className="bg-card rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-border">
                             <h2 className="text-xl font-bold text-white">{t('masa_kart_numarasi_secin')}</h2>
-                            <p className="text-gray-400 text-sm mt-1">{t('musteriye_verilecek_masa_kartini_secin')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{t('musteriye_verilecek_masa_kartini_secin')}</p>
                             <div className="flex items-center gap-4 mt-3 text-xs">
                                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> {t('secili')}</span>
                                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600 inline-block" /> {t('bos')}</span>
@@ -552,7 +552,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                             {cardModalLoading ? (
                                 <div className="text-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" />
-                                    <p className="text-gray-400 mt-3 text-sm">Masa durumu kontrol ediliyor...</p>
+                                    <p className="text-muted-foreground mt-3 text-sm">Masa durumu kontrol ediliyor...</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-3">
@@ -575,7 +575,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                                         ? "bg-red-900/30 border border-red-500/30 text-red-400/50 cursor-not-allowed"
                                                         : isSelected
                                                             ? "bg-green-500 border-2 border-green-400 text-white shadow-lg shadow-green-500/30 scale-105"
-                                                            : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500"
+                                                            : "bg-gray-700 border border-gray-600 text-foreground hover:bg-gray-600 hover:border-gray-500"
                                                     }`}
                                             >
                                                 {num}
@@ -585,10 +585,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                        <div className="p-4 border-t border-border flex gap-3">
                             <button
                                 onClick={() => { setShowCardModal(null); setSelectedCards(new Set()); }}
-                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg font-medium transition"
                             >
                                 İptal
                             </button>
@@ -615,10 +615,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             {/* Cancel Confirmation Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-gray-700">
+                    <div className="bg-card rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-border">
                             <h2 className="text-xl font-bold text-white">Rezervasyonu Iptal Et</h2>
-                            <p className="text-gray-400 text-sm mt-1">Iptal sebebini secin</p>
+                            <p className="text-muted-foreground text-sm mt-1">Iptal sebebini secin</p>
                         </div>
                         <div className="p-6 space-y-3">
                             {CANCEL_REASONS.map((reason) => (
@@ -649,10 +649,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                 className="w-full mt-2 bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
                             />
                         </div>
-                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                        <div className="p-4 border-t border-border flex gap-3">
                             <button
                                 onClick={() => { setShowCancelModal(null); setCancelReason(""); setCancelNote(""); }}
-                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-foreground rounded-lg font-medium transition"
                             >
                                 Vazgec
                             </button>

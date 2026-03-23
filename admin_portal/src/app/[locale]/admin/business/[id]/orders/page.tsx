@@ -353,14 +353,14 @@ const params = useParams();
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Header - Red Bar like Businesss Page */}
             <header className="bg-red-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -389,9 +389,9 @@ const params = useParams();
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
-                    <div className="bg-gray-800 rounded-lg p-4">
+                    <div className="bg-card rounded-lg p-4">
                         <div className="text-2xl font-bold text-white">{stats.total}</div>
-                        <div className="text-sm text-gray-400">{t('toplam')}</div>
+                        <div className="text-sm text-muted-foreground">{t('toplam')}</div>
                     </div>
                     <div className="bg-yellow-600/20 rounded-lg p-4 border-l-4 border-yellow-500">
                         <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
@@ -413,24 +413,24 @@ const params = useParams();
                             : 'bg-gray-700/50 border-gray-500'
                             }`}
                     >
-                        <div className="text-2xl font-bold text-gray-300">
+                        <div className="text-2xl font-bold text-foreground">
                             {stats.completed}
                             {stats.hiddenCompleted > 0 && !showCompletedOrders && (
                                 <span className="text-xs ml-1 text-yellow-400">+{stats.hiddenCompleted} gizli</span>
                             )}
                         </div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                             {showCompletedOrders ? t('tumunu_goster_aktif') : '📦 Tamamlandı'}
                         </div>
                     </button>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-gray-800 rounded-lg p-4 mb-4 md:mb-6">
+                <div className="bg-card rounded-lg p-4 mb-4 md:mb-6">
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4">
                         {/* Search */}
                         <div className="col-span-2">
-                            <label className="block text-xs text-gray-400 mb-1">{t('search')}</label>
+                            <label className="block text-xs text-muted-foreground mb-1">{t('search')}</label>
                             <input
                                 type="text"
                                 placeholder={t('siparis_no_musteri_adi')}
@@ -501,38 +501,38 @@ const params = useParams();
                 </div>
 
                 {/* Orders Table */}
-                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                <div className="bg-card rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-700">
+                        <table className="min-w-full divide-y divide-border">
                             <thead className="bg-gray-750">
                                 <tr>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                         No
                                     </th>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                         {t('musteri')}
                                     </th>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
                                         {t('tarih')}
                                     </th>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">
                                         Teslim
                                     </th>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                         {t('tutar')}
                                     </th>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                         {t('durum')}
                                     </th>
-                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
 
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-gray-800 divide-y divide-gray-700">
+                            <tbody className="bg-card divide-y divide-border">
                                 {filteredOrders.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                                             {orders.length === 0 ? t('henuz_siparis_yok') : t('filtreye_uygun_siparis_bulunamadi')}
                                         </td>
                                     </tr>
@@ -546,7 +546,7 @@ const params = useParams();
                                                 case 'ready': return 'bg-green-900/30 border-l-4 border-green-500';
                                                 case 'completed': return 'bg-gray-700/50 border-l-4 border-gray-500';
                                                 case 'cancelled': return 'bg-red-900/30 border-l-4 border-red-500';
-                                                default: return index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750';
+                                                default: return index % 2 === 0 ? 'bg-card' : 'bg-gray-750';
                                             }
                                         };
 
@@ -565,14 +565,14 @@ const params = useParams();
                                                     >
                                                         <div className="text-sm font-medium text-white">{order.customerName}</div>
                                                         {/* Phone: Only visible during active orders */}
-                                                        <div className="text-sm text-gray-400">
+                                                        <div className="text-sm text-muted-foreground">
                                                             {['pending', 'preparing', 'ready'].includes(order.status)
                                                                 ? order.customerPhone
                                                                 : '🔒 Gizli'}
                                                         </div>
                                                     </td>
                                                     <td
-                                                        className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden md:table-cell"
+                                                        className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-foreground hidden md:table-cell"
                                                         onClick={() => setSelectedOrder(order)}
                                                     >
                                                         {formatDate(order.createdAt)}
@@ -588,7 +588,7 @@ const params = useParams();
                                                                 <span className="text-amber-400">{t('kurye')}</span>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs text-gray-400">{formatDate(order.scheduledAt?.toDate())}</div>
+                                                        <div className="text-xs text-muted-foreground">{formatDate(order.scheduledAt?.toDate())}</div>
                                                     </td>
                                                     <td
                                                         className="px-4 md:px-6 py-4 whitespace-nowrap"
@@ -640,7 +640,7 @@ const params = useParams();
                                                                 </button>
                                                             )}
                                                             {order.status === 'completed' && (
-                                                                <span className="flex-1 text-center text-gray-400 py-3 text-sm">{t('tamamlandi')}</span>
+                                                                <span className="flex-1 text-center text-muted-foreground py-3 text-sm">{t('tamamlandi')}</span>
                                                             )}
                                                             {order.status === 'cancelled' && (
                                                                 <span className="flex-1 text-center text-red-400 py-3 text-sm">❌ İptal</span>
@@ -810,7 +810,7 @@ function EditOrderModal({
                         <h2 className="text-lg font-bold text-gray-900">
                             ✏️ Sipariş Düzenle - {order.orderNumber}
                         </h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+                        <button onClick={onClose} className="text-muted-foreground hover:text-gray-600">✕</button>
                     </div>
 
                     <div className="bg-purple-50 rounded-lg p-3 mb-4">

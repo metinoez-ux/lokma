@@ -251,20 +251,20 @@ const router = useRouter();
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white">{t('yukleniyor')}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto px-4 py-6">
                 {/* Page Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">💰 Provizyon Raporu</h1>
-                        <p className="text-gray-400 text-sm">{t('i_sletme_bazli_provizyon_takibi_ve_rapor')}</p>
+                        <p className="text-muted-foreground text-sm">{t('i_sletme_bazli_provizyon_takibi_ve_rapor')}</p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -284,45 +284,45 @@ const router = useRouter();
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
-                        <p className="text-gray-400 text-xs">{t('siparis')}</p>
+                        <p className="text-muted-foreground text-xs">{t('siparis')}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
-                        <p className="text-gray-400 text-xs">Ciro</p>
+                        <p className="text-muted-foreground text-xs">Ciro</p>
                     </div>
                     <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">{t('toplam_provizyon')}</p>
+                        <p className="text-muted-foreground text-xs">{t('toplam_provizyon')}</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">Tahsil Edilen</p>
+                        <p className="text-muted-foreground text-xs">Tahsil Edilen</p>
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">{t('bekleyen_nakit')}</p>
+                        <p className="text-muted-foreground text-xs">{t('bekleyen_nakit')}</p>
                     </div>
                     <div className="bg-blue-600/20 border border-blue-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">Kart Provizyon</p>
+                        <p className="text-muted-foreground text-xs">Kart Provizyon</p>
                     </div>
                     <div className="bg-purple-600/20 border border-purple-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-purple-400">€{stats.cashCommission.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">Nakit Provizyon</p>
+                        <p className="text-muted-foreground text-xs">Nakit Provizyon</p>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-gray-300">€{stats.vatTotal.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">{t('kdv_toplam')}</p>
+                    <div className="bg-card rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-foreground">€{stats.vatTotal.toFixed(2)}</p>
+                        <p className="text-muted-foreground text-xs">{t('kdv_toplam')}</p>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-gray-800 rounded-xl p-4 mb-6">
+                <div className="bg-card rounded-xl p-4 mb-6">
                     <div className="flex flex-wrap gap-4 items-center">
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">{t('donem')}</label>
+                            <label className="block text-muted-foreground text-xs mb-1">{t('donem')}</label>
                             <input
                                 type="month"
                                 value={filterPeriod}
@@ -331,7 +331,7 @@ const router = useRouter();
                             />
                         </div>
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">{t('i_sletme')}</label>
+                            <label className="block text-muted-foreground text-xs mb-1">{t('i_sletme')}</label>
                             <select
                                 value={filterBusiness}
                                 onChange={(e) => setFilterBusiness(e.target.value)}
@@ -344,7 +344,7 @@ const router = useRouter();
                             </select>
                         </div>
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Tahsilat Durumu</label>
+                            <label className="block text-muted-foreground text-xs mb-1">Tahsilat Durumu</label>
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -368,21 +368,21 @@ const router = useRouter();
 
                 {/* Summary View */}
                 {viewMode === 'summary' ? (
-                    <div className="bg-gray-800 rounded-xl overflow-hidden">
+                    <div className="bg-card rounded-xl overflow-hidden">
                         <table className="w-full">
                             <thead className="bg-gray-700">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('i_sletme')}</th>
-                                    <th className="px-4 py-3 text-left text-gray-300 text-sm">Plan</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('siparis')}</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">Ciro</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">Provizyon</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">Kart</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">Nakit</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('bekleyen')}</th>
+                                    <th className="px-4 py-3 text-left text-foreground text-sm">{t('i_sletme')}</th>
+                                    <th className="px-4 py-3 text-left text-foreground text-sm">Plan</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('siparis')}</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">Ciro</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">Provizyon</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">Kart</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">Nakit</th>
+                                    <th className="px-4 py-3 text-right text-foreground text-sm">{t('bekleyen')}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-700">
+                            <tbody className="divide-y divide-border">
                                 {businessSummaries.length === 0 ? (
                                     <tr>
                                         <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
@@ -403,7 +403,7 @@ const router = useRouter();
                                                 <span className="text-white font-medium">{bs.businessName}</span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className="text-gray-400 text-sm">{bs.planName}</span>
+                                                <span className="text-muted-foreground text-sm">{bs.planName}</span>
                                                 <span className="text-amber-400 text-xs ml-1">%{bs.commissionRate}</span>
                                             </td>
                                             <td className="px-4 py-3 text-right text-white">{bs.totalOrders}</td>
@@ -426,7 +426,7 @@ const router = useRouter();
                             </tbody>
                             {/* Footer totals */}
                             {businessSummaries.length > 0 && (
-                                <tfoot className="bg-gray-900 border-t-2 border-gray-600">
+                                <tfoot className="bg-background border-t-2 border-gray-600">
                                     <tr>
                                         <td className="px-4 py-3 text-white font-bold" colSpan={2}>{t('toplam')}</td>
                                         <td className="px-4 py-3 text-right text-white font-bold">{stats.totalOrders}</td>
@@ -442,23 +442,23 @@ const router = useRouter();
                     </div>
                 ) : (
                     /* Detail View */
-                    <div className="bg-gray-800 rounded-xl overflow-hidden">
+                    <div className="bg-card rounded-xl overflow-hidden">
                         <table className="w-full">
                             <thead className="bg-gray-700">
                                 <tr>
-                                    <th className="px-3 py-3 text-left text-gray-300 text-xs">{t('siparis')}</th>
-                                    <th className="px-3 py-3 text-left text-gray-300 text-xs">{t('i_sletme')}</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">Teslimat</th>
-                                    <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('tutar')}</th>
-                                    <th className="px-3 py-3 text-right text-gray-300 text-xs">Oran</th>
-                                    <th className="px-3 py-3 text-right text-gray-300 text-xs">Provizyon</th>
-                                    <th className="px-3 py-3 text-right text-gray-300 text-xs">Net + KDV</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('odeme')}</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('durum')}</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('tarih')}</th>
+                                    <th className="px-3 py-3 text-left text-foreground text-xs">{t('siparis')}</th>
+                                    <th className="px-3 py-3 text-left text-foreground text-xs">{t('i_sletme')}</th>
+                                    <th className="px-3 py-3 text-center text-foreground text-xs">Teslimat</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">{t('tutar')}</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">Oran</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">Provizyon</th>
+                                    <th className="px-3 py-3 text-right text-foreground text-xs">Net + KDV</th>
+                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('odeme')}</th>
+                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('durum')}</th>
+                                    <th className="px-3 py-3 text-center text-foreground text-xs">{t('tarih')}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-700">
+                            <tbody className="divide-y divide-border">
                                 {filteredRecords.length === 0 ? (
                                     <tr>
                                         <td colSpan={10} className="px-4 py-12 text-center text-gray-500">
@@ -475,10 +475,10 @@ const router = useRouter();
                                                 <span className="text-white text-xs">{r.businessName}</span>
                                             </td>
                                             <td className="px-3 py-2 text-center">
-                                                <span className="text-gray-300 text-xs">{courierLabels[r.courierType] || r.courierType}</span>
+                                                <span className="text-foreground text-xs">{courierLabels[r.courierType] || r.courierType}</span>
                                             </td>
                                             <td className="px-3 py-2 text-right text-white">€{r.orderTotal.toFixed(2)}</td>
-                                            <td className="px-3 py-2 text-right text-gray-400">%{r.commissionRate}</td>
+                                            <td className="px-3 py-2 text-right text-muted-foreground">%{r.commissionRate}</td>
                                             <td className="px-3 py-2 text-right">
                                                 <div className="flex flex-col items-end">
                                                     <span className="text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
@@ -488,7 +488,7 @@ const router = useRouter();
                                                 </div>
                                             </td>
                                             <td className="px-3 py-2 text-right">
-                                                <span className="text-gray-300 text-xs">
+                                                <span className="text-foreground text-xs">
                                                     €{r.netCommission.toFixed(2)} + €{r.vatAmount.toFixed(2)}
                                                 </span>
                                             </td>
@@ -502,7 +502,7 @@ const router = useRouter();
                                                     {statusLabels[r.collectionStatus]}
                                                 </span>
                                             </td>
-                                            <td className="px-3 py-2 text-center text-gray-400 text-xs">
+                                            <td className="px-3 py-2 text-center text-muted-foreground text-xs">
                                                 {r.createdAt.toLocaleDateString('de-DE')}
                                             </td>
                                         </tr>
@@ -516,23 +516,23 @@ const router = useRouter();
                 {/* Order Detail Modal */}
                 {(selectedOrder || orderLoading) && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
-                        <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-700" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
                             {orderLoading ? (
                                 <div className="p-12 text-center">
                                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto mb-4"></div>
-                                    <p className="text-gray-400">{t('siparis_detaylari_yukleniyor')}</p>
+                                    <p className="text-muted-foreground">{t('siparis_detaylari_yukleniyor')}</p>
                                 </div>
                             ) : selectedOrder?.notFound ? (
                                 <div className="p-6">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-lg font-bold text-white">{t('siparis')}{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
-                                        <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
+                                        <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
                                     </div>
-                                    <p className="text-gray-400">{t('siparis_detayi_bulunamadi_sadece_provizy')}</p>
+                                    <p className="text-muted-foreground">{t('siparis_detayi_bulunamadi_sadece_provizy')}</p>
                                     {selectedOrder.commission && (
-                                        <div className="mt-4 bg-gray-900/50 rounded-lg p-4">
-                                            <p className="text-gray-300 text-sm">💰 Provizyon: <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
-                                            <p className="text-gray-300 text-sm">{t('tutar')}{selectedOrder.commission.orderTotal.toFixed(2)}</p>
+                                        <div className="mt-4 bg-background/50 rounded-lg p-4">
+                                            <p className="text-foreground text-sm">💰 Provizyon: <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
+                                            <p className="text-foreground text-sm">{t('tutar')}{selectedOrder.commission.orderTotal.toFixed(2)}</p>
                                         </div>
                                     )}
                                 </div>
@@ -542,9 +542,9 @@ const router = useRouter();
                                     <div className="flex justify-between items-start mb-5">
                                         <div>
                                             <h3 className="text-lg font-bold text-white">{t('siparis')}{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
-                                            <p className="text-gray-400 text-sm mt-0.5">{selectedOrder.butcherName || selectedOrder.businessName || selectedOrder.commission?.businessName}</p>
+                                            <p className="text-muted-foreground text-sm mt-0.5">{selectedOrder.butcherName || selectedOrder.businessName || selectedOrder.commission?.businessName}</p>
                                         </div>
-                                        <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white text-2xl leading-none">✕</button>
+                                        <button onClick={() => setSelectedOrder(null)} className="text-muted-foreground hover:text-white text-2xl leading-none">✕</button>
                                     </div>
 
                                     {/* Status Badge */}
@@ -553,7 +553,7 @@ const router = useRouter();
                                             selectedOrder.status === 'cancelled' ? 'bg-red-600/30 text-red-300' :
                                                 selectedOrder.status === 'ready' ? 'bg-blue-600/30 text-blue-300' :
                                                     selectedOrder.status === 'preparing' ? 'bg-yellow-600/30 text-yellow-300' :
-                                                        'bg-gray-600/30 text-gray-300'
+                                                        'bg-gray-600/30 text-foreground'
                                             }`}>
                                             {selectedOrder.status === 'delivered' ? '✅ Teslim Edildi' :
                                                 selectedOrder.status === 'cancelled' ? '❌ İptal' :
@@ -569,8 +569,8 @@ const router = useRouter();
                                     </div>
 
                                     {/* Customer Info */}
-                                    <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                        <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('musteri_bilgileri')}</h4>
+                                    <div className="bg-background/50 rounded-xl p-4 mb-4">
+                                        <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('musteri_bilgileri')}</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <p className="text-gray-500 text-xs">Ad Soyad</p>
@@ -595,20 +595,20 @@ const router = useRouter();
 
                                     {/* Order Items */}
                                     {selectedOrder.items && selectedOrder.items.length > 0 && (
-                                        <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_i_cerigi')}</h4>
+                                        <div className="bg-background/50 rounded-xl p-4 mb-4">
+                                            <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_i_cerigi')}</h4>
                                             <div className="space-y-2">
                                                 {selectedOrder.items.map((item: any, idx: number) => (
-                                                    <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-700/50 last:border-0">
+                                                    <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
                                                         <div className="flex-1">
                                                             <p className="text-white text-sm font-medium">{item.productName || item.name}</p>
-                                                            <p className="text-gray-400 text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || t('adet')}</p>
+                                                            <p className="text-muted-foreground text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || t('adet')}</p>
                                                         </div>
                                                         <p className="text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
+                                            <div className="mt-3 pt-3 border-t border-border flex justify-between">
                                                 <span className="text-white font-bold">{t('toplam')}</span>
                                                 <span className="text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
                                             </div>
@@ -617,8 +617,8 @@ const router = useRouter();
 
                                     {/* Courier Info */}
                                     {(selectedOrder.courierName || selectedOrder.courierId) && (
-                                        <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('kurye_bilgileri')}</h4>
+                                        <div className="bg-background/50 rounded-xl p-4 mb-4">
+                                            <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('kurye_bilgileri')}</h4>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <p className="text-gray-500 text-xs">{t('kurye_adi')}</p>
@@ -636,7 +636,7 @@ const router = useRouter();
                                                                 selectedOrder.deliveryProof.type === 'left_at_door' ? t('kapida_birakildi') :
                                                                     selectedOrder.deliveryProof.type || '-'}
                                                             {selectedOrder.deliveryProof.distanceKm !== undefined && (
-                                                                <span className="text-gray-400 ml-2">({selectedOrder.deliveryProof.distanceKm.toFixed(1)} km)</span>
+                                                                <span className="text-muted-foreground ml-2">({selectedOrder.deliveryProof.distanceKm.toFixed(1)} km)</span>
                                                             )}
                                                         </p>
                                                     </div>
@@ -646,36 +646,36 @@ const router = useRouter();
                                     )}
 
                                     {/* Timestamps */}
-                                    <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                        <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('zaman_cizelgesi')}</h4>
+                                    <div className="bg-background/50 rounded-xl p-4 mb-4">
+                                        <h4 className="text-muted-foreground text-xs font-medium mb-3 uppercase tracking-wider">{t('zaman_cizelgesi')}</h4>
                                         <div className="space-y-2">
                                             {selectedOrder.createdAt && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">{t('siparis_olusturuldu')}</span>
+                                                    <span className="text-muted-foreground text-sm">{t('siparis_olusturuldu')}</span>
                                                     <span className="text-white text-sm">{selectedOrder.createdAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.statusHistory?.ready && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">{t('hazir')}</span>
+                                                    <span className="text-muted-foreground text-sm">{t('hazir')}</span>
                                                     <span className="text-white text-sm">{(selectedOrder.statusHistory.ready.toDate ? selectedOrder.statusHistory.ready.toDate() : new Date(selectedOrder.statusHistory.ready)).toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.claimedAt && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">{t('kurye_aldi')}</span>
+                                                    <span className="text-muted-foreground text-sm">{t('kurye_aldi')}</span>
                                                     <span className="text-white text-sm">{selectedOrder.claimedAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.deliveredAt && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">✅ Teslim Edildi</span>
+                                                    <span className="text-muted-foreground text-sm">✅ Teslim Edildi</span>
                                                     <span className="text-white text-sm">{selectedOrder.deliveredAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.createdAt && selectedOrder.deliveredAt && (
-                                                <div className="flex justify-between pt-2 border-t border-gray-700/50">
-                                                    <span className="text-gray-400 text-sm">{t('toplam_sure')}</span>
+                                                <div className="flex justify-between pt-2 border-t border-border/50">
+                                                    <span className="text-muted-foreground text-sm">{t('toplam_sure')}</span>
                                                     <span className="text-amber-400 text-sm font-medium">
                                                         {Math.round((selectedOrder.deliveredAt.getTime() - selectedOrder.createdAt.getTime()) / 60000)} dk
                                                     </span>
@@ -690,29 +690,29 @@ const router = useRouter();
                                             <h4 className="text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('provizyon_detayi')}</h4>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-300 text-sm">{t('siparis_tutari')}</span>
+                                                    <span className="text-foreground text-sm">{t('siparis_tutari')}</span>
                                                     <span className="text-white text-sm">€{selectedOrder.commission.orderTotal.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-300 text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? t('kendi_kurye') : t('lokma_kurye')})</span>
+                                                    <span className="text-foreground text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? t('kendi_kurye') : t('lokma_kurye')})</span>
                                                     <span className="text-white text-sm">%{selectedOrder.commission.commissionRate}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-300 text-sm">Provizyon</span>
+                                                    <span className="text-foreground text-sm">Provizyon</span>
                                                     <span className="text-amber-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
                                                 </div>
                                                 {selectedOrder.commission.perOrderFee > 0 && (
                                                     <div className="flex justify-between">
-                                                        <span className="text-gray-300 text-sm">{t('siparis_basi_ucret')}</span>
+                                                        <span className="text-foreground text-sm">{t('siparis_basi_ucret')}</span>
                                                         <span className="text-white text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
                                                     </div>
                                                 )}
                                                 <div className="flex justify-between pt-2 border-t border-amber-700/30">
-                                                    <span className="text-gray-300 text-sm">Net Provizyon</span>
+                                                    <span className="text-foreground text-sm">Net Provizyon</span>
                                                     <span className="text-white text-sm">€{selectedOrder.commission.netCommission.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-300 text-sm">KDV (%{selectedOrder.commission.vatRate})</span>
+                                                    <span className="text-foreground text-sm">KDV (%{selectedOrder.commission.vatRate})</span>
                                                     <span className="text-white text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between pt-2 border-t border-amber-700/30">
@@ -720,13 +720,13 @@ const router = useRouter();
                                                     <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center mt-2">
-                                                    <span className="text-gray-300 text-sm">{t('odeme')}</span>
+                                                    <span className="text-foreground text-sm">{t('odeme')}</span>
                                                     <span className={`px-2 py-0.5 rounded text-xs ${selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
                                                         {selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-300 text-sm">Tahsilat</span>
+                                                    <span className="text-foreground text-sm">Tahsilat</span>
                                                     <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColors[selectedOrder.commission.collectionStatus]}`}>
                                                         {statusLabels[selectedOrder.commission.collectionStatus]}
                                                     </span>
@@ -737,8 +737,8 @@ const router = useRouter();
 
                                     {/* Order Note */}
                                     {selectedOrder.notes && (
-                                        <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-gray-400 text-xs font-medium mb-2 uppercase tracking-wider">{t('siparis_notu')}</h4>
+                                        <div className="bg-background/50 rounded-xl p-4 mb-4">
+                                            <h4 className="text-muted-foreground text-xs font-medium mb-2 uppercase tracking-wider">{t('siparis_notu')}</h4>
                                             <p className="text-white text-sm">{selectedOrder.notes}</p>
                                         </div>
                                     )}

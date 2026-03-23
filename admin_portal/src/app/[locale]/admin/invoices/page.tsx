@@ -327,20 +327,20 @@ export default function InvoicesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white">{t('yukleniyor')}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Page Title */}
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">📄 Faturalar</h1>
-                        <p className="text-gray-400 text-sm">{t('b2b_abonelik_faturalari')}</p>
+                        <p className="text-muted-foreground text-sm">{t('b2b_abonelik_faturalari')}</p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -439,38 +439,38 @@ export default function InvoicesPage() {
                 )}
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-white">{stats.total}</p>
-                        <p className="text-gray-400 text-sm">{t('toplam')}</p>
+                        <p className="text-muted-foreground text-sm">{t('toplam')}</p>
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-yellow-400">{stats.pending}</p>
-                        <p className="text-gray-400 text-sm">{t('bekleyen')}</p>
+                        <p className="text-muted-foreground text-sm">{t('bekleyen')}</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-green-400">{stats.paid}</p>
-                        <p className="text-gray-400 text-sm">{t('odenen')}</p>
+                        <p className="text-muted-foreground text-sm">{t('odenen')}</p>
                     </div>
                     <div className="bg-red-600/20 border border-red-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-red-400">{stats.failed}</p>
-                        <p className="text-gray-400 text-sm">{t('basarisiz')}</p>
+                        <p className="text-muted-foreground text-sm">{t('basarisiz')}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalAmount)}</p>
-                        <p className="text-gray-400 text-sm">{t('toplam_tutar')}</p>
+                        <p className="text-muted-foreground text-sm">{t('toplam_tutar')}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 text-center">
+                    <div className="bg-card rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.paidAmount)}</p>
-                        <p className="text-gray-400 text-sm">Tahsil Edilen</p>
+                        <p className="text-muted-foreground text-sm">Tahsil Edilen</p>
                     </div>
                 </div>
 
                 {/* Enhanced Filters */}
-                <div className="bg-gray-800 rounded-xl p-4 mb-6 space-y-4">
+                <div className="bg-card rounded-xl p-4 mb-6 space-y-4">
                     {/* Row 1: Status + Period Presets */}
                     <div className="flex flex-wrap gap-3 items-end">
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">{t('durum')}</label>
+                            <label className="block text-muted-foreground text-xs mb-1">{t('durum')}</label>
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -495,7 +495,7 @@ export default function InvoicesPage() {
 
                     {/* Row 2: Period Preset Chips */}
                     <div>
-                        <label className="block text-gray-400 text-xs mb-2">Zeitraum</label>
+                        <label className="block text-muted-foreground text-xs mb-2">Zeitraum</label>
                         <div className="flex flex-wrap gap-2">
                             {[
                                 { key: 'current_quarter' as PeriodPreset, label: `Aktuelles Quartal (${getCurrentQuarterLabel()})` },
@@ -512,7 +512,7 @@ export default function InvoicesPage() {
                                     onClick={() => { setPeriodPreset(key); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${periodPreset === key
                                             ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {label}
@@ -523,7 +523,7 @@ export default function InvoicesPage() {
 
                     {/* Row 3: Quartal Chips */}
                     <div>
-                        <label className="block text-gray-400 text-xs mb-2">Quartal {new Date().getFullYear()}</label>
+                        <label className="block text-muted-foreground text-xs mb-2">Quartal {new Date().getFullYear()}</label>
                         <div className="flex gap-2">
                             {(['q1', 'q2', 'q3', 'q4'] as PeriodPreset[]).map((q) => (
                                 <button
@@ -531,7 +531,7 @@ export default function InvoicesPage() {
                                     onClick={() => { setPeriodPreset(q); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
                                     className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${periodPreset === q
                                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {q.toUpperCase()} ({q === 'q1' ? 'Jan–Mär' : q === 'q2' ? 'Apr–Jun' : q === 'q3' ? 'Jul–Sep' : 'Okt–Dez'})
@@ -543,7 +543,7 @@ export default function InvoicesPage() {
                     {/* Row 4: Custom Date Range + Single Day */}
                     <div className="flex flex-wrap gap-4 items-end">
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Von</label>
+                            <label className="block text-muted-foreground text-xs mb-1">Von</label>
                             <input
                                 type="date"
                                 value={dateFrom}
@@ -552,7 +552,7 @@ export default function InvoicesPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Bis</label>
+                            <label className="block text-muted-foreground text-xs mb-1">Bis</label>
                             <input
                                 type="date"
                                 value={dateTo}
@@ -562,7 +562,7 @@ export default function InvoicesPage() {
                         </div>
                         <div className="text-gray-500 text-sm pb-2">oder</div>
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Einzeltag</label>
+                            <label className="block text-muted-foreground text-xs mb-1">Einzeltag</label>
                             <input
                                 type="date"
                                 value={singleDay}
@@ -590,20 +590,20 @@ export default function InvoicesPage() {
                 </div>
 
                 {/* Invoice Table */}
-                <div className="bg-gray-800 rounded-xl overflow-hidden">
+                <div className="bg-card rounded-xl overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-gray-700">
                             <tr>
-                                <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('fatura_no')}</th>
-                                <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('musteri')}</th>
-                                <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('donem')}</th>
-                                <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('tutar')}</th>
-                                <th className="px-4 py-3 text-center text-gray-300 text-sm">{t('durum')}</th>
-                                <th className="px-4 py-3 text-center text-gray-300 text-sm">{t('son_odeme')}</th>
-                                <th className="px-4 py-3 text-center text-gray-300 text-sm">{t('i_slemler')}</th>
+                                <th className="px-4 py-3 text-left text-foreground text-sm">{t('fatura_no')}</th>
+                                <th className="px-4 py-3 text-left text-foreground text-sm">{t('musteri')}</th>
+                                <th className="px-4 py-3 text-left text-foreground text-sm">{t('donem')}</th>
+                                <th className="px-4 py-3 text-right text-foreground text-sm">{t('tutar')}</th>
+                                <th className="px-4 py-3 text-center text-foreground text-sm">{t('durum')}</th>
+                                <th className="px-4 py-3 text-center text-foreground text-sm">{t('son_odeme')}</th>
+                                <th className="px-4 py-3 text-center text-foreground text-sm">{t('i_slemler')}</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700">
+                        <tbody className="divide-y divide-border">
                             {filteredInvoices.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
@@ -622,7 +622,7 @@ export default function InvoicesPage() {
                                                 <p className="text-gray-500 text-xs">{invoice.butcherAddress}</p>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-300">{invoice.period}</td>
+                                        <td className="px-4 py-3 text-foreground">{invoice.period}</td>
                                         <td className="px-4 py-3 text-right">
                                             <span className="text-white font-bold">{formatCurrency(invoice.grandTotal, invoice.currency)}</span>
                                             {invoice.surchargeAmount && invoice.surchargeAmount > 0 && (
@@ -634,7 +634,7 @@ export default function InvoicesPage() {
                                                 {statusLabels[invoice.status]}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-center text-gray-300 text-sm">
+                                        <td className="px-4 py-3 text-center text-foreground text-sm">
                                             {new Date(invoice.dueDate).toLocaleDateString('de-DE')}
                                         </td>
                                         <td className="px-4 py-3 text-center">
@@ -823,13 +823,13 @@ export default function InvoicesPage() {
             {/* Invoice Creation Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+                    <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
                         <h2 className="text-xl font-bold text-white mb-4">{t('manuel_fatura_olustur')}</h2>
-                        <p className="text-gray-400 text-sm mb-4">{t('gobd_uyumlu_ardisik_fatura_numarasi_otom')}</p>
+                        <p className="text-muted-foreground text-sm mb-4">{t('gobd_uyumlu_ardisik_fatura_numarasi_otom')}</p>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-gray-300 text-sm mb-1">{t('musteri_adi')}</label>
+                                <label className="block text-foreground text-sm mb-1">{t('musteri_adi')}</label>
                                 <input
                                     type="text"
                                     value={newInvoice.butcherName}
@@ -839,7 +839,7 @@ export default function InvoicesPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-gray-300 text-sm mb-1">Adres</label>
+                                <label className="block text-foreground text-sm mb-1">Adres</label>
                                 <input
                                     type="text"
                                     value={newInvoice.butcherAddress}
@@ -849,7 +849,7 @@ export default function InvoicesPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-gray-300 text-sm mb-1">{t('aciklama')}</label>
+                                <label className="block text-foreground text-sm mb-1">{t('aciklama')}</label>
                                 <input
                                     type="text"
                                     value={newInvoice.description}
@@ -860,7 +860,7 @@ export default function InvoicesPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-300 text-sm mb-1">{t('net_tutar')}</label>
+                                    <label className="block text-foreground text-sm mb-1">{t('net_tutar')}</label>
                                     <input
                                         type="number"
                                         value={newInvoice.netAmount || ''}
@@ -871,7 +871,7 @@ export default function InvoicesPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-300 text-sm mb-1">{t('kdv_orani')}</label>
+                                    <label className="block text-foreground text-sm mb-1">{t('kdv_orani')}</label>
                                     <select
                                         value={newInvoice.vatRate}
                                         onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: e.target.value as 'STANDARD' | 'REDUCED' })}
@@ -885,10 +885,10 @@ export default function InvoicesPage() {
 
                             {/* Preview */}
                             {newInvoice.netAmount > 0 && (
-                                <div className="bg-gray-900 rounded-lg p-3 text-sm">
-                                    <div className="flex justify-between text-gray-400"><span>Net:</span><span>{formatCurrency(newInvoice.netAmount)}</span></div>
-                                    <div className="flex justify-between text-gray-400"><span>KDV ({newInvoice.vatRate === 'REDUCED' ? '7%' : '19%'}):</span><span>{formatCurrency(newInvoice.netAmount * VAT_RATES[newInvoice.vatRate])}</span></div>
-                                    <div className="flex justify-between text-white font-bold border-t border-gray-700 mt-2 pt-2"><span>{t('toplam')}</span><span>{formatCurrency(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate]))}</span></div>
+                                <div className="bg-background rounded-lg p-3 text-sm">
+                                    <div className="flex justify-between text-muted-foreground"><span>Net:</span><span>{formatCurrency(newInvoice.netAmount)}</span></div>
+                                    <div className="flex justify-between text-muted-foreground"><span>KDV ({newInvoice.vatRate === 'REDUCED' ? '7%' : '19%'}):</span><span>{formatCurrency(newInvoice.netAmount * VAT_RATES[newInvoice.vatRate])}</span></div>
+                                    <div className="flex justify-between text-white font-bold border-t border-border mt-2 pt-2"><span>{t('toplam')}</span><span>{formatCurrency(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate]))}</span></div>
                                 </div>
                             )}
                         </div>
@@ -915,7 +915,7 @@ export default function InvoicesPage() {
             {/* Storno Confirmation Modal */}
             {showStornoModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+                    <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
                         <h2 className="text-xl font-bold text-red-400 mb-4">{t('fatura_storno_i_ptal')}</h2>
                         <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-4">
                             <p className="text-red-200 text-sm">
@@ -924,7 +924,7 @@ export default function InvoicesPage() {
                         </div>
 
                         <div>
-                            <label className="block text-gray-300 text-sm mb-1">Storno Sebebi (zorunlu, min 10 karakter)</label>
+                            <label className="block text-foreground text-sm mb-1">Storno Sebebi (zorunlu, min 10 karakter)</label>
                             <textarea
                                 value={stornoReason}
                                 onChange={(e) => setStornoReason(e.target.value)}

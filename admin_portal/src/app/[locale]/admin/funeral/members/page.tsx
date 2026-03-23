@@ -104,13 +104,13 @@ export default function FuneralMembersPage() {
     if (adminLoading) return <div className="p-8 text-center text-white">{t('yukleniyor')}</div>;
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="min-h-screen bg-background text-white p-6">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
                         {t('cenaze_fonu_uyeleri')}
                     </h1>
-                    <p className="text-gray-400 mt-1">{t('uyelik_aidat_ve_durum_takibi')}</p>
+                    <p className="text-muted-foreground mt-1">{t('uyelik_aidat_ve_durum_takibi')}</p>
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
@@ -129,19 +129,19 @@ export default function FuneralMembersPage() {
                             placeholder={t('uye_no_i_sim_veya_tc_no_ile_ara')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-5 py-4 bg-gray-800 rounded-xl border border-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-lg"
+                            className="w-full px-5 py-4 bg-card rounded-xl border border-border focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-lg"
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-2xl">🔍</span>
                     </div>
                 </div>
 
-                <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col justify-center items-center">
-                    <span className="text-gray-400 text-sm">{t('toplam_uye')}</span>
+                <div className="bg-card p-4 rounded-xl border border-border flex flex-col justify-center items-center">
+                    <span className="text-muted-foreground text-sm">{t('toplam_uye')}</span>
                     <span className="text-3xl font-bold text-white">{members.length}</span>
                 </div>
 
-                <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col justify-center items-center">
-                    <span className="text-gray-400 text-sm">{t('aktif_aileler')}</span>
+                <div className="bg-card p-4 rounded-xl border border-border flex flex-col justify-center items-center">
+                    <span className="text-muted-foreground text-sm">{t('aktif_aileler')}</span>
                     <span className="text-3xl font-bold text-green-400">
                         {members.filter(m => m.status === 'active').length}
                     </span>
@@ -149,10 +149,10 @@ export default function FuneralMembersPage() {
             </div>
 
             {/* Members Table */}
-            <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden shadow-xl">
+            <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs font-semibold tracking-wider">
+                        <thead className="bg-background/50 text-muted-foreground uppercase text-xs font-semibold tracking-wider">
                             <tr>
                                 <th className="px-6 py-4">{t('uye_no')}</th>
                                 <th className="px-6 py-4">{t('vor_und_nachname')}</th>
@@ -163,7 +163,7 @@ export default function FuneralMembersPage() {
                                 <th className="px-6 py-4 text-right">{t('i_slem')}</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700">
+                        <tbody className="divide-y divide-border">
                             {loading ? (
                                 <tr><td colSpan={7} className="text-center py-8">{t('yukleniyor')}</td></tr>
                             ) : filteredMembers.length === 0 ? (
@@ -175,7 +175,7 @@ export default function FuneralMembersPage() {
                                         <div className="font-medium text-white">{m.personalInfo.firstName} {m.personalInfo.lastName}</div>
                                         <div className="text-xs text-gray-500">{m.personalInfo.placeOfBirth}, {new Date(m.personalInfo.dateOfBirth).getFullYear()}</div>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-400">
+                                    <td className="px-6 py-4 text-muted-foreground">
                                         {m.dependents?.length || 0} {t('kisi')}
                                     </td>
                                     <td className="px-6 py-4">
@@ -193,7 +193,7 @@ export default function FuneralMembersPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="bg-gray-700 px-2 py-1 rounded text-xs text-gray-300 border border-gray-600">
+                                        <span className="bg-gray-700 px-2 py-1 rounded text-xs text-foreground border border-gray-600">
                                             {m.subscription.plan === 'family' ? t('familie') : t('einzel')}
                                         </span>
                                     </td>
@@ -211,9 +211,9 @@ export default function FuneralMembersPage() {
 
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-2xl p-8 border border-gray-700 shadow-2xl">
+                    <div className="bg-card rounded-2xl w-full max-w-2xl p-8 border border-border shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4">{t('yeni_uye_kaydi')}</h2>
-                        <p className="text-gray-400 mb-6">{t('demo_amacli_hizli_kayit_formu_gercek_uyg')}</p>
+                        <p className="text-muted-foreground mb-6">{t('demo_amacli_hizli_kayit_formu_gercek_uyg')}</p>
 
                         {/* Placeholder Form */}
                         <div className="space-y-4">
@@ -224,7 +224,7 @@ export default function FuneralMembersPage() {
                             </button>
                             <button
                                 onClick={() => setShowAddModal(false)}
-                                className="w-full bg-transparent py-3 rounded text-gray-400 hover:text-white"
+                                className="w-full bg-transparent py-3 rounded text-muted-foreground hover:text-white"
                             >
                                 {t('vazgec')}
                             </button>
@@ -241,7 +241,7 @@ function StatusBadge({ status, labels }: { status: string; labels: Record<string
         active: 'bg-green-900/50 text-green-400 border-green-700',
         pending: 'bg-yellow-900/50 text-yellow-400 border-yellow-700',
         debtor: 'bg-red-900/50 text-red-400 border-red-700',
-        passive: 'bg-gray-700 text-gray-400 border-gray-600',
+        passive: 'bg-gray-700 text-muted-foreground border-gray-600',
         deceased: 'bg-purple-900/50 text-purple-400 border-purple-700',
     };
 

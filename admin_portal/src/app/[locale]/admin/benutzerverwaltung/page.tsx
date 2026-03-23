@@ -91,12 +91,12 @@ export default function BenutzerverwaltungPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-background text-white">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold mb-1">Benutzerverwaltung</h1>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                         Benutzer, Partner und Teams verwalten
                     </p>
                 </div>
@@ -109,14 +109,14 @@ export default function BenutzerverwaltungPage() {
                             <Link
                                 key={section.href}
                                 href={section.href}
-                                className="group bg-gray-800 border border-gray-700 rounded-xl p-5 hover:border-red-500/50 hover:bg-gray-800/80 transition-all"
+                                className="group bg-card border border-border rounded-xl p-5 hover:border-red-500/50 hover:bg-card/80 transition-all"
                             >
                                 <div className="flex items-start justify-between mb-3">
                                     <h3 className="text-white font-semibold text-sm group-hover:text-red-400 transition-colors">
                                         {t(section.labelKey) || section.fallbackLabel}
                                     </h3>
                                     {count !== undefined && (
-                                        <span className="bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
+                                        <span className="bg-gray-700 text-foreground text-xs px-2 py-0.5 rounded-full">
                                             {count.toLocaleString('de-DE')}
                                         </span>
                                     )}

@@ -236,12 +236,12 @@ export default function PlansPage() {
     if (loading || adminLoading || sectorsLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-900 text-white">
+        <div className="flex flex-col min-h-screen bg-background text-white">
             <div className="w-full max-w-4xl mx-auto px-6 py-8">
                 {/* Back Button */}
                 <button
                     onClick={() => router.push('/admin/dashboard')}
-                    className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors group"
+                    className="flex items-center text-muted-foreground hover:text-white mb-6 transition-colors group"
                 >
                     <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
                     {t('panela_geri_don')}
@@ -250,7 +250,7 @@ export default function PlansPage() {
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Abonelik Paketleri</h1>
-                        <p className="text-gray-400 mt-1">{t('i_sletme_turune_gore_abonelik_planlarini')}</p>
+                        <p className="text-muted-foreground mt-1">{t('i_sletme_turune_gore_abonelik_planlarini')}</p>
                     </div>
                     <button
                         onClick={handleCreate}
@@ -261,7 +261,7 @@ export default function PlansPage() {
                 </div>
 
                 {/* Business Type Selector */}
-                <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg mb-6 w-fit">
+                <div className="flex space-x-1 bg-card p-1 rounded-lg mb-6 w-fit">
                     {
                         sectorCategories.map(type => (
                             <button
@@ -269,7 +269,7 @@ export default function PlansPage() {
                                 onClick={() => setSelectedBusinessType(type.id)}
                                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedBusinessType === type.id
                                     ? 'bg-gray-700 text-white shadow-sm'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                    : 'text-muted-foreground hover:text-white hover:bg-gray-700/50'
                                     }`}
                             >
                                 {type.label}
@@ -282,7 +282,7 @@ export default function PlansPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {
                         plans.map(plan => (
-                            <div key={plan.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 transition-all group shadow-lg flex flex-col relative">
+                            <div key={plan.id} className="bg-card rounded-xl border border-border overflow-hidden hover:border-gray-500 transition-all group shadow-lg flex flex-col relative">
                                 {/* Top Color Bar */}
                                 <div className={`h-1.5 w-full ${plan.color}`}></div>
 
@@ -294,10 +294,10 @@ export default function PlansPage() {
                                                 <h3 className="font-bold text-white text-lg tracking-tight">{plan.name}</h3>
                                                 <div className={`w-2 h-2 rounded-full shrink-0 ${plan.isActive ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></div>
                                             </div>
-                                            <p className="text-xs text-gray-400 font-mono mt-1 bg-gray-900/50 inline-block px-1.5 py-0.5 rounded-md">{plan.code}</p>
+                                            <p className="text-xs text-muted-foreground font-mono mt-1 bg-background/50 inline-block px-1.5 py-0.5 rounded-md">{plan.code}</p>
                                         </div>
 
-                                        <div className="flex gap-0.5 -mt-1 -mr-2 bg-gray-900/60 p-1 rounded-lg border border-gray-700/50 opacity-80 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex gap-0.5 -mt-1 -mr-2 bg-background/60 p-1 rounded-lg border border-border/50 opacity-80 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => handleEdit(plan)}
                                                 className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-md transition-colors"
@@ -387,14 +387,14 @@ export default function PlansPage() {
                                     </div>
 
                                     {/* Limits Info Box */}
-                                    <div className="grid grid-cols-3 gap-0 bg-gray-900/40 rounded-xl border border-gray-700/50 p-1">
+                                    <div className="grid grid-cols-3 gap-0 bg-background/40 rounded-xl border border-border/50 p-1">
                                         <div className="text-center py-2">
                                             <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">{t('siparis')}</p>
-                                            <p className="text-sm font-bold text-gray-300">{plan.orderLimit === null || plan.orderLimit === undefined ? '∞' : plan.orderLimit}</p>
+                                            <p className="text-sm font-bold text-foreground">{plan.orderLimit === null || plan.orderLimit === undefined ? '∞' : plan.orderLimit}</p>
                                         </div>
-                                        <div className="text-center py-2 border-l border-r border-gray-700/50">
+                                        <div className="text-center py-2 border-l border-r border-border/50">
                                             <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Personel</p>
-                                            <p className="text-sm font-bold text-gray-300">{plan.personnelLimit === null || plan.personnelLimit === undefined ? '∞' : plan.personnelLimit}</p>
+                                            <p className="text-sm font-bold text-foreground">{plan.personnelLimit === null || plan.personnelLimit === undefined ? '∞' : plan.personnelLimit}</p>
                                         </div>
                                         <div className="text-center py-2">
                                             <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Prov.</p>
@@ -409,9 +409,9 @@ export default function PlansPage() {
                     {/* 'New Plan' Ghost Card */}
                     <button
                         onClick={handleCreate}
-                        className="min-h-[300px] border-2 border-dashed border-gray-700 hover:border-gray-500 hover:text-white rounded-xl flex flex-col items-center justify-center gap-4 text-gray-500 transition-all group bg-gray-800/10 hover:bg-gray-800/40"
+                        className="min-h-[300px] border-2 border-dashed border-border hover:border-gray-500 hover:text-white rounded-xl flex flex-col items-center justify-center gap-4 text-gray-500 transition-all group bg-card/10 hover:bg-card/40"
                     >
-                        <div className="w-12 h-12 rounded-full bg-gray-800 group-hover:bg-gray-700 group-hover:scale-110 flex items-center justify-center transition-all shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-card group-hover:bg-gray-700 group-hover:scale-110 flex items-center justify-center transition-all shadow-sm">
                             <span className="text-xl font-medium">+</span>
                         </div>
                         <span className="font-semibold text-sm transition-colors">{t('yeni_paket_ekle')}</span>
@@ -435,13 +435,13 @@ export default function PlansPage() {
                 {
                     isModalOpen && (
                         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="bg-gray-900 rounded-2xl w-full max-w-6xl border border-gray-700 shadow-2xl flex flex-col max-h-[95vh]">
+                            <div className="bg-background rounded-2xl w-full max-w-6xl border border-border shadow-2xl flex flex-col max-h-[95vh]">
 
                                 {/* Modal Header */}
-                                <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900 rounded-t-2xl">
+                                <div className="p-6 border-b border-border flex justify-between items-center bg-background rounded-t-2xl">
                                     <div>
                                         <h2 className="text-2xl font-bold text-white">{editingPlan ? t('paketi_duzenle') : t('yeni_paket_olustur')}</h2>
-                                        <p className="text-sm text-gray-400 mt-1">
+                                        <p className="text-sm text-muted-foreground mt-1">
                                             <span className="bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded text-xs border border-blue-800 uppercase tracking-wide mr-2">
                                                 {(sectorCategories.find(t => t.id === formData.businessType)?.label || formData.businessType || selectedBusinessType)}
                                             </span>
@@ -463,38 +463,38 @@ export default function PlansPage() {
                                         <div className="lg:col-span-12 xl:col-span-5 space-y-6">
 
                                             {/* 1. Identity & Pricing */}
-                                            <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50">
+                                            <div className="bg-card/50 p-5 rounded-xl border border-border/50">
                                                 <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                                                     <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
                                                     {t('paket_kimligi_fiyatlandirma')}
                                                 </h3>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('paket_adi')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('paket_adi')}</label>
                                                         <input
                                                             type="text"
                                                             value={formData.name}
                                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                                                             placeholder={t('orn_gold_paket')}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('kod_id')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('kod_id')}</label>
                                                         <input
                                                             type="text"
                                                             value={formData.code}
                                                             onChange={e => setFormData({ ...formData, code: e.target.value })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm font-mono"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm font-mono"
                                                             placeholder="gold_pkg"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Renk</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Renk</label>
                                                         <select
                                                             value={formData.color}
                                                             onChange={e => setFormData({ ...formData, color: e.target.value })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
                                                         >
                                                             {colorOptions.map(opt => (
                                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -502,23 +502,23 @@ export default function PlansPage() {
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('aylik_ucret')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('aylik_ucret')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
                                                             value={formData.monthlyFee}
                                                             onChange={(e) => setFormData({ ...formData, monthlyFee: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                            className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
                                                             placeholder="29.00"
                                                             min="0"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Para Birimi</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Para Birimi</label>
                                                         <select
                                                             value={formData.currency || 'EUR'}
                                                             onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                            className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
                                                         >
                                                             <option value="EUR">Euro (€)</option>
                                                             <option value="TRY">Türk Lirası (₺)</option>
@@ -528,23 +528,23 @@ export default function PlansPage() {
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('yillik_ucret')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('yillik_ucret')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
                                                             value={formData.yearlyFee || ''}
                                                             onChange={e => setFormData({ ...formData, yearlyFee: parseFloat(e.target.value) })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
                                                             placeholder="Opsiyonel"
                                                         />
                                                     </div>
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('aciklama')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('aciklama')}</label>
                                                         <input
                                                             type="text"
                                                             value={formData.description || ''}
                                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
                                                             placeholder={t('paket_aciklamasi')}
                                                         />
                                                     </div>
@@ -552,14 +552,14 @@ export default function PlansPage() {
                                             </div>
 
                                             {/* 2. Limits & Rules */}
-                                            <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50">
+                                            <div className="bg-card/50 p-5 rounded-xl border border-border/50">
                                                 <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                                                     <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
                                                     {t('limitler_hizmet_sartlari')}
                                                 </h3>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('urun_limiti')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('urun_limiti')}</label>
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="number"
@@ -567,19 +567,19 @@ export default function PlansPage() {
                                                                 onChange={e => setFormData({ ...formData, productLimit: e.target.value ? parseInt(e.target.value) : null })}
                                                                 placeholder={t('sinirsiz')}
                                                                 disabled={formData.productLimit === null}
-                                                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
                                                             />
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormData(p => ({ ...p, productLimit: p.productLimit === null ? 30 : null }))}
-                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.productLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
                                                             >
                                                                 ∞
                                                             </button>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('siparis_limiti_ay')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('siparis_limiti_ay')}</label>
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="number"
@@ -587,19 +587,19 @@ export default function PlansPage() {
                                                                 onChange={e => setFormData({ ...formData, orderLimit: e.target.value ? parseInt(e.target.value) : null })}
                                                                 placeholder={t('sinirsiz')}
                                                                 disabled={formData.orderLimit === null}
-                                                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
                                                             />
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormData(p => ({ ...p, orderLimit: p.orderLimit === null ? 100 : null }))}
-                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.orderLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
                                                             >
                                                                 ∞
                                                             </button>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Personel Limiti</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Personel Limiti</label>
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="number"
@@ -607,25 +607,25 @@ export default function PlansPage() {
                                                                 onChange={e => setFormData({ ...formData, personnelLimit: e.target.value ? parseInt(e.target.value) : null })}
                                                                 placeholder={t('sinirsiz')}
                                                                 disabled={formData.personnelLimit === null}
-                                                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
                                                             />
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormData(p => ({ ...p, personnelLimit: p.personnelLimit === null ? 3 : null }))}
-                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.personnelLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.personnelLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-card border-gray-600 text-muted-foreground hover:bg-gray-700'}`}
                                                             >
                                                                 ∞
                                                             </button>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Personel Aşım Ücreti ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Personel Aşım Ücreti ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
                                                             value={formData.personnelOverageFee ?? 0}
                                                             onChange={e => setFormData({ ...formData, personnelOverageFee: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
                                                             placeholder="Opsiyonel"
                                                         />
                                                     </div>
@@ -633,55 +633,55 @@ export default function PlansPage() {
                                                     <div className="col-span-2">
                                                         <label className="block text-xs font-medium text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
                                                         <div className="grid grid-cols-3 gap-3">
-                                                            <div className="bg-gray-900 rounded-lg p-3 border border-green-600/40">
+                                                            <div className="bg-background rounded-lg p-3 border border-green-600/40">
                                                                 <label className="block text-xs text-green-400 mb-1">🛒 Gel-Al</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).commissionClickCollect ?? 5}
                                                                     onChange={e => setFormData({ ...formData, commissionClickCollect: parseFloat(e.target.value) } as any)}
-                                                                    className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-white text-sm font-bold text-center"
+                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm font-bold text-center"
                                                                 />
                                                             </div>
-                                                            <div className="bg-gray-900 rounded-lg p-3 border border-blue-600/40">
+                                                            <div className="bg-background rounded-lg p-3 border border-blue-600/40">
                                                                 <label className="block text-xs text-blue-400 mb-1">{t('kendi_kurye')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).commissionOwnCourier ?? 4}
                                                                     onChange={e => setFormData({ ...formData, commissionOwnCourier: parseFloat(e.target.value) } as any)}
-                                                                    className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-white text-sm font-bold text-center"
+                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm font-bold text-center"
                                                                 />
                                                             </div>
-                                                            <div className="bg-gray-900 rounded-lg p-3 border border-purple-600/40">
+                                                            <div className="bg-background rounded-lg p-3 border border-purple-600/40">
                                                                 <label className="block text-xs text-purple-400 mb-1">{t('lokma_kurye')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).commissionLokmaCourier ?? 7}
                                                                     onChange={e => setFormData({ ...formData, commissionLokmaCourier: parseFloat(e.target.value) } as any)}
-                                                                    className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-white text-sm font-bold text-center"
+                                                                    className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm font-bold text-center"
                                                                 />
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('ucretsiz_siparis_i_lk_x_adet')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('ucretsiz_siparis_i_lk_x_adet')}</label>
                                                         <input
                                                             type="number"
                                                             value={(formData as any).freeOrderCount ?? 0}
                                                             onChange={e => setFormData({ ...formData, freeOrderCount: parseInt(e.target.value) || 0 } as any)}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
                                                             placeholder="0"
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('kampanya_push_gonderim_limiti')}</label>
+                                                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t('kampanya_push_gonderim_limiti')}</label>
                                                         <input
                                                             type="number"
                                                             value={formData.campaignLimit || ''}
                                                             onChange={e => setFormData({ ...formData, campaignLimit: e.target.value ? parseInt(e.target.value) : null })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
                                                             placeholder="Opsiyonel"
                                                         />
                                                     </div>
@@ -690,13 +690,13 @@ export default function PlansPage() {
                                                     <div className="col-span-2">
                                                         <label className="block text-xs font-medium text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
                                                         <div className="flex gap-2">
-                                                            <div className="relative flex bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
+                                                            <div className="relative flex bg-background rounded-lg border border-border overflow-hidden">
                                                                 {(['none', 'percentage', 'fixed'] as const).map(type => (
                                                                     <button
                                                                         key={type}
                                                                         type="button"
                                                                         onClick={() => setFormData({ ...formData, perOrderFeeType: type } as any)}
-                                                                        className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+                                                                        className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-muted-foreground hover:bg-card'}`}
                                                                     >
                                                                         {type === 'none' ? t('yok') : type === 'percentage' ? '%' : globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}
                                                                     </button>
@@ -708,7 +708,7 @@ export default function PlansPage() {
                                                                     step={(formData as any).perOrderFeeType === 'percentage' ? '0.1' : '0.01'}
                                                                     value={(formData as any).perOrderFeeAmount ?? 0}
                                                                     onChange={e => setFormData({ ...formData, perOrderFeeAmount: parseFloat(e.target.value) } as any)}
-                                                                    className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                                    className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
                                                                     placeholder={(formData as any).perOrderFeeType === 'percentage' ? '5%' : `1.00 ${globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}`}
                                                                 />
                                                             )}
@@ -731,11 +731,11 @@ export default function PlansPage() {
                                                                         <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${formData.features?.tableReservation ? 'left-4' : 'left-0.5'}`}></div>
                                                                     </div>
                                                                 </div>
-                                                                <span className="ml-2 text-xs text-gray-400">{formData.features?.tableReservation ? t('aktif') : t('kapali')}</span>
+                                                                <span className="ml-2 text-xs text-muted-foreground">{formData.features?.tableReservation ? t('aktif') : t('kapali')}</span>
                                                             </label>
                                                         </div>
                                                         {formData.features?.tableReservation && (
-                                                            <div className="grid grid-cols-2 gap-3 bg-gray-900/50 p-3 rounded-lg border border-pink-900/30">
+                                                            <div className="grid grid-cols-2 gap-3 bg-background/50 p-3 rounded-lg border border-pink-900/30">
                                                                 <div>
                                                                     <label className="block text-xs text-gray-500 mb-1">{t('dahil_masa_sayisi')}</label>
                                                                     <div className="flex gap-2">
@@ -744,13 +744,13 @@ export default function PlansPage() {
                                                                             value={(formData as any).tableReservationLimit === null ? '' : (formData as any).tableReservationLimit}
                                                                             onChange={e => setFormData({ ...formData, tableReservationLimit: e.target.value ? parseInt(e.target.value) : null } as any)}
                                                                             disabled={(formData as any).tableReservationLimit === null}
-                                                                            className="flex-1 bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-white text-sm disabled:opacity-50"
+                                                                            className="flex-1 bg-card border border-border rounded px-2 py-1.5 text-white text-sm disabled:opacity-50"
                                                                             placeholder="Limit"
                                                                         />
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setFormData(p => ({ ...p, tableReservationLimit: (p as any).tableReservationLimit === null ? 50 : null } as any))}
-                                                                            className={`px-2 rounded border text-xs font-bold ${(formData as any).tableReservationLimit === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-400'}`}
+                                                                            className={`px-2 rounded border text-xs font-bold ${(formData as any).tableReservationLimit === null ? 'bg-pink-600 border-pink-500 text-white' : 'bg-card border-gray-600 text-muted-foreground'}`}
                                                                         >
                                                                             ∞
                                                                         </button>
@@ -763,7 +763,7 @@ export default function PlansPage() {
                                                                         step="0.01"
                                                                         value={(formData as any).tableReservationOverageFee ?? 0}
                                                                         onChange={e => setFormData({ ...formData, tableReservationOverageFee: parseFloat(e.target.value) } as any)}
-                                                                        className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-white text-sm"
+                                                                        className="w-full bg-card border border-border rounded px-2 py-1.5 text-white text-sm"
                                                                         placeholder="0.50"
                                                                     />
                                                                 </div>
@@ -774,14 +774,14 @@ export default function PlansPage() {
                                             </div>
 
                                             {/* Plan Durumu - Basitleştirilmiş */}
-                                            <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                                                <label className="flex items-center cursor-pointer p-3 bg-gray-900 rounded-lg border border-gray-700 hover:border-gray-500 transition-all">
+                                            <div className="bg-card/50 p-4 rounded-xl border border-border/50">
+                                                <label className="flex items-center cursor-pointer p-3 bg-background rounded-lg border border-border hover:border-gray-500 transition-all">
                                                     <div className="mr-3">
                                                         <div className={`w-10 h-5 rounded-full relative transition-colors ${formData.isActive ? 'bg-green-600' : 'bg-gray-600'}`}>
                                                             <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.isActive ? 'left-6' : 'left-1'}`}></div>
                                                         </div>
                                                     </div>
-                                                    <span className={`text-sm font-medium ${formData.isActive ? 'text-white' : 'text-gray-400'}`}>
+                                                    <span className={`text-sm font-medium ${formData.isActive ? 'text-white' : 'text-muted-foreground'}`}>
                                                         {formData.isActive ? t('plan_aktif') : t('plan_pasif')}
                                                     </span>
                                                     <input
@@ -799,8 +799,8 @@ export default function PlansPage() {
                                         <div className="lg:col-span-12 xl:col-span-7 space-y-6">
 
                                             {/* 3. Features Grid */}
-                                            <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 h-full">
-                                                <h3 className="text-white font-semibold mb-6 flex items-center gap-2 border-b border-gray-700 pb-4">
+                                            <div className="bg-card/50 p-6 rounded-xl border border-border/50 h-full">
+                                                <h3 className="text-white font-semibold mb-6 flex items-center gap-2 border-b border-border pb-4">
                                                     <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
                                                     {t('ozellikler_moduller')}
                                                 </h3>
@@ -817,9 +817,9 @@ export default function PlansPage() {
                                                         { key: 'groupOrderLink', label: '🔗 Link ile Grup Siparişi', color: 'text-pink-400' },
                                                         { key: 'groupOrderTable', label: '🪑 Masada Grup Siparişi', color: 'text-orange-400' },
                                                         { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-400' },
-                                                        { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true },
+                                                        { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-muted-foreground', invert: true },
                                                     ].map((feature) => (
-                                                        <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
+                                                        <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
                                                             <div className="relative flex items-center">
                                                                 <input
                                                                     type="checkbox"
@@ -863,7 +863,7 @@ export default function PlansPage() {
                                                     </button>
 
                                                     {(formData as any)._promoExpanded !== false && (
-                                                        <div className="p-4 bg-gray-900/50 space-y-3">
+                                                        <div className="p-4 bg-background/50 space-y-3">
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                                 {[
                                                                     { key: 'campaigns', label: '📢 Kampanya Yönetimi', color: 'text-purple-400', desc: 'İndirim/fırsat kampanyaları' },
@@ -874,7 +874,7 @@ export default function PlansPage() {
                                                                     { key: 'freeDrink', label: '🍺 Gratis İçecek', color: 'text-cyan-400', desc: 'Ücretsiz içecek modülü' },
                                                                     { key: 'donationRoundUp', label: '💚 Bağış Yuvarlama', color: 'text-emerald-400', desc: 'Checkout bağış yuvarlama' },
                                                                 ].map((promo) => (
-                                                                    <label key={promo.key} className="flex items-start p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-orange-700/30 hover:bg-gray-800 transition-all cursor-pointer group">
+                                                                    <label key={promo.key} className="flex items-start p-3 rounded-lg bg-card/50 border border-border/50 hover:border-orange-700/30 hover:bg-card transition-all cursor-pointer group">
                                                                         <div className="relative flex items-center mt-0.5">
                                                                             <input
                                                                                 type="checkbox"
@@ -898,33 +898,33 @@ export default function PlansPage() {
                                                                     <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">⭐ {t('one_cikan_urun_ayarlari')}</h4>
                                                                     <div className="grid grid-cols-2 gap-4">
                                                                         <div>
-                                                                            <label className="block text-xs text-gray-400 mb-1.5">{t('siparis_basi_ucret')}</label>
+                                                                            <label className="block text-xs text-muted-foreground mb-1.5">{t('siparis_basi_ucret')}</label>
                                                                             <input
                                                                                 type="number"
                                                                                 step="0.01"
                                                                                 min="0"
                                                                                 value={(formData as any).sponsoredFeePerConversion ?? 0.40}
                                                                                 onChange={e => setFormData({ ...formData, sponsoredFeePerConversion: parseFloat(e.target.value) || 0 } as any)}
-                                                                                className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                                className="w-full bg-background border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
                                                                                 placeholder="0.40"
                                                                             />
                                                                             <p className="text-xs text-gray-500 mt-1">{t('0_bedava_bu_plan_icin_sponsored_ucretsiz')}</p>
                                                                         </div>
                                                                         <div>
-                                                                            <label className="block text-xs text-gray-400 mb-1.5">{t('max_urun_sayisi')}</label>
+                                                                            <label className="block text-xs text-muted-foreground mb-1.5">{t('max_urun_sayisi')}</label>
                                                                             <input
                                                                                 type="number"
                                                                                 min="1"
                                                                                 max="50"
                                                                                 value={(formData as any).sponsoredMaxProducts ?? 5}
                                                                                 onChange={e => setFormData({ ...formData, sponsoredMaxProducts: parseInt(e.target.value) || 5 } as any)}
-                                                                                className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                                className="w-full bg-background border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
                                                                                 placeholder="5"
                                                                             />
                                                                             <p className="text-xs text-gray-500 mt-1">{t('bu_plandaki_isletme_kac_urun_one_cikarab')}</p>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="mt-3 bg-gray-900/50 rounded-lg px-3 py-2">
+                                                                    <div className="mt-3 bg-background/50 rounded-lg px-3 py-2">
                                                                         <p className="text-xs text-yellow-300/80">
                                                                             {t('bu_plandaki_isletmeler_max')} <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> {t('urun_secebilir')}
                                                                             {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
@@ -944,13 +944,13 @@ export default function PlansPage() {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {[
                                                             { key: 'eslIntegration', label: t('esl_etiket_destegi'), color: 'text-indigo-300' },
-                                                            { key: 'posIntegration', label: 'POS Entegrasyonu', color: 'text-gray-400' },
-                                                            { key: 'scaleIntegration', label: t('akilli_kantar'), color: 'text-gray-400' },
-                                                            { key: 'accountingIntegration', label: 'Muhasebe (Datev)', color: 'text-gray-400' },
+                                                            { key: 'posIntegration', label: 'POS Entegrasyonu', color: 'text-muted-foreground' },
+                                                            { key: 'scaleIntegration', label: t('akilli_kantar'), color: 'text-muted-foreground' },
+                                                            { key: 'accountingIntegration', label: 'Muhasebe (Datev)', color: 'text-muted-foreground' },
                                                             { key: 'aiSupplierOrdering', label: t('b2b_ai_siparis'), color: 'text-green-400' },
                                                             { key: 'aiBestPrice', label: t('ai_fiyat_onerisi'), color: 'text-amber-400' },
                                                         ].map((feature) => (
-                                                            <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
+                                                            <label key={feature.key} className="flex items-center p-3 rounded-lg bg-background border border-border hover:border-gray-600 hover:bg-card transition-all cursor-pointer group">
                                                                 <div className="relative flex items-center">
                                                                     <input
                                                                         type="checkbox"
@@ -967,14 +967,14 @@ export default function PlansPage() {
                                                 </div>
 
                                                 {/* Stripe ID Section (Compact) */}
-                                                <div className="mt-8 pt-6 border-t border-gray-700/50">
+                                                <div className="mt-8 pt-6 border-t border-border/50">
                                                     <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">{t('teknik_stripe_ids')}</h4>
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <input
                                                             type="text"
                                                             value={formData.stripeProductId || ''}
                                                             onChange={e => setFormData({ ...formData, stripeProductId: e.target.value })}
-                                                            className="bg-gray-900 border border-gray-800 rounded px-2 py-1.5 text-xs font-mono text-gray-400 focus:text-white focus:border-blue-500 outline-none"
+                                                            className="bg-background border border-border rounded px-2 py-1.5 text-xs font-mono text-muted-foreground focus:text-white focus:border-blue-500 outline-none"
                                                             placeholder={t('product_id_prod')}
                                                         />
                                                         <input
@@ -984,7 +984,7 @@ export default function PlansPage() {
                                                                 ...formData,
                                                                 stripePriceId: { ...formData.stripePriceId, monthly: e.target.value } as any
                                                             })}
-                                                            className="bg-gray-900 border border-gray-800 rounded px-2 py-1.5 text-xs font-mono text-gray-400 focus:text-white focus:border-blue-500 outline-none"
+                                                            className="bg-background border border-border rounded px-2 py-1.5 text-xs font-mono text-muted-foreground focus:text-white focus:border-blue-500 outline-none"
                                                             placeholder={t('monthly_price_id')}
                                                         />
                                                     </div>
@@ -995,11 +995,11 @@ export default function PlansPage() {
                                 </form>
 
                                 {/* Modal Footer */}
-                                <div className="p-5 border-t border-gray-800 bg-gray-900 rounded-b-2xl flex justify-end gap-3 z-10">
+                                <div className="p-5 border-t border-border bg-background rounded-b-2xl flex justify-end gap-3 z-10">
                                     <button
                                         type="button"
                                         onClick={() => setIsModalOpen(false)}
-                                        className="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 font-medium transition-colors"
+                                        className="px-5 py-2.5 bg-card hover:bg-gray-700 rounded-xl text-foreground font-medium transition-colors"
                                     >
                                         İptal
                                     </button>

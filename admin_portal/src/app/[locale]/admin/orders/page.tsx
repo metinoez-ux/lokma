@@ -1009,14 +1009,14 @@ export default function OrdersPage() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
@@ -1092,14 +1092,14 @@ export default function OrdersPage() {
                                                     setBusinessFilter('all');
                                                     setBusinessSearch('');
                                                 }}
-                                                className="ml-1 text-gray-400 hover:text-white text-sm"
+                                                className="ml-1 text-muted-foreground hover:text-white text-sm"
                                             >
                                                 ✕
                                             </button>
                                         )}
                                     </div>
                                     {showBusinessDropdown && (
-                                        <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+                                        <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-card border border-gray-600 rounded-lg shadow-xl z-50">
                                             <div
                                                 className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
                                                 onClick={() => {
@@ -1148,14 +1148,14 @@ export default function OrdersPage() {
                                 onClick={() => setShowPrinterPanel(!showPrinterPanel)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${
                                     !printerSettings.enabled || !printerSettings.printerIp
-                                        ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300 hover:from-gray-500 hover:to-gray-600'
+                                        ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-foreground hover:from-gray-500 hover:to-gray-600'
                                         : printerHealth.status === 'online'
                                         ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-400 hover:to-emerald-500'
                                         : printerHealth.status === 'offline'
                                         ? 'bg-gradient-to-r from-red-500 to-red-600 text-white ring-2 ring-red-400/50 animate-pulse'
                                         : printerHealth.status === 'checking'
                                         ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-400 hover:to-yellow-500'
-                                        : 'bg-gradient-to-r from-gray-600 to-gray-700 text-gray-300'
+                                        : 'bg-gradient-to-r from-gray-600 to-gray-700 text-foreground'
                                 }`}
                                 title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Prüfe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
                             >
@@ -1198,8 +1198,8 @@ export default function OrdersPage() {
                                     </button>
                                     {/* Timer Selection Dropdown */}
                                     {showDeliveryTimerMenu && (
-                                        <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
-                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">{t('kurye_sure_secin')}</p>
+                                        <div className="absolute top-full left-0 mt-2 bg-card border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
+                                            <p className="text-muted-foreground text-xs px-2 pb-2 border-b border-border mb-2">{t('kurye_sure_secin')}</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {PAUSE_DURATIONS.map(d => (
                                                     <button
@@ -1233,8 +1233,8 @@ export default function OrdersPage() {
                                     </button>
                                     {/* Timer Selection Dropdown */}
                                     {showPickupTimerMenu && (
-                                        <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
-                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">{t('select_pause_duration')}</p>
+                                        <div className="absolute top-full left-0 mt-2 bg-card border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
+                                            <p className="text-muted-foreground text-xs px-2 pb-2 border-b border-border mb-2">{t('select_pause_duration')}</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {PAUSE_DURATIONS.map(d => (
                                                     <button
@@ -1305,17 +1305,17 @@ export default function OrdersPage() {
 
             {showPrinterPanel && (
                 <div className="max-w-7xl mx-auto mb-4">
-                    <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
+                    <div className="bg-card rounded-xl p-5 border border-border">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-white font-bold flex items-center gap-2">
                                 🖨️ Bon-Drucker
                                 {/* Live Status Badge */}
                                 <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-600/20 text-gray-400 border border-gray-500/40' :
+                                    !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-600/20 text-muted-foreground border border-gray-500/40' :
                                     printerHealth.status === 'online' ? 'bg-green-500/20 text-green-400 border border-green-500/40' :
                                     printerHealth.status === 'offline' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
                                     printerHealth.status === 'checking' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40' :
-                                    'bg-gray-600/20 text-gray-400 border border-gray-500/40'
+                                    'bg-gray-600/20 text-muted-foreground border border-gray-500/40'
                                 }`}>
                                     {!printerSettings.enabled || !printerSettings.printerIp ? '● Nicht konfiguriert' :
                                      printerHealth.status === 'online' ? '● Online' :
@@ -1324,13 +1324,13 @@ export default function OrdersPage() {
                                     {printerHealth.responseTimeMs && printerHealth.status === 'online' ? ` (${printerHealth.responseTimeMs}ms)` : ''}
                                 </span>
                             </h3>
-                            <button onClick={() => setShowPrinterPanel(false)} className="text-gray-400 hover:text-white" title={t('close_title')}>✕</button>
+                            <button onClick={() => setShowPrinterPanel(false)} className="text-muted-foreground hover:text-white" title={t('close_title')}>✕</button>
                         </div>
 
                         {/* Read-only printer info + Controls */}
                         {(!printerSettings.enabled || !printerSettings.printerIp) ? (
-                            <div className="bg-gray-900 rounded-xl p-4 text-center">
-                                <p className="text-gray-400 text-sm mb-3">Kein Drucker konfiguriert</p>
+                            <div className="bg-background rounded-xl p-4 text-center">
+                                <p className="text-muted-foreground text-sm mb-3">Kein Drucker konfiguriert</p>
                                 <a
                                     href="/admin/settings/printer"
                                     className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm font-medium transition"
@@ -1341,7 +1341,7 @@ export default function OrdersPage() {
                         ) : (
                             <>
                                 {/* Read-only config info */}
-                                <div className="bg-gray-900 rounded-xl p-3 mb-4 flex items-center justify-between">
+                                <div className="bg-background rounded-xl p-3 mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-4 text-sm">
                                         <div>
                                             <span className="text-gray-500">Drucker:</span>
@@ -1373,7 +1373,7 @@ export default function OrdersPage() {
                                     <div className="flex items-center gap-6">
                                         {/* Copies */}
                                         <div className="flex items-center gap-2">
-                                            <label className="text-gray-400 text-sm">Kopien:</label>
+                                            <label className="text-muted-foreground text-sm">Kopien:</label>
                                             <select
                                                 value={printerSettings.printCopies}
                                                 onChange={(e) => savePrinterSettings({ ...printerSettings, printCopies: parseInt(e.target.value) })}
@@ -1387,7 +1387,7 @@ export default function OrdersPage() {
                                         </div>
                                         {/* Auto-Print */}
                                         <div className="flex items-center gap-2">
-                                            <label className="text-gray-400 text-sm">Auto-Print</label>
+                                            <label className="text-muted-foreground text-sm">Auto-Print</label>
                                             <button
                                                 onClick={() => savePrinterSettings({ ...printerSettings, autoPrint: !printerSettings.autoPrint })}
                                                 className={`relative w-12 h-6 rounded-full transition-colors ${printerSettings.autoPrint ? 'bg-amber-500' : 'bg-gray-600'}`}
@@ -1413,12 +1413,12 @@ export default function OrdersPage() {
 
             {/* Visual Order Status Workflow - Matching Super Admin Dashboard */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-6">
+                <div className="bg-card rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-white font-bold">
                             {t('siparis_durumlari_anlik')}
                         </h3>
-                        <span className="text-gray-400 text-sm">
+                        <span className="text-muted-foreground text-sm">
                             {t('su_anki_siparisler')}
                         </span>
                     </div>
@@ -1428,7 +1428,7 @@ export default function OrdersPage() {
                         <div
                             className={`flex-1 min-w-[100px] bg-yellow-600/20 border-2 border-yellow-500 rounded-lg p-4 text-center relative ${stats.pending > 0 ? "animate-pulse" : ""}`}
                         >
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-500 rounded-full border-2 border-gray-800"></div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-500 rounded-full border-2 border-border"></div>
                             <p
                                 className={`text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? "animate-bounce" : ""}`}
                             >
@@ -1443,44 +1443,44 @@ export default function OrdersPage() {
 
                         {/* Hazırlanıyor */}
                         <div className="flex-1 min-w-[100px] bg-amber-600/20 border border-amber-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-500 rounded-full border-2 border-gray-800"></div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-500 rounded-full border-2 border-border"></div>
                             <p className="text-amber-400 text-3xl font-bold">
                                 {stats.preparing}
                             </p>
-                            <p className="text-gray-400 text-sm">👨‍🍳 {t('workflow.preparing')}</p>
+                            <p className="text-muted-foreground text-sm">👨‍🍳 {t('workflow.preparing')}</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
 
                         {/* Hazır */}
                         <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-border"></div>
                             <p className="text-green-400 text-3xl font-bold">
                                 {stats.ready}
                             </p>
-                            <p className="text-gray-400 text-sm">📦 {t('workflow.ready')}</p>
+                            <p className="text-muted-foreground text-sm">📦 {t('workflow.ready')}</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
 
                         {/* Yolda */}
                         <div className="flex-1 min-w-[100px] bg-indigo-600/20 border border-indigo-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-500 rounded-full border-2 border-gray-800"></div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-500 rounded-full border-2 border-border"></div>
                             <p className="text-indigo-400 text-3xl font-bold">
                                 {stats.inTransit}
                             </p>
-                            <p className="text-gray-400 text-sm">🛵 {t('workflow.inTransit')}</p>
+                            <p className="text-muted-foreground text-sm">🛵 {t('workflow.inTransit')}</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
 
                         {/* Tamamlanan */}
                         <div className="flex-1 min-w-[100px] bg-emerald-600/20 border border-emerald-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-gray-800"></div>
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-border"></div>
                             <p className="text-emerald-400 text-3xl font-bold">
                                 {stats.completed}
                             </p>
-                            <p className="text-gray-400 text-sm">✓ {t('workflow.completed')}</p>
+                            <p className="text-muted-foreground text-sm">✓ {t('workflow.completed')}</p>
                         </div>
                     </div>
 
@@ -1492,19 +1492,19 @@ export default function OrdersPage() {
             {/* Orders Kanban View */}
             <div className="max-w-7xl mx-auto">
                 {loading ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                        <p className="text-gray-400 mt-4">{t('siparisler_yukleniyor')}</p>
+                        <p className="text-muted-foreground mt-4">{t('siparisler_yukleniyor')}</p>
                     </div>
                 ) : filteredOrders.length === 0 ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <p className="text-4xl mb-4">📭</p>
-                        <p className="text-gray-400">{t('siparis_bulunamadi')}</p>
+                        <p className="text-muted-foreground">{t('siparis_bulunamadi')}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         {/* Pending Column */}
-                        <div className="bg-gray-800 rounded-xl p-4">
+                        <div className="bg-card rounded-xl p-4">
                             <h3 className="text-yellow-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
                                 {t('workflow.pending')} ({pendingOrders.length})
@@ -1537,7 +1537,7 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Preparing Column */}
-                        <div className="bg-gray-800 rounded-xl p-4">
+                        <div className="bg-card rounded-xl p-4">
                             <h3 className="text-amber-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-amber-400 rounded-full"></span>
                                 {t('workflow.preparing')} ({preparingOrders.length})
@@ -1553,7 +1553,7 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Ready Column */}
-                        <div className="bg-gray-800 rounded-xl p-4">
+                        <div className="bg-card rounded-xl p-4">
                             <h3 className="text-green-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-green-400 rounded-full"></span>
                                 {t('workflow.ready')} ({readyOrders.length})
@@ -1572,7 +1572,7 @@ export default function OrdersPage() {
                         {/* Servis Edildi column removed — dine-in orders now go directly to Tamamlanan */}
 
                         {/* In Transit Column */}
-                        <div className="bg-gray-800 rounded-xl p-4">
+                        <div className="bg-card rounded-xl p-4">
                             <h3 className="text-indigo-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-indigo-400 rounded-full"></span>
                                 {t('workflow.inTransit')} ({inTransitOrders.length})
@@ -1588,7 +1588,7 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Completed Column */}
-                        <div className="bg-gray-800 rounded-xl p-4">
+                        <div className="bg-card rounded-xl p-4">
                             <h3 className="text-emerald-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
                                 {t('workflow.completed')} ({completedOrders.length})

@@ -218,7 +218,7 @@ export default function KermesMenusPage() {
 
     if (adminLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         );
@@ -226,17 +226,17 @@ export default function KermesMenusPage() {
 
     if (!admin || admin.role !== 'super_admin') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white">{t('erisim_reddedildi_sadece_super_admin')}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <Link href="/admin/kermes" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
                     {t('kermes_yonetimi')}
                 </Link>
 
@@ -245,7 +245,7 @@ export default function KermesMenusPage() {
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             {t('kermes_menuleri')}
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('tum_kermes_menu_ogelerini_yonetin')} {menuItems.length} {t('urun')}
                         </p>
                     </div>
@@ -261,7 +261,7 @@ export default function KermesMenusPage() {
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row gap-4 mb-6">
                     <div className="flex-1 relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
                         <input
                             type="text"
                             placeholder={t('urun_adi_veya_sku_ara')}
@@ -287,7 +287,7 @@ export default function KermesMenusPage() {
                     {filteredItems.map(item => (
                         <div
                             key={item.id}
-                            className={`bg-gray-800 rounded-xl p-4 border ${item.isActive ? 'border-gray-600' : 'border-red-500/50 opacity-60'}`}
+                            className={`bg-card rounded-xl p-4 border ${item.isActive ? 'border-gray-600' : 'border-red-500/50 opacity-60'}`}
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <div>
@@ -297,13 +297,13 @@ export default function KermesMenusPage() {
                                 <span className="text-lg font-bold text-pink-400">€{item.defaultPrice.toFixed(2)}</span>
                             </div>
                             {item.description && (
-                                <p className="text-gray-400 text-sm mb-2">{item.description}</p>
+                                <p className="text-muted-foreground text-sm mb-2">{item.description}</p>
                             )}
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">
                                     {item.category}
                                 </span>
-                                <span className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs">
+                                <span className="px-2 py-1 bg-gray-700 text-foreground rounded text-xs">
                                     {item.unit}
                                 </span>
                                 {item.tags?.map(tag => (
@@ -337,7 +337,7 @@ export default function KermesMenusPage() {
                 </div>
 
                 {filteredItems.length === 0 && (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                         <p className="text-4xl mb-4">🍽️</p>
                         <p>{t('henuz_menu_ogesi_yok')}</p>
                         <p className="text-sm mt-2">{t('yeni_bir_menu_ogesi_ekleyerek_baslayin')}</p>
@@ -348,14 +348,14 @@ export default function KermesMenusPage() {
             {/* Add/Edit Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-card rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold text-white mb-4">
                             {editingItem ? t('menu_duzenle') : t('yeni_menu_ekle')}
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">SKU *</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">SKU *</label>
                                 <input
                                     type="text"
                                     value={formData.sku}
@@ -365,7 +365,7 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('kategori')}</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">{t('kategori')}</label>
                                 <select
                                     value={formData.category}
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -378,7 +378,7 @@ export default function KermesMenusPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Ad (TR) *</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">Ad (TR) *</label>
                                 <input
                                     type="text"
                                     value={formData.name}
@@ -388,7 +388,7 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Ad (DE)</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">Ad (DE)</label>
                                 <input
                                     type="text"
                                     value={formData.name_de}
@@ -398,7 +398,7 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('aciklama_tr')}</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">{t('aciklama_tr')}</label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -408,7 +408,7 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('varsayilan_fiyat')}</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">{t('varsayilan_fiyat')}</label>
                                 <input
                                     type="number"
                                     step="0.50"
@@ -418,7 +418,7 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Birim</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">Birim</label>
                                 <select
                                     value={formData.unit}
                                     onChange={(e) => setFormData({ ...formData, unit: e.target.value as any })}
@@ -430,7 +430,7 @@ export default function KermesMenusPage() {
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('etiketler_virgulle_ayirin')}</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">{t('etiketler_virgulle_ayirin')}</label>
                                 <input
                                     type="text"
                                     value={formData.tags}

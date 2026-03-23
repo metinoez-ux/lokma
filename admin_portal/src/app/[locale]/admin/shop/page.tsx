@@ -90,7 +90,7 @@ export default function ShopDashboard() {
 
     if (adminLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
@@ -115,19 +115,19 @@ export default function ShopDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/dashboard" className="text-gray-400 hover:text-white">
+                        <Link href="/admin/dashboard" className="text-muted-foreground hover:text-white">
                             ← {t('dashboard')}
                         </Link>
                         <div>
                             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                                 🛍️ E-Commerce / Online Shop
                             </h1>
-                            <p className="text-gray-400 text-sm mt-1">
+                            <p className="text-muted-foreground text-sm mt-1">
                                 {t('monte_bueno_diger_markalar')}
                             </p>
                         </div>
@@ -154,30 +154,30 @@ export default function ShopDashboard() {
             {/* Stats Cards */}
             <div className="max-w-7xl mx-auto mb-8">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">📦</div>
                         <div className="text-2xl font-bold text-white">{stats.totalProducts}</div>
-                        <div className="text-gray-400 text-sm">{t('toplam_urun')}</div>
+                        <div className="text-muted-foreground text-sm">{t('toplam_urun')}</div>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">✅</div>
                         <div className="text-2xl font-bold text-green-400">{stats.activeProducts}</div>
-                        <div className="text-gray-400 text-sm">{t('aktif_urun')}</div>
+                        <div className="text-muted-foreground text-sm">{t('aktif_urun')}</div>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">⏳</div>
                         <div className="text-2xl font-bold text-yellow-400">{stats.pendingOrders}</div>
-                        <div className="text-gray-400 text-sm">{t('bekleyen_siparis')}</div>
+                        <div className="text-muted-foreground text-sm">{t('bekleyen_siparis')}</div>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">📅</div>
                         <div className="text-2xl font-bold text-blue-400">{stats.todayOrders}</div>
-                        <div className="text-gray-400 text-sm">{t('bugun')}</div>
+                        <div className="text-muted-foreground text-sm">{t('bugun')}</div>
                     </div>
-                    <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                    <div className="bg-card rounded-xl p-4 border border-border">
                         <div className="text-3xl mb-2">💰</div>
                         <div className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.totalRevenue, 'EUR')}</div>
-                        <div className="text-gray-400 text-sm">{t('ciro')}</div>
+                        <div className="text-muted-foreground text-sm">{t('ciro')}</div>
                     </div>
                 </div>
             </div>
@@ -185,7 +185,7 @@ export default function ShopDashboard() {
             {/* Quick Actions & Recent Orders */}
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Quick Actions */}
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                <div className="bg-card rounded-xl border border-border p-6">
                     <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         {t('hizli_i_slemler')}
                     </h2>
@@ -204,13 +204,13 @@ export default function ShopDashboard() {
                         </Link>
                         <Link href="/admin/shop/products" className="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">📊</div>
-                            <div className="text-gray-300 text-sm font-medium">{t('stok_kontrolu')}</div>
+                            <div className="text-foreground text-sm font-medium">{t('stok_kontrolu')}</div>
                         </Link>
                     </div>
                 </div>
 
                 {/* Recent Orders */}
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+                <div className="bg-card rounded-xl border border-border p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
                             {t('son_siparisler')}
@@ -222,7 +222,7 @@ export default function ShopDashboard() {
                     {recentOrders.length === 0 ? (
                         <div className="text-center py-8">
                             <div className="text-4xl mb-3">📭</div>
-                            <p className="text-gray-400">{t('henuz_siparis_yok')}</p>
+                            <p className="text-muted-foreground">{t('henuz_siparis_yok')}</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -234,11 +234,11 @@ export default function ShopDashboard() {
                                 >
                                     <div>
                                         <div className="text-white font-medium">{order.orderNumber}</div>
-                                        <div className="text-gray-400 text-sm">{order.customerName}</div>
+                                        <div className="text-muted-foreground text-sm">{order.customerName}</div>
                                     </div>
                                     <div className="text-right">
                                         <div className="text-emerald-400 font-medium">{formatCurrency(order.total, 'EUR')}</div>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${statusColors[order.status] || 'bg-gray-600 text-gray-300'}`}>
+                                        <span className={`text-xs px-2 py-0.5 rounded ${statusColors[order.status] || 'bg-gray-600 text-foreground'}`}>
                                             {statusLabels[order.status] || order.status}
                                         </span>
                                     </div>
@@ -260,9 +260,9 @@ export default function ShopDashboard() {
                         <h3 className="text-white font-bold">Monte Bueno</h3>
                         <p className="text-yellow-300/70 text-sm">{t('zeytinyagi_zeytin')}</p>
                     </div>
-                    <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-6 text-center opacity-50">
+                    <div className="bg-card/50 border border-border/50 rounded-xl p-6 text-center opacity-50">
                         <div className="text-4xl mb-3">🌿</div>
-                        <h3 className="text-gray-400 font-bold">{t('yeni_marka')}</h3>
+                        <h3 className="text-muted-foreground font-bold">{t('yeni_marka')}</h3>
                         <p className="text-gray-500 text-sm">{t('yakinda')}</p>
                     </div>
                 </div>

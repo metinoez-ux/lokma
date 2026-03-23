@@ -1876,14 +1876,14 @@ export default function SuperAdminDashboard() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Toast Notification - CENTERED & PROMINENT */}
             {toast && (
                 <div className="fixed inset-0 z-[100] flex items-start justify-center pointer-events-none pt-20">
@@ -1922,7 +1922,7 @@ export default function SuperAdminDashboard() {
             <main className="max-w-7xl mx-auto px-4 pb-8">
                 {/* User Search Tab */}
                 {activeTab === 'users' && (
-                    <div className="bg-gray-800 rounded-xl p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-bold text-white">{tNav('kullanici_yonetimi')}</h2>
                             {/* Super Admin ve İşletme Sahipleri kullanıcı/personel ekleyebilir */}
@@ -1953,7 +1953,7 @@ export default function SuperAdminDashboard() {
                                 onClick={() => setUserStatusFilter('active')}
                                 className={`px-4 py-2 rounded-lg font-medium transition ${userStatusFilter === 'active'
                                     ? 'bg-green-600 text-white'
-                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                    : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                                     }`}
                             >
                                 ✅ {tNav('aktif')} ({users.filter(u => (u as any).isActive !== false).length})
@@ -1962,7 +1962,7 @@ export default function SuperAdminDashboard() {
                                 onClick={() => setUserStatusFilter('archived')}
                                 className={`px-4 py-2 rounded-lg font-medium transition ${userStatusFilter === 'archived'
                                     ? 'bg-amber-600 text-white'
-                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                    : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                                     }`}
                             >
                                 {tNav('arsivlenmis')}{users.filter(u => (u as any).isActive === false).length})
@@ -1989,7 +1989,7 @@ export default function SuperAdminDashboard() {
                                         placeholder={tNav('i_sim_e_posta_veya_telefon_ile_ara')}
                                         className="w-full px-4 py-3 pl-12 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                                     />
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">🔍</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xl">🔍</span>
                                     {searchLoading && (
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2">
                                             <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
@@ -2003,7 +2003,7 @@ export default function SuperAdminDashboard() {
                             {/* Sorting Controls (only when showing all users) */}
                             {showAllUsers && (
                                 <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
-                                    <span className="text-gray-400 text-sm">{tNav('sirala')}</span>
+                                    <span className="text-muted-foreground text-sm">{tNav('sirala')}</span>
                                     <select
                                         value={allUsersSortBy}
                                         onChange={(e) => setAllUsersSortBy(e.target.value as 'createdAt' | 'firstName' | 'lastName')}
@@ -2043,7 +2043,7 @@ export default function SuperAdminDashboard() {
 
                                     {/* Pagination */}
                                     <div className="flex-1" />
-                                    <span className="text-gray-400 text-sm">
+                                    <span className="text-muted-foreground text-sm">
                                         {tNav('sayfa')} {allUsersPage} / {Math.ceil(allUsersTotal / USERS_PER_PAGE) || 1}
                                     </span>
                                     <button
@@ -2064,7 +2064,7 @@ export default function SuperAdminDashboard() {
                             )}
 
                             {!showAllUsers && (
-                                <p className="text-gray-400 text-sm mt-2">
+                                <p className="text-muted-foreground text-sm mt-2">
                                     {tNav('i_sim_soyisim_e_posta_veya_telefon_ile_k')}{t('allUsers')}{tNav('butonunu_kullanin')}
                                 </p>
                             )}
@@ -2217,7 +2217,7 @@ export default function SuperAdminDashboard() {
                                                 <div className="flex-1 min-w-0">
                                                     {/* Name with Role Badge and Location */}
                                                     <div className="flex items-center gap-3 flex-wrap">
-                                                        <p className={`font-medium ${(user as any).isActive !== false ? 'text-white' : 'text-gray-300'
+                                                        <p className={`font-medium ${(user as any).isActive !== false ? 'text-white' : 'text-foreground'
                                                             }`}>
                                                             {(user as any).firstName && (user as any).lastName
                                                                 ? `${(user as any).firstName} ${(user as any).lastName}`
@@ -2275,7 +2275,7 @@ export default function SuperAdminDashboard() {
                                                         )}
                                                         {/* Location - City, Country */}
                                                         {((user as any).country || (user as any).city) && (
-                                                            <span className="text-gray-400 text-sm flex items-center gap-1">
+                                                            <span className="text-muted-foreground text-sm flex items-center gap-1">
                                                                 <span>📍</span>
                                                                 {(user as any).city || ''}{(user as any).city && (user as any).country ? ', ' : ''}{(user as any).country || ''}
                                                             </span>
@@ -2288,7 +2288,7 @@ export default function SuperAdminDashboard() {
                                                 {/* Business Assignment (if admin) */}
                                                 {user.isAdmin && (user.adminProfile as any)?.butcherName && (
                                                     <div className="text-right hidden md:block">
-                                                        <p className="text-gray-300 font-medium text-sm">
+                                                        <p className="text-foreground font-medium text-sm">
                                                             {(user.adminProfile as any).butcherName}
                                                         </p>
                                                         <p className="text-gray-500 text-xs flex items-center justify-end gap-1">
@@ -2428,17 +2428,17 @@ export default function SuperAdminDashboard() {
 
                             </div>
                         ) : (searchQuery && !searchLoading) || showAllUsers ? (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-muted-foreground">
                                 <p className="text-4xl mb-4">🔍</p>
                                 <p>{t('noResultsFound')}</p>
                             </div>
                         ) : allUsersLoading ? (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-muted-foreground">
                                 <div className="animate-spin h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                                 <p>{t('loadingUsers')}</p>
                             </div>
                         ) : (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-muted-foreground">
                                 <p className="text-4xl mb-4">👆</p>
                                 <p>{tNav('aramaya_baslamak_icin_yukariya_yazin_vey')}{t('allUsers')}{tNav('butonunu_kullanin')}</p>
                             </div>
@@ -2450,7 +2450,7 @@ export default function SuperAdminDashboard() {
                 {/* Admins Tab */}
                 {
                     activeTab === 'admins' && (
-                        <div className="bg-gray-800 rounded-xl p-6">
+                        <div className="bg-card rounded-xl p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-bold text-white">{tNav('mevcutAdminler')}</h2>
                                 <button
@@ -2479,7 +2479,7 @@ export default function SuperAdminDashboard() {
                                     onClick={() => setAdminStatusFilter('active')}
                                     className={`px-4 py-2 rounded-lg font-medium transition ${adminStatusFilter === 'active'
                                         ? 'bg-green-600 text-white'
-                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     ✅ Aktif ({admins.filter(a => a.isActive !== false).length})
@@ -2488,7 +2488,7 @@ export default function SuperAdminDashboard() {
                                     onClick={() => setAdminStatusFilter('archived')}
                                     className={`px-4 py-2 rounded-lg font-medium transition ${adminStatusFilter === 'archived'
                                         ? 'bg-amber-600 text-white'
-                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {tNav('arsivlenmis')}{admins.filter(a => a.isActive === false).length})
@@ -2500,7 +2500,7 @@ export default function SuperAdminDashboard() {
                                 {/* Search Bar */}
                                 <div className="flex gap-3">
                                     <div className="relative flex-1">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">🔍</span>
                                         <input
                                             type="text"
                                             placeholder={tNav('i_sim_e_posta_veya_telefon_ile_ara')}
@@ -2513,7 +2513,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Filter Controls */}
                                 <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
-                                    <span className="text-gray-400 text-sm">{tNav('filtrele')}:</span>
+                                    <span className="text-muted-foreground text-sm">{tNav('filtrele')}:</span>
                                     <select
                                         value={adminFilter}
                                         onChange={(e) => setAdminFilter(e.target.value as 'all' | 'business' | 'staff' | 'super')}
@@ -2527,7 +2527,7 @@ export default function SuperAdminDashboard() {
                                             <option value="super">👑 {tNav('superAdmin_label')}</option>
                                         )}
                                     </select>
-                                    <span className="text-gray-400 text-sm ml-auto">
+                                    <span className="text-muted-foreground text-sm ml-auto">
                                         {admins.filter(a => {
                                             // Filter by search
                                             const matchesSearch = !searchQuery ||
@@ -2545,7 +2545,7 @@ export default function SuperAdminDashboard() {
                                 </div>
                             </div>
                             <table className="w-full text-left">
-                                <thead className="text-gray-400 border-b border-gray-700">
+                                <thead className="text-muted-foreground border-b border-border">
                                     <tr>
                                         <th className="pb-3 py-2">{tNav('kullanici')}</th>
                                         <th className="pb-3 py-2">{tNav('rol')}</th>
@@ -2573,7 +2573,7 @@ export default function SuperAdminDashboard() {
                                         return matchesSearch && matchesFilter && matchesStatus;
                                     }).length === 0 && (
                                             <tr>
-                                                <td colSpan={5} className="py-8 text-center text-gray-400">
+                                                <td colSpan={5} className="py-8 text-center text-muted-foreground">
                                                     <p className="text-2xl mb-2">👥</p>
                                                     <p>{adminStatusFilter === 'archived' ? tNav('arsivlenmis_admin_bulunamadi') : t('noAdminsFound')}</p>
                                                 </td>
@@ -2594,11 +2594,11 @@ export default function SuperAdminDashboard() {
                                             : a.isActive === false;
                                         return matchesSearch && matchesFilter && matchesStatus;
                                     }).map((a) => (
-                                        <tr key={a.id} className="border-b border-gray-700 hover:bg-gray-750">
+                                        <tr key={a.id} className="border-b border-border hover:bg-gray-750">
                                             <td className="py-4">
                                                 <div>
                                                     <p className="font-medium">{a.displayName}</p>
-                                                    <p className="text-gray-400 text-sm">{a.email}</p>
+                                                    <p className="text-muted-foreground text-sm">{a.email}</p>
                                                     <p className="text-gray-500 text-xs font-mono">{tNav('id')} {a.id}</p>
                                                 </div>
                                             </td>
@@ -2622,7 +2622,7 @@ export default function SuperAdminDashboard() {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="py-4 text-gray-400">
+                                            <td className="py-4 text-muted-foreground">
                                                 {(a as Admin & { location?: string }).location || '-'}
                                             </td>
                                             <td className="py-4">
@@ -2753,17 +2753,17 @@ export default function SuperAdminDashboard() {
             {
                 selectedUser && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-                        <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl">
+                        <div className="bg-card rounded-2xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4">{tNav('admin_rolu_ata')}</h3>
 
                             <div className="bg-gray-700 rounded-lg p-4 mb-6">
                                 <p className="text-white font-medium">{selectedUser.displayName || t('unnamed')}</p>
-                                <p className="text-gray-400 text-sm">{selectedUser.email}</p>
+                                <p className="text-muted-foreground text-sm">{selectedUser.email}</p>
                             </div>
 
                             <div className="space-y-4 mb-6">
                                 <div>
-                                    <label className="block text-gray-300 text-sm mb-2">{tNav('admin_rolu')}</label>
+                                    <label className="block text-foreground text-sm mb-2">{tNav('admin_rolu')}</label>
                                     <select
                                         value={assignRole}
                                         onChange={(e) => setAssignRole(e.target.value as AdminType)}
@@ -2778,7 +2778,7 @@ export default function SuperAdminDashboard() {
                                 {/* Business Selection - for kasap/restoran roles */}
                                 {(assignRole === 'kasap' || assignRole === 'kasap_staff' || assignRole === tNav('restoran') || assignRole === 'restoran_staff') && (
                                     <div>
-                                        <label className="block text-gray-300 text-sm mb-2">🏪 İşletme Seçin</label>
+                                        <label className="block text-foreground text-sm mb-2">🏪 İşletme Seçin</label>
                                         {selectedButcherId && (
                                             <div className="mb-2 px-4 py-2 bg-green-600/20 border border-green-500 rounded-lg flex items-center justify-between">
                                                 <span className="text-green-400">
@@ -2814,14 +2814,14 @@ export default function SuperAdminDashboard() {
                                                             className="w-full px-4 py-3 text-left hover:bg-gray-600 border-b border-gray-600 last:border-b-0 text-white"
                                                         >
                                                             <p className="font-medium">{b.name}</p>
-                                                            <p className="text-xs text-gray-400">
+                                                            <p className="text-xs text-muted-foreground">
                                                                 {b.country === 'TR' ? '🇹🇷' : '🇩🇪'} {b.postalCode} {b.city}
                                                             </p>
                                                         </button>
                                                     ))
                                                 }
                                                 {butcherList.filter(b => matchesBusinessSearch(b, assignLocation)).length === 0 && (
-                                                        <p className="px-4 py-3 text-gray-400 text-sm">{tNav('i_sletme_bulunamadi')}</p>
+                                                        <p className="px-4 py-3 text-muted-foreground text-sm">{tNav('i_sletme_bulunamadi')}</p>
                                                     )}
                                             </div>
                                         )}
@@ -2854,7 +2854,7 @@ export default function SuperAdminDashboard() {
             {
                 showCreateModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl">
+                        <div className="bg-card rounded-xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                 <span>📱</span> {tNav('admin_davetiyesi_gonder')}
                             </h3>
@@ -2874,7 +2874,7 @@ export default function SuperAdminDashboard() {
                             <div className="space-y-4">
                                 {/* Phone Number - Primary Field */}
                                 <div>
-                                    <label htmlFor="invitePhone" className="block text-gray-400 text-sm mb-1">
+                                    <label htmlFor="invitePhone" className="block text-muted-foreground text-sm mb-1">
                                         {tNav('telefon_numarasi')}
                                     </label>
                                     <input
@@ -2892,7 +2892,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Role Selection */}
                                 <div>
-                                    <label htmlFor="inviteRole" className="block text-gray-400 text-sm mb-1">
+                                    <label htmlFor="inviteRole" className="block text-muted-foreground text-sm mb-1">
                                         {tNav('rol_secimi')}
                                     </label>
                                     <select
@@ -2923,7 +2923,7 @@ export default function SuperAdminDashboard() {
                                 {/* Business Selection - Shows for kasap roles */}
                                 {(newUserRole === 'kasap' || newUserRole === 'kasap_staff') && (
                                     <div>
-                                        <label htmlFor="selectedButcher" className="block text-gray-400 text-sm mb-1">
+                                        <label htmlFor="selectedButcher" className="block text-muted-foreground text-sm mb-1">
                                             {tNav('i_sletme')} {admin?.adminType === 'super' ? '* (Zorunlu)' : ''}
                                         </label>
 
@@ -2936,7 +2936,7 @@ export default function SuperAdminDashboard() {
                                                 </p>
                                             </div>
                                         ) : loadingButchers ? (
-                                            <div className="w-full px-4 py-3 bg-gray-700 text-gray-400 rounded-lg">
+                                            <div className="w-full px-4 py-3 bg-gray-700 text-muted-foreground rounded-lg">
                                                 {tNav('kasaplar_yukleniyor')}
                                             </div>
                                         ) : (
@@ -2978,7 +2978,7 @@ export default function SuperAdminDashboard() {
 
                                                         {/* Arama Sonuçları */}
                                                         {businessSearchFilter.length >= 3 && (
-                                                            <div className="mt-2 max-h-48 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
+                                                            <div className="mt-2 max-h-48 overflow-y-auto bg-card border border-gray-600 rounded-lg">
                                                                 {(() => {
                                                                     const filtered = butcherList.filter(b =>
                                                                         matchesBusinessSearch(b, businessSearchFilter)
@@ -2986,7 +2986,7 @@ export default function SuperAdminDashboard() {
 
                                                                     if (filtered.length === 0) {
                                                                         return (
-                                                                            <div className="p-3 text-gray-400 text-center">
+                                                                            <div className="p-3 text-muted-foreground text-center">
                                                                                 ❌ "{businessSearchFilter}{tNav('icin_sonuc_bulunamadi')}
                                                                             </div>
                                                                         );
@@ -3000,10 +3000,10 @@ export default function SuperAdminDashboard() {
                                                                                 setSelectedButcherId(b.id);
                                                                                 setBusinessSearchFilter('');
                                                                             }}
-                                                                            className="w-full text-left px-4 py-3 hover:bg-green-600/30 border-b border-gray-700 last:border-b-0 transition"
+                                                                            className="w-full text-left px-4 py-3 hover:bg-green-600/30 border-b border-border last:border-b-0 transition"
                                                                         >
                                                                             <div className="font-medium text-white">{b.name}</div>
-                                                                            <div className="text-sm text-gray-400">
+                                                                            <div className="text-sm text-muted-foreground">
                                                                                 {b.country === 'TR' ? '🇹🇷' : '🇩🇪'} {b.postalCode && `${b.postalCode}`} {b.city}
                                                                                 {b.types?.length > 0 && (
                                                                                     <span className="ml-2 text-xs bg-gray-700 px-2 py-0.5 rounded">
@@ -3032,7 +3032,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Info Box */}
                                 <div className="bg-gray-700/50 rounded-lg p-3 mt-2">
-                                    <p className="text-gray-400 text-xs">
+                                    <p className="text-muted-foreground text-xs">
                                         <strong>{tNav('davetiye_icerigi')}</strong><br />
                                         &quot;{admin?.displayName || 'Admin'} {tNav('sizi_mira_admin_olarak_davet_etti')}
                                         {selectedButcherId && butcherList.find(b => b.id === selectedButcherId) && (
@@ -3077,23 +3077,23 @@ export default function SuperAdminDashboard() {
             {
                 showShareModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl">
+                        <div className="bg-card rounded-xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                 <span>✅</span> {tNav('davetiye_olusturuldu')}
                             </h3>
 
                             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-4">
-                                <div className="text-sm text-gray-400 mb-2">{tNav('davet_detaylari')}</div>
+                                <div className="text-sm text-muted-foreground mb-2">{tNav('davet_detaylari')}</div>
                                 <div className="text-white font-medium">{invitationRole}</div>
                                 {invitationBusiness && (
-                                    <div className="text-gray-300 text-sm">{invitationBusiness}</div>
+                                    <div className="text-foreground text-sm">{invitationBusiness}</div>
                                 )}
-                                <div className="text-gray-400 text-sm mt-1">📱 {invitationPhone}</div>
+                                <div className="text-muted-foreground text-sm mt-1">📱 {invitationPhone}</div>
                             </div>
 
                             {/* Invitation Link */}
                             <div className="mb-4">
-                                <label className="block text-gray-400 text-sm mb-2">🔗 Davet Linki</label>
+                                <label className="block text-muted-foreground text-sm mb-2">🔗 Davet Linki</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
@@ -3119,7 +3119,7 @@ export default function SuperAdminDashboard() {
 
                             {/* Share Options */}
                             <div className="space-y-3">
-                                <div className="text-gray-400 text-sm font-medium">{tNav('davetiye_gonder')}</div>
+                                <div className="text-muted-foreground text-sm font-medium">{tNav('davetiye_gonder')}</div>
 
                                 {/* WhatsApp */}
                                 <a
@@ -3196,21 +3196,21 @@ export default function SuperAdminDashboard() {
             {
                 editingAdmin && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl my-8">
+                        <div className="bg-card rounded-2xl p-6 w-full max-w-2xl my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white">{tNav('admin_duzenle')}</h3>
-                                <button onClick={() => setEditingAdmin(null)} className="text-gray-400 hover:text-white text-2xl">✕</button>
+                                <button onClick={() => setEditingAdmin(null)} className="text-muted-foreground hover:text-white text-2xl">✕</button>
                             </div>
 
                             <div className="space-y-6">
                                 {/* 📝 Kişisel Bilgiler */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         {tNav('kisisel_bilgiler')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Ad</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">Ad</label>
                                             <input
                                                 type="text"
                                                 value={(editingAdmin.displayName || '').split(' ')[0] || ''}
@@ -3226,7 +3226,7 @@ export default function SuperAdminDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Soyad</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">Soyad</label>
                                             <input
                                                 type="text"
                                                 value={(editingAdmin.displayName || '').split(' ').slice(1).join(' ') || ''}
@@ -3246,12 +3246,12 @@ export default function SuperAdminDashboard() {
 
                                 {/* 📞 İletişim Bilgileri */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         {tNav('i_letisim_bilgileri')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">E-posta</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">E-posta</label>
                                             <input
                                                 type="email"
                                                 value={editingAdmin.email || ''}
@@ -3261,7 +3261,7 @@ export default function SuperAdminDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Telefon</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">Telefon</label>
                                             <div className="flex gap-2">
                                                 <select
                                                     value={(editingAdmin as any).dialCode || '+49'}
@@ -3288,13 +3288,13 @@ export default function SuperAdminDashboard() {
 
                                 {/* 📍 Adres Bilgileri */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         📍 Adres Bilgileri
                                     </h4>
                                     <div className="space-y-3">
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="col-span-2 relative">
-                                                <label className="block text-gray-400 text-sm mb-1">Sokak / Cadde</label>
+                                                <label className="block text-muted-foreground text-sm mb-1">Sokak / Cadde</label>
                                                 <input
                                                     type="text"
                                                     value={(editingAdmin as any).address || ''}
@@ -3309,7 +3309,7 @@ export default function SuperAdminDashboard() {
                                                     autoComplete="off"
                                                 />
                                                 {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                         {addressSuggestions.map((s) => (
                                                             <div
                                                                 key={s.place_id}
@@ -3323,7 +3323,7 @@ export default function SuperAdminDashboard() {
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Ev No</label>
+                                                <label className="block text-muted-foreground text-sm mb-1">Ev No</label>
                                                 <input
                                                     type="text"
                                                     value={(editingAdmin as any).houseNumber || ''}
@@ -3335,7 +3335,7 @@ export default function SuperAdminDashboard() {
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="relative">
-                                                <label className="block text-gray-400 text-sm mb-1">{tNav('sehir')}</label>
+                                                <label className="block text-muted-foreground text-sm mb-1">{tNav('sehir')}</label>
                                                 <input
                                                     type="text"
                                                     value={(editingAdmin as any).city || ''}
@@ -3349,7 +3349,7 @@ export default function SuperAdminDashboard() {
                                                     placeholder={tNav('orn_berlin')}
                                                 />
                                                 {showCitySuggestions && citySuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                                         {citySuggestions.map((s) => (
                                                             <div
                                                                 key={s.place_id}
@@ -3367,7 +3367,7 @@ export default function SuperAdminDashboard() {
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Posta Kodu</label>
+                                                <label className="block text-muted-foreground text-sm mb-1">Posta Kodu</label>
                                                 <input
                                                     type="text"
                                                     value={(editingAdmin as any).postalCode || ''}
@@ -3377,7 +3377,7 @@ export default function SuperAdminDashboard() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-sm mb-1">{tNav('ulke')}</label>
+                                                <label className="block text-muted-foreground text-sm mb-1">{tNav('ulke')}</label>
                                                 <select
                                                     value={(editingAdmin as any).country || 'Deutschland'}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, country: e.target.value } as any)}
@@ -3397,13 +3397,13 @@ export default function SuperAdminDashboard() {
 
                                 {/* 🔐 Yetki Yönetimi */}
                                 <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                         {tNav('yetki_yonetimi')}
                                     </h4>
                                     <div className="space-y-4">
                                         {/* Role Selector - Business admins only see their sector's roles */}
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">
+                                            <label className="block text-muted-foreground text-sm mb-1">
                                                 {admin?.adminType === 'super' ? tNav('admin_rolu') : 'Rol'}
                                             </label>
                                             <select
@@ -3442,7 +3442,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* Location Input */}
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Konum (Opsiyonel)</label>
+                                            <label className="block text-muted-foreground text-sm mb-1">Konum (Opsiyonel)</label>
                                             <input
                                                 type="text"
                                                 value={editLocation}
@@ -3456,11 +3456,11 @@ export default function SuperAdminDashboard() {
                                         {/* İşletme Seçimi - SADECE Super Admin görebilir */}
                                         {admin?.adminType === 'super' && editRole !== 'super' && (
                                             <div>
-                                                <label className="block text-gray-400 text-sm mb-1">
+                                                <label className="block text-muted-foreground text-sm mb-1">
                                                     {tNav('i_sletme_secimi')}
                                                 </label>
                                                 {loadingButchers ? (
-                                                    <div className="text-gray-400 text-sm py-2">{t('loading')}</div>
+                                                    <div className="text-muted-foreground text-sm py-2">{t('loading')}</div>
                                                 ) : (
                                                     <div className="space-y-2">
                                                         <input
@@ -3468,7 +3468,7 @@ export default function SuperAdminDashboard() {
                                                             value={businessSearchFilter}
                                                             onChange={(e) => setBusinessSearchFilter(e.target.value)}
                                                             placeholder={tNav('i_sletme_ara')}
-                                                            className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder:text-gray-400 text-sm"
+                                                            className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder:text-muted-foreground text-sm"
                                                         />
                                                         <select
                                                             value={editButcherId}
@@ -3569,14 +3569,14 @@ export default function SuperAdminDashboard() {
             {
                 showNewUserModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-2xl w-full p-6 my-8">
+                        <div className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     {tNav('yeni_kullanici_ekle')}
                                 </h3>
                                 <button
                                     onClick={() => setShowNewUserModal(false)}
-                                    className="text-gray-400 hover:text-white text-xl"
+                                    className="text-muted-foreground hover:text-white text-xl"
                                 >
                                     ✕
                                 </button>
@@ -3586,7 +3586,7 @@ export default function SuperAdminDashboard() {
                                 {/* Personal Info */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{tNav('adi')} *</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('adi')} *</label>
                                         <input
                                             type="text"
                                             value={newUserData.firstName}
@@ -3596,7 +3596,7 @@ export default function SuperAdminDashboard() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{tNav('soyadi')} *</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('soyadi')} *</label>
                                         <input
                                             type="text"
                                             value={newUserData.lastName}
@@ -3609,7 +3609,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Contact Info */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">{tNav('e_posta')} *</label>
+                                    <label className="block text-muted-foreground text-sm mb-1">{tNav('e_posta')} *</label>
                                     <input
                                         type="email"
                                         value={newUserData.email}
@@ -3621,7 +3621,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Phone with Country Code */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">{tNav('telefon')}</label>
+                                    <label className="block text-muted-foreground text-sm mb-1">{tNav('telefon')}</label>
                                     <div className="flex gap-2">
                                         <select
                                             value={newUserData.dialCode}
@@ -3645,7 +3645,7 @@ export default function SuperAdminDashboard() {
                                 </div>
 
                                 {/* Address Section */}
-                                <div className="border-t border-gray-700 pt-4 mt-2">
+                                <div className="border-t border-border pt-4 mt-2">
                                     <h4 className="text-white font-semibold mb-3">
                                         {tNav('adres_bilgileri') || 'Adressinformationen'}
                                     </h4>
@@ -3653,7 +3653,7 @@ export default function SuperAdminDashboard() {
                                         {/* Street with Google Places */}
                                         <div className="grid grid-cols-3 gap-2">
                                             <div className="col-span-2 relative">
-                                                <label className="block text-gray-400 text-xs mb-1">{tNav('sokak') || 'Straße'}</label>
+                                                <label className="block text-muted-foreground text-xs mb-1">{tNav('sokak') || 'Straße'}</label>
                                                 <input
                                                     type="text"
                                                     id="newUserStreetInput"
@@ -3671,7 +3671,7 @@ export default function SuperAdminDashboard() {
                                                 />
                                                 {/* Custom Autocomplete Dropdown */}
                                                 {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                         {addressSuggestions.map((suggestion) => (
                                                             <div
                                                                 key={suggestion.place_id}
@@ -3685,11 +3685,11 @@ export default function SuperAdminDashboard() {
                                                     </div>
                                                 )}
                                                 {addressSearchLoading && (
-                                                    <div className="absolute right-2 top-7 text-gray-400 text-xs">🔍</div>
+                                                    <div className="absolute right-2 top-7 text-muted-foreground text-xs">🔍</div>
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-xs mb-1">{tNav('bina_no') || 'Hausnr.'}</label>
+                                                <label className="block text-muted-foreground text-xs mb-1">{tNav('bina_no') || 'Hausnr.'}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.houseNumber}
@@ -3701,7 +3701,7 @@ export default function SuperAdminDashboard() {
                                         </div>
                                         {/* Address Line 2 */}
                                         <div>
-                                            <label className="block text-gray-400 text-xs mb-1">{tNav('adres_satiri_2_daire_kat_vb')}</label>
+                                            <label className="block text-muted-foreground text-xs mb-1">{tNav('adres_satiri_2_daire_kat_vb')}</label>
                                             <input
                                                 type="text"
                                                 value={newUserData.addressLine2}
@@ -3713,7 +3713,7 @@ export default function SuperAdminDashboard() {
                                         {/* City, Postal Code, Country */}
                                         <div className="grid grid-cols-3 gap-2">
                                             <div className="relative">
-                                                <label className="block text-gray-400 text-xs mb-1">{tNav('sehir')}</label>
+                                                <label className="block text-muted-foreground text-xs mb-1">{tNav('sehir')}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.city}
@@ -3728,7 +3728,7 @@ export default function SuperAdminDashboard() {
                                                     placeholder={tNav('sehir_yazin')}
                                                 />
                                                 {showCitySuggestions && citySuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                                         {citySuggestions.map((suggestion) => (
                                                             <div
                                                                 key={suggestion.place_id}
@@ -3742,7 +3742,7 @@ export default function SuperAdminDashboard() {
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-xs mb-1">{tNav('posta_kodu')}</label>
+                                                <label className="block text-muted-foreground text-xs mb-1">{tNav('posta_kodu')}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.postalCode}
@@ -3752,7 +3752,7 @@ export default function SuperAdminDashboard() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-xs mb-1">{tNav('ulke')}</label>
+                                                <label className="block text-muted-foreground text-xs mb-1">{tNav('ulke')}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.country}
@@ -3767,7 +3767,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Role Selection */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">{tNav('rol')} *</label>
+                                    <label className="block text-muted-foreground text-sm mb-1">{tNav('rol')} *</label>
                                     <select
                                         value={newUserData.role}
                                         onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as any, sector: '' })}
@@ -3791,7 +3791,7 @@ export default function SuperAdminDashboard() {
                                 {/* Sector Selection - Only for Staff and Business Admin */}
                                 {(newUserData.role === 'staff' || newUserData.role === 'business_admin') && (
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">{tNav('sektor_modulu')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('sektor_modulu')}</label>
                                         <select
                                             value={newUserData.sector}
                                             onChange={(e) => setNewUserData({ ...newUserData, sector: e.target.value })}
@@ -3828,7 +3828,7 @@ export default function SuperAdminDashboard() {
                                 {/* İşletme Seçimi - Sadece Super Admin için, eğer role staff veya business_admin ise */}
                                 {admin?.adminType === 'super' && (newUserData.role === 'staff' || newUserData.role === 'business_admin') && (
                                     <div className="relative">
-                                        <label className="block text-gray-400 text-sm mb-1">{tNav('i_sletme_secin')}</label>
+                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('i_sletme_secin')}</label>
                                         <div className="relative">
                                             <input
                                                 type="text"
@@ -3849,7 +3849,7 @@ export default function SuperAdminDashboard() {
                                                         setNewUserData(prev => ({ ...prev, businessId: '' }));
                                                         setBusinessSearchQuery('');
                                                     }}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                                                     title={tNav('iptal')}
                                                 >
                                                     ✕
@@ -3859,7 +3859,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* Dropdown suggestions */}
                                         {showBusinessSuggestions && (
-                                            <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                 {butcherList
                                                     .filter(b => (!newUserData.sector || (b.types && b.types.includes(newUserData.sector))) &&
                                                                  matchesBusinessSearch(b, businessSearchQuery))
@@ -3879,7 +3879,7 @@ export default function SuperAdminDashboard() {
                                                 {butcherList
                                                     .filter(b => (!newUserData.sector || (b.types && b.types.includes(newUserData.sector))) &&
                                                                  matchesBusinessSearch(b, businessSearchQuery)).length === 0 && (
-                                                        <div className="px-3 py-2 text-gray-400 text-sm">Sonuç bulunamadı</div>
+                                                        <div className="px-3 py-2 text-muted-foreground text-sm">Sonuç bulunamadı</div>
                                                     )}
                                             </div>
                                         )}
@@ -3888,7 +3888,7 @@ export default function SuperAdminDashboard() {
 
                                 {/* Temporary Password */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">{tNav('gecici_sifre')}</label>
+                                    <label className="block text-muted-foreground text-sm mb-1">{tNav('gecici_sifre')}</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
@@ -3915,7 +3915,7 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
+                            <div className="flex gap-3 mt-6 pt-4 border-t border-border">
                                 <button
                                     onClick={() => {
                                         setShowNewUserModal(false);
@@ -4099,14 +4099,14 @@ export default function SuperAdminDashboard() {
             {
                 editingUserProfile && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-6xl w-full p-6 my-8">
+                        <div className="bg-card rounded-xl border border-border shadow-2xl max-w-6xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     {tNav('kullanici_profili_duzenle')}
                                 </h3>
                                 <button
                                     onClick={() => setEditingUserProfile(null)}
-                                    className="text-gray-400 hover:text-white text-xl"
+                                    className="text-muted-foreground hover:text-white text-xl"
                                 >
                                     ✕
                                 </button>
@@ -4115,9 +4115,9 @@ export default function SuperAdminDashboard() {
                             <div className="space-y-6">
                                 {/* Firestore UID - Only visible to Super Admins */}
                                 {admin?.adminType === 'super' && editingUserProfile.userId && (
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900/50 rounded-lg border border-gray-700/50">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-background/50 rounded-lg border border-border/50">
                                         <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">UID</span>
-                                        <code className="text-xs text-gray-400 font-mono select-all">{editingUserProfile.userId}</code>
+                                        <code className="text-xs text-muted-foreground font-mono select-all">{editingUserProfile.userId}</code>
                                         <button
                                             onClick={() => {
                                                 navigator.clipboard.writeText(editingUserProfile.userId);
@@ -4131,13 +4131,13 @@ export default function SuperAdminDashboard() {
                                     </div>
                                 )}
                                 {/* Profile Picture Upload Section */}
-                                <div className="flex items-center gap-6 p-4 bg-gray-750/50 rounded-xl border border-gray-700/50">
+                                <div className="flex items-center gap-6 p-4 bg-gray-750/50 rounded-xl border border-border/50">
                                     <div className="relative group shrink-0">
                                         {editingUserProfile.photoURL ? (
                                             <img
                                                 src={editingUserProfile.photoURL}
                                                 alt="Profile"
-                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-600 shadow-md bg-gray-800"
+                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-600 shadow-md bg-card"
                                             />
                                         ) : (
                                             <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center text-2xl font-bold text-gray-500 border-2 border-gray-600 shadow-inner">
@@ -4215,7 +4215,7 @@ export default function SuperAdminDashboard() {
                                                 </button>
                                             )}
                                         </div>
-                                        <p className="text-gray-400 text-xs leading-relaxed">
+                                        <p className="text-muted-foreground text-xs leading-relaxed">
                                             {tNav('kullanicinin_profil_fotografini_guncelle')}
                                         </p>
                                     </div>
@@ -4227,12 +4227,12 @@ export default function SuperAdminDashboard() {
                                     <div className="space-y-6">
                                         {/* Personal Info */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                                 {tNav('kisisel_bilgiler')}
                                             </h4>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-gray-400 text-sm mb-1">Ad</label>
+                                                    <label className="block text-muted-foreground text-sm mb-1">Ad</label>
                                                     <input
                                                         type="text"
                                                         value={editingUserProfile.firstName}
@@ -4241,7 +4241,7 @@ export default function SuperAdminDashboard() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-gray-400 text-sm mb-1">Soyad</label>
+                                                    <label className="block text-muted-foreground text-sm mb-1">Soyad</label>
                                                     <input
                                                         type="text"
                                                         value={editingUserProfile.lastName}
@@ -4255,7 +4255,7 @@ export default function SuperAdminDashboard() {
                                             <div className="mt-4 flex items-center justify-between p-3 bg-gray-750 rounded-lg border border-gray-600">
                                                 <div className="flex-1">
                                                     <span className="text-white font-medium">{tNav('hesap_durumu')}</span>
-                                                    <p className="text-gray-400 text-xs">{tNav('pasif_hesaplar_giris_yapamaz_ama_veriler')}</p>
+                                                    <p className="text-muted-foreground text-xs">{tNav('pasif_hesaplar_giris_yapamaz_ama_veriler')}</p>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <button
@@ -4288,7 +4288,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* Contact Info - GDPR Privacy: Business admins cannot see phone/email */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                                 {tNav('i_letisim_bilgileri')}
                                                 {admin?.adminType !== 'super' && (
                                                     <span className="text-xs text-yellow-500 font-normal ml-2">{tNav('gizlilik_korumali')}</span>
@@ -4298,7 +4298,7 @@ export default function SuperAdminDashboard() {
                                                 /* Super Admin: Full access to contact info */
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">E-posta Adresi</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">E-posta Adresi</label>
                                                         <input
                                                             type="email"
                                                             value={editingUserProfile.email}
@@ -4307,7 +4307,7 @@ export default function SuperAdminDashboard() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">Telefon</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">Telefon</label>
                                                         <div className="flex gap-2">
                                                             <select
                                                                 value={editingUserProfile.dialCode || '+90'}
@@ -4343,13 +4343,13 @@ export default function SuperAdminDashboard() {
                                                     <div className="grid grid-cols-2 gap-4 mt-3">
                                                         <div>
                                                             <label className="block text-gray-500 text-sm mb-1">E-posta</label>
-                                                            <div className="px-3 py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700">
+                                                            <div className="px-3 py-2 bg-card text-gray-500 rounded-lg border border-border">
                                                                 🔒 Gizli
                                                             </div>
                                                         </div>
                                                         <div>
                                                             <label className="block text-gray-500 text-sm mb-1">Telefon</label>
-                                                            <div className="px-3 py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700">
+                                                            <div className="px-3 py-2 bg-card text-gray-500 rounded-lg border border-border">
                                                                 🔒 Gizli
                                                             </div>
                                                         </div>
@@ -4360,7 +4360,7 @@ export default function SuperAdminDashboard() {
 
                                         {/* Address */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center justify-between border-b border-gray-700 pb-2">
+                                            <h4 className="text-white font-semibold mb-3 flex items-center justify-between border-b border-border pb-2">
                                                 <span className="flex items-center gap-2">📍 Adres Bilgileri</span>
                                                 <button
                                                     type="button"
@@ -4375,7 +4375,7 @@ export default function SuperAdminDashboard() {
                                                 {/* Street and House Number Row */}
                                                 <div className="grid grid-cols-4 gap-4">
                                                     <div className="col-span-3 relative">
-                                                        <label className="block text-gray-400 text-sm mb-1">Cadde / Sokak</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">Cadde / Sokak</label>
                                                         <input
                                                             id="google-places-street-input"
                                                             type="text"
@@ -4394,7 +4394,7 @@ export default function SuperAdminDashboard() {
                                                         />
                                                         {/* Custom Autocomplete Dropdown */}
                                                         {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                            <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                            <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                                                 {addressSuggestions.map((suggestion, index) => (
                                                                     <div
                                                                         key={suggestion.place_id}
@@ -4408,11 +4408,11 @@ export default function SuperAdminDashboard() {
                                                             </div>
                                                         )}
                                                         {addressSearchLoading && (
-                                                            <div className="absolute right-2 top-8 text-gray-400 text-xs">🔍</div>
+                                                            <div className="absolute right-2 top-8 text-muted-foreground text-xs">🔍</div>
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">{tNav('kapi_no')}</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('kapi_no')}</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.houseNumber}
@@ -4425,7 +4425,7 @@ export default function SuperAdminDashboard() {
 
                                                 {/* Address Line 2 */}
                                                 <div>
-                                                    <label className="block text-gray-400 text-sm mb-1">
+                                                    <label className="block text-muted-foreground text-sm mb-1">
                                                         {tNav('adres_satiri_2')} <span className="text-gray-500 text-xs">{tNav('daire_kat_site_adi_vb')}</span>
                                                     </label>
                                                     <input
@@ -4440,7 +4440,7 @@ export default function SuperAdminDashboard() {
                                                 {/* PLZ, City, Country */}
                                                 <div className="grid grid-cols-3 gap-4">
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">PLZ</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">PLZ</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.postalCode}
@@ -4449,7 +4449,7 @@ export default function SuperAdminDashboard() {
                                                         />
                                                     </div>
                                                     <div className="relative">
-                                                        <label className="block text-gray-400 text-sm mb-1">{tNav('sehir')}</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('sehir')}</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.city}
@@ -4465,7 +4465,7 @@ export default function SuperAdminDashboard() {
                                                         />
                                                         {/* City Autocomplete Dropdown */}
                                                         {showCitySuggestions && citySuggestions.length > 0 && (
-                                                            <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                            <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                                 {citySuggestions.map((suggestion) => (
                                                                     <div
                                                                         key={suggestion.place_id}
@@ -4479,11 +4479,11 @@ export default function SuperAdminDashboard() {
                                                             </div>
                                                         )}
                                                         {citySearchLoading && (
-                                                            <div className="absolute right-2 top-8 text-gray-400 text-xs">&#x1f50d;</div>
+                                                            <div className="absolute right-2 top-8 text-muted-foreground text-xs">&#x1f50d;</div>
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">{tNav('ulke')}</label>
+                                                        <label className="block text-muted-foreground text-sm mb-1">{tNav('ulke')}</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.country}
@@ -4499,12 +4499,12 @@ export default function SuperAdminDashboard() {
                                     <div className="space-y-6">
                                         {/* Admin Role Section */}
                                         <div>
-                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-border pb-2">
                                                 {tNav('yetki_yonetimi')}
                                             </h4>
                                             <div className="space-y-3">
                                                 <div>
-                                                    <label className="block text-gray-400 text-sm mb-1">Rol</label>
+                                                    <label className="block text-muted-foreground text-sm mb-1">Rol</label>
                                                     <select
                                                         value={editingUserProfile.isAdmin ? (editingUserProfile.adminType || 'admin') : 'user'}
                                                         onChange={(e) => {
@@ -4545,7 +4545,7 @@ export default function SuperAdminDashboard() {
                                                 {/* Business Selection - ARAMA BAZLI AUTOCOMPLETE (Kermes HARİCİ roller için) */}
                                                 {editingUserProfile.isAdmin && editingUserProfile.adminType && editingUserProfile.adminType !== 'super' && editingUserProfile.adminType !== 'user' && editingUserProfile.adminType !== 'kermes' && editingUserProfile.adminType !== 'kermes_staff' && (
                                                     <div className="relative">
-                                                        <label className="block text-gray-400 text-sm mb-1">
+                                                        <label className="block text-muted-foreground text-sm mb-1">
                                                             {tNav('i_sletme_secimi')} <span className="text-red-500">*</span>
                                                         </label>
 
@@ -4589,9 +4589,9 @@ export default function SuperAdminDashboard() {
 
                                                                 {/* Arama Sonuçları */}
                                                                 {businessSearchFilter.length >= 3 && (
-                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
+                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-card border border-gray-600 rounded-lg">
                                                                         {loadingButchers ? (
-                                                                            <div className="p-3 text-gray-400 text-center">
+                                                                            <div className="p-3 text-muted-foreground text-center">
                                                                                 ⏳ {t('loading')}
                                                                             </div>
                                                                         ) : (
@@ -4602,7 +4602,7 @@ export default function SuperAdminDashboard() {
 
                                                                                 if (filteredBusinesses.length === 0) {
                                                                                     return (
-                                                                                        <div className="p-3 text-gray-400 text-center">
+                                                                                        <div className="p-3 text-muted-foreground text-center">
                                                                                             ❌ "{businessSearchFilter}{tNav('icin_sonuc_bulunamadi')}
                                                                                         </div>
                                                                                     );
@@ -4620,10 +4620,10 @@ export default function SuperAdminDashboard() {
                                                                                             });
                                                                                             setBusinessSearchFilter('');
                                                                                         }}
-                                                                                        className="w-full text-left px-4 py-3 hover:bg-blue-600/30 border-b border-gray-700 last:border-b-0 transition"
+                                                                                        className="w-full text-left px-4 py-3 hover:bg-blue-600/30 border-b border-border last:border-b-0 transition"
                                                                                     >
                                                                                         <div className="font-medium text-white">{b.name}</div>
-                                                                                        <div className="text-sm text-gray-400">
+                                                                                        <div className="text-sm text-muted-foreground">
                                                                                             📍 {b.city} {b.postalCode && `- ${b.postalCode}`}
                                                                                             {b.types?.length > 0 && (
                                                                                                 <span className="ml-2 text-xs bg-gray-700 px-2 py-0.5 rounded">
@@ -4651,7 +4651,7 @@ export default function SuperAdminDashboard() {
                                                 {/* 🆕 ORGANIZASYON SEÇİMİ - Kermes Admin/Personel için */}
                                                 {editingUserProfile.isAdmin && (editingUserProfile.adminType === 'kermes' || editingUserProfile.adminType === 'kermes_staff') && (
                                                     <div className="relative">
-                                                        <label className="block text-gray-400 text-sm mb-1">
+                                                        <label className="block text-muted-foreground text-sm mb-1">
                                                             {tNav('organizasyon_secimi_vikz_camii')} <span className="text-red-500">*</span>
                                                         </label>
 
@@ -4695,9 +4695,9 @@ export default function SuperAdminDashboard() {
 
                                                                 {/* Organizasyon Arama Sonuçları */}
                                                                 {organizationSearchFilter.length >= 3 && (
-                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
+                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-card border border-gray-600 rounded-lg">
                                                                         {loadingOrganizations ? (
-                                                                            <div className="p-3 text-gray-400 text-center">
+                                                                            <div className="p-3 text-muted-foreground text-center">
                                                                                 {tNav('organizasyonlar_yukleniyor')}
                                                                             </div>
                                                                         ) : (
@@ -4712,7 +4712,7 @@ export default function SuperAdminDashboard() {
 
                                                                                 if (filteredOrgs.length === 0) {
                                                                                     return (
-                                                                                        <div className="p-3 text-gray-400 text-center">
+                                                                                        <div className="p-3 text-muted-foreground text-center">
                                                                                             ❌ "{organizationSearchFilter}{tNav('icin_organizasyon_bulunamadi')}
                                                                                         </div>
                                                                                     );
@@ -4730,10 +4730,10 @@ export default function SuperAdminDashboard() {
                                                                                             });
                                                                                             setOrganizationSearchFilter('');
                                                                                         }}
-                                                                                        className="w-full text-left px-4 py-3 hover:bg-emerald-600/30 border-b border-gray-700 last:border-b-0 transition"
+                                                                                        className="w-full text-left px-4 py-3 hover:bg-emerald-600/30 border-b border-border last:border-b-0 transition"
                                                                                     >
                                                                                         <div className="font-medium text-white">🕌 {o.shortName || o.name}</div>
-                                                                                        <div className="text-sm text-gray-400">
+                                                                                        <div className="text-sm text-muted-foreground">
                                                                                             📍 {o.postalCode && `${o.postalCode} `}{o.city}
                                                                                             <span className="ml-2 text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">
                                                                                                 {o.type.toUpperCase()}
@@ -4834,7 +4834,7 @@ export default function SuperAdminDashboard() {
                                                                     <label
                                                                         className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType === 'lokma_fleet'
                                                                             ? 'border-emerald-400 bg-emerald-800/40'
-                                                                            : 'border-gray-600 bg-gray-800/40 hover:border-gray-500'
+                                                                            : 'border-gray-600 bg-card/40 hover:border-gray-500'
                                                                             }`}
                                                                         onClick={() => setEditingUserProfile({
                                                                             ...editingUserProfile,
@@ -4856,7 +4856,7 @@ export default function SuperAdminDashboard() {
                                                                     <label
                                                                         className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType !== 'lokma_fleet'
                                                                             ? 'border-amber-400 bg-amber-800/30'
-                                                                            : 'border-gray-600 bg-gray-800/40 hover:border-gray-500'
+                                                                            : 'border-gray-600 bg-card/40 hover:border-gray-500'
                                                                             }`}
                                                                         onClick={() => setEditingUserProfile({
                                                                             ...editingUserProfile,
@@ -4917,8 +4917,8 @@ export default function SuperAdminDashboard() {
                                                                         className={`flex items-center justify-between p-3 rounded-lg border ${role.isPrimary
                                                                             ? 'bg-yellow-900/30 border-yellow-600'
                                                                             : role.isActive
-                                                                                ? 'bg-gray-800/50 border-gray-600'
-                                                                                : 'bg-gray-900/50 border-gray-700 opacity-50'
+                                                                                ? 'bg-card/50 border-gray-600'
+                                                                                : 'bg-background/50 border-border opacity-50'
                                                                             }`}
                                                                     >
                                                                         <div className="flex items-center gap-3">
@@ -4938,7 +4938,7 @@ export default function SuperAdminDashboard() {
                                                                                         </span>
                                                                                     )}
                                                                                 </p>
-                                                                                <p className="text-gray-400 text-sm">
+                                                                                <p className="text-muted-foreground text-sm">
                                                                                     {role.businessName || role.organizationName || tNav('tum_sistem')}
                                                                                 </p>
                                                                             </div>
@@ -4992,7 +4992,7 @@ export default function SuperAdminDashboard() {
                                                                 ))}
                                                             </div>
                                                         ) : (
-                                                            <div className="text-center py-6 text-gray-400">
+                                                            <div className="text-center py-6 text-muted-foreground">
                                                                 <p className="text-3xl mb-2">🎭</p>
                                                                 <p>{tNav('henuz_ek_rol_atanmamis')}</p>
                                                                 <p className="text-xs mt-1">Mevcut ana rol: <span className="text-indigo-300 font-medium">{(editingUserProfile.adminType ? getRoleLabel(editingUserProfile.adminType) : null) || editingUserProfile.adminType || tNav('atanmamis')}</span></p>
@@ -5007,7 +5007,7 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
+                            <div className="flex gap-3 mt-6 pt-4 border-t border-border">
                                 {/* Delete/Archive Button - Only for Super Admin */}
                                 {admin?.adminType === 'super' && (
                                     <button
@@ -5313,13 +5313,13 @@ export default function SuperAdminDashboard() {
             {
                 deleteModal?.show && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-2xl w-full p-6">
+                        <div className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full p-6">
                             <div className="text-center mb-6">
                                 <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-4xl">⚠️</span>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2">{tNav('kullaniciyi_sil')}</h3>
-                                <p className="text-gray-400">
+                                <p className="text-muted-foreground">
                                     <span className="font-semibold text-white">"{deleteModal.userName}"</span> {tNav('kullanicisini_silmek_istediginize_emin_m')}
                                 </p>
                                 <p className="text-red-400 text-sm mt-2 flex items-center justify-center gap-1">
@@ -5348,14 +5348,14 @@ export default function SuperAdminDashboard() {
             {/* 🆕 ROL EKLEME MODAL */}
             {showAddRoleModal && editingUserProfile && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-gray-800 rounded-xl border border-indigo-600 shadow-2xl max-w-2xl w-full p-6">
+                    <div className="bg-card rounded-xl border border-indigo-600 shadow-2xl max-w-2xl w-full p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 {tNav('yeni_rol_ekle')}
                             </h3>
                             <button
                                 onClick={() => setShowAddRoleModal(false)}
-                                className="text-gray-400 hover:text-white text-2xl"
+                                className="text-muted-foreground hover:text-white text-2xl"
                             >
                                 ×
                             </button>
@@ -5364,7 +5364,7 @@ export default function SuperAdminDashboard() {
                         <div className="space-y-4">
                             {/* Rol Türü Seçimi */}
                             <div>
-                                <label className="block text-gray-400 text-sm mb-2">{tNav('rol_turu')}</label>
+                                <label className="block text-muted-foreground text-sm mb-2">{tNav('rol_turu')}</label>
                                 <select
                                     value={newRoleType}
                                     onChange={(e) => {
@@ -5392,7 +5392,7 @@ export default function SuperAdminDashboard() {
                             {/* İşletme Seçimi (isletme_admin, isletme_staff için) */}
                             {newRoleType && ['isletme_admin', 'isletme_staff'].includes(newRoleType) && (
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-2">
+                                    <label className="block text-muted-foreground text-sm mb-2">
                                         {tNav('i_sletme_secimi')} <span className="text-red-500">*</span>
                                     </label>
                                     {newRoleBusinessId ? (
@@ -5428,7 +5428,7 @@ export default function SuperAdminDashboard() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setNewRoleBusinessSearch('')}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                                                     >
                                                         ✕
                                                     </button>
@@ -5437,7 +5437,7 @@ export default function SuperAdminDashboard() {
                                             {/* Sonuç Listesi */}
                                             <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
                                                 {loadingButchers ? (
-                                                    <div className="p-3 text-center text-gray-400">⏳ {t('loading')}</div>
+                                                    <div className="p-3 text-center text-muted-foreground">⏳ {t('loading')}</div>
                                                 ) : (
                                                     (() => {
                                                         const searchLower = newRoleBusinessSearch.toLowerCase().trim();
@@ -5452,7 +5452,7 @@ export default function SuperAdminDashboard() {
 
                                                         if (results.length === 0) {
                                                             return (
-                                                                <div className="p-4 text-center text-gray-400">
+                                                                <div className="p-4 text-center text-muted-foreground">
                                                                     <p className="text-2xl mb-2">🔍</p>
                                                                     <p>"{newRoleBusinessSearch}{tNav('bulunamadi')}</p>
                                                                     <p className="text-xs mt-1">{tNav('farkli_bir_arama_deneyin')}</p>
@@ -5479,7 +5479,7 @@ export default function SuperAdminDashboard() {
                                                                         className="w-full text-left px-3 py-2 hover:bg-indigo-600/30 border-b border-gray-600 last:border-b-0 transition"
                                                                     >
                                                                         <div className="text-white text-sm font-medium">{b.name}</div>
-                                                                        <div className="text-gray-400 text-xs">📍 {b.city}</div>
+                                                                        <div className="text-muted-foreground text-xs">📍 {b.city}</div>
                                                                     </button>
                                                                 ))}
                                                             </>
@@ -5495,7 +5495,7 @@ export default function SuperAdminDashboard() {
                             {/* Organizasyon Seçimi (kermes için) */}
                             {newRoleType && ['kermes', 'kermes_staff'].includes(newRoleType) && (
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-2">
+                                    <label className="block text-muted-foreground text-sm mb-2">
                                         {tNav('organizasyon_secimi')} <span className="text-red-500">*</span>
                                     </label>
                                     {newRoleOrganizationId ? (
@@ -5531,7 +5531,7 @@ export default function SuperAdminDashboard() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setNewRoleOrgSearch('')}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
                                                     >
                                                         ✕
                                                     </button>
@@ -5540,7 +5540,7 @@ export default function SuperAdminDashboard() {
                                             {/* Sonuç Listesi */}
                                             <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
                                                 {loadingOrganizations ? (
-                                                    <div className="p-3 text-center text-gray-400">⏳ {t('loading')}</div>
+                                                    <div className="p-3 text-center text-muted-foreground">⏳ {t('loading')}</div>
                                                 ) : (
                                                     (() => {
                                                         const searchLower = newRoleOrgSearch.toLowerCase().trim();
@@ -5556,7 +5556,7 @@ export default function SuperAdminDashboard() {
 
                                                         if (results.length === 0) {
                                                             return (
-                                                                <div className="p-4 text-center text-gray-400">
+                                                                <div className="p-4 text-center text-muted-foreground">
                                                                     <p className="text-2xl mb-2">🔍</p>
                                                                     <p>"{newRoleOrgSearch}{tNav('bulunamadi')}</p>
                                                                     <p className="text-xs mt-1">{tNav('farkli_bir_arama_deneyin')}</p>
@@ -5583,7 +5583,7 @@ export default function SuperAdminDashboard() {
                                                                         className="w-full text-left px-3 py-2 hover:bg-emerald-600/30 border-b border-gray-600 last:border-b-0 transition"
                                                                     >
                                                                         <div className="text-white text-sm font-medium">🕌 {o.shortName || o.name}</div>
-                                                                        <div className="text-gray-400 text-xs">📍 {o.postalCode && `${o.postalCode} `}{o.city}</div>
+                                                                        <div className="text-muted-foreground text-xs">📍 {o.postalCode && `${o.postalCode} `}{o.city}</div>
                                                                     </button>
                                                                 ))}
                                                             </>
@@ -5598,7 +5598,7 @@ export default function SuperAdminDashboard() {
                         </div>
 
                         {/* Modal Buttons */}
-                        <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700">
+                        <div className="flex gap-3 mt-6 pt-4 border-t border-border">
                             <button
                                 onClick={() => setShowAddRoleModal(false)}
                                 className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition"

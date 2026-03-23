@@ -208,14 +208,14 @@ export default function InvitationsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Header */}
             <header className="bg-red-700 text-white">
                 <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -234,14 +234,14 @@ export default function InvitationsPage() {
                 <div className="flex space-x-2 mb-6">
                     <button
                         onClick={() => setActiveTab('invite')}
-                        className={`px-6 py-3 rounded-lg font-medium transition ${activeTab === 'invite' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        className={`px-6 py-3 rounded-lg font-medium transition ${activeTab === 'invite' ? 'bg-blue-600 text-white' : 'bg-card text-muted-foreground hover:bg-gray-700'
                             }`}
                     >
                         {t('yeni_davet')}
                     </button>
                     <button
                         onClick={() => setActiveTab('pending')}
-                        className={`px-6 py-3 rounded-lg font-medium transition relative ${activeTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        className={`px-6 py-3 rounded-lg font-medium transition relative ${activeTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-card text-muted-foreground hover:bg-gray-700'
                             }`}
                     >
                         {t('onay_bekleyenler')}
@@ -253,7 +253,7 @@ export default function InvitationsPage() {
                     </button>
                     <button
                         onClick={() => setActiveTab('superadmins')}
-                        className={`px-6 py-3 rounded-lg font-medium transition ${activeTab === 'superadmins' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        className={`px-6 py-3 rounded-lg font-medium transition ${activeTab === 'superadmins' ? 'bg-blue-600 text-white' : 'bg-card text-muted-foreground hover:bg-gray-700'
                             }`}
                     >
                         {t('mevcut_super_adminler')}
@@ -264,15 +264,15 @@ export default function InvitationsPage() {
             <main className="max-w-4xl mx-auto px-4 pb-8">
                 {/* Invite Tab */}
                 {activeTab === 'invite' && (
-                    <div className="bg-gray-800 rounded-xl p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <h2 className="text-xl font-bold text-white mb-4">{t('yeni_super_admin_davet_et')}</h2>
-                        <p className="text-gray-400 mb-6">
+                        <p className="text-muted-foreground mb-6">
                             {t('davet_edilen_kisi_48_saat_icinde_linke_t')}
                         </p>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-gray-300 text-sm mb-2">{t('eposta_adresi')}</label>
+                                <label className="block text-foreground text-sm mb-2">{t('eposta_adresi')}</label>
                                 <input
                                     type="email"
                                     value={newEmail}
@@ -283,7 +283,7 @@ export default function InvitationsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-gray-300 text-sm mb-2">{t('role_label')}</label>
+                                <label className="block text-foreground text-sm mb-2">{t('role_label')}</label>
                                 <select
                                     value={inviteRole}
                                     onChange={(e) => setInviteRole(e.target.value as 'super_admin' | 'admin')}
@@ -312,7 +312,7 @@ export default function InvitationsPage() {
                                         <div key={inv.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                                             <div>
                                                 <p className="text-white">{inv.email}</p>
-                                                <p className="text-gray-400 text-xs">
+                                                <p className="text-muted-foreground text-xs">
                                                     {inv.createdAt?.toLocaleDateString('de-DE')} • {inv.role}
                                                 </p>
                                             </div>
@@ -335,11 +335,11 @@ export default function InvitationsPage() {
 
                 {/* Pending Approvals Tab */}
                 {activeTab === 'pending' && (
-                    <div className="bg-gray-800 rounded-xl p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <h2 className="text-xl font-bold text-white mb-4">{t('onay_bekleyen_basvurular')}</h2>
 
                         {pendingApprovals.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-muted-foreground">
                                 <p className="text-4xl mb-4">✓</p>
                                 <p>{t('onay_bekleyen_basvuru_yok')}</p>
                             </div>
@@ -350,7 +350,7 @@ export default function InvitationsPage() {
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
                                                 <p className="text-white font-semibold text-lg">{inv.email}</p>
-                                                <p className="text-gray-400 text-sm">
+                                                <p className="text-muted-foreground text-sm">
                                                     {t('davet_eden')}: {inv.invitedByEmail} • {inv.createdAt?.toLocaleDateString('de-DE')}
                                                 </p>
                                             </div>
@@ -360,25 +360,25 @@ export default function InvitationsPage() {
                                         </div>
 
                                         {inv.registrationData && (
-                                            <div className="bg-gray-800 rounded-lg p-4 mb-4">
+                                            <div className="bg-card rounded-lg p-4 mb-4">
                                                 <h4 className="text-white font-medium mb-3">{t('kayit_bilgileri')}</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <div>
-                                                        <span className="text-gray-400">{t('full_name')}</span>
+                                                        <span className="text-muted-foreground">{t('full_name')}</span>
                                                         <span className="text-white ml-2">
                                                             {inv.registrationData.firstName} {inv.registrationData.lastName}
                                                         </span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-400">{t('phone')}</span>
+                                                        <span className="text-muted-foreground">{t('phone')}</span>
                                                         <span className="text-white ml-2">{inv.registrationData.phone}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-400">{t('dogum_tarihi')}</span>
+                                                        <span className="text-muted-foreground">{t('dogum_tarihi')}</span>
                                                         <span className="text-white ml-2">{inv.registrationData.dateOfBirth}</span>
                                                     </div>
                                                     <div className="col-span-2">
-                                                        <span className="text-gray-400">{t('address')}</span>
+                                                        <span className="text-muted-foreground">{t('address')}</span>
                                                         <span className="text-white ml-2">
                                                             {inv.registrationData.address.street} {inv.registrationData.address.houseNumber},
                                                             {inv.registrationData.address.postalCode} {inv.registrationData.address.city}
@@ -411,7 +411,7 @@ export default function InvitationsPage() {
 
                 {/* Super Admins Tab */}
                 {activeTab === 'superadmins' && (
-                    <div className="bg-gray-800 rounded-xl p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <h2 className="text-xl font-bold text-white mb-4">{t('existing_super_admins')}</h2>
                         <div className="space-y-2">
                             {superAdmins.map((email, index) => (
@@ -424,7 +424,7 @@ export default function InvitationsPage() {
                                 </div>
                             ))}
                         </div>
-                        <p className="text-gray-400 text-sm mt-4">
+                        <p className="text-muted-foreground text-sm mt-4">
                             {t('not_super_admin_listesi_config_ts_dosyas')}
                         </p>
                     </div>

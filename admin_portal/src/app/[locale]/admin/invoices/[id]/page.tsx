@@ -298,7 +298,7 @@ export default function InvoiceDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500" />
             </div>
         );
@@ -306,11 +306,11 @@ export default function InvoiceDetailPage() {
 
     if (error || !invoice) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <div className="text-5xl mb-4">⚠️</div>
                     <h2 className="text-xl font-bold text-white mb-2">{t('notFound')}</h2>
-                    <p className="text-gray-400 mb-6">{error || t('notFoundDesc')}</p>
+                    <p className="text-muted-foreground mb-6">{error || t('notFoundDesc')}</p>
                     <Link href="/admin/invoices" className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500">
                         ← {t('backToInvoices')}
                     </Link>
@@ -320,12 +320,12 @@ export default function InvoiceDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Header */}
             <div className="max-w-5xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/invoices" className="text-gray-400 hover:text-white transition-colors">
+                        <Link href="/admin/invoices" className="text-muted-foreground hover:text-white transition-colors">
                             ← {t('back')}
                         </Link>
                         <div>
@@ -345,7 +345,7 @@ export default function InvoiceDetailPage() {
                                     </span>
                                 )}
                             </h1>
-                            <p className="text-gray-400 text-sm mt-1">
+                            <p className="text-muted-foreground text-sm mt-1">
                                 {t('createdOn')} {formatDate(invoice.createdAt)} | {t('dueOn')} {formatDate(invoice.dueDate)}
                             </p>
                         </div>
@@ -404,20 +404,20 @@ export default function InvoiceDetailPage() {
                         {/* Parties */}
                         <div className="grid grid-cols-2 gap-4">
                             {/* Seller */}
-                            <div className="bg-gray-800 rounded-xl p-5">
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('seller')}</h3>
+                            <div className="bg-card rounded-xl p-5">
+                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('seller')}</h3>
                                 <p className="text-white font-bold">{LOKMA_COMPANY_INFO.name}</p>
-                                <p className="text-gray-300 text-sm">{LOKMA_COMPANY_INFO.address}</p>
-                                <p className="text-gray-300 text-sm">{LOKMA_COMPANY_INFO.postalCode} {LOKMA_COMPANY_INFO.city}</p>
+                                <p className="text-foreground text-sm">{LOKMA_COMPANY_INFO.address}</p>
+                                <p className="text-foreground text-sm">{LOKMA_COMPANY_INFO.postalCode} {LOKMA_COMPANY_INFO.city}</p>
                                 <p className="text-gray-500 text-xs mt-2">{t('taxNo')}: {LOKMA_COMPANY_INFO.taxId}</p>
                                 <p className="text-gray-500 text-xs">{t('vatIdLabel')}: {LOKMA_COMPANY_INFO.vatId}</p>
                             </div>
 
                             {/* Buyer */}
-                            <div className="bg-gray-800 rounded-xl p-5">
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('buyer')}</h3>
+                            <div className="bg-card rounded-xl p-5">
+                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('buyer')}</h3>
                                 <p className="text-white font-bold">{invoice.butcherName}</p>
-                                <p className="text-gray-300 text-sm">{invoice.butcherAddress || '-'}</p>
+                                <p className="text-foreground text-sm">{invoice.butcherAddress || '-'}</p>
                                 {invoice.butcherTaxId && (
                                     <p className="text-gray-500 text-xs mt-2">{t('vatIdLabel')}: {invoice.butcherTaxId}</p>
                                 )}
@@ -425,37 +425,37 @@ export default function InvoiceDetailPage() {
                         </div>
 
                         {/* Line Items */}
-                        <div className="bg-gray-800 rounded-xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-700">
+                        <div className="bg-card rounded-xl overflow-hidden">
+                            <div className="px-5 py-4 border-b border-border">
                                 <h3 className="text-white font-semibold">{t('lineItems')}</h3>
                             </div>
                             <table className="w-full">
                                 <thead className="bg-gray-700/50">
                                     <tr>
-                                        <th className="px-5 py-3 text-left text-gray-400 text-xs uppercase">{t('descriptionCol')}</th>
-                                        <th className="px-5 py-3 text-right text-gray-400 text-xs uppercase">{t('quantity')}</th>
-                                        <th className="px-5 py-3 text-right text-gray-400 text-xs uppercase">{t('unitPrice')}</th>
-                                        <th className="px-5 py-3 text-right text-gray-400 text-xs uppercase">{t('vatCol')}</th>
-                                        <th className="px-5 py-3 text-right text-gray-400 text-xs uppercase">{t('totalCol')}</th>
+                                        <th className="px-5 py-3 text-left text-muted-foreground text-xs uppercase">{t('descriptionCol')}</th>
+                                        <th className="px-5 py-3 text-right text-muted-foreground text-xs uppercase">{t('quantity')}</th>
+                                        <th className="px-5 py-3 text-right text-muted-foreground text-xs uppercase">{t('unitPrice')}</th>
+                                        <th className="px-5 py-3 text-right text-muted-foreground text-xs uppercase">{t('vatCol')}</th>
+                                        <th className="px-5 py-3 text-right text-muted-foreground text-xs uppercase">{t('totalCol')}</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-700">
+                                <tbody className="divide-y divide-border">
                                     {invoice.items && invoice.items.length > 0 ? (
                                         invoice.items.map((item, i) => (
                                             <tr key={i} className="hover:bg-gray-700/30">
                                                 <td className="px-5 py-3 text-white">{item.description}</td>
-                                                <td className="px-5 py-3 text-right text-gray-300">{item.quantity}</td>
-                                                <td className="px-5 py-3 text-right text-gray-300">{formatCurrency(item.unitPrice)}</td>
-                                                <td className="px-5 py-3 text-right text-gray-300">{invoice.taxRate}%</td>
+                                                <td className="px-5 py-3 text-right text-foreground">{item.quantity}</td>
+                                                <td className="px-5 py-3 text-right text-foreground">{formatCurrency(item.unitPrice)}</td>
+                                                <td className="px-5 py-3 text-right text-foreground">{invoice.taxRate}%</td>
                                                 <td className="px-5 py-3 text-right text-white font-medium">{formatCurrency(item.total)}</td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
                                             <td className="px-5 py-3 text-white">{invoice.description || 'LOKMA Abonnement'}</td>
-                                            <td className="px-5 py-3 text-right text-gray-300">1</td>
-                                            <td className="px-5 py-3 text-right text-gray-300">{formatCurrency(invoice.subtotal)}</td>
-                                            <td className="px-5 py-3 text-right text-gray-300">{invoice.taxRate}%</td>
+                                            <td className="px-5 py-3 text-right text-foreground">1</td>
+                                            <td className="px-5 py-3 text-right text-foreground">{formatCurrency(invoice.subtotal)}</td>
+                                            <td className="px-5 py-3 text-right text-foreground">{invoice.taxRate}%</td>
                                             <td className="px-5 py-3 text-right text-white font-medium">{formatCurrency(invoice.subtotal)}</td>
                                         </tr>
                                     )}
@@ -463,13 +463,13 @@ export default function InvoiceDetailPage() {
                             </table>
 
                             {/* Totals */}
-                            <div className="px-5 py-4 border-t border-gray-700 space-y-2">
+                            <div className="px-5 py-4 border-t border-border space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">{t('subtotal')}</span>
+                                    <span className="text-muted-foreground">{t('subtotal')}</span>
                                     <span className="text-white">{formatCurrency(invoice.subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">{t('vat')} ({invoice.taxRate}%)</span>
+                                    <span className="text-muted-foreground">{t('vat')} ({invoice.taxRate}%)</span>
                                     <span className="text-white">{formatCurrency(invoice.taxAmount)}</span>
                                 </div>
                                 {invoice.surchargeAmount && invoice.surchargeAmount > 0 && (
@@ -490,16 +490,16 @@ export default function InvoiceDetailPage() {
                             <div className="bg-red-900/30 border border-red-700 rounded-xl p-5">
                                 <h3 className="text-red-400 font-semibold mb-2">⚠️ {t('stornoInfo')}</h3>
                                 {invoice.stornoReason && (
-                                    <p className="text-gray-300 text-sm"><strong>{t('stornoReason')}:</strong> {invoice.stornoReason || invoice.cancelReason}</p>
+                                    <p className="text-foreground text-sm"><strong>{t('stornoReason')}:</strong> {invoice.stornoReason || invoice.cancelReason}</p>
                                 )}
                                 {invoice.stornoInvoiceNumber && (
-                                    <p className="text-gray-300 text-sm"><strong>{t('stornoInvoiceNo')}:</strong> {invoice.stornoInvoiceNumber}</p>
+                                    <p className="text-foreground text-sm"><strong>{t('stornoInvoiceNo')}:</strong> {invoice.stornoInvoiceNumber}</p>
                                 )}
                                 {invoice.originalInvoiceNumber && (
-                                    <p className="text-gray-300 text-sm"><strong>{t('originalInvoiceNo')}:</strong> {invoice.originalInvoiceNumber}</p>
+                                    <p className="text-foreground text-sm"><strong>{t('originalInvoiceNo')}:</strong> {invoice.originalInvoiceNumber}</p>
                                 )}
                                 {invoice.cancelledAt && (
-                                    <p className="text-gray-300 text-sm"><strong>{t('cancelledOn')}:</strong> {formatDate(invoice.cancelledAt)}</p>
+                                    <p className="text-foreground text-sm"><strong>{t('cancelledOn')}:</strong> {formatDate(invoice.cancelledAt)}</p>
                                 )}
                             </div>
                         )}
@@ -508,8 +508,8 @@ export default function InvoiceDetailPage() {
                     {/* Right Column - Metadata & Actions */}
                     <div className="space-y-6">
                         {/* Invoice Metadata */}
-                        <div className="bg-gray-800 rounded-xl p-5">
-                            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('invoiceDetails')}</h3>
+                        <div className="bg-card rounded-xl p-5">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t('invoiceDetails')}</h3>
                             <div className="space-y-3">
                                 <div>
                                     <span className="text-gray-500 text-xs">{t('invoiceNumber')}</span>
@@ -540,7 +540,7 @@ export default function InvoiceDetailPage() {
                                 {/* Lexware Reference */}
                                 {(invoice as any).lexwareInvoiceId && (
                                     <>
-                                        <div className="pt-3 border-t border-gray-700">
+                                        <div className="pt-3 border-t border-border">
                                             <span className="text-gray-500 text-xs">Lexware Invoice ID</span>
                                             <p className="text-orange-400 font-mono text-xs break-all">{(invoice as any).lexwareInvoiceId}</p>
                                         </div>
@@ -564,8 +564,8 @@ export default function InvoiceDetailPage() {
                         </div>
 
                         {/* Payment Info */}
-                        <div className="bg-gray-800 rounded-xl p-5">
-                            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">{t('paymentInfo')}</h3>
+                        <div className="bg-card rounded-xl p-5">
+                            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t('paymentInfo')}</h3>
                             <div className="space-y-3">
                                 {invoice.paymentMethod && (
                                     <div>
@@ -590,8 +590,8 @@ export default function InvoiceDetailPage() {
 
                         {/* Audit Trail */}
                         {auditLogs.length > 0 && (
-                            <div className="bg-gray-800 rounded-xl p-5">
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+                            <div className="bg-card rounded-xl p-5">
+                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                                     {t('auditTrail')}
                                 </h3>
                                 <div className="space-y-3">
@@ -603,13 +603,13 @@ export default function InvoiceDetailPage() {
                                                 </span>
                                                 <span className={`px-2 py-0.5 rounded text-xs ${log.action === 'storno' ? 'bg-red-900 text-red-300' :
                                                     log.action === 'payment_received' ? 'bg-green-900 text-green-300' :
-                                                        'bg-gray-700 text-gray-300'
+                                                        'bg-gray-700 text-foreground'
                                                     }`}>
                                                     {log.action}
                                                 </span>
                                             </div>
                                             {log.reason && (
-                                                <p className="text-gray-400 text-xs mt-1">{log.reason}</p>
+                                                <p className="text-muted-foreground text-xs mt-1">{log.reason}</p>
                                             )}
                                             <p className="text-gray-500 text-xs">
                                                 {log.performedBy?.displayName || log.performedBy?.email || '-'}
@@ -622,9 +622,9 @@ export default function InvoiceDetailPage() {
 
                         {/* Notes */}
                         {invoice.notes && (
-                            <div className="bg-gray-800 rounded-xl p-5">
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('notes')}</h3>
-                                <p className="text-gray-300 text-sm">{invoice.notes}</p>
+                            <div className="bg-card rounded-xl p-5">
+                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('notes')}</h3>
+                                <p className="text-foreground text-sm">{invoice.notes}</p>
                             </div>
                         )}
                     </div>
@@ -642,14 +642,14 @@ export default function InvoiceDetailPage() {
             {/* Storno Modal */}
             {showStornoModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+                    <div className="bg-card rounded-xl p-6 w-full max-w-md mx-4">
                         <h2 className="text-xl font-bold text-white mb-2">⚠️ {t('cancelInvoice')}</h2>
-                        <p className="text-gray-400 text-sm mb-4">
+                        <p className="text-muted-foreground text-sm mb-4">
                             {t('gobdNote')}
                         </p>
 
                         <div className="mb-4">
-                            <label className="block text-gray-300 text-sm mb-1">{t('cancelReasonLabel')}</label>
+                            <label className="block text-foreground text-sm mb-1">{t('cancelReasonLabel')}</label>
                             <textarea
                                 value={stornoReason}
                                 onChange={(e) => setStornoReason(e.target.value)}

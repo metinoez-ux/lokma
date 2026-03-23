@@ -141,7 +141,7 @@ export default function BusinessDetailsPage() {
 
   // Fallback plan labels for badge display (dynamic plans override these)
   const defaultPlanLabels: Record<string, { label: string; color: string }> = {
-    none: { label: t('yok'), color: "bg-gray-800" },
+    none: { label: t('yok'), color: "bg-card" },
   };
 
   // 🆕 Dynamic business type labels for UI - synced with /lib/business-types.ts
@@ -618,10 +618,10 @@ export default function BusinessDetailsPage() {
           {children}
         </div>
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="bg-gray-800/95 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-6 text-center max-w-md shadow-2xl">
+          <div className="bg-card/95 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-6 text-center max-w-md shadow-2xl">
             <span className="text-4xl">🔒</span>
             <h3 className="text-white font-bold mt-3 text-lg">{t('buFonksiyonPlaninizdaMevcutDegil')}</h3>
-            <p className="text-gray-400 text-sm mt-2">
+            <p className="text-muted-foreground text-sm mt-2">
               {t('mevcutPlan')}: <strong className="text-white">{business?.subscriptionPlan || 'free'}</strong>
             </p>
             <a
@@ -2492,7 +2492,7 @@ export default function BusinessDetailsPage() {
 
   if (adminLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
       </div>
     );
@@ -2501,7 +2501,7 @@ export default function BusinessDetailsPage() {
   // Show "not found" only if NOT creating new business
   if (!business && businessId !== 'new') {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center text-white">
         <p className="text-4xl mb-4"></p>
         <p>{t('isletmeBulunamadi')}</p>
         <Link
@@ -2522,7 +2522,7 @@ export default function BusinessDetailsPage() {
   const planInfo = planLabels[business?.subscriptionPlan || "none"] || { label: business?.subscriptionPlan || t('yok'), color: 'bg-gray-600' };
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Toast */}
       {toast && (
         <div
@@ -2534,13 +2534,13 @@ export default function BusinessDetailsPage() {
       )}
 
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-30">
+      <header className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
                 href="/admin/business"
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-white"
               >
                 {t('geri_buton')}
               </Link>
@@ -2549,7 +2549,7 @@ export default function BusinessDetailsPage() {
                   {businessId === 'new' ? t('yeniIsletmeEkle2') : (business?.companyName || t('isletmeDetayi'))}
                 </h1>
                 {business && (
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     {(business.shopPhone || business.contactPerson?.phone) && (
                       <span className="mr-3"> {business.shopPhone || business.contactPerson?.phone}</span>
                     )}
@@ -2574,7 +2574,7 @@ export default function BusinessDetailsPage() {
             {/* Main Navigation Tabs */}
             <button
               onClick={() => { setActiveTab("overview"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
             >
                {t('dashboard')}
             </button>
@@ -2588,19 +2588,19 @@ export default function BusinessDetailsPage() {
             )}
             <button
               onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
             >
               {t('siparisler')}{orders.length})
             </button>
             <button
               onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
             >
                {t('tedarik')} ({supplierOrders.length})
             </button>
             <button
               onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
             >
               {!planFeatures.reservations && admin?.adminType !== 'super' && '🔒 '}{t('masaRezervasyonlari')}
             </button>
@@ -2609,7 +2609,7 @@ export default function BusinessDetailsPage() {
             <div className="relative settings-dropdown-container">
               <button
                 onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-700 text-foreground hover:bg-gray-600"}`}
               >
                 {t('ayarlar')}
                 <svg className={`w-3.5 h-3.5 transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2618,7 +2618,7 @@ export default function BusinessDetailsPage() {
               </button>
 
               {showSettingsDropdown && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-gray-600 rounded-xl shadow-2xl z-50 overflow-hidden">
                   {([
                     { key: "isletme", label: t('isletme'), action: "tab" },
                     { key: "menu", label: t('menuUrunler'), action: "tab" },
@@ -2640,7 +2640,7 @@ export default function BusinessDetailsPage() {
                         }}
                         className={`flex items-center gap-3 px-4 py-2.5 text-sm transition w-full text-left ${activeTab === "settings" && settingsSubTab === item.key
                           ? "bg-red-600/20 text-red-400 font-medium"
-                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                          : "text-foreground hover:bg-gray-700 hover:text-white"
                           } ${isGated ? 'opacity-60' : ''}`}
                       >
                         <span>{isGated ? '🔒 ' : ''}{item.label}</span>
@@ -2660,7 +2660,7 @@ export default function BusinessDetailsPage() {
           <div className="space-y-6">
 
             {/* Active Staff & Couriers Panel */}
-            <div className="bg-gray-800 rounded-xl p-4">
+            <div className="bg-card rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold">
                   {t('aktif_personel_kuryeler')}
@@ -2675,7 +2675,7 @@ export default function BusinessDetailsPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Mağaza Çalışanları */}
                 <div className="bg-gray-700/50 rounded-lg p-4">
-                  <h4 className="text-gray-300 text-sm font-medium mb-3 flex items-center gap-2">
+                  <h4 className="text-foreground text-sm font-medium mb-3 flex items-center gap-2">
                     {t('magazaCalisanlari')}
                   </h4>
                   <div className="space-y-2">
@@ -2711,7 +2711,7 @@ export default function BusinessDetailsPage() {
 
                 {/* Aktif Kuryeler */}
                 <div className="bg-gray-700/50 rounded-lg p-4">
-                  <h4 className="text-gray-300 text-sm font-medium mb-3 flex items-center gap-2">
+                  <h4 className="text-foreground text-sm font-medium mb-3 flex items-center gap-2">
                     {t('kuryelerDagitimda')}
                   </h4>
                   <div className="space-y-2">
@@ -2762,13 +2762,13 @@ export default function BusinessDetailsPage() {
             </div>
 
             {/* Kanban Board - matches partner Bestellzentrum layout */}
-            <div className="bg-gray-800 rounded-xl p-4">
+            <div className="bg-card rounded-xl p-4">
               <div className="flex flex-col gap-3 mb-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-white font-bold text-lg">
                     {t('bestellzentrum')}
                   </h3>
-                  <span className="text-gray-400 text-sm">
+                  <span className="text-muted-foreground text-sm">
                     {t('suAnkiSiparisler')}
                   </span>
                 </div>
@@ -2827,7 +2827,7 @@ export default function BusinessDetailsPage() {
                 return (
               <div className="grid grid-cols-5 gap-3" style={{ minHeight: '300px' }}>
                 {/* Column: Ausstehend (Pending) */}
-                <div className="bg-gray-900/50 rounded-xl p-3 border border-yellow-600/20">
+                <div className="bg-background/50 rounded-xl p-3 border border-yellow-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <span className="text-yellow-400 font-semibold text-sm">
@@ -2843,7 +2843,7 @@ export default function BusinessDetailsPage() {
                             {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
+                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         {(order as any).isScheduledOrder && (order as any).scheduledDeliveryTime && (
                           <div className="mb-1.5">
                             <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
@@ -2870,7 +2870,7 @@ export default function BusinessDetailsPage() {
                 </div>
 
                 {/* Column: In Zubereitung (Preparing) */}
-                <div className="bg-gray-900/50 rounded-xl p-3 border border-blue-600/20">
+                <div className="bg-background/50 rounded-xl p-3 border border-blue-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <span className="text-blue-400 font-semibold text-sm">
@@ -2886,7 +2886,7 @@ export default function BusinessDetailsPage() {
                             {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
                           </span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
+                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2899,7 +2899,7 @@ export default function BusinessDetailsPage() {
                 </div>
 
                 {/* Column: Bereit (Ready) */}
-                <div className="bg-gray-900/50 rounded-xl p-3 border border-green-600/20">
+                <div className="bg-background/50 rounded-xl p-3 border border-green-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     <span className="text-green-400 font-semibold text-sm">
@@ -2912,7 +2912,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
+                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2925,7 +2925,7 @@ export default function BusinessDetailsPage() {
                 </div>
 
                 {/* Column: Auf dem Weg (On the Way) */}
-                <div className="bg-gray-900/50 rounded-xl p-3 border border-amber-600/20">
+                <div className="bg-background/50 rounded-xl p-3 border border-amber-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-amber-500"></div>
                     <span className="text-amber-400 font-semibold text-sm">
@@ -2938,7 +2938,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
+                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2951,7 +2951,7 @@ export default function BusinessDetailsPage() {
                 </div>
 
                 {/* Column: Abgeschlossen (Completed) */}
-                <div className="bg-gray-900/50 rounded-xl p-3 border border-green-600/20">
+                <div className="bg-background/50 rounded-xl p-3 border border-green-600/20">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     <span className="text-green-400 font-semibold text-sm">
@@ -2964,7 +2964,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-white font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
+                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
                           <span className="text-gray-500 text-xs">
@@ -2981,7 +2981,7 @@ export default function BusinessDetailsPage() {
             </div>
 
             {/* Revenue Summary */}
-            <div className="bg-gray-800 rounded-xl p-4">
+            <div className="bg-card rounded-xl p-4">
               <h3 className="text-white font-bold mb-4">{t('gelirOzeti')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
@@ -2990,13 +2990,13 @@ export default function BusinessDetailsPage() {
                       .filter(o => o.status !== 'cancelled')
                       .reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
                   </p>
-                  <p className="text-gray-400 text-sm">{t('toplam_ciro')}</p>
+                  <p className="text-muted-foreground text-sm">{t('toplam_ciro')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-blue-400 text-2xl font-bold">
                     {orders.length}
                   </p>
-                  <p className="text-gray-400 text-sm">{t('toplamSiparis')}</p>
+                  <p className="text-muted-foreground text-sm">{t('toplamSiparis')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-purple-400 text-2xl font-bold">
@@ -3009,13 +3009,13 @@ export default function BusinessDetailsPage() {
                       )
                       : 0, business?.currency)}
                   </p>
-                  <p className="text-gray-400 text-sm">{t('ortalamaSiparis')}</p>
+                  <p className="text-muted-foreground text-sm">{t('ortalamaSiparis')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-yellow-400 text-2xl font-bold">
                     {staffList.length}
                   </p>
-                  <p className="text-gray-400 text-sm">{t('personel_label')}</p>
+                  <p className="text-muted-foreground text-sm">{t('personel_label')}</p>
                 </div>
               </div>
             </div>
@@ -3023,14 +3023,14 @@ export default function BusinessDetailsPage() {
             {/* Contact Info & Membership Details */}
             <div className="grid md:grid-cols-2 gap-4">
               {/* Contact Info */}
-              <div className="bg-gray-800 rounded-xl p-4">
+              <div className="bg-card rounded-xl p-4">
                 <h3 className="text-white font-bold mb-4">
                   {t('iletisimBilgileri')}
                 </h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm">{t('yetkiliKisi')}</p>
+                      <p className="text-muted-foreground text-sm">{t('yetkiliKisi')}</p>
                       <p className="text-white font-medium">
                         {business?.contactPerson?.name
                           ? `${business?.contactPerson?.name} ${business?.contactPerson?.surname || ""}`
@@ -3041,7 +3041,7 @@ export default function BusinessDetailsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm">{t('iletisim1')}</p>
+                      <p className="text-muted-foreground text-sm">{t('iletisim1')}</p>
                       <p className="text-white">
                         {business?.contactPerson?.phone ||
                           business?.shopPhone ||
@@ -3054,9 +3054,9 @@ export default function BusinessDetailsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="border-t border-gray-700 pt-3">
+                  <div className="border-t border-border pt-3">
                     <div className="flex justify-between items-center mb-2">
-                      <p className="text-gray-400 text-sm">{t('calismaSaatleri2')}</p>
+                      <p className="text-muted-foreground text-sm">{t('calismaSaatleri2')}</p>
                       {(() => {
                         const activeHours = overviewHoursTab === 'gelal' ? business?.pickupHours : (overviewHoursTab === 'kurye' ? business?.deliveryHours : business?.openingHours);
                         const status = checkShopStatus(activeHours || "");
@@ -3077,17 +3077,17 @@ export default function BusinessDetailsPage() {
                       const hasPickup = (business?.pickupHours && business.pickupHours.length > 0) || business?.pickupStartTime;
                       const hasDelivery = (business?.deliveryHours && business.deliveryHours.length > 0) || business?.deliveryStartTime;
                       return (hasPickup || hasDelivery) ? (
-                      <div className="flex w-full bg-gray-900/50 rounded-lg p-1 mb-3">
+                      <div className="flex w-full bg-background/50 rounded-lg p-1 mb-3">
                         <button
                           onClick={() => setOverviewHoursTab('genel')}
-                          className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'genel' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-300'}`}
+                          className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'genel' ? 'bg-gray-700 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                           Genel
                         </button>
                         {hasPickup && (
                           <button
                             onClick={() => setOverviewHoursTab('gelal')}
-                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'gelal' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-300'}`}
+                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'gelal' ? 'bg-gray-700 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             Gel-Al
                           </button>
@@ -3095,7 +3095,7 @@ export default function BusinessDetailsPage() {
                         {hasDelivery && (
                           <button
                             onClick={() => setOverviewHoursTab('kurye')}
-                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'kurye' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-300'}`}
+                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'kurye' ? 'bg-gray-700 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             Kurye
                           </button>
@@ -3113,9 +3113,9 @@ export default function BusinessDetailsPage() {
                         const end = business?.pickupEndTime || '';
                         if (start || end) {
                           return (
-                            <div className="text-xs text-gray-300 bg-gray-800/50 rounded-lg p-3 space-y-1">
-                              <div className="flex justify-between"><span className="text-gray-400">{t('gelAlBaslangic')}:</span><span>{start || '-'}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-400">{t('gelAlBitis')}:</span><span>{end || '-'}</span></div>
+                            <div className="text-xs text-foreground bg-card/50 rounded-lg p-3 space-y-1">
+                              <div className="flex justify-between"><span className="text-muted-foreground">{t('gelAlBaslangic')}:</span><span>{start || '-'}</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">{t('gelAlBitis')}:</span><span>{end || '-'}</span></div>
                               <p className="text-gray-500 italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
                             </div>
                           );
@@ -3126,9 +3126,9 @@ export default function BusinessDetailsPage() {
                         const end = business?.deliveryEndTime || '';
                         if (start || end) {
                           return (
-                            <div className="text-xs text-gray-300 bg-gray-800/50 rounded-lg p-3 space-y-1">
-                              <div className="flex justify-between"><span className="text-gray-400">{t('kuryeBaslangic')}:</span><span>{start || '-'}</span></div>
-                              <div className="flex justify-between"><span className="text-gray-400">{t('kuryeBitis')}:</span><span>{end || '-'}</span></div>
+                            <div className="text-xs text-foreground bg-card/50 rounded-lg p-3 space-y-1">
+                              <div className="flex justify-between"><span className="text-muted-foreground">{t('kuryeBaslangic')}:</span><span>{start || '-'}</span></div>
+                              <div className="flex justify-between"><span className="text-muted-foreground">{t('kuryeBitis')}:</span><span>{end || '-'}</span></div>
                               <p className="text-gray-500 italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
                             </div>
                           );
@@ -3152,10 +3152,10 @@ export default function BusinessDetailsPage() {
                                 key={i}
                                 className={`text-xs flex justify-between px-2 py-1 rounded ${isToday
                                   ? "bg-green-900/20 text-green-300 font-medium border border-green-800/30"
-                                  : "text-gray-300"
+                                  : "text-foreground"
                                   }`}
                               >
-                                <span className={isToday ? "text-green-400" : "font-medium text-gray-400"}>
+                                <span className={isToday ? "text-green-400" : "font-medium text-muted-foreground"}>
                                   {line.split(": ")[0]}
                                 </span>
                                 <span>{line.split(": ")[1]}</span>
@@ -3170,8 +3170,8 @@ export default function BusinessDetailsPage() {
                       );
                     })()}
                   </div>
-                  <div className="border-t border-gray-700 pt-3">
-                    <p className="text-gray-400 text-sm">{t('adres_label')}</p>
+                  <div className="border-t border-border pt-3">
+                    <p className="text-muted-foreground text-sm">{t('adres_label')}</p>
                     <p className="text-white">
                       {business?.address?.street}, {business?.address?.postalCode}{" "}
                       {business?.address?.city}
@@ -3184,14 +3184,14 @@ export default function BusinessDetailsPage() {
               </div>
 
               {/* Subscription & Membership Status */}
-              <div className="bg-gray-800 rounded-xl p-4">
+              <div className="bg-card rounded-xl p-4">
                 <h3 className="text-white font-bold mb-4">
                   {t('uyelikAbonelik')}
                 </h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm">{t('mevcut_plan')}</p>
+                      <p className="text-muted-foreground text-sm">{t('mevcut_plan')}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span
                           className={`w-3 h-3 rounded-full ${planInfo.color}`}
@@ -3207,7 +3207,7 @@ export default function BusinessDetailsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm">{t('durum')}</p>
+                      <p className="text-muted-foreground text-sm">{t('durum')}</p>
                       <span
                         className={`inline-block mt-1 px-2 py-1 rounded text-xs ${business?.isActive ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"}`}
                       >
@@ -3215,9 +3215,9 @@ export default function BusinessDetailsPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 border-t border-gray-700 pt-3">
+                  <div className="grid grid-cols-2 gap-4 border-t border-border pt-3">
                     <div>
-                      <p className="text-gray-400 text-sm">{t('musteriTarihi')}</p>
+                      <p className="text-muted-foreground text-sm">{t('musteriTarihi')}</p>
                       <p className="text-white">
                         {(business as any).createdAt?.toDate
                           ? (business as any).createdAt
@@ -3227,7 +3227,7 @@ export default function BusinessDetailsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm">{t('planBaslangic')}</p>
+                      <p className="text-muted-foreground text-sm">{t('planBaslangic')}</p>
                       <p className="text-white">
                         {(business?.subscriptionStartDate as any)?.toDate
                           ? (business?.subscriptionStartDate as any)
@@ -3254,23 +3254,23 @@ export default function BusinessDetailsPage() {
         {
           productModalOpen && !editingInlineProduct && (
             <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-              <div className="bg-gray-800 rounded-xl w-full max-w-lg overflow-hidden border border-gray-700">
-                <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <div className="bg-card rounded-xl w-full max-w-lg overflow-hidden border border-border">
+                <div className="p-4 border-b border-border flex justify-between items-center">
                   <h3 className="text-white font-bold">{t('urunEkle')}</h3>
-                  <button onClick={() => setProductModalOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+                  <button onClick={() => setProductModalOpen(false)} className="text-muted-foreground hover:text-white">✕</button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-gray-700">
+                <div className="flex border-b border-border">
                   <button
                     onClick={() => setProductMode('standard')}
-                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'standard' ? "bg-gray-700 text-white" : "text-gray-400 hover:bg-gray-750"}`}
+                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'standard' ? "bg-gray-700 text-white" : "text-muted-foreground hover:bg-gray-750"}`}
                   >
                     {t('hizliSecStandart')}
                   </button>
                   <button
                     onClick={() => setProductMode('custom')}
-                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'custom' ? "bg-gray-700 text-white" : "text-gray-400 hover:bg-gray-750"}`}
+                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'custom' ? "bg-gray-700 text-white" : "text-muted-foreground hover:bg-gray-750"}`}
                   >
                     {t('ozelUrunTalep')}
                   </button>
@@ -3280,7 +3280,7 @@ export default function BusinessDetailsPage() {
                   {productMode === 'standard' ? (
                     <div className="space-y-4">
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">{t('urunSecin')}</label>
+                        <label className="text-muted-foreground text-sm block mb-1">{t('urunSecin')}</label>
                         <select
                           value={selectedMasterId}
                           onChange={(e) => setSelectedMasterId(e.target.value)}
@@ -3300,7 +3300,7 @@ export default function BusinessDetailsPage() {
                         </div>
                       )}
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">{t('satisFiyati')}</label>
+                        <label className="text-muted-foreground text-sm block mb-1">{t('satisFiyati')}</label>
                         <input
                           type="number"
                           value={customProductForm.price}
@@ -3322,7 +3322,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-gray-400 text-sm block mb-1">Fiyat (€)</label>
+                          <label className="text-muted-foreground text-sm block mb-1">Fiyat (€)</label>
                           <input
                             type="number"
                             value={customProductForm.price}
@@ -3332,7 +3332,7 @@ export default function BusinessDetailsPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm block mb-1">{t('birim')}</label>
+                          <label className="text-muted-foreground text-sm block mb-1">{t('birim')}</label>
                           <select
                             value={customProductForm.unit}
                             onChange={(e) => setCustomProductForm({ ...customProductForm, unit: e.target.value })}
@@ -3345,7 +3345,7 @@ export default function BusinessDetailsPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">{t('fotograf')}</label>
+                        <label className="text-muted-foreground text-sm block mb-1">{t('fotograf')}</label>
                         <input
                           type="file"
                           accept="image/*"
@@ -3354,7 +3354,7 @@ export default function BusinessDetailsPage() {
                               setCustomProductForm({ ...customProductForm, imageFile: e.target.files[0] });
                             }
                           }}
-                          className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+                          className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
                         />
                       </div>
                       <div className="bg-yellow-900/20 text-yellow-500 p-3 rounded-lg text-xs">
@@ -3367,7 +3367,7 @@ export default function BusinessDetailsPage() {
                 <div className="p-4 bg-gray-750 flex justify-end gap-3">
                   <button
                     onClick={() => setProductModalOpen(false)}
-                    className="px-4 py-2 text-gray-400 hover:text-white"
+                    className="px-4 py-2 text-muted-foreground hover:text-white"
                   >
                     {t('iptal1')}
                   </button>
@@ -3387,8 +3387,8 @@ export default function BusinessDetailsPage() {
         {/* Orders Tab */}
         {
           activeTab === "orders" && (
-            <div className="bg-gray-800 rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <div className="bg-card rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-border flex justify-between items-center">
                 <h3 className="text-white font-bold">{t('sonSiparisler')}</h3>
                 <Link
                   href={`/admin/business/${business?.id}/orders`}
@@ -3398,7 +3398,7 @@ export default function BusinessDetailsPage() {
                 </Link>
               </div>
               {orders.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-muted-foreground">
                   <p className="text-4xl mb-4"></p>
                   <p>{t('henuzSiparisYok')}</p>
                 </div>
@@ -3429,13 +3429,13 @@ export default function BusinessDetailsPage() {
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setProcurementSubTab('orders')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-foreground hover:bg-gray-600'}`}
                 >
                    {t('procurement_orders')} ({supplierOrders.length})
                 </button>
                 <button
                   onClick={() => setProcurementSubTab('suppliers')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-foreground hover:bg-gray-600'}`}
                 >
                    {t('procurement_suppliers')} ({suppliers.length})
                 </button>
@@ -3443,8 +3443,8 @@ export default function BusinessDetailsPage() {
 
               {/* ═══ SUPPLIERS LIST ═══ */}
               {procurementSubTab === 'suppliers' && (
-                <div className="bg-gray-800 rounded-xl overflow-hidden">
-                  <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                <div className="bg-card rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-border flex justify-between items-center">
                     <h3 className="text-white font-bold">{t('procurement_suppliers')}</h3>
                     <button
                       onClick={() => {
@@ -3458,17 +3458,17 @@ export default function BusinessDetailsPage() {
                     </button>
                   </div>
                   {loadingSuppliers ? (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                       <span className="animate-spin inline-block"></span> {t('procurement_loading')}
                     </div>
                   ) : suppliers.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                       <p className="text-4xl mb-4"></p>
                       <p>{t('henuz_tedarikci_eklenmemis')}</p>
                       <p className="text-sm mt-1">{t('toptancilari_ekleyerek_takip')}</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-700">
+                    <div className="divide-y divide-border">
                       {suppliers.map((supplier: any) => (
                         <div key={supplier.id} className="p-4 hover:bg-gray-750 flex items-center justify-between">
                           <div className="flex-1">
@@ -3476,7 +3476,7 @@ export default function BusinessDetailsPage() {
                               <span className="text-lg"></span>
                               <div>
                                 <p className="text-white font-semibold">{supplier.name}</p>
-                                <div className="flex gap-4 text-xs text-gray-400 mt-1">
+                                <div className="flex gap-4 text-xs text-muted-foreground mt-1">
                                   {supplier.contactPerson && <span>{supplier.contactPerson}</span>}
                                   {supplier.phone && <span>{supplier.phone}</span>}
                                   {supplier.email && <span>{supplier.email}</span>}
@@ -3525,8 +3525,8 @@ export default function BusinessDetailsPage() {
 
               {/* ═══ SUPPLIER ORDERS LIST ═══ */}
               {procurementSubTab === 'orders' && (
-                <div className="bg-gray-800 rounded-xl overflow-hidden">
-                  <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                <div className="bg-card rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-border flex justify-between items-center">
                     <h3 className="text-white font-bold">{t('procurement_orders')}</h3>
                     <button
                       onClick={() => {
@@ -3553,18 +3553,18 @@ export default function BusinessDetailsPage() {
                     </button>
                   </div>
                   {loadingSupplierOrders ? (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                       <span className="animate-spin inline-block"></span> {t('procurement_loading')}
                     </div>
                   ) : supplierOrders.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                       <p className="text-4xl mb-4"></p>
                       <p>{t('henuz_tedarik_siparisi_yok')}</p>
                       <p className="text-sm mt-1">{t('toptancilardan_siparisleri_takip')}</p>
                     </div>
                   ) : (
                     <table className="w-full text-left">
-                      <thead className="bg-gray-750 text-gray-400 text-sm">
+                      <thead className="bg-gray-750 text-muted-foreground text-sm">
                         <tr>
                           <th className="px-4 py-3">{t('siparis_no')}</th>
                           <th className="px-4 py-3">{t('tedarikci')}</th>
@@ -3592,17 +3592,17 @@ export default function BusinessDetailsPage() {
                             cancelled: ` ${t('iptal')}`,
                           };
                           return (
-                            <tr key={order.id} className="border-t border-gray-700 hover:bg-gray-750">
+                            <tr key={order.id} className="border-t border-border hover:bg-gray-750">
                               <td className="px-4 py-3 font-mono text-sm text-blue-400">{order.orderNumber}</td>
                               <td className="px-4 py-3">{order.supplierName}</td>
-                              <td className="px-4 py-3 text-sm text-gray-400">{order.items?.length || 0} {t('procurement_items_count')}</td>
+                              <td className="px-4 py-3 text-sm text-muted-foreground">{order.items?.length || 0} {t('procurement_items_count')}</td>
                               <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-gray-600'}`}>
                                   {statusLabels[order.status] || order.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-gray-400 text-sm">
+                              <td className="px-4 py-3 text-muted-foreground text-sm">
                                 {order.orderDate?.toDate?.()?.toLocaleDateString('de-DE') || order.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '—'}
                               </td>
                               <td className="px-4 py-3">
@@ -3666,7 +3666,7 @@ export default function BusinessDetailsPage() {
         {/* Settings Tab */}
         {
           activeTab === "settings" && (
-            <div className="bg-gray-800 rounded-xl p-6">
+            <div className="bg-card rounded-xl p-6">
               {/* Settings Sub-Tab Header */}
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-white font-bold text-xl">
@@ -3790,7 +3790,7 @@ export default function BusinessDetailsPage() {
               {settingsSubTab === "isletme" && (
                 <>
                   {/* Internal Tab Bar for İşletme */}
-                  <div className="flex gap-2 border-b border-gray-700 pb-3 mb-6 flex-wrap">
+                  <div className="flex gap-2 border-b border-border pb-3 mb-6 flex-wrap">
                     {[
                       { id: "bilgiler" as const, label: t('isletmeBilgileri') },
                       { id: "fatura" as const, label: t('fatura_adresi') },
@@ -3804,7 +3804,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setIsletmeInternalTab(tab.id)}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${isletmeInternalTab === tab.id
                           ? "bg-red-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-700 text-foreground hover:bg-gray-600"
                           }`}
                       >
                         {tab.label}
@@ -3817,23 +3817,23 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {/* Şirket Adı */}
                       <div>
-                        <label className="text-gray-400 text-sm">{t('sirketAdi')}</label>
+                        <label className="text-muted-foreground text-sm">{t('sirketAdi')}</label>
                         <input type="text" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                       </div>
                       {/* Mutfak Türü */}
                       <div>
-                        <label className="text-gray-400 text-sm">{t('mutfakTuruAltBaslik')}</label>
+                        <label className="text-muted-foreground text-sm">{t('mutfakTuruAltBaslik')}</label>
                         <input type="text" value={formData.cuisineType} onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })} disabled={!isEditing} placeholder={t('ornKebapDonerTurkisch')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         <p className="text-xs text-gray-500 mt-1">{t('kartlardaIsletmeAdiAltindaGosterilir')}</p>
                       </div>
                       {/* İşletme Türleri */}
                       <div>
-                        <label className="text-gray-400 text-sm block mb-2">{t('isletmeTurleri')}</label>
+                        <label className="text-muted-foreground text-sm block mb-2">{t('isletmeTurleri')}</label>
                         <div className="flex flex-wrap gap-2">
                           {dynamicSectorTypes.map((sector) => {
                             const isSelected = formData.types?.includes(sector.id);
                             return (
-                              <button key={sector.id} type="button" onClick={() => { if (!isEditing) return; const newTypes = isSelected ? formData.types.filter(t => t !== sector.id) : [...(formData.types || []), sector.id]; setFormData({ ...formData, types: newTypes }); }} disabled={!isEditing} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'bg-blue-600 text-white ring-2 ring-white/50' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                              <button key={sector.id} type="button" onClick={() => { if (!isEditing) return; const newTypes = isSelected ? formData.types.filter(t => t !== sector.id) : [...(formData.types || []), sector.id]; setFormData({ ...formData, types: newTypes }); }} disabled={!isEditing} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'bg-blue-600 text-white ring-2 ring-white/50' : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                                 <span>{sector.icon}</span><span>{sector.label}</span>{isSelected && <span className="text-white/80">✓</span>}
                               </button>
                             );
@@ -3843,97 +3843,97 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Müşteri No */}
                       <div>
-                        <label className="text-gray-400 text-sm">{t('musteriNo')}</label>
+                        <label className="text-muted-foreground text-sm">{t('musteriNo')}</label>
                         <input type="text" value={formData.customerId} readOnly disabled={true} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 opacity-50 cursor-not-allowed" />
                         <p className="text-xs text-gray-500 mt-1">{t('musteriNoDegistirilemez')}</p>
                       </div>
                       {/* Vergi UID */}
                       <div>
-                        <label className="text-gray-400 text-sm">{t('vergi_uid_nummer_vat')}</label>
+                        <label className="text-muted-foreground text-sm">{t('vergi_uid_nummer_vat')}</label>
                         <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
                         <p className="text-xs text-gray-500 mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
                       </div>
                       {/* Adres */}
-                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                      <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-white font-medium pb-2"> {t('adres_baslik')}</h4>
                         <div>
-                          <label className="text-gray-400 text-sm">{t('sokakCadde')}</label>
+                          <label className="text-muted-foreground text-sm">{t('sokakCadde')}</label>
                           <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-gray-400 text-sm">{t('postaKodu')}</label>
+                            <label className="text-muted-foreground text-sm">{t('postaKodu')}</label>
                             <input type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">{t('sehir1')}</label>
+                            <label className="text-muted-foreground text-sm">{t('sehir1')}</label>
                             <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                       </div>
                       {/* İletişim */}
-                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                      <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-white font-medium pb-2">{t('iletisim')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">{t('telefon_label')}</label>
+                            <label className="text-muted-foreground text-sm">{t('telefon_label')}</label>
                             <input type="tel" value={formData.shopPhone || ''} onChange={(e) => setFormData({ ...formData, shopPhone: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">{t('ePosta')}</label>
+                            <label className="text-muted-foreground text-sm">{t('ePosta')}</label>
                             <input type="email" value={formData.shopEmail || ''} onChange={(e) => setFormData({ ...formData, shopEmail: e.target.value })} disabled={!isEditing} placeholder="info@example.com" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">{t('webSitesi')}</label>
+                          <label className="text-muted-foreground text-sm">{t('webSitesi')}</label>
                           <input type="url" value={formData.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} disabled={!isEditing} placeholder="https://www.example.com" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         </div>
                       </div>
                       {/* Sosyal Medya */}
-                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                      <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-white font-medium pb-2">📱 {t('sosyalMedya')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">{t('instagram')}</label>
+                            <label className="text-muted-foreground text-sm">{t('instagram')}</label>
                             <input type="text" value={formData.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">📘 Facebook</label>
+                            <label className="text-muted-foreground text-sm">📘 Facebook</label>
                             <input type="text" value={formData.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} disabled={!isEditing} placeholder="facebook.com/..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">💬 WhatsApp</label>
+                            <label className="text-muted-foreground text-sm">💬 WhatsApp</label>
                             <input type="tel" value={formData.whatsapp || ''} onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">🎵 TikTok</label>
+                            <label className="text-muted-foreground text-sm">🎵 TikTok</label>
                             <input type="text" value={formData.tiktok || ''} onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">▶️ YouTube</label>
+                            <label className="text-muted-foreground text-sm">▶️ YouTube</label>
                             <input type="text" value={formData.youtube || ''} onChange={(e) => setFormData({ ...formData, youtube: e.target.value })} disabled={!isEditing} placeholder="youtube.com/..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                       </div>
                       {/* İrtibat Kişisi */}
-                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                      <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-blue-400 font-medium text-sm">{t('lokmaYetkiliIrtibatKisisi')}</h4>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-gray-400 text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
-                          <div><label className="text-gray-400 text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-gray-400 text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
-                          <div><label className="text-gray-400 text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
                         </div>
                       </div>
                       {/* Impressum / Rechtliche Angaben */}
-                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                      <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-white font-medium pb-2">📜 {t('impressumBaslik')}</h4>
                         <p className="text-gray-500 text-xs -mt-2">{t('impressumAciklama')}</p>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">{t('rechtsform')}</label>
+                            <label className="text-muted-foreground text-sm">{t('rechtsform')}</label>
                             <select value={formData.legalForm || ''} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
                               <option value="">{t('bitteWaehlen')}</option>
                               {Object.entries(GERMAN_LEGAL_FORM_LABELS).map(([key, label]) => (
@@ -3942,30 +3942,30 @@ export default function BusinessDetailsPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">{t('geschaeftsfuehrer')}</label>
+                            <label className="text-muted-foreground text-sm">{t('geschaeftsfuehrer')}</label>
                             <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">{t('vertretungsberechtigter')}</label>
+                          <label className="text-muted-foreground text-sm">{t('vertretungsberechtigter')}</label>
                           <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">{t('registergericht')}</label>
+                            <label className="text-muted-foreground text-sm">{t('registergericht')}</label>
                             <input type="text" value={formData.registerCourt || ''} onChange={(e) => setFormData({ ...formData, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Mönchengladbach" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">{t('handelsregisternummer')}</label>
+                            <label className="text-muted-foreground text-sm">{t('handelsregisternummer')}</label>
                             <input type="text" value={formData.registerNumber || ''} onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. HRB 12345" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
                           </div>
                         </div>
                       </div>
                       {/* Google Place */}
-                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                      <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-white font-medium pb-2">🗺️ Google Place</h4>
                         <div className="relative">
-                          <label className="text-gray-400 text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
+                          <label className="text-muted-foreground text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
                           {isEditing && (
                             <div className="flex gap-2 mt-1 mb-2">
                               <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500" />
@@ -3975,15 +3975,15 @@ export default function BusinessDetailsPage() {
                             </div>
                           )}
                           {showGoogleDropdown && googleSearchResults.length > 0 && (
-                            <div className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                            <div className="absolute z-50 mt-1 w-full bg-card border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               {googleSearchResults.map((place, index) => (
-                                <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-gray-700 border-b border-gray-700 last:border-0 transition">
+                                <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-gray-700 border-b border-border last:border-0 transition">
                                   <p className="text-white font-medium">{place.name}</p>
-                                  <p className="text-gray-400 text-sm">{place.formatted_address}</p>
+                                  <p className="text-muted-foreground text-sm">{place.formatted_address}</p>
                                   {place.rating && (<p className="text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
                                 </button>
                               ))}
-                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-gray-400 hover:text-white text-sm">✕ {t('kapat_button')}</button>
+                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-muted-foreground hover:text-white text-sm">✕ {t('kapat_button')}</button>
                             </div>
                           )}
                           <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
@@ -3996,34 +3996,34 @@ export default function BusinessDetailsPage() {
                   {/* ═══════ Tab 2: Fatura Adresi ═══════ */}
                   {isletmeInternalTab === t(t('fatura')) && (
                     <div className="space-y-6">
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                      <div className="bg-card/50 border border-border rounded-xl p-6">
                         <label className="flex items-center gap-3 cursor-pointer mb-4">
                           <input type="checkbox" checked={formData.hasDifferentBillingAddress || false} onChange={(e) => setFormData({ ...formData, hasDifferentBillingAddress: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-500" />
                           <span className="text-white font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-4">{t('geneldeIsletmeIsmiIleFaturaIsmi')}</p>
                         {formData.hasDifferentBillingAddress && (
-                          <div className="space-y-4 pt-4 border-t border-gray-700">
+                          <div className="space-y-4 pt-4 border-t border-border">
                             <div>
-                              <label className="text-gray-400 text-sm">{t('faturaFirmaKisiAdi')}</label>
+                              <label className="text-muted-foreground text-sm">{t('faturaFirmaKisiAdi')}</label>
                               <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder={t('ornAbcGmbh')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                             </div>
                             <div>
-                              <label className="text-gray-400 text-sm">{t('fatura_adresi')}</label>
+                              <label className="text-muted-foreground text-sm">{t('fatura_adresi')}</label>
                               <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder={t('sokakCadde')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="text-gray-400 text-sm">{t('postaKodu')}</label>
+                                <label className="text-muted-foreground text-sm">{t('postaKodu')}</label>
                                 <input type="text" value={formData.billingPostalCode || ''} onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
-                                <label className="text-gray-400 text-sm">{t('sehir1')}</label>
+                                <label className="text-muted-foreground text-sm">{t('sehir1')}</label>
                                 <input type="text" value={formData.billingCity || ''} onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                             </div>
                             <div>
-                              <label className="text-gray-400 text-sm">{t('fatura_vergi_no')}</label>
+                              <label className="text-muted-foreground text-sm">{t('fatura_vergi_no')}</label>
                               <input type="text" value={formData.billingVatNumber || ''} onChange={(e) => setFormData({ ...formData, billingVatNumber: e.target.value })} disabled={!isEditing} placeholder="DE..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
                             </div>
                           </div>
@@ -4037,8 +4037,8 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {admin?.adminType === 'super' ? (
                         <>
-                          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                            <label className="text-gray-400 text-sm"> LOKMA Label <span className="text-xs text-purple-400">(Super Admin)</span></label>
+                          <div className="bg-card/50 border border-border rounded-xl p-6">
+                            <label className="text-muted-foreground text-sm"> LOKMA Label <span className="text-xs text-purple-400">(Super Admin)</span></label>
                             <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
                               <option value="">{t('secilmedi')}</option>
                               <option value="tuna">🔴 TUNA</option>
@@ -4046,15 +4046,15 @@ export default function BusinessDetailsPage() {
                             </select>
                             <p className="text-xs text-gray-500 mt-1">{t('buAyarSadeceSuperAdminTarafindan')}</p>
                           </div>
-                          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                            <label className="text-gray-400 text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-400">{t('filtrelemeIcin')}</span></label>
+                          <div className="bg-card/50 border border-border rounded-xl p-6">
+                            <label className="text-muted-foreground text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-400">{t('filtrelemeIcin')}</span></label>
                             <p className="text-xs text-gray-500 mb-3 mt-1">{t('buIsletmeHangiMarkalarinUrunleriniSatiyor')}</p>
                             <div className="flex flex-wrap gap-3">
-                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-gray-700 border border-gray-600 text-gray-400 hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-gray-700 border border-gray-600 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-red-500" />
                                 <span className="text-lg">🔴</span><span className="font-medium">{t('tunaUrunleri')}</span>
                               </label>
-                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTorosProducts ? 'bg-green-600/30 border-2 border-green-500 text-green-300' : 'bg-gray-700 border border-gray-600 text-gray-400 hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTorosProducts ? 'bg-green-600/30 border-2 border-green-500 text-green-300' : 'bg-gray-700 border border-gray-600 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-green-500" />
                                 <span className="text-lg">🟢</span><span className="font-medium">{t('akdenizTorosUrunleri')}</span>
                               </label>
@@ -4063,8 +4063,8 @@ export default function BusinessDetailsPage() {
                           </div>
                         </>
                       ) : (
-                        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 text-center">
-                          <p className="text-gray-400">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>
+                        <div className="bg-card/50 border border-border rounded-xl p-6 text-center">
+                          <p className="text-muted-foreground">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>
                         </div>
                       )}
                     </div>
@@ -4074,7 +4074,7 @@ export default function BusinessDetailsPage() {
                   {isletmeInternalTab === "gorseller" && (
                     <div className="space-y-6">
                       {/* İşletme Kart Görseli */}
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                      <div className="bg-card/50 border border-border rounded-xl p-6">
                         <h4 className="text-white font-medium mb-4">{t('isletmeKartGorseli')}</h4>
                         <div className="flex items-start gap-4">
                           <div className="w-32 h-32 bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center border border-gray-600 shrink-0">
@@ -4082,7 +4082,7 @@ export default function BusinessDetailsPage() {
                           </div>
                           {isEditing && (
                             <div className="flex flex-col gap-2 w-full">
-                              <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
+                              <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
                               <div className="flex items-center gap-2 my-1"><span className="text-gray-600 text-xs">{t('veya')}</span></div>
                               <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
                                 {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
@@ -4093,7 +4093,7 @@ export default function BusinessDetailsPage() {
                         </div>
                       </div>
                       {/* İşletme Logosu */}
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                      <div className="bg-card/50 border border-border rounded-xl p-6">
                         <h4 className="text-white font-medium mb-4">{t('isletmeLogosuKare')}</h4>
                         <div className="flex items-center gap-4">
                           {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-gray-600" />) : (<div className="w-20 h-20 rounded-lg bg-gray-700 border border-dashed border-gray-500 flex items-center justify-center text-gray-500 text-3xl">🏪</div>)}
@@ -4116,9 +4116,9 @@ export default function BusinessDetailsPage() {
                   {isletmeInternalTab === "saatler" && (
                     <div className="space-y-6">
                       {/* Left Sidebar + Content Grid Layout */}
-                      <div className="flex gap-0 rounded-xl overflow-hidden border border-gray-700">
+                      <div className="flex gap-0 rounded-xl overflow-hidden border border-border">
                         {/* Left Sidebar Navigation */}
-                        <div className="w-48 bg-gray-800/80 border-r border-gray-700 flex-shrink-0">
+                        <div className="w-48 bg-card/80 border-r border-border flex-shrink-0">
                           {[
                             { id: "genel" as const, label: t('acilisSaatleri') },
                             { id: "kurye" as const, label: t('kuryeSaatleri') },
@@ -4127,9 +4127,9 @@ export default function BusinessDetailsPage() {
                             <button
                               key={tab.id}
                               onClick={() => setSaatlerSubTab(tab.id)}
-                              className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-gray-700/50 last:border-0 ${saatlerSubTab === tab.id
+                              className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-border/50 last:border-0 ${saatlerSubTab === tab.id
                                 ? "bg-blue-600/20 text-blue-400 border-l-2 border-l-blue-500"
-                                : "text-gray-400 hover:bg-gray-700/50 hover:text-white border-l-2 border-l-transparent"
+                                : "text-muted-foreground hover:bg-gray-700/50 hover:text-white border-l-2 border-l-transparent"
                                 }`}
                             >
                               {tab.label}
@@ -4138,7 +4138,7 @@ export default function BusinessDetailsPage() {
                         </div>
 
                         {/* Right Content Area */}
-                        <div className="flex-1 bg-gray-800/30 p-6">
+                        <div className="flex-1 bg-card/30 p-6">
                           {/* === Genel Açılış Saatleri === */}
                           {saatlerSubTab === "genel" && (
                             <div>
@@ -4171,14 +4171,14 @@ export default function BusinessDetailsPage() {
                                     };
                                   return (
                                     <div key={day.display} className="flex items-center gap-3">
-                                      <span className="w-24 text-sm text-gray-400 font-medium">{day.display}</span>
-                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
+                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <span className="text-gray-500 font-bold">–</span>
-                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <label className="flex items-center cursor-pointer ml-auto relative">
                                         <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                         <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                        <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                        <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                       </label>
                                     </div>
                                   );
@@ -4194,7 +4194,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex items-center justify-between mb-4">
                                 <div>
                                   <h4 className="text-white font-medium">{t('kuryeAcilisSaatleri')}</h4>
-                                  <p className="text-xs text-gray-400 mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
                                 {formData.openingHours && (
                                   <button
@@ -4244,14 +4244,14 @@ export default function BusinessDetailsPage() {
                                     };
                                     return (
                                       <div key={day.display} className="flex items-center gap-3">
-                                        <span className="w-24 text-sm text-gray-400 font-medium">{day.display}</span>
-                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <span className="text-gray-500 font-bold">–</span>
-                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                           <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                          <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                          <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                       </div>
                                     );
@@ -4267,7 +4267,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex items-center justify-between mb-4">
                                 <div>
                                   <h4 className="text-white font-medium">{t('gelAlAcilisSaatleri')}</h4>
-                                  <p className="text-xs text-gray-400 mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{t('isletmeAcikOlsaBileKuryegelAl')}</p>
                                 </div>
                                 {formData.openingHours && (
                                   <button
@@ -4317,14 +4317,14 @@ export default function BusinessDetailsPage() {
                                     };
                                     return (
                                       <div key={day.display} className="flex items-center gap-3">
-                                        <span className="w-24 text-sm text-gray-400 font-medium">{day.display}</span>
-                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <span className="text-gray-500 font-bold">–</span>
-                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                           <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                          <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                          <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                       </div>
                                     );
@@ -4342,8 +4342,8 @@ export default function BusinessDetailsPage() {
                   {isletmeInternalTab === "teslimat" && (
                     <LockedModuleOverlay featureKey="delivery">
                     <div className="space-y-6">
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2 mb-4">{t('teslimatAyarlari')}</h4>
+                      <div className="bg-card/50 border border-border rounded-xl p-6">
+                        <h4 className="text-white font-medium border-b border-border pb-2 mb-4">{t('teslimatAyarlari')}</h4>
                         <div className="space-y-4">
                           {/* Kurye Desteği Checkbox */}
                           <div className="flex items-center gap-3">
@@ -4353,15 +4353,15 @@ export default function BusinessDetailsPage() {
                           {formData.supportsDelivery && (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               <div>
-                                <label className="text-gray-400 text-sm">{t('minSiparis')}</label>
+                                <label className="text-muted-foreground text-sm">{t('minSiparis')}</label>
                                 <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
-                                <label className="text-gray-400 text-sm">{t('teslimatUcreti')}</label>
+                                <label className="text-muted-foreground text-sm">{t('teslimatUcreti')}</label>
                                 <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
-                                <label className="text-gray-400 text-sm">{t('maksMesafe')}</label>
+                                <label className="text-muted-foreground text-sm">{t('maksMesafe')}</label>
                                 <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                             </div>
@@ -4369,10 +4369,10 @@ export default function BusinessDetailsPage() {
 
                           {/* Ücretsiz Teslimat Eşiği */}
                           <div className="mt-3">
-                            <label className="text-gray-400 text-sm flex items-center gap-1">{t('ucretsizTeslimatEsigi')}</label>
+                            <label className="text-muted-foreground text-sm flex items-center gap-1">{t('ucretsizTeslimatEsigi')}</label>
                             <div className="flex items-center gap-2 mt-1">
                               <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-32 bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
-                              <span className="text-gray-400 text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
+                              <span className="text-muted-foreground text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-1">{t('0HerZamanTeslimatUcretiUygulanir')}</p>
                           </div>
@@ -4382,7 +4382,7 @@ export default function BusinessDetailsPage() {
                             <input type="checkbox" checked={formData.preOrderEnabled} onChange={(e) => setFormData({ ...formData, preOrderEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-amber-500" />
                             <div>
                               <span className="text-white">{t('onSiparisKabulEt')}</span>
-                              <p className="text-xs text-gray-400">{t('isletmeKapaliykenDeErtesiGunIcin')}</p>
+                              <p className="text-xs text-muted-foreground">{t('isletmeKapaliykenDeErtesiGunIcin')}</p>
                             </div>
                           </div>
 
@@ -4391,7 +4391,7 @@ export default function BusinessDetailsPage() {
                             <input type="checkbox" checked={formData.pickupEnabled !== false} onChange={(e) => setFormData({ ...formData, pickupEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-green-500" />
                             <div>
                               <span className="text-white">{t('gelAlDestegiVar')}</span>
-                              <p className="text-xs text-gray-400">{t('musterilerSiparisiKendisiAlabilir')}</p>
+                              <p className="text-xs text-muted-foreground">{t('musterilerSiparisiKendisiAlabilir')}</p>
                             </div>
                           </div>
                         </div>
@@ -4407,12 +4407,12 @@ export default function BusinessDetailsPage() {
                 settingsSubTab === "menu" && (
                   <div className="space-y-6">
                     {/* Internal Tab Bar */}
-                    <div className="flex gap-2 border-b border-gray-700 pb-3">
+                    <div className="flex gap-2 border-b border-border pb-3">
                       <button
                         onClick={() => setMenuInternalTab("kategoriler")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "kategoriler"
                           ? "bg-red-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-700 text-foreground hover:bg-gray-600"
                           }`}
                       >
                         {t('kategoriler')} ({inlineCategories.length})
@@ -4421,7 +4421,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("urunler")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "urunler"
                           ? "bg-red-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-700 text-foreground hover:bg-gray-600"
                           }`}
                       >
                         {t('urunler')}{inlineProducts.length})
@@ -4430,7 +4430,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("sponsored")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
                           ? "bg-amber-600 text-white"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          : "bg-gray-700 text-foreground hover:bg-gray-600"
                           } ${!planFeatures.sponsoredProducts && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
                       >
                         {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
@@ -4446,7 +4446,7 @@ export default function BusinessDetailsPage() {
                             <span className="text-2xl">📂</span>
                             <div>
                               <h4 className="text-white font-bold">{t('kategoriler')}</h4>
-                              <p className="text-gray-400 text-xs">{inlineCategories.length} {t('kategori')}</p>
+                              <p className="text-muted-foreground text-xs">{inlineCategories.length} {t('kategori')}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -4499,10 +4499,10 @@ export default function BusinessDetailsPage() {
 
                         {/* Empty state */}
                         {!loadingCategories && inlineCategories.length === 0 && (
-                          <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
+                          <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl">🗂️</span>
                             <h4 className="text-white font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
-                            <p className="text-gray-400 text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
                             <div className="flex items-center gap-3 mt-4">
                               <button
                                 onClick={() => {
@@ -4524,7 +4524,7 @@ export default function BusinessDetailsPage() {
                             {inlineCategories.map((cat, index) => (
                               <div
                                 key={cat.id}
-                                className={`bg-gray-800/80 rounded-xl p-3 border transition flex items-center gap-3 ${cat.isActive ? 'border-gray-700' : 'border-red-900/50 opacity-60'}`}
+                                className={`bg-card/80 rounded-xl p-3 border transition flex items-center gap-3 ${cat.isActive ? 'border-border' : 'border-red-900/50 opacity-60'}`}
                               >
                                 {/* Move buttons */}
                                 <div className="flex flex-col items-center gap-0.5">
@@ -4577,14 +4577,14 @@ export default function BusinessDetailsPage() {
                         {/* Category Add/Edit Modal */}
                         {showCategoryModal && (
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                            <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                            <div className="bg-card rounded-xl p-6 w-full max-w-md">
                               <h2 className="text-xl font-bold text-white mb-4">
                                 {editingCategory ? t('kategoriDuzenle') : t('yeni_kategori')}
                               </h2>
 
                               {/* Icon Selection */}
                               <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block">{t('ikon')}</label>
+                                <label className="text-muted-foreground text-sm mb-2 block">{t('ikon')}</label>
                                 <div className="flex flex-wrap gap-2">
                                   {CATEGORY_ICONS.map(icon => (
                                     <button
@@ -4620,7 +4620,7 @@ export default function BusinessDetailsPage() {
                                     onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
                                     className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500"
                                   />
-                                  <span className="text-gray-300">{t('aktifUygulamadaGorunsun')}</span>
+                                  <span className="text-foreground">{t('aktifUygulamadaGorunsun')}</span>
                                 </label>
                               </div>
 
@@ -4628,7 +4628,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex gap-3">
                                 <button
                                   onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
-                                  className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
+                                  className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={handleSaveCategory}
@@ -4645,16 +4645,16 @@ export default function BusinessDetailsPage() {
                         {/* Category Delete Confirmation */}
                         {deletingCategoryId && (
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                            <div className="bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center">
+                            <div className="bg-card rounded-xl p-6 w-full max-w-sm text-center">
                               <span className="text-4xl">⚠️</span>
                               <h3 className="text-lg font-bold text-white mt-3">{t('kategoriyi_sil')}</h3>
-                              <p className="text-gray-400 text-sm mt-2">
+                              <p className="text-muted-foreground text-sm mt-2">
                                 {t('buKategoriyiKaliciOlarakSilmekIstediginizden')}
                               </p>
                               <div className="flex gap-3 mt-5">
                                 <button
                                   onClick={() => setDeletingCategoryId(null)}
-                                  className="flex-1 px-4 py-2.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
+                                  className="flex-1 px-4 py-2.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600"
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={() => handleDeleteCategory(deletingCategoryId)}
@@ -4676,7 +4676,7 @@ export default function BusinessDetailsPage() {
                             <span className="text-2xl"></span>
                             <div>
                               <h4 className="text-white font-bold">{t('urunler1')}</h4>
-                              <p className="text-gray-400 text-xs">{inlineProducts.length} {t('urun1')}</p>
+                              <p className="text-muted-foreground text-xs">{inlineProducts.length} {t('urun1')}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -4709,7 +4709,7 @@ export default function BusinessDetailsPage() {
                                 setProductCurrentPage(1);
                               }}
                               placeholder={t('urun_ara_placeholder')}
-                              className="w-full px-4 py-2.5 pl-10 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                              className="w-full px-4 py-2.5 pl-10 bg-card border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                             />
                             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -4746,7 +4746,7 @@ export default function BusinessDetailsPage() {
                                 onClick={() => { setInlineCategoryFilter('all'); setProductCurrentPage(1); }}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === 'all'
                                   ? 'bg-green-600 text-white'
-                                  : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
+                                  : 'bg-gray-700/80 text-foreground hover:bg-gray-600'
                                   }`}
                               >
                                  Tümü {inlineProducts.length}
@@ -4759,7 +4759,7 @@ export default function BusinessDetailsPage() {
                                     onClick={() => { setInlineCategoryFilter(cn); setProductCurrentPage(1); }}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === cn
                                       ? 'bg-blue-600 text-white'
-                                      : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
+                                      : 'bg-gray-700/80 text-foreground hover:bg-gray-600'
                                       }`}
                                   >
                                     {catInfo?.icon || ''} {cn} {catCounts[cn]}
@@ -4769,7 +4769,7 @@ export default function BusinessDetailsPage() {
 
                               {/* Status filter dropdown — pushed right */}
                               <div className="ml-auto flex items-center gap-2">
-                                <span className="text-gray-400 text-xs">Durum Filtresi:</span>
+                                <span className="text-muted-foreground text-xs">Durum Filtresi:</span>
                                 <select
                                   value={inlineStatusFilter}
                                   onChange={(e) => { setInlineStatusFilter(e.target.value); setProductCurrentPage(1); }}
@@ -4794,10 +4794,10 @@ export default function BusinessDetailsPage() {
 
                         {/* Empty state */}
                         {!loadingProducts && inlineProducts.length === 0 && (
-                          <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
+                          <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl"></span>
                             <h4 className="text-white font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
-                            <p className="text-gray-400 text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
                             <button
                               onClick={() => setProductModalOpen(true)}
                               className="mt-4 inline-block px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
@@ -4959,9 +4959,9 @@ export default function BusinessDetailsPage() {
                                 </div>
                               )}
 
-                              <div className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
+                              <div className="bg-card/60 rounded-xl border border-border overflow-hidden">
                                 {/* Table Header */}
-                                <div className="px-4 py-2.5 bg-gray-700/50 border-b border-gray-700 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-gray-400 font-medium">
+                                <div className="px-4 py-2.5 bg-gray-700/50 border-b border-border grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-muted-foreground font-medium">
                                   <div className="flex justify-center">
                                     <input
                                       type="checkbox"
@@ -4986,7 +4986,7 @@ export default function BusinessDetailsPage() {
                                 </div>
 
                                 {/* Table Body */}
-                                <div className="divide-y divide-gray-700/50">
+                                <div className="divide-y divide-border/50">
                                   {paginatedProducts.map((product: any) => {
                                     const isSelected = selectedInlineProducts.has(product.id);
                                     const productName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
@@ -5044,20 +5044,20 @@ export default function BusinessDetailsPage() {
                                             </p>
                                           </div>
                                           {/* SKU */}
-                                          <div className="text-gray-400 text-xs truncate font-mono">{sku.length > 16 ? sku.slice(0, 16) + '...' : sku}</div>
+                                          <div className="text-muted-foreground text-xs truncate font-mono">{sku.length > 16 ? sku.slice(0, 16) + '...' : sku}</div>
                                           {/* Price */}
                                           <div className="text-right">
                                             {appPrice ? (
                                               <div className="space-y-0.5">
                                                 <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">{t('brutto')}</span></div>
-                                                <div className="text-gray-400 text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">{t('netto')}</span></div>
+                                                <div className="text-muted-foreground text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">{t('netto')}</span></div>
                                               </div>
                                             ) : (
                                               <span className="text-gray-600 text-xs">—</span>
                                             )}
                                           </div>
                                           {/* Unit */}
-                                          <div className="text-gray-300 text-xs text-center">{product.unit === 'kg' ? 'kg' : 'Adet'}</div>
+                                          <div className="text-foreground text-xs text-center">{product.unit === 'kg' ? 'kg' : 'Adet'}</div>
                                           {/* Status */}
                                           <div className="flex flex-col items-center gap-0.5">
                                             <span
@@ -5154,7 +5154,7 @@ export default function BusinessDetailsPage() {
                                         </div>
                                         {/* ═══ ACCORDION EDIT PANEL ═══ */}
                                         {editingInlineProduct?.id === product.id && (
-                                          <div className="col-span-full bg-slate-800/90 border-l-2 border-blue-500 rounded-b-lg overflow-hidden" style={{ backdropFilter: 'blur(8px)', minHeight: '420px' }}>
+                                          <div className="col-span-full bg-card/90 border-l-2 border-blue-500 rounded-b-lg overflow-hidden" style={{ backdropFilter: 'blur(8px)', minHeight: '420px' }}>
                                             <div id="inline-edit-panel" className="p-4">
                                               {/* Tab Navigation */}
                                               <div className="flex items-center justify-between mb-4">
@@ -5172,7 +5172,7 @@ export default function BusinessDetailsPage() {
                                                       onClick={() => setEditInlineTab(tab.key as any)}
                                                       className={`px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap transition ${editInlineTab === tab.key
                                                         ? 'bg-blue-500 text-white'
-                                                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                                        : 'text-muted-foreground hover:text-white hover:bg-gray-700/50'
                                                         }`}
                                                     >
                                                       {tab.label}
@@ -5181,7 +5181,7 @@ export default function BusinessDetailsPage() {
                                                 </div>
                                                 <button
                                                   onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }}
-                                                  className="text-gray-400 hover:text-white p-1 transition"
+                                                  className="text-muted-foreground hover:text-white p-1 transition"
                                                 >
                                                   ✕
                                                 </button>
@@ -5192,16 +5192,16 @@ export default function BusinessDetailsPage() {
                                                 {editInlineTab === 'general' && (
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">SKU (ID)</label>
-                                                      <input value={editFormFull.sku || editingInlineProduct?.id || ''} readOnly className="w-full bg-gray-900/50 text-gray-300 text-sm rounded px-3 py-2 border border-gray-700" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">SKU (ID)</label>
+                                                      <input value={editFormFull.sku || editingInlineProduct?.id || ''} readOnly className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('barkod')}</label>
-                                                      <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('barkod')}</label>
+                                                      <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('kategori_label')}</label>
-                                                      <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none">
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('kategori_label')}</label>
+                                                      <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none">
                                                         <option value="">{t('kategori_secin')}</option>
                                                         {inlineCategories.map((cat: any) => (
                                                           <option key={cat.id || cat.name} value={typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}>{typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}</option>
@@ -5209,35 +5209,35 @@ export default function BusinessDetailsPage() {
                                                       </select>
                                                     </div>
                                                     <div className="md:col-span-2">
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('urun_adi')}</label>
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('urun_adi')}</label>
                                                       <MultiLanguageInput label={t('urun_adi_label')} value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('marka')}</label>
-                                                      <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('marka')}</label>
+                                                      <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div className="flex gap-2">
                                                       <div className="flex-1">
-                                                        <label className="text-xs text-gray-400 mb-1 block">{t('birim')}</label>
-                                                        <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                        <label className="text-xs text-muted-foreground mb-1 block">{t('birim')}</label>
+                                                        <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                                                           <option value="kg">Kg</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
-                                                        <label className="text-xs text-gray-400 mb-1 block">{t('durum_label')}</label>
-                                                        <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                        <label className="text-xs text-muted-foreground mb-1 block">{t('durum_label')}</label>
+                                                        <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                                                           <option value="active">{t('aktif')}</option><option value="passive">{t('pasif')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
-                                                        <label className="text-xs text-gray-400 mb-1 block">KDV</label>
-                                                        <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                        <label className="text-xs text-muted-foreground mb-1 block">KDV</label>
+                                                        <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                                                           <option value="7">%7</option><option value="19">%19</option><option value="0">%0</option>
                                                         </select>
                                                       </div>
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3">
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('aciklama')}</label>
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('aciklama')}</label>
                                                       <MultiLanguageInput label="Açıklama" value={editFormFull.description || { tr: '' }} onChange={(v: any) => setEditFormFull((p: any) => ({ ...p, description: v }))} isTextArea />
                                                     </div>
                                                   </div>
@@ -5258,13 +5258,13 @@ export default function BusinessDetailsPage() {
                                                   return (
                                                     <div className="space-y-6">
                                                       {/* Vergi Oranı */}
-                                                      <div className="border-b border-gray-700 pb-4">
+                                                      <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-3">
                                                           <h3 className="text-sm font-medium text-amber-400">{t('vergi_orani')}</h3>
                                                           <span className="text-xs text-gray-500">{t('netto_brutto_hint')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white">
+                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm text-white">
                                                             <option value="0">{t('tax_zero')}</option>
                                                             <option value="7">{t('tax_reduced')}</option>
                                                             <option value="19">{t('tax_standard')}</option>
@@ -5277,14 +5277,14 @@ export default function BusinessDetailsPage() {
                                                       </div>
 
                                                       {/*  {t('fiyatlandirma')} + Netto/Brutto Toggle */}
-                                                      <div className="border-b border-gray-700 pb-4">
+                                                      <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-4">
                                                           <h3 className="text-sm font-medium text-amber-400"> {t('fiyatlandirma')}</h3>
-                                                          <div className="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-600">
-                                                            <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+                                                          <div className="flex items-center bg-card rounded-lg p-0.5 border border-gray-600">
+                                                            <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                               {t('netto_input')}
                                                             </button>
-                                                            <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'brutto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+                                                            <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'brutto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                               {t('brutto_input')}
                                                             </button>
                                                           </div>
@@ -5292,14 +5292,14 @@ export default function BusinessDetailsPage() {
 
                                                         {/* Alış Fiyatı */}
                                                         <div className="mb-4">
-                                                          <label className="block text-sm text-gray-300 font-medium mb-2">{t('alis_fiyati')}</label>
+                                                          <label className="block text-sm text-foreground font-medium mb-2">{t('alis_fiyati')}</label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
                                                               {priceInputMode === 'netto' ? (
-                                                                <input type="number" step="0.01" value={editFormFull.purchasePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, purchasePrice: e.target.value }))} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                <input type="number" step="0.01" value={editFormFull.purchasePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, purchasePrice: e.target.value }))} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
-                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                   {pp > 0 ? `€${pp.toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                 </div>
                                                               )}
@@ -5307,9 +5307,9 @@ export default function BusinessDetailsPage() {
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
-                                                                <input type="number" step="0.01" value={pp > 0 ? calcBrutto(pp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, purchasePrice: String(calcNetto(brutto)) })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                <input type="number" step="0.01" value={pp > 0 ? calcBrutto(pp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, purchasePrice: String(calcNetto(brutto)) })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
-                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                   {pp > 0 ? `€${calcBrutto(pp).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                 </div>
                                                               )}
@@ -5319,14 +5319,14 @@ export default function BusinessDetailsPage() {
 
                                                         {/* Satış Fiyatı */}
                                                         <div className="mb-4">
-                                                          <label className="block text-sm text-gray-300 font-medium mb-2">{t('satis_fiyati')}</label>
+                                                          <label className="block text-sm text-foreground font-medium mb-2">{t('satis_fiyati')}</label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
                                                               {priceInputMode === 'netto' ? (
-                                                                <input type="number" step="0.01" value={editFormFull.sellingPrice || ''} onChange={e => { setEditFormFull((p: any) => ({ ...p, sellingPrice: e.target.value })); setCustomProductForm((prev: any) => ({ ...prev, price: e.target.value })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                <input type="number" step="0.01" value={editFormFull.sellingPrice || ''} onChange={e => { setEditFormFull((p: any) => ({ ...p, sellingPrice: e.target.value })); setCustomProductForm((prev: any) => ({ ...prev, price: e.target.value })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
-                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                   {sp > 0 ? `€${sp.toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                 </div>
                                                               )}
@@ -5334,9 +5334,9 @@ export default function BusinessDetailsPage() {
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
-                                                                <input type="number" step="0.01" value={sp > 0 ? calcBrutto(sp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; const netto = calcNetto(brutto); setEditFormFull((p: any) => ({ ...p, sellingPrice: String(netto) })); setCustomProductForm((prev: any) => ({ ...prev, price: String(netto) })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                <input type="number" step="0.01" value={sp > 0 ? calcBrutto(sp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; const netto = calcNetto(brutto); setEditFormFull((p: any) => ({ ...p, sellingPrice: String(netto) })); setCustomProductForm((prev: any) => ({ ...prev, price: String(netto) })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
-                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                   {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                 </div>
                                                               )}
@@ -5346,7 +5346,7 @@ export default function BusinessDetailsPage() {
 
                                                         {/* İndirimli Fiyat */}
                                                         <div className="mb-4">
-                                                          <label className="block text-sm text-gray-300 font-medium mb-2 flex items-center gap-2">
+                                                          <label className="block text-sm text-foreground font-medium mb-2 flex items-center gap-2">
                                                             {t('discounted_price')}
                                                             {discountPct && (
                                                               <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-600/80 text-white animate-pulse">
@@ -5358,9 +5358,9 @@ export default function BusinessDetailsPage() {
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
                                                               {priceInputMode === 'netto' ? (
-                                                                <input type="number" step="0.01" value={editFormFull.discountedPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, discountedPrice: e.target.value }))} className="w-full bg-gray-900 border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00 (opsiyonel)" />
+                                                                <input type="number" step="0.01" value={editFormFull.discountedPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, discountedPrice: e.target.value }))} className="w-full bg-background border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00 (opsiyonel)" />
                                                               ) : (
-                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                   {dp > 0 ? `€${dp.toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                 </div>
                                                               )}
@@ -5368,9 +5368,9 @@ export default function BusinessDetailsPage() {
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
-                                                                <input type="number" step="0.01" value={dp > 0 ? calcBrutto(dp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, discountedPrice: String(calcNetto(brutto)) })); }} className="w-full bg-gray-900 border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00" />
+                                                                <input type="number" step="0.01" value={dp > 0 ? calcBrutto(dp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, discountedPrice: String(calcNetto(brutto)) })); }} className="w-full bg-background border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00" />
                                                               ) : (
-                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                   {dp > 0 ? `€${calcBrutto(dp).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                 </div>
                                                               )}
@@ -5379,7 +5379,7 @@ export default function BusinessDetailsPage() {
                                                         </div>
 
                                                         {/* Kar Marjı Özet */}
-                                                        <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                                                        <div className="bg-card/50 rounded-lg p-3 border border-border">
                                                           <div className="grid grid-cols-3 gap-3 text-center">
                                                             <div>
                                                               <span className="block text-xs text-gray-500 mb-1">{t('kar_marji')}</span>
@@ -5404,12 +5404,12 @@ export default function BusinessDetailsPage() {
                                                       </div>
 
                                                       {/* 📱 App Satış Fiyatı */}
-                                                      <div className="border-b border-gray-700 pb-4">
+                                                      <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-3">
                                                           <h3 className="text-sm font-medium text-blue-400">{t('app_sales_price')}</h3>
                                                           <label className="flex items-center gap-2 cursor-pointer">
                                                             <input type="checkbox" checked={!!(editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0)} onChange={e => { if (!e.target.checked) { setEditFormFull((p: any) => ({ ...p, appPrice: '' })); } else { setEditFormFull((p: any) => ({ ...p, appPrice: editFormFull.sellingPrice || '0' })); } }} className="w-4 h-4 rounded accent-blue-500" />
-                                                            <span className="text-xs text-gray-400">{t('farkli_fiyat_uygula')}</span>
+                                                            <span className="text-xs text-muted-foreground">{t('farkli_fiyat_uygula')}</span>
                                                           </label>
                                                         </div>
                                                         <p className="text-xs text-gray-500 mb-3">{t('app_price_desc')}</p>
@@ -5417,17 +5417,17 @@ export default function BusinessDetailsPage() {
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
-                                                              <input type="number" step="0.01" value={editFormFull.appPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, appPrice: e.target.value }))} className="w-full bg-gray-900 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
+                                                              <input type="number" step="0.01" value={editFormFull.appPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, appPrice: e.target.value }))} className="w-full bg-background border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
                                                             </div>
                                                             <div>
                                                               <label className="block text-xs text-gray-500 mb-1">{t('brutto')} <span className="text-gray-600">inkl. {taxRate}%</span></label>
-                                                              <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                              <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                 {parseFloat(editFormFull.appPrice) > 0 ? `€${calcBrutto(parseFloat(editFormFull.appPrice)).toFixed(2)}` : '--'}
                                                               </div>
                                                             </div>
                                                           </div>
                                                         ) : (
-                                                          <div className="px-4 py-3 bg-gray-800/40 border border-gray-700 rounded-lg text-center">
+                                                          <div className="px-4 py-3 bg-card/40 border border-border rounded-lg text-center">
                                                             <span className="text-sm text-gray-500">{t('same_as_selling_price')}{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
                                                           </div>
                                                         )}
@@ -5439,13 +5439,13 @@ export default function BusinessDetailsPage() {
                                                         <p className="text-xs text-gray-500 mb-3">{t('esl_price_hint')}</p>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">{t('esl_store_pickup_price')} (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+                                                            <label className="text-xs text-muted-foreground mb-1 block">{t('esl_store_pickup_price')} (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
                                                             <span className="text-[10px] text-gray-600 mt-1 block">{t('esl_price_hint')}</span>
                                                           </div>
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">{t('courier_price_label')} (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
+                                                            <label className="text-xs text-muted-foreground mb-1 block">{t('courier_price_label')} (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
                                                             <span className="text-[10px] text-gray-600 mt-1 block">{t('kurye_fiyat_aciklama')}</span>
                                                           </div>
                                                         </div>
@@ -5457,30 +5457,30 @@ export default function BusinessDetailsPage() {
                                                 {editInlineTab === 'stock' && (
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('stok_durumu')}</label>
-                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('stok_durumu')}</label>
+                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                                                         <option value="in">{t('stokta')}</option><option value="out">{t('stokta_degil')}</option>
                                                       </select>
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('mevcut_stok')}</label>
-                                                      <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('mevcut_stok')}</label>
+                                                      <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('min_stok')}</label>
-                                                      <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('min_stok')}</label>
+                                                      <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('tedarikci_label')}</label>
-                                                      <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('tedarikci_label')}</label>
+                                                      <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('parti_no')}</label>
-                                                      <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('parti_no')}</label>
+                                                      <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('depo_konumu')}</label>
-                                                      <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('depo_konumu')}</label>
+                                                      <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                   </div>
                                                 )}
@@ -5489,16 +5489,16 @@ export default function BusinessDetailsPage() {
                                                   <div className="space-y-4">
                                                     {/* Mevcut Görseller */}
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-2 block">{t('mevcut_gorseller')}</label>
+                                                      <label className="text-xs text-muted-foreground mb-2 block">{t('mevcut_gorseller')}</label>
                                                       <div className="flex gap-2 flex-wrap">
                                                         {editingInlineProduct?.imageUrl && (
                                                           <div className="relative group">
-                                                            <img src={editingInlineProduct.imageUrl} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                            <img src={editingInlineProduct.imageUrl} alt="" className="w-20 h-20 rounded object-cover border border-border" />
                                                           </div>
                                                         )}
                                                         {(editFormFull.images || editingInlineProduct?.images || []).map((img: string, i: number) => (
                                                           <div key={i} className="relative group">
-                                                            <img src={img} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                            <img src={img} alt="" className="w-20 h-20 rounded object-cover border border-border" />
                                                             <button
                                                               type="button"
                                                               onClick={() => {
@@ -5522,7 +5522,7 @@ export default function BusinessDetailsPage() {
 
                                                     {/* Dosyadan Yükle */}
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-2 block">📤 Görsel Yükle (Dosya Seç)</label>
+                                                      <label className="text-xs text-muted-foreground mb-2 block">📤 Görsel Yükle (Dosya Seç)</label>
                                                       <input
                                                         type="file"
                                                         accept="image/*"
@@ -5552,15 +5552,15 @@ export default function BusinessDetailsPage() {
                                                           }
                                                           e.target.value = '';
                                                         }}
-                                                        className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
+                                                        className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
                                                       />
                                                       <p className="text-xs text-gray-500 mt-1">Birden fazla dosya seçebilirsiniz. JPG, PNG, WebP formatları desteklenir.</p>
                                                     </div>
 
                                                     {/* URL ile ekle */}
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">🔗 Görsel URL (opsiyonel)</label>
-                                                      <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                      <label className="text-xs text-muted-foreground mb-1 block">🔗 Görsel URL (opsiyonel)</label>
+                                                      <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                   </div>
                                                 )}
@@ -5575,31 +5575,31 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         <div className="md:col-span-2">
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('ingredients_label')}</label>
-                                                          <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('ingredients_label')}</label>
+                                                          <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('consumption_info_label')}</label>
-                                                          <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('consumption_info_label')}</label>
+                                                          <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('additives_label')}</label>
-                                                          <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('additives_label')}</label>
+                                                          <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Herkunft / Menşe</label>
-                                                          <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">Herkunft / Menşe</label>
+                                                          <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                           <label className="inline-flex items-center gap-2 cursor-pointer">
-                                                            <input type="checkbox" checked={editFormFull.containsAlcohol || false} onChange={e => setEditFormFull((p: any) => ({ ...p, containsAlcohol: e.target.checked }))} className="w-4 h-4 rounded border-gray-600 bg-gray-800" />
-                                                            <span className="text-xs text-gray-300">🍷 Alkol İçerir (Alkoholhaltig)</span>
+                                                            <input type="checkbox" checked={editFormFull.containsAlcohol || false} onChange={e => setEditFormFull((p: any) => ({ ...p, containsAlcohol: e.target.checked }))} className="w-4 h-4 rounded border-gray-600 bg-card" />
+                                                            <span className="text-xs text-foreground">🍷 Alkol İçerir (Alkoholhaltig)</span>
                                                           </label>
                                                         </div>
                                                       </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
                                                     <div>
@@ -5634,7 +5634,7 @@ export default function BusinessDetailsPage() {
                                                               }))}
                                                               className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition ${checked
                                                                 ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                                                                : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:border-gray-500'
+                                                                : 'bg-card/50 border-border text-gray-500 hover:border-gray-500'
                                                                 }`}
                                                             >
                                                               <span className="text-lg">{allergen.emoji}</span>
@@ -5645,7 +5645,7 @@ export default function BusinessDetailsPage() {
                                                       </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
                                                     <div>
@@ -5679,7 +5679,7 @@ export default function BusinessDetailsPage() {
                                                                 ...p,
                                                                 nutritionPer100g: { ...(p.nutritionPer100g || {}), [item.key]: e.target.value === '' ? undefined : parseFloat(e.target.value) }
                                                               }))}
-                                                              className="w-full bg-gray-900/50 text-white text-xs rounded px-2 py-1.5 border border-gray-700 focus:border-green-500 focus:outline-none"
+                                                              className="w-full bg-background/50 text-white text-xs rounded px-2 py-1.5 border border-border focus:border-green-500 focus:outline-none"
                                                             />
                                                           </div>
                                                         ))}
@@ -5687,7 +5687,7 @@ export default function BusinessDetailsPage() {
                                                       <p className="text-[10px] text-gray-600 mt-1">{t('eu_big7_note')}</p>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
                                                     <div>
@@ -5728,7 +5728,7 @@ export default function BusinessDetailsPage() {
                                                               }}
                                                               className={`px-3 py-2 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${selected
                                                                 ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/10'
-                                                                : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-500'
+                                                                : 'bg-card/50 border-border text-muted-foreground hover:border-gray-500'
                                                                 }`}
                                                             >
                                                               <span>{cert.emoji}</span>
@@ -5739,7 +5739,7 @@ export default function BusinessDetailsPage() {
                                                       </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
                                                     <div>
@@ -5748,17 +5748,17 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="space-y-3">
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Dahili {t('notlar')}</label>
-                                                          <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">Dahili {t('notlar')}</label>
+                                                          <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('etiketler')}</label>
-                                                          <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('etiketler')}</label>
+                                                          <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                       </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
                                                     <div>
@@ -5766,45 +5766,45 @@ export default function BusinessDetailsPage() {
                                                         <span></span> {t('audit_trail_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                                                        <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                        <div className="bg-background/30 rounded p-3 border border-border/50">
                                                           <p className="text-xs text-gray-500 mb-1">{t('olusturulma')}</p>
-                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
+                                                          <p className="text-xs text-foreground">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
                                                         </div>
-                                                        <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                        <div className="bg-background/30 rounded p-3 border border-border/50">
                                                           <p className="text-xs text-gray-500 mb-1">{t('guncelleme')}</p>
-                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
+                                                          <p className="text-xs text-foreground">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
                                                         </div>
-                                                        <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                        <div className="bg-background/30 rounded p-3 border border-border/50">
                                                           <p className="text-xs text-gray-500 mb-1">SKU / Master ID</p>
-                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.id || '—'}</p>
-                                                          <p className="text-xs text-gray-400">{editingInlineProduct?.masterId ? `Master: ${editingInlineProduct.masterId}` : ''}</p>
+                                                          <p className="text-xs text-foreground">{editingInlineProduct?.id || '—'}</p>
+                                                          <p className="text-xs text-muted-foreground">{editingInlineProduct?.masterId ? `Master: ${editingInlineProduct.masterId}` : ''}</p>
                                                         </div>
                                                       </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
                                                     <div>
-                                                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span></span> {t('physical_info_title')}
                                                       </h4>
                                                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Gewicht (Ağırlık)</label>
-                                                          <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">Gewicht (Ağırlık)</label>
+                                                          <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Packung (Ambalaj)</label>
-                                                          <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">Packung (Ambalaj)</label>
+                                                          <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Gehäusetemperatur (Saklama)</label>
-                                                          <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">Gehäusetemperatur (Saklama)</label>
+                                                          <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('mhd_label')}</label>
-                                                          <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('mhd_label')}</label>
+                                                          <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2">
                                                           <p className="text-xs text-amber-400/80 bg-amber-900/20 border border-amber-700/30 rounded px-3 py-2">
@@ -5812,12 +5812,12 @@ export default function BusinessDetailsPage() {
                                                           </p>
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('artikelnummer')}</label>
-                                                          <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('artikelnummer')}</label>
+                                                          <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="col-span-2 md:col-span-3 lg:col-span-4">
-                                                          <label className="text-xs text-gray-400 mb-1 block">{t('special_info_label')}</label>
-                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('special_info_label')}</label>
+                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder={t('ozel_uyarilar_placeholder')} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                                                         </div>
                                                       </div>
                                                     </div>
@@ -5828,25 +5828,25 @@ export default function BusinessDetailsPage() {
                                                 {editInlineTab === 'app' && (
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">{t('one_cikan_urun')}</label>
-                                                      <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('one_cikan_urun')}</label>
+                                                      <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                                                         <option value="no">{t('hayir')}</option>
                                                         <option value="yes">Evet ⭐</option>
                                                       </select>
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Stok Durumu (App)</label>
-                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                      <label className="text-xs text-muted-foreground mb-1 block">Stok Durumu (App)</label>
+                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                                                         <option value="in">{t('stokta')}</option>
                                                         <option value="out">{t('stokta_yok')}</option>
                                                       </select>
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3">
-                                                      <label className="text-xs text-gray-400 mb-2 block">Seçenek Grupları (Opsiyonlar/Extras)</label>
+                                                      <label className="text-xs text-muted-foreground mb-2 block">Seçenek Grupları (Opsiyonlar/Extras)</label>
                                                       {(editFormFull.optionGroups || []).length > 0 ? (
                                                         <div className="space-y-2">
                                                           {(editFormFull.optionGroups || []).map((group: any, i: number) => (
-                                                            <div key={i} className="bg-gray-900/30 rounded p-2 border border-gray-700/50 text-sm text-gray-300">
+                                                            <div key={i} className="bg-background/30 rounded p-2 border border-border/50 text-sm text-foreground">
                                                               <span className="font-medium text-white">{group.name || `Grup ${i + 1}`}</span>
                                                               {group.options?.length > 0 && (
                                                                 <span className="text-gray-500 ml-2">({group.options.length} seçenek)</span>
@@ -5858,7 +5858,7 @@ export default function BusinessDetailsPage() {
                                                         <p className="text-gray-500 text-sm">{t('secenek_grubu_tanimlanmamis')}</p>
                                                       )}
                                                     </div>
-                                                    <div className="md:col-span-2 lg:col-span-3 bg-gray-900/20 rounded p-3 border border-gray-700/30">
+                                                    <div className="md:col-span-2 lg:col-span-3 bg-background/20 rounded p-3 border border-border/30">
                                                       <p className="text-xs text-gray-500">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. {t('fiyatlandirma')} farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
                                                     </div>
                                                   </div>
@@ -5868,8 +5868,8 @@ export default function BusinessDetailsPage() {
                                               </div>
 
                                               {/* Footer */}
-                                              <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-gray-700/50">
-                                                <button onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }} className="px-6 py-2 text-sm text-gray-400 hover:text-white transition">
+                                              <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-border/50">
+                                                <button onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }} className="px-6 py-2 text-sm text-muted-foreground hover:text-white transition">
                                                   {t('iptal')}
                                                 </button>
                                                 <button onClick={handleAddProduct} disabled={addingProduct} className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-500/20 transition active:scale-95 disabled:opacity-50">
@@ -5887,9 +5887,9 @@ export default function BusinessDetailsPage() {
                                 {/* Pagination Controls */}
                                 {
                                   totalPages > 1 && (
-                                    <div className="px-4 py-3 bg-gray-700/30 border-t border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                                    <div className="px-4 py-3 bg-gray-700/30 border-t border-border flex items-center justify-between flex-wrap gap-2">
                                       {/* Left: Info */}
-                                      <div className="text-gray-400 text-xs">
+                                      <div className="text-muted-foreground text-xs">
                                         {startIdx + 1}–{Math.min(endIdx, totalFiltered)} / {totalFiltered} ürün
                                         {productSearchQuery.trim() && (
                                           <span className="text-blue-400 ml-1">(arama sonuçları)</span>
@@ -5901,14 +5901,14 @@ export default function BusinessDetailsPage() {
                                         <button
                                           onClick={() => setProductCurrentPage(1)}
                                           disabled={safeCurrentPage === 1}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           «
                                         </button>
                                         <button
                                           onClick={() => setProductCurrentPage(Math.max(1, safeCurrentPage - 1))}
                                           disabled={safeCurrentPage === 1}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           ‹
                                         </button>
@@ -5921,7 +5921,7 @@ export default function BusinessDetailsPage() {
                                               onClick={() => setProductCurrentPage(pg)}
                                               className={`px-2.5 py-1 rounded text-xs font-medium transition ${pg === safeCurrentPage
                                                 ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                                 }`}
                                             >
                                               {pg}
@@ -5931,14 +5931,14 @@ export default function BusinessDetailsPage() {
                                         <button
                                           onClick={() => setProductCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
                                           disabled={safeCurrentPage === totalPages}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           ›
                                         </button>
                                         <button
                                           onClick={() => setProductCurrentPage(totalPages)}
                                           disabled={safeCurrentPage === totalPages}
-                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           »
                                         </button>
@@ -5969,7 +5969,7 @@ export default function BusinessDetailsPage() {
                                 {
                                   totalFiltered === 0 && productSearchQuery.trim() && (
                                     <div className="px-4 py-8 text-center">
-                                      <p className="text-gray-400 text-sm">{t('aranilan')} <span className="text-white font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
+                                      <p className="text-muted-foreground text-sm">{t('aranilan')} <span className="text-white font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
                                       <button
                                         onClick={() => {
                                           setProductSearchQuery('');
@@ -5999,15 +5999,15 @@ export default function BusinessDetailsPage() {
                             <span className="text-2xl">⭐</span>
                             <div>
                               <h4 className="text-white font-bold">{t('one_cikan_urunler')}</h4>
-                              <p className="text-gray-400 text-xs">{t('one_cikan_aciklama')}</p>
+                              <p className="text-muted-foreground text-xs">{t('one_cikan_aciklama')}</p>
                             </div>
                           </div>
                         </div>
 
                         {/* Limit Progress Bar */}
-                        <div className="bg-gray-800/60 rounded-xl border border-amber-500/30 p-4">
+                        <div className="bg-card/60 rounded-xl border border-amber-500/30 p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-300 font-medium">
+                            <span className="text-sm text-foreground font-medium">
                               {t('sponsored_kullanim')}
                             </span>
                             <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
@@ -6041,10 +6041,10 @@ export default function BusinessDetailsPage() {
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
                           </div>
                         ) : inlineProducts.length === 0 ? (
-                          <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
+                          <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl"></span>
                             <h4 className="text-white font-medium mt-3">{t('henuz_urun_eklenmemis')}</h4>
-                            <p className="text-gray-400 text-sm mt-1">{t('sponsored_urun_once_ekle')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{t('sponsored_urun_once_ekle')}</p>
                           </div>
                         ) : (
                           <div className="space-y-1">
@@ -6058,8 +6058,8 @@ export default function BusinessDetailsPage() {
                                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${isSponsored
                                     ? 'bg-amber-900/20 border-amber-500/40 hover:border-amber-400/60'
                                     : disabled
-                                      ? 'bg-gray-800/30 border-gray-700/50 opacity-50 cursor-not-allowed'
-                                      : 'bg-gray-800/40 border-gray-700 hover:border-gray-500'
+                                      ? 'bg-card/30 border-border/50 opacity-50 cursor-not-allowed'
+                                      : 'bg-card/40 border-border hover:border-gray-500'
                                     }`}
                                 >
                                   <input
@@ -6199,14 +6199,14 @@ export default function BusinessDetailsPage() {
                                     <td className="py-2.5 pr-3 text-white font-medium">
                                       {shift.displayName || shift.email || t('isimsiz')}
                                     </td>
-                                    <td className="py-2.5 pr-3 text-gray-300">{startStr}</td>
-                                    <td className="py-2.5 pr-3 text-gray-300 font-mono">{elapsedStr}</td>
-                                    <td className="py-2.5 pr-3 text-gray-400 max-w-[150px] truncate" title={shift.shiftStartLocation?.address}>
+                                    <td className="py-2.5 pr-3 text-foreground">{startStr}</td>
+                                    <td className="py-2.5 pr-3 text-foreground font-mono">{elapsedStr}</td>
+                                    <td className="py-2.5 pr-3 text-muted-foreground max-w-[150px] truncate" title={shift.shiftStartLocation?.address}>
                                       {shift.shiftStartLocation?.address
                                         ? shift.shiftStartLocation.address.substring(0, 30) + (shift.shiftStartLocation.address.length > 30 ? '…' : '')
                                         : '—'}
                                     </td>
-                                    <td className="py-2.5 pr-3 text-gray-300">
+                                    <td className="py-2.5 pr-3 text-foreground">
                                       {shift.shiftAssignedTables?.length
                                         ? shift.shiftAssignedTables.join(', ')
                                         : '—'}
@@ -6234,7 +6234,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setStaffStatusFilter('active')}
                         className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'active'
                           ? 'bg-green-600 text-white'
-                          : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                           }`}
                       >
                         {t('aktif')}{staffList.filter(s => s.isActive !== false).length})
@@ -6243,7 +6243,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setStaffStatusFilter('archived')}
                         className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'archived'
                           ? 'bg-amber-600 text-white'
-                          : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                           }`}
                       >
                         {t('arsivlenmis')}{staffList.filter(s => s.isActive === false).length})
@@ -6252,7 +6252,7 @@ export default function BusinessDetailsPage() {
 
                     {/* Search */}
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></span>
                       <input
                         type="text"
                         placeholder={t('isimEpostaVeyaTelefonIleAra')}
@@ -6276,13 +6276,13 @@ export default function BusinessDetailsPage() {
                       </h3>
 
                       {staffList.length === 0 ? (
-                        <div className="text-center py-8 text-gray-400">
+                        <div className="text-center py-8 text-muted-foreground">
                           <p className="text-4xl mb-2"></p>
                           <p>{t('henuzPersonelYok')}</p>
                         </div>
                       ) : (
                         <table className="w-full text-left">
-                          <thead className="text-gray-400 border-b border-gray-700">
+                          <thead className="text-muted-foreground border-b border-border">
                             <tr>
                               <th className="pb-3 py-2">{t('kullanici')}</th>
                               <th className="pb-3 py-2">{t('personel_rol')}</th>
@@ -6300,7 +6300,7 @@ export default function BusinessDetailsPage() {
                               return matchesStatus && matchesSearch;
                             }).length === 0 && (
                                 <tr>
-                                  <td colSpan={4} className="py-8 text-center text-gray-400">
+                                  <td colSpan={4} className="py-8 text-center text-muted-foreground">
                                     <p className="text-2xl mb-2"></p>
                                     <p>{staffStatusFilter === 'archived' ? t('arsivlenmisPersonelBulunamadi') : t('personelBulunamadi')}</p>
                                   </td>
@@ -6314,11 +6314,11 @@ export default function BusinessDetailsPage() {
                                 s.phoneNumber?.includes(staffSearchQuery);
                               return matchesStatus && matchesSearch;
                             }).map((staff) => (
-                              <tr key={staff.id} className="border-b border-gray-700 hover:bg-gray-750">
+                              <tr key={staff.id} className="border-b border-border hover:bg-gray-750">
                                 <td className="py-4">
                                   <div>
                                     <p className="font-medium">{staff.displayName}</p>
-                                    <p className="text-gray-400 text-sm">{staff.email || '-'}</p>
+                                    <p className="text-muted-foreground text-sm">{staff.email || '-'}</p>
                                     <p className="text-gray-500 text-xs">{staff.phoneNumber}</p>
                                   </div>
                                 </td>
@@ -6427,7 +6427,7 @@ export default function BusinessDetailsPage() {
                     </div>
 
                     {/* Invite New Staff */}
-                    <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
+                    <div className="bg-background/50 rounded-xl p-6 border border-border">
                       <h3 className="text-white font-bold text-lg mb-4">
                         {t('yeni_personel_ekle')}
                       </h3>
@@ -6475,7 +6475,7 @@ export default function BusinessDetailsPage() {
                         className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
                       />
                       <div className="mt-3">
-                        <label className="text-gray-400 text-sm">{t('rol')}</label>
+                        <label className="text-muted-foreground text-sm">{t('rol')}</label>
                         <select
                           value={inviteRole}
                           onChange={(e) => setInviteRole(e.target.value)}
@@ -6499,8 +6499,8 @@ export default function BusinessDetailsPage() {
                       {inviteResult && inviteResult.success && (
                         <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
                           <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
-                          <div className="bg-gray-800 p-3 rounded text-sm">
-                            <p className="text-gray-400">{t('geciciSifre')}</p>
+                          <div className="bg-card p-3 rounded text-sm">
+                            <p className="text-muted-foreground">{t('geciciSifre')}</p>
                             <p className="text-white font-mono text-lg">{inviteResult.tempPassword}</p>
                           </div>
                           {inviteResult.notifications && (
@@ -6518,7 +6518,7 @@ export default function BusinessDetailsPage() {
                           )}
                           <button
                             onClick={() => setInviteResult(null)}
-                            className="text-xs text-gray-400 hover:text-white"
+                            className="text-xs text-muted-foreground hover:text-white"
                           >
                             {t('kapat')}
                           </button>
@@ -6539,7 +6539,7 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {/* {t('masa_rezervasyonu')} */}
                       <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2">
+                        <h4 className="text-white font-medium border-b border-border pb-2">
                           {t('masa_rezervasyonu')}
                         </h4>
                         <div className="flex items-center gap-3">
@@ -6557,7 +6557,7 @@ export default function BusinessDetailsPage() {
                           />
                           <div>
                             <span className="text-white">{t('masa_rezervasyonu_aktif')}</span>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                               {t('musterilerMobilUygulamadanMasaRezervasyonuYapabilir')}
                             </p>
                           </div>
@@ -6565,7 +6565,7 @@ export default function BusinessDetailsPage() {
                         {formData.hasReservation && (
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-gray-400 text-sm">
+                              <label className="text-muted-foreground text-sm">
                                 {t('oturmaKapasitesiKisi')}
                               </label>
                               <input
@@ -6587,7 +6587,7 @@ export default function BusinessDetailsPage() {
                               </p>
                             </div>
                             <div>
-                              <label className="text-gray-400 text-sm">
+                              <label className="text-muted-foreground text-sm">
                                 Max Masa Rezervasyonu
                               </label>
                               <input
@@ -6614,17 +6614,17 @@ export default function BusinessDetailsPage() {
 
                       {/*  Yerinde Sipariş Ayarları */}
                       <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2">
+                        <h4 className="text-white font-medium border-b border-border pb-2">
                           {t('yerindeSiparisAyarlari')}
                         </h4>
 
                         {/* Ödeme Zamanlaması */}
                         <div>
-                          <label className="text-gray-400 text-sm block mb-2">{t('odemeZamanlamasi')}</label>
+                          <label className="text-muted-foreground text-sm block mb-2">{t('odemeZamanlamasi')}</label>
                           <div className="flex gap-3">
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
                               ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                              : 'bg-gray-700 border-gray-600 text-gray-300'
+                              : 'bg-gray-700 border-gray-600 text-foreground'
                               } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <input
                                 type="radio"
@@ -6637,12 +6637,12 @@ export default function BusinessDetailsPage() {
                               />
                               <div>
                                 <span className="font-medium">{t('hemenOde')}</span>
-                                <p className="text-xs text-gray-400">{t('fastFoodSiparisOncesiOdemeZorunlu')}</p>
+                                <p className="text-xs text-muted-foreground">{t('fastFoodSiparisOncesiOdemeZorunlu')}</p>
                               </div>
                             </label>
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
                               ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                              : 'bg-gray-700 border-gray-600 text-gray-300'
+                              : 'bg-gray-700 border-gray-600 text-foreground'
                               } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <input
                                 type="radio"
@@ -6655,7 +6655,7 @@ export default function BusinessDetailsPage() {
                               />
                               <div>
                                 <span className="font-medium">{t('cikistaOde')}</span>
-                                <p className="text-xs text-gray-400">{t('restoran_masada_hesap_isteme')}</p>
+                                <p className="text-xs text-muted-foreground">{t('restoran_masada_hesap_isteme')}</p>
                               </div>
                             </label>
                           </div>
@@ -6672,7 +6672,7 @@ export default function BusinessDetailsPage() {
                           />
                           <div>
                             <span className="text-white">{t('garson_servisi_aktif')}</span>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                               {formData.hasTableService
                                 ? t('siparisHazirOluncaMusteriyeSiparisinizMasaniza')
                                 : t('siparisHazirOluncaMusteriyeGelipAlabilirsiniz')}
@@ -6692,7 +6692,7 @@ export default function BusinessDetailsPage() {
                   <div className="space-y-6">
                     <div className="space-y-6">
                       {/* Current Plan Display */}
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 space-y-4">
+                      <div className="bg-card/50 border border-border rounded-xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-white font-medium text-lg">{t('uyelikAbonelik')}</h4>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -6701,7 +6701,7 @@ export default function BusinessDetailsPage() {
                             (formData.subscriptionPlan === 'standard') ? 'bg-blue-500 text-white' :
                             (formData.subscriptionPlan === 'basic') ? 'bg-green-600 text-white' :
                             (formData.subscriptionPlan === 'free') ? 'bg-gray-500 text-white' :
-                            'bg-gray-600 text-gray-300'
+                            'bg-gray-600 text-foreground'
                           }`}>
                             {formData.subscriptionPlan?.toUpperCase() || 'NONE'}
                           </span>
@@ -6709,7 +6709,7 @@ export default function BusinessDetailsPage() {
 
                         {/* Plan Selection */}
                         <div>
-                          <label className="text-gray-400 text-sm block mb-2">Plan</label>
+                          <label className="text-muted-foreground text-sm block mb-2">Plan</label>
                           <select
                             value={formData.subscriptionPlan}
                             onChange={async (e) => {
@@ -6782,24 +6782,24 @@ export default function BusinessDetailsPage() {
                       </div>
 
                       {/* Plan Features Info */}
-                      <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 space-y-3">
-                        <h5 className="text-gray-300 text-sm font-medium">Plan Ozellikleri</h5>
+                      <div className="bg-card/30 border border-border/50 rounded-xl p-4 space-y-3">
+                        <h5 className="text-foreground text-sm font-medium">Plan Ozellikleri</h5>
                         <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div className="bg-gray-800/50 rounded-lg p-3">
+                          <div className="bg-card/50 rounded-lg p-3">
                             <span className="text-gray-500 font-bold">FREE</span>
-                            <p className="text-gray-400 mt-1">Temel profil, sinirli siparis</p>
+                            <p className="text-muted-foreground mt-1">Temel profil, sinirli siparis</p>
                           </div>
-                          <div className="bg-gray-800/50 rounded-lg p-3">
+                          <div className="bg-card/50 rounded-lg p-3">
                             <span className="text-green-400 font-bold">BASIC</span>
-                            <p className="text-gray-400 mt-1">Siparis yonetimi, temel istatistik</p>
+                            <p className="text-muted-foreground mt-1">Siparis yonetimi, temel istatistik</p>
                           </div>
-                          <div className="bg-gray-800/50 rounded-lg p-3">
+                          <div className="bg-card/50 rounded-lg p-3">
                             <span className="text-blue-400 font-bold">STANDARD</span>
-                            <p className="text-gray-400 mt-1">Tam ERP, kurye, promosyon</p>
+                            <p className="text-muted-foreground mt-1">Tam ERP, kurye, promosyon</p>
                           </div>
-                          <div className="bg-gray-800/50 rounded-lg p-3">
+                          <div className="bg-card/50 rounded-lg p-3">
                             <span className="text-amber-400 font-bold">PREMIUM</span>
-                            <p className="text-gray-400 mt-1">AI analiz, sponsorlu gosterim</p>
+                            <p className="text-muted-foreground mt-1">AI analiz, sponsorlu gosterim</p>
                           </div>
                         </div>
                       </div>
@@ -6816,11 +6816,11 @@ export default function BusinessDetailsPage() {
                     <div className="space-y-6">
                       {/* Bank Details (SEPA) */}
                       <div className="space-y-4">
-                        <h4 className="text-white font-medium border-b border-gray-700 pb-2">
+                        <h4 className="text-white font-medium border-b border-border pb-2">
                           {t('banka_bilgileri_sepa')}
                         </h4>
                         <div>
-                          <label className="text-gray-400 text-sm">
+                          <label className="text-muted-foreground text-sm">
                             {t('hesap_sahibi')}
                           </label>
                           <input
@@ -6838,7 +6838,7 @@ export default function BusinessDetailsPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">{t('bankaAdi1')}</label>
+                          <label className="text-muted-foreground text-sm">{t('bankaAdi1')}</label>
                           <input
                             type="text"
                             value={formData.bankName}
@@ -6852,7 +6852,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-gray-400 text-sm">{t('iban')}</label>
+                            <label className="text-muted-foreground text-sm">{t('iban')}</label>
                             <input
                               type="text"
                               value={formData.bankIban}
@@ -6865,7 +6865,7 @@ export default function BusinessDetailsPage() {
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">{t('bic')}</label>
+                            <label className="text-muted-foreground text-sm">{t('bic')}</label>
                             <input
                               type="text"
                               value={formData.bankBic}
@@ -6898,7 +6898,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center justify-center py-12">
                           <div className="text-center">
                             <span className="text-4xl">🎁</span>
-                            <p className="text-gray-400 mt-3 text-sm">{t('promosyonAyarlari')}</p>
+                            <p className="text-muted-foreground mt-3 text-sm">{t('promosyonAyarlari')}</p>
                             <p className="text-gray-500 text-xs mt-1">{t('kampanyaOlusturVeYonet')}</p>
                           </div>
                         </div>
@@ -6920,7 +6920,7 @@ export default function BusinessDetailsPage() {
                           <span className="text-3xl">📢</span>
                           <div>
                             <h3 className="text-xl font-bold text-white">{t('marketing_boost')}</h3>
-                            <p className="text-sm text-gray-400">{t('marketingBoostAciklama')}</p>
+                            <p className="text-sm text-muted-foreground">{t('marketingBoostAciklama')}</p>
                           </div>
                         </div>
                         <button
@@ -6956,8 +6956,8 @@ export default function BusinessDetailsPage() {
                       </div>
 
                       {/* Ranking Algorithm Explanation */}
-                      <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4">
-                        <h4 className="text-gray-300 font-bold text-sm mb-2 flex items-center gap-2">
+                      <div className="bg-card/40 border border-border rounded-xl p-4">
+                        <h4 className="text-foreground font-bold text-sm mb-2 flex items-center gap-2">
                           <span>📊</span> {t('boost_ranking')}
                         </h4>
                         <div className="flex flex-wrap gap-2">
@@ -6968,9 +6968,9 @@ export default function BusinessDetailsPage() {
                             { label: t('boost_rank_distance'), pct: 10, color: 'bg-green-500' },
                             { label: t('boost_rank_volume'), pct: 10, color: 'bg-orange-500' },
                           ].map(f => (
-                            <div key={f.label} className="flex items-center gap-1.5 bg-gray-900/60 px-2.5 py-1.5 rounded-lg">
+                            <div key={f.label} className="flex items-center gap-1.5 bg-background/60 px-2.5 py-1.5 rounded-lg">
                               <div className={`w-2 h-2 rounded-full ${f.color}`} />
-                              <span className="text-gray-300 text-xs">{f.label}</span>
+                              <span className="text-foreground text-xs">{f.label}</span>
                               <span className="text-gray-500 text-[10px] font-bold">%{f.pct}</span>
                             </div>
                           ))}
@@ -6979,26 +6979,26 @@ export default function BusinessDetailsPage() {
 
                       {/* ==== New Campaign Form ==== */}
                       {showBoostForm && (
-                        <div className="bg-gray-800/60 border border-purple-500/30 rounded-xl p-5 space-y-5">
+                        <div className="bg-card/60 border border-purple-500/30 rounded-xl p-5 space-y-5">
                           <h4 className="text-white font-bold flex items-center gap-2">
                             <span>🆕</span> {t('boost_yeni_kampanya')}
                           </h4>
 
                           {/* Campaign Name */}
                           <div>
-                            <label className="text-sm text-gray-400 mb-1 block">{t('boost_kampanya_adi')}</label>
+                            <label className="text-sm text-muted-foreground mb-1 block">{t('boost_kampanya_adi')}</label>
                             <input
                               type="text"
                               placeholder={t('boost_kampanya_adi_placeholder')}
                               value={boostForm.campaignName}
                               onChange={e => setBoostForm(p => ({ ...p, campaignName: e.target.value }))}
-                              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
                             />
                           </div>
 
                           {/* Model Selection */}
                           <div>
-                            <label className="text-sm text-gray-400 mb-2 block">{t('boost_fiyatlandirma_modeli')}</label>
+                            <label className="text-sm text-muted-foreground mb-2 block">{t('boost_fiyatlandirma_modeli')}</label>
                             <div className="grid grid-cols-2 gap-3">
                               <button
                                 type="button"
@@ -7006,14 +7006,14 @@ export default function BusinessDetailsPage() {
                                 className={`p-4 rounded-xl border-2 transition-all text-left ${
                                   boostForm.model === 'cpc'
                                     ? 'border-blue-500 bg-blue-900/20'
-                                    : 'border-gray-700 bg-gray-900/40 hover:border-gray-500'
+                                    : 'border-border bg-background/40 hover:border-gray-500'
                                 }`}
                               >
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-lg">🔵</span>
                                   <span className="text-white font-bold text-sm">CPC</span>
                                 </div>
-                                <p className="text-gray-400 text-xs">{t('boost_cpc_aciklama')}</p>
+                                <p className="text-muted-foreground text-xs">{t('boost_cpc_aciklama')}</p>
                                 <p className="text-blue-400 text-[10px] mt-1 font-medium">{t('boost_cpc_model_label')}</p>
                               </button>
                               <button
@@ -7022,14 +7022,14 @@ export default function BusinessDetailsPage() {
                                 className={`p-4 rounded-xl border-2 transition-all text-left ${
                                   boostForm.model === 'payPerOrder'
                                     ? 'border-green-500 bg-green-900/20'
-                                    : 'border-gray-700 bg-gray-900/40 hover:border-gray-500'
+                                    : 'border-border bg-background/40 hover:border-gray-500'
                                 }`}
                               >
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-lg">🟢</span>
                                   <span className="text-white font-bold text-sm">Pay-per-Order</span>
                                 </div>
-                                <p className="text-gray-400 text-xs">{t('boost_ppo_aciklama')}</p>
+                                <p className="text-muted-foreground text-xs">{t('boost_ppo_aciklama')}</p>
                                 <p className="text-green-400 text-[10px] mt-1 font-medium">{t('boost_ppo_model_label')}</p>
                               </button>
                             </div>
@@ -7038,7 +7038,7 @@ export default function BusinessDetailsPage() {
                           {/* Bid Amount + Budget */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="text-sm text-gray-400 mb-1 block">
+                              <label className="text-sm text-muted-foreground mb-1 block">
                                 {boostForm.model === 'cpc' ? t('boost_tiklama_basina') : t('boost_siparis_basina')}
                               </label>
                               <div className="relative">
@@ -7048,19 +7048,19 @@ export default function BusinessDetailsPage() {
                                   min="0.10"
                                   value={boostForm.bidAmount}
                                   onChange={e => setBoostForm(p => ({ ...p, bidAmount: e.target.value }))}
-                                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                  className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€</span>
                               </div>
                               <p className="text-gray-600 text-[10px] mt-1">{t('boost_min_bid')}</p>
                             </div>
                             <div>
-                              <label className="text-sm text-gray-400 mb-1 block">{t('boost_butce')}</label>
+                              <label className="text-sm text-muted-foreground mb-1 block">{t('boost_butce')}</label>
                               <div className="flex gap-2">
                                 <select
                                   value={boostForm.budgetType}
                                   onChange={e => setBoostForm(p => ({ ...p, budgetType: e.target.value as any }))}
-                                  className="bg-gray-900 border border-gray-600 rounded-lg px-2 py-2.5 text-white text-xs focus:border-purple-500 outline-none"
+                                  className="bg-background border border-gray-600 rounded-lg px-2 py-2.5 text-white text-xs focus:border-purple-500 outline-none"
                                   title={t('boost_butce_turu')}
                                 >
                                   <option value="daily">{t('boost_gunluk')}</option>
@@ -7072,7 +7072,7 @@ export default function BusinessDetailsPage() {
                                   min="5"
                                   value={boostForm.budgetAmount}
                                   onChange={e => setBoostForm(p => ({ ...p, budgetAmount: e.target.value }))}
-                                  className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                  className="flex-1 bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
                                 />
                               </div>
                               {boostForm.model === 'cpc' && parseFloat(boostForm.bidAmount) > 0 && (
@@ -7085,7 +7085,7 @@ export default function BusinessDetailsPage() {
 
                           {/* Active Days */}
                           <div>
-                            <label className="text-sm text-gray-400 mb-2 block">{t('boost_aktif_gunler')}</label>
+                            <label className="text-sm text-muted-foreground mb-2 block">{t('boost_aktif_gunler')}</label>
                             <div className="flex gap-1.5">
                               {[t('boost_day_mon'), t('boost_day_tue'), t('boost_day_wed'), t('boost_day_thu'), t('boost_day_fri'), t('boost_day_sat'), t('boost_day_sun')].map((day, i) => {
                                 const dayIdx = i === 6 ? 0 : i + 1; // Mon=1,...,Sat=6,Sun=0
@@ -7105,7 +7105,7 @@ export default function BusinessDetailsPage() {
                                     className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
                                       isActive
                                         ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                                        : 'bg-card text-gray-500 hover:bg-gray-700'
                                     }`}
                                   >
                                     {day}
@@ -7118,33 +7118,33 @@ export default function BusinessDetailsPage() {
                           {/* Active Hours */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="text-sm text-gray-400 mb-1 block">{t('boost_baslangic_saati')}</label>
+                              <label className="text-sm text-muted-foreground mb-1 block">{t('boost_baslangic_saati')}</label>
                               <input
                                 type="time"
                                 value={boostForm.activeHoursStart}
                                 onChange={e => setBoostForm(p => ({ ...p, activeHoursStart: e.target.value }))}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
                               />
                             </div>
                             <div>
-                              <label className="text-sm text-gray-400 mb-1 block">{t('boost_bitis_saati')}</label>
+                              <label className="text-sm text-muted-foreground mb-1 block">{t('boost_bitis_saati')}</label>
                               <input
                                 type="time"
                                 value={boostForm.activeHoursEnd}
                                 onChange={e => setBoostForm(p => ({ ...p, activeHoursEnd: e.target.value }))}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
                               />
                             </div>
                           </div>
 
                           {/* Campaign End Date */}
                           <div>
-                            <label className="text-sm text-gray-400 mb-1 block">{t('boost_bitis_tarihi')}</label>
+                            <label className="text-sm text-muted-foreground mb-1 block">{t('boost_bitis_tarihi')}</label>
                             <input
                               type="date"
                               value={boostForm.endDate}
                               onChange={e => setBoostForm(p => ({ ...p, endDate: e.target.value }))}
-                              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
+                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-purple-500 outline-none"
                               placeholder={t('boost_bitis_placeholder')}
                             />
                             <p className="text-gray-600 text-[10px] mt-1">{t('boost_bitis_aciklama')}</p>
@@ -7170,7 +7170,7 @@ export default function BusinessDetailsPage() {
                             <button
                               type="button"
                               onClick={() => setShowBoostForm(false)}
-                              className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl text-sm transition-all"
+                              className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-foreground rounded-xl text-sm transition-all"
                             >
                               {t('boost_iptal')}
                             </button>
@@ -7243,7 +7243,7 @@ export default function BusinessDetailsPage() {
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />
                           </div>
                         ) : boostCampaigns.length === 0 ? (
-                          <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
+                          <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl">📭</span>
                             <h4 className="text-white font-medium mt-3">{t('boost_kampanya_yok')}</h4>
                             <p className="text-gray-500 text-sm mt-1">{t('boost_kampanya_yok_aciklama')}</p>
@@ -7253,8 +7253,8 @@ export default function BusinessDetailsPage() {
                             {boostCampaigns.map((campaign: any) => {
                               const budgetPct = campaign.budgetAmount > 0 ? (campaign.budgetSpent / campaign.budgetAmount) * 100 : 0;
                               return (
-                                <div key={campaign.id} className={`bg-gray-800/60 rounded-xl p-4 border transition-all ${
-                                  campaign.status === 'active' ? 'border-purple-500/40' : 'border-gray-700'
+                                <div key={campaign.id} className={`bg-card/60 rounded-xl p-4 border transition-all ${
+                                  campaign.status === 'active' ? 'border-purple-500/40' : 'border-border'
                                 }`}>
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
@@ -7298,19 +7298,19 @@ export default function BusinessDetailsPage() {
                                   </div>
                                   {/* Stats Row */}
                                   <div className="grid grid-cols-4 gap-3 mb-3">
-                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                    <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">Bid</p>
                                       <p className="text-white font-bold text-sm">{campaign.bidAmount}€</p>
                                     </div>
-                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                    <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">{t('boost_gosterim')}</p>
                                       <p className="text-white font-bold text-sm">{campaign.metrics?.impressions || 0}</p>
                                     </div>
-                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                    <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">{campaign.model === 'cpc' ? t('boost_tiklama') : t('boost_siparis')}</p>
                                       <p className="text-white font-bold text-sm">{campaign.model === 'cpc' ? (campaign.metrics?.clicks || 0) : (campaign.metrics?.orders || 0)}</p>
                                     </div>
-                                    <div className="bg-gray-900/60 rounded-lg p-2 text-center">
+                                    <div className="bg-background/60 rounded-lg p-2 text-center">
                                       <p className="text-gray-500 text-[10px]">ROAS</p>
                                       <p className="text-white font-bold text-sm">{campaign.metrics?.roas ? `${campaign.metrics.roas}x` : '—'}</p>
                                     </div>
@@ -7336,23 +7336,23 @@ export default function BusinessDetailsPage() {
                       </div>
 
                       {/* Competitor Comparison */}
-                      <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4">
-                        <h4 className="text-gray-400 font-bold text-xs mb-3">{t('boost_platform_karsilastirma')}</h4>
+                      <div className="bg-card/30 border border-border/50 rounded-xl p-4">
+                        <h4 className="text-muted-foreground font-bold text-xs mb-3">{t('boost_platform_karsilastirma')}</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs">
                             <thead>
-                              <tr className="text-gray-500 border-b border-gray-700">
+                              <tr className="text-gray-500 border-b border-border">
                                 <th className="text-left pb-2">{t('boost_platform')}</th>
                                 <th className="text-left pb-2">{t('boost_model')}</th>
                                 <th className="text-left pb-2">{t('boost_ort_maliyet')}</th>
                                 <th className="text-left pb-2">{t('boost_sonuc')}</th>
                               </tr>
                             </thead>
-                            <tbody className="text-gray-300">
-                              <tr className="border-b border-gray-800"><td className="py-1.5">🔵 Uber Eats</td><td>CPC</td><td>{t('boost_uber_cost')}</td><td>{t('boost_uber_result')}</td></tr>
-                              <tr className="border-b border-gray-800"><td className="py-1.5">🟢 Wolt</td><td>Pay-per-Order</td><td>{t('boost_wolt_cost')}</td><td>{t('boost_wolt_result')}</td></tr>
-                              <tr className="border-b border-gray-800"><td className="py-1.5">🟠 Lieferando</td><td>TopRank</td><td>{t('boost_lieferando_cost')}</td><td>{t('boost_lieferando_result')}</td></tr>
-                              <tr className="border-b border-gray-800"><td className="py-1.5">🟣 Yemeksepeti</td><td>Hybrid</td><td>{t('boost_yemeksepeti_cost')}</td><td>{t('boost_yemeksepeti_result')}</td></tr>
+                            <tbody className="text-foreground">
+                              <tr className="border-b border-border"><td className="py-1.5">🔵 Uber Eats</td><td>CPC</td><td>{t('boost_uber_cost')}</td><td>{t('boost_uber_result')}</td></tr>
+                              <tr className="border-b border-border"><td className="py-1.5">🟢 Wolt</td><td>Pay-per-Order</td><td>{t('boost_wolt_cost')}</td><td>{t('boost_wolt_result')}</td></tr>
+                              <tr className="border-b border-border"><td className="py-1.5">🟠 Lieferando</td><td>TopRank</td><td>{t('boost_lieferando_cost')}</td><td>{t('boost_lieferando_result')}</td></tr>
+                              <tr className="border-b border-border"><td className="py-1.5">🟣 Yemeksepeti</td><td>Hybrid</td><td>{t('boost_yemeksepeti_cost')}</td><td>{t('boost_yemeksepeti_result')}</td></tr>
                               <tr className="bg-purple-900/20"><td className="py-1.5 font-bold text-purple-300">🟣 LOKMA</td><td className="text-purple-300">CPC + PPO</td><td className="text-purple-300">{t('boost_lokma_cost')}</td><td className="text-purple-300">{t('boost_lokma_result')}</td></tr>
                             </tbody>
                           </table>
@@ -7372,14 +7372,14 @@ export default function BusinessDetailsPage() {
                   <div className="space-y-6">
                     <div className="space-y-6">
                       {formData.reviews && formData.reviews.length > 0 && (
-                        <div className="pt-6 border-t border-gray-700">
+                        <div className="pt-6 border-t border-border">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                               <Star className="w-5 h-5 text-yellow-500" />
                               <h3 className="font-semibold text-gray-200">
                                 {t('googleYorumlari')}
                               </h3>
-                              <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full border border-gray-700">
+                              <span className="text-xs text-gray-500 bg-card px-2 py-0.5 rounded-full border border-border">
                                 {formData.rating?.toFixed(1)} ({formData.reviewCount})
                               </span>
                             </div>
@@ -7390,7 +7390,7 @@ export default function BusinessDetailsPage() {
                               .map((review: any, i: number) => (
                                 <div
                                   key={i}
-                                  className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/50"
+                                  className="bg-card/50 rounded-lg p-3 border border-border/50"
                                 >
                                   <div className="flex items-center gap-2 mb-2">
                                     <img
@@ -7399,10 +7399,10 @@ export default function BusinessDetailsPage() {
                                       className="w-6 h-6 rounded-full"
                                     />
                                     <div className="flex-1 min-w-0">
-                                      <label htmlFor="brandLabelActive" className="text-sm font-medium text-gray-400">
+                                      <label htmlFor="brandLabelActive" className="text-sm font-medium text-muted-foreground">
                                         App
                                       </label>
-                                      <div className="text-xs font-medium text-gray-300 truncate">
+                                      <div className="text-xs font-medium text-foreground truncate">
                                         {review.author_name}
                                       </div>
                                       <div className="flex text-yellow-500 text-[10px]">
@@ -7413,7 +7413,7 @@ export default function BusinessDetailsPage() {
                                       </div>
                                     </div>
                                   </div>
-                                  <p className="text-xs text-gray-400 line-clamp-3 italic">
+                                  <p className="text-xs text-muted-foreground line-clamp-3 italic">
                                     "{review.text}"
                                   </p>
                                 </div>
@@ -7433,14 +7433,14 @@ export default function BusinessDetailsPage() {
                   <div className="space-y-6">
                     <div className="space-y-6">
                       {business && business.subscriptionHistory && business.subscriptionHistory.length > 0 && (
-                        <div className="pt-6 border-t border-gray-700">
+                        <div className="pt-6 border-t border-border">
                           <div className="flex items-center gap-2 mb-4">
                             <History className="w-5 h-5 text-purple-400" />
                             <h3 className="font-semibold text-gray-200">{t('abonelikGecmisi')}</h3>
                           </div>
-                          <div className="overflow-x-auto bg-gray-800/30 rounded-lg border border-gray-700/50">
-                            <table className="w-full text-xs text-left text-gray-400">
-                              <thead className="text-gray-500 bg-gray-900/50 uppercase">
+                          <div className="overflow-x-auto bg-card/30 rounded-lg border border-border/50">
+                            <table className="w-full text-xs text-left text-muted-foreground">
+                              <thead className="text-gray-500 bg-background/50 uppercase">
                                 <tr>
                                   <th className="px-4 py-2">Plan</th>
                                   <th className="px-4 py-2">{t('baslangic1')}</th>
@@ -7448,9 +7448,9 @@ export default function BusinessDetailsPage() {
                                   <th className="px-4 py-2">{t('degistiren')}</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-800">
+                              <tbody className="divide-y divide-border">
                                 {(business?.subscriptionHistory || []).map((h: any, i: number) => (
-                                  <tr key={i} className="hover:bg-gray-800/30">
+                                  <tr key={i} className="hover:bg-card/30">
                                     <td className="px-4 py-2 font-medium text-white uppercase">{h.plan}</td>
                                     <td className="px-4 py-2">{h.startDate?.seconds ? new Date(h.startDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.startDate).toLocaleDateString('de-DE')}</td>
                                     <td className="px-4 py-2">{h.endDate?.seconds ? new Date(h.endDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.endDate).toLocaleDateString('de-DE')}</td>
@@ -7479,11 +7479,11 @@ export default function BusinessDetailsPage() {
             <LockedModuleOverlay featureKey="reservations">
             <div className="space-y-6">
               {/* Capacity Management Config */}
-              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <div className="bg-background rounded-2xl p-6 border border-border">
                 <ReservationCapacityConfig businessId={businessId} />
               </div>
               {/* Reservations List */}
-              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <div className="bg-background rounded-2xl p-6 border border-border">
                 <ReservationsPanel
                   businessId={businessId}
                   businessName={formData.companyName || ""}
@@ -7502,26 +7502,26 @@ export default function BusinessDetailsPage() {
             <div className="space-y-6">
               {/* ── Header Stats Row ── */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <div className="bg-background rounded-xl p-4 border border-border text-center">
                   <p className="text-2xl font-bold text-amber-400">{formData.maxReservationTables || 0}</p>
-                  <p className="text-xs text-gray-400 mt-1">{t('toplam_masa')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('toplam_masa')}</p>
                 </div>
-                <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <div className="bg-background rounded-xl p-4 border border-border text-center">
                   <p className="text-2xl font-bold text-teal-400">{formData.tableCapacity || 0}</p>
-                  <p className="text-xs text-gray-400 mt-1">{t('oturma_kapasitesi')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('oturma_kapasitesi')}</p>
                 </div>
-                <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <div className="bg-background rounded-xl p-4 border border-border text-center">
                   <p className="text-2xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
-                  <p className="text-xs text-gray-400 mt-1">{t('qrSiparis')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('qrSiparis')}</p>
                 </div>
-                <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <div className="bg-background rounded-xl p-4 border border-border text-center">
                   <p className="text-2xl font-bold text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
-                  <p className="text-xs text-gray-400 mt-1">{t('garsonSiparis')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('garsonSiparis')}</p>
                 </div>
               </div>
 
               {/* ── Table Management: Masa Yönetimi ── */}
-              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <div className="bg-background rounded-2xl p-6 border border-border">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
                   {t('masaYonetimi')}
                 </h2>
@@ -7529,7 +7529,7 @@ export default function BusinessDetailsPage() {
                 {/* Quick setup row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div>
-                    <label className="text-gray-400 text-sm block mb-1">{t('toplam_masa_adedi')}</label>
+                    <label className="text-muted-foreground text-sm block mb-1">{t('toplam_masa_adedi')}</label>
                     <input
                       type="number"
                       value={formData.maxReservationTables}
@@ -7546,7 +7546,7 @@ export default function BusinessDetailsPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-sm block mb-1">{t('oturmaKapasitesiKisi')}</label>
+                    <label className="text-muted-foreground text-sm block mb-1">{t('oturmaKapasitesiKisi')}</label>
                     <input
                       type="number"
                       value={formData.tableCapacity}
@@ -7601,7 +7601,7 @@ export default function BusinessDetailsPage() {
                 {formData.tables.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <h3 className="text-sm font-semibold text-gray-300">{t('bolumler')}</h3>
+                      <h3 className="text-sm font-semibold text-foreground">{t('bolumler')}</h3>
                       <button
                         onClick={() => {
                           const name = prompt(t('yeniBolumAdiOr1Kat'));
@@ -7612,7 +7612,7 @@ export default function BusinessDetailsPage() {
                           }
                           setFormData({ ...formData, tableSections: [...formData.tableSections, name.trim()] });
                         }}
-                        className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition"
+                        className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-foreground rounded-md transition"
                       >
                         {t('bolumEkle')}
                       </button>
@@ -7654,7 +7654,7 @@ export default function BusinessDetailsPage() {
                 {formData.tables.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-300">
+                      <h3 className="text-sm font-semibold text-foreground">
                         🪑 Masalar ({formData.tables.length})
                       </h3>
                     </div>
@@ -7679,7 +7679,7 @@ export default function BusinessDetailsPage() {
                             )}
                             {!sec && formData.tableSections.length > 0 && tablesInSection.length > 0 && (
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-gray-400 text-sm font-bold">{t('bolumAtanmamis')}</span>
+                                <span className="text-muted-foreground text-sm font-bold">{t('bolumAtanmamis')}</span>
                                 <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
@@ -7687,7 +7687,7 @@ export default function BusinessDetailsPage() {
                               {tablesInSection.map((table: any) => (
                                 <div
                                   key={table._idx}
-                                  className="bg-gray-800 rounded-lg border border-gray-700 p-3 flex flex-col gap-2 hover:border-amber-500/50 transition"
+                                  className="bg-card rounded-lg border border-border p-3 flex flex-col gap-2 hover:border-amber-500/50 transition"
                                 >
                                   {/* Table label */}
                                   <div className="flex items-center gap-1">
@@ -7713,7 +7713,7 @@ export default function BusinessDetailsPage() {
                                         updated[table._idx] = { ...updated[table._idx], section: e.target.value };
                                         setFormData({ ...formData, tables: updated });
                                       }}
-                                      className="w-full bg-gray-700 text-gray-300 px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-xs"
+                                      className="w-full bg-gray-700 text-foreground px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-xs"
                                     >
                                       <option value="">—</option>
                                       {formData.tableSections.map((s: string) => (
@@ -7743,10 +7743,10 @@ export default function BusinessDetailsPage() {
 
                 {/* Empty state */}
                 {formData.tables.length === 0 && (
-                  <div className="bg-gray-800/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
+                  <div className="bg-card/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
                     <span className="text-4xl">&#x1FA91;</span>
                     <p className="text-white font-semibold mt-3">{t('henuzMasaTanimlanmadi')}</p>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-muted-foreground text-sm mt-1">
                       {t('yukaridanMasaSayisiniGirerekOtomatikOlusturun')}
                     </p>
                   </div>
@@ -7755,11 +7755,11 @@ export default function BusinessDetailsPage() {
 
               {/* ── Table QR Codes — Compact Table Layout ── */}
               {(planFeatures.dineInQR || admin?.adminType === 'super') && formData.tables.length > 0 && (
-                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                <div className="bg-background rounded-2xl p-6 border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                        {t('masaQrKodlari')}
-                      <span className="text-sm font-normal text-gray-400">
+                      <span className="text-sm font-normal text-muted-foreground">
                         · {formData.tables.length} masa
                       </span>
                     </h2>
@@ -7815,7 +7815,7 @@ export default function BusinessDetailsPage() {
                               const { downloadTableCardPDF } = await import('@/utils/tableCardPdfGenerator');
                               await downloadTableCardPDF(table.label, businessId, formData.companyName || 'Isletme');
                             }}
-                            className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
+                            className="bg-card rounded-lg border border-border p-2 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
                             title={`Masa ${table.label} PDF kart indir`}
                           >
                             <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
@@ -7826,7 +7826,7 @@ export default function BusinessDetailsPage() {
                                 loading="lazy"
                               />
                             </div>
-                            <span className="text-xs font-bold text-gray-300 group-hover:text-red-400 transition">
+                            <span className="text-xs font-bold text-foreground group-hover:text-red-400 transition">
                               M{table.label}
                               {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
                             </span>
@@ -7841,31 +7841,31 @@ export default function BusinessDetailsPage() {
 
               {/* ── Garson Sipariş Card ── */}
               {(planFeatures.waiterOrder || admin?.adminType === 'super') && (
-                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                <div className="bg-background rounded-2xl p-6 border border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-teal-600/20 flex items-center justify-center">
                       <span className="text-xl">👨‍🍳</span>
                     </div>
                     <div className="flex-1">
                       <h3 className="text-white font-semibold">{t('garsonSiparisSistemi')}</h3>
-                      <p className="text-xs text-gray-400">{t('personelTablettelefonIleMasadaSiparisAlir')}</p>
+                      <p className="text-xs text-muted-foreground">{t('personelTablettelefonIleMasadaSiparisAlir')}</p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
                       {t('aktif')}
                     </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                    <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                    <div className="bg-card rounded-lg p-3 border border-border">
                       <p className="text-teal-400 font-medium text-sm">{t('1MasaSec')}</p>
-                      <p className="text-gray-400 text-xs mt-1">{t('garsonMasayiSecer')}</p>
+                      <p className="text-muted-foreground text-xs mt-1">{t('garsonMasayiSecer')}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                    <div className="bg-card rounded-lg p-3 border border-border">
                       <p className="text-teal-400 font-medium text-sm">{t('2UrunEkle')}</p>
-                      <p className="text-gray-400 text-xs mt-1">{t('menudenUrunEkler')}</p>
+                      <p className="text-muted-foreground text-xs mt-1">{t('menudenUrunEkler')}</p>
                     </div>
-                    <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                    <div className="bg-card rounded-lg p-3 border border-border">
                       <p className="text-teal-400 font-medium text-sm">{t('3SiparisGonder')}</p>
-                      <p className="text-gray-400 text-xs mt-1">{t('mutfagaIletilir')}</p>
+                      <p className="text-muted-foreground text-xs mt-1">{t('mutfagaIletilir')}</p>
                     </div>
                   </div>
                 </div>
@@ -7873,7 +7873,7 @@ export default function BusinessDetailsPage() {
 
               {/* ── Link İle Grup Siparişi Card ── */}
               {(planFeatures.groupOrderLink || admin?.adminType === 'super') && (
-                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700 mt-6">
+                <div className="bg-background rounded-2xl p-6 border border-border mt-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
@@ -7881,7 +7881,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       <div>
                         <h3 className="text-white font-semibold">{t('linkIleGrupSiparisi')}</h3>
-                        <p className="text-xs text-gray-400">{t('musterilerSiparisLinkiniPaylasarakOrtakSiparisVerebilir')}</p>
+                        <p className="text-xs text-muted-foreground">{t('musterilerSiparisLinkiniPaylasarakOrtakSiparisVerebilir')}</p>
                       </div>
                     </div>
                     <div>
@@ -7913,7 +7913,7 @@ export default function BusinessDetailsPage() {
 
               {/* ── Masada Grup Siparişi Card ── */}
               {(planFeatures.groupOrderTable || admin?.adminType === 'super') && (
-                <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700 mt-6">
+                <div className="bg-background rounded-2xl p-6 border border-border mt-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
@@ -7921,7 +7921,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       <div>
                         <h3 className="text-white font-semibold">{t('masadaGrupSiparisi')}</h3>
-                        <p className="text-xs text-gray-400">{t('masadakiMusterilerQrOkutarakAyniSipariseUrunEkleyebilir')}</p>
+                        <p className="text-xs text-muted-foreground">{t('masadakiMusterilerQrOkutarakAyniSipariseUrunEkleyebilir')}</p>
                       </div>
                     </div>
                     <div>
@@ -7952,8 +7952,8 @@ export default function BusinessDetailsPage() {
               )}
 
               {/* ── Plan Info Footer ── */}
-              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700 mt-6">
-                <p className="text-sm text-gray-400">
+              <div className="p-4 bg-card/50 rounded-xl border border-border mt-6">
+                <p className="text-sm text-muted-foreground">
                   {t('buOzelliklerIsletmenin')} <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> {t('planiUzerindenYonetilmektedirDegisiklikYapmakIcin')} <a href="/admin/plans" className="text-blue-400 hover:underline">{t('planYonetimi')}</a> {t('sayfasiniZiyaretEdin')}
                 </p>
               </div>
@@ -7969,15 +7969,15 @@ export default function BusinessDetailsPage() {
       {
         confirmModal.show && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-2xl max-w-md w-full p-6">
+            <div className="bg-card rounded-2xl max-w-md w-full p-6">
               <h3 className="text-xl font-bold text-white mb-2">
                 {confirmModal.title}
               </h3>
-              <p className="text-gray-300 mb-6">{confirmModal.message}</p>
+              <p className="text-foreground mb-6">{confirmModal.message}</p>
 
               {confirmModal.showRoleSelect && (
                 <div className="mb-4">
-                  <label className="text-gray-400 text-sm">{t('yeniRolSec')}</label>
+                  <label className="text-muted-foreground text-sm">{t('yeniRolSec')}</label>
                   <select
                     value={selectedNewRole}
                     onChange={(e) => setSelectedNewRole(e.target.value)}
@@ -8017,21 +8017,21 @@ export default function BusinessDetailsPage() {
       {
         showTemplateModal && (
           <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-gray-900 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+            <div className="bg-background rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-border shadow-2xl">
               {/* Header */}
-              <div className="p-5 border-b border-gray-700 flex-shrink-0">
+              <div className="p-5 border-b border-border flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                       {t('urun_sablonu')} — Ürün Seçimi
                     </h2>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-muted-foreground text-sm mt-1">
                       {templateProducts.length} ürün mevcut · {Object.values(selectedTemplateProducts).filter(Boolean).length} seçili
                     </p>
                   </div>
                   <button
                     onClick={() => setShowTemplateModal(false)}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition text-gray-400 hover:text-white"
+                    className="p-2 hover:bg-gray-700 rounded-lg transition text-muted-foreground hover:text-white"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -8059,13 +8059,13 @@ export default function BusinessDetailsPage() {
                       value={templateSearch}
                       onChange={(e) => setTemplateSearch(e.target.value)}
                       placeholder="{t('urun_ara')}"
-                      className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <select
                     value={templateFilter}
                     onChange={(e) => setTemplateFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
+                    className="px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="all"> {t('tum_kategoriler')}</option>
                     {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
@@ -8105,7 +8105,7 @@ export default function BusinessDetailsPage() {
                           className={`flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer
                           ${isSelected
                               ? 'bg-amber-900/20 border-amber-600/40 hover:bg-amber-900/30'
-                              : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800 opacity-60'
+                              : 'bg-card/50 border-border hover:bg-card opacity-60'
                             }`}
                           onClick={() => setSelectedTemplateProducts(prev => ({ ...prev, [product.id]: !prev[product.id] }))}
                         >
@@ -8136,7 +8136,7 @@ export default function BusinessDetailsPage() {
                           {/* Product Info */}
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-medium truncate">{prodName}</p>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-muted-foreground text-xs">
                               {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : ' Adet'}
                               {product.defaultPrice ? ` · €${product.defaultPrice.toFixed(2)}` : ''}
                             </p>
@@ -8149,8 +8149,8 @@ export default function BusinessDetailsPage() {
                               onChange={(e) => setTemplateCategoryMap(prev => ({ ...prev, [product.id]: e.target.value }))}
                               className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition
                               ${isSelected
-                                  ? 'bg-gray-800 border-amber-600/50 text-amber-300 focus:ring-2 focus:ring-amber-500'
-                                  : 'bg-gray-800/50 border-gray-600 text-gray-500'
+                                  ? 'bg-card border-amber-600/50 text-amber-300 focus:ring-2 focus:ring-amber-500'
+                                  : 'bg-card/50 border-gray-600 text-gray-500'
                                 }`}
                               disabled={!isSelected}
                             >
@@ -8172,8 +8172,8 @@ export default function BusinessDetailsPage() {
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-gray-700 flex items-center justify-between flex-shrink-0">
-                <div className="text-gray-400 text-sm">
+              <div className="p-4 border-t border-border flex items-center justify-between flex-shrink-0">
+                <div className="text-muted-foreground text-sm">
                   🤖 <span className="text-amber-400">AI</span> kategorileri otomatik önerdi — istediğinizi değiştirebilirsiniz
                 </div>
                 <div className="flex items-center gap-3">
@@ -8211,84 +8211,84 @@ export default function BusinessDetailsPage() {
       {
         showSupplierModal && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
-            <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+            <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-border flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">{editingSupplier ? ' Tedarikçi Düzenle' : ' Yeni Tedarikçi Ekle'}</h2>
-                <button onClick={() => setShowSupplierModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+                <button onClick={() => setShowSupplierModal(false)} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400 mb-1 block">Firma Adı *</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">Firma Adı *</label>
                     <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
                       placeholder={t('tedarikci_adi_placeholder')}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">{t('yetkili_kisi')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('yetkili_kisi')}</label>
                     <input value={supplierForm.contactPerson} onChange={e => setSupplierForm((p: any) => ({ ...p, contactPerson: e.target.value }))}
                       placeholder={t('isim_soyisim_placeholder')}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">{t('telefon')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('telefon')}</label>
                     <input value={supplierForm.phone} onChange={e => setSupplierForm((p: any) => ({ ...p, phone: e.target.value }))}
                       placeholder="+49 ..."
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">E-Posta</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">E-Posta</label>
                     <input value={supplierForm.email} onChange={e => setSupplierForm((p: any) => ({ ...p, email: e.target.value }))}
                       placeholder="info@firma.de"
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Vergi No (USt-IdNr)</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">Vergi No (USt-IdNr)</label>
                     <input value={supplierForm.taxId} onChange={e => setSupplierForm((p: any) => ({ ...p, taxId: e.target.value }))}
                       placeholder="DE123456789"
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400 mb-1 block">{t('adres')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('adres')}</label>
                     <input value={supplierForm.address} onChange={e => setSupplierForm((p: any) => ({ ...p, address: e.target.value }))}
                       placeholder={t('adres_placeholder')}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">{t('odeme_kosullari')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('odeme_kosullari')}</label>
                     <input value={supplierForm.paymentTerms} onChange={e => setSupplierForm((p: any) => ({ ...p, paymentTerms: e.target.value }))}
                       placeholder={t('odeme_kosullari_placeholder')}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Teslimat Süresi (gün)</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">Teslimat Süresi (gün)</label>
                     <input type="number" value={supplierForm.deliveryDays} onChange={e => setSupplierForm((p: any) => ({ ...p, deliveryDays: e.target.value }))}
                       placeholder="2"
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Min. Sipariş Tutarı (€)</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">Min. Sipariş Tutarı (€)</label>
                     <input type="number" value={supplierForm.minOrderValue} onChange={e => setSupplierForm((p: any) => ({ ...p, minOrderValue: e.target.value }))}
                       placeholder="100"
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">{t('durum_label')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('durum_label')}</label>
                     <select value={supplierForm.isActive ? 'active' : 'inactive'} onChange={e => setSupplierForm((p: any) => ({ ...p, isActive: e.target.value === 'active' }))}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                       <option value="active">{t('aktif')}</option>
                       <option value="inactive">{t('pasif')}</option>
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400 mb-1 block">{t('notlar')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('notlar')}</label>
                     <textarea value={supplierForm.notes} onChange={e => setSupplierForm((p: any) => ({ ...p, notes: e.target.value }))}
                       rows={2} placeholder={t('ozel_kosullar_placeholder')}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                   </div>
                 </div>
               </div>
-              <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+              <div className="p-6 border-t border-border flex justify-end gap-3">
                 <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
                 <button onClick={saveSupplier} disabled={savingSupplier || !supplierForm.name.trim()}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
@@ -8306,38 +8306,38 @@ export default function BusinessDetailsPage() {
       {
         showOrderModal && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
-            <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+            <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-border flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">{editingOrder ? ' Sipariş Düzenle' : ' Yeni Tedarik Siparişi'}</h2>
-                <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+                <button onClick={() => setShowOrderModal(false)} className="text-muted-foreground hover:text-white text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-5">
                 {/* Supplier Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Tedarikçi *</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">Tedarikçi *</label>
                     <select
                       value={orderForm.supplierId}
                       onChange={e => {
                         const s = suppliers.find((s: any) => s.id === e.target.value);
                         setOrderForm((p: any) => ({ ...p, supplierId: e.target.value, supplierName: s?.name || '' }));
                       }}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border">
                       {suppliers.map((s: any) => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">{t('beklenen_teslimat')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('beklenen_teslimat')}</label>
                     <input type="date" value={orderForm.expectedDeliveryDate} onChange={e => setOrderForm((p: any) => ({ ...p, expectedDeliveryDate: e.target.value }))}
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-1 block">{t('fatura_no')}</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('fatura_no')}</label>
                     <input value={orderForm.invoiceNumber} onChange={e => setOrderForm((p: any) => ({ ...p, invoiceNumber: e.target.value }))}
                       placeholder="RE-2026-001"
-                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                      className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                 </div>
 
@@ -8357,7 +8357,7 @@ export default function BusinessDetailsPage() {
                   </div>
                   <div className="space-y-3">
                     {orderForm.items.map((item: any, idx: number) => (
-                      <div key={idx} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                      <div key={idx} className="bg-background/50 rounded-lg p-4 border border-border">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-xs text-gray-500 font-semibold">Kalem #{idx + 1}</span>
                           {orderForm.items.length > 1 && (
@@ -8371,7 +8371,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="col-span-2">
-                            <label className="text-xs text-gray-400 mb-1 block">{t('urun_adi_label')} *</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t('urun_adi_label')} *</label>
                             <div className="relative">
                               <input
                                 value={item.productName}
@@ -8381,7 +8381,7 @@ export default function BusinessDetailsPage() {
                                   setOrderForm((p: any) => ({ ...p, items: newItems }));
                                 }}
                                 placeholder={t('urun_adi_sec_placeholder')}
-                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                                 list={`product-list-${idx}`}
                               />
                               <datalist id={`product-list-${idx}`}>
@@ -8394,7 +8394,7 @@ export default function BusinessDetailsPage() {
                             </div>
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">SKU / Artikelnr</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">SKU / Artikelnr</label>
                             <input
                               value={item.sku || ''}
                               onChange={e => {
@@ -8403,11 +8403,11 @@ export default function BusinessDetailsPage() {
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
                               placeholder="Art.Nr."
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">{t('birim_label')}</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t('birim_label')}</label>
                             <select
                               value={item.unit}
                               onChange={e => {
@@ -8415,7 +8415,7 @@ export default function BusinessDetailsPage() {
                                 newItems[idx] = { ...newItems[idx], unit: e.target.value };
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600">
+                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600">
                               <option value="kg">kg</option>
                               <option value="adet">Adet (Stück)</option>
                               <option value="paket">{t('paket')}</option>
@@ -8424,7 +8424,7 @@ export default function BusinessDetailsPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Sipariş Miktarı *</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">Sipariş Miktarı *</label>
                             <input
                               type="number"
                               min="0" step="0.1"
@@ -8434,11 +8434,11 @@ export default function BusinessDetailsPage() {
                                 newItems[idx] = { ...newItems[idx], orderedQuantity: e.target.value };
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">{t('birim_fiyat_ek')} *</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t('birim_fiyat_ek')} *</label>
                             <input
                               type="number"
                               min="0" step="0.01"
@@ -8449,11 +8449,11 @@ export default function BusinessDetailsPage() {
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
                               placeholder="€"
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">{t('satir_toplam')}</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t('satir_toplam')}</label>
                             <p className="text-white text-sm font-semibold py-2">
                               {formatCurrency(Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0), (business as any)?.currency || 'EUR')}
                             </p>
@@ -8464,7 +8464,7 @@ export default function BusinessDetailsPage() {
                   </div>
                   {/* Total */}
                   <div className="mt-4 text-right">
-                    <span className="text-gray-400 text-sm">Toplam: </span>
+                    <span className="text-muted-foreground text-sm">Toplam: </span>
                     <span className="text-white text-lg font-bold">
                       {formatCurrency(
                         orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0),
@@ -8476,13 +8476,13 @@ export default function BusinessDetailsPage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="text-xs text-gray-400 mb-1 block">{t('notlar')}</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('notlar')}</label>
                   <textarea value={orderForm.notes} onChange={e => setOrderForm((p: any) => ({ ...p, notes: e.target.value }))}
                     rows={2} placeholder={t('siparis_notlari_placeholder')}
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                    className="w-full bg-background/50 text-white text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none resize-none" />
                 </div>
               </div>
-              <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+              <div className="p-6 border-t border-border flex justify-end gap-3">
                 <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
                 <button onClick={saveSupplierOrder} disabled={savingOrder || !orderForm.supplierId}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
@@ -8500,28 +8500,28 @@ export default function BusinessDetailsPage() {
       {
         showGoodsReceiptModal && goodsReceiptOrder && (
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowGoodsReceiptModal(false)}>
-            <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-              <div className="p-6 border-b border-gray-700">
+            <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-border">
                 <h2 className="text-xl font-bold text-white">📥 Mal Kabul (Wareneingang)</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-muted-foreground text-sm mt-1">
                   Sipariş: <span className="text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
                 </p>
               </div>
               <div className="p-6 space-y-4">
                 {goodsReceiptOrder.items.map((item: any, idx: number) => (
-                  <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-700/50' : 'bg-gray-900/50 border-gray-700'}`}>
+                  <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-700/50' : 'bg-background/50 border-border'}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <span className="text-white font-semibold">{item.productName}</span>
                         {item.sku && <span className="text-gray-500 text-xs ml-2">(#{item.sku})</span>}
                       </div>
-                      <span className="text-gray-400 text-sm">
+                      <span className="text-muted-foreground text-sm">
                         Sipariş: <strong className="text-white">{item.orderedQuantity} {item.unit}</strong>
                       </span>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">{t('teslim_alinan_miktar')}</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('teslim_alinan_miktar')}</label>
                         <input
                           type="number" min="0" step="0.1"
                           value={item.receivedQuantity || ''}
@@ -8531,11 +8531,11 @@ export default function BusinessDetailsPage() {
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
                           placeholder="0"
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Parti / Charge No</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">Parti / Charge No</label>
                         <input
                           value={item.batchNumber || ''}
                           onChange={e => {
@@ -8544,11 +8544,11 @@ export default function BusinessDetailsPage() {
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
                           placeholder="LOT-001"
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">{t('uretim_tarihi')}</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('uretim_tarihi')}</label>
                         <input
                           type="date"
                           value={item.productionDate || ''}
@@ -8557,11 +8557,11 @@ export default function BusinessDetailsPage() {
                             newItems[idx] = { ...newItems[idx], productionDate: e.target.value };
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Son Kullanma (MHD)</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">Son Kullanma (MHD)</label>
                         <input
                           type="date"
                           value={item.expirationDate || ''}
@@ -8570,7 +8570,7 @@ export default function BusinessDetailsPage() {
                             newItems[idx] = { ...newItems[idx], expirationDate: e.target.value };
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
-                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div className="flex items-end">
@@ -8578,7 +8578,7 @@ export default function BusinessDetailsPage() {
                           ? 'bg-green-600/30 text-green-300'
                           : Number(item.receivedQuantity || 0) > 0
                             ? 'bg-yellow-600/30 text-yellow-300'
-                            : 'bg-gray-700 text-gray-400'
+                            : 'bg-gray-700 text-muted-foreground'
                           }`}>
                           {Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
                             ? ' Tam'
@@ -8591,8 +8591,8 @@ export default function BusinessDetailsPage() {
                   </div>
                 ))}
               </div>
-              <div className="p-6 border-t border-gray-700 flex justify-between items-center">
-                <div className="text-sm text-gray-400">
+              <div className="p-6 border-t border-border flex justify-between items-center">
+                <div className="text-sm text-muted-foreground">
                   {goodsReceiptOrder.items.filter((it: any) => Number(it.receivedQuantity || 0) >= Number(it.orderedQuantity)).length} / {goodsReceiptOrder.items.length} kalem tam teslim
                 </div>
                 <div className="flex gap-3">

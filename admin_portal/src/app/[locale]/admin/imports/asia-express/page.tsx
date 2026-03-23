@@ -194,19 +194,19 @@ export default function AsiaExpressImportPage() {
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
-                        <div className="text-sm text-gray-300">{t('toplam_urun')}</div>
+                        <div className="text-sm text-foreground">{t('toplam_urun')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-purple-400">{CATEGORIES.length}</div>
-                        <div className="text-sm text-gray-300">{t('kategori')}</div>
+                        <div className="text-sm text-foreground">{t('kategori')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-green-400">{scrapedProducts.length}</div>
-                        <div className="text-sm text-gray-300">Scraped</div>
+                        <div className="text-sm text-foreground">Scraped</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-amber-400">{stats.imported}</div>
-                        <div className="text-sm text-gray-300">İmported</div>
+                        <div className="text-sm text-foreground">İmported</div>
                     </div>
                 </div>
 
@@ -237,7 +237,7 @@ export default function AsiaExpressImportPage() {
                             </label>
                         ))}
                     </div>
-                    <div className="mt-4 text-center text-gray-300">
+                    <div className="mt-4 text-center text-foreground">
                         {t('secili')} <span className="text-amber-400 font-bold">{getTotalSelected()}</span> {t('urun')}
                     </div>
                 </div>
@@ -245,12 +245,12 @@ export default function AsiaExpressImportPage() {
                 {/* Instructions Modal */}
                 {scrapingInstructions && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-800 rounded-2xl p-6 max-w-3xl max-h-[80vh] overflow-y-auto">
+                        <div className="bg-card rounded-2xl p-6 max-w-3xl max-h-[80vh] overflow-y-auto">
                             <h3 className="text-2xl font-bold text-white mb-4">{t('manuel_scraping_talimatlari')}</h3>
-                            <div className="text-gray-300 space-y-4">
+                            <div className="text-foreground space-y-4">
                                 <p>{t('asia_express_food_sitesi_login_gerektird')}</p>
 
-                                <div className="bg-slate-900 p-4 rounded-lg">
+                                <div className="bg-background p-4 rounded-lg">
                                     <p className="text-amber-400 font-bold mb-2">{t('1_browser_devtools_u_acin_f12')}</p>
                                     <p className="text-amber-400 font-bold mb-2">{t('2_console_a_bu_kodu_yapistirin')}</p>
                                     <pre className="bg-black p-4 rounded text-green-400 text-xs overflow-x-auto">

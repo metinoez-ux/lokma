@@ -209,7 +209,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (adminLoading || loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         );
@@ -217,14 +217,14 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (!admin || admin.role !== 'super_admin') {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-white">{t('erisim_reddedildi_sadece_super_admin')}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Toast Notifications */}
             <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] pointer-events-none flex flex-col gap-2">
                 {toasts.map(toast => (
@@ -260,7 +260,7 @@ const { admin, loading: adminLoading } = useAdmin();
             `}</style>
 
             <div className="max-w-4xl mx-auto">
-                <Link href="/admin/kermes" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
+                <Link href="/admin/kermes" className="text-muted-foreground hover:text-white mb-4 inline-flex items-center gap-2">
                     {t('kermes_yonetimi')}
                 </Link>
 
@@ -269,7 +269,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             {t('menu_kategorileri')}
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {t('kermes_menu_kategorilerini_yonetin')} {categories.length} {t('kategori')}
                         </p>
                     </div>
@@ -287,20 +287,20 @@ const { admin, loading: adminLoading } = useAdmin();
                     {categories.map((category, index) => (
                         <div
                             key={category.id}
-                            className={`bg-gray-800 rounded-xl p-4 border ${category.isActive ? 'border-gray-600' : 'border-red-500/50 opacity-60'} flex items-center gap-4`}
+                            className={`bg-card rounded-xl p-4 border ${category.isActive ? 'border-gray-600' : 'border-red-500/50 opacity-60'} flex items-center gap-4`}
                         >
                             <div className="flex flex-col gap-1">
                                 <button
                                     onClick={() => moveCategory(index, 'up')}
                                     disabled={index === 0 || saving}
-                                    className="text-gray-400 hover:text-white disabled:opacity-30 text-sm"
+                                    className="text-muted-foreground hover:text-white disabled:opacity-30 text-sm"
                                 >
                                     ▲
                                 </button>
                                 <button
                                     onClick={() => moveCategory(index, 'down')}
                                     disabled={index === categories.length - 1 || saving}
-                                    className="text-gray-400 hover:text-white disabled:opacity-30 text-sm"
+                                    className="text-muted-foreground hover:text-white disabled:opacity-30 text-sm"
                                 >
                                     ▼
                                 </button>
@@ -316,7 +316,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <div className="flex-1">
                                 <h3 className="font-bold text-white">{category.name}</h3>
                                 {category.name_de && (
-                                    <p className="text-gray-400 text-sm">{category.name_de}</p>
+                                    <p className="text-muted-foreground text-sm">{category.name_de}</p>
                                 )}
                             </div>
 
@@ -353,7 +353,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 </div>
 
                 {categories.length === 0 && (
-                    <div className="text-center py-12 text-gray-400">
+                    <div className="text-center py-12 text-muted-foreground">
                         <p className="text-4xl mb-4">📂</p>
                         <p>{t('henuz_kategori_yok')}</p>
                     </div>
@@ -363,14 +363,14 @@ const { admin, loading: adminLoading } = useAdmin();
             {/* Add/Edit Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+                    <div className="bg-card rounded-xl p-6 max-w-md w-full">
                         <h2 className="text-xl font-bold text-white mb-4">
                             {editingCategory ? t('kategori_duzenle') : t('yeni_kategori')}
                         </h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('kategori_adi_tr')}</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">{t('kategori_adi_tr')}</label>
                                 <input
                                     type="text"
                                     value={formData.name}
@@ -381,7 +381,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('kategori_adi_de')}</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">{t('kategori_adi_de')}</label>
                                 <input
                                     type="text"
                                     value={formData.name_de}
@@ -391,7 +391,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">İkon</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">İkon</label>
                                 <div className="flex flex-wrap gap-2">
                                     {DEFAULT_ICONS.map(icon => (
                                         <button
@@ -406,7 +406,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Renk</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">Renk</label>
                                 <div className="flex flex-wrap gap-2">
                                     {DEFAULT_COLORS.map(color => (
                                         <button

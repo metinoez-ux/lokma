@@ -357,7 +357,7 @@ export default function SponsoredAdsPage() {
   /* -- Guards -- */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gray-500" />
       </div>
     );
@@ -365,20 +365,20 @@ export default function SponsoredAdsPage() {
 
   if (!admin) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-red-400">{t('accessDenied')}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-background text-white">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* -- Header -- */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{t('title')}</h1>
-            <p className="text-gray-400 text-sm mt-1">{t('subtitle')}</p>
+            <p className="text-muted-foreground text-sm mt-1">{t('subtitle')}</p>
           </div>
           <button
             onClick={openCreate}
@@ -399,8 +399,8 @@ export default function SponsoredAdsPage() {
             },
             { label: t('totalClicks'), value: ads.reduce((s, a) => s + a.clicks, 0).toLocaleString() },
           ].map((stat, i) => (
-            <div key={i} className="bg-gray-800 rounded-xl p-4">
-              <div className="text-xs text-gray-400">{stat.label}</div>
+            <div key={i} className="bg-card rounded-xl p-4">
+              <div className="text-xs text-muted-foreground">{stat.label}</div>
               <div className="text-xl font-bold mt-1">{stat.value}</div>
             </div>
           ))}
@@ -408,20 +408,20 @@ export default function SponsoredAdsPage() {
 
         {/* -- Campaigns List -- */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
             {t('campaigns')}
           </h2>
 
           {loadingAds ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse h-28 bg-gray-800 rounded-xl" />
+                <div key={i} className="animate-pulse h-28 bg-card rounded-xl" />
               ))}
             </div>
           ) : ads.length === 0 ? (
-            <div className="bg-gray-800 rounded-xl p-12 text-center">
+            <div className="bg-card rounded-xl p-12 text-center">
               <div className="text-4xl mb-3">📢</div>
-              <p className="text-gray-400">{t('noCampaigns')}</p>
+              <p className="text-muted-foreground">{t('noCampaigns')}</p>
               <button
                 onClick={openCreate}
                 className="mt-4 px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-sm transition"
@@ -434,7 +434,7 @@ export default function SponsoredAdsPage() {
               {ads.map((ad) => {
                 const badge = getStatusBadge(ad);
                 return (
-                  <div key={ad.id} className="bg-gray-800 rounded-xl p-4">
+                  <div key={ad.id} className="bg-card rounded-xl p-4">
                     <div className="flex items-start gap-4">
                       {/* Banner preview */}
                       {ad.bannerImageUrl && (
@@ -461,18 +461,18 @@ export default function SponsoredAdsPage() {
                             {badge.text}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-400">{ad.advertiserName}</div>
+                        <div className="text-xs text-muted-foreground">{ad.advertiserName}</div>
                         {/* Product + pricing row */}
                         {ad.selectedProductName && (
                           <div className="flex items-center gap-2 mt-0.5 text-xs">
-                            <span className="text-gray-300">{ad.selectedProductName}</span>
+                            <span className="text-foreground">{ad.selectedProductName}</span>
                             {ad.originalPrice && ad.discountPrice && ad.discountPrice < ad.originalPrice ? (
                               <>
                                 <span className="text-gray-500 line-through">{ad.originalPrice.toFixed(2)} EUR</span>
                                 <span className="text-green-400 font-semibold">{ad.discountPrice.toFixed(2)} EUR</span>
                               </>
                             ) : ad.originalPrice ? (
-                              <span className="text-gray-400">{ad.originalPrice.toFixed(2)} EUR</span>
+                              <span className="text-muted-foreground">{ad.originalPrice.toFixed(2)} EUR</span>
                             ) : null}
                           </div>
                         )}
@@ -482,19 +482,19 @@ export default function SponsoredAdsPage() {
 
                         {/* Metrics row */}
                         <div className="flex items-center gap-4 mt-2 text-xs">
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             {t('impressionsLabel')}: <span className="text-white font-medium">{ad.impressions.toLocaleString()}</span>
                           </span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             {t('clicksLabel')}: <span className="text-white font-medium">{ad.clicks.toLocaleString()}</span>
                           </span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             CTR: <span className="text-white font-medium">{ctr(ad)}</span>
                           </span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             {t('conversionsLabel')}: <span className="text-green-400 font-medium">{ad.conversions}</span>
                           </span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             {t('spent')}: <span className="text-yellow-400 font-medium">{ad.spentAmount.toFixed(2)}/{ad.totalBudget.toFixed(2)}</span>
                           </span>
                         </div>
@@ -536,14 +536,14 @@ export default function SponsoredAdsPage() {
         {/* -- Create/Edit Modal -- */}
         {showForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 overflow-y-auto py-8">
-            <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl space-y-4 my-auto">
+            <div className="bg-card rounded-2xl p-6 w-full max-w-2xl shadow-2xl space-y-4 my-auto">
               <h3 className="text-lg font-bold">
                 {editingId ? t('editCampaign') : t('createCampaign')}
               </h3>
 
               {/* Banner upload */}
               <div>
-                <label className="block text-xs text-gray-400 mb-1">{t('bannerImage')} *</label>
+                <label className="block text-xs text-muted-foreground mb-1">{t('bannerImage')} *</label>
                 <div
                   className="w-full h-32 rounded-xl overflow-hidden bg-gray-700 cursor-pointer border-2 border-dashed border-gray-600 hover:border-gray-400 transition flex items-center justify-center"
                   onClick={() => bannerInputRef.current?.click()}
@@ -551,7 +551,7 @@ export default function SponsoredAdsPage() {
                   {bannerPreview ? (
                     <img src={bannerPreview} alt="banner" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-gray-400 text-sm">{t('uploadBanner')}</span>
+                    <span className="text-muted-foreground text-sm">{t('uploadBanner')}</span>
                   )}
                 </div>
                 <input
@@ -572,7 +572,7 @@ export default function SponsoredAdsPage() {
               {/* Logo upload */}
               <div className="flex items-center gap-4">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('advertiserLogo')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('advertiserLogo')}</label>
                   <div
                     className="w-14 h-14 rounded-lg overflow-hidden bg-gray-700 cursor-pointer border border-gray-600 hover:border-gray-400 transition flex items-center justify-center"
                     onClick={() => logoInputRef.current?.click()}
@@ -598,7 +598,7 @@ export default function SponsoredAdsPage() {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-400 mb-1">{t('advertiserName')} *</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('advertiserName')} *</label>
                   <input
                     type="text"
                     value={form.advertiserName}
@@ -613,7 +613,7 @@ export default function SponsoredAdsPage() {
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs text-gray-400">{t('adTitle')} * (Reklam Satiri)</label>
+                    <label className="text-xs text-muted-foreground">{t('adTitle')} * (Reklam Satiri)</label>
                     <span className={`text-[10px] font-mono ${form.title.length > 35 ? 'text-yellow-400' : 'text-gray-500'}`}>
                       {form.title.length}/40
                     </span>
@@ -629,7 +629,7 @@ export default function SponsoredAdsPage() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs text-gray-400">{t('adSubtitle')} (Alt Yazi)</label>
+                    <label className="text-xs text-muted-foreground">{t('adSubtitle')} (Alt Yazi)</label>
                     <span className={`text-[10px] font-mono ${(form.subtitle?.length || 0) > 80 ? 'text-yellow-400' : 'text-gray-500'}`}>
                       {form.subtitle?.length || 0}/90
                     </span>
@@ -640,14 +640,14 @@ export default function SponsoredAdsPage() {
                     value={form.subtitle}
                     onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
                     placeholder="z.B. Premium Qualitaet aus der Tuerkei. In ueber 500 Maerkten erhaeltlich."
-                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-xs font-light text-gray-300"
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-xs font-light text-foreground"
                   />
                 </div>
               </div>
 
               {/* Product Selection + Pricing */}
-              <div className="space-y-3 border border-gray-700 rounded-xl p-4">
-                <label className="block text-xs text-gray-400 font-semibold">Urun Verknuepfung (optional)</label>
+              <div className="space-y-3 border border-border rounded-xl p-4">
+                <label className="block text-xs text-muted-foreground font-semibold">Urun Verknuepfung (optional)</label>
 
                 {/* Selected product preview */}
                 {form.selectedProductId && selectedProductName ? (
@@ -656,7 +656,7 @@ export default function SponsoredAdsPage() {
                       {form.selectedProductImage ? (
                         <img src={form.selectedProductImage} alt={selectedProductName} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">📦</div>
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-2xl">📦</div>
                       )}
                       {/* Discount badge overlay */}
                       {(() => {
@@ -683,7 +683,7 @@ export default function SponsoredAdsPage() {
                           if (origP && discP && discP < origP) {
                             return (
                               <>
-                                <span className="text-gray-400 line-through text-xs">{Number(origP).toFixed(2)} EUR</span>
+                                <span className="text-muted-foreground line-through text-xs">{Number(origP).toFixed(2)} EUR</span>
                                 <span className="text-green-400 font-bold text-sm">{Number(discP).toFixed(2)} EUR</span>
                               </>
                             );
@@ -711,7 +711,7 @@ export default function SponsoredAdsPage() {
                     <button
                       type="button"
                       onClick={() => { setShowProductPicker(!showProductPicker); setProductSearch(''); }}
-                      className="w-full px-3 py-2.5 bg-gray-700 text-gray-300 rounded-lg border border-dashed border-gray-500 hover:border-gray-400 text-sm text-left transition"
+                      className="w-full px-3 py-2.5 bg-gray-700 text-foreground rounded-lg border border-dashed border-gray-500 hover:border-gray-400 text-sm text-left transition"
                     >
                       Urun auswaehlen...
                     </button>
@@ -725,7 +725,7 @@ export default function SponsoredAdsPage() {
                             onChange={(e) => setProductSearch(e.target.value)}
                             placeholder="Urun suchen..."
                             autoFocus
-                            className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
+                            className="w-full px-3 py-2 bg-card text-white rounded-lg border border-gray-600 focus:border-gray-400 focus:outline-none text-sm"
                           />
                         </div>
                         <div className="overflow-y-auto flex-1">
@@ -757,7 +757,7 @@ export default function SponsoredAdsPage() {
                                   }}
                                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-600/50 text-left transition"
                                 >
-                                  <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-800">
+                                  <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-card">
                                     {img ? (
                                       <img src={img} alt={pName} className="w-full h-full object-cover" />
                                     ) : (
@@ -766,7 +766,7 @@ export default function SponsoredAdsPage() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="text-sm text-white truncate">{pName}</div>
-                                    {pPrice > 0 && <div className="text-[10px] text-gray-400">{pPrice.toFixed(2)} EUR</div>}
+                                    {pPrice > 0 && <div className="text-[10px] text-muted-foreground">{pPrice.toFixed(2)} EUR</div>}
                                   </div>
                                 </button>
                               );
@@ -776,7 +776,7 @@ export default function SponsoredAdsPage() {
                             const name = getLocalizedText(p.name).toLowerCase();
                             return name.includes(productSearch.toLowerCase());
                           }).length === 0 && (
-                            <div className="px-3 py-4 text-center text-gray-400 text-sm">Kein Produkt gefunden</div>
+                            <div className="px-3 py-4 text-center text-muted-foreground text-sm">Kein Produkt gefunden</div>
                           )}
                         </div>
                       </div>
@@ -820,7 +820,7 @@ export default function SponsoredAdsPage() {
                         return (
                           <div className="col-span-2 flex items-center gap-2 text-xs">
                             <span className="bg-red-600 text-white px-2 py-0.5 rounded-full font-bold">%{pct} Rabatt</span>
-                            <span className="text-gray-400">Originalpreis: <span className="line-through">{origP.toFixed(2)} EUR</span> &rarr; <span className="text-green-400 font-semibold">{discP.toFixed(2)} EUR</span></span>
+                            <span className="text-muted-foreground">Originalpreis: <span className="line-through">{origP.toFixed(2)} EUR</span> &rarr; <span className="text-green-400 font-semibold">{discP.toFixed(2)} EUR</span></span>
                           </div>
                         );
                       }
@@ -833,7 +833,7 @@ export default function SponsoredAdsPage() {
               {/* Keywords & Categories */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('productKeywords')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('productKeywords')}</label>
                   <input
                     type="text"
                     value={form.productKeywords}
@@ -843,7 +843,7 @@ export default function SponsoredAdsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('targetBusinessTypes')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('targetBusinessTypes')}</label>
                   <input
                     type="text"
                     value={form.targetBusinessTypes}
@@ -856,7 +856,7 @@ export default function SponsoredAdsPage() {
 
               {/* Hedefleme: Ulkeler + Opsiyonel Bolge */}
               <div className="space-y-3">
-                <label className="block text-xs text-gray-400 mb-2">Hedefleme</label>
+                <label className="block text-xs text-muted-foreground mb-2">Hedefleme</label>
 
                 {/* Ulke secimi */}
                 <div>
@@ -869,7 +869,7 @@ export default function SponsoredAdsPage() {
                         const allSelected = allCodes.every(c => form.targetCountries.includes(c));
                         setForm(f => ({ ...f, targetCountries: allSelected ? ['DE'] : allCodes }));
                       }}
-                      className={`px-3 py-1.5 text-xs rounded-lg border transition ${AVAILABLE_COUNTRIES.every(c => form.targetCountries.includes(c.code)) ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400'}`}
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition ${AVAILABLE_COUNTRIES.every(c => form.targetCountries.includes(c.code)) ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-700 border-gray-600 text-foreground hover:border-gray-400'}`}
                     >
                       Ganz Europa
                     </button>
@@ -886,7 +886,7 @@ export default function SponsoredAdsPage() {
                             return { ...f, targetCountries: next.length === 0 ? ['DE'] : next };
                           });
                         }}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg border transition ${form.targetCountries.includes(country.code) ? 'bg-blue-600/30 border-blue-500/50 text-blue-300' : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-400'}`}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg border transition ${form.targetCountries.includes(country.code) ? 'bg-blue-600/30 border-blue-500/50 text-blue-300' : 'bg-gray-700 border-gray-600 text-muted-foreground hover:border-gray-400'}`}
                       >
                         <span>{country.flag}</span>
                         <span>{country.code}</span>
@@ -896,7 +896,7 @@ export default function SponsoredAdsPage() {
                 </div>
 
                 {/* Opsiyonel bolge daraltma */}
-                <div className="border border-gray-700 rounded-lg p-3">
+                <div className="border border-border rounded-lg p-3">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -910,7 +910,7 @@ export default function SponsoredAdsPage() {
                       }}
                       className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-pink-500 focus:ring-pink-500"
                     />
-                    <span className="text-xs text-gray-300">Regionale Eingrenzung (optional)</span>
+                    <span className="text-xs text-foreground">Regionale Eingrenzung (optional)</span>
                   </label>
                   {form.targetRadius > 0 && (
                     <div className="grid grid-cols-2 gap-3 mt-3">
@@ -943,7 +943,7 @@ export default function SponsoredAdsPage() {
               {/* Pricing */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('pricingModel')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('pricingModel')}</label>
                   <select
                     value={form.pricingModel}
                     onChange={(e) => setForm((f) => ({ ...f, pricingModel: e.target.value }))}
@@ -956,7 +956,7 @@ export default function SponsoredAdsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('bidAmount')} (EUR)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('bidAmount')} (EUR)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -970,7 +970,7 @@ export default function SponsoredAdsPage() {
               {/* Budget */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('dailyBudget')} (EUR)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('dailyBudget')} (EUR)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -980,7 +980,7 @@ export default function SponsoredAdsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('totalBudget')} (EUR)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('totalBudget')} (EUR)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -990,7 +990,7 @@ export default function SponsoredAdsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('priority')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('priority')}</label>
                   <input
                     type="number"
                     value={form.priority}
@@ -1003,7 +1003,7 @@ export default function SponsoredAdsPage() {
               {/* Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('startDate')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('startDate')}</label>
                   <input
                     type="date"
                     value={form.startDate}
@@ -1012,7 +1012,7 @@ export default function SponsoredAdsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">{t('endDate')}</label>
+                  <label className="block text-xs text-muted-foreground mb-1">{t('endDate')}</label>
                   <input
                     type="date"
                     value={form.endDate}

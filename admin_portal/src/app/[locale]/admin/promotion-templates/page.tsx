@@ -14,10 +14,10 @@ function PromotionTemplatesPageContent() {
     }, [locale, router]);
 
     return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="text-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">Promosyon sayfasına yönlendiriliyor...</p>
+                <p className="text-muted-foreground text-sm">Promosyon sayfasına yönlendiriliyor...</p>
             </div>
         </div>
     );
@@ -26,7 +26,7 @@ function PromotionTemplatesPageContent() {
 export default function PromotionTemplatesPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-white flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500" />
             </div>
         }>

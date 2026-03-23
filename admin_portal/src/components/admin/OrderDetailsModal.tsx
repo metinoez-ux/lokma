@@ -128,14 +128,14 @@ export default function OrderDetailsModal({
     return (
         <>
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                <div className="bg-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-                    <div className="p-6 border-b border-gray-700 flex items-center justify-between sticky top-0 bg-gray-800 z-10">
+                <div className="bg-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+                    <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
                         <h2 className="text-xl font-bold text-white">
-                            📦 {t('modal.order')} #{order.orderNumber || order.id.slice(0, 6).toUpperCase()} <span className="text-gray-400 text-sm ml-2 font-normal">({t(ORDER_TYPES[order.type]?.labelKey || 'type_pickup')})</span>
+                            📦 {t('modal.order')} #{order.orderNumber || order.id.slice(0, 6).toUpperCase()} <span className="text-muted-foreground text-sm ml-2 font-normal">({t(ORDER_TYPES[order.type]?.labelKey || 'type_pickup')})</span>
                         </h2>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"
+                            className="text-muted-foreground hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"
                         >
                             ✕
                         </button>
@@ -144,7 +144,7 @@ export default function OrderDetailsModal({
                     <div className="p-6 space-y-4">
                         {/* Status */}
                         <div className="flex items-center justify-between">
-                            <span className="text-gray-400">{t('modal.status')}</span>
+                            <span className="text-muted-foreground">{t('modal.status')}</span>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium bg-${ORDER_STATUSES[order.status]?.color || 'gray'}-600/20 text-${ORDER_STATUSES[order.status]?.color || 'gray'}-400`}>
                                 {t(ORDER_STATUSES[order.status]?.labelKey || 'status_pending')}
                             </span>
@@ -152,7 +152,7 @@ export default function OrderDetailsModal({
 
                         {/* Business */}
                         <div className="flex items-center justify-between">
-                            <span className="text-gray-400">{t('modal.business')}</span>
+                            <span className="text-muted-foreground">{t('modal.business')}</span>
                             <Link href={`/admin/butchers/${order.businessId}`} className="text-blue-400 hover:underline">
                                 {businesses[order.businessId] || order.businessId}
                             </Link>
@@ -160,7 +160,7 @@ export default function OrderDetailsModal({
 
                         {/* Type */}
                         <div className="flex items-center justify-between">
-                            <span className="text-gray-400">{t('modal.type')}</span>
+                            <span className="text-muted-foreground">{t('modal.type')}</span>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium bg-${ORDER_TYPES[order.type]?.color || 'gray'}-600/20 text-${ORDER_TYPES[order.type]?.color || 'gray'}-400`}>
                                 {t(ORDER_TYPES[order.type]?.labelKey || 'type_pickup')}
                             </span>
@@ -173,7 +173,7 @@ export default function OrderDetailsModal({
                             const isFuture = d.getTime() > Date.now() + 30 * 60 * 1000;
                             return (
                                 <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
-                                    <span className={isFuture ? 'text-purple-300 font-medium' : 'text-gray-400'}>
+                                    <span className={isFuture ? 'text-purple-300 font-medium' : 'text-muted-foreground'}>
                                         {isFuture ? `🕐 ${t('scheduledPickup')}` : t('pickupTime')}
                                     </span>
                                     <span className={isFuture ? 'text-purple-200 font-bold' : 'text-white'}>
@@ -189,18 +189,18 @@ export default function OrderDetailsModal({
                                 <h4 className="text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ {t('modal.dineInDetail')}</h4>
                                 {order.tableNumber && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-400">{t('modal.table')}</span>
+                                        <span className="text-muted-foreground">{t('modal.table')}</span>
                                         <span className="text-white font-bold text-lg">#{order.tableNumber}</span>
                                     </div>
                                 )}
                                 {order.waiterName && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-400">{t('modal.waiter')}</span>
+                                        <span className="text-muted-foreground">{t('modal.waiter')}</span>
                                         <span className="text-white">{order.waiterName}</span>
                                     </div>
                                 )}
                                 <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">{t('modal.payment')}</span>
+                                    <span className="text-muted-foreground">{t('modal.payment')}</span>
                                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === 'paid'
                                         ? 'bg-green-600/20 text-green-400'
                                         : 'bg-red-600/20 text-red-400'
@@ -212,7 +212,7 @@ export default function OrderDetailsModal({
                                 </div>
                                 {order.servedByName && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-400">{t('modal.servedBy')}</span>
+                                        <span className="text-muted-foreground">{t('modal.servedBy')}</span>
                                         <span className="text-teal-400 font-medium">🍽️ {order.servedByName}</span>
                                     </div>
                                 )}
@@ -220,8 +220,8 @@ export default function OrderDetailsModal({
                         )}
 
                         {/* Customer */}
-                        <div className="flex items-center justify-between border-t border-gray-700 pt-4">
-                            <span className="text-gray-400">{t('modal.customer')}</span>
+                        <div className="flex items-center justify-between border-t border-border pt-4">
+                            <span className="text-muted-foreground">{t('modal.customer')}</span>
                             <div className="text-right">
                                 <p className="text-white font-medium">{order.customerName || t('modal.guest')}</p>
                                 {order.customerPhone && (
@@ -235,7 +235,7 @@ export default function OrderDetailsModal({
                         {/* Address */}
                         {order.address && (
                             <div className="flex items-center justify-between bg-gray-700/30 rounded-lg p-3">
-                                <span className="text-gray-400">{t('modal.address')}</span>
+                                <span className="text-muted-foreground">{t('modal.address')}</span>
                                 <div className="text-right text-white text-sm">
                                     <p>{order.address.street}</p>
                                     <p>{order.address.postalCode} {order.address.city}</p>
@@ -244,13 +244,13 @@ export default function OrderDetailsModal({
                         )}
 
                         {/* Items */}
-                        <div className="border-t border-gray-700 pt-4">
+                        <div className="border-t border-border pt-4">
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-white font-semibold">{t('modal.products')}</h4>
                                 {order.items?.length > 0 && (
                                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium shadow-sm border ${allChecked
                                         ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                                        : 'bg-gray-800 text-gray-400 border-gray-600'
+                                        : 'bg-card text-muted-foreground border-gray-600'
                                         }`}>
                                         ✓ {checkedCount}/{order.items.length}
                                     </span>
@@ -261,7 +261,7 @@ export default function OrderDetailsModal({
                             {order.isGroupOrder && order.items?.length > 0 && (
                                 <div className="mb-4">
                                     <h5 className="text-amber-400 font-medium text-sm mb-2">👨‍🍳 {t('modal.kitchenSummary')}</h5>
-                                    <div className="bg-gray-800/80 border border-gray-600 rounded-lg p-3 space-y-1 text-sm text-gray-200">
+                                    <div className="bg-card/80 border border-gray-600 rounded-lg p-3 space-y-1 text-sm text-gray-200">
                                         {Object.values(
                                             order.items.reduce((acc: any, item: any) => {
                                                 const opts = (item.selectedOptions || []).map((o: any) => o.optionName || o.name).join(', ');
@@ -278,7 +278,7 @@ export default function OrderDetailsModal({
                                                 <span>
                                                     {aggr.name}
                                                     {aggr.opts && aggr.opts.length > 0 && (
-                                                        <span className="text-gray-400 ml-1 text-xs">({aggr.opts.map((o: any) => o.optionName || o.name).join(', ')})</span>
+                                                        <span className="text-muted-foreground ml-1 text-xs">({aggr.opts.map((o: any) => o.optionName || o.name).join(', ')})</span>
                                                     )}
                                                 </span>
                                             </div>
@@ -304,7 +304,7 @@ export default function OrderDetailsModal({
                                                         onClick={() => onToggleItemChecked(order.id, originalIdx)}
                                                         className={`w-5 h-5 rounded border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all ${isChecked
                                                             ? 'bg-green-500 border-green-500 text-white'
-                                                            : 'border-gray-500 hover:border-green-400 bg-gray-800'
+                                                            : 'border-gray-500 hover:border-green-400 bg-card'
                                                             }`}
                                                     >
                                                         {isChecked && <span className="text-xs font-bold font-sans">✓</span>}
@@ -360,7 +360,7 @@ export default function OrderDetailsModal({
                                         });
 
                                         return Object.entries(groupedByParticipant).map(([pName, items]) => (
-                                            <div key={pName} className="bg-gray-800 border border-gray-600 rounded-xl p-3 shadow-sm mb-3">
+                                            <div key={pName} className="bg-card border border-gray-600 rounded-xl p-3 shadow-sm mb-3">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <span className="text-purple-400 text-sm">👤</span>
                                                     <span className="text-white text-sm font-semibold border-b border-gray-600 pb-0.5 w-full">{pName}</span>
@@ -407,18 +407,18 @@ export default function OrderDetailsModal({
                         </div>
 
                         {/* Totals */}
-                        <div className="border-t border-gray-700 pt-5 space-y-2.5 bg-gray-900/30 -mx-6 px-6 pb-2">
+                        <div className="border-t border-border pt-5 space-y-2.5 bg-background/30 -mx-6 px-6 pb-2">
                             <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">{t('modal.subtotal')}</span>
+                                <span className="text-muted-foreground">{t('modal.subtotal')}</span>
                                 <span className="text-white font-medium">{formatCurrency(order.subtotal || 0, order.currency)}</span>
                             </div>
                             {(order.deliveryFee ?? 0) > 0 && (
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-gray-400">{t('modal.deliveryFee')}</span>
+                                    <span className="text-muted-foreground">{t('modal.deliveryFee')}</span>
                                     <span className="text-white font-medium">{formatCurrency(order.deliveryFee || 0, order.currency)}</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-700/50 mt-1">
+                            <div className="flex justify-between text-xl font-bold pt-2 border-t border-border/50 mt-1">
                                 <span className="text-white">{t('modal.total')}</span>
                                 <span className="text-emerald-400 drop-shadow-sm">{formatCurrency(order.total || 0, order.currency)}</span>
                             </div>
@@ -426,15 +426,15 @@ export default function OrderDetailsModal({
 
                         {/* Notes */}
                         {order.notes && (
-                            <div className="border-t border-gray-700 pt-4 pb-1">
+                            <div className="border-t border-border pt-4 pb-1">
                                 <h4 className="text-amber-400 font-semibold text-sm mb-2 flex items-center gap-1">📝 {t('modal.notes')}</h4>
                                 <p className="text-yellow-50 bg-yellow-900/30 border border-yellow-500/40 rounded-xl p-3.5 shadow-sm leading-relaxed whitespace-pre-wrap">{order.notes}</p>
                             </div>
                         )}
 
                         {/* Status Actions */}
-                        <div className="border-t border-gray-700 pt-4">
-                            <h4 className="text-gray-300 text-sm font-medium mb-3">{t('modal.updateStatus')}</h4>
+                        <div className="border-t border-border pt-4">
+                            <h4 className="text-foreground text-sm font-medium mb-3">{t('modal.updateStatus')}</h4>
                             <div className="grid grid-cols-2 gap-2">
                                 {mainStatuses.map(([key, value]) => (
                                     <button
@@ -456,12 +456,12 @@ export default function OrderDetailsModal({
                             
                             {/* Edge Case Statuses (Collapsible) */}
                             {edgeCaseStatuses.length > 0 && (
-                                <details className="mt-4 group bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all">
-                                    <summary className="px-4 py-2 text-sm text-gray-400 font-medium cursor-pointer flex items-center justify-between hover:bg-gray-700/50 transition-colors">
+                                <details className="mt-4 group bg-card/50 border border-border rounded-lg overflow-hidden transition-all">
+                                    <summary className="px-4 py-2 text-sm text-muted-foreground font-medium cursor-pointer flex items-center justify-between hover:bg-gray-700/50 transition-colors">
                                         {t('modal.otherStatuses') || "Diğer Durumlar (Edge Cases)"}
                                         <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
                                     </summary>
-                                    <div className="p-3 grid grid-cols-2 gap-2 border-t border-gray-700 bg-gray-900/30">
+                                    <div className="p-3 grid grid-cols-2 gap-2 border-t border-border bg-background/30">
                                         {edgeCaseStatuses.map(([key, value]) => (
                                             <button
                                                 key={key}
@@ -469,7 +469,7 @@ export default function OrderDetailsModal({
                                                 disabled={order.status === key}
                                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${order.status === key
                                                     ? 'bg-gray-700 text-gray-600 cursor-not-allowed border border-gray-600/50'
-                                                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600 hover:text-white border border-gray-600'
+                                                    : 'bg-gray-700/50 text-foreground hover:bg-gray-600 hover:text-white border border-gray-600'
                                                     }`}
                                             >
                                                 {t(value.labelKey)}
@@ -481,13 +481,13 @@ export default function OrderDetailsModal({
                         </div>
 
                         {/* Print Action */}
-                        <div className="border-t border-gray-700 pt-5 pb-2">
+                        <div className="border-t border-border pt-5 pb-2">
                             <button
                                 onClick={() => printerSettings?.enabled && printerSettings?.printerIp ? onPrint?.(order) : onShowPrinterPanel?.()}
                                 disabled={printingOrderId === order.id}
                                 className={`w-full px-4 py-3.5 rounded-xl transition flex items-center justify-center gap-2 font-medium shadow-sm active:scale-[0.98] ${
                                     !printerSettings?.enabled || !printerSettings?.printerIp
-                                        ? 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white'
+                                        ? 'bg-gray-700 border border-gray-600 text-foreground hover:bg-gray-600 hover:text-white'
                                         : 'bg-indigo-600/20 border border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/30 hover:text-indigo-200'
                                 }`}
                             >
@@ -503,8 +503,8 @@ export default function OrderDetailsModal({
             {/* Cancellation Reason Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-700">
-                        <div className="p-5 border-b border-gray-700 flex items-center justify-between bg-gray-800/50">
+                    <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl border border-border">
+                        <div className="p-5 border-b border-border flex items-center justify-between bg-card/50">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 ❌ {t('cancelModal.title')}
                             </h2>
@@ -513,14 +513,14 @@ export default function OrderDetailsModal({
                                     setShowCancelModal(false);
                                     setCancelReason('');
                                 }}
-                                className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-700"
+                                className="text-muted-foreground hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-700"
                             >
                                 ✕
                             </button>
                         </div>
 
                         <div className="p-6 space-y-4">
-                            <p className="text-gray-300 text-sm leading-relaxed">
+                            <p className="text-foreground text-sm leading-relaxed">
                                 {t('cancelModal.subtitle') || t('cancelModal.description')}
                             </p>
 
@@ -539,7 +539,7 @@ export default function OrderDetailsModal({
 
                             <div className="flex items-center gap-2">
                                 <span className="h-px bg-gray-700 flex-1"></span>
-                                <span className="text-gray-400 text-xs font-medium">{t('cancelModal.customReason')}</span>
+                                <span className="text-muted-foreground text-xs font-medium">{t('cancelModal.customReason')}</span>
                                 <span className="h-px bg-gray-700 flex-1"></span>
                             </div>
 
@@ -547,7 +547,7 @@ export default function OrderDetailsModal({
                                 value={cancelReason}
                                 onChange={(e) => setCancelReason(e.target.value)}
                                 placeholder={t('cancelModal.placeholder') || t('cancelModal.reasonPlaceholder')}
-                                className="w-full bg-gray-900 border border-gray-600 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none h-28"
+                                className="w-full bg-background border border-gray-600 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none h-28"
                             />
 
                             <div className="flex gap-3">
@@ -582,8 +582,8 @@ export default function OrderDetailsModal({
             {/* Unavailable Items Modal */}
             {showUnavailableModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
-                    <div className="bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-700">
-                        <div className="p-5 border-b border-gray-700 flex items-center justify-between bg-gray-800/50">
+                    <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl border border-border">
+                        <div className="p-5 border-b border-border flex items-center justify-between bg-card/50">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 ⚠️ {t('missingModal.title')}
                             </h2>
@@ -592,18 +592,18 @@ export default function OrderDetailsModal({
                                     setShowUnavailableModal(false);
                                     setUnavailableItems([]);
                                 }}
-                                className="text-gray-400 hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-700"
+                                className="text-muted-foreground hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-700"
                             >
                                 ✕
                             </button>
                         </div>
 
                         <div className="p-6 space-y-5">
-                            <p className="text-gray-300 text-sm leading-relaxed">
+                            <p className="text-foreground text-sm leading-relaxed">
                                 {t('missingModal.description')}
                             </p>
 
-                            <div className="bg-gray-900/80 border border-gray-700 border-l-4 border-l-yellow-500 rounded-xl p-4 max-h-48 overflow-y-auto shadow-inner">
+                            <div className="bg-background/80 border border-border border-l-4 border-l-yellow-500 rounded-xl p-4 max-h-48 overflow-y-auto shadow-inner">
                                 <ul className="space-y-1.5 list-disc list-inside text-gray-200 text-sm">
                                     {unavailableItems.map((item, idx) => (
                                         <li key={idx} className="flex justify-between items-center group">

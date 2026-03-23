@@ -114,13 +114,13 @@ const { admin } = useAdmin();
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">{t('cancel_back')}</Link>
+                        <Link href="/admin/orders" className="text-muted-foreground text-sm hover:text-white mb-2 inline-block">{t('cancel_back')}</Link>
                         <h1 className="text-3xl font-bold">{t('yeni_siparis_olustur')}</h1>
-                        <p className="text-gray-400">{t('adim')} {step}/3: {step === 1 ? t('tedarikci_secimi') : step === 2 ? t('urunleri_gir') : t('onizleme_gonder')}</p>
+                        <p className="text-muted-foreground">{t('adim')} {step}/3: {step === 1 ? t('tedarikci_secimi') : step === 2 ? t('urunleri_gir') : t('onizleme_gonder')}</p>
                     </div>
                 </div>
 
@@ -128,8 +128,8 @@ const { admin } = useAdmin();
                 {step === 1 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {suppliers.length === 0 && (
-                            <div className="col-span-full text-center py-12 bg-gray-800 rounded-xl">
-                                <p className="text-gray-400 mb-4">{t('kayitli_tedarikciniz_yok')}</p>
+                            <div className="col-span-full text-center py-12 bg-card rounded-xl">
+                                <p className="text-muted-foreground mb-4">{t('kayitli_tedarikciniz_yok')}</p>
                                 <Link href="/admin/orders/suppliers" className="text-green-400 underline font-bold">{t('tedarikci_ekle')}</Link>
                             </div>
                         )}
@@ -137,7 +137,7 @@ const { admin } = useAdmin();
                             <button
                                 key={s.id}
                                 onClick={() => { setSelectedSupplier(s); setStep(2); }}
-                                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-green-500 transition p-6 rounded-xl text-left group"
+                                className="bg-card hover:bg-gray-700 border border-border hover:border-green-500 transition p-6 rounded-xl text-left group"
                             >
                                 <div className="text-2xl mb-2">
                                     {s.category === 'meat' ? '🥩' : s.category === 'vegetable' ? '🥦' : '📦'}
@@ -153,16 +153,16 @@ const { admin } = useAdmin();
                 {step === 2 && (
                     <div className="space-y-8">
                         {/* Smart Paste Area */}
-                        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                        <div className="bg-card p-6 rounded-xl border border-border">
                             <h3 className="font-bold mb-2 flex items-center gap-2">
                                 <span>🤖</span> {t('hizli_ekle_smart_paste')}
                             </h3>
-                            <p className="text-xs text-gray-400 mb-2">{t('listenizi_alt_alta_yapistirin_orn_50_kg_')}</p>
+                            <p className="text-xs text-muted-foreground mb-2">{t('listenizi_alt_alta_yapistirin_orn_50_kg_')}</p>
                             <div className="flex gap-2">
                                 <textarea
                                     value={rawText}
                                     onChange={e => setRawText(e.target.value)}
-                                    className="flex-1 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white h-24"
+                                    className="flex-1 bg-background border border-gray-600 rounded-lg p-3 text-white h-24"
                                     placeholder={`10 Karton Ayran\n50 kg Rinderhack\n20 Stk Brot`}
                                 />
                                 <button
@@ -175,14 +175,14 @@ const { admin } = useAdmin();
                         </div>
 
                         {/* Items Table */}
-                        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                        <div className="bg-card p-6 rounded-xl border border-border">
                             <h3 className="font-bold mb-4">{t('siparis_listesi')}{items.length})</h3>
                             {items.length === 0 ? (
                                 <div className="text-center text-gray-500 py-4">{t('listeniz_bos')}</div>
                             ) : (
                                 <div className="space-y-2">
                                     {items.map((item, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 bg-gray-900 p-3 rounded-lg border border-gray-700">
+                                        <div key={idx} className="flex items-center gap-2 bg-background p-3 rounded-lg border border-border">
                                             <input
                                                 type="number"
                                                 value={item.quantity}
@@ -201,7 +201,7 @@ const { admin } = useAdmin();
                                                     newItems[idx].unit = e.target.value;
                                                     setItems(newItems);
                                                 }}
-                                                className="w-16 bg-transparent border-b border-gray-600 focus:border-green-500 outline-none text-center text-sm text-gray-400"
+                                                className="w-16 bg-transparent border-b border-gray-600 focus:border-green-500 outline-none text-center text-sm text-muted-foreground"
                                             />
                                             <input
                                                 type="text"
@@ -232,7 +232,7 @@ const { admin } = useAdmin();
                         </div>
 
                         <div className="flex justify-between">
-                            <button onClick={() => setStep(1)} className="text-gray-400 hover:text-white">{t('back')}</button>
+                            <button onClick={() => setStep(1)} className="text-muted-foreground hover:text-white">{t('back')}</button>
                             <button
                                 onClick={() => setStep(3)}
                                 disabled={items.length === 0}
@@ -308,7 +308,7 @@ const { admin } = useAdmin();
                                 />
                             </div>
 
-                            <div className="text-center text-xs text-gray-400 mt-12 border-t pt-4">
+                            <div className="text-center text-xs text-muted-foreground mt-12 border-t pt-4">
                                 {t('mira_retail_os_tarafindan_olusturulmustu')}
                             </div>
                         </div>
@@ -335,7 +335,7 @@ const { admin } = useAdmin();
                             </button>
                         </div>
 
-                        <button onClick={() => setStep(2)} className="w-full text-center text-gray-500 hover:text-gray-300 mt-4">{t('duzenlemeye_don')}</button>
+                        <button onClick={() => setStep(2)} className="w-full text-center text-gray-500 hover:text-foreground mt-4">{t('duzenlemeye_don')}</button>
                     </div>
                 )}
             </div>

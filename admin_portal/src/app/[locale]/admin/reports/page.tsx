@@ -165,14 +165,14 @@ export default function ReportsPage() {
 
     if (adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6">
+        <div className="min-h-screen bg-background p-6">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
@@ -188,7 +188,7 @@ export default function ReportsPage() {
                         <h1 className="text-xl font-bold text-white flex items-center gap-2">
                             🚩 {t('title')}
                         </h1>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                             {t('subtitle')}
                         </p>
                     </div>
@@ -208,8 +208,8 @@ export default function ReportsPage() {
                             <p className="text-[10px] text-green-300">{t('statusResolved')}</p>
                         </div>
                         <div className="bg-gray-600/20 border border-gray-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-gray-400">{stats.total}</p>
-                            <p className="text-[10px] text-gray-300">{t('total')}</p>
+                            <p className="text-xl font-bold text-muted-foreground">{stats.total}</p>
+                            <p className="text-[10px] text-foreground">{t('total')}</p>
                         </div>
                     </div>
                 </div>
@@ -234,9 +234,9 @@ export default function ReportsPage() {
                         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
                     </div>
                 ) : filteredReports.length === 0 ? (
-                    <div className="text-center py-20 bg-gray-800 rounded-xl">
+                    <div className="text-center py-20 bg-card rounded-xl">
                         <p className="text-4xl mb-3">📭</p>
-                        <p className="text-gray-400">{t('noReports')}</p>
+                        <p className="text-muted-foreground">{t('noReports')}</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -249,7 +249,7 @@ export default function ReportsPage() {
                                         setSelectedReport(report);
                                         setAdminNotes(report.adminNotes || '');
                                     }}
-                                    className="bg-gray-800 rounded-xl p-4 cursor-pointer hover:bg-gray-750 transition-colors border border-gray-700 hover:border-orange-500/30"
+                                    className="bg-card rounded-xl p-4 cursor-pointer hover:bg-gray-750 transition-colors border border-border hover:border-orange-500/30"
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1 min-w-0">
@@ -257,7 +257,7 @@ export default function ReportsPage() {
                                                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${report.status === 'new' ? 'bg-yellow-600/30 text-yellow-300' :
                                                         report.status === 'in_review' ? 'bg-blue-600/30 text-blue-300' :
                                                             report.status === 'resolved' ? 'bg-green-600/30 text-green-300' :
-                                                                'bg-gray-600/30 text-gray-300'
+                                                                'bg-gray-600/30 text-foreground'
                                                     }`}>
                                                     {statusInfo.icon} {t(statusInfo.labelKey)}
                                                 </span>
@@ -270,7 +270,7 @@ export default function ReportsPage() {
                                                     {(() => { const tl = topicLabelKeys[report.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : report.topic; })()}
                                                 </span>
                                                 <span className="text-gray-600">•</span>
-                                                <span className="text-sm text-gray-400 truncate">
+                                                <span className="text-sm text-muted-foreground truncate">
                                                     {report.reason}
                                                 </span>
                                             </div>
@@ -293,14 +293,14 @@ export default function ReportsPage() {
             {/* Detail Modal */}
             {selectedReport && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setSelectedReport(null)}>
-                    <div className="bg-gray-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    <div className="bg-card rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <div className="p-6">
                             {/* Modal Header */}
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                     🚩 {t('reportDetails')}
                                 </h2>
-                                <button onClick={() => setSelectedReport(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
+                                <button onClick={() => setSelectedReport(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
                             </div>
 
                             {/* Status */}
@@ -308,7 +308,7 @@ export default function ReportsPage() {
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedReport.status === 'new' ? 'bg-yellow-600/30 text-yellow-300' :
                                         selectedReport.status === 'in_review' ? 'bg-blue-600/30 text-blue-300' :
                                             selectedReport.status === 'resolved' ? 'bg-green-600/30 text-green-300' :
-                                                'bg-gray-600/30 text-gray-300'
+                                                'bg-gray-600/30 text-foreground'
                                     }`}>
                                     {(reportStatusKeys[selectedReport.status] || reportStatusKeys.new).icon}{' '}
                                     {t((reportStatusKeys[selectedReport.status] || reportStatusKeys.new).labelKey)}
@@ -319,36 +319,36 @@ export default function ReportsPage() {
                             {/* Info */}
                             <div className="space-y-3 mb-6">
                                 <div className="bg-gray-700/50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-400 mb-1">{t('topic')}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">{t('topic')}</p>
                                     <p className="text-sm text-white">{(() => { const tl = topicLabelKeys[selectedReport.topic]; return tl ? `${tl.icon} ${t(tl.labelKey)}` : selectedReport.topic; })()}</p>
                                 </div>
                                 <div className="bg-gray-700/50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-400 mb-1">{t('reason')}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">{t('reason')}</p>
                                     <p className="text-sm text-white">{selectedReport.reason}</p>
                                 </div>
                                 <div className="bg-gray-700/50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-400 mb-1">{t('description')}</p>
+                                    <p className="text-xs text-muted-foreground mb-1">{t('description')}</p>
                                     <p className="text-sm text-white whitespace-pre-wrap">{selectedReport.description}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-400 mb-1">🏪 {t('business')}</p>
+                                        <p className="text-xs text-muted-foreground mb-1">🏪 {t('business')}</p>
                                         <p className="text-sm text-white">{selectedReport.businessName}</p>
                                     </div>
                                     {selectedReport.productName && (
                                         <div className="bg-gray-700/50 rounded-lg p-3">
-                                            <p className="text-xs text-gray-400 mb-1">📦 {t('product')}</p>
+                                            <p className="text-xs text-muted-foreground mb-1">📦 {t('product')}</p>
                                             <p className="text-sm text-white">{selectedReport.productName}</p>
                                         </div>
                                     )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-400 mb-1">👤 {t('reporter')}</p>
+                                        <p className="text-xs text-muted-foreground mb-1">👤 {t('reporter')}</p>
                                         <p className="text-sm text-white">{selectedReport.reporterName}</p>
                                     </div>
                                     <div className="bg-gray-700/50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-400 mb-1">📧 {t('emailLabel')}</p>
+                                        <p className="text-xs text-muted-foreground mb-1">📧 {t('emailLabel')}</p>
                                         <p className="text-sm text-orange-400">{selectedReport.reporterEmail}</p>
                                     </div>
                                 </div>
@@ -356,7 +356,7 @@ export default function ReportsPage() {
 
                             {/* Admin Notes */}
                             <div className="mb-4">
-                                <label className="text-xs text-gray-400 block mb-1">{t('adminNotes')}</label>
+                                <label className="text-xs text-muted-foreground block mb-1">{t('adminNotes')}</label>
                                 <textarea
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
@@ -396,7 +396,7 @@ export default function ReportsPage() {
 
                             {/* Delete (Super Admin) */}
                             {admin?.adminType === 'super' && (
-                                <div className="mt-4 pt-3 border-t border-gray-700">
+                                <div className="mt-4 pt-3 border-t border-border">
                                     <button
                                         onClick={() => handleDeleteReport(selectedReport.id)}
                                         className="w-full px-4 py-2 bg-red-900/30 hover:bg-red-800/50 text-red-400 text-sm rounded-xl transition-colors"

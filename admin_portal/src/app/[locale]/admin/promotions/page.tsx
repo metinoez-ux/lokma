@@ -706,11 +706,11 @@ function PromotionsPageContent() {
     // Super admin daima erişebilir; normal admin businessId gerektirir
     if (!adminLoading && !isSuperAdmin && !businessId) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
                     <h2 className="text-xl font-bold text-white mt-4">{t('noAccess')}</h2>
-                    <p className="text-gray-400 mt-2">{t('noAccessDesc')}</p>
+                    <p className="text-muted-foreground mt-2">{t('noAccessDesc')}</p>
                 </div>
             </div>
         );
@@ -718,14 +718,14 @@ function PromotionsPageContent() {
 
     if (loading || adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Header */}
             <header className="bg-gradient-to-r from-blue-800 to-blue-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -787,7 +787,7 @@ function PromotionsPageContent() {
             </header>
 
             {/* ─── Ana Sekme Navigasyonu ─── */}
-            <div className="bg-gray-900 border-b border-gray-700 sticky top-0 z-10">
+            <div className="bg-background border-b border-border sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex gap-0 overflow-x-auto">
                         {([
@@ -801,7 +801,7 @@ function PromotionsPageContent() {
                                 onClick={() => setMainTab(tab.key as any)}
                                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${mainTab === tab.key
                                     ? 'border-blue-500 text-blue-400'
-                                    : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                                    : 'border-transparent text-muted-foreground hover:text-gray-200 hover:border-gray-600'
                                     }`}
                             >
                                 <span>{tab.label}</span>
@@ -815,7 +815,7 @@ function PromotionsPageContent() {
 
                 {/* ─── 🥤 Bedava İçecek Tab ─── */}
                 {mainTab === 'bedava_icecek' && isRestaurantSegment(businessType) && (
-                    <div className="mb-6 bg-gray-800 rounded-xl overflow-hidden border border-emerald-800/40">
+                    <div className="mb-6 bg-card rounded-xl overflow-hidden border border-emerald-800/40">
                         {/* Kart başlığı */}
                         <div className="bg-emerald-900/30 px-5 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -863,12 +863,12 @@ function PromotionsPageContent() {
 
                             {/* Minimum sipariş tutarı */}
                             <div>
-                                <label className="text-gray-300 text-sm font-medium block mb-2">
+                                <label className="text-foreground text-sm font-medium block mb-2">
                                     {t('minimumOrderAmount')}
                                     <span className="ml-2 text-gray-500 font-normal text-xs">{t('everyOrderActive')}</span>
                                 </label>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-gray-400 font-bold">€</span>
+                                    <span className="text-muted-foreground font-bold">€</span>
                                     <input
                                         type="number"
                                         min="0"
@@ -891,7 +891,7 @@ function PromotionsPageContent() {
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
-                                        <label className="text-gray-300 text-sm font-medium">
+                                        <label className="text-foreground text-sm font-medium">
                                             {t('freeProducts')}
                                         </label>
                                         <p className="text-gray-500 text-xs mt-0.5">
@@ -900,7 +900,7 @@ function PromotionsPageContent() {
                                     </div>
                                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${freeDrinkProducts.length >= 5
                                         ? 'bg-emerald-900/50 text-emerald-300'
-                                        : 'bg-gray-700 text-gray-400'
+                                        : 'bg-gray-700 text-muted-foreground'
                                         }`}>
                                         {freeDrinkProducts.length} / 5
                                     </span>
@@ -912,7 +912,7 @@ function PromotionsPageContent() {
                                         {t('productsLoading')}
                                     </div>
                                 ) : businessProducts.length === 0 ? (
-                                    <div className="text-center py-6 text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">
+                                    <div className="text-center py-6 text-gray-500 text-sm border border-dashed border-border rounded-xl">
                                         <span className="text-2xl block mb-2">🔍</span>
                                         Bu işletmenin menüsünde henüz ürün yok.
                                     </div>
@@ -936,8 +936,8 @@ function PromotionsPageContent() {
                                                     className={`flex items-center gap-3 p-3 rounded-xl border text-left transition ${isSelected
                                                         ? 'bg-emerald-950/40 border-emerald-600 text-white'
                                                         : atMax
-                                                            ? 'bg-gray-800/40 border-gray-700 text-gray-600 cursor-not-allowed'
-                                                            : 'bg-gray-700/60 border-gray-600 text-gray-300 hover:border-emerald-600/50 cursor-pointer'
+                                                            ? 'bg-card/40 border-border text-gray-600 cursor-not-allowed'
+                                                            : 'bg-gray-700/60 border-gray-600 text-foreground hover:border-emerald-600/50 cursor-pointer'
                                                         }`}
                                                 >
                                                     {p.imageUrl ? (
@@ -989,7 +989,7 @@ function PromotionsPageContent() {
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === tab.key
                                     ? 'bg-orange-600 text-white'
-                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                                    : 'bg-card text-muted-foreground hover:bg-gray-700'}`}
                             >
                                 {tab.label} ({tab.count})
                             </button>
@@ -999,14 +999,14 @@ function PromotionsPageContent() {
                     {/* Promotion Cards */}
                     {
                         filteredPromos.length === 0 ? (
-                            <div className="bg-gray-800 rounded-xl p-12 text-center">
+                            <div className="bg-card rounded-xl p-12 text-center">
                                 <span className="text-5xl">🎯</span>
                                 <h3 className="text-lg font-medium text-white mt-4">{t('noCampaignsYet')}</h3>
-                                <p className="text-gray-400 mt-2">{t('createCampaignsForCustomers')}</p>
+                                <p className="text-muted-foreground mt-2">{t('createCampaignsForCustomers')}</p>
                                 <button
                                     onClick={() => canCreateCampaign ? setShowTemplateSelector(true) : undefined}
                                     disabled={!canCreateCampaign}
-                                    className={`mt-4 px-6 py-3 rounded-lg transition ${canCreateCampaign ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-600 text-gray-400 cursor-not-allowed'}`}
+                                    className={`mt-4 px-6 py-3 rounded-lg transition ${canCreateCampaign ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-600 text-muted-foreground cursor-not-allowed'}`}
                                 >
                                     {`📋 ${t('quickCreateFromTemplate')}`}
                                 </button>
@@ -1021,21 +1021,21 @@ function PromotionsPageContent() {
                                     return (
                                         <div
                                             key={promo.id}
-                                            className={`bg-gray-800 rounded-xl overflow-hidden border transition ${isExpired ? 'border-gray-700 opacity-70' : promo.isActive ? 'border-orange-800/50' : 'border-gray-700'
+                                            className={`bg-card rounded-xl overflow-hidden border transition ${isExpired ? 'border-border opacity-70' : promo.isActive ? 'border-orange-800/50' : 'border-border'
                                                 }`}
                                         >
                                             {/* ─── Card header ─── */}
-                                            <div className={`px-4 py-3 flex items-center justify-between ${isExpired ? 'bg-gray-800' : promo.isActive ? 'bg-orange-900/20' : 'bg-gray-800'
+                                            <div className={`px-4 py-3 flex items-center justify-between ${isExpired ? 'bg-card' : promo.isActive ? 'bg-orange-900/20' : 'bg-card'
                                                 }`}>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-2xl">{typeInfo?.icon || '🎯'}</span>
                                                     <div>
                                                         <h3 className="text-white font-semibold text-sm">{promo.title}</h3>
-                                                        <span className="text-xs text-gray-400">{t(typeInfo?.labelKey || 'percentOff')}</span>
+                                                        <span className="text-xs text-muted-foreground">{t(typeInfo?.labelKey || 'percentOff')}</span>
                                                     </div>
                                                 </div>
-                                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${isExpired ? 'bg-gray-700 text-gray-400' :
-                                                    promo.isActive ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-400'
+                                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${isExpired ? 'bg-gray-700 text-muted-foreground' :
+                                                    promo.isActive ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-muted-foreground'
                                                     }`}>
                                                     {isExpired ? `⏰ ${t('ended')}` : promo.isActive ? `✅ ${t('activeStatus')}` : `⏸️ ${t('passive')}`}
                                                 </span>
@@ -1044,7 +1044,7 @@ function PromotionsPageContent() {
                                             {/* ─── Card body ─── */}
                                             <div className="px-4 py-3">
                                                 {promo.description && (
-                                                    <p className="text-gray-300 text-sm mb-2">{promo.description}</p>
+                                                    <p className="text-foreground text-sm mb-2">{promo.description}</p>
                                                 )}
 
                                                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1060,7 +1060,7 @@ function PromotionsPageContent() {
                                                     ))}
                                                     {/* Min order */}
                                                     {promo.minOrderAmount && (
-                                                        <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full">
+                                                        <span className="text-xs bg-gray-700 text-muted-foreground px-2 py-0.5 rounded-full">
                                                             Min €{promo.minOrderAmount}
                                                         </span>
                                                     )}
@@ -1091,7 +1091,7 @@ function PromotionsPageContent() {
                                                 </div>
 
                                                 {/* Stats */}
-                                                <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                                                <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
                                                     {promo.redemptions != null && (
                                                         <span>{`📊 ${promo.redemptions} ${t('usage')}`}</span>
                                                     )}
@@ -1181,14 +1181,14 @@ function PromotionsPageContent() {
             {
                 showTemplateSelector && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+                        <div className="bg-card rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-bold text-white">{`📋 ${t('campaignTemplates')}`}</h2>
-                                <button onClick={() => setShowTemplateSelector(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
+                                <button onClick={() => setShowTemplateSelector(false)} className="text-muted-foreground hover:text-white text-xl">✕</button>
                             </div>
-                            <p className="text-gray-400 text-sm mb-4">
+                            <p className="text-muted-foreground text-sm mb-4">
                                 Hazır şablonlardan seçin, tek tıkla kampanya oluşturun.
-                                <span className="text-gray-500 block mt-1">{t('yourPlan')}: <strong className="text-gray-300">{businessPlanName}</strong></span>
+                                <span className="text-gray-500 block mt-1">{t('yourPlan')}: <strong className="text-foreground">{businessPlanName}</strong></span>
                             </p>
 
                             {templates.length === 0 ? (
@@ -1221,7 +1221,7 @@ function PromotionsPageContent() {
                                                 disabled={!tierAllowed}
                                                 className={`w-full text-left rounded-lg p-4 transition border ${tierAllowed
                                                     ? 'bg-gray-700 hover:bg-gray-600 border-gray-600 hover:border-orange-500 cursor-pointer'
-                                                    : 'bg-gray-800/50 border-gray-700/50 opacity-50 cursor-not-allowed'
+                                                    : 'bg-card/50 border-border/50 opacity-50 cursor-not-allowed'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -1230,12 +1230,12 @@ function PromotionsPageContent() {
                                                         <h3 className={`font-semibold ${tierAllowed ? 'text-white' : 'text-gray-500'}`}>
                                                             {tpl.nameTranslations?.tr || tpl.name}
                                                         </h3>
-                                                        <p className="text-gray-400 text-sm">{tpl.description}</p>
+                                                        <p className="text-muted-foreground text-sm">{tpl.description}</p>
                                                         <div className="flex gap-2 mt-1">
-                                                            <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded">
+                                                            <span className="text-xs bg-gray-600 text-foreground px-2 py-0.5 rounded">
                                                                 {PROMOTION_TYPES.find(pt => pt.value === tpl.type)?.icon}
                                                             </span>
-                                                            <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded">
+                                                            <span className="text-xs bg-gray-600 text-foreground px-2 py-0.5 rounded">
                                                                 {tpl.defaultDurationDays} {t('days')}
                                                             </span>
                                                             {tierLabel && (
@@ -1268,7 +1268,7 @@ function PromotionsPageContent() {
             {
                 showModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl my-8">
+                        <div className="bg-card rounded-xl p-6 w-full max-w-2xl my-8">
                             <h2 className="text-xl font-bold text-white mb-4">
                                 {editingPromo ? t('editCampaign') : t('newCampaign')}
                             </h2>
@@ -1291,7 +1291,7 @@ function PromotionsPageContent() {
                                         </button>
                                         <button
                                             onClick={() => setConflictWarning(null)}
-                                            className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg text-xs hover:bg-gray-600 transition"
+                                            className="px-3 py-2 bg-gray-700 text-foreground rounded-lg text-xs hover:bg-gray-600 transition"
                                         >
                                             {t('cancel')}
                                         </button>
@@ -1301,7 +1301,7 @@ function PromotionsPageContent() {
 
                             {/* Title */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">{t('campaignTitle')}</label>
+                                <label className="text-muted-foreground text-sm mb-1 block">{t('campaignTitle')}</label>
                                 <input
                                     type="text"
                                     value={formData.title}
@@ -1313,7 +1313,7 @@ function PromotionsPageContent() {
 
                             {/* Description */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">{t('description')}</label>
+                                <label className="text-muted-foreground text-sm mb-1 block">{t('description')}</label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1325,7 +1325,7 @@ function PromotionsPageContent() {
 
                             {/* Type */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">{t('campaignType')}</label>
+                                <label className="text-muted-foreground text-sm mb-1 block">{t('campaignType')}</label>
                                 <select
                                     value={formData.type}
                                     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -1346,7 +1346,7 @@ function PromotionsPageContent() {
                             {/* Value (conditonal) */}
                             {formData.type !== 'freeDelivery' && formData.type !== 'buyXGetY' && formData.type !== 'loyaltyCard' && (
                                 <div className="mb-4">
-                                    <label className="text-gray-400 text-sm mb-1 block">
+                                    <label className="text-muted-foreground text-sm mb-1 block">
                                         {t('discountValue')} {formData.type === 'percentOff' || formData.type === 'happyHour' ? '(%)' : '(€)'}
                                     </label>
                                     <input
@@ -1362,7 +1362,7 @@ function PromotionsPageContent() {
                             {formData.type === 'buyXGetY' && (
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">{t('buyX')}</label>
+                                        <label className="text-muted-foreground text-sm mb-1 block">{t('buyX')}</label>
                                         <input
                                             type="number"
                                             value={formData.buyX}
@@ -1371,7 +1371,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">{t('payY')}</label>
+                                        <label className="text-muted-foreground text-sm mb-1 block">{t('payY')}</label>
                                         <input
                                             type="number"
                                             value={formData.getY}
@@ -1386,7 +1386,7 @@ function PromotionsPageContent() {
                             {formData.type === 'happyHour' && (
                                 <div className="grid grid-cols-2 gap-3 mb-4">
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">{`⏰ ${t('startTime')}`}</label>
+                                        <label className="text-muted-foreground text-sm mb-1 block">{`⏰ ${t('startTime')}`}</label>
                                         <input
                                             type="time"
                                             value={formData.happyHourStart}
@@ -1395,7 +1395,7 @@ function PromotionsPageContent() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">{`⏰ ${t('endTime')}`}</label>
+                                        <label className="text-muted-foreground text-sm mb-1 block">{`⏰ ${t('endTime')}`}</label>
                                         <input
                                             type="time"
                                             value={formData.happyHourEnd}
@@ -1411,7 +1411,7 @@ function PromotionsPageContent() {
                                 <div className="mb-4 bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
                                     <label className="text-emerald-300 text-sm font-semibold mb-2 block">{`💸 ${t('cashbackSettings')}`}</label>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">{t('cashbackRate')}</label>
+                                        <label className="text-muted-foreground text-sm mb-1 block">{t('cashbackRate')}</label>
                                         <input
                                             type="number"
                                             value={formData.cashbackPercent}
@@ -1452,7 +1452,7 @@ function PromotionsPageContent() {
                                     <label className="text-blue-300 text-sm font-semibold mb-2 block">{`📦 ${t('bundleSettings')}`}</label>
                                     <div className="grid grid-cols-1 gap-3">
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">{t('bundlePrice')}</label>
+                                            <label className="text-muted-foreground text-sm mb-1 block">{t('bundlePrice')}</label>
                                             <input
                                                 type="number"
                                                 value={formData.bundlePrice || ''}
@@ -1462,7 +1462,7 @@ function PromotionsPageContent() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">{t('productIds')}</label>
+                                            <label className="text-muted-foreground text-sm mb-1 block">{t('productIds')}</label>
                                             <input
                                                 type="text"
                                                 value={formData.bundleProductIds.join(', ')}
@@ -1482,7 +1482,7 @@ function PromotionsPageContent() {
                                     <label className="text-amber-300 text-sm font-semibold mb-2 block">{`🛒 ${t('cartBoosterSettings')}`}</label>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">{t('thresholdAmount')}</label>
+                                            <label className="text-muted-foreground text-sm mb-1 block">{t('thresholdAmount')}</label>
                                             <input
                                                 type="number"
                                                 value={formData.boosterThreshold || ''}
@@ -1492,7 +1492,7 @@ function PromotionsPageContent() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-gray-400 text-sm mb-1 block">{t('reward')}</label>
+                                            <label className="text-muted-foreground text-sm mb-1 block">{t('reward')}</label>
                                             <input
                                                 type="number"
                                                 value={formData.boosterReward || ''}
@@ -1511,7 +1511,7 @@ function PromotionsPageContent() {
                                 <div className="mb-4 bg-rose-900/20 rounded-lg p-4 border border-rose-800/30">
                                     <label className="text-rose-300 text-sm font-semibold mb-2 block">{`🏷️ ${t('productBasedDiscount')}`}</label>
                                     <div>
-                                        <label className="text-gray-400 text-sm mb-1 block">{t('targetProductId')}</label>
+                                        <label className="text-muted-foreground text-sm mb-1 block">{t('targetProductId')}</label>
                                         <input
                                             type="text"
                                             value={formData.targetProductId}
@@ -1526,7 +1526,7 @@ function PromotionsPageContent() {
 
                             {/* 📂 Kategori / Ürün Filtresi (M-1) — tüm tipler için opsiyonel */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block font-medium">{`📂 ${t('categoryProductFilter')}`}</label>
+                                <label className="text-muted-foreground text-sm mb-2 block font-medium">{`📂 ${t('categoryProductFilter')}`}</label>
                                 <div className="grid grid-cols-1 gap-3">
                                     <div>
                                         <label className="text-gray-500 text-xs mb-1 block">{t('validCategories')}</label>
@@ -1553,7 +1553,7 @@ function PromotionsPageContent() {
 
                             {/* Min Order */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">{t('minOrderAmount')}</label>
+                                <label className="text-muted-foreground text-sm mb-1 block">{t('minOrderAmount')}</label>
                                 <input
                                     type="number"
                                     value={formData.minOrderAmount || ''}
@@ -1565,7 +1565,7 @@ function PromotionsPageContent() {
 
                             {/* Usage Limits */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block font-medium">{`📊 ${t('usageLimits')}`}</label>
+                                <label className="text-muted-foreground text-sm mb-2 block font-medium">{`📊 ${t('usageLimits')}`}</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="text-gray-500 text-xs mb-1 block">{t('totalMaxUsage')}</label>
@@ -1623,7 +1623,7 @@ function PromotionsPageContent() {
                             {/* Dates */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">{t('startDate')}</label>
+                                    <label className="text-muted-foreground text-sm mb-1 block">{t('startDate')}</label>
                                     <input
                                         type="date"
                                         value={formData.validFrom}
@@ -1632,7 +1632,7 @@ function PromotionsPageContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-gray-400 text-sm mb-1 block">{t('endDate')}</label>
+                                    <label className="text-muted-foreground text-sm mb-1 block">{t('endDate')}</label>
                                     <input
                                         type="date"
                                         value={formData.validUntil}
@@ -1644,7 +1644,7 @@ function PromotionsPageContent() {
 
                             {/* Valid Days */}
                             <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-1 block">{t('validDays')}</label>
+                                <label className="text-muted-foreground text-sm mb-1 block">{t('validDays')}</label>
                                 <div className="flex flex-wrap gap-1.5">
                                     {DAY_OPTIONS.map(d => (
                                         <button
@@ -1657,7 +1657,7 @@ function PromotionsPageContent() {
                                             }}
                                             className={`px-3 py-1.5 rounded-lg text-sm transition ${formData.validDays.includes(d.value)
                                                 ? 'bg-orange-600 text-white'
-                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                                : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'}`}
                                         >
                                             {t(d.labelKey || 'mon')}
                                         </button>
@@ -1667,7 +1667,7 @@ function PromotionsPageContent() {
 
                             {/* Display Options */}
                             <div className="mb-4 bg-gray-700/50 rounded-lg p-4">
-                                <label className="text-gray-300 text-sm font-semibold mb-3 block">{`📱 ${t('displaySettings')}`}</label>
+                                <label className="text-foreground text-sm font-semibold mb-3 block">{`📱 ${t('displaySettings')}`}</label>
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1676,7 +1676,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, showAsPopup: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">{t('showPopupOnOpen')}</span>
+                                        <span className="text-foreground text-sm">{t('showPopupOnOpen')}</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1685,7 +1685,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, showInDiscovery: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">{t('showBadgeOnCard')}</span>
+                                        <span className="text-foreground text-sm">{t('showBadgeOnCard')}</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1694,7 +1694,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, showInStore: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">{t('showBannerInStore')}</span>
+                                        <span className="text-foreground text-sm">{t('showBannerInStore')}</span>
                                     </label>
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input
@@ -1703,7 +1703,7 @@ function PromotionsPageContent() {
                                             onChange={(e) => setFormData({ ...formData, newCustomersOnly: e.target.checked })}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                         />
-                                        <span className="text-gray-300 text-sm">{t('showOnlyNewCustomers')}</span>
+                                        <span className="text-foreground text-sm">{t('showOnlyNewCustomers')}</span>
                                     </label>
                                 </div>
                             </div>
@@ -1719,10 +1719,10 @@ function PromotionsPageContent() {
                                                 onClick={() => setFormData({ ...formData, popupFormat: f.value })}
                                                 className={`text-left p-3 rounded-lg text-sm transition border ${formData.popupFormat === f.value
                                                     ? 'bg-blue-700/40 border-blue-500 text-white'
-                                                    : 'bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50'}`}
+                                                    : 'bg-gray-700/50 border-gray-600 text-foreground hover:bg-gray-600/50'}`}
                                             >
                                                 <span className="font-medium block">{t(f.labelKey || 'bottomSheet')}</span>
-                                                <span className="text-xs text-gray-400">{t(f.descKey || 'bottomSheetDesc')}</span>
+                                                <span className="text-xs text-muted-foreground">{t(f.descKey || 'bottomSheetDesc')}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -1738,7 +1738,7 @@ function PromotionsPageContent() {
                                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                         className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500"
                                     />
-                                    <span className="text-gray-300">{t('activePublishNow')}</span>
+                                    <span className="text-foreground">{t('activePublishNow')}</span>
                                 </label>
                             </div>
 
@@ -1746,7 +1746,7 @@ function PromotionsPageContent() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => { setShowModal(false); setConflictWarning(null); setForceOverrideConflict(false); }}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
+                                    className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
                                 >
                                     {t('cancel')}
                                 </button>
@@ -1782,7 +1782,7 @@ function PromotionsPageContent() {
 export default function PromotionsPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-white flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
         }>

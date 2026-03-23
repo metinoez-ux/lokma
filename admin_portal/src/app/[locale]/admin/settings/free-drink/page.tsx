@@ -151,39 +151,39 @@ export default function FreeDrinkSettingsPage() {
     // ------------------------------------------------------------------
     if (!businessId) {
         return (
-            <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-2xl mb-2">⚠️</p>
-                    <p className="text-gray-400">Bu ayar yalnızca işletmeye bağlı admin hesapları için geçerlidir.</p>
+                    <p className="text-muted-foreground">Bu ayar yalnızca işletmeye bağlı admin hesapları için geçerlidir.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
+        <div className="min-h-screen bg-background p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                     <Link href="/admin/settings" className="hover:text-white transition">⚙️ {t('settings') || 'Ayarlar'}</Link>
                     <span>›</span>
                     <span className="text-white">🥤 {t('gratis_icecek') || 'Gratis İçecek'}</span>
                 </div>
 
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 space-y-6">
+                <div className="bg-card border border-border rounded-2xl p-8 space-y-6">
                     {/* Header */}
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">🥤</span>
                         <div>
                             <h2 className="text-xl font-bold">{t('gratis_icecek') || 'Gratis İçecek'}</h2>
-                            <p className="text-gray-400 text-sm">
+                            <p className="text-muted-foreground text-sm">
                                 {t('gratis_icecek_desc') || 'Müşterilerinize siparişlerinde bedava içecek sunun — sizin seçiminizle.'}
                             </p>
                         </div>
                     </div>
 
                     {/* ── Toggle ── */}
-                    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
+                    <div className="flex items-center justify-between p-4 bg-background rounded-xl border border-border">
                         <div>
                             <h3 className="font-bold">{t('ozelligi_aktif_et') || 'Özelliği Aktif Et'}</h3>
                             <p className="text-xs text-gray-500">
@@ -237,7 +237,7 @@ export default function FreeDrinkSettingsPage() {
                                 <span className="animate-spin mr-2">⏳</span> Ürünler yükleniyor…
                             </div>
                         ) : products.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">
+                            <div className="text-center py-8 text-gray-500 text-sm border border-dashed border-border rounded-xl">
                                 <p className="text-2xl mb-2">🧃</p>
                                 <p>Menünüzde henüz içecek ürünü yok.</p>
                                 <p className="text-xs mt-1 text-gray-600">Menü &gt; Ürünler bölümünden içecek ekleyin.</p>
@@ -257,8 +257,8 @@ export default function FreeDrinkSettingsPage() {
                         ${isSelected
                                                     ? 'border-emerald-500 bg-emerald-950/40 shadow-lg shadow-emerald-900/20'
                                                     : isMaxed
-                                                        ? 'border-gray-700 bg-gray-900/40 opacity-40 cursor-not-allowed'
-                                                        : 'border-gray-700 bg-gray-900/40 hover:border-gray-500 cursor-pointer'
+                                                        ? 'border-border bg-background/40 opacity-40 cursor-not-allowed'
+                                                        : 'border-border bg-background/40 hover:border-gray-500 cursor-pointer'
                                                 }
                       `}
                                         >
@@ -286,7 +286,7 @@ export default function FreeDrinkSettingsPage() {
                                                 {product.name}
                                             </p>
                                             {product.price != null && (
-                                                <p className="text-xs text-gray-400">€{product.price.toFixed(2)}</p>
+                                                <p className="text-xs text-muted-foreground">€{product.price.toFixed(2)}</p>
                                             )}
                                         </button>
                                     );

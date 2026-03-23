@@ -209,17 +209,17 @@ export default function DriverTipsOverviewPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-background flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
-                    <p className="text-gray-500 dark:text-gray-400">{t('loading')}</p>
+                    <p className="text-gray-500 dark:text-muted-foreground">{t('loading')}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-background text-gray-900 dark:text-white p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">
@@ -227,7 +227,7 @@ export default function DriverTipsOverviewPage() {
                         <h1 className="text-2xl font-bold flex items-center gap-3">
                             💰 {t('title')}
                         </h1>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                        <p className="text-gray-500 dark:text-muted-foreground text-sm mt-1">
                             {t('subtitle')}
                         </p>
                     </div>
@@ -260,7 +260,7 @@ export default function DriverTipsOverviewPage() {
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                 periodFilter === p.key
                                     ? 'bg-amber-500 text-black'
-                                    : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'
+                                    : 'bg-gray-200 dark:bg-card text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-700'
                             }`}
                         >
                             {p.label}
@@ -293,11 +293,11 @@ export default function DriverTipsOverviewPage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 mb-6 bg-gray-200 dark:bg-gray-800 rounded-lg p-1 w-fit">
+                <div className="flex gap-1 mb-6 bg-gray-200 dark:bg-card rounded-lg p-1 w-fit">
                     <button
                         onClick={() => { setActiveTab('overview'); setSelectedDriverId(null); }}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            activeTab === 'overview' ? 'bg-amber-500 text-black' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            activeTab === 'overview' ? 'bg-amber-500 text-black' : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white'
                         }`}
                     >
                         {t('tab_drivers')}
@@ -305,7 +305,7 @@ export default function DriverTipsOverviewPage() {
                     <button
                         onClick={() => setActiveTab('details')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            activeTab === 'details' ? 'bg-amber-500 text-black' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            activeTab === 'details' ? 'bg-amber-500 text-black' : 'text-gray-500 dark:text-muted-foreground hover:text-gray-900 dark:hover:text-white'
                         }`}
                     >
                         {t('tab_details')}
@@ -319,17 +319,17 @@ export default function DriverTipsOverviewPage() {
                         placeholder={t('search_placeholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full max-w-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                        className="w-full max-w-md bg-white dark:bg-card border border-gray-300 dark:border-border rounded-lg px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500"
                     />
                 </div>
 
                 {/* ---- TAB: OVERVIEW (Driver Summary Table) ---- */}
                 {activeTab === 'overview' && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-gray-200 dark:border-gray-700 text-left text-gray-500 dark:text-gray-400">
+                                    <tr className="border-b border-gray-200 dark:border-border text-left text-gray-500 dark:text-muted-foreground">
                                         <th className="px-4 py-3 font-medium">{t('th_driver')}</th>
                                         <th className="px-4 py-3 font-medium text-right">{t('th_total_tips')}</th>
                                         <th className="px-4 py-3 font-medium text-center">{t('th_deliveries')}</th>
@@ -350,17 +350,17 @@ export default function DriverTipsOverviewPage() {
                                         </tr>
                                     ) : (
                                         filteredDrivers.map(driver => (
-                                            <tr key={driver.driverId} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                                            <tr key={driver.driverId} className="border-b border-gray-100 dark:border-border/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                                                 <td className="px-4 py-3">
                                                     <div className="font-medium text-gray-900 dark:text-white">{driver.driverName}</div>
-                                                    <div className="text-xs text-gray-400 dark:text-gray-500">{driver.driverEmail}</div>
+                                                    <div className="text-xs text-muted-foreground dark:text-gray-500">{driver.driverEmail}</div>
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-bold text-amber-400">
                                                     {formatCurrency(driver.totalTips)}
                                                 </td>
-                                                <td className="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{driver.totalDeliveries}</td>
+                                                <td className="px-4 py-3 text-center text-gray-600 dark:text-foreground">{driver.totalDeliveries}</td>
                                                 <td className="px-4 py-3 text-center text-green-600 dark:text-green-400">{driver.tippedDeliveries}</td>
-                                                <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{formatCurrency(driver.avgTip)}</td>
+                                                <td className="px-4 py-3 text-right text-gray-600 dark:text-foreground">{formatCurrency(driver.avgTip)}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`inline-block w-2 h-2 rounded-full ${driver.bankRegistered ? 'bg-green-400' : 'bg-red-400'}`}></span>
                                                 </td>
@@ -368,8 +368,8 @@ export default function DriverTipsOverviewPage() {
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
                                                         driver.payoutFrequency === 'weekly' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' :
                                                         driver.payoutFrequency === 'monthly' ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300' :
-                                                        driver.payoutFrequency === 'manual' ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' :
-                                                        'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                                                        driver.payoutFrequency === 'manual' ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-foreground' :
+                                                        'bg-gray-100 dark:bg-gray-700 text-muted-foreground dark:text-gray-500'
                                                     }`}>
                                                         {driver.payoutFrequency === 'weekly' ? t('frequency_weekly') :
                                                          driver.payoutFrequency === 'monthly' ? t('frequency_monthly') :
@@ -404,7 +404,7 @@ export default function DriverTipsOverviewPage() {
                             <button
                                 onClick={() => setSelectedDriverId(null)}
                                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                                    !selectedDriverId ? 'bg-amber-500 text-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                    !selectedDriverId ? 'bg-amber-500 text-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
                                 }`}
                             >
                                 {t('all_drivers')}
@@ -414,7 +414,7 @@ export default function DriverTipsOverviewPage() {
                                     key={d.driverId}
                                     onClick={() => setSelectedDriverId(d.driverId)}
                                     className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                                        selectedDriverId === d.driverId ? 'bg-amber-500 text-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        selectedDriverId === d.driverId ? 'bg-amber-500 text-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
                                     }`}
                                 >
                                     {d.driverName} ({formatCurrency(d.totalTips)})
@@ -441,11 +441,11 @@ export default function DriverTipsOverviewPage() {
                         )}
 
                         {/* Tip entries table */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="border-b border-gray-200 dark:border-gray-700 text-left text-gray-500 dark:text-gray-400">
+                                        <tr className="border-b border-gray-200 dark:border-border text-left text-gray-500 dark:text-muted-foreground">
                                             <th className="px-4 py-3 font-medium">{t('th_date')}</th>
                                             <th className="px-4 py-3 font-medium">{t('th_time')}</th>
                                             <th className="px-4 py-3 font-medium">{t('th_driver')}</th>
@@ -466,14 +466,14 @@ export default function DriverTipsOverviewPage() {
                                             </tr>
                                         ) : (
                                             filteredEntries.slice(0, 200).map(entry => (
-                                                <tr key={entry.orderId} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatDate(entry.deliveredAt)}</td>
-                                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{formatTime(entry.deliveredAt)}</td>
+                                                <tr key={entry.orderId} className="border-b border-gray-100 dark:border-border/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                                                    <td className="px-4 py-3 text-gray-600 dark:text-foreground">{formatDate(entry.deliveredAt)}</td>
+                                                    <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground">{formatTime(entry.deliveredAt)}</td>
                                                     <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{entry.driverName}</td>
                                                     {isSuperAdminUser && <td className="px-4 py-3 text-gray-700 dark:text-gray-200 font-medium">{entry.customerName || '—'}</td>}
-                                                    {isSuperAdminUser && <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{entry.orderId.substring(0, 12)}...</td>}
-                                                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{entry.city || '—'}</td>
-                                                    <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{formatCurrency(entry.orderTotal)}</td>
+                                                    {isSuperAdminUser && <td className="px-4 py-3 text-gray-500 dark:text-muted-foreground font-mono text-xs">{entry.orderId.substring(0, 12)}...</td>}
+                                                    <td className="px-4 py-3 text-gray-600 dark:text-foreground">{entry.city || '—'}</td>
+                                                    <td className="px-4 py-3 text-right text-gray-600 dark:text-foreground">{formatCurrency(entry.orderTotal)}</td>
                                                     <td className="px-4 py-3 text-center">
                                                         <span className="text-sm">{entry.paymentMethod === 'cash' ? '💵' : '💳'}</span>
                                                     </td>
@@ -492,7 +492,7 @@ export default function DriverTipsOverviewPage() {
                                     </tbody>
                                 </table>
                                 {filteredEntries.length > 200 && (
-                                    <div className="px-4 py-3 text-center text-gray-500 text-sm border-t border-gray-200 dark:border-gray-700">
+                                    <div className="px-4 py-3 text-center text-gray-500 text-sm border-t border-gray-200 dark:border-border">
                                         {t('showing_first', { count: filteredEntries.length })}
                                     </div>
                                 )}

@@ -137,7 +137,7 @@ function GlobalProductsPageContent() {
     // Marka Etiketleri (Kasap Zincirleri)
     const BRAND_LABELS = [
         { value: 'tuna', label: 'TUNA', color: 'bg-red-600', icon: '🔴' },
-        { value: 'akdeniz_toros', label: 'Akdeniz Toros', color: 'bg-gray-800', icon: '⚫' },
+        { value: 'akdeniz_toros', label: 'Akdeniz Toros', color: 'bg-card', icon: '⚫' },
     ];
 
     // Toptancı/Kaynak Filtreleri
@@ -1258,13 +1258,13 @@ function GlobalProductsPageContent() {
     }, [categoryFilter, wholesalerFilter, countryFilter, brandFilter, searchQuery]);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6 md:p-8">
+        <div className="min-h-screen bg-background text-white p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header - Context Aware */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <div className="flex items-center gap-2 text-gray-400 mb-1">
+                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
                             {isBusinessContext ? (
                                 <Link href="/admin/business" className="hover:text-white transition-colors">{t('isletmeListesi')}</Link>
                             ) : (
@@ -1280,7 +1280,7 @@ function GlobalProductsPageContent() {
                                 <>{t('masterUrunKatalogu')}</>
                             )}
                         </h1>
-                        <p className="text-gray-400 mt-1">
+                        <p className="text-muted-foreground mt-1">
                             {isBusinessContext
                                 ? `${businessInfo?.companyName || t('buIsletme')} ${t('icinUrunYonetimi')}`
                                 : t('tumIsletmelerdeGecerliOlanGenelUrun')}
@@ -1292,7 +1292,7 @@ function GlobalProductsPageContent() {
                             <button
                                 onClick={handleSeed}
                                 disabled={seeding}
-                                className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 text-gray-300 font-medium transition-colors"
+                                className="px-4 py-2 bg-card border border-gray-600 rounded-lg hover:bg-gray-700 text-foreground font-medium transition-colors"
                             >
                                 {seeding ? "Ekleniyor..." : t('varsayilanlariYukleSeed')}
                             </button>
@@ -1312,7 +1312,7 @@ function GlobalProductsPageContent() {
                         onClick={() => setPageMode('products')}
                         className={`px-6 py-3 rounded-xl font-medium transition-all ${pageMode === 'products'
                             ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg'
-                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                            : 'bg-card text-muted-foreground hover:bg-gray-700'
                             }`}
                     >
                         {t('masterUrunler')}
@@ -1323,7 +1323,7 @@ function GlobalProductsPageContent() {
                             onClick={() => setPageMode('kermes')}
                             className={`px-6 py-3 rounded-xl font-medium transition-all ${pageMode === 'kermes'
                                 ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg'
-                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                : 'bg-card text-muted-foreground hover:bg-gray-700'
                                 }`}
                         >
                             {t('kermesMenuOlustur')}
@@ -1338,7 +1338,7 @@ function GlobalProductsPageContent() {
 
                 {/* 🆕 KERMES MODU */}
                 {pageMode === 'kermes' ? (
-                    <div className="bg-gray-800 rounded-xl border border-pink-500/30 p-6">
+                    <div className="bg-card rounded-xl border border-pink-500/30 p-6">
                         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                             {t('kermesMenuOlusturma')}
                             <span className="text-sm font-normal text-pink-300">
@@ -1348,7 +1348,7 @@ function GlobalProductsPageContent() {
 
                         {/* Organizasyon Seçimi */}
                         <div className="mb-6">
-                            <label className="block text-gray-400 text-sm mb-2">
+                            <label className="block text-muted-foreground text-sm mb-2">
                                 {t('organizasyonSecinKermesYapilacakCamidernek')}
                             </label>
                             {selectedOrganization ? (
@@ -1356,7 +1356,7 @@ function GlobalProductsPageContent() {
                                     <div className="text-3xl">🕌</div>
                                     <div className="flex-1">
                                         <p className="text-white font-bold">{selectedOrganization.shortName || selectedOrganization.name}</p>
-                                        <p className="text-gray-400 text-sm">📍 {selectedOrganization.city} • {selectedOrganization.postalCode}</p>
+                                        <p className="text-muted-foreground text-sm">📍 {selectedOrganization.city} • {selectedOrganization.postalCode}</p>
                                     </div>
                                     <button
                                         onClick={() => {
@@ -1381,7 +1381,7 @@ function GlobalProductsPageContent() {
                                     {/* Liste */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                         {loadingOrganizations ? (
-                                            <div className="col-span-full text-center py-8 text-gray-400">
+                                            <div className="col-span-full text-center py-8 text-muted-foreground">
                                                 {t('organizasyonlarYukleniyor')}
                                             </div>
                                         ) : (
@@ -1408,7 +1408,7 @@ function GlobalProductsPageContent() {
                                                             <span className="text-xl">🕌</span>
                                                             <div>
                                                                 <p className="text-white font-medium text-sm">{org.shortName || org.name}</p>
-                                                                <p className="text-gray-400 text-xs">📍 {org.city}</p>
+                                                                <p className="text-muted-foreground text-xs">📍 {org.city}</p>
                                                             </div>
                                                         </div>
                                                     </button>
@@ -1431,7 +1431,7 @@ function GlobalProductsPageContent() {
                             <div>
                                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
                                     {t('kermesMenusuHazirla')}
-                                    <span className="text-sm font-normal text-gray-400">
+                                    <span className="text-sm font-normal text-muted-foreground">
                                         {t('mevcutKermesUrunlerindenSecinVeyaYeni')}
                                     </span>
                                 </h3>
@@ -1441,7 +1441,7 @@ function GlobalProductsPageContent() {
                                     {kermesProducts.length === 0 ? (
                                         <div className="col-span-full text-center py-8 bg-gray-700/50 rounded-xl">
                                             <p className="text-2xl mb-2">🍲</p>
-                                            <p className="text-gray-400">{t('henuzKermesUrunuYok')}</p>
+                                            <p className="text-muted-foreground">{t('henuzKermesUrunuYok')}</p>
                                             <button
                                                 onClick={() => {
                                                     setPageMode('products');
@@ -1471,7 +1471,7 @@ function GlobalProductsPageContent() {
                                                         }`}
                                                 >
                                                     <p className="text-white text-sm font-medium line-clamp-2">{getLocalizedText(product.name)}</p>
-                                                    <p className="text-gray-400 text-xs mt-1">
+                                                    <p className="text-muted-foreground text-xs mt-1">
                                                         {product.defaultUnit === 'adet' ? '🔢' : '⚖️'} {product.defaultUnit}
                                                     </p>
                                                     {isSelected && (
@@ -1553,18 +1553,18 @@ function GlobalProductsPageContent() {
                     <>
                         {/* 🆕 BUSINESS CONTEXT: Dual-Tab Kategoriler & Ürünler */}
                         {isBusinessContext && (
-                            <div className="bg-gray-800 rounded-xl p-5 mb-6 border border-cyan-500/30">
+                            <div className="bg-card rounded-xl p-5 mb-6 border border-cyan-500/30">
                                 {/* Section Header with Title + View Mode Toggle */}
                                 <div className="flex items-center justify-between mb-5">
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                                         {t('menuUrunler')}
-                                        <span className="text-sm font-normal text-gray-400">
+                                        <span className="text-sm font-normal text-muted-foreground">
                                             — {businessInfo?.companyName || t('isletme')}
                                         </span>
                                     </h2>
                                     <button
                                         onClick={fetchBusinessProducts}
-                                        className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 text-sm"
+                                        className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 text-sm"
                                     >
                                         🔄 Yenile
                                     </button>
@@ -1576,7 +1576,7 @@ function GlobalProductsPageContent() {
                                         onClick={() => setBusinessViewMode('categories')}
                                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'categories'
                                             ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/40'
-                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            : 'bg-gray-700 text-muted-foreground hover:bg-gray-600 hover:text-white'
                                             }`}
                                     >
                                         🗂️ Kategoriler ({businessCategories.length})
@@ -1585,7 +1585,7 @@ function GlobalProductsPageContent() {
                                         onClick={() => setBusinessViewMode('products')}
                                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'products'
                                             ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40'
-                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            : 'bg-gray-700 text-muted-foreground hover:bg-gray-600 hover:text-white'
                                             }`}
                                     >
                                         {t('urunler1')}{businessProducts.length})
@@ -1594,7 +1594,7 @@ function GlobalProductsPageContent() {
                                         onClick={() => setBusinessViewMode('sponsored')}
                                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'sponsored'
                                             ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/40'
-                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            : 'bg-gray-700 text-muted-foreground hover:bg-gray-600 hover:text-white'
                                             }`}
                                     >
                                         ⭐ Öne Çıkan ({sponsoredProducts.length})
@@ -1607,7 +1607,7 @@ function GlobalProductsPageContent() {
                                 {businessViewMode === 'categories' && (
                                     <div>
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="text-gray-400 text-sm">
+                                            <div className="text-muted-foreground text-sm">
                                                 {t('kategorileriSiralayinDuzenleyinVeyaYeniEkleyin')}
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -1638,11 +1638,11 @@ function GlobalProductsPageContent() {
                                         </div>
 
                                         {loadingBusinessCategories ? (
-                                            <div className="text-center py-8 text-gray-400">{t('kategorilerYukleniyor')}</div>
+                                            <div className="text-center py-8 text-muted-foreground">{t('kategorilerYukleniyor')}</div>
                                         ) : businessCategories.length === 0 ? (
                                             <div className="text-center py-12 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
                                                 <p className="text-4xl mb-3">🗂️</p>
-                                                <p className="text-gray-300 font-medium mb-1">{t('henuzKategoriEklenmemis')}</p>
+                                                <p className="text-foreground font-medium mb-1">{t('henuzKategoriEklenmemis')}</p>
                                                 <p className="text-sm text-gray-500 mb-4">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
                                                 <button
                                                     onClick={openCategoryAdd}
@@ -1663,7 +1663,7 @@ function GlobalProductsPageContent() {
                                                             key={cat.id}
                                                             className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${cat.isActive
                                                                 ? 'bg-gray-700/50 border-gray-600 hover:border-gray-500'
-                                                                : 'bg-gray-800/50 border-red-900/40 opacity-60'
+                                                                : 'bg-card/50 border-red-900/40 opacity-60'
                                                                 }`}
                                                         >
                                                             {/* Up/Down Arrows */}
@@ -1743,7 +1743,7 @@ function GlobalProductsPageContent() {
                                                     onClick={() => setActiveCategoryTab('all')}
                                                     className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === 'all'
                                                         ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600 hover:text-gray-200'
                                                         }`}
                                                 >
                                                     {t('tumu')}
@@ -1761,7 +1761,7 @@ function GlobalProductsPageContent() {
                                                             onClick={() => setActiveCategoryTab(cat.id)}
                                                             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === cat.id
                                                                 ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                                : 'bg-gray-700 text-muted-foreground hover:bg-gray-600 hover:text-gray-200'
                                                                 }`}
                                                         >
                                                             {cat.icon} {getLocalizedText(cat.name)}
@@ -1776,7 +1776,7 @@ function GlobalProductsPageContent() {
                                                     onClick={() => setActiveCategoryTab('uncategorized')}
                                                     className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === 'uncategorized'
                                                         ? 'bg-gray-600 text-white shadow-lg'
-                                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600 hover:text-gray-200'
                                                         }`}
                                                 >
                                                     ❓ Kategorisiz
@@ -1795,7 +1795,7 @@ function GlobalProductsPageContent() {
 
                                         {/* 🆕 Status Filter Dropdown */}
                                         <div className="flex items-center gap-3 mb-4">
-                                            <label className="text-gray-400 text-xs font-medium">Durum Filtresi:</label>
+                                            <label className="text-muted-foreground text-xs font-medium">Durum Filtresi:</label>
                                             <select
                                                 value={bizStatusFilter}
                                                 onChange={(e) => { setBizStatusFilter(e.target.value); setBusinessProductPage(1); }}
@@ -1816,11 +1816,11 @@ function GlobalProductsPageContent() {
 
                                         {/* Product Table */}
                                         {loadingBusinessProducts ? (
-                                            <div className="text-center py-8 text-gray-400">{t('urunlerYukleniyor')}</div>
+                                            <div className="text-center py-8 text-muted-foreground">{t('urunlerYukleniyor')}</div>
                                         ) : businessProducts.length === 0 ? (
                                             <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
                                                 <p className="text-3xl mb-2">📭</p>
-                                                <p className="text-gray-400 mb-2">{t('buIsletmeyeHenuzUrunAtanmamis')}</p>
+                                                <p className="text-muted-foreground mb-2">{t('buIsletmeyeHenuzUrunAtanmamis')}</p>
                                                 <p className="text-sm text-gray-500">{t('asagidanMasterKatalogdanUrunEkleyebilirsiniz')}</p>
                                             </div>
                                         ) : (() => {
@@ -2036,7 +2036,7 @@ function GlobalProductsPageContent() {
                                                                 {/* İptal */}
                                                                 <button
                                                                     onClick={() => setSelectedBusinessProducts(new Set())}
-                                                                    className="px-2.5 py-1.5 bg-gray-600 hover:bg-gray-500 text-gray-300 rounded-lg text-xs font-medium transition"
+                                                                    className="px-2.5 py-1.5 bg-gray-600 hover:bg-gray-500 text-foreground rounded-lg text-xs font-medium transition"
                                                                 >
                                                                     ✕ İptal
                                                                 </button>
@@ -2048,7 +2048,7 @@ function GlobalProductsPageContent() {
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-sm">
                                                             <thead>
-                                                                <tr className="text-left text-gray-400 border-b border-gray-700">
+                                                                <tr className="text-left text-muted-foreground border-b border-border">
                                                                     <th className="py-2 pr-2 w-8">
                                                                         <input
                                                                             type="checkbox"
@@ -2085,7 +2085,7 @@ function GlobalProductsPageContent() {
                                                                     const isSelected = selectedBusinessProducts.has(product.id);
                                                                     const isSponsoredProduct = sponsoredProducts.includes(product.id);
                                                                     return (
-                                                                        <tr key={product.id} className={`border-b border-gray-700/50 transition ${isSelected ? 'bg-cyan-900/20' : 'hover:bg-gray-700/30'} ${product.outOfStock ? 'opacity-60' : ''}`}>
+                                                                        <tr key={product.id} className={`border-b border-border/50 transition ${isSelected ? 'bg-cyan-900/20' : 'hover:bg-gray-700/30'} ${product.outOfStock ? 'opacity-60' : ''}`}>
                                                                             <td className="py-3 pr-2">
                                                                                 <input
                                                                                     type="checkbox"
@@ -2125,7 +2125,7 @@ function GlobalProductsPageContent() {
                                                                                     <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-600/30 text-orange-300">🚫 Stokta Yok</span>
                                                                                 )}
                                                                             </td>
-                                                                            <td className="py-3 pr-2 text-gray-400 font-mono text-xs">
+                                                                            <td className="py-3 pr-2 text-muted-foreground font-mono text-xs">
                                                                                 {product.id?.substring(0, 15)}...
                                                                             </td>
                                                                             <td className="py-3 pr-4">
@@ -2155,12 +2155,12 @@ function GlobalProductsPageContent() {
                                                                                     return (
                                                                                         <div className="space-y-0.5">
                                                                                             <div className="text-green-400 font-medium text-sm">{brutto?.toFixed(2)}€ <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
-                                                                                            <div className="text-gray-400 text-xs">{nettoPrice.toFixed(2)}€ <span className="text-gray-500 text-[10px]">netto</span></div>
+                                                                                            <div className="text-muted-foreground text-xs">{nettoPrice.toFixed(2)}€ <span className="text-gray-500 text-[10px]">netto</span></div>
                                                                                         </div>
                                                                                     );
                                                                                 })()}
                                                                             </td>
-                                                                            <td className="py-3 pr-2 text-gray-300">
+                                                                            <td className="py-3 pr-2 text-foreground">
                                                                                 {product.defaultUnit || product.unit || 'adet'}
                                                                             </td>
                                                                             <td className="py-3">
@@ -2199,15 +2199,15 @@ function GlobalProductsPageContent() {
 
                                                     {/* PAGINATION */}
                                                     {totalBizPages > 1 && (
-                                                        <div className="flex items-center justify-between pt-3 border-t border-gray-700">
-                                                            <span className="text-gray-400 text-sm">
+                                                        <div className="flex items-center justify-between pt-3 border-t border-border">
+                                                            <span className="text-muted-foreground text-sm">
                                                                 {filteredBizProducts.length} üründen {((safeBizPage - 1) * BUSINESS_PRODUCTS_PER_PAGE) + 1}-{Math.min(safeBizPage * BUSINESS_PRODUCTS_PER_PAGE, filteredBizProducts.length)} gösteriliyor
                                                             </span>
                                                             <div className="flex items-center gap-1">
                                                                 <button
                                                                     onClick={() => setBusinessProductPage(p => Math.max(1, p - 1))}
                                                                     disabled={safeBizPage <= 1}
-                                                                    className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
+                                                                    className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
                                                                 >
                                                                     ← Önceki
                                                                 </button>
@@ -2217,7 +2217,7 @@ function GlobalProductsPageContent() {
                                                                         onClick={() => setBusinessProductPage(page)}
                                                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${page === safeBizPage
                                                                             ? 'bg-emerald-600 text-white'
-                                                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                                                            : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                                                                             }`}
                                                                     >
                                                                         {page}
@@ -2226,7 +2226,7 @@ function GlobalProductsPageContent() {
                                                                 <button
                                                                     onClick={() => setBusinessProductPage(p => Math.min(totalBizPages, p + 1))}
                                                                     disabled={safeBizPage >= totalBizPages}
-                                                                    className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
+                                                                    className="px-3 py-1.5 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
                                                                 >
                                                                     Sonraki →
                                                                 </button>
@@ -2250,7 +2250,7 @@ function GlobalProductsPageContent() {
                                                 <span className="text-2xl">⭐</span>
                                                 <div>
                                                     <h4 className="text-white font-bold">Öne Çıkan Ürünler</h4>
-                                                    <p className="text-gray-400 text-xs">{t('one_cikan_aciklama')}</p>
+                                                    <p className="text-muted-foreground text-xs">{t('one_cikan_aciklama')}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -2258,7 +2258,7 @@ function GlobalProductsPageContent() {
                                         {/* Limit Progress Bar */}
                                         <div className="bg-gray-700/50 rounded-xl border border-amber-500/30 p-4">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-sm text-gray-300 font-medium">
+                                                <span className="text-sm text-foreground font-medium">
                                                     Sponsored Ürün Kullanımı
                                                 </span>
                                                 <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
@@ -2294,7 +2294,7 @@ function GlobalProductsPageContent() {
                                         ) : businessProducts.length === 0 ? (
                                             <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
                                                 <p className="text-3xl mb-2">📦</p>
-                                                <p className="text-gray-400 mb-2">{t('henuz_urun_atanmamis')}</p>
+                                                <p className="text-muted-foreground mb-2">{t('henuz_urun_atanmamis')}</p>
                                                 <p className="text-sm text-gray-500">Önce işletmeye ürün atayın, sonra öne çıkan olarak seçin.</p>
                                             </div>
                                         ) : (
@@ -2309,8 +2309,8 @@ function GlobalProductsPageContent() {
                                                             className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${isSponsored
                                                                 ? 'bg-amber-900/20 border-amber-500/40 hover:border-amber-400/60'
                                                                 : disabled
-                                                                    ? 'bg-gray-800/30 border-gray-700/50 opacity-50 cursor-not-allowed'
-                                                                    : 'bg-gray-800/40 border-gray-700 hover:border-gray-500'
+                                                                    ? 'bg-card/30 border-border/50 opacity-50 cursor-not-allowed'
+                                                                    : 'bg-card/40 border-border hover:border-gray-500'
                                                                 }`}
                                                         >
                                                             <input
@@ -2406,14 +2406,14 @@ function GlobalProductsPageContent() {
                         {/* 🆕 CATEGORY ADD/EDIT MODAL */}
                         {showCategoryModal && (
                             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                                <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700">
+                                <div className="bg-card rounded-xl p-6 w-full max-w-md border border-border">
                                     <h2 className="text-xl font-bold text-white mb-4">
                                         {editingCategoryItem ? t('kategoriDuzenle') : '+ Yeni Kategori'}
                                     </h2>
 
                                     {/* Icon Selection */}
                                     <div className="mb-4">
-                                        <label className="text-gray-400 text-sm mb-2 block">{t('ikon')}</label>
+                                        <label className="text-muted-foreground text-sm mb-2 block">{t('ikon')}</label>
                                         <div className="flex flex-wrap gap-2">
                                             {CATEGORY_ICONS.map(icon => (
                                                 <button
@@ -2447,7 +2447,7 @@ function GlobalProductsPageContent() {
                                                 onChange={(e) => setCategoryFormData({ ...categoryFormData, isActive: e.target.checked })}
                                                 className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500 focus:ring-violet-500"
                                             />
-                                            <span className="text-gray-300">{t('aktifUygulamadaGorunsun')}</span>
+                                            <span className="text-foreground">{t('aktifUygulamadaGorunsun')}</span>
                                         </label>
                                     </div>
 
@@ -2455,7 +2455,7 @@ function GlobalProductsPageContent() {
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => { setShowCategoryModal(false); setEditingCategoryItem(null); }}
-                                            className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
+                                            className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
                                         >{t('iptal')}</button>
                                         <button
                                             onClick={handleCategorySave}
@@ -2472,14 +2472,14 @@ function GlobalProductsPageContent() {
                         {/* Master Katalog Section Header (collapsible for business context) */}
                         {isBusinessContext && (
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold text-gray-400">
+                                <h3 className="text-lg font-bold text-muted-foreground">
                                     {t('masterKatalogdanUrunEkle')}
                                 </h3>
                                 <button
                                     onClick={() => setShowAllMasterProducts(!showAllMasterProducts)}
                                     className={`px-4 py-2 rounded-lg font-medium transition-all ${showAllMasterProducts
                                         ? 'bg-gray-600 text-white'
-                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
                                         }`}
                                 >
                                     {showAllMasterProducts ? '📂 Listeyi Gizle' : t('tumUrunleriGoster')}
@@ -2490,7 +2490,7 @@ function GlobalProductsPageContent() {
                         {/* Show search/filters and product list: always for global, or when search active / showAll for business */}
                         {(!isBusinessContext || showAllMasterProducts || searchQuery) && (
                             <>
-                                <div className="bg-gray-800 rounded-xl p-4 mb-6 border border-gray-700">
+                                <div className="bg-card rounded-xl p-4 mb-6 border border-border">
                                     <div className="flex flex-wrap gap-4">
                                         <div className="flex-1 min-w-[200px]">
                                             <input
@@ -2506,7 +2506,7 @@ function GlobalProductsPageContent() {
                                             <select
                                                 value={wholesalerFilter}
                                                 onChange={(e) => setWholesalerFilter(e.target.value)}
-                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${wholesalerFilter !== 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${wholesalerFilter !== 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-foreground'}`}
                                             >
                                                 {WHOLESALER_OPTIONS.map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
@@ -2516,7 +2516,7 @@ function GlobalProductsPageContent() {
                                             <select
                                                 value={countryFilter}
                                                 onChange={(e) => setCountryFilter(e.target.value)}
-                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${countryFilter !== 'all' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${countryFilter !== 'all' ? 'bg-purple-600 text-white' : 'bg-gray-700 text-foreground'}`}
                                             >
                                                 {COUNTRY_OPTIONS.map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
@@ -2526,7 +2526,7 @@ function GlobalProductsPageContent() {
                                             <select
                                                 value={brandFilter}
                                                 onChange={(e) => setBrandFilter(e.target.value)}
-                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${brandFilter !== 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                                                className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${brandFilter !== 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-foreground'}`}
                                             >
                                                 <option value="all">{t('tumMarkalar')}</option>
                                                 {BRAND_LABELS.map(brand => (
@@ -2542,7 +2542,7 @@ function GlobalProductsPageContent() {
                                                         setCountryFilter('all');
                                                         setBrandFilter('all');
                                                     }}
-                                                    className="px-3 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-500 font-medium"
+                                                    className="px-3 py-2 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium"
                                                 >
                                                     ✕ Filtreleri Temizle
                                                 </button>
@@ -2551,11 +2551,11 @@ function GlobalProductsPageContent() {
                                     </div>
                                     <div className="flex items-center justify-between mt-2">
                                         {searchQuery ? (
-                                            <p className="text-gray-400 text-sm">
+                                            <p className="text-muted-foreground text-sm">
                                                 "{searchQuery}{t('icin')} {filteredProducts.length} {t('sonucBulundu')}
                                             </p>
                                         ) : (
-                                            <p className="text-gray-400 text-sm">
+                                            <p className="text-muted-foreground text-sm">
                                                 Toplam {filteredProducts.length} {t('urunSayfa')} {currentPage}/{totalPages || 1} {t('sayfaBasi')} {PRODUCTS_PER_PAGE})
                                             </p>
                                         )}
@@ -2707,10 +2707,10 @@ function GlobalProductsPageContent() {
                                 {loading ? (
                                     <div className="text-center py-20 text-gray-500">{t('yukleniyor')}</div>
                                 ) : products.length === 0 ? (
-                                    <div className="bg-gray-800 rounded-xl p-12 text-center border border-gray-700">
+                                    <div className="bg-card rounded-xl p-12 text-center border border-border">
                                         <p className="text-2xl mb-4">📭</p>
                                         <p className="text-xl font-bold mb-2">{t('henuzUrunYok')}</p>
-                                        <p className="text-gray-400 mb-6">{t('varsayilanlariYukleButonunaBasarakBaslangicVerilerini')}</p>
+                                        <p className="text-muted-foreground mb-6">{t('varsayilanlariYukleButonunaBasarakBaslangicVerilerini')}</p>
                                         <button
                                             onClick={handleSeed}
                                             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-500"
@@ -2719,10 +2719,10 @@ function GlobalProductsPageContent() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+                                    <div className="bg-card rounded-xl overflow-hidden border border-border">
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
-                                                <thead className="bg-gray-900/50 text-gray-400 text-sm">
+                                                <thead className="bg-background/50 text-muted-foreground text-sm">
                                                     <tr>
                                                         <th className="px-4 py-4 w-10">
                                                             <input
@@ -2741,11 +2741,11 @@ function GlobalProductsPageContent() {
                                                         <th className="px-4 py-4">Birim</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="divide-y divide-gray-700">
+                                                <tbody className="divide-y divide-border">
                                                     {paginatedProducts.map(product => (
                                                         <tr
                                                             key={product.id}
-                                                            className={`hover:bg-gray-700/50 transition-colors cursor-pointer ${(product as any).outOfStock ? 'opacity-50 bg-gray-800/50' : ''}`}
+                                                            className={`hover:bg-gray-700/50 transition-colors cursor-pointer ${(product as any).outOfStock ? 'opacity-50 bg-card/50' : ''}`}
                                                             onClick={(e) => {
                                                                 // Don't open edit if clicking on checkbox
                                                                 if ((e.target as HTMLElement).tagName !== 'INPUT') {
@@ -2779,7 +2779,7 @@ function GlobalProductsPageContent() {
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-4 font-mono text-sm text-gray-400">{product.id}</td>
+                                                            <td className="px-4 py-4 font-mono text-sm text-muted-foreground">{product.id}</td>
                                                             <td className="px-4 py-4 font-bold text-white">{getLocalizedText(product.name)}</td>
                                                             <td className="px-4 py-4">
                                                                 {(() => {
@@ -2824,7 +2824,7 @@ function GlobalProductsPageContent() {
                                                                     ))}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-4 text-gray-300">{product.defaultUnit}</td>
+                                                            <td className="px-4 py-4 text-foreground">{product.defaultUnit}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -2834,22 +2834,22 @@ function GlobalProductsPageContent() {
                                         {/* Pagination Controls */}
                                         {
                                             !searchQuery && totalPages > 1 && (
-                                                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-900/30">
-                                                    <div className="text-sm text-gray-400">
+                                                <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-background/30">
+                                                    <div className="text-sm text-muted-foreground">
                                                         {startIndex + 1} - {Math.min(startIndex + PRODUCTS_PER_PAGE, filteredProducts.length)} / {filteredProducts.length} {t('urunGosteriliyor')}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => setCurrentPage(1)}
                                                             disabled={currentPage === 1}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             ⟨⟨
                                                         </button>
                                                         <button
                                                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                                             disabled={currentPage === 1}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             {t('onceki')}
                                                         </button>
@@ -2873,7 +2873,7 @@ function GlobalProductsPageContent() {
                                                                         onClick={() => setCurrentPage(pageNum)}
                                                                         className={`w-8 h-8 rounded text-sm font-medium ${currentPage === pageNum
                                                                             ? 'bg-green-600 text-white'
-                                                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                                            : 'bg-gray-700 text-foreground hover:bg-gray-600'
                                                                             }`}
                                                                     >
                                                                         {pageNum}
@@ -2885,14 +2885,14 @@ function GlobalProductsPageContent() {
                                                         <button
                                                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                                             disabled={currentPage === totalPages}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             Sonraki →
                                                         </button>
                                                         <button
                                                             onClick={() => setCurrentPage(totalPages)}
                                                             disabled={currentPage === totalPages}
-                                                            className="px-3 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                            className="px-3 py-1 rounded bg-gray-700 text-foreground hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
                                                             ⟩⟩
                                                         </button>
@@ -2910,12 +2910,12 @@ function GlobalProductsPageContent() {
                         {
                             showModal && (
                                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                                    <div className="bg-gray-800 rounded-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+                                    <div className="bg-card rounded-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-border shadow-2xl">
                                         {/* Sticky Header */}
-                                        <div className="flex-shrink-0 p-6 pb-0 border-b border-gray-700">
+                                        <div className="flex-shrink-0 p-6 pb-0 border-b border-border">
                                             <div className="flex items-center justify-between mb-4">
                                                 <h2 className="text-xl font-bold">{editingProduct ? t('urunuDuzenle') : t('yeniUrunEkle')}</h2>
-                                                <button onClick={() => { setShowModal(false); setProductEditTab('general'); }} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                                                <button onClick={() => { setShowModal(false); setProductEditTab('general'); }} className="text-muted-foreground hover:text-white text-2xl leading-none">&times;</button>
                                             </div>
 
                                             {/* Validation Errors Banner */}
@@ -2949,7 +2949,7 @@ function GlobalProductsPageContent() {
                                                         onClick={() => setProductEditTab(tab.key)}
                                                         className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap rounded-t-lg transition-all border-b-2 ${productEditTab === tab.key
                                                             ? 'bg-gray-700/80 text-white border-blue-500'
-                                                            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/40 border-transparent'
+                                                            : 'text-muted-foreground hover:text-gray-200 hover:bg-gray-700/40 border-transparent'
                                                             }`}
                                                     >
                                                         {tab.label}
@@ -2965,29 +2965,29 @@ function GlobalProductsPageContent() {
                                             {productEditTab === 'general' && (
                                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                                     {/* Temel Bilgiler */}
-                                                    <div className="border-b border-gray-700 pb-4">
+                                                    <div className="border-b border-border pb-4">
                                                         <h3 className="text-sm font-medium text-blue-400 mb-3">📋 Temel Bilgiler</h3>
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">
+                                                                <label className="block text-sm text-muted-foreground mb-1">
                                                                     SKU (ID) <span className="text-red-500">*</span>
                                                                 </label>
                                                                 <input
                                                                     type="text"
                                                                     value={formData.id}
                                                                     onChange={e => { const v = e.target.value; setFormData(prev => ({ ...prev, id: v })); setValidationErrors(prev => { const next = { ...prev }; delete next.id; return next; }); }}
-                                                                    className={`w-full bg-gray-900 border rounded-lg px-4 py-2 font-mono text-sm ${validationErrors.id ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
+                                                                    className={`w-full bg-background border rounded-lg px-4 py-2 font-mono text-sm ${validationErrors.id ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
                                                                     placeholder="MIRA-MEAT-..."
                                                                 />
                                                                 {validationErrors.id && <p className="text-red-400 text-xs mt-1">{validationErrors.id}</p>}
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Barkod</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Barkod</label>
                                                                 <input
                                                                     type="text"
                                                                     value={(formData as any).barcode || ''}
                                                                     onChange={e => setFormData({ ...formData, barcode: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="EAN/UPC"
                                                                 />
                                                             </div>
@@ -2996,7 +2996,7 @@ function GlobalProductsPageContent() {
 
 
                                                     {/* Ürün Detay */}
-                                                    <div className="border-b border-gray-700 pb-4">
+                                                    <div className="border-b border-border pb-4">
                                                         <h3 className="text-sm font-medium text-green-400 mb-4">🛍️ {t('urunDetaylari')}</h3>
 
                                                         {/* Row 1: Ürün Adı + Üretici Markası */}
@@ -3014,12 +3014,12 @@ function GlobalProductsPageContent() {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('ureticiMarkasi')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('ureticiMarkasi')}</label>
                                                                 <input
                                                                     type="text"
                                                                     value={(formData as any).brand || ''}
                                                                     onChange={e => setFormData({ ...formData, brand: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder={t('ornGaziPinarYayla')}
                                                                 />
                                                             </div>
@@ -3028,11 +3028,11 @@ function GlobalProductsPageContent() {
                                                         {/* Row 2: Birim + Durum + Vergi Oranı */}
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Birim *</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Birim *</label>
                                                                 <select
                                                                     value={formData.defaultUnit}
                                                                     onChange={e => setFormData({ ...formData, defaultUnit: e.target.value as any })}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2"
                                                                 >
                                                                     <option value="kg">KG</option>
                                                                     <option value="adet">Adet</option>
@@ -3041,18 +3041,18 @@ function GlobalProductsPageContent() {
                                                                 </select>
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Durum</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Durum</label>
                                                                 <select
                                                                     value={(formData as any).isActive !== false ? 'true' : 'false'}
                                                                     onChange={e => setFormData({ ...formData, isActive: e.target.value === 'true' } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2"
                                                                 >
                                                                     <option value="true">✓ Aktif</option>
                                                                     <option value="false">✗ Deaktif</option>
                                                                 </select>
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('vergiOrani')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('vergiOrani')}</label>
                                                                 <select
                                                                     value={(formData as any).taxRate === undefined ? '7' : String((formData as any).taxRate)}
                                                                     onChange={e => {
@@ -3066,7 +3066,7 @@ function GlobalProductsPageContent() {
                                                                             setFormData({ ...formData, taxRate: parseFloat(val) } as any);
                                                                         }
                                                                     }}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2"
                                                                 >
                                                                     <option value="0">%0 (Vergisiz)</option>
                                                                     <option value="7">{t('7Indirimli')}</option>
@@ -3102,7 +3102,7 @@ function GlobalProductsPageContent() {
                                             {productEditTab === 'media' && (
                                                 <div className="space-y-6">
                                                     {/* Ürün Görselleri */}
-                                                    <div className="border-b border-gray-700 pb-4">
+                                                    <div className="border-b border-border pb-4">
                                                         <h3 className="text-sm font-medium text-purple-400 mb-3">{t('urunGorselleriMax5')}</h3>
                                                         <div className="space-y-3">
                                                             {/* Image Preview Grid */}
@@ -3162,7 +3162,7 @@ function GlobalProductsPageContent() {
                                                     </div>
 
                                                     {/* Tedarik & İzlenebilirlik (Collapsible) */}
-                                                    <div className="border-b border-gray-700 pb-4">
+                                                    <div className="border-b border-border pb-4">
                                                         <button
                                                             type="button"
                                                             onClick={() => setFormData(prev => ({ ...prev, _tedarikOpen: !(prev as any)._tedarikOpen } as any))}
@@ -3173,44 +3173,44 @@ function GlobalProductsPageContent() {
                                                         </button>
                                                         {(formData as any)._tedarikOpen && <div className="grid grid-cols-2 gap-3 mt-3">
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('toptanciAdi')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('toptanciAdi')}</label>
                                                                 <input
                                                                     type="text"
                                                                     value={(formData as any).supplierName || ''}
                                                                     onChange={e => setFormData({ ...formData, supplierName: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder={t('ornMetroSelgros')}
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('sarjNumarasi')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('sarjNumarasi')}</label>
                                                                 <input
                                                                     type="text"
                                                                     value={(formData as any).batchNumber || ''}
                                                                     onChange={e => setFormData({ ...formData, batchNumber: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="Lot/Batch No"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('alisFiyati')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('alisFiyati')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.01"
                                                                     value={(formData as any).purchasePrice || ''}
                                                                     onChange={e => setFormData({ ...formData, purchasePrice: parseFloat(e.target.value) || 0 } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('satisFiyati')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('satisFiyati')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.01"
                                                                     value={(formData as any).sellingPrice || ''}
                                                                     onChange={e => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="0.00"
                                                                 />
                                                             </div>
@@ -3229,31 +3229,31 @@ function GlobalProductsPageContent() {
                                                         </h4>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                             <div className="md:col-span-2">
-                                                                <label className="text-xs text-gray-400 mb-1 block">Ürün İçeriği / Zutaten (LMIV sırasına göre)</label>
-                                                                <textarea value={(formData as any).ingredients || ''} onChange={e => setFormData({ ...formData, ingredients: e.target.value } as any)} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Ürün İçeriği / Zutaten (LMIV sırasına göre)</label>
+                                                                <textarea value={(formData as any).ingredients || ''} onChange={e => setFormData({ ...formData, ingredients: e.target.value } as any)} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Tüketim Bilgisi (Verbraucherinformation)</label>
-                                                                <textarea value={(formData as any).consumptionInfo || ''} onChange={e => setFormData({ ...formData, consumptionInfo: e.target.value } as any)} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Tüketim Bilgisi (Verbraucherinformation)</label>
+                                                                <textarea value={(formData as any).consumptionInfo || ''} onChange={e => setFormData({ ...formData, consumptionInfo: e.target.value } as any)} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Katkı Maddeleri / Zusatzstoffe</label>
-                                                                <input value={((formData as any).additives || []).join(', ')} onChange={e => setFormData({ ...formData, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) } as any)} placeholder="E300, E330, E621..." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Katkı Maddeleri / Zusatzstoffe</label>
+                                                                <input value={((formData as any).additives || []).join(', ')} onChange={e => setFormData({ ...formData, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) } as any)} placeholder="E300, E330, E621..." className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Herkunft / Menşe</label>
-                                                                <input value={(formData as any).origin || (formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, origin: e.target.value } as any)} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Herkunft / Menşe</label>
+                                                                <input value={(formData as any).origin || (formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, origin: e.target.value } as any)} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div className="flex items-center gap-3">
                                                                 <label className="inline-flex items-center gap-2 cursor-pointer">
-                                                                    <input type="checkbox" checked={(formData as any).containsAlcohol || false} onChange={e => setFormData({ ...formData, containsAlcohol: e.target.checked } as any)} className="w-4 h-4 rounded border-gray-600 bg-gray-800" />
-                                                                    <span className="text-xs text-gray-300">🍷 Alkol İçerir (Alkoholhaltig)</span>
+                                                                    <input type="checkbox" checked={(formData as any).containsAlcohol || false} onChange={e => setFormData({ ...formData, containsAlcohol: e.target.checked } as any)} className="w-4 h-4 rounded border-gray-600 bg-card" />
+                                                                    <span className="text-xs text-foreground">🍷 Alkol İçerir (Alkoholhaltig)</span>
                                                                 </label>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
                                                     <div>
@@ -3288,7 +3288,7 @@ function GlobalProductsPageContent() {
                                                                         }}
                                                                         className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition ${checked
                                                                             ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                                                                            : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:border-gray-500'
+                                                                            : 'bg-card/50 border-border text-gray-500 hover:border-gray-500'
                                                                             }`}
                                                                     >
                                                                         <span className="text-lg">{allergen.emoji}</span>
@@ -3300,7 +3300,7 @@ function GlobalProductsPageContent() {
                                                         </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
                                                     <div>
@@ -3336,7 +3336,7 @@ function GlobalProductsPageContent() {
                                                                             (nutrition as any)[item.key] = val === '' ? undefined : parseFloat(val);
                                                                             setFormData({ ...formData, nutritionPer100g: nutrition } as any);
                                                                         }}
-                                                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-2 py-1.5 text-xs"
+                                                                        className="w-full bg-background border border-gray-600 rounded-lg px-2 py-1.5 text-xs"
                                                                     />
                                                                 </div>
                                                             ))}
@@ -3344,7 +3344,7 @@ function GlobalProductsPageContent() {
                                                         <p className="text-[10px] text-gray-600 mt-1">* EU Big 7 — zorunlu beyan alanları</p>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
                                                     <div>
@@ -3383,7 +3383,7 @@ function GlobalProductsPageContent() {
                                                                         }}
                                                                         className={`px-3 py-2 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${selected
                                                                             ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/10'
-                                                                            : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-500'
+                                                                            : 'bg-card/50 border-border text-muted-foreground hover:border-gray-500'
                                                                             }`}
                                                                     >
                                                                         <span>{cert.emoji}</span>
@@ -3394,7 +3394,7 @@ function GlobalProductsPageContent() {
                                                         </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
                                                     <div>
@@ -3403,21 +3403,21 @@ function GlobalProductsPageContent() {
                                                         </h4>
                                                         <div className="space-y-3">
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Dahili Notlar</label>
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Dahili Notlar</label>
                                                                 <textarea
                                                                     value={(formData as any).internalNotes || ''}
                                                                     onChange={e => setFormData({ ...formData, internalNotes: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-sm min-h-[80px]"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2 text-sm min-h-[80px]"
                                                                     placeholder="Sadece admin panelinde görünür notlar..."
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Etiketler</label>
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Etiketler</label>
                                                                 <div className="flex gap-2 items-center mb-2">
                                                                     <input
                                                                         type="text"
                                                                         placeholder="Etiket ekle (Enter ile)"
-                                                                        className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                                                                        className="flex-1 bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm"
                                                                         onKeyDown={(e) => {
                                                                             if (e.key === 'Enter') {
                                                                                 e.preventDefault();
@@ -3447,7 +3447,7 @@ function GlobalProductsPageContent() {
                                                         </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
                                                     <div>
@@ -3455,64 +3455,64 @@ function GlobalProductsPageContent() {
                                                             <span>🕒</span> Denetim İzi
                                                         </h4>
                                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                            <div className="bg-background/30 rounded p-3 border border-border/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Oluşturulma</p>
-                                                                <p className="text-xs text-gray-300">{(formData as any).createdAt ? new Date((formData as any).createdAt).toLocaleString('de-DE') : t('henuz_kaydedilmedi')}</p>
+                                                                <p className="text-xs text-foreground">{(formData as any).createdAt ? new Date((formData as any).createdAt).toLocaleString('de-DE') : t('henuz_kaydedilmedi')}</p>
                                                             </div>
-                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                            <div className="bg-background/30 rounded p-3 border border-border/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Son Güncelleme</p>
-                                                                <p className="text-xs text-gray-300">{(formData as any).updatedAt ? new Date((formData as any).updatedAt).toLocaleString('de-DE') : '--'}</p>
+                                                                <p className="text-xs text-foreground">{(formData as any).updatedAt ? new Date((formData as any).updatedAt).toLocaleString('de-DE') : '--'}</p>
                                                             </div>
-                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                            <div className="bg-background/30 rounded p-3 border border-border/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Son Düzenleyen</p>
-                                                                <p className="text-xs text-gray-300">{(formData as any).lastModifiedBy || '--'}</p>
+                                                                <p className="text-xs text-foreground">{(formData as any).lastModifiedBy || '--'}</p>
                                                             </div>
-                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                            <div className="bg-background/30 rounded p-3 border border-border/50">
                                                                 <p className="text-xs text-gray-500 mb-1">Menşe Ülke</p>
-                                                                <input type="text" value={(formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, originCountry: e.target.value } as any)} className="w-full bg-transparent border-0 text-xs text-gray-300 p-0 focus:outline-none" placeholder="örn: Almanya, Türkiye" />
+                                                                <input type="text" value={(formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, originCountry: e.target.value } as any)} className="w-full bg-transparent border-0 text-xs text-foreground p-0 focus:outline-none" placeholder="örn: Almanya, Türkiye" />
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <hr className="border-gray-700/50" />
+                                                    <hr className="border-border/50" />
 
                                                     {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
                                                     <div>
-                                                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
                                                         </h4>
                                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Gewicht (Ağırlık)</label>
-                                                                <input value={(formData as any).weight || ''} onChange={e => setFormData({ ...formData, weight: e.target.value } as any)} placeholder="500g, 1kg" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Gewicht (Ağırlık)</label>
+                                                                <input value={(formData as any).weight || ''} onChange={e => setFormData({ ...formData, weight: e.target.value } as any)} placeholder="500g, 1kg" className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Packung (Ambalaj)</label>
-                                                                <input value={(formData as any).packung || ''} onChange={e => setFormData({ ...formData, packung: e.target.value } as any)} placeholder="Vakuum, Schale" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Packung (Ambalaj)</label>
+                                                                <input value={(formData as any).packung || ''} onChange={e => setFormData({ ...formData, packung: e.target.value } as any)} placeholder="Vakuum, Schale" className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Gehäusetemperatur (Saklama)</label>
-                                                                <input value={(formData as any).storageTemp || ''} onChange={e => setFormData({ ...formData, storageTemp: e.target.value } as any)} placeholder="+2°C bis +7°C" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Gehäusetemperatur (Saklama)</label>
+                                                                <input value={(formData as any).storageTemp || ''} onChange={e => setFormData({ ...formData, storageTemp: e.target.value } as any)} placeholder="+2°C bis +7°C" className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">MHD (Mindesthaltbarkeit)</label>
-                                                                <input value={(formData as any).mhd || ''} onChange={e => setFormData({ ...formData, mhd: e.target.value } as any)} placeholder="z.B. 14 Tage" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">MHD (Mindesthaltbarkeit)</label>
+                                                                <input value={(formData as any).mhd || ''} onChange={e => setFormData({ ...formData, mhd: e.target.value } as any)} placeholder="z.B. 14 Tage" className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
-                                                                <input type="date" value={(formData as any).productionDate || ''} onChange={e => setFormData({ ...formData, productionDate: e.target.value } as any)} className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Üretim Tarihi</label>
+                                                                <input type="date" value={(formData as any).productionDate || ''} onChange={e => setFormData({ ...formData, productionDate: e.target.value } as any)} className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Son Kullanma Tarihi</label>
-                                                                <input type="date" value={(formData as any).expirationDate || ''} onChange={e => setFormData({ ...formData, expirationDate: e.target.value } as any)} className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Son Kullanma Tarihi</label>
+                                                                <input type="date" value={(formData as any).expirationDate || ''} onChange={e => setFormData({ ...formData, expirationDate: e.target.value } as any)} className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs text-gray-400 mb-1 block">Artikelnummer</label>
-                                                                <input value={(formData as any).artikelnummer || ''} onChange={e => setFormData({ ...formData, artikelnummer: e.target.value } as any)} placeholder="Ürün No" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Artikelnummer</label>
+                                                                <input value={(formData as any).artikelnummer || ''} onChange={e => setFormData({ ...formData, artikelnummer: e.target.value } as any)} placeholder="Ürün No" className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                                                             </div>
                                                             <div className="col-span-2 md:col-span-3 lg:col-span-4">
-                                                                <label className="text-xs text-gray-400 mb-1 block">Besondere Informationen (Özel Bilgiler)</label>
-                                                                <textarea value={(formData as any).specialInfo || ''} onChange={e => setFormData({ ...formData, specialInfo: e.target.value } as any)} rows={2} placeholder="Özel uyarılar, saklama talimatları..." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
+                                                                <label className="text-xs text-muted-foreground mb-1 block">Besondere Informationen (Özel Bilgiler)</label>
+                                                                <textarea value={(formData as any).specialInfo || ''} onChange={e => setFormData({ ...formData, specialInfo: e.target.value } as any)} rows={2} placeholder="Özel uyarılar, saklama talimatları..." className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -3528,7 +3528,7 @@ function GlobalProductsPageContent() {
                                                         <div className="flex items-center justify-between">
                                                             <div>
                                                                 <h3 className="text-sm font-medium text-orange-400">🚫 Stokta Yok İşareti</h3>
-                                                                <p className="text-xs text-gray-400 mt-1">Aktif edildiğinde ürün uygulamada gri tonla gösterilir, silinmez.</p>
+                                                                <p className="text-xs text-muted-foreground mt-1">Aktif edildiğinde ürün uygulamada gri tonla gösterilir, silinmez.</p>
                                                             </div>
                                                             <label className="relative inline-flex items-center cursor-pointer">
                                                                 <input
@@ -3538,7 +3538,7 @@ function GlobalProductsPageContent() {
                                                                     className="sr-only peer"
                                                                 />
                                                                 <div className="w-11 h-6 bg-gray-600 peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                                                <span className={`ml-2 text-sm font-medium ${(formData as any).outOfStock ? 'text-orange-400' : 'text-gray-400'}`}>
+                                                                <span className={`ml-2 text-sm font-medium ${(formData as any).outOfStock ? 'text-orange-400' : 'text-muted-foreground'}`}>
                                                                     {(formData as any).outOfStock ? 'Stokta Yok' : 'Stokta'}
                                                                 </span>
                                                             </label>
@@ -3549,46 +3549,46 @@ function GlobalProductsPageContent() {
                                                         <h3 className="text-sm font-medium text-emerald-400 mb-3">{t('stokYonetimi')}</h3>
                                                         <div className="grid grid-cols-3 gap-3 mb-3">
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Mevcut Stok</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Mevcut Stok</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).currentStock || ''}
                                                                     onChange={e => setFormData({ ...formData, currentStock: parseFloat(e.target.value) || 0 } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="0"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Min. Stok</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Min. Stok</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).minStock || ''}
                                                                     onChange={e => setFormData({ ...formData, minStock: parseFloat(e.target.value) || 0 } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="0"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('siparisNoktasi')}</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">{t('siparisNoktasi')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={(formData as any).reorderPoint || ''}
                                                                     onChange={e => setFormData({ ...formData, reorderPoint: parseFloat(e.target.value) || 0 } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder="0"
                                                                 />
                                                             </div>
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Stok Birimi</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Stok Birimi</label>
                                                                 <select
                                                                     value={(formData as any).stockUnit || 'kg'}
                                                                     onChange={e => setFormData({ ...formData, stockUnit: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2"
                                                                 >
                                                                     <option value="kg">KG</option>
                                                                     <option value="adet">Adet</option>
@@ -3598,12 +3598,12 @@ function GlobalProductsPageContent() {
                                                                 </select>
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Depo/Raf Konumu</label>
+                                                                <label className="block text-sm text-muted-foreground mb-1">Depo/Raf Konumu</label>
                                                                 <input
                                                                     type="text"
                                                                     value={(formData as any).stockLocation || ''}
                                                                     onChange={e => setFormData({ ...formData, stockLocation: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                                    className="w-full bg-background border border-gray-600 rounded-lg px-4 py-2"
                                                                     placeholder={t('ornRafA3SogukDepo')}
                                                                 />
                                                             </div>
@@ -3625,11 +3625,11 @@ function GlobalProductsPageContent() {
                                                     {/* App Ayarları Başlık */}
                                                     <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4">
                                                         <h3 className="text-sm font-medium text-indigo-400 mb-1">📱 Mobil Uygulama Ayarları</h3>
-                                                        <p className="text-xs text-gray-400">Bu bölümdeki ayarlar doğrudan mobil uygulama görünümünü etkiler.</p>
+                                                        <p className="text-xs text-muted-foreground">Bu bölümdeki ayarlar doğrudan mobil uygulama görünümünü etkiler.</p>
                                                     </div>
 
                                                     {/* 🎛️ Ürün Seçenekleri (Lieferando-style Option Groups) */}
-                                                    <div className="lg:col-span-2 border-t border-gray-700 pt-4">
+                                                    <div className="lg:col-span-2 border-t border-border pt-4">
                                                         <div className="flex items-center justify-between mb-3">
                                                             <h3 className="text-sm font-medium text-amber-400">{t('urunSecenekleriVaryantlarEkstralar')}</h3>
                                                             <button
@@ -3654,14 +3654,14 @@ function GlobalProductsPageContent() {
                                                         </div>
 
                                                         {((formData as any).optionGroups || []).length === 0 ? (
-                                                            <div className="bg-gray-900/50 border border-dashed border-gray-600 rounded-xl p-6 text-center">
+                                                            <div className="bg-background/50 border border-dashed border-gray-600 rounded-xl p-6 text-center">
                                                                 <p className="text-gray-500 text-sm">{t('henuzSecenekGrubuYok')}</p>
                                                                 <p className="text-gray-600 text-xs mt-1">{t('boyutSecimiEkstralarVeyaSonderwunschEklemek')}</p>
                                                             </div>
                                                         ) : (
                                                             <div className="space-y-4">
                                                                 {((formData as any).optionGroups || []).map((group: any, groupIdx: number) => (
-                                                                    <div key={group.id} className="bg-gray-900/60 border border-gray-600 rounded-xl p-4">
+                                                                    <div key={group.id} className="bg-background/60 border border-gray-600 rounded-xl p-4">
                                                                         {/* Group Header */}
                                                                         <div className="flex items-center gap-3 mb-3">
                                                                             <span className="text-gray-500 font-mono text-xs">#{groupIdx + 1}</span>
@@ -3673,7 +3673,7 @@ function GlobalProductsPageContent() {
                                                                                     groups[groupIdx] = { ...groups[groupIdx], name: e.target.value };
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
-                                                                                className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm font-semibold"
+                                                                                className="flex-1 bg-card border border-gray-600 rounded-lg px-3 py-1.5 text-sm font-semibold"
                                                                                 placeholder={t('grupAdiOrnBoyutSecimiEkstralar')}
                                                                             />
                                                                             <button
@@ -3691,7 +3691,7 @@ function GlobalProductsPageContent() {
                                                                         </div>
 
                                                                         {/* Group Settings */}
-                                                                        <div className="flex flex-wrap items-center gap-3 mb-3 pb-3 border-b border-gray-700">
+                                                                        <div className="flex flex-wrap items-center gap-3 mb-3 pb-3 border-b border-border">
                                                                             <select
                                                                                 value={group.type}
                                                                                 onChange={e => {
@@ -3704,7 +3704,7 @@ function GlobalProductsPageContent() {
                                                                                     };
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
-                                                                                className="bg-gray-800 border border-gray-600 rounded-lg px-2 py-1 text-xs"
+                                                                                className="bg-card border border-gray-600 rounded-lg px-2 py-1 text-xs"
                                                                             >
                                                                                 <option value="radio">{t('tekSecimRadio')}</option>
                                                                                 <option value="checkbox">{t('cokluSecimCheckbox')}</option>
@@ -3725,7 +3725,7 @@ function GlobalProductsPageContent() {
                                                                                     }}
                                                                                     className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-700 text-red-500"
                                                                                 />
-                                                                                <span className="text-xs text-gray-400">Zorunlu</span>
+                                                                                <span className="text-xs text-muted-foreground">Zorunlu</span>
                                                                             </label>
 
                                                                             {group.type === 'checkbox' && (
@@ -3741,7 +3741,7 @@ function GlobalProductsPageContent() {
                                                                                                 groups[groupIdx] = { ...groups[groupIdx], minSelect: parseInt(e.target.value) || 0 };
                                                                                                 setFormData({ ...formData, optionGroups: groups } as any);
                                                                                             }}
-                                                                                            className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-center"
+                                                                                            className="w-14 bg-card border border-gray-600 rounded px-2 py-1 text-xs text-center"
                                                                                         />
                                                                                     </div>
                                                                                     <div className="flex items-center gap-1">
@@ -3755,7 +3755,7 @@ function GlobalProductsPageContent() {
                                                                                                 groups[groupIdx] = { ...groups[groupIdx], maxSelect: parseInt(e.target.value) || -1 };
                                                                                                 setFormData({ ...formData, optionGroups: groups } as any);
                                                                                             }}
-                                                                                            className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-center"
+                                                                                            className="w-14 bg-card border border-gray-600 rounded px-2 py-1 text-xs text-center"
                                                                                         />
                                                                                         <span className="text-[10px] text-gray-600">{t('1Sinirsiz')}</span>
                                                                                     </div>
@@ -3766,7 +3766,7 @@ function GlobalProductsPageContent() {
                                                                         {/* Options List */}
                                                                         <div className="space-y-2">
                                                                             {(group.options || []).map((opt: any, optIdx: number) => (
-                                                                                <div key={opt.id} className="flex items-center gap-2 bg-gray-800/50 rounded-lg px-3 py-2">
+                                                                                <div key={opt.id} className="flex items-center gap-2 bg-card/50 rounded-lg px-3 py-2">
                                                                                     <span className="text-gray-600 text-xs w-4">{optIdx + 1}.</span>
                                                                                     <input
                                                                                         type="text"
@@ -3778,7 +3778,7 @@ function GlobalProductsPageContent() {
                                                                                             groups[groupIdx] = { ...groups[groupIdx], options: opts };
                                                                                             setFormData({ ...formData, optionGroups: groups } as any);
                                                                                         }}
-                                                                                        className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm"
+                                                                                        className="flex-1 bg-background border border-gray-600 rounded px-2 py-1 text-sm"
                                                                                         placeholder={t('secenekAdiOrnKleinGroMit')}
                                                                                     />
                                                                                     <div className="flex items-center gap-1">
@@ -3795,7 +3795,7 @@ function GlobalProductsPageContent() {
                                                                                                 groups[groupIdx] = { ...groups[groupIdx], options: opts };
                                                                                                 setFormData({ ...formData, optionGroups: groups } as any);
                                                                                             }}
-                                                                                            className="w-20 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-right"
+                                                                                            className="w-20 bg-background border border-gray-600 rounded px-2 py-1 text-sm text-right"
                                                                                             placeholder="0.00"
                                                                                         />
                                                                                     </div>
@@ -3889,13 +3889,13 @@ function GlobalProductsPageContent() {
                                                 return (
                                                     <div className="space-y-6">
                                                         {/* Vergi Oranı — Üstte */}
-                                                        <div className="border-b border-gray-700 pb-4">
+                                                        <div className="border-b border-border pb-4">
                                                             <div className="flex items-center justify-between mb-3">
                                                                 <h3 className="text-sm font-medium text-amber-400">🏦 Vergi Oranı</h3>
                                                                 <span className="text-xs text-gray-500">Netto/Brutto hesaplaması bu orana göre yapılır</span>
                                                             </div>
                                                             <div className="flex items-center gap-3">
-                                                                <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setFormData({ ...formData, taxRate: parseFloat(customRate) || 0 } as any); } } else { setFormData({ ...formData, taxRate: parseFloat(val) } as any); } }} className="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                                                                <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setFormData({ ...formData, taxRate: parseFloat(customRate) || 0 } as any); } } else { setFormData({ ...formData, taxRate: parseFloat(val) } as any); } }} className="bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm">
                                                                     <option value="0">%0 (Vergisiz)</option>
                                                                     <option value="7">%7 (İndirimli)</option>
                                                                     <option value="19">%19 (Standart)</option>
@@ -3908,14 +3908,14 @@ function GlobalProductsPageContent() {
                                                         </div>
 
                                                         {/* Fiyatlandırma + Netto/Brutto Toggle */}
-                                                        <div className="border-b border-gray-700 pb-4">
+                                                        <div className="border-b border-border pb-4">
                                                             <div className="flex items-center justify-between mb-4">
                                                                 <h3 className="text-sm font-medium text-amber-400">💰 Fiyatlandırma</h3>
-                                                                <div className="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-600">
-                                                                    <button type="button" onClick={() => setFormData({ ...formData, _priceInputMode: 'netto' } as any)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+                                                                <div className="flex items-center bg-card rounded-lg p-0.5 border border-gray-600">
+                                                                    <button type="button" onClick={() => setFormData({ ...formData, _priceInputMode: 'netto' } as any)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                                         Netto girişi
                                                                     </button>
-                                                                    <button type="button" onClick={() => setFormData({ ...formData, _priceInputMode: 'brutto' } as any)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+                                                                    <button type="button" onClick={() => setFormData({ ...formData, _priceInputMode: 'brutto' } as any)} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                                         Brutto girişi
                                                                     </button>
                                                                 </div>
@@ -3923,14 +3923,14 @@ function GlobalProductsPageContent() {
 
                                                             {/* Alış Fiyatı */}
                                                             <div className="mb-4">
-                                                                <label className="block text-sm text-gray-300 font-medium mb-2">Alış Fiyatı</label>
+                                                                <label className="block text-sm text-foreground font-medium mb-2">Alış Fiyatı</label>
                                                                 <div className="grid grid-cols-2 gap-3">
                                                                     <div>
                                                                         <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
                                                                         {priceInputMode === 'netto' ? (
-                                                                            <input type="number" step="0.01" value={(formData as any).purchasePrice || ''} onChange={e => setFormData({ ...formData, purchasePrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                            <input type="number" step="0.01" value={(formData as any).purchasePrice || ''} onChange={e => setFormData({ ...formData, purchasePrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                                         ) : (
-                                                                            <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                            <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                 {(formData as any).purchasePrice ? `€${((formData as any).purchasePrice).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                             </div>
                                                                         )}
@@ -3938,9 +3938,9 @@ function GlobalProductsPageContent() {
                                                                     <div>
                                                                         <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
                                                                         {priceInputMode === 'brutto' ? (
-                                                                            <input type="number" step="0.01" value={(formData as any).purchasePrice ? calcBrutto((formData as any).purchasePrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, purchasePrice: calcNetto(brutto) } as any); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                            <input type="number" step="0.01" value={(formData as any).purchasePrice ? calcBrutto((formData as any).purchasePrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, purchasePrice: calcNetto(brutto) } as any); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                                         ) : (
-                                                                            <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                            <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                 {(formData as any).purchasePrice ? `€${calcBrutto((formData as any).purchasePrice).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                             </div>
                                                                         )}
@@ -3950,14 +3950,14 @@ function GlobalProductsPageContent() {
 
                                                             {/* Satış Fiyatı */}
                                                             <div className="mb-4">
-                                                                <label className="block text-sm text-gray-300 font-medium mb-2">Satış Fiyatı</label>
+                                                                <label className="block text-sm text-foreground font-medium mb-2">Satış Fiyatı</label>
                                                                 <div className="grid grid-cols-2 gap-3">
                                                                     <div>
                                                                         <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
                                                                         {priceInputMode === 'netto' ? (
-                                                                            <input type="number" step="0.01" value={(formData as any).sellingPrice || ''} onChange={e => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                            <input type="number" step="0.01" value={(formData as any).sellingPrice || ''} onChange={e => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                                         ) : (
-                                                                            <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                            <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                 {(formData as any).sellingPrice ? `€${((formData as any).sellingPrice).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                             </div>
                                                                         )}
@@ -3965,9 +3965,9 @@ function GlobalProductsPageContent() {
                                                                     <div>
                                                                         <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
                                                                         {priceInputMode === 'brutto' ? (
-                                                                            <input type="number" step="0.01" value={(formData as any).sellingPrice ? calcBrutto((formData as any).sellingPrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, sellingPrice: calcNetto(brutto) } as any); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                                            <input type="number" step="0.01" value={(formData as any).sellingPrice ? calcBrutto((formData as any).sellingPrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, sellingPrice: calcNetto(brutto) } as any); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                                         ) : (
-                                                                            <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                            <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                 {(formData as any).sellingPrice ? `€${calcBrutto((formData as any).sellingPrice).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                             </div>
                                                                         )}
@@ -3976,7 +3976,7 @@ function GlobalProductsPageContent() {
                                                             </div>
 
                                                             {/* Kar Marjı Özet */}
-                                                            <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                                                            <div className="bg-card/50 rounded-lg p-3 border border-border">
                                                                 <div className="grid grid-cols-3 gap-3 text-center">
                                                                     <div>
                                                                         <span className="block text-xs text-gray-500 mb-1">Kar Marjı</span>
@@ -4002,7 +4002,7 @@ function GlobalProductsPageContent() {
                                                             </div>
 
                                                             {/* 📱 App Satış Fiyatı (Kurye + Gel-Al) */}
-                                                            <div className="border-b border-gray-700 pb-4">
+                                                            <div className="border-b border-border pb-4">
                                                                 <div className="flex items-center justify-between mb-3">
                                                                     <h3 className="text-sm font-medium text-blue-400">📱 App Satış Fiyatı</h3>
                                                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -4018,7 +4018,7 @@ function GlobalProductsPageContent() {
                                                                             }}
                                                                             className="w-4 h-4 rounded accent-blue-500"
                                                                         />
-                                                                        <span className="text-xs text-gray-400">{t('farkli_fiyat')}</span>
+                                                                        <span className="text-xs text-muted-foreground">{t('farkli_fiyat')}</span>
                                                                     </label>
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 mb-3">Kurye ve Gel-Al siparişlerinde gösterilen fiyat</p>
@@ -4027,9 +4027,9 @@ function GlobalProductsPageContent() {
                                                                         <div>
                                                                             <label className="block text-xs text-gray-500 mb-1">Netto</label>
                                                                             {priceInputMode === 'netto' ? (
-                                                                                <input type="number" step="0.01" value={(formData as any).appSellingPrice || ''} onChange={e => setFormData({ ...formData, appSellingPrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-gray-900 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
+                                                                                <input type="number" step="0.01" value={(formData as any).appSellingPrice || ''} onChange={e => setFormData({ ...formData, appSellingPrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-background border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
                                                                             ) : (
-                                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                     {(formData as any).appSellingPrice ? `${(formData as any).appSellingPrice.toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                                 </div>
                                                                             )}
@@ -4037,16 +4037,16 @@ function GlobalProductsPageContent() {
                                                                         <div>
                                                                             <label className="block text-xs text-gray-500 mb-1">Brutto <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
                                                                             {priceInputMode === 'brutto' ? (
-                                                                                <input type="number" step="0.01" value={(formData as any).appSellingPrice ? calcBrutto((formData as any).appSellingPrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, appSellingPrice: calcNetto(brutto) } as any); }} className="w-full bg-gray-900 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
+                                                                                <input type="number" step="0.01" value={(formData as any).appSellingPrice ? calcBrutto((formData as any).appSellingPrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, appSellingPrice: calcNetto(brutto) } as any); }} className="w-full bg-background border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
                                                                             ) : (
-                                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                     {(formData as any).appSellingPrice ? `${calcBrutto((formData as any).appSellingPrice).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                                 </div>
                                                                             )}
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="px-4 py-3 bg-gray-800/40 border border-gray-700 rounded-lg text-center">
+                                                                    <div className="px-4 py-3 bg-card/40 border border-border rounded-lg text-center">
                                                                         <span className="text-sm text-gray-500">💡 Satış fiyatı ile aynı{(formData as any).sellingPrice ? ` (${(formData as any).sellingPrice.toFixed(2)})` : ''}</span>
                                                                     </div>
                                                                 )}
@@ -4069,7 +4069,7 @@ function GlobalProductsPageContent() {
                                                                             }}
                                                                             className="w-4 h-4 rounded accent-emerald-500"
                                                                         />
-                                                                        <span className="text-xs text-gray-400">{t('farkli_fiyat')}</span>
+                                                                        <span className="text-xs text-muted-foreground">{t('farkli_fiyat')}</span>
                                                                     </label>
                                                                 </div>
                                                                 <p className="text-xs text-gray-500 mb-3">Mağaza içi raf/ESL etiketlerinde gösterilecek fiyat</p>
@@ -4078,9 +4078,9 @@ function GlobalProductsPageContent() {
                                                                         <div>
                                                                             <label className="block text-xs text-gray-500 mb-1">Netto</label>
                                                                             {priceInputMode === 'netto' ? (
-                                                                                <input type="number" step="0.01" value={(formData as any).inStorePrice || ''} onChange={e => setFormData({ ...formData, inStorePrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-gray-900 border border-emerald-600/50 rounded-lg px-4 py-2 text-emerald-200" placeholder="0.00" />
+                                                                                <input type="number" step="0.01" value={(formData as any).inStorePrice || ''} onChange={e => setFormData({ ...formData, inStorePrice: parseFloat(e.target.value) || 0 } as any)} className="w-full bg-background border border-emerald-600/50 rounded-lg px-4 py-2 text-emerald-200" placeholder="0.00" />
                                                                             ) : (
-                                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                     {(formData as any).inStorePrice ? `${(formData as any).inStorePrice.toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                                 </div>
                                                                             )}
@@ -4088,16 +4088,16 @@ function GlobalProductsPageContent() {
                                                                         <div>
                                                                             <label className="block text-xs text-gray-500 mb-1">Brutto <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
                                                                             {priceInputMode === 'brutto' ? (
-                                                                                <input type="number" step="0.01" value={(formData as any).inStorePrice ? calcBrutto((formData as any).inStorePrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, inStorePrice: calcNetto(brutto) } as any); }} className="w-full bg-gray-900 border border-emerald-600/50 rounded-lg px-4 py-2 text-emerald-200" placeholder="0.00" />
+                                                                                <input type="number" step="0.01" value={(formData as any).inStorePrice ? calcBrutto((formData as any).inStorePrice) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setFormData({ ...formData, inStorePrice: calcNetto(brutto) } as any); }} className="w-full bg-background border border-emerald-600/50 rounded-lg px-4 py-2 text-emerald-200" placeholder="0.00" />
                                                                             ) : (
-                                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                                <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                                     {(formData as any).inStorePrice ? `${calcBrutto((formData as any).inStorePrice).toFixed(2)}` : <span className="text-gray-500">--</span>}
                                                                                 </div>
                                                                             )}
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="px-4 py-3 bg-gray-800/40 border border-gray-700 rounded-lg text-center">
+                                                                    <div className="px-4 py-3 bg-card/40 border border-border rounded-lg text-center">
                                                                         <span className="text-sm text-gray-500">💡 Satış fiyatı ile aynı{(formData as any).sellingPrice ? ` (${(formData as any).sellingPrice.toFixed(2)})` : ''}</span>
                                                                     </div>
                                                                 )}
@@ -4113,10 +4113,10 @@ function GlobalProductsPageContent() {
                                         </div>{/* End Scrollable Tab Content */}
 
                                         {/* Sticky Footer */}
-                                        <div className="flex-shrink-0 flex justify-end gap-3 p-6 pt-4 border-t border-gray-700">
+                                        <div className="flex-shrink-0 flex justify-end gap-3 p-6 pt-4 border-t border-border">
                                             <button
                                                 onClick={() => { setShowModal(false); setProductEditTab('general'); }}
-                                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                                className="px-4 py-2 text-muted-foreground hover:text-white transition-colors"
                                             >
                                                 {t('iptal')}
                                             </button>
@@ -4163,7 +4163,7 @@ export default function GlobalProductsPage() {
     const t = useTranslations('AdminProducts');
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-white flex items-center justify-center">
                 <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>

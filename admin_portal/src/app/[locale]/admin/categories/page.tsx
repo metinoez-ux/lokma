@@ -204,11 +204,11 @@ function CategoriesPageContent() {
     // Check if admin has access - for Super Admin show business selector inline
     if (!adminLoading && !butcherId && !isSuperAdmin) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="bg-card rounded-xl p-8 text-center max-w-md">
                     <span className="text-5xl">🔒</span>
                     <h2 className="text-xl font-bold text-white mt-4">{t('no_access')}</h2>
-                    <p className="text-gray-400 mt-2">
+                    <p className="text-muted-foreground mt-2">
                         {t('no_access_desc')}
                     </p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
@@ -228,14 +228,14 @@ function CategoriesPageContent() {
 
     if (loading || adminLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Header */}
             <header className="bg-gradient-to-r from-violet-800 to-violet-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -259,10 +259,10 @@ function CategoriesPageContent() {
 
             <main className="max-w-7xl mx-auto px-4 py-6">
                 {categories.length === 0 ? (
-                    <div className="bg-gray-800 rounded-xl p-12 text-center">
+                    <div className="bg-card rounded-xl p-12 text-center">
                         <span className="text-5xl">🗂️</span>
                         <h3 className="text-lg font-medium text-white mt-4">{t('no_categories')}</h3>
-                        <p className="text-gray-400 mt-2">{t('no_categories_desc')}</p>
+                        <p className="text-muted-foreground mt-2">{t('no_categories_desc')}</p>
                         <button
                             onClick={openAdd}
                             className="mt-4 px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition"
@@ -275,7 +275,7 @@ function CategoriesPageContent() {
                         {categories.map((category, index) => (
                             <div
                                 key={category.id}
-                                className={`bg-gray-800 rounded-xl p-4 border transition ${category.isActive ? 'border-gray-700' : 'border-red-900/50 opacity-60'
+                                className={`bg-card rounded-xl p-4 border transition ${category.isActive ? 'border-border' : 'border-red-900/50 opacity-60'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
@@ -338,14 +338,14 @@ function CategoriesPageContent() {
             {/* Add/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                    <div className="bg-card rounded-xl p-6 w-full max-w-md">
                         <h2 className="text-xl font-bold text-white mb-4">
                             {editingCategory ? t('edit_category') : t('new_category')}
                         </h2>
 
                         {/* Icon Selection */}
                         <div className="mb-4">
-                            <label className="text-gray-400 text-sm mb-2 block">{t('icon_label')}</label>
+                            <label className="text-muted-foreground text-sm mb-2 block">{t('icon_label')}</label>
                             <div className="flex flex-wrap gap-2">
                                 {DEFAULT_ICONS.map(icon => (
                                     <button
@@ -364,7 +364,7 @@ function CategoriesPageContent() {
 
                         {/* Name Input */}
                         <div className="mb-4">
-                            <label className="text-gray-400 text-sm mb-2 block">{t('category_name')}</label>
+                            <label className="text-muted-foreground text-sm mb-2 block">{t('category_name')}</label>
                             <input
                                 type="text"
                                 value={formData.name}
@@ -383,7 +383,7 @@ function CategoriesPageContent() {
                                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                     className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500 focus:ring-violet-500"
                                 />
-                                <span className="text-gray-300">{t('active_visible')}</span>
+                                <span className="text-foreground">{t('active_visible')}</span>
                             </label>
                         </div>
 
@@ -391,7 +391,7 @@ function CategoriesPageContent() {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
+                                className="flex-1 px-4 py-3 bg-gray-700 text-foreground rounded-lg hover:bg-gray-600 transition"
                             >
                                 {t('cancel')}
                             </button>
@@ -429,7 +429,7 @@ export default function CategoriesPage() {
   const t = useTranslations('AdminCategories');
 return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+            <div className="min-h-screen bg-background text-white flex items-center justify-center">
                 <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>

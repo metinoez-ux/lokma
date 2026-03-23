@@ -74,7 +74,7 @@ function PermissionToggle({
   return (
     <label
       className={`flex items-center gap-3 py-1.5 px-2 rounded-lg cursor-pointer transition-colors
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-card'}
         ${isOverride ? 'ring-1 ring-amber-400/50' : ''}
       `}
     >
@@ -111,7 +111,7 @@ function PermissionToggle({
           )}
         </div>
         {description && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{description}</div>
+          <div className="text-xs text-gray-500 dark:text-muted-foreground truncate">{description}</div>
         )}
       </div>
     </label>
@@ -151,13 +151,13 @@ function ModuleSection({
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 dark:border-border rounded-xl overflow-hidden">
       {/* Module Header */}
       <div
         className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors
           ${someChecked
             ? 'bg-green-50 dark:bg-green-900/20'
-            : 'bg-gray-50 dark:bg-gray-800/50'
+            : 'bg-gray-50 dark:bg-card/50'
           }
         `}
         onClick={() => !readOnly && handleToggleAll()}
@@ -167,7 +167,7 @@ function ModuleSection({
           <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
             {t(module.labelKey)}
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+          <span className="text-xs text-gray-500 dark:text-muted-foreground ml-1">
             ({actions.filter(([actionId]) => permissions[`${moduleId}.${actionId}` as PermissionKey] === true).length}/{actions.length})
           </span>
         </div>
@@ -179,7 +179,7 @@ function ModuleSection({
       </div>
 
       {/* Action Toggles */}
-      <div className="px-3 py-2 space-y-0.5 bg-white dark:bg-gray-900">
+      <div className="px-3 py-2 space-y-0.5 bg-white dark:bg-background">
         {actions.map(([actionId, actionDef]) => {
           const key = `${moduleId}.${actionId}` as PermissionKey;
           const isOverride = overrides ? key in overrides : false;
@@ -280,7 +280,7 @@ export default function PermissionEditor({
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             {t('perm.title')}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-sm text-gray-500 dark:text-muted-foreground mt-0.5">
             {t('perm.active_count', { granted: grantedCount, total: totalCount })}
           </p>
         </div>
@@ -296,8 +296,8 @@ export default function PermissionEditor({
 
       {/* Group Selector */}
       {!readOnly && (
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
-          <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-2">
+        <div className="bg-gray-50 dark:bg-card/50 rounded-xl p-4">
+          <label className="block text-xs font-semibold text-gray-600 dark:text-foreground uppercase tracking-wide mb-2">
             {t('perm.group_template_label')}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -308,7 +308,7 @@ export default function PermissionEditor({
                 className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all text-sm
                   ${localGroupId === group.id
                     ? `${group.color} text-white border-transparent shadow-md scale-[1.02]`
-                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                    : 'bg-white dark:bg-background border-gray-200 dark:border-border hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-foreground'
                   }
                 `}
               >
@@ -320,7 +320,7 @@ export default function PermissionEditor({
             ))}
           </div>
           {localGroupId && DEFAULT_PERMISSION_GROUPS[localGroupId] && (
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+            <p className="mt-2 text-xs text-gray-500 dark:text-muted-foreground italic">
               {t(DEFAULT_PERMISSION_GROUPS[localGroupId].descriptionKey)}
             </p>
           )}
@@ -340,11 +340,11 @@ export default function PermissionEditor({
             const isExpanded = expandedCategories.has(category);
 
             return (
-              <div key={category} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+              <div key={category} className="border border-gray-200 dark:border-border rounded-xl overflow-hidden">
                 {/* Category Header */}
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-100 dark:bg-card hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   <span className="flex items-center gap-2 font-bold text-sm text-gray-800 dark:text-gray-200">
                     <span>{icon}</span>
@@ -362,7 +362,7 @@ export default function PermissionEditor({
 
                 {/* Modules */}
                 {isExpanded && (
-                  <div className="p-3 space-y-3 bg-white dark:bg-gray-900">
+                  <div className="p-3 space-y-3 bg-white dark:bg-background">
                     {modules.map((mod) => (
                       <ModuleSection
                         key={mod.id}
