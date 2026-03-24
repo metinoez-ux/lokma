@@ -298,10 +298,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // 🔍 Store all loaded products for instant search
   List<ButcherProduct> _allProducts = [];
 
+  late final Stream<QuerySnapshot> _productsStream;
+
   @override
   void initState() {
     super.initState();
     _deliveryModeIndex = widget.initialDeliveryMode;
+    _productsStream = FirebaseFirestore.instance
+        .collection('businesses')
+        .doc(widget.businessId)
+        .collection('products')
+        .where('isActive', isEqualTo: true)
+        .snapshots();
     _loadButcherAndReviews();
     _setupCategoriesListener(); // 🔄 Real-time listener for categories
     
@@ -2323,12 +2331,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       backgroundColor: scaffoldBg,
       bottomNavigationBar: _buildCartBar(),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('businesses')
-            .doc(widget.businessId)
-            .collection('products')
-            .where('isActive', isEqualTo: true) // Only show active products
-            .snapshots(),
+        stream: _productsStream,
         builder: (context, snapshot) {
           // 🔴 Error handling for stream
           if (snapshot.hasError) {
@@ -2378,7 +2381,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             slivers: [
               // 1. LIEFERANDO-STYLE: White Top Bar (separate from hero)
               SliverAppBar(
-                expandedHeight: 0, // No expanded height - just the app bar
                 floating: false,
                 pinned: true,
                 backgroundColor: scaffoldBg,
@@ -3443,86 +3445,92 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final textRowHeight = 30.0; // Decreased roughly 6-10px
      final frontLipHeight = 10.0; // Decreased by 14px total
 
-     return Center(
-       child: ConstrainedBox(
-         constraints: const BoxConstraints(maxWidth: 600),
-         child: Container(
-           // Edge-to-edge! Only top corners will be rounded by the decorations inside.
-           margin: const EdgeInsets.only(top: 0),
-           height: cartButtonHeight + textRowHeight + frontLipHeight + bottomPadding + 12, // Adjusted padding
-           child: Stack(
-             alignment: Alignment.bottomCenter,
-             clipBehavior: Clip.none,
-             children: [
-               // Layer 1 (Back Wall): Dark wallet card holding the text
-               Positioned(
-                 top: 0,
-                 bottom: 0,
-                 left: 0,
-                 right: 0,
-                 child: Container(
-                   padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
-                   decoration: BoxDecoration(
-                     color: infoCardColor,
-                     borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                   ),
-                   alignment: Alignment.topCenter,
-                   child: Row(
-                     mainAxisAlignment: MainAxisAlignment.center,
-                     children: [
-                       Icon(
-                         isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
-                         size: 16,
-                         color: infoIconColor,
+     return Row(
+       mainAxisAlignment: MainAxisAlignment.center,
+       crossAxisAlignment: CrossAxisAlignment.end,
+       children: [
+         Flexible(
+           child: ConstrainedBox(
+             constraints: const BoxConstraints(maxWidth: 600),
+             child: Container(
+               // Edge-to-edge! Only top corners will be rounded by the decorations inside.
+               margin: const EdgeInsets.only(top: 0),
+               height: cartButtonHeight + textRowHeight + frontLipHeight + bottomPadding + 12, // Adjusted padding
+               child: Stack(
+                 alignment: Alignment.bottomCenter,
+                 clipBehavior: Clip.none,
+                 children: [
+                   // Layer 1 (Back Wall): Dark wallet card holding the text
+                   Positioned(
+                     top: 0,
+                     bottom: 0,
+                     left: 0,
+                     right: 0,
+                     child: Container(
+                       padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+                       decoration: BoxDecoration(
+                         color: infoCardColor,
+                         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                        ),
-                       const SizedBox(width: 6),
-                       Flexible(
-                         child: Text(
-                           isSuccess
-                               ? 'marketplace.min_order_success'.tr()
-                               : 'marketplace.min_order_add_text'.tr(namedArgs: {
-                                    'amount': remaining.toStringAsFixed(2),
-                                    'currency': currency,
-                                    'minOrder': minOrder.toStringAsFixed(0),
-                                  }),
-                           style: TextStyle(
-                             fontSize: 13,
-                             fontWeight: FontWeight.w600,
-                             color: infoTextColor,
+                       alignment: Alignment.topCenter,
+                       child: Row(
+                         mainAxisAlignment: MainAxisAlignment.center,
+                         children: [
+                           Icon(
+                             isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
+                             size: 16,
+                             color: infoIconColor,
                            ),
-                           textAlign: TextAlign.center,
-                           maxLines: 1,
-                           overflow: TextOverflow.ellipsis,
-                         ),
+                           const SizedBox(width: 6),
+                           Flexible(
+                             child: Text(
+                               isSuccess
+                                   ? 'marketplace.min_order_success'.tr()
+                                   : 'marketplace.min_order_add_text'.tr(namedArgs: {
+                                        'amount': remaining.toStringAsFixed(2),
+                                        'currency': currency,
+                                        'minOrder': minOrder.toStringAsFixed(0),
+                                      }),
+                               style: TextStyle(
+                                 fontSize: 13,
+                                 fontWeight: FontWeight.w600,
+                                 color: infoTextColor,
+                               ),
+                               textAlign: TextAlign.center,
+                               maxLines: 1,
+                               overflow: TextOverflow.ellipsis,
+                             ),
+                           ),
+                         ],
                        ),
-                     ],
+                     ),
                    ),
-                 ),
-               ),
-               // Layer 2 (Front Lip): Empty, thinner light grey card
-               Positioned(
-                 top: textRowHeight, // Lets the text peek out
-                 bottom: 0,
-                 left: 0,
-                 right: 0,
-                 child: Container(
-                   decoration: BoxDecoration(
-                     color: shadowStripColor,
-                     borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                   // Layer 2 (Front Lip): Empty, thinner light grey card
+                   Positioned(
+                     top: textRowHeight, // Lets the text peek out
+                     bottom: 0,
+                     left: 0,
+                     right: 0,
+                     child: Container(
+                       decoration: BoxDecoration(
+                         color: shadowStripColor,
+                         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                       ),
+                     ),
                    ),
-                 ),
+                   // Layer 3 (Front): Cart button floating inside the Front Lip
+                   Positioned(
+                     bottom: bottomPadding + 10, // Floating above the bottom edge safe area
+                     left: 16, 
+                     right: 16,
+                     child: cartButton,
+                   ),
+                 ],
                ),
-               // Layer 3 (Front): Cart button floating inside the Front Lip
-               Positioned(
-                 bottom: bottomPadding + 10, // Floating above the bottom edge safe area
-                 left: 16, 
-                 right: 16,
-                 child: cartButton,
-               ),
-             ],
+             ),
            ),
          ),
-       ),
+       ],
      );
    }
 
