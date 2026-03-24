@@ -2832,7 +2832,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           right: 0,
           bottom: 0,
           child: Container(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -2861,7 +2860,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildScannedTableBanner(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: _buildScannedTableBanner(),
+                ),
                 // UNIFIED Lieferando Footer (combines banner and button)
                 Builder(
                   builder: (context) {
@@ -2871,54 +2873,96 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     final remaining = minOrder - grandTotal;
                     
                     final isDark = Theme.of(context).brightness == Brightness.dark;
+                    final bottomPadding = MediaQuery.of(context).padding.bottom;
                     
                     if (!isUnderMin) {
-                      return _buildLieferandoCheckoutButton(grandTotal);
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding + 12),
+                        child: _buildLieferandoCheckoutButton(grandTotal),
+                      );
                     }
                     
+                    // Wallet-style: pocket illusion 
+                    final infoCardColor = isDark ? const Color(0xFF5A5652) : const Color(0xFFE2E2E2);
+                    final infoTextColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+                    final infoIconColor = infoTextColor;
+                    
+                    // Layer 2 (Front Lip): Empty, thinner, sits in front
+                    // We use surface color so it seamlessly blends into the solid part of the gradient.
+                    final shadowStripColor = Theme.of(context).colorScheme.surface;
+
+                    final cartButtonHeight = 54.0; 
+                    final textRowHeight = 30.0;
+                    final frontLipHeight = 14.0;
+
                     return Container(
-                      margin: const EdgeInsets.only(top: 8.0, bottom: 0.0), // Removed bottom 8.0
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0),
-                        borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      margin: const EdgeInsets.only(top: 0),
+                      height: cartButtonHeight + textRowHeight + frontLipHeight + bottomPadding + 12,
+                      child: Stack(
+                        alignment: Alignment.bottomCenter,
+                        clipBehavior: Clip.none,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 14, bottom: 8, left: 16, right: 16),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.pedal_bike, size: 16, color: isDark ? Colors.white70 : Colors.black54),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    'marketplace.min_order_add_text'.tr(namedArgs: {
-                                      'amount': remaining.toStringAsFixed(2),
-                                      'currency': CurrencyUtils.getCurrencySymbol(),
-                                      'minOrder': minOrder.toStringAsFixed(0),
-                                    }),
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: isDark ? Colors.white70 : Colors.black87,
-                                    ),
-                                    textAlign: TextAlign.center,
+                          // Layer 1 (Back Wall): Dark wallet card holding the text
+                          Positioned(
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+                              decoration: BoxDecoration(
+                                color: infoCardColor,
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                              ),
+                              alignment: Alignment.topCenter,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.pedal_bike,
+                                    size: 16,
+                                    color: infoIconColor,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      'marketplace.min_order_add_text'.tr(namedArgs: {
+                                        'amount': remaining.toStringAsFixed(2),
+                                        'currency': CurrencyUtils.getCurrencySymbol(),
+                                        'minOrder': minOrder.toStringAsFixed(0),
+                                      }),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: infoTextColor,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                          // Layer 2 (Front Lip): Empty, thinner light grey card
+                          Positioned(
+                            top: textRowHeight, 
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: shadowStripColor,
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                              ),
+                            ),
+                          ),
+                          // Layer 3 (Front): Cart button floating inside the Front Lip
+                          Positioned(
+                            bottom: bottomPadding + 10,
+                            left: 16, 
+                            right: 16,
                             child: _buildLieferandoCheckoutButton(grandTotal, isUnderMin: true),
                           ),
                         ],

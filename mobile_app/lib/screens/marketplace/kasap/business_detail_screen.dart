@@ -3313,7 +3313,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      // Track min order reached transition
      if (minOrder > 0 && isDeliveryMode) {
        if (remaining <= 0 && !_minOrderReached) {
-         // Just reached the minimum!
          _minOrderReached = true;
          _showMinOrderSuccess = true;
          HapticFeedback.mediumImpact();
@@ -3322,7 +3321,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
            if (mounted) setState(() => _showMinOrderSuccess = false);
          });
        } else if (remaining > 0 && _minOrderReached) {
-         // Dropped below minimum again
          _minOrderReached = false;
          _showMinOrderSuccess = false;
          _minOrderSuccessTimer?.cancel();
@@ -3333,131 +3331,182 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final showBanner = minOrder > 0 && isDeliveryMode && (remaining > 0 || _showMinOrderSuccess);
      final isSuccess = remaining <= 0 && _showMinOrderSuccess;
 
-     return Container(
-       margin: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
-       child: Column(
-         mainAxisSize: MainAxisSize.min,
-         children: [
-           if (showBanner)
-             Container(
-               margin: const EdgeInsets.only(bottom: 6),
-               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-               decoration: BoxDecoration(
-                 color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFEEEEEE),
-                 borderRadius: BorderRadius.circular(16),
+     // Wallet-card stacked design
+     final cartButton = Material(
+       color: accent,
+       borderRadius: BorderRadius.circular(28),
+       elevation: 4,
+       shadowColor: accent.withValues(alpha: 0.4),
+       child: InkWell(
+         borderRadius: BorderRadius.circular(28),
+         onTap: () {
+           HapticFeedback.selectionClick();
+           Navigator.of(context).push(
+             MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
+           );
+         },
+         child: Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+           child: Row(
+             children: [
+               // Cart icon with badge
+               Stack(
+                 clipBehavior: Clip.none,
+                 children: [
+                   const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
+                   Positioned(
+                     top: -6,
+                     right: -8,
+                     child: Container(
+                       padding: const EdgeInsets.all(4),
+                       decoration: const BoxDecoration(
+                         color: Color(0xFF1A1A1A),
+                         shape: BoxShape.circle,
+                       ),
+                       child: Text(
+                         '$itemCount',
+                         style: const TextStyle(
+                           color: Colors.white,
+                           fontSize: 12,
+                           fontWeight: FontWeight.w700,
+                         ),
+                       ),
+                     ),
+                   ),
+                 ],
                ),
+               const SizedBox(width: 14),
+               // Center text
+               Expanded(
+                 child: Text(
+                   _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
+                   style: const TextStyle(
+                     color: Colors.white,
+                     fontSize: 16,
+                     fontWeight: FontWeight.w600,
+                   ),
+                 ),
+               ),
+               // Price on right
+               Text(
+                 '${cartTotal.toStringAsFixed(2)} $currency',
+                 style: const TextStyle(
+                   color: Colors.white,
+                   fontSize: 16,
+                   fontWeight: FontWeight.w600,
+                 ),
+               ),
+             ],
+           ),
+         ),
+       ),
+     );
+
+     if (!showBanner) {
+       return Container(
+         margin: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
+         child: cartButton,
+       );
+     }
+
+     // Wallet-style: pocket illusion 
+     // Layer 1 (Back Wall): Holds the text, turns green on success, sits at top: 0
+     final infoCardColor = isSuccess
+          ? (isDark ? const Color(0xFF243F24) : const Color(0xFFE8F5E9)) // Lieferando style dark green / light green bg
+          : (isDark ? const Color(0xFF5A5652) : const Color(0xFFE2E2E2)); // Lieferando style neutral grey bg
+     final infoTextColor = isSuccess
+          ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32)) // Lieferando style green text
+          : (isDark ? Colors.white : const Color(0xFF1A1A1A));
+     final infoIconColor = infoTextColor;
+     
+     // Layer 2 (Front Lip): Empty, thinner, sits in front
+     final shadowStripColor = Theme.of(context).scaffoldBackgroundColor;
+
+     // Heights based on user pocket illusion
+     final bottomPadding = MediaQuery.of(context).padding.bottom;
+     final cartButtonHeight = 54.0; 
+     final textRowHeight = 30.0; // Decreased roughly 6-10px
+     final frontLipHeight = 14.0; // Decreased by 10px total
+
+     return Container(
+       // Edge-to-edge! Only top corners will be rounded by the decorations inside.
+       margin: EdgeInsets.only(top: 0),
+       height: cartButtonHeight + textRowHeight + frontLipHeight + bottomPadding + 12, // Adjusted padding
+       child: Stack(
+         alignment: Alignment.bottomCenter,
+         clipBehavior: Clip.none,
+         children: [
+           // Layer 1 (Back Wall): Dark wallet card holding the text
+           Positioned(
+             top: 0,
+             bottom: 0,
+             left: 0,
+             right: 0,
+             child: Container(
+               padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+               decoration: BoxDecoration(
+                 color: infoCardColor,
+                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+               ),
+               alignment: Alignment.topCenter,
                child: Row(
                  mainAxisAlignment: MainAxisAlignment.center,
                  children: [
                    Icon(
                      isSuccess ? Icons.check_circle_outline : Icons.pedal_bike,
-                     size: 18,
-                     color: isSuccess
-                         ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
-                         : (isDark ? Colors.white70 : Colors.black54),
+                     size: 16,
+                     color: infoIconColor,
                    ),
-                   const SizedBox(width: 8),
+                   const SizedBox(width: 6),
                    Flexible(
                      child: Text(
                        isSuccess
                            ? 'marketplace.min_order_success'.tr()
-                           : 'marketplace.min_order_remaining'.tr(namedArgs: {
-                               'amount': remaining.toStringAsFixed(2),
-                               'currency': currency,
-                             }),
+                           : 'marketplace.min_order_add_text'.tr(namedArgs: {
+                                'amount': remaining.toStringAsFixed(2),
+                                'currency': currency,
+                                'minOrder': minOrder.toStringAsFixed(0),
+                              }),
                        style: TextStyle(
-                         fontSize: 14,
-                         fontWeight: FontWeight.w500,
-                         color: isSuccess
-                             ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
-                             : (isDark ? Colors.white70 : Colors.black87),
+                         fontSize: 13,
+                         fontWeight: FontWeight.w600,
+                         color: infoTextColor,
                        ),
                        textAlign: TextAlign.center,
+                       maxLines: 1,
+                       overflow: TextOverflow.ellipsis,
                      ),
                    ),
                  ],
                ),
              ),
-             
-           // Cart Button Pill
-           Padding(
-             padding: EdgeInsets.all(showBanner ? 8.0 : 0.0),
-             child: Material(
-               color: accent,
-               borderRadius: BorderRadius.circular(28),
-               elevation: showBanner ? 0 : 4,
-               shadowColor: accent.withValues(alpha: 0.4),
-               child: InkWell(
-                 borderRadius: BorderRadius.circular(28),
-                 onTap: () {
-                   HapticFeedback.selectionClick();
-                   Navigator.of(context).push(
-                     MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
-                   );
-                 },
-                 child: Padding(
-                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                   child: Row(
-                     children: [
-                       // Cart icon with badge
-                       Stack(
-                         clipBehavior: Clip.none,
-                         children: [
-                           const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
-                           Positioned(
-                             top: -6,
-                             right: -8,
-                             child: Container(
-                               padding: const EdgeInsets.all(4),
-                               decoration: const BoxDecoration(
-                                 color: Color(0xFF1A1A1A),
-                                 shape: BoxShape.circle,
-                               ),
-                               child: Text(
-                                 '$itemCount',
-                                 style: const TextStyle(
-                                   color: Colors.white,
-                                   fontSize: 12,
-                                   fontWeight: FontWeight.w700,
-                                 ),
-                               ),
-                             ),
-                           ),
-                         ],
-                       ),
-                       const SizedBox(width: 14),
-                       // Center text
-                       Expanded(
-                         child: Text(
-                           _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
-                           style: const TextStyle(
-                             color: Colors.white,
-                             fontSize: 16,
-                             fontWeight: FontWeight.w600,
-                           ),
-                         ),
-                       ),
-                       // Price on right
-                       Text(
-                         '${cartTotal.toStringAsFixed(2)} $currency',
-                         style: const TextStyle(
-                           color: Colors.white,
-                           fontSize: 16,
-                           fontWeight: FontWeight.w600,
-                         ),
-                       ),
-                     ],
-                   ),
-                 ),
+           ),
+           // Layer 2 (Front Lip): Empty, thinner light grey card
+           Positioned(
+             top: textRowHeight, // Lets the text peek out
+             bottom: 0,
+             left: 0,
+             right: 0,
+             child: Container(
+               decoration: BoxDecoration(
+                 color: shadowStripColor,
+                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                ),
              ),
+           ),
+           // Layer 3 (Front): Cart button floating inside the Front Lip
+           Positioned(
+             bottom: bottomPadding + 10, // Floating above the bottom edge safe area
+             left: 16, 
+             right: 16,
+             child: cartButton,
            ),
          ],
        ),
      );
-  }
+   }
 
-  // Instagram-style animated heart overlay for favorite toggle
+   // Instagram-style animated heart overlay for favorite toggle
   void _showFavoriteHeartOverlay(BuildContext ctx, bool isNowFavorite) {
     late OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
