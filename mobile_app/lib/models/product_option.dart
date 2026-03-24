@@ -57,6 +57,13 @@ class OptionGroup {
   bool get isRadio => type == 'radio';
   bool get isCheckbox => type == 'checkbox';
 
+  static List<ProductOption> _parseOptions(dynamic value) {
+    if (value == null) return [];
+    if (value is Iterable) return value.map((o) => ProductOption.fromMap(o as Map<String, dynamic>)).toList();
+    if (value is Map) return value.values.map((o) => ProductOption.fromMap(o as Map<String, dynamic>)).toList();
+    return [];
+  }
+
   factory OptionGroup.fromMap(Map<String, dynamic> map) {
     return OptionGroup(
       id: map['id'] ?? '',
@@ -65,9 +72,7 @@ class OptionGroup {
       type: map['type'] ?? 'checkbox',
       minSelect: map['minSelect'] ?? 0,
       maxSelect: map['maxSelect'] ?? -1,
-      options: (map['options'] as List<dynamic>?)
-          ?.map((o) => ProductOption.fromMap(o as Map<String, dynamic>))
-          .toList() ?? [],
+      options: _parseOptions(map['options']),
     );
   }
 

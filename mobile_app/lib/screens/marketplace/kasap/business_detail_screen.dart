@@ -2256,6 +2256,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     
     // Preparation - Safe Data Access
     final data = _butcherDoc!.data() as Map<String, dynamic>?;
+    
+    double parseSafelyDouble(dynamic val) {
+      if (val == null) return 0.0;
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val) ?? 0.0;
+      return 0.0;
+    }
+    int parseSafelyInt(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+    
     final brand = data?['brand'];
     // Tab-aware opening hours: use deliveryHours/pickupHours/openingHours based on active tab
     final OpeningHoursHelper openingHelper;
@@ -2741,7 +2755,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    ],
                                  ),
                                )
-                              else if ((data?['rating'] as num?)?.toDouble() != null && (data?['rating'] as num).toDouble() > 0)
+                              else if (parseSafelyDouble(data?['rating']) > 0)
                                 InkWell(
                                   onTap: _showRatings,
                                   child: Row(
@@ -2750,7 +2764,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       const Icon(Icons.star, color: Colors.amber, size: 16),
                                       const SizedBox(width: 4),
                                       Text(
-                                        '${(data!['rating'] as num).toDouble().toStringAsFixed(1).replaceAll('.', ',')}${(data['reviewCount'] as num?)?.toInt() != null && (data['reviewCount'] as num).toInt() > 0 ? ' (${data['reviewCount']})' : ''}',
+                                        '${parseSafelyDouble(data?['rating']).toStringAsFixed(1).replaceAll('.', ',')}${parseSafelyInt(data?['reviewCount']) > 0 ? ' (${parseSafelyInt(data?['reviewCount'])})' : ''}',
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                                           fontSize: 13,
@@ -2844,7 +2858,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    ),
                                  ),
                                  const SizedBox(width: 4),
-                                 Flexible(
+                                 Container(
+                                   constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.4),
                                    child: Text(
                                      isPausedForCurrentTab
                                          ? (pauseRemainingMinutes != null
@@ -2871,7 +2886,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            ),
                            
                            // Delivery Fee (hidden in masa mode)
-                           if (!_isMasaMode && (data?['deliveryFee'] as num?)?.toDouble() != null) ...[
+                           if (!_isMasaMode && data?['deliveryFee'] != null) ...[
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                              Row(
                                mainAxisSize: MainAxisSize.min,
@@ -2879,15 +2894,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  Icon(Icons.delivery_dining, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
                                  const SizedBox(width: 3),
                                  Text(
-                                   (data!['deliveryFee'] as num).toDouble() == 0
+                                   parseSafelyDouble(data?['deliveryFee']) == 0
                                        ? tr('marketplace.free_delivery_label')
-                                       : '${(data!['deliveryFee'] as num).toDouble().toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
+                                       : '${parseSafelyDouble(data?['deliveryFee']).toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
                                    style: TextStyle(
-                                     color: (data!['deliveryFee'] as num).toDouble() == 0
+                                     color: parseSafelyDouble(data?['deliveryFee']) == 0
                                          ? const Color(0xFF4CAF50)
                                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                      fontSize: 13,
-                                     fontWeight: (data!['deliveryFee'] as num).toDouble() == 0 ? FontWeight.w600 : FontWeight.w400,
+                                     fontWeight: parseSafelyDouble(data?['deliveryFee']) == 0 ? FontWeight.w600 : FontWeight.w400,
                                    ),
                                  ),
                                ],
@@ -2895,10 +2910,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            ],
 
                            // Min Order (hidden in masa mode)
-                           if (!_isMasaMode && (data?['minDeliveryOrder'] ?? 0) > 0) ...[
+                           if (!_isMasaMode && parseSafelyDouble(data?['minDeliveryOrder']) > 0) ...[
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                              Text(
-                               'Min. ${data!['minDeliveryOrder']}${CurrencyUtils.getCurrencySymbol()}',
+                               'Min. ${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                  fontSize: 13,
@@ -4556,7 +4571,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      inCart 
+                                      inCart
                                         ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
                                         : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
                                       style: const TextStyle(

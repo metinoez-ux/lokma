@@ -92,7 +92,7 @@ class ButcherProduct {
       price: (data['sellingPrice'] ?? data['price'] ?? masterData?['sellingPrice'] ?? masterData?['price'] ?? 0).toDouble(), // sellingPrice first (Admin Portal), then legacy price
       unitType: getVal<String>('unit') ?? 'adet', // Default to 'adet' not 'kg'
       imageUrl: imgUrl,
-      tags: List<String>.from(data['tags'] ?? masterData?['tags'] ?? []),
+      tags: _parseList(data['tags'] ?? masterData?['tags']),
       inStock: data['isAvailable'] ?? true,
       minQuantity: (getVal<String>('unit') == 'kg') ? 0.5 : 1.0, // Only kg uses 0.5
       stepQuantity: (getVal<String>('unit') == 'kg') ? 0.5 : 1.0, // Only kg uses 0.5
@@ -101,11 +101,9 @@ class ButcherProduct {
       expectedRestockDate: data['expectedRestockDate'] != null 
           ? DateTime.tryParse(data['expectedRestockDate']) 
           : null,
-      optionGroups: (data['optionGroups'] as List<dynamic>?)
-          ?.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>))
-          .toList() ?? [],
-      allergens: List<String>.from(data['allergens'] ?? masterData?['allergens'] ?? []),
-      additives: List<String>.from(data['additives'] ?? masterData?['additives'] ?? []),
+      optionGroups: _parseOptionGroups(data['optionGroups']),
+      allergens: _parseList(data['allergens'] ?? masterData?['allergens']),
+      additives: _parseList(data['additives'] ?? masterData?['additives']),
       outOfStock: data['outOfStock'] ?? false,
       appSellingPrice: (data['appSellingPrice'] ?? masterData?['appSellingPrice']) != null
           ? (data['appSellingPrice'] ?? masterData?['appSellingPrice']).toDouble()
@@ -114,6 +112,24 @@ class ButcherProduct {
           ? (data['inStorePrice'] ?? masterData?['inStorePrice']).toDouble()
           : null,
     );
+  }
+
+  static List<String> _parseList(dynamic value) {
+    if (value == null) return [];
+    if (value is Iterable) return value.map((e) => e.toString()).toList();
+    if (value is Map) return value.values.map((e) => e.toString()).toList();
+    return [];
+  }
+
+  static List<OptionGroup> _parseOptionGroups(dynamic value) {
+    if (value == null) return [];
+    if (value is Iterable) {
+      return value.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>)).toList();
+    }
+    if (value is Map) {
+      return value.values.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>)).toList();
+    }
+    return [];
   }
 
   static String _extractString(dynamic data, {String fallback = ''}) {
