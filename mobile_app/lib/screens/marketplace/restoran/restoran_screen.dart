@@ -4337,7 +4337,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Hata: $e'),
+                                    content: Text('marketplace.error'.tr(namedArgs: {'error': e.toString()})),
                                     backgroundColor: Colors.red,
                                   ),
                                 );

@@ -536,7 +536,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     if (groupState.session != null && _isDineIn) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Grup siparisi aktif. Lutfen grup siparis ekranindan siparis verin.'),
+          content: Text('marketplace.group_order_active_warning'.tr()),
           backgroundColor: Colors.orange,
         ),
       );
@@ -2857,16 +2857,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: _buildScannedTableBanner(),
-                ),
-                // UNIFIED Lieferando Footer (combines banner and button)
-                Builder(
-                  builder: (context) {
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: _buildScannedTableBanner(),
+                    ),
+                    // UNIFIED Lieferando Footer (combines banner and button)
+                    Builder(
+                      builder: (context) {
                     final minOrder = (_butcherData?['minDeliveryOrder'] as num?)?.toDouble() ?? (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
                     final isDelivery = !_isPickUp && !_isDineIn;
                     final isUnderMin = isDelivery && (grandTotal < minOrder);
@@ -2974,8 +2977,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ),
           ),
         ),
-      ],
-    );
+      ),
+    ),
+  ],
+);
   }
   
   String? _getEstimatedDeliveryTime() {
