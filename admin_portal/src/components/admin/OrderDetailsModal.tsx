@@ -135,7 +135,7 @@ export default function OrderDetailsModal({
                         </h2>
                         <button
                             onClick={onClose}
-                            className="text-muted-foreground hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"
+                            className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                         >
                             ✕
                         </button>
@@ -173,10 +173,10 @@ export default function OrderDetailsModal({
                             const isFuture = d.getTime() > Date.now() + 30 * 60 * 1000;
                             return (
                                 <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
-                                    <span className={isFuture ? 'text-purple-300 font-medium' : 'text-muted-foreground'}>
+                                    <span className={isFuture ? 'text-purple-700 dark:text-purple-300 font-medium' : 'text-muted-foreground'}>
                                         {isFuture ? `🕐 ${t('scheduledPickup')}` : t('pickupTime')}
                                     </span>
-                                    <span className={isFuture ? 'text-purple-200 font-bold' : 'text-white'}>
+                                    <span className={isFuture ? 'text-purple-900 dark:text-purple-200 font-bold' : 'text-foreground'}>
                                         {d.toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
@@ -234,7 +234,7 @@ export default function OrderDetailsModal({
 
                         {/* Address */}
                         {order.address && (
-                            <div className="flex items-center justify-between bg-gray-700/30 rounded-lg p-3">
+                            <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-700/30 rounded-lg p-3">
                                 <span className="text-muted-foreground">{t('modal.address')}</span>
                                 <div className="text-right text-foreground text-sm">
                                     <p>{order.address.street}</p>
@@ -250,7 +250,7 @@ export default function OrderDetailsModal({
                                 {order.items?.length > 0 && (
                                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium shadow-sm border ${allChecked
                                         ? 'bg-green-500/20 text-green-800 dark:text-green-400 border-green-500/30'
-                                        : 'bg-card text-muted-foreground border-gray-600'
+                                        : 'bg-card text-muted-foreground border-gray-300 dark:border-gray-600'
                                         }`}>
                                         ✓ {checkedCount}/{order.items.length}
                                     </span>
@@ -261,7 +261,7 @@ export default function OrderDetailsModal({
                             {order.isGroupOrder && order.items?.length > 0 && (
                                 <div className="mb-4">
                                     <h5 className="text-amber-800 dark:text-amber-400 font-medium text-sm mb-2">👨‍🍳 {t('modal.kitchenSummary')}</h5>
-                                    <div className="bg-card/80 border border-gray-600 rounded-lg p-3 space-y-1 text-sm text-gray-200">
+                                    <div className="bg-gray-100 dark:bg-card/80 border border-gray-300 dark:border-gray-600 rounded-lg p-3 space-y-1 text-sm text-gray-700 dark:text-gray-200">
                                         {Object.values(
                                             order.items.reduce((acc: any, item: any) => {
                                                 const opts = (item.selectedOptions || []).map((o: any) => o.optionName || o.name).join(', ');
@@ -298,7 +298,7 @@ export default function OrderDetailsModal({
                                         const isChecked = !!(checkedItems || {})[originalIdx];
                                         const posNum = item.positionNumber || (originalIdx + 1);
                                         return (
-                                            <div key={originalIdx} className={`rounded-xl px-3 py-2 transition-all mb-1.5 border border-transparent ${isChecked ? 'bg-green-900/20 border-green-500/20' : 'bg-gray-700/30 border-gray-600/30 shadow-sm'}`}>
+                                            <div key={originalIdx} className={`rounded-xl px-3 py-2 transition-all mb-1.5 border border-transparent ${isChecked ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-500/20' : 'bg-gray-100 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600/30 shadow-sm'}`}>
                                                 <div className="flex items-center gap-2.5 text-sm">
                                                     <button
                                                         onClick={() => onToggleItemChecked(order.id, originalIdx)}
@@ -314,7 +314,7 @@ export default function OrderDetailsModal({
                                                     {item.isFreeDrink && (
                                                         <span className="bg-emerald-500 text-white text-[10px] font-bold rounded-md px-1.5 py-0.5 flex-shrink-0 tracking-wide">{t('free')}</span>
                                                     )}
-                                                    <span className={`flex-1 font-medium ${isChecked ? 'text-green-300 line-through opacity-70' : item.isFreeDrink ? 'text-emerald-300' : 'text-gray-200'}`}>
+                                                    <span className={`flex-1 font-medium ${isChecked ? 'text-green-600 dark:text-green-300 line-through opacity-70' : item.isFreeDrink ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-gray-200'}`}>
                                                         {item.quantity}x {item.productName || item.name}
                                                     </span>
                                                     <span className={`${isChecked ? 'text-green-800 dark:text-green-400 opacity-70' : item.isFreeDrink ? 'text-emerald-800 dark:text-emerald-400 font-semibold' : 'text-foreground font-medium'}`}>
@@ -333,7 +333,7 @@ export default function OrderDetailsModal({
                                                     <div className="pl-14 space-y-1 mt-1.5">
                                                         {item.selectedOptions.map((opt: any, optIdx: number) => (
                                                             <div key={optIdx} className="flex justify-between text-xs">
-                                                                <span className={`${isChecked ? 'text-green-300/60 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
+                                                                <span className={`${isChecked ? 'text-green-600 dark:text-green-300/60 line-through' : 'text-purple-600 dark:text-purple-300'}`}>{"\u21B3"} {opt.optionName || opt.name}</span>
                                                                 {(opt.priceModifier || opt.price) ? (
                                                                     <span className={`${isChecked ? 'text-green-800 dark:text-green-400/60' : 'text-purple-800 dark:text-purple-400'} font-medium`}>+{formatCurrency(opt.priceModifier || opt.price, order?.currency)}</span>
                                                                 ) : null}
@@ -344,7 +344,7 @@ export default function OrderDetailsModal({
                                                 {/* Show item note */}
                                                 {item.itemNote && (
                                                     <div className="pl-14 mt-1.5 p-1.5 bg-yellow-900/20 rounded-md border border-yellow-500/10">
-                                                        <span className="text-xs text-amber-200 font-medium whitespace-pre-line">📝 {item.itemNote}</span>
+                                                        <span className="text-xs text-amber-800 dark:text-amber-200 font-medium whitespace-pre-line">{"\uD83D\uDCDD"} {item.itemNote}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -360,10 +360,10 @@ export default function OrderDetailsModal({
                                         });
 
                                         return Object.entries(groupedByParticipant).map(([pName, items]) => (
-                                            <div key={pName} className="bg-card border border-gray-600 rounded-xl p-3 shadow-sm mb-3">
+                                            <div key={pName} className="bg-gray-50 dark:bg-card border border-gray-200 dark:border-gray-600 rounded-xl p-3 shadow-sm mb-3">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <span className="text-purple-800 dark:text-purple-400 text-sm">👤</span>
-                                                    <span className="text-foreground text-sm font-semibold border-b border-gray-600 pb-0.5 w-full">{pName}</span>
+                                                    <span className="text-foreground text-sm font-semibold border-b border-gray-300 dark:border-gray-600 pb-0.5 w-full">{pName}</span>
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     {items.map(info => renderItem(info.item, info.index))}
@@ -428,7 +428,7 @@ export default function OrderDetailsModal({
                         {order.notes && (
                             <div className="border-t border-border pt-4 pb-1">
                                 <h4 className="text-amber-800 dark:text-amber-400 font-semibold text-sm mb-2 flex items-center gap-1">📝 {t('modal.notes')}</h4>
-                                <p className="text-yellow-50 bg-yellow-900/30 border border-yellow-500/40 rounded-xl p-3.5 shadow-sm leading-relaxed whitespace-pre-wrap">{order.notes}</p>
+                                <p className="text-yellow-900 dark:text-yellow-50 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-500/40 rounded-xl p-3.5 shadow-sm leading-relaxed whitespace-pre-wrap">{order.notes}</p>
                             </div>
                         )}
 
@@ -442,10 +442,10 @@ export default function OrderDetailsModal({
                                         onClick={() => handleStatusChangeInternal(key as OrderStatus)}
                                         disabled={order.status === key}
                                         className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${order.status === key
-                                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600'
+                                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-300 dark:border-gray-600'
                                             : key === 'cancelled'
-                                                ? 'bg-red-900/20 text-red-800 dark:text-red-400 hover:bg-red-900/40 border border-red-900/50'
-                                                : `bg-gray-700 text-white hover:bg-gray-600`
+                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 border border-red-300 dark:border-red-900/50'
+                                                : `bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600`
                                             }`}
                                     >
                                         {key === 'cancelled' && <span className="mr-1.5">❌</span>}
@@ -457,7 +457,7 @@ export default function OrderDetailsModal({
                             {/* Edge Case Statuses (Collapsible) */}
                             {edgeCaseStatuses.length > 0 && (
                                 <details className="mt-4 group bg-card/50 border border-border rounded-lg overflow-hidden transition-all">
-                                    <summary className="px-4 py-2 text-sm text-muted-foreground font-medium cursor-pointer flex items-center justify-between hover:bg-gray-700/50 transition-colors">
+                                    <summary className="px-4 py-2 text-sm text-muted-foreground font-medium cursor-pointer flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
                                         {t('modal.otherStatuses') || "Diğer Durumlar (Edge Cases)"}
                                         <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
                                     </summary>
@@ -468,8 +468,8 @@ export default function OrderDetailsModal({
                                                 onClick={() => handleStatusChangeInternal(key as OrderStatus)}
                                                 disabled={order.status === key}
                                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${order.status === key
-                                                    ? 'bg-gray-700 text-gray-600 cursor-not-allowed border border-gray-600/50'
-                                                    : 'bg-gray-700/50 text-foreground hover:bg-gray-600 hover:text-white border border-gray-600'
+                                                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-600/50'
+                                                    : 'bg-gray-200 dark:bg-gray-700/50 text-foreground hover:bg-gray-300 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
                                                     }`}
                                             >
                                                 {t(value.labelKey)}
@@ -487,8 +487,8 @@ export default function OrderDetailsModal({
                                 disabled={printingOrderId === order.id}
                                 className={`w-full px-4 py-3.5 rounded-xl transition flex items-center justify-center gap-2 font-medium shadow-sm active:scale-[0.98] ${
                                     !printerSettings?.enabled || !printerSettings?.printerIp
-                                        ? 'bg-gray-700 border border-gray-600 text-foreground hover:bg-gray-600 hover:text-white'
-                                        : 'bg-indigo-600/20 border border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/30 hover:text-indigo-200'
+                                        ? 'bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        : 'bg-indigo-100 dark:bg-indigo-600/20 border border-indigo-300 dark:border-indigo-500/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-600/30'
                                 }`}
                             >
                                 {!printerSettings?.enabled || !printerSettings?.printerIp
@@ -513,7 +513,7 @@ export default function OrderDetailsModal({
                                     setShowCancelModal(false);
                                     setCancelReason('');
                                 }}
-                                className="text-muted-foreground hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-700"
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                             >
                                 ✕
                             </button>
@@ -530,7 +530,7 @@ export default function OrderDetailsModal({
                                     <button
                                         key={reasonKey}
                                         onClick={() => setCancelReason(t(`cancelModal.reasons.${reasonKey}`))}
-                                        className="bg-gray-700/50 hover:bg-gray-600 border border-gray-600 text-gray-200 px-3 py-2 rounded-lg text-sm transition-colors text-left"
+                                        className="bg-gray-200 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 px-3 py-2 rounded-lg text-sm transition-colors text-left"
                                     >
                                         {t(`cancelModal.reasons.${reasonKey}`)}
                                     </button>
@@ -538,16 +538,16 @@ export default function OrderDetailsModal({
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <span className="h-px bg-gray-700 flex-1"></span>
+                                <span className="h-px bg-gray-300 dark:bg-gray-700 flex-1"></span>
                                 <span className="text-muted-foreground text-xs font-medium">{t('cancelModal.customReason')}</span>
-                                <span className="h-px bg-gray-700 flex-1"></span>
+                                <span className="h-px bg-gray-300 dark:bg-gray-700 flex-1"></span>
                             </div>
 
                             <textarea
                                 value={cancelReason}
                                 onChange={(e) => setCancelReason(e.target.value)}
                                 placeholder={t('cancelModal.placeholder') || t('cancelModal.reasonPlaceholder')}
-                                className="w-full bg-background border border-gray-600 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none h-28"
+                                className="w-full bg-background border border-gray-300 dark:border-gray-600 rounded-xl p-4 text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none h-28"
                             />
 
                             <div className="flex gap-3">
@@ -556,7 +556,7 @@ export default function OrderDetailsModal({
                                         setShowCancelModal(false);
                                         setCancelReason('');
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition font-medium"
+                                    className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
                                 >
                                     {t('cancelModal.cancel')}
                                 </button>
@@ -592,7 +592,7 @@ export default function OrderDetailsModal({
                                     setShowUnavailableModal(false);
                                     setUnavailableItems([]);
                                 }}
-                                className="text-muted-foreground hover:text-white transition-colors p-1.5 rounded-full hover:bg-gray-700"
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                             >
                                 ✕
                             </button>
@@ -604,7 +604,7 @@ export default function OrderDetailsModal({
                             </p>
 
                             <div className="bg-background/80 border border-border border-l-4 border-l-yellow-500 rounded-xl p-4 max-h-48 overflow-y-auto shadow-inner">
-                                <ul className="space-y-1.5 list-disc list-inside text-gray-200 text-sm">
+                                <ul className="space-y-1.5 list-disc list-inside text-gray-700 dark:text-gray-200 text-sm">
                                     {unavailableItems.map((item, idx) => (
                                         <li key={idx} className="flex justify-between items-center group">
                                             <span>
@@ -626,7 +626,7 @@ export default function OrderDetailsModal({
                                         setShowUnavailableModal(false);
                                         setUnavailableItems([]);
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition font-medium"
+                                    className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
                                 >
                                     {t('missingModal.cancel')}
                                 </button>

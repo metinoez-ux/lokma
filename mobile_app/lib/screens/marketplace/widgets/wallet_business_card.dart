@@ -122,18 +122,19 @@ class WalletBusinessCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: !isAvailable
-                    ? null
-                    : Border.all(
-                        color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-                      ),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.08),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.black.withValues(alpha: 0.3)
-                        : Colors.black.withValues(alpha: 0.05),
-                    blurRadius: !isAvailable ? 8 : 10,
-                    offset: !isAvailable ? const Offset(0, -2) : const Offset(0, 4),
+                        ? Colors.black.withValues(alpha: 0.5)
+                        : Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),

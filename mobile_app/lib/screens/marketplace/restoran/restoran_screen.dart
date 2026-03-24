@@ -663,7 +663,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final cartState = ref.watch(cartProvider);
+    return Stack(
+      children: [
+        Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         bottom: false,
@@ -825,6 +828,76 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           ],
         ),
       ),
+    ),
+        // Floating Cart FAB -- only visible when cart has items
+        if (cartState.isNotEmpty)
+          Positioned(
+            right: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 70,
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _showCartBottomSheet(
+                  context,
+                  businessName: cartState.butcherName ?? '',
+                  businessId: cartState.butcherId ?? '',
+                  itemCount: cartState.items.length,
+                );
+              },
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: lokmaPink,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: lokmaPink.withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Center(
+                      child: Icon(
+                        Icons.shopping_bag_outlined,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                    // Badge with item count
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: lokmaPink, width: 1.5),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${cartState.items.length}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: lokmaPink,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
   // Kompakt konum başlığı (LOKMA logo, şehir+sokak, kalp ikonu)
@@ -2364,7 +2437,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         backgroundColor: lokmaPink,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(26),
                         ),
                         elevation: 0,
                       ),
@@ -2398,7 +2471,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               .withValues(alpha: 0.2),
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(26),
                         ),
                       ),
                       child: Text(
