@@ -1089,6 +1089,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     // 🍊 LIEFERANDO-STYLE: Theme-aware background with tabs
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -2831,7 +2832,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           right: 0,
           bottom: 0,
           child: Container(
-            padding: EdgeInsets.fromLTRB(20, 14, 20, MediaQuery.of(context).padding.bottom + 4),
+            padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom + 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -2872,14 +2873,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     final isDark = Theme.of(context).brightness == Brightness.dark;
                     
                     if (!isUnderMin) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                        child: _buildLieferandoCheckoutButton(grandTotal),
-                      );
+                      return _buildLieferandoCheckoutButton(grandTotal);
                     }
                     
                     return Container(
-                      margin: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                      margin: const EdgeInsets.only(top: 8.0, bottom: 0.0), // Removed bottom 8.0
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF0F0F0),
                         borderRadius: BorderRadius.circular(32),
