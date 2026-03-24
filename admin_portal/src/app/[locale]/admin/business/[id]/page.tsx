@@ -2834,37 +2834,17 @@ export default function BusinessDetailsPage() {
                       {t('order_pending')} ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {filteredOrders.filter(o => o.status === 'pending' || o.status === 'accepted').map(order => (
-                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-yellow-500">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-blue-600/30 text-blue-800 dark:text-blue-400'}`}>
-                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
-                          </span>
-                        </div>
-                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
-                        {(order as any).isScheduledOrder && (order as any).scheduledDeliveryTime && (
-                          <div className="mb-1.5">
-                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
-                              {(() => {
-                                const d = (order as any).scheduledDeliveryTime?.toDate?.();
-                                if (!d) return '';
-                                const now = new Date();
-                                const isToday = d.toDateString() === now.toDateString();
-                                const time = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                                return isToday ? `${t('filter_heute')} ${time}` : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ` ${time}`;
-                              })()}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
-                          <span className="text-gray-500 text-xs">
-                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
-                          </span>
-                        </div>
-                      </div>
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        businesses={{ [business?.id || '']: business?.companyName || '' }}
+                        checkedItems={{}}
+                        onClick={() => setSelectedOrder(order)}
+                        t={t}
+                        isPreOrder={(order as any).isScheduledOrder}
+                      />
                     ))}
                   </div>
                 </div>
@@ -2877,23 +2857,16 @@ export default function BusinessDetailsPage() {
                       {t('filter_in_zubereitung')} ({filteredOrders.filter(o => o.status === 'preparing').length})
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {filteredOrders.filter(o => o.status === 'preparing').map(order => (
-                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-blue-500">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                          <span className={`px-2 py-0.5 rounded text-xs ${((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-blue-600/30 text-blue-800 dark:text-blue-400'}`}>
-                            {((order as any).orderType || (order as any).deliveryMethod || '') === 'delivery' ? t('delivery_label') : t('pickup_label')}
-                          </span>
-                        </div>
-                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
-                          <span className="text-gray-500 text-xs">
-                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
-                          </span>
-                        </div>
-                      </div>
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        businesses={{ [business?.id || '']: business?.companyName || '' }}
+                        checkedItems={{}}
+                        onClick={() => setSelectedOrder(order)}
+                        t={t}
+                      />
                     ))}
                   </div>
                 </div>
@@ -2906,20 +2879,16 @@ export default function BusinessDetailsPage() {
                       {t('filter_bereit')} ({filteredOrders.filter(o => o.status === 'ready').length})
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {filteredOrders.filter(o => o.status === 'ready').map(order => (
-                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-green-500">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                        </div>
-                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
-                          <span className="text-gray-500 text-xs">
-                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
-                          </span>
-                        </div>
-                      </div>
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        businesses={{ [business?.id || '']: business?.companyName || '' }}
+                        checkedItems={{}}
+                        onClick={() => setSelectedOrder(order)}
+                        t={t}
+                      />
                     ))}
                   </div>
                 </div>
@@ -2932,20 +2901,16 @@ export default function BusinessDetailsPage() {
                       {t('filter_auf_dem_weg')} ({filteredOrders.filter(o => o.status === 'onTheWay').length})
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {filteredOrders.filter(o => o.status === 'onTheWay').map(order => (
-                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-amber-500">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                        </div>
-                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
-                          <span className="text-gray-500 text-xs">
-                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
-                          </span>
-                        </div>
-                      </div>
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        businesses={{ [business?.id || '']: business?.companyName || '' }}
+                        checkedItems={{}}
+                        onClick={() => setSelectedOrder(order)}
+                        t={t}
+                      />
                     ))}
                   </div>
                 </div>
@@ -2958,20 +2923,16 @@ export default function BusinessDetailsPage() {
                       {t('filter_abgeschlossen')} ({filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length})
                     </span>
                   </div>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).map(order => (
-                      <div key={order.id} className="bg-gray-700 rounded-xl p-3 hover:bg-gray-600 transition border-l-3 border-green-500">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-foreground font-medium text-sm">#{order.orderNumber || order.id.slice(0, 6).toUpperCase()}</span>
-                        </div>
-                        <p className="text-muted-foreground text-xs mb-1.5">{order.customerName || t('kunde_label')}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-green-800 dark:text-green-400 font-bold text-sm">{formatCurrency(order.total || 0, business?.currency)}</span>
-                          <span className="text-gray-500 text-xs">
-                            {order.createdAt?.toDate?.()?.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) || ''}
-                          </span>
-                        </div>
-                      </div>
+                      <OrderCard
+                        key={order.id}
+                        order={order}
+                        businesses={{ [business?.id || '']: business?.companyName || '' }}
+                        checkedItems={{}}
+                        onClick={() => setSelectedOrder(order)}
+                        t={t}
+                      />
                     ))}
                   </div>
                 </div>
