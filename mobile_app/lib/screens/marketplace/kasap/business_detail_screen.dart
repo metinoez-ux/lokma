@@ -3426,7 +3426,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final bottomPadding = MediaQuery.of(context).padding.bottom;
      final cartButtonHeight = 54.0; 
      final textRowHeight = 30.0; // Decreased roughly 6-10px
-     final frontLipHeight = 14.0; // Decreased by 10px total
+     final frontLipHeight = 10.0; // Decreased by 14px total
 
      return Center(
        child: ConstrainedBox(

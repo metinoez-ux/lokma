@@ -2896,7 +2896,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
                     final cartButtonHeight = 54.0; 
                     final textRowHeight = 30.0;
-                    final frontLipHeight = 14.0;
+                    final frontLipHeight = 10.0;
 
                     return Container(
                       margin: const EdgeInsets.only(top: 0),
