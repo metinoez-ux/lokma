@@ -145,7 +145,7 @@ export default function OrderDetailsModal({
                         {/* Status */}
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">{t('modal.status')}</span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium bg-${ORDER_STATUSES[order.status]?.color || 'gray'}-600/20 text-${ORDER_STATUSES[order.status]?.color || 'gray'}-400`}>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium bg-${ORDER_STATUSES[order.status]?.color || 'gray'}-100 dark:bg-${ORDER_STATUSES[order.status]?.color || 'gray'}-900/40 text-${ORDER_STATUSES[order.status]?.color || 'gray'}-800 dark:text-${ORDER_STATUSES[order.status]?.color || 'gray'}-300`}>
                                 {t(ORDER_STATUSES[order.status]?.labelKey || 'status_pending')}
                             </span>
                         </div>
@@ -161,7 +161,7 @@ export default function OrderDetailsModal({
                         {/* Type */}
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">{t('modal.type')}</span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium bg-${ORDER_TYPES[order.type]?.color || 'gray'}-600/20 text-${ORDER_TYPES[order.type]?.color || 'gray'}-400`}>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium bg-${ORDER_TYPES[order.type]?.color || 'gray'}-100 dark:bg-${ORDER_TYPES[order.type]?.color || 'gray'}-900/40 text-${ORDER_TYPES[order.type]?.color || 'gray'}-800 dark:text-${ORDER_TYPES[order.type]?.color || 'gray'}-300`}>
                                 {t(ORDER_TYPES[order.type]?.labelKey || 'type_pickup')}
                             </span>
                         </div>
@@ -442,10 +442,10 @@ export default function OrderDetailsModal({
                                         onClick={() => handleStatusChangeInternal(key as OrderStatus)}
                                         disabled={order.status === key}
                                         className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${order.status === key
-                                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-300 dark:border-gray-600'
+                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700'
                                             : key === 'cancelled'
-                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 border border-red-300 dark:border-red-900/50'
-                                                : `bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600`
+                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-900/50'
+                                                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
                                             }`}
                                     >
                                         {key === 'cancelled' && <span className="mr-1.5">❌</span>}
@@ -468,8 +468,8 @@ export default function OrderDetailsModal({
                                                 onClick={() => handleStatusChangeInternal(key as OrderStatus)}
                                                 disabled={order.status === key}
                                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${order.status === key
-                                                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-600/50'
-                                                    : 'bg-gray-200 dark:bg-gray-700/50 text-foreground hover:bg-gray-300 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
+                                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-200 dark:border-gray-700'
+                                                    : 'bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
                                                     }`}
                                             >
                                                 {t(value.labelKey)}
@@ -487,8 +487,8 @@ export default function OrderDetailsModal({
                                 disabled={printingOrderId === order.id}
                                 className={`w-full px-4 py-3.5 rounded-xl transition flex items-center justify-center gap-2 font-medium shadow-sm active:scale-[0.98] ${
                                     !printerSettings?.enabled || !printerSettings?.printerIp
-                                        ? 'bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-foreground hover:bg-gray-300 dark:hover:bg-gray-600'
-                                        : 'bg-indigo-100 dark:bg-indigo-600/20 border border-indigo-300 dark:border-indigo-500/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-600/30'
+                                        ? 'bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        : 'bg-indigo-50 dark:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-500/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-600/30'
                                 }`}
                             >
                                 {!printerSettings?.enabled || !printerSettings?.printerIp
