@@ -22,7 +22,7 @@ dependencies:
   
   # Google Sign-In
   google_sign_in: ^6.2.2
-  sign_in_with_apple: ^6.1.0
+  sign_in_with_apple: ^7.0.1
   
   # Navigation
   go_router: ^17.0.0
