@@ -36,8 +36,10 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String? initialTableNumber;
   final bool closedAcknowledged;
   final String? groupSessionId;
+  final bool isReservationIntent;
+  final String? reservationTabId;
   
-  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber, this.closedAcknowledged = false, this.groupSessionId});
+  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber, this.closedAcknowledged = false, this.groupSessionId, this.isReservationIntent = false, this.reservationTabId});
 
   @override
   ConsumerState<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
@@ -536,41 +538,69 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
     final businessName = data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
     
-    // Calculate next opening time
-    OpeningHoursHelper openingHelper;
-    if (data?['openingHours'] != null) {
-      openingHelper = OpeningHoursHelper(data?['openingHours']);
-    } else if (data?['deliveryHours'] != null) {
-      openingHelper = OpeningHoursHelper(data?['deliveryHours']);
-    } else {
-      openingHelper = OpeningHoursHelper(data?['pickupHours']);
-    }
-    final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
-    String nextOpenText = '';
-    if (nextOpen != null) {
-      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
-      final now = DateTime.now();
-      final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
-      final tomorrow = now.add(const Duration(days: 1));
-      final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
-      
-      if (isToday) {
-        nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
-      } else if (isTomorrow) {
-        nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
-      } else {
-        final dayNames = [
-          'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
-          'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
-        ];
-        nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayNames[nextOpen.weekday - 1], 'time': timeStr});
+    // Multi-hour display logic
+    String? _formatNextOpen(dynamic hoursData, {bool isShop = false}) {
+      if (hoursData == null) return null;
+      try {
+        final helper = OpeningHoursHelper(hoursData);
+        final now = DateTime.now();
+        if (helper.isOpenAt(now)) {
+          return isShop 
+              ? tr('marketplace.filter_open_now_title') 
+              : tr('marketplace.available_now');
+        }
+        
+        final nextOpen = helper.getNextOpenDateTime(now);
+        if (nextOpen == null) return null;
+        
+        final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+        final tomorrow = now.add(const Duration(days: 1));
+        final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+        
+        final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+        if (isToday) {
+          return isShop 
+              ? tr('marketplace.opens_today', namedArgs: {'time': timeStr}) 
+              : tr('marketplace.available_today', namedArgs: {'time': timeStr});
+        } else if (isTomorrow) {
+          return isShop 
+              ? tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr}) 
+              : tr('marketplace.available_tomorrow', namedArgs: {'time': timeStr});
+        } else {
+          final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+          final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
+          return isShop 
+              ? tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr}) 
+              : tr('marketplace.available_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+        }
+      } catch (e) {
+        return null;
       }
+    }
+
+    final shopText = _formatNextOpen(data?['openingHours'], isShop: true);
+    final deliveryText = _formatNextOpen(data?['deliveryHours']);
+    final pickupText = _formatNextOpen(data?['pickupHours']);
+    
+    Widget _buildTimeRow(IconData icon, String label, String time, BuildContext ctx) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+            const Spacer(),
+            Text(time, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+          ],
+        ),
+      );
     }
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       
-      final accent = _getAccent(context);
+      final accent = const Color(0xFF282726); // LOKMA premium wallet black
       
       showDialog(
         context: context,
@@ -605,39 +635,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
                       fontSize: 20, // Reduced slightly for compact look
-                      fontWeight: FontWeight.w200,
+                      fontWeight: FontWeight.w300,
                       height: 1.15,
                       letterSpacing: 0.5,
                       color: Theme.of(dialogCtx).colorScheme.onSurface,
                     ),
                   ),
                   
-                  if (nextOpenText.isNotEmpty) ...[
-                    const SizedBox(height: 12), // Reduced
-                    // Compact & Premium Time Badge
+                  if (shopText != null || deliveryText != null || pickupText != null) ...[
+                    const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), // Reduced vertical
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.5),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Column(
                         children: [
-                          Icon(Icons.schedule, size: 14, color: Theme.of(dialogCtx).colorScheme.onSurfaceVariant), // Reduced
-                          const SizedBox(width: 6), // Reduced
-                          Text(
-                            nextOpenText,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w200,
-                              letterSpacing: 0.5,
-                              color: Theme.of(dialogCtx).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                          if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
+                          if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
+                          if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
                         ],
                       ),
                     ),
@@ -1431,7 +1454,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // ═══ Business Name ═══
                         Text(
                           data?['companyName'] ?? 'marketplace.business_info'.tr(),
-                          style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w200),
+                          style: GoogleFonts.inter(color: textColor, fontSize: 22, fontWeight: FontWeight.w400),
                         ),
                         const SizedBox(height: 6),
                         
@@ -1462,10 +1485,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       const Icon(Icons.verified, color: Colors.white, size: 14),
                                       const SizedBox(width: 5),
                                       Text(_getBrandLabel(data?['brand']).toUpperCase(),
-                                        style: const TextStyle(
+                                        style: GoogleFonts.inter(
                                           color: Colors.white,
                                           fontSize: 13,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w500,
                                           letterSpacing: 1.2,
                                         )),
                                     ],
@@ -1481,7 +1504,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // ═══ MAP SECTION — "So findest du uns" ═══
                         if (hasAddress) ...[
                           Text('marketplace.find_us'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
+                            style: GoogleFonts.inter(color: textColor, fontSize: 18, fontWeight: FontWeight.w400)),
                           const SizedBox(height: 10),
                           Builder(
                             builder: (context) {
@@ -1559,7 +1582,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                 children: [
                                                   const Icon(Icons.open_in_new, size: 12, color: Colors.black87),
                                                   const SizedBox(width: 4),
-                                                  Text('marketplace.open_maps'.tr(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87)),
+                                                  Text('marketplace.open_maps'.tr(), style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w400, color: Colors.black87)),
                                                 ],
                                               ),
                                             ),
@@ -1589,10 +1612,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             Icon(Icons.map_outlined, color: subtitleColor, size: 36),
                                             const SizedBox(height: 6),
                                             Text('$postalCode $city',
-                                              style: TextStyle(color: subtitleColor, fontSize: 13)),
+                                              style: GoogleFonts.inter(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w300)),
                                             const SizedBox(height: 4),
                                             Text('marketplace.open_maps'.tr(),
-                                              style: TextStyle(color: Colors.blue, fontSize: 12)),
+                                              style: GoogleFonts.inter(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w400)),
                                           ],
                                         ),
                                       ),
@@ -1622,10 +1645,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('common.address'.tr(),
-                                        style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
+                                        style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w400)),
                                       const SizedBox(height: 3),
                                       Text(fullAddress,
-                                        style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w100, height: 1.4)),
+                                        style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w300, height: 1.4)),
                                     ],
                                   ),
                                 ),
@@ -1661,12 +1684,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text('marketplace.phone_label'.tr(),
-                                          style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w100)),
+                                          style: GoogleFonts.inter(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w300)),
                                         const SizedBox(height: 3),
                                         Text(phone,
-                                          style: TextStyle(
+                                          style: GoogleFonts.inter(
                                             color: Colors.blue,
-                                            fontSize: 15, fontWeight: FontWeight.w100,
+                                            fontSize: 15, fontWeight: FontWeight.w300,
                                           )),
                                       ],
                                     ),
@@ -1683,11 +1706,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         if (cuisineType.trim().isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text('marketplace.cuisine'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
+                            style: GoogleFonts.inter(color: textColor, fontSize: 18, fontWeight: FontWeight.w400)),
                           const SizedBox(height: 6),
                           Text(
                             cuisineType.split(RegExp(r'[,;]')).map((t) => t.trim()).where((t) => t.isNotEmpty).join('  ·  '),
-                            style: TextStyle(color: subtitleColor, fontSize: 14, fontWeight: FontWeight.w100),
+                            style: GoogleFonts.inter(color: subtitleColor, fontSize: 14, fontWeight: FontWeight.w300),
                           ),
                           const SizedBox(height: 20),
                           Divider(color: dividerColor, height: 1),
@@ -1697,7 +1720,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // ═══ BUSINESS HOURS ═══
                         const SizedBox(height: 5),
                         Text('marketplace.business_hours'.tr(),
-                          style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
+                          style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w400)),
                         // ═══ CLOSING SOON INDICATOR ═══
                         Builder(builder: (context) {
                           final closingSoonText = _getClosingSoonText();
@@ -1712,7 +1735,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               ),
                               child: Text(
                                 closingSoonText,
-                                style: const TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+                                style: GoogleFonts.inter(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w400),
                               ),
                             ),
                           );
@@ -1728,8 +1751,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             indicatorWeight: 2.5,
                             labelColor: textColor,
                             unselectedLabelColor: subtitleColor,
-                            labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
-                            unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w100),
+                            labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
+                            unselectedLabelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w300),
                             labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                             tabs: tabs,
                           ),
@@ -1763,7 +1786,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Impressum',
-                                  style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600)),
+                                  style: GoogleFonts.inter(color: textColor, fontSize: 15, fontWeight: FontWeight.w400)),
                                 const SizedBox(height: 12),
                                 _buildImpressumSection(data, textColor, subtitleColor),
                               ],
@@ -1839,7 +1862,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     // Body text style: very small, very thin
-    final bodyStyle = TextStyle(color: subtitleColor, fontSize: 11, fontWeight: FontWeight.w300, height: 1.5);
+    final bodyStyle = GoogleFonts.inter(color: subtitleColor, fontSize: 11, fontWeight: FontWeight.w300, height: 1.5);
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1847,7 +1870,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (displayName.isNotEmpty)
           Text(
             displayName + (legalFormLabel.isNotEmpty ? ' ($legalFormLabel)' : ''),
-            style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
+            style: GoogleFonts.inter(color: textColor, fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
           ),
         if (fullAddress.isNotEmpty)
           Padding(
@@ -1899,7 +1922,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         const SizedBox(height: 10),
         Text(
           _getImpressumTagline(),
-          style: TextStyle(color: subtitleColor.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.w300, height: 1.5),
+          style: GoogleFonts.inter(color: subtitleColor.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.w300, height: 1.5),
         ),
       ],
     );
@@ -2015,19 +2038,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   Widget _buildGeneralHoursTab(bool isDark, Color textColor, Color subtitleColor, Color accent) {
     try {
       if (_butcherDoc == null) {
-        return Center(child: Text('marketplace.hours_loading'.tr(), style: TextStyle(color: subtitleColor)));
+        return Center(child: Text('marketplace.hours_loading'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
       }
       
       final rawData = _butcherDoc!.data();
       if (rawData == null) {
-        return Center(child: Text('marketplace.hours_not_found'.tr(), style: TextStyle(color: subtitleColor)));
+        return Center(child: Text('marketplace.hours_not_found'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
       }
       
       final data = rawData as Map<String, dynamic>;
       final hours = data['openingHours'];
 
       if (hours == null || hours.toString().trim().isEmpty) {
-        return Center(child: Text('marketplace.business_hours_not_entered'.tr(), style: TextStyle(color: subtitleColor)));
+        return Center(child: Text('marketplace.business_hours_not_entered'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
       }
 
       final dayNamesDisplay = [
@@ -2092,7 +2115,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 padding: EdgeInsets.zero,
                 children: lines.map((line) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5),
-                  child: Text(line, style: TextStyle(color: textColor, fontSize: 14)),
+                  child: Text(line, style: GoogleFonts.inter(color: textColor, fontSize: 14, fontWeight: FontWeight.w300)),
                 )).toList(),
               ),
             ),
@@ -2127,7 +2150,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       );
     } catch (e) {
       debugPrint('Error building general hours tab: $e');
-      return Center(child: Text('marketplace.hours_cannot_display'.tr(), style: TextStyle(color: subtitleColor)));
+      return Center(child: Text('marketplace.hours_cannot_display'.tr(), style: GoogleFonts.inter(color: subtitleColor, fontWeight: FontWeight.w300)));
     }
   }
 
@@ -2216,7 +2239,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Icon(Icons.schedule, color: subtitleColor, size: 40),
             const SizedBox(height: 12),
             Text('marketplace.same_as_general'.tr(),
-              style: TextStyle(color: subtitleColor, fontSize: 16, fontWeight: FontWeight.w300)),
+              style: GoogleFonts.inter(color: subtitleColor, fontSize: 16, fontWeight: FontWeight.w300)),
           ],
         ),
       );
@@ -2249,9 +2272,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           const SizedBox(width: 5),
           Text(
             isOpenNow ? 'marketplace.filter_open_now_title'.tr() : 'marketplace.currently_closed'.tr(),
-            style: TextStyle(
+            style: GoogleFonts.inter(
               color: isOpenNow ? Colors.green : Colors.red,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
               fontSize: 13,
             ),
           ),
@@ -2284,15 +2307,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(dayName, style: TextStyle(
+          Text(dayName, style: GoogleFonts.inter(
             color: dayColor,
             fontSize: 15,
             fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
           )),
-          Text(hours, style: TextStyle(
+          Text(hours, style: GoogleFonts.inter(
             color: hoursColor,
             fontSize: 15,
-            fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
+            fontWeight: isToday ? FontWeight.w500 : FontWeight.w300,
           )),
         ],
       ),
@@ -2896,8 +2919,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  fontSize: 13,
                                ),
                              ),
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                           ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
+                              if (_isMasaMode || !isOpen || isPausedForCurrentTab)
+                                Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                            ] else if ((data?['type']?.toString() ?? '').isNotEmpty) ...[
                              Text(
                                'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
                                style: TextStyle(
@@ -2905,11 +2929,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  fontSize: 13,
                                ),
                              ),
-                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                           ],
-                           
-                           // Open/Closed Status
-                           InkWell(
+                              if (_isMasaMode || !isOpen || isPausedForCurrentTab)
+                                Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                            ],
+                            
+                            // Open/Closed Status
+                            if (_isMasaMode || !isOpen || isPausedForCurrentTab)
+                              InkWell(
                              onTap: _showWeeklyHours,
                              child: Row(
                                mainAxisSize: MainAxisSize.min,
@@ -3423,7 +3449,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
          onTap: () {
            HapticFeedback.selectionClick();
            Navigator.of(context).push(
-             MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
+             MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber, isReservationIntent: widget.isReservationIntent, reservationTabId: widget.reservationTabId)),
            );
          },
          child: Padding(

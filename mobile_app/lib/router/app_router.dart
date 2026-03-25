@@ -148,6 +148,8 @@ class AppRouter {
           final closedAck = state.uri.queryParameters['closedAck'] == 'true' || addMore;
           final groupSessionId = state.uri.queryParameters['groupSessionId'];
           final businessName = state.uri.queryParameters['businessName'] ?? '';
+          final isReservationIntent = state.uri.queryParameters['isReservationIntent'] == 'true';
+          final reservationTabId = state.uri.queryParameters['reservationTabId'];
           
           // Group mode: Navigate to GroupTableOrderScreen with tabs (Menu/Ben/Masa)
           if (groupSessionId != null && groupSessionId.isNotEmpty) {
@@ -165,6 +167,8 @@ class AppRouter {
             initialTableNumber: tableNumber,
             closedAcknowledged: closedAck,
             groupSessionId: groupSessionId,
+            isReservationIntent: isReservationIntent,
+            reservationTabId: reservationTabId,
           );
         },
       ),

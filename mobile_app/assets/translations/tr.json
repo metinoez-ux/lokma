@@ -660,6 +660,10 @@
     "pinch_to_zoom": "Yakınlaştırmak için sıkıştırın"
   },
   "marketplace": {
+    "available_now": "Şu an siparişe açık",
+    "available_today": "Bugün {time}'dan itibaren",
+    "available_tomorrow": "Yarın {time}'dan itibaren",
+    "available_on_day": "{day} {time}'dan itibaren",
     "catering_services": "Catering Hizmetleri",
     "login_to_see_prices": "Fiyatları Görmek İçin Giriş Yapın",
     "catering_prices_members_only": "Catering fiyatları üyelere özeldir",
@@ -991,7 +995,12 @@
     "name_hint": "Orn: Ahmet",
     "wrong_pin": "Yanlis PIN kodu girdiniz.",
     "wrong_pin_detail": "Yanlis PIN kodu girdiniz. Lutfen grup siparisini baslatan kisiye kodu sorun.",
-    "group_create_error_msg": "Grup olusturulurken hata: {error}"
+    "group_create_error_msg": "Grup olusturulurken hata: {error}",
+    "masa_action_title": "Nasıl devam etmek istersiniz?",
+    "masa_action_reserve": "Masa Rezervasyonu",
+    "masa_action_reserve_desc": "Hemen yerinizi ayırtın",
+    "masa_action_browse": "Menü & Ön Sipariş",
+    "masa_action_browse_desc": "Menüye göz atın ve rezervasyon için ön sipariş verin"
   },
   "navigation": {
     "food": "Yemek",

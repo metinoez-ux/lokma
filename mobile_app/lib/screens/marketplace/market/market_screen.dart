@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -398,9 +399,40 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
     // First check openingHours — if business is closed per its schedule, mark unavailable
     if (!_isBusinessOpenNow(data)) {
+      String? nextOpenText;
+      
+      OpeningHoursHelper? openingHelper;
+      if (data['openingHours'] != null) {
+        openingHelper = OpeningHoursHelper(data['openingHours']);
+      } else if (data['deliveryHours'] != null) {
+        openingHelper = OpeningHoursHelper(data['deliveryHours']);
+      } else if (data['pickupHours'] != null) {
+        openingHelper = OpeningHoursHelper(data['pickupHours']);
+      }
+      
+      if (openingHelper != null) {
+        final nextOpen = openingHelper.getNextOpenDateTime(now);
+        if (nextOpen != null) {
+          final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+          final tomorrow = now.add(const Duration(days: 1));
+          final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+          
+          final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+          if (isToday) {
+            nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
+          } else if (isTomorrow) {
+            nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
+          } else {
+            final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+            final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
+            nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+          }
+        }
+      }
+
       return (
         isAvailable: false,
-        reason: 'marketplace.currently_closed'.tr(),
+        reason: nextOpenText ?? 'marketplace.currently_closed'.tr(),
         startTime: null,
         deliveryTime: deliveryStartTime,
         pickupTime: pickupStartTime
@@ -515,241 +547,220 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData) {
     final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
     
-    // Calculate next opening time
-    // Use deliveryHours/pickupHours as fallback for next opening calculation
-    OpeningHoursHelper openingHelper;
-    if (businessData['openingHours'] != null) {
-      openingHelper = OpeningHoursHelper(businessData['openingHours']);
-    } else if (businessData['deliveryHours'] != null) {
-      openingHelper = OpeningHoursHelper(businessData['deliveryHours']);
-    } else {
-      openingHelper = OpeningHoursHelper(businessData['pickupHours']);
-    }
-    final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
-    String? nextOpenText;
-    if (nextOpen != null) {
-      final now = DateTime.now();
-      final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
-      final tomorrow = now.add(const Duration(days: 1));
-      final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
-      
-      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
-      if (isToday) {
-        nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
-      } else if (isTomorrow) {
-        nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
-      } else {
-        final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
-        final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
-        nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+    // Multi-hour display logic
+    String? _formatNextOpen(dynamic hoursData, {bool isShop = false}) {
+      if (hoursData == null) return null;
+      try {
+        final helper = OpeningHoursHelper(hoursData);
+        final now = DateTime.now();
+        if (helper.isOpenAt(now)) {
+          return isShop 
+              ? tr('marketplace.filter_open_now_title') 
+              : tr('marketplace.available_now');
+        }
+        
+        final nextOpen = helper.getNextOpenDateTime(now);
+        if (nextOpen == null) return null;
+        
+        final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+        final tomorrow = now.add(const Duration(days: 1));
+        final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+        
+        final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+        if (isToday) {
+          return isShop 
+              ? tr('marketplace.opens_today', namedArgs: {'time': timeStr}) 
+              : tr('marketplace.available_today', namedArgs: {'time': timeStr});
+        } else if (isTomorrow) {
+          return isShop 
+              ? tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr}) 
+              : tr('marketplace.available_tomorrow', namedArgs: {'time': timeStr});
+        } else {
+          final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+          final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
+          return isShop 
+              ? tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr}) 
+              : tr('marketplace.available_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+        }
+      } catch (e) {
+        return null;
       }
+    }
+
+    final shopText = _formatNextOpen(businessData['openingHours'], isShop: true);
+    final deliveryText = _formatNextOpen(businessData['deliveryHours']);
+    final pickupText = _formatNextOpen(businessData['pickupHours']);
+    
+    Widget _buildTimeRow(IconData icon, String label, String time, BuildContext ctx) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+            const Spacer(),
+            Text(time, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
+          ],
+        ),
+      );
     }
     
     showDialog(
       context: context,
-      builder: (ctx) {
-        final theme = Theme.of(ctx);
-        final onSurface = theme.colorScheme.onSurface;
-        final surfaceVariant = theme.colorScheme.surfaceContainerHighest;
+      barrierDismissible: true,
+      builder: (dialogCtx) {
+        final accent = const Color(0xFF282726); // LOKMA premium wallet black
         
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: theme.dialogBackgroundColor,
-          title: Stack(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: surfaceVariant.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.storefront_outlined, color: onSurface.withValues(alpha: 0.7), size: 22),
+        return Dialog(
+          backgroundColor: Theme.of(dialogCtx).colorScheme.surface,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Premium Header Icon
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 28),
-                      child: Text(
-                        businessName,
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: onSurface,
-                        ),
+                  child: Icon(Icons.storefront_outlined, size: 28, color: accent),
+                ),
+                const SizedBox(height: 12),
+                
+                // Business Name
+                Text(
+                  businessName,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w300,
+                    height: 1.15,
+                    letterSpacing: 0.5,
+                    color: Theme.of(dialogCtx).colorScheme.onSurface,
+                  ),
+                ),
+                
+                if (shopText != null || deliveryText != null || pickupText != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.5),
                       ),
+                    ),
+                    child: Column(
+                      children: [
+                        if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
+                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
+                        if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
+                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
+                        if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
+                      ],
                     ),
                   ),
                 ],
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(ctx),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: onSurface.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
+                
+                const SizedBox(height: 12),
+                
+                // Descriptive Subtitle
+                Text(
+                  preOrderEnabled
+                      ? 'marketplace.closed_but_preorder_short'.tr()
+                      : 'marketplace.closed_plan_later'.tr(),
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w200,
+                    letterSpacing: 0.5,
+                    color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
+                    height: 1.3,
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Primary CTA (Continue)
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      final businessId = _currentBusinessIdForDialog;
+                      if (businessId != null) {
+                        context.push('/kasap/$businessId?mode=$_deliveryMode&closedAck=true');
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: accent,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: Icon(Icons.close, size: 18, color: onSurface.withValues(alpha: 0.5)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: surfaceVariant.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (reason != null)
-                      Row(
-                        children: [
-                          Icon(Icons.schedule_outlined, color: onSurface.withValues(alpha: 0.5), size: 16),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              reason,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w400,
-                                color: onSurface.withValues(alpha: 0.7),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
+                    child: Text(
+                      'common.continue_button'.tr(),
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 0.5,
+                        color: Colors.white.withOpacity(0.9),
                       ),
-                    if (preOrderEnabled) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3E3E40),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
-                            const SizedBox(width: 6),
-                            Text(
-                              tr('marketplace.pre_order_active'),
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (nextOpenText != null) ...[
-                      Divider(color: onSurface.withValues(alpha: 0.1), height: 16),
-                      Row(
-                        children: [
-                          Icon(Icons.event_available_outlined, color: lokmaPink, size: 16),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              nextOpenText,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: lokmaPink,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                preOrderEnabled
-                    ? 'marketplace.closed_but_preorder'.tr()
-                    : 'marketplace.closed_but_browse'.tr(),
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  fontWeight: FontWeight.w300,
-                  color: onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    final businessId = _currentBusinessIdForDialog;
-                    if (businessId != null) {
-                      context.push('/kasap/$businessId?mode=$_deliveryMode&closedAck=true');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: lokmaPink,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  ),
-                  child: Text(
-                    preOrderEnabled ? tr('marketplace.browse_products_and_order') : tr('marketplace.browse_products'),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: preOrderEnabled ? 13 : 15, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              // "Find Open Businesses" text link
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => OpenPartnersMapSheet(
-                        allBusinesses: _allBusinesses,
-                        userLat: _userLat,
-                        userLng: _userLng,
-                        deliveryMode: _deliveryMode,
-                        activeSegment: 'markt',
-                        sectorTypes: _marketSectorTypes,
-                      ),
-                    );
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: onSurface.withValues(alpha: 0.7),
-                  ),
-                  child: Text(
-                    'marketplace.find_open_businesses'.tr(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
-              ),
-            ],
+                
+                const SizedBox(height: 4),
+                
+                // Secondary CTA (Find Open Businesses)
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => OpenPartnersMapSheet(
+                          allBusinesses: _allBusinesses,
+                          userLat: _userLat,
+                          userLng: _userLng,
+                          deliveryMode: _deliveryMode,
+                          activeSegment: 'markt',
+                          sectorTypes: _marketSectorTypes,
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.7),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      'marketplace.find_open_businesses'.tr(),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          actionsPadding: EdgeInsets.zero,
-          actions: const [],
         );
       },
     );

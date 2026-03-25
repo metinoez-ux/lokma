@@ -19,11 +19,13 @@ import 'package:lokma_app/widgets/main_scaffold.dart';
 class ReservationBookingScreen extends ConsumerStatefulWidget {
   final String businessId;
   final String businessName;
+  final bool isPreOrder;
 
   const ReservationBookingScreen({
     super.key,
     required this.businessId,
     required this.businessName,
+    this.isPreOrder = false,
   });
 
   @override
@@ -335,7 +337,21 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
         // For reminder notifications
         'reminder24hSent': false,
         'reminder2hSent': false,
+        
+        if (widget.isPreOrder) 'isPreOrder': true,
+        if (widget.isPreOrder) 'preOrderItems': ref.read(cartProvider).items.map((e) => e.toMap()).toList(),
+        if (widget.isPreOrder) 'preOrderTotal': ref.read(cartProvider).totalAmount,
+        
+        // Continuous Tab (Phase 2)
+        if (widget.isPreOrder) 'tabStatus': 'pre_ordered',
+        if (widget.isPreOrder) 'prePaidAmount': 0.0,
+        if (widget.isPreOrder) 'tabItems': ref.read(cartProvider).items.map((e) => e.toMap()).toList(),
+        if (widget.isPreOrder) 'pendingBalance': ref.read(cartProvider).totalAmount,
       });
+
+      if (widget.isPreOrder) {
+        ref.read(cartProvider.notifier).clearCart();
+      }
 
       if (!mounted) return;
 

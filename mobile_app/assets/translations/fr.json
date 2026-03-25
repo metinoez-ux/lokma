@@ -659,6 +659,10 @@
     "pinch_to_zoom": "Pincez pour zoomer"
   },
   "marketplace": {
+    "available_now": "Disponible maintenant",
+    "available_today": "Disponible aujourd'hui à partir de {time}",
+    "available_tomorrow": "Disponible demain à partir de {time}",
+    "available_on_day": "Disponible {day} à partir de {time}",
     "catering_services": "Services de traiteur",
     "login_to_see_prices": "Connectez-vous pour voir les prix",
     "catering_prices_members_only": "Les prix de la restauration sont réservés aux membres",
@@ -990,7 +994,12 @@
     "name_hint": "Ex.: Jean",
     "wrong_pin": "Code PIN incorrect.",
     "wrong_pin_detail": "Code PIN incorrect. Veuillez demander a la personne qui a lance la commande de groupe.",
-    "group_create_error_msg": "Erreur lors de la creation du groupe: {error}"
+    "group_create_error_msg": "Erreur lors de la creation du groupe: {error}",
+    "masa_action_title": "Comment souhaitez-vous procéder ?",
+    "masa_action_reserve": "Réservation de table",
+    "masa_action_reserve_desc": "Sécurisez votre place immédiatement",
+    "masa_action_browse": "Menu et Précommande",
+    "masa_action_browse_desc": "Consultez le menu et précommandez pour votre réservation"
   },
   "navigation": {
     "food": "Repas",

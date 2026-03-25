@@ -11,6 +11,7 @@ import '../providers/kermes_cart_provider.dart';
 import '../providers/bottom_nav_provider.dart';
 import '../services/order_service.dart';
 import '../screens/orders/courier_tracking_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
@@ -358,11 +359,14 @@ class GlassBottomBar extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          Image.asset(
-            'assets/icons/sepet_icon.png',
+          SvgPicture.asset(
+            'assets/images/icon_cart_new.svg',
             width: iconSize,
             height: iconSize,
-            color: color,
+            colorFilter: ColorFilter.mode(
+              color,
+              BlendMode.srcIn,
+            ),
           ),
            if (cartItemCount > 0)
             Positioned(

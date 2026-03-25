@@ -2484,10 +2484,40 @@ export const onReservationStatusChange = onDocumentUpdated(
 
                 const icsBase64 = Buffer.from(icsContent).toString("base64");
 
+                // Build pre-order items html
+                const preOrderItems = after.preOrderItems || [];
+                let preOrderHtml = "";
+                if (Array.isArray(preOrderItems) && preOrderItems.length > 0) {
+                    const itemsListHtml = preOrderItems.map((item: any) => {
+                        const qty = item.quantity || 1;
+                        const pName = item.product?.name || item.name || "Ürün";
+                        // Options
+                        let optionsTxt = "";
+                        if (Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0) {
+                            optionsTxt = `<div style="color: #aaa; font-size: 12px; margin-top: 4px;">+ ${item.selectedOptions.map((o: any) => o.name || "").filter(Boolean).join(", ")}</div>`;
+                        }
+                        return `
+                            <div style="padding: 10px 0; border-bottom: 1px solid #444;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #fff; font-weight: bold;">${qty}x ${pName}</span>
+                                </div>
+                                ${optionsTxt}
+                            </div>
+                        `;
+                    }).join("");
+
+                    preOrderHtml = `
+                        <div style="background: #333; border-radius: 10px; padding: 18px; margin: 20px 0 15px;">
+                            <h3 style="margin: 0 0 12px; color: #fff; font-size: 16px;">Sipariş Detaylarınız</h3>
+                            ${itemsListHtml}
+                        </div>
+                    `;
+                }
+
                 // Table card display
                 const tableCardHtml = tableCardNumbers.length > 0
                     ? `<div style="background: #1b3a1b; border: 1px solid #2E7D32; border-radius: 8px; padding: 12px; margin: 15px 0;">
-                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">IHRE TISCHKARTENUMMER</p>
+                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">MASA NUMARANIZ</p>
                         <div style="display: flex; gap: 8px;">
                             ${tableCardNumbers.map((n: number) => `<span style="background: #2E7D32; color: white; padding: 6px 14px; border-radius: 8px; font-size: 18px; font-weight: bold;">${n}</span>`).join("")}
                         </div>
@@ -2497,63 +2527,65 @@ export const onReservationStatusChange = onDocumentUpdated(
                 // Send email via Resend
                 const resend = new Resend(resendApiKey.value());
                 await resend.emails.send({
-                    from: "LOKMA Marketplace <noreply@lokma.shop>",
+                    from: `${businessName} <noreply@lokma.shop>`,
                     to: customerEmail,
-                    subject: `✅ Ihre Reservierung ist bestätigt – ${businessName}`,
+                    subject: `✅ Rezervasyonunuz Onaylandı – ${businessName}`,
                     html: `
                         <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
                             <div style="max-width: 600px; margin: 0 auto;">
                                 <div style="background: #2E7D32; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
                                     <h1 style="margin: 0; color: white; font-size: 22px;">LOKMA</h1>
-                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Ihre Reservierung ist bestätigt ✓</p>
+                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Rezervasyonunuz Onaylandı ✓</p>
                                 </div>
                                 <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
-                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Hallo <strong>${customerName}</strong>,</p>
-                                    <p style="color: #ccc; margin: 0 0 20px;">Ihre Tischreservierung wurde bestätigt. Hier sind die Details:</p>
+                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Merhaba <strong>${customerName}</strong>,</p>
+                                    <p style="color: #ccc; margin: 0 0 20px;">Masa rezervasyonunuz başarıyla onaylanmıştır. İşte detaylar:</p>
                                     
                                     <div style="background: #333; border-radius: 10px; padding: 18px; margin: 15px 0;">
                                         <table style="width: 100%; color: #ccc; font-size: 14px; border-collapse: collapse;">
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Restaurant</td>
+                                                <td style="padding: 6px 0; color: #999;">İşletme</td>
                                                 <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #fff;">${businessName}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Datum</td>
+                                                <td style="padding: 6px 0; color: #999;">Tarih</td>
                                                 <td style="padding: 6px 0; text-align: right; color: #fff;">${dateStr}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Uhrzeit</td>
+                                                <td style="padding: 6px 0; color: #999;">Saat</td>
                                                 <td style="padding: 6px 0; text-align: right; color: #fff;">${timeStr}</td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 6px 0; color: #999;">Personenanzahl</td>
-                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Personen</td>
+                                                <td style="padding: 6px 0; color: #999;">Kişi Sayısı</td>
+                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Kişi</td>
                                             </tr>
                                         </table>
                                     </div>
 
                                     ${tableCardHtml}
+                                    ${preOrderHtml}
 
-                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Reservierung zum Kalender hinzufügen:</p>
+                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Rezervasyonu takviminize ekleyin:</p>
                                     
                                     <div style="text-align: center; margin: 15px 0;">
                                         <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 6px 10px;">
-                                            📅 Zu Google Kalender hinzufügen
+                                            📅 Google Takvim'e Ekle
                                         </a>
                                     </div>
-                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">Die iCal-Datei ist im Anhang — mit einem Klick zu Apple Kalender oder Outlook hinzufügen.</p>
+                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">iCal dosyası ektedir — Apple Takvim veya Outlook'a kolayca ekleyebilirsiniz.</p>
                                     
-                                    <div style="border-top: 1px solid #444; margin-top: 20px; padding-top: 15px;">
-                                        <p style="color: #999; font-size: 12px; margin: 0;">Guten Appetit! 🍽️</p>
+                                    <div style="border-top: 1px solid #444; margin-top: 20px; padding-top: 20px; text-align: center;">
+                                        <p style="color: #ccc; font-size: 14px; margin: 0 0 10px;">Bizi tercih ettiğiniz için teşekkür ederiz. Afiyet olsun! 🍽️</p>
+                                        <p style="color: #999; font-size: 13px; margin: 0;">Saygılarımızla,<br/><strong style="color: #fff;">${businessName} Ekibi</strong></p>
                                     </div>
                                 </div>
-                                <p style="color: #555; font-size: 11px; text-align: center; margin-top: 15px;">LOKMA Marketplace · noreply@lokma.shop</p>
+                                <p style="color: #555; font-size: 11px; text-align: center; margin-top: 15px;">Bu e-posta LOKMA Marketplace üzerinden gönderilmiştir.</p>
                             </div>
                         </div>
                     `,
                     attachments: [
                         {
-                            filename: "reservierung.ics",
+                            filename: "rezervasyon.ics",
                             content: icsBase64,
                         },
                     ],

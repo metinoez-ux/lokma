@@ -71,7 +71,7 @@ export default function OrderCard({
     return (
         <button
             onClick={onClick}
-            className={`w-full text-left rounded-xl p-3 transition ${isPreOrder
+            className={`w-full text-left rounded-xl p-3 transition ${isPreOrder || order.type === 'dine_in_preorder'
                 ? 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border-l-4 border-purple-500 shadow-sm'
                 : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 shadow-sm'
                 }`}
@@ -98,12 +98,29 @@ export default function OrderCard({
                 </div>
             )}
             {/* Dine-in table badge + source */}
-            {order.type === 'dine_in' && (
+            {(order.type === 'dine_in' || order.type === 'dine_in_preorder') && (
                 <div className="mb-1 space-y-0.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium">
-                            🍽️ {t('kanban.table')} {order.tableNumber ? `#${order.tableNumber}` : ''}
-                        </span>
+                        {order.type === 'dine_in_preorder' ? (
+                            <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 text-sm font-bold border border-fuchsia-200 dark:border-fuchsia-800/50 shadow-sm">
+                                    {order.tableNumber ? `🍽️ ${t('kanban.table', { defaultValue: 'Masa'})} #${order.tableNumber}` : `🗓️ ${t('kanban.tableWaiting', { defaultValue: 'Masa Bekleniyor'})}`}
+                                </span>
+                                {order._raw?.tabStatus === 'seated' && (
+                                    <span className="px-2 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 text-xs font-black tracking-wide border border-red-300 dark:border-red-700 shadow-sm flex items-center gap-1.5 animate-pulse">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                        </span>
+                                        {t('kanban.customerArrived', { defaultValue: 'MÜŞTERİ GELDİ' })}
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-medium">
+                                🍽️ {t('kanban.table')} {order.tableNumber ? `#${order.tableNumber}` : ''}
+                            </span>
+                        )}
                         {order.isGroupOrder && (
                             <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium">
                                 👥 {t('kanban.group')}{order.groupParticipantCount ? ` (${order.groupParticipantCount} ${t('kanban.person')})` : ''}

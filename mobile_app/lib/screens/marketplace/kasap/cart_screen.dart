@@ -23,6 +23,7 @@ import 'package:lokma_app/providers/auth_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'reservation_booking_screen.dart';
 
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
@@ -47,7 +48,9 @@ class CartScreen extends ConsumerStatefulWidget {
   final bool initialDineIn;
   final String? initialTableNumber;
   final int initialTab;
-  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false, this.initialTableNumber, this.initialTab = 0});
+  final bool isReservationIntent;
+  final String? reservationTabId;
+  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false, this.initialTableNumber, this.initialTab = 0, this.isReservationIntent = false, this.reservationTabId});
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -146,7 +149,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   void initState() {
     super.initState();
     _isPickUp = widget.initialPickUp;
-    _isDineIn = widget.initialDineIn;
+    _isDineIn = widget.initialDineIn || widget.isReservationIntent;
     // Auto-set table number from deep link (QR code on table)
     if (widget.initialTableNumber != null) {
       _scannedTableNumber = widget.initialTableNumber;
@@ -1124,10 +1127,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
         ),
         centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50),
-          child: _buildCheckoutStepIndicator(0),
-        ),
+        bottom: widget.isReservationIntent
+            ? null
+            : PreferredSize(
+                preferredSize: const Size.fromHeight(50),
+                child: _buildCheckoutStepIndicator(0),
+              ),
       ),
       body: _buildCartTabContent(cart, kermesCart),
     );
@@ -1238,6 +1243,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Sepet Tab İçeriği
   Widget _buildCartTabContent(CartState cart, KermesCartState kermesCart) {
+    if (widget.reservationTabId != null && cart.items.isEmpty) {
+      return _buildActiveTabContent(widget.reservationTabId!);
+    }
+
     final bothEmpty = cart.items.isEmpty && kermesCart.isEmpty;
     
     if (bothEmpty) {
@@ -1246,7 +1255,350 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     return _buildLieferandoCartContent(cart, kermesCart);
   }
-  
+
+  /// 🍽 Masa Adisyonu (Aktif Adisyon) - Phase 4
+  Widget _buildActiveTabContent(String tabId) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collectionGroup('reservations')
+          .where(FieldPath.documentId, isEqualTo: tabId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return _buildEmptyCart();
+        }
+
+        final doc = snapshot.data!.docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+        final List<dynamic> rawTabItems = data['tabItems'] ?? [];
+        final double pendingBalance = (data['pendingBalance'] as num?)?.toDouble() ?? 0.0;
+        final String status = data['paymentStatus'] ?? 'pending';
+
+        if (status == 'paid' || status == 'cash_requested') {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, size: 64, color: Colors.green),
+                const SizedBox(height: 16),
+                Text(
+                  'Hesabınız alındı.\nAfiyet olsun!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accentColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                  onPressed: () {
+                    ref.read(cartProvider.notifier).clearCart();
+                    context.go('/restoran');
+                  },
+                  child: const Text('Ana Sayfaya Dön', style: TextStyle(color: Colors.white, fontSize: 16)),
+                )
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Center(
+                    child: Text(
+                      '🍽️ Masa Adisyonunuz',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      'Siparişleriniz hazırlanıyor veya masanıza servis edildi.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  if (rawTabItems.isEmpty) ...[
+                    const Spacer(),
+                    const Center(
+                      child: Text('Henüz sipariş vermediniz.', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ] else ...[
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[900] : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                      ),
+                      child: Column(
+                        children: [
+                          for (int i = 0; i < rawTabItems.length; i++) ...[
+                            ListTile(
+                              title: Text(
+                                '${rawTabItems[i]['quantity']}x ${rawTabItems[i]['name']}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: textColor,
+                                ),
+                              ),
+                              subtitle: rawTabItems[i]['price'] != null 
+                                  ? Text(CurrencyUtils.formatCurrency((rawTabItems[i]['price'] as num).toDouble()))
+                                  : null,
+                              trailing: Text(
+                                CurrencyUtils.formatCurrency(((rawTabItems[i]['price'] as num?)?.toDouble() ?? 0.0) * ((rawTabItems[i]['quantity'] as num?)?.toInt() ?? 1)),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: _accentColor,
+                                ),
+                              ),
+                            ),
+                            if (i < rawTabItems.length - 1)
+                              Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Bottom Settlement Action Bar
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Genel Toplam',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                          ),
+                        ),
+                        Text(
+                          CurrencyUtils.formatCurrency(pendingBalance),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _accentColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        onPressed: pendingBalance > 0 ? () => _showSettlementOptions(context, pendingBalance, tabId, doc.reference) : null,
+                        child: const Text(
+                          '💳 Hesabı İste / Öde',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Settlement Option Bottom Sheet
+  void _showSettlementOptions(BuildContext context, double pendingBalance, String tabId, DocumentReference docRef) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (c) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Text(
+                'Hesabı Nasıl Ödemek İstersiniz?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Nakit Öde
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.money, color: Colors.green),
+                ),
+                title: const Text('Nakit (Garson Çağır)', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Garson masanıza gelip hesabı alacaktır.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _requestCashSettlement(docRef);
+                },
+              ),
+              const Divider(height: 32),
+              // Kredi Kartı Öde
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _accentColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.credit_card, color: _accentColor),
+                ),
+                title: const Text('Kredi Kartı ile Şimdi Öde', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Uygulama üzerinden hızlı ve güvenli ödeme.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _processStripeSettlement(docRef, pendingBalance);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _requestCashSettlement(DocumentReference docRef) async {
+    try {
+      showDialog(
+        context: context, 
+        barrierDismissible: false, 
+        builder: (c) => const Center(child: CircularProgressIndicator())
+      );
+      
+      await docRef.update({
+        'paymentStatus': 'cash_requested',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hesap talebiniz iletildi. Bizi tercih ettiğiniz için teşekkürler!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hesap istenirken hata oluştu: $e')),
+      );
+    }
+  }
+
+  Future<void> _processStripeSettlement(DocumentReference docRef, double amount) async {
+    try {
+      showDialog(
+        context: context, 
+        barrierDismissible: false, 
+        builder: (c) => const Center(child: CircularProgressIndicator())
+      );
+      
+      // Simulate API call for Payment Intent
+      await Future.delayed(const Duration(seconds: 1));
+      
+      await docRef.update({
+        'paymentStatus': 'paid',
+        'tabStatus': 'closed',
+        'totalAmount': amount, // Fixate final matched amount
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ödeme başarıyla alındı. Teşekkürler!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ödeme başarısız: $e')),
+      );
+    }
+  }
+
   /// Birleştirilmiş Siparişler Tab'ı - Kronolojik tek liste
   Widget _buildUnifiedOrdersTab() {
     final authState = ref.watch(authProvider);
@@ -2639,7 +2991,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🚴 Delivery Info Pill (Lieferando style)
-              _buildLieferandoDeliveryPill(),
+              if (!widget.isReservationIntent)
+                _buildLieferandoDeliveryPill(),
               
               // 🏪 Business name — simple right-aligned text (always visible)
               if (hasKasap && _butcherData != null)
@@ -4830,6 +5183,69 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
+  /// 🕒 Append items to an active reservation tab (Phase 2)
+  Future<void> _appendItemsToTab() async {
+    final cartState = ref.read(cartProvider);
+    if (cartState.butcherId == null || widget.reservationTabId == null || cartState.items.isEmpty) return;
+
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final newItems = cartState.items.map((e) => e.toMap()).toList();
+      final addedAmount = cartState.totalAmount;
+
+      final docRef = FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(cartState.butcherId)
+          .collection('reservations')
+          .doc(widget.reservationTabId);
+
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) throw Exception('Tab not found');
+
+        final existingItems = List<dynamic>.from(snapshot.data()?['tabItems'] ?? []);
+        existingItems.addAll(newItems);
+
+        final pendingBalance = (snapshot.data()?['pendingBalance'] as num?)?.toDouble() ?? 0.0;
+
+        transaction.update(docRef, {
+          'tabItems': existingItems,
+          'pendingBalance': pendingBalance + addedAmount,
+        });
+      });
+
+      // Clear the cart
+      ref.read(cartProvider.notifier).clearCart();
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Siparişiniz adisyona eklendi!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+    } catch (e) {
+      if (mounted) Navigator.pop(context); // Close loading dialog
+      debugPrint('Error appending to tab: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// 🟠 Orange Checkout Button (Lieferando pill style)
   Widget _buildLieferandoCheckoutButton(double total, {bool isUnderMin = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -4843,6 +5259,30 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return GestureDetector(
       onTap: () {
         if (isUnderMin) return;
+        
+        // 🏨 MASA REZERVASYONU ÖN SİPARİŞ VEYA ADİSYON (PHASE 2)
+        if (widget.isReservationIntent) {
+          if (widget.reservationTabId != null) {
+            _appendItemsToTab();
+            return;
+          }
+
+          final cartState = ref.read(cartProvider);
+          if (cartState.butcherId != null) {
+             Navigator.push(
+               context,
+               MaterialPageRoute(
+                 builder: (context) => ReservationBookingScreen(
+                   businessId: cartState.butcherId!,
+                   businessName: cartState.butcherName ?? '',
+                   isPreOrder: true,
+                 ),
+               ),
+             );
+          }
+          return;
+        }
+
         // 🪑 DINE-IN QR GATE: Require QR scan before checkout
         if (_isDineIn && _scannedTableNumber == null) {
           _showQrScanSheet();
@@ -4873,9 +5313,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 const SizedBox(width: 8),
               ],
               Text(
-                (_isDineIn && _scannedTableNumber == null)
-                    ? tr('checkout.scan_table_qr', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'})
-                    : tr('checkout.proceed', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'}),
+                widget.isReservationIntent
+                    ? (widget.reservationTabId != null ? 'Siparişi Adisyona Ekle' : 'masa_action_reserve'.tr())
+                    : (_isDineIn && _scannedTableNumber == null)
+                        ? tr('checkout.scan_table_qr', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'})
+                        : tr('checkout.proceed', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'}),
                 style: TextStyle(
                   color: textColor,
                   fontSize: 16,

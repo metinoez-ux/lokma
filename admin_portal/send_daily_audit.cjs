@@ -5,13 +5,13 @@ const resend = new Resend('re_Fj6keGwM_5Cx6q55RAMkhiWpUNh7ZxeAQ');
 
 async function sendEmail() {
   try {
-    const reportText = fs.readFileSync('/Users/metinoz/Library/CloudStorage/SynologyDrive-Mtn/LOKMA/md_/audit/audit_closed_business_popup_ui.md', 'utf8');
+    const reportText = fs.readFileSync('/Users/metinoz/Library/CloudStorage/SynologyDrive-Mtn/LOKMA/md_/audit/daily_audit_report_20260324.md', 'utf8');
     
-    console.log("Sending email...");
+    console.log("Sending daily audit email...");
     const data = await resend.emails.send({
-      from: 'LOKMA Audit <onboarding@resend.dev>',
+      from: 'LOKMA Daily Report <onboarding@resend.dev>',
       to: 'metin.oez@gmail.com',
-      subject: 'LOKMA Audit Report: Closed Business Popup UI Refinement',
+      subject: 'LOKMA Daily Audit: Comprehensive 24h Activity Report',
       text: reportText,
     });
     console.log("Email sent successfully:", data);

@@ -29,7 +29,8 @@ class WalletBusinessCard extends ConsumerWidget {
   final String? cuisineType;
   final double distance;
   final Function() onTap;
-  final Function(BuildContext, String, String, Map<String, dynamic>) showClosedDialog;
+  final Function(BuildContext, String, String, Map<String, dynamic>)
+      showClosedDialog;
 
   const WalletBusinessCard({
     super.key,
@@ -61,7 +62,7 @@ class WalletBusinessCard extends ConsumerWidget {
         : '${distance.toStringAsFixed(1).replaceAll('.', ',')} km';
 
     // Kalınlık ve Padding değerleri (Wallet Efekti)
-    const double bannerHeight = 34.0;
+    const double bannerHeight = 26.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -78,12 +79,11 @@ class WalletBusinessCard extends ConsumerWidget {
                 right: 0,
                 child: Container(
                   width: double.infinity,
-                  height: bannerHeight + 20, // Alt kartın altına inmesi için ekstra yükseklik
-                  padding: const EdgeInsets.only(top: 6, bottom: 20),
+                  height: bannerHeight +
+                      20, // Alt kartın altına inmesi için ekstra yükseklik
+                  padding: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF2A2A28)
-                        : Colors.grey[800],
+                    color: const Color(0xFF282726),
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
@@ -96,19 +96,20 @@ class WalletBusinessCard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.center,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.info_outline, color: Colors.white, size: 14),
+                      Icon(Icons.info_outline,
+                          color: Colors.white.withValues(alpha: 0.9), size: 14),
                       const SizedBox(width: 6),
                       Text(
                         unavailableReason,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w200,
                           letterSpacing: 0.5,
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -122,10 +123,29 @@ class WalletBusinessCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.08),
+                border: Border(
+                  top: !isAvailable
+                      ? BorderSide.none
+                      : BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.08),
+                        ),
+                  bottom: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
+                  ),
+                  left: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
+                  ),
+                  right: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
+                  ),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -153,7 +173,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                   imageUrl: imageUrl!,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(
-                                    color: Theme.of(context).brightness == Brightness.dark
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
                                         ? const Color(0xFF2A2A28)
                                         : Colors.grey[200],
                                     child: Center(
@@ -163,21 +184,26 @@ class WalletBusinessCard extends ConsumerWidget {
                                       ),
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) => Container(
-                                    color: Theme.of(context).brightness == Brightness.dark
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
                                         ? const Color(0xFF2A2A28)
                                         : Colors.grey[200],
                                     child: const Center(
-                                      child: Icon(Icons.restaurant, color: lokmaPink, size: 48),
+                                      child: Icon(Icons.restaurant,
+                                          color: lokmaPink, size: 48),
                                     ),
                                   ),
                                 )
                               : Container(
-                                  color: Theme.of(context).brightness == Brightness.dark
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? const Color(0xFF2A2A28)
                                       : Colors.grey[200],
                                   child: const Center(
-                                    child: Icon(Icons.restaurant, color: lokmaPink, size: 48),
+                                    child: Icon(Icons.restaurant,
+                                        color: lokmaPink, size: 48),
                                   ),
                                 ),
                         ),
@@ -188,19 +214,22 @@ class WalletBusinessCard extends ConsumerWidget {
                             ),
                           ),
 
-                        // Masa Rezervasyonu badge overlay warning 
-                        if (deliveryMode == 'masada' && (data['hasReservation'] as bool? ?? false))
+                        // Masa Rezervasyonu badge overlay warning
+                        if (deliveryMode == 'masada' &&
+                            (data['hasReservation'] as bool? ?? false))
                           Positioned(
                             bottom: 0,
                             left: 0,
                             right: 0,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
                               color: Colors.black.withValues(alpha: 0.65),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.info_outline, color: Colors.white, size: 14),
+                                  const Icon(Icons.info_outline,
+                                      color: Colors.white, size: 14),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
@@ -230,18 +259,21 @@ class WalletBusinessCard extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              if (data['hasReservation'] == true && deliveryMode == 'masada')
+                              if (data['hasReservation'] == true &&
+                                  deliveryMode == 'masada')
                                 Opacity(
                                   opacity: isAvailable ? 1.0 : 0.7,
                                   child: Container(
                                     margin: const EdgeInsets.only(bottom: 8),
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
                                       color: lokmaPink.withValues(alpha: 0.9),
                                       borderRadius: BorderRadius.circular(14),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.3),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.3),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
@@ -254,10 +286,12 @@ class WalletBusinessCard extends ConsumerWidget {
                                           'assets/images/icon_masa_rezervasyon.svg',
                                           width: 16,
                                           height: 16,
-                                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                                          colorFilter: const ColorFilter.mode(
+                                              Colors.white, BlendMode.srcIn),
                                         ),
                                         Text(
-                                          'marketplace.online_table_reservation_badge'.tr(),
+                                          'marketplace.online_table_reservation_badge'
+                                              .tr(),
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 11,
@@ -279,19 +313,25 @@ class WalletBusinessCard extends ConsumerWidget {
                                     onTap: () async {
                                       HapticFeedback.lightImpact();
                                       if (!isAvailable) {
-                                        showClosedDialog(context, name, unavailableReason, data);
+                                        showClosedDialog(context, name,
+                                            unavailableReason, data);
                                         return;
                                       }
 
-                                      final session = await showModalBottomSheet<TableGroupSession>(
+                                      final session =
+                                          await showModalBottomSheet<
+                                              TableGroupSession>(
                                         context: context,
                                         useRootNavigator: true,
                                         shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                          borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(24)),
                                         ),
-                                        backgroundColor: Theme.of(context).brightness == Brightness.dark
-                                            ? const Color(0xFF2A2A28)
-                                            : Colors.white,
+                                        backgroundColor:
+                                            Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? const Color(0xFF2A2A28)
+                                                : Colors.white,
                                         isScrollControlled: true,
                                         builder: (ctx) => GroupOrderSetupSheet(
                                           businessId: id,
@@ -305,24 +345,33 @@ class WalletBusinessCard extends ConsumerWidget {
                                           useRootNavigator: true,
                                           isScrollControlled: true,
                                           backgroundColor: Colors.transparent,
-                                          builder: (ctx) => MarketplaceGroupShareSheet(session: session),
+                                          builder: (ctx) =>
+                                              MarketplaceGroupShareSheet(
+                                                  session: session),
                                         );
                                         if (context.mounted) {
-                                          final encodedName = Uri.encodeComponent(name);
-                                          final tableNum = session.tableNumber.isNotEmpty ? session.tableNumber : 'delivery';
+                                          final encodedName =
+                                              Uri.encodeComponent(name);
+                                          final tableNum =
+                                              session.tableNumber.isNotEmpty
+                                                  ? session.tableNumber
+                                                  : 'delivery';
                                           context.push(
                                               '/kasap/$id?mode=$deliveryMode&groupSessionId=${session.id}&businessName=$encodedName&table=$tableNum');
                                         }
                                       }
                                     },
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 5),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF2E7D32).withValues(alpha: 0.9),
+                                        color: const Color(0xFF2E7D32)
+                                            .withValues(alpha: 0.9),
                                         borderRadius: BorderRadius.circular(14),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.3),
+                                            color: Colors.black
+                                                .withValues(alpha: 0.3),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
@@ -331,7 +380,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.groups_rounded, color: Colors.white, size: 16),
+                                          const Icon(Icons.groups_rounded,
+                                              color: Colors.white, size: 16),
                                           const SizedBox(width: 6),
                                           Text(
                                             tr('marketplace.group_order_badge'),
@@ -367,7 +417,10 @@ class WalletBusinessCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.2),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -379,7 +432,8 @@ class WalletBusinessCard extends ConsumerWidget {
                                     imageUrl: logoUrl!,
                                     fit: BoxFit.cover,
                                     errorWidget: (_, __, ___) => const Center(
-                                      child: Icon(Icons.store, color: lokmaPink, size: 24),
+                                      child: Icon(Icons.store,
+                                          color: lokmaPink, size: 24),
                                     ),
                                   ),
                                 ),
@@ -409,12 +463,21 @@ class WalletBusinessCard extends ConsumerWidget {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.star, color: Theme.of(context).colorScheme.tertiary, size: 16),
+                                  Icon(Icons.star,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
+                                      size: 16),
                                   const SizedBox(width: 6),
                                   Text(
-                                    rating.toStringAsFixed(1).replaceAll('.', ','),
+                                    rating
+                                        .toStringAsFixed(1)
+                                        .replaceAll('.', ','),
                                     style: GoogleFonts.inter(
-                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.9),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w300,
                                     ),
@@ -424,7 +487,10 @@ class WalletBusinessCard extends ConsumerWidget {
                                     Text(
                                       reviewText,
                                       style: GoogleFonts.inter(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w300,
                                       ),
@@ -433,15 +499,24 @@ class WalletBusinessCard extends ConsumerWidget {
                                   Text(
                                     ' · ',
                                     style: GoogleFonts.inter(
-                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
                                       fontSize: 13,
                                     ),
                                   ),
                                   Expanded(
                                     child: Text(
-                                      cuisineType != null && cuisineType!.isNotEmpty ? cuisineType! : typeLabel,
+                                      cuisineType != null &&
+                                              cuisineType!.isNotEmpty
+                                          ? cuisineType!
+                                          : typeLabel,
                                       style: GoogleFonts.inter(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w300,
                                       ),
@@ -454,30 +529,44 @@ class WalletBusinessCard extends ConsumerWidget {
                               const SizedBox(height: 6),
                               Builder(
                                 builder: (context) {
-                                  final deliveryFee = (data['deliveryFee'] as num?)?.toDouble() ?? 0.0;
-                                  final minOrderAmount = (data['minDeliveryOrder'] as num?)?.toDouble() ??
-                                      (data['minOrderAmount'] as num?)?.toDouble() ??
-                                      10.0;
+                                  final deliveryFee =
+                                      (data['deliveryFee'] as num?)
+                                              ?.toDouble() ??
+                                          0.0;
+                                  final minOrderAmount =
+                                      (data['minDeliveryOrder'] as num?)
+                                              ?.toDouble() ??
+                                          (data['minOrderAmount'] as num?)
+                                              ?.toDouble() ??
+                                          10.0;
 
                                   if (deliveryMode == 'teslimat') {
                                     final hasMinOrder = minOrderAmount > 0;
                                     return Row(
                                       children: [
                                         Icon(Icons.delivery_dining,
-                                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.7),
                                             size: 16),
                                         const SizedBox(width: 6),
                                         if (deliveryFee == 0)
                                           Text(
                                             tr('marketplace.free_delivery_label'),
                                             style: GoogleFonts.inter(
-                                                color: tunaGreen, fontSize: 13, fontWeight: FontWeight.w300),
+                                                color: tunaGreen,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w300),
                                           )
                                         else
                                           Text(
                                             '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
                                             style: GoogleFonts.inter(
-                                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.7),
                                               fontSize: 13,
                                               fontWeight: FontWeight.w300,
                                             ),
@@ -485,16 +574,25 @@ class WalletBusinessCard extends ConsumerWidget {
                                         if (hasMinOrder) ...[
                                           Text(' · ',
                                               style: GoogleFonts.inter(
-                                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.7),
                                                   fontSize: 13)),
                                           Icon(Icons.shopping_basket_outlined,
-                                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.7),
                                               size: 14),
                                           const SizedBox(width: 6),
                                           Text(
                                             'Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                                             style: GoogleFonts.inter(
-                                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.7),
                                               fontSize: 13,
                                               fontWeight: FontWeight.w300,
                                             ),
@@ -503,25 +601,37 @@ class WalletBusinessCard extends ConsumerWidget {
                                       ],
                                     );
                                   } else {
-                                    final hasReservation = data['hasReservation'] as bool? ?? false;
+                                    final hasReservation =
+                                        data['hasReservation'] as bool? ??
+                                            false;
                                     return Row(
                                       children: [
                                         Icon(Icons.location_on_outlined,
-                                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.7),
                                             size: 14),
                                         const SizedBox(width: 4),
                                         Text(
                                           distanceText,
                                           style: GoogleFonts.inter(
-                                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.8),
                                             fontSize: 13,
                                             fontWeight: FontWeight.w300,
                                           ),
                                         ),
-                                        if (hasReservation && deliveryMode == 'masada') ...[
+                                        if (hasReservation &&
+                                            deliveryMode == 'masada') ...[
                                           Text(' · ',
                                               style: GoogleFonts.inter(
-                                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.7),
                                                   fontSize: 13)),
                                           SvgPicture.asset(
                                             'assets/images/icon_masa_rezervasyon.svg',
@@ -556,7 +666,7 @@ class WalletBusinessCard extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             // ==========================================
             // 1. TOP-LEFT CORNER: Brand & Status Badges (ABSOLUTE)
             // ==========================================
@@ -568,13 +678,17 @@ class WalletBusinessCard extends ConsumerWidget {
                 children: [
                   if (isTunaPartner)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFFA01E22), // TUNA dark red
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -614,12 +728,17 @@ class WalletBusinessCard extends ConsumerWidget {
                   GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
-                      ref.read(butcherFavoritesProvider.notifier).toggleFavorite(id);
+                      ref
+                          .read(butcherFavoritesProvider.notifier)
+                          .toggleFavorite(id);
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

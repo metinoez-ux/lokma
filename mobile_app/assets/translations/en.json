@@ -660,6 +660,10 @@
     "pinch_to_zoom": "Pinch to zoom"
   },
   "marketplace": {
+    "available_now": "Available Now",
+    "available_today": "Available today from {time}",
+    "available_tomorrow": "Available tomorrow from {time}",
+    "available_on_day": "Available {day} from {time}",
     "catering_services": "Catering Services",
     "login_to_see_prices": "Login to See Prices",
     "catering_prices_members_only": "Catering prices are member-exclusive",
@@ -991,7 +995,12 @@
     "name_hint": "e.g.: John",
     "wrong_pin": "Wrong PIN code.",
     "wrong_pin_detail": "Wrong PIN code. Please ask the person who started the group order.",
-    "group_create_error_msg": "Error creating group: {error}"
+    "group_create_error_msg": "Error creating group: {error}",
+    "masa_action_title": "How would you like to proceed?",
+    "masa_action_reserve": "Table Reservation",
+    "masa_action_reserve_desc": "Secure your seat immediately",
+    "masa_action_browse": "Menu & Pre-Order",
+    "masa_action_browse_desc": "Browse the menu and pre-order food for your table reservation"
   },
   "navigation": {
     "food": "Food",

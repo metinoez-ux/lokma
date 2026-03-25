@@ -661,6 +661,10 @@
     "pinch_to_zoom": "Zum Zoomen kneifen"
   },
   "marketplace": {
+    "available_now": "Jetzt möglich",
+    "available_today": "Heute ab {time}",
+    "available_tomorrow": "Morgen ab {time}",
+    "available_on_day": "Ab {day} {time}",
     "catering_services": "Cateringdienste",
     "login_to_see_prices": "Anmelden, um Preise zu sehen",
     "catering_prices_members_only": "Catering-Preise sind exklusiv für Mitglieder",
@@ -994,7 +998,12 @@
     "name_hint": "z.B.: Max",
     "wrong_pin": "Falscher PIN-Code.",
     "wrong_pin_detail": "Falscher PIN-Code. Bitte fragen Sie die Person, die die Gruppenbestellung gestartet hat.",
-    "group_create_error_msg": "Fehler beim Erstellen der Gruppe: {error}"
+    "group_create_error_msg": "Fehler beim Erstellen der Gruppe: {error}",
+    "masa_action_title": "Wie möchten Sie fortfahren?",
+    "masa_action_reserve": "Tisch Reservieren",
+    "masa_action_reserve_desc": "Jeden Sitzplatz sofort sichern",
+    "masa_action_browse": "Menü & Vorbestellung",
+    "masa_action_browse_desc": "Stöbern Sie im Menü und bestellen Sie Ihr Essen für die Reservierung vor"
   },
   "navigation": {
     "food": "Essen",

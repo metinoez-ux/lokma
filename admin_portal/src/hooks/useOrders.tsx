@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react';
-import { collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // ============================================================
@@ -88,6 +88,50 @@ function mapDocToOrder(docId: string, d: any): Order {
 }
 
 // ============================================================
+// CONTINUOUS TAB RESERVATION MAPPING
+// Normalizes active reservations into the Order interface
+// ============================================================
+
+function mapReservationToOrder(docId: string, d: any): Order {
+  // Map tabStatus to standard order status for Kanban rendering
+  let status = 'pending';
+  // If seated, we want kitchen to see it as preparing/ready to serve
+  if (d.tabStatus === 'seated') status = 'preparing'; 
+  else if (d.tabStatus === 'closed') status = 'completed';
+  else if (d.tabStatus === 'pre_ordered') status = 'pending';
+  else if (d.status === 'confirmed') status = 'accepted';
+  else status = d.status || 'pending';
+
+  return {
+    id: docId,
+    orderNumber: `R-${docId.slice(0, 5).toUpperCase()}`,
+    businessId: d.businessId || '',
+    businessName: d.businessName || '',
+    customerId: d.userId || '',
+    customerName: d.userName || '',
+    customerPhone: d.userPhone || '',
+    items: d.tabItems || d.preOrderItems || [], // The active continuous tab ledger
+    subtotal: d.pendingBalance || d.preOrderTotal || 0,
+    deliveryFee: 0,
+    total: d.pendingBalance || d.preOrderTotal || 0,
+    status: status,
+    type: 'dine_in_preorder', 
+    createdAt: d.createdAt || d.reservationDate,
+    scheduledAt: d.reservationDate,
+    isScheduledOrder: true,
+    address: null,
+    notes: d.notes || '',
+    tableNumber: d.tableNumber,
+    waiterName: '',
+    groupSessionId: '',
+    isGroupOrder: false,
+    groupParticipantCount: d.partySize || 0,
+    paymentStatus: (d.prePaidAmount && d.pendingBalance && d.prePaidAmount >= d.pendingBalance) ? 'paid' : 'unpaid',
+    _raw: d,
+  };
+}
+
+// ============================================================
 // DATE FILTER HELPER
 // ============================================================
 
@@ -129,6 +173,7 @@ export const ORDER_TYPES: Record<string, { labelKey: string; color: string }> = 
   pickup:   { labelKey: 'type_pickup',    color: 'green' },
   delivery: { labelKey: 'type_delivery',  color: 'blue' },
   dine_in:  { labelKey: 'type_dineIn',    color: 'amber' },
+  dine_in_preorder: { labelKey: 'type_dineInPreorder', color: 'purple' },
 };
 
 // ============================================================
@@ -186,45 +231,77 @@ export function OrdersProvider({
   businessId: fixedBusinessId,
   initialDateFilter = 'all',
 }: OrdersProviderProps) {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [meatOrders, setMeatOrders] = useState<Order[]>([]);
+  const [resOrders, setResOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilter>(initialDateFilter);
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [businessFilter, setBusinessFilter] = useState('all');
 
-  // Single Firestore listener
+  const orders = useMemo(() => {
+    return [...meatOrders, ...resOrders].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
+      const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
+      return bTime - aTime;
+    });
+  }, [meatOrders, resOrders]);
+
+  // Dual Firestore listeners
   useEffect(() => {
     setLoading(true);
     
     const startDate = getStartDateForFilter(dateFilter);
     
-    const q = query(
+    // 1. Standard Orders Stream
+    const qOrders = query(
       collection(db, 'meat_orders'),
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
       orderBy('createdAt', 'desc'),
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubOrders = onSnapshot(qOrders, (snapshot) => {
       let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
-      
-      // If fixedBusinessId is provided, filter server-side result client-side
-      // This matches the Bestellzentrum approach: fetch all, filter by business
       if (fixedBusinessId) {
         mapped = mapped.filter(o => 
-          o.businessId === fixedBusinessId || 
-          o._raw.butcherId === fixedBusinessId
+          o.businessId === fixedBusinessId || o._raw.butcherId === fixedBusinessId
         );
       }
-      
-      setOrders(mapped);
+      setMeatOrders(mapped);
       setLoading(false);
     }, (error) => {
       console.error('[useOrders] Error loading orders:', error);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // 2. Continuous Tab Reservations Stream
+    const qReservations = query(
+      collectionGroup(db, 'reservations'),
+      where('createdAt', '>=', Timestamp.fromDate(startDate)),
+      orderBy('createdAt', 'desc'),
+    );
+
+    const unsubReservations = onSnapshot(qReservations, (snapshot) => {
+      // Filter logically relevant tabs
+      const relevantDocs = snapshot.docs.filter(d => {
+        const data = d.data();
+        return data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+      });
+
+      let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
+      
+      if (fixedBusinessId) {
+        mapped = mapped.filter(o => o.businessId === fixedBusinessId);
+      }
+      setResOrders(mapped);
+    }, (error) => {
+      console.error('[useOrders] Error loading reservations:', error);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubReservations();
+    };
   }, [dateFilter, fixedBusinessId]);
 
   // Client-side filtering
@@ -297,40 +374,70 @@ export interface UseOrdersStandaloneOptions {
 
 export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
   const { businessId, initialDateFilter = 'all' } = options;
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [meatOrders, setMeatOrders] = useState<Order[]>([]);
+  const [resOrders, setResOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilter>(initialDateFilter);
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
+  const orders = useMemo(() => {
+    return [...meatOrders, ...resOrders].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
+      const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
+      return bTime - aTime;
+    });
+  }, [meatOrders, resOrders]);
+
   useEffect(() => {
     setLoading(true);
     const startDate = getStartDateForFilter(dateFilter);
     
-    const q = query(
+    // 1. Orders
+    const qOrders = query(
       collection(db, 'meat_orders'),
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
       orderBy('createdAt', 'desc'),
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubOrders = onSnapshot(qOrders, (snapshot) => {
       let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
-      
       if (businessId) {
-        mapped = mapped.filter(o => 
-          o.businessId === businessId || 
-          o._raw.butcherId === businessId
-        );
+        mapped = mapped.filter(o => o.businessId === businessId || o._raw.butcherId === businessId);
       }
-      
-      setOrders(mapped);
+      setMeatOrders(mapped);
       setLoading(false);
     }, (error) => {
       console.error('[useOrdersStandalone] Error:', error);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // 2. Reservations
+    const qReservations = query(
+      collectionGroup(db, 'reservations'),
+      where('createdAt', '>=', Timestamp.fromDate(startDate)),
+      orderBy('createdAt', 'desc'),
+    );
+
+    const unsubReservations = onSnapshot(qReservations, (snapshot) => {
+      const relevantDocs = snapshot.docs.filter(d => {
+        const data = d.data();
+        return data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+      });
+
+      let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
+      if (businessId) {
+        mapped = mapped.filter(o => o.businessId === businessId);
+      }
+      setResOrders(mapped);
+    }, (error) => {
+      console.error('[useOrdersStandalone] Error loading reservations:', error);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubReservations();
+    };
   }, [dateFilter, businessId]);
 
   const filteredOrders = useMemo(() => {

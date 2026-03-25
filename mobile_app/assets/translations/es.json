@@ -659,6 +659,10 @@
     "pinch_to_zoom": "Pellizcar para acercar"
   },
   "marketplace": {
+    "available_now": "Disponible ahora",
+    "available_today": "Disponible hoy a partir de las {time}",
+    "available_tomorrow": "Disponible mañana a partir de las {time}",
+    "available_on_day": "Disponible el {day} a partir de las {time}",
     "catering_services": "Servicios de cátering",
     "login_to_see_prices": "Inicie sesión para ver los precios",
     "catering_prices_members_only": "Los precios de catering son exclusivos para miembros",
@@ -990,7 +994,12 @@
     "name_hint": "Ej.: Juan",
     "wrong_pin": "Codigo PIN incorrecto.",
     "wrong_pin_detail": "Codigo PIN incorrecto. Pregunte a la persona que inicio el pedido grupal.",
-    "group_create_error_msg": "Error al crear el grupo: {error}"
+    "group_create_error_msg": "Error al crear el grupo: {error}",
+    "masa_action_title": "¿Cómo te gustaría proceder?",
+    "masa_action_reserve": "Reserva de mesa",
+    "masa_action_reserve_desc": "Asegura tu lugar de inmediato",
+    "masa_action_browse": "Menú y Pre-pedido",
+    "masa_action_browse_desc": "Explora el menú y haz un pedido anticipado para tu reserva"
   },
   "navigation": {
     "food": "Comida",
