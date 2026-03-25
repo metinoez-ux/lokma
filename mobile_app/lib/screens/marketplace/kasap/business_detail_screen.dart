@@ -7,6 +7,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -576,75 +577,138 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         barrierDismissible: true,
         builder: (dialogCtx) {
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+            backgroundColor: Theme.of(dialogCtx).colorScheme.surface,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24), // Reduced padding
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Title: business name + opens at time
+                  // Premium Header Icon (Reduced Size)
+                  Container(
+                    padding: const EdgeInsets.all(12), // Reduced
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.storefront_outlined, size: 28, color: accent), // Reduced
+                  ),
+                  const SizedBox(height: 12), // Reduced
+                  
+                  // Business Name (Thin, Elegant Typography)
                   Text(
-                    nextOpenText.isNotEmpty
-                        ? '$businessName\n$nextOpenText'
-                        : businessName,
+                    businessName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      height: 1.3,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 20, // Reduced slightly for compact look
+                      fontWeight: FontWeight.w200,
+                      height: 1.15,
+                      letterSpacing: 0.5,
+                      color: Theme.of(dialogCtx).colorScheme.onSurface,
                     ),
                   ),
                   
-                  const SizedBox(height: 12),
+                  if (nextOpenText.isNotEmpty) ...[
+                    const SizedBox(height: 12), // Reduced
+                    // Compact & Premium Time Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), // Reduced vertical
+                      decoration: BoxDecoration(
+                        color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.schedule, size: 14, color: Theme.of(dialogCtx).colorScheme.onSurfaceVariant), // Reduced
+                          const SizedBox(width: 6), // Reduced
+                          Text(
+                            nextOpenText,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w200,
+                              letterSpacing: 0.5,
+                              color: Theme.of(dialogCtx).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   
-                  // Subtitle
+                  const SizedBox(height: 12), // Reduced
+                  
+                  // Descriptive Subtitle
                   Text(
                     preOrderEnabled
                         ? 'marketplace.closed_but_preorder_short'.tr()
                         : 'marketplace.closed_plan_later'.tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.6),
-                      height: 1.4,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w200,
+                      letterSpacing: 0.5,
+                      color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.9),
+                      height: 1.3, // Reduced
                     ),
                   ),
                   
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24), // Reduced
                   
-                  // Primary CTA: Weiter / Continue
+                  // Primary CTA (Continue)
                   SizedBox(
                     width: double.infinity,
+                    height: 48, // Reduced from 52
                     child: FilledButton(
                       onPressed: () => Navigator.pop(dialogCtx),
                       style: FilledButton.styleFrom(
                         backgroundColor: accent,
                         foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Text(
                         'common.continue_button'.tr(),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.inter(
+                          fontSize: 14, // Reduced
+                          fontWeight: FontWeight.w200,
+                          letterSpacing: 0.5,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
                       ),
                     ),
                   ),
                   
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4), // Reduced
                   
-                  // Secondary: Find open businesses
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(dialogCtx);
-                      context.go('/');
-                    },
-                    child: Text(
-                      'marketplace.find_open_businesses'.tr(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
+                  // Secondary CTA (Find Open Businesses)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48, // Reduced from 52
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialogCtx);
+                        context.go('/');
+                      },
+                      style: TextButton.styleFrom(
+
+                        foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(
+                        'marketplace.find_open_businesses'.tr(),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w200,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ),
