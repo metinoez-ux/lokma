@@ -393,6 +393,8 @@ export default function ReservationsPage() {
             groups[timeKey].push(r);
         });
         return Object.keys(groups).sort().map(k => ({ time: k, reservations: groups[k] }));
+    }, [filteredReservations]);
+
     const CANCEL_REASONS = [
         t('cancel_reason_masa_musait_degil'),
         t('cancel_reason_isletme_kapali'),
