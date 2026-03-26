@@ -5154,7 +5154,8 @@
       "pickup_pause_title": "Pickup Pause",
       "delivery_pause_title": "Delivery Pause",
       "select_pause_duration": "Select duration",
-      "status_paused": "Paused"
+      "status_paused": "Paused",
+      "type_dineInPreorder": "Dine-in (Pre-order)"
     }
   },
   "AdminProducts": {

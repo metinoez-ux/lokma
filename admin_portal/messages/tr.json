@@ -5152,7 +5152,8 @@
       "pickup_pause_title": "Gel-Al Duraklat",
       "delivery_pause_title": "Kurye Duraklat",
       "select_pause_duration": "Sure secin",
-      "status_paused": "Duraklatildi"
+      "status_paused": "Duraklatildi",
+      "type_dineInPreorder": "Masa (Ön Sipariş)"
     }
   },
   "AdminProducts": {

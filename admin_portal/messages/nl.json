@@ -2747,7 +2747,8 @@
       "status_paused": "Gepauzeerd",
       "modal": {
         "otherStatuses": "Andere Statussen"
-      }
+      },
+      "type_dineInPreorder": "Tafel (Vooraf besteld)"
     }
   },
   "AdminActivitylogs": {

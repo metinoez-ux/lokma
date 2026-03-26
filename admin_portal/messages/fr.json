@@ -5135,7 +5135,8 @@
       "pickup_pause_title": "Pause Retrait",
       "delivery_pause_title": "Pause Livraison",
       "select_pause_duration": "Choisir la duree",
-      "status_paused": "En pause"
+      "status_paused": "En pause",
+      "type_dineInPreorder": "Table (Précommande)"
     }
   },
   "AdminProducts": {

@@ -110,7 +110,12 @@ export function mapReservationToOrder(docId: string, d: any): Order {
     customerId: d.userId || '',
     customerName: d.userName || '',
     customerPhone: d.userPhone || '',
-    items: d.tabItems || d.preOrderItems || [], // The active continuous tab ledger
+    items: (d.tabItems || d.preOrderItems || []).map((item: any) => ({
+      ...item,
+      name: item.name || item.productName || item.product?.nameTr || item.product?.name || 'Masa Siparişi',
+      price: item.price || item.product?.price || 0,
+      productId: item.productId || item.product?.id || '',
+    })), // The active continuous tab ledger
     subtotal: d.pendingBalance || d.preOrderTotal || 0,
     deliveryFee: 0,
     total: d.pendingBalance || d.preOrderTotal || 0,

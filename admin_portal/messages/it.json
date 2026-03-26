@@ -5111,7 +5111,8 @@
       "pickup_pause_title": "Pausa Ritiro",
       "delivery_pause_title": "Pausa Consegna",
       "select_pause_duration": "Seleziona durata",
-      "status_paused": "In pausa"
+      "status_paused": "In pausa",
+      "type_dineInPreorder": "Tavolo (Pre-ordine)"
     }
   },
   "AdminProducts": {

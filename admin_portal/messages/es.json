@@ -5132,7 +5132,8 @@
       "pickup_pause_title": "Pausa Recogida",
       "delivery_pause_title": "Pausa Entrega",
       "select_pause_duration": "Seleccionar duracion",
-      "status_paused": "Pausado"
+      "status_paused": "Pausado",
+      "type_dineInPreorder": "Mesa (Reserva)"
     }
   },
   "AdminProducts": {

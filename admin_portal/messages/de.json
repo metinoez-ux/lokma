@@ -5184,7 +5184,8 @@
       "pickup_pause_title": "Gel-Al Pause",
       "delivery_pause_title": "Kurier Pause",
       "select_pause_duration": "Dauer wahlen",
-      "status_paused": "Pausiert"
+      "status_paused": "Pausiert",
+      "type_dineInPreorder": "Tisch (Vorbestellung)"
     }
   },
   "AdminProducts": {

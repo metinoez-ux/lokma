@@ -83,15 +83,18 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     try {
         const logoBuffer = Buffer.from(RECEIPT_LOGO_BASE64, 'base64');
         parts.push(logoBuffer);
+        parts.push(CMD.LINE);
     } catch {
-        // Fallback to text logo if image fails
-        parts.push(CMD.BOLD_ON);
-        parts.push(CMD.FONT_LARGE);
-        parts.push(textLine('LOKMA'));
-        parts.push(CMD.FONT_NORMAL);
-        parts.push(CMD.BOLD_OFF);
-        parts.push(textLine('fresh. fast. local.'));
+        // Ignore Buffer decode fail
     }
+
+    // Unconditional text fallback guaranteeing LOKMA branding on all receipt printers
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_LARGE);
+    parts.push(textLine('LOKMA'));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+    parts.push(textLine('fresh. fast. local.'));
     parts.push(CMD.ALIGN_LEFT);
     parts.push(separator());
 
@@ -108,6 +111,7 @@ function buildReceipt(order: any, businessName?: string): Buffer {
         delivery: 'KURYE / LIEFERUNG',
         pickup: 'GEL-AL / ABHOLUNG',
         dine_in: 'YERINDE / VOR ORT',
+        dine_in_preorder: 'MASA (OEN SIPARIS) / DINE-IN',
     };
     const orderType = order.orderType || order.type || 'delivery';
     parts.push(CMD.BOLD_ON);
