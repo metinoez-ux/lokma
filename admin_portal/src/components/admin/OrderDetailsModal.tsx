@@ -45,6 +45,27 @@ export default function OrderDetailsModal({
     const [cancelReason, setCancelReason] = useState('');
     const [showUnavailableModal, setShowUnavailableModal] = useState(false);
     const [unavailableItems, setUnavailableItems] = useState<any[]>([]);
+    const [resLoading, setResLoading] = useState(false);
+
+    // Reservation type flag
+    const isReservation = order.type === 'dine_in_preorder';
+    const rawStatus = order._raw?.status || order.status;
+    const rawTabStatus = order._raw?.tabStatus;
+
+    // Update a reservation doc directly in businesses/{businessId}/reservations/{id}
+    const handleReservationUpdate = async (fields: Record<string, any>) => {
+        if (!order.businessId || !order.id) return;
+        setResLoading(true);
+        try {
+            const resRef = doc(db, 'businesses', order.businessId, 'reservations', order.id);
+            await updateDoc(resRef, { ...fields, updatedAt: new Date() });
+            onClose();
+        } catch (err) {
+            console.error('Reservation update error:', err);
+        } finally {
+            setResLoading(false);
+        }
+    };
 
     const formatCurrency = (amount: number, currencyCode?: string) => {
         return globalFormatCurrency(amount, currencyCode);
@@ -444,49 +465,136 @@ export default function OrderDetailsModal({
 
                         {/* Status Actions */}
                         <div className="border-t border-border pt-4">
-                            <h4 className="text-foreground text-sm font-medium mb-3">{t('modal.updateStatus')}</h4>
-                            <div className="grid grid-cols-2 gap-2">
-                                {mainStatuses.map(([key, value]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => handleStatusChangeInternal(key as OrderStatus)}
-                                        disabled={order.status === key}
-                                        className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${order.status === key
-                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700'
-                                            : key === 'cancelled'
-                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-900/50'
-                                                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
-                                            }`}
-                                    >
-                                        {key === 'cancelled' && <span className="mr-1.5">❌</span>}
-                                        {t(value.labelKey)}
-                                    </button>
-                                ))}
-                            </div>
-                            
-                            {/* Edge Case Statuses (Collapsible) */}
-                            {edgeCaseStatuses.length > 0 && (
-                                <details className="mt-4 group bg-card/50 border border-border rounded-lg overflow-hidden transition-all">
-                                    <summary className="px-4 py-2 text-sm text-muted-foreground font-medium cursor-pointer flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-                                        {t('modal.otherStatuses') || "Diğer Durumlar (Edge Cases)"}
-                                        <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
-                                    </summary>
-                                    <div className="p-3 grid grid-cols-2 gap-2 border-t border-border bg-background/30">
-                                        {edgeCaseStatuses.map(([key, value]) => (
+                            {isReservation ? (
+                                // ── RESERVATION ACTIONS ──────────────────────────────────
+                                <div className="space-y-3">
+                                    <h4 className="text-foreground text-sm font-medium">🗓️ Rezervasyon İşlemleri</h4>
+
+                                    {/* Extra info: party size */}
+                                    {order._raw?.partySize && (
+                                        <div className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/20 rounded-lg px-3 py-2">
+                                            <span className="text-muted-foreground text-sm">Kişi Sayısı</span>
+                                            <span className="font-bold text-purple-700 dark:text-purple-300">👥 {order._raw.partySize} kişi</span>
+                                        </div>
+                                    )}
+
+                                    {/* PENDING → confirm or reject */}
+                                    {(rawStatus === 'pending' || rawTabStatus === 'pre_ordered') && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                disabled={resLoading}
+                                                onClick={() => handleReservationUpdate({ status: 'confirmed' })}
+                                                className="px-4 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl font-bold transition shadow-sm"
+                                            >
+                                                ✅ Onayla
+                                            </button>
+                                            <button
+                                                disabled={resLoading}
+                                                onClick={() => handleReservationUpdate({ status: 'rejected' })}
+                                                className="px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 disabled:opacity-50 text-red-700 dark:text-red-300 rounded-xl font-bold transition border border-red-200 dark:border-red-800"
+                                            >
+                                                ❌ Reddet
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* CONFIRMED + not seated yet → seated or cancel */}
+                                    {rawStatus === 'confirmed' && !rawTabStatus && (
+                                        <div className="space-y-2">
+                                            <button
+                                                disabled={resLoading}
+                                                onClick={() => handleReservationUpdate({ tabStatus: 'seated', status: 'confirmed' })}
+                                                className="w-full px-4 py-3.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl font-bold transition shadow-md animate-pulse ring-2 ring-purple-400/20"
+                                            >
+                                                🪑 Müşteri Geldi — Masaya Oturdu
+                                            </button>
+                                            <button
+                                                disabled={resLoading}
+                                                onClick={() => handleReservationUpdate({ status: 'cancelled' })}
+                                                className="w-full px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 disabled:opacity-50 text-red-600 dark:text-red-400 rounded-xl font-medium transition border border-red-200 dark:border-red-800"
+                                            >
+                                                ❌ İptal Et
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* SEATED → complete */}
+                                    {rawTabStatus === 'seated' && (
+                                        <div className="space-y-2">
+                                            <div className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3 text-center text-purple-700 dark:text-purple-300 font-semibold">
+                                                🪑 Müşteri şu an masada
+                                            </div>
+                                            <button
+                                                disabled={resLoading}
+                                                onClick={() => handleReservationUpdate({ tabStatus: 'closed', status: 'completed' })}
+                                                className="w-full px-4 py-3 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white rounded-xl font-bold transition"
+                                            >
+                                                ✅ Oturumu Tamamla
+                                            </button>
+                                            <button
+                                                disabled={resLoading}
+                                                onClick={() => handleReservationUpdate({ status: 'cancelled', tabStatus: '' })}
+                                                className="w-full px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 disabled:opacity-50 text-red-600 dark:text-red-400 rounded-xl font-medium transition border border-red-200 dark:border-red-800"
+                                            >
+                                                ❌ İptal Et
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* DONE states */}
+                                    {(rawStatus === 'cancelled' || rawStatus === 'rejected' || rawStatus === 'completed' || rawTabStatus === 'closed') && (
+                                        <div className="bg-gray-100 dark:bg-gray-700/30 rounded-lg p-3 text-center text-muted-foreground text-sm">
+                                            Bu rezervasyon tamamlandı veya iptal edildi.
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                // ── NORMAL ORDER ACTIONS ─────────────────────────────────
+                                <>
+                                    <h4 className="text-foreground text-sm font-medium mb-3">{t('modal.updateStatus')}</h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {mainStatuses.map(([key, value]) => (
                                             <button
                                                 key={key}
                                                 onClick={() => handleStatusChangeInternal(key as OrderStatus)}
                                                 disabled={order.status === key}
-                                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${order.status === key
-                                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-200 dark:border-gray-700'
-                                                    : 'bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
+                                                className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${order.status === key
+                                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700'
+                                                    : key === 'cancelled'
+                                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-900/50'
+                                                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
                                                     }`}
                                             >
+                                                {key === 'cancelled' && <span className="mr-1.5">❌</span>}
                                                 {t(value.labelKey)}
                                             </button>
                                         ))}
                                     </div>
-                                </details>
+
+                                    {edgeCaseStatuses.length > 0 && (
+                                        <details className="mt-4 group bg-card/50 border border-border rounded-lg overflow-hidden transition-all">
+                                            <summary className="px-4 py-2 text-sm text-muted-foreground font-medium cursor-pointer flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                                                {t('modal.otherStatuses') || 'Diğer Durumlar'}
+                                                <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
+                                            </summary>
+                                            <div className="p-3 grid grid-cols-2 gap-2 border-t border-border bg-background/30">
+                                                {edgeCaseStatuses.map(([key, value]) => (
+                                                    <button
+                                                        key={key}
+                                                        onClick={() => handleStatusChangeInternal(key as OrderStatus)}
+                                                        disabled={order.status === key}
+                                                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${order.status === key
+                                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-200 dark:border-gray-700'
+                                                            : 'bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
+                                                            }`}
+                                                    >
+                                                        {t(value.labelKey)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </details>
+                                    )}
+                                </>
                             )}
                         </div>
 
