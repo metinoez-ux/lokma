@@ -683,10 +683,12 @@ export default function OrdersPage() {
         });
 
         // 2. Listen to reservations (collectionGroup)
+        // NOTE: Do NOT add orderBy here — collectionGroup with where+orderBy on 'createdAt'
+        // requires a dedicated COLLECTION_GROUP index that may not exist yet.
+        // We filter client-side by createdAt and sort the mapped array ourselves.
         const qReservations = query(
             collectionGroup(db, 'reservations'),
-            where('createdAt', '>=', Timestamp.fromDate(startDate)),
-            orderBy('createdAt', 'desc')
+            where('createdAt', '>=', Timestamp.fromDate(startDate))
         );
 
         const unsubReservations = onSnapshot(qReservations, (snapshot) => {
@@ -699,7 +701,13 @@ export default function OrdersPage() {
                 return false;
             });
 
-            const mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
+            const mapped = relevantDocs
+                .map(doc => mapReservationToOrder(doc.id, doc.data()))
+                .sort((a, b) => {
+                    const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+                    const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+                    return bMs - aMs; // newest first
+                });
             setResOrders(mapped);
 
             // --- Auto-print new reservation orders ---

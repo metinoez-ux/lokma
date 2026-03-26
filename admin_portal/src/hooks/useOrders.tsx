@@ -284,12 +284,15 @@ export function OrdersProvider({
     });
 
     // 2. Continuous Tab Reservations Stream
+    // NOTE: orderBy(createdAt) requires a COLLECTION_GROUP index.
+    // We only use it when businessId is available (composite index [businessId, createdAt] exists).
+    // Without businessId, we skip orderBy and sort client-side to avoid silent failures.
     const resConstraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
-      orderBy('createdAt', 'desc'),
     ];
     if (fixedBusinessId) {
       resConstraints.unshift(where('businessId', '==', fixedBusinessId));
+      resConstraints.push(orderBy('createdAt', 'desc'));
     }
     const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
@@ -307,6 +310,14 @@ export function OrdersProvider({
       // Keep safety filter
       if (fixedBusinessId) {
         mapped = mapped.filter(o => o.businessId === fixedBusinessId);
+      }
+      // Sort newest first (client-side when no orderBy in query)
+      if (!fixedBusinessId) {
+        mapped.sort((a, b) => {
+          const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+          const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+          return bMs - aMs;
+        });
       }
       setResOrders(mapped);
     }, (error) => {
@@ -431,12 +442,14 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
     });
 
     // 2. Reservations
+    // NOTE: orderBy(createdAt) on collectionGroup requires COLLECTION_GROUP index.
+    // Only use it when businessId is present (composite [businessId, createdAt] index exists).
     const resConstraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
-      orderBy('createdAt', 'desc'),
     ];
     if (businessId) {
       resConstraints.unshift(where('businessId', '==', businessId));
+      resConstraints.push(orderBy('createdAt', 'desc'));
     }
     const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
@@ -452,6 +465,13 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
       let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
       if (businessId) {
         mapped = mapped.filter(o => o.businessId === businessId);
+      } else {
+        // Sort client-side when no orderBy in query
+        mapped.sort((a, b) => {
+          const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+          const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+          return bMs - aMs;
+        });
       }
       setResOrders(mapped);
     }, (error) => {
