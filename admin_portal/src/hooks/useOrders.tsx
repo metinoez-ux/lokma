@@ -294,10 +294,12 @@ export function OrdersProvider({
     const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
     const unsubReservations = onSnapshot(qReservations, (snapshot) => {
-      // Filter logically relevant tabs
+      // Include pre-order/tab reservations AND plain pending/confirmed reservations
       const relevantDocs = snapshot.docs.filter(d => {
         const data = d.data();
-        return data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+        if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
+        if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
+        return false;
       });
 
       let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
@@ -439,9 +441,12 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
     const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
     const unsubReservations = onSnapshot(qReservations, (snapshot) => {
+      // Include pre-order/tab reservations AND plain pending/confirmed reservations
       const relevantDocs = snapshot.docs.filter(d => {
         const data = d.data();
-        return data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+        if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
+        if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
+        return false;
       });
 
       let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
