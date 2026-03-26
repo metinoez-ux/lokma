@@ -557,6 +557,7 @@ export default function OrdersPage() {
     }, [orders, printerSettings, businesses]);
 
     // Real-time orders & reservations subscriptions
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         setLoading(true);
 
@@ -571,6 +572,8 @@ export default function OrdersPage() {
         } else if (dateFilter === 'all') {
             startDate = new Date(2020, 0, 1); // Far past
         }
+
+        const effectBusinessId = adminBusinessId; // capture for closure
 
         // 1. Listen to meat_orders
         const qOrders = query(
@@ -682,18 +685,39 @@ export default function OrdersPage() {
             setLoading(false);
         });
 
-        // 2. Listen to reservations (collectionGroup)
-        // NOTE: Do NOT add orderBy here — collectionGroup with where+orderBy on 'createdAt'
-        // requires a dedicated COLLECTION_GROUP index that may not exist yet.
-        // We filter client-side by createdAt and sort the mapped array ourselves.
-        const qReservations = query(
-            collectionGroup(db, 'reservations'),
-            where('createdAt', '>=', Timestamp.fromDate(startDate))
-        );
+        // 2. Listen to reservations
+        // CRITICAL: collectionGroup + where(range) requires explicit Firestore index.
+        // Solution: when we know the businessId, query the sub-collection directly
+        // (collection scope — uses automatic single-field indexes, no explicit index needed).
+        // Super admin has no fixed businessId, so we use collectionGroup without a range filter
+        // and apply date filtering client-side.
+        let qReservations;
+        if (effectBusinessId) {
+            // Business admin — direct sub-collection query (no index needed)
+            qReservations = query(
+                collection(db, 'businesses', effectBusinessId, 'reservations'),
+                where('createdAt', '>=', Timestamp.fromDate(startDate)),
+                orderBy('createdAt', 'desc')
+            );
+        } else {
+            // Super admin — collectionGroup without range filter (Firestore auto-indexes single fields)
+            // Date filtering handled client-side below
+            qReservations = query(
+                collectionGroup(db, 'reservations'),
+                orderBy('createdAt', 'desc')
+            );
+        }
+
+        const startMs = startDate.getTime();
 
         const unsubReservations = onSnapshot(qReservations, (snapshot) => {
             const relevantDocs = snapshot.docs.filter(d => {
                 const data = d.data();
+                // For super admin: apply date filter client-side
+                if (!effectBusinessId) {
+                    const createdMs = data.createdAt?.toMillis?.() ?? (data.createdAt?.seconds ? data.createdAt.seconds * 1000 : 0);
+                    if (createdMs < startMs) return false;
+                }
                 // Include pre-order/tab reservations (tabStatus set)
                 if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
                 // Also include plain reservations (no tabStatus) that are pending or confirmed
@@ -706,7 +730,7 @@ export default function OrdersPage() {
                 .sort((a, b) => {
                     const aMs = a.createdAt?.toMillis?.() ?? (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
                     const bMs = b.createdAt?.toMillis?.() ?? (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
-                    return bMs - aMs; // newest first
+                    return bMs - aMs;
                 });
             setResOrders(mapped);
 
@@ -751,7 +775,7 @@ export default function OrdersPage() {
             unsubOrders();
             unsubReservations();
         };
-    }, [dateFilter]);
+    }, [dateFilter, adminBusinessId]);
 
     // Filter orders
     const filteredOrders = orders.filter(order => {
