@@ -81,22 +81,14 @@ function buildReceipt(order: any, businessName?: string): Buffer {
     // --- LOKMA LOGO (raster image) ---
     parts.push(CMD.ALIGN_CENTER);
     try {
+        // We do not append CMD.LINE immediately after the logo as it breaks the ESC/POS raster format on SUNMI Bob printers
         const logoBuffer = Buffer.from(RECEIPT_LOGO_BASE64, 'base64');
         parts.push(logoBuffer);
-        parts.push(CMD.LINE);
     } catch {
         // Ignore Buffer decode fail
     }
-
-    // Unconditional text fallback guaranteeing LOKMA branding on all receipt printers
-    parts.push(CMD.BOLD_ON);
-    parts.push(CMD.FONT_LARGE);
-    parts.push(textLine('LOKMA'));
-    parts.push(CMD.FONT_NORMAL);
-    parts.push(CMD.BOLD_OFF);
-    parts.push(textLine('fresh. fast. local.'));
-    parts.push(CMD.ALIGN_LEFT);
-    parts.push(separator());
+    
+    parts.push(textLine('')); // Safe spacer
 
     // --- HEADER ---
     parts.push(CMD.ALIGN_CENTER);

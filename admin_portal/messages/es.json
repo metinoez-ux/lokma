@@ -5453,7 +5453,18 @@
     "status": "Status",
     "checking_table_status": "Comprobando estado de la mesa...",
     "printer_ip_not_set": "IP de impresora no configurada.",
-    "reservation_printed": "Reserva impresa"
+    "reservation_printed": "Reserva impresa",
+    "title_rezervasyon": "🍽️ Reservas",
+    "bu_hafta": "📅 Esta Semana",
+    "bu_ay": "📅 Este Mes",
+    "masa_yonetimi": "Gestión de Mesas",
+    "masa_yonetimi_dashboard": "Panel de Gestión de Mesas",
+    "kapat": "Cerrar",
+    "cancel_reason_masa_musait_degil": "No hay mesa disponible",
+    "cancel_reason_isletme_kapali": "Establecimiento cerrado",
+    "cancel_reason_personel_yetersiz": "Personal insuficiente",
+    "cancel_reason_musteri_iletisim_yok": "No se pudo contactar al cliente",
+    "cancel_reason_diger": "Otro"
   },
   "AdminSectors": {
     "aciklama": "Descripción",

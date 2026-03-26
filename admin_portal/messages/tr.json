@@ -5473,7 +5473,18 @@
     "status": "Durum",
     "checking_table_status": "Masa durumu kontrol ediliyor...",
     "printer_ip_not_set": "Yazici IP ayarlanmamis. Siparisler sayfasindan ayarlayin.",
-    "reservation_printed": "Rezervasyon yazdirildi"
+    "reservation_printed": "Rezervasyon yazdirildi",
+    "title_rezervasyon": "🍽️ Rezervasyon",
+    "bu_hafta": "📅 Bu Hafta",
+    "bu_ay": "📅 Bu Ay",
+    "masa_yonetimi": "Masa Yönetimi",
+    "masa_yonetimi_dashboard": "Masa Yönetimi Dashboard",
+    "kapat": "Kapat",
+    "cancel_reason_masa_musait_degil": "Masa müsait değil",
+    "cancel_reason_isletme_kapali": "İşletme kapalı",
+    "cancel_reason_personel_yetersiz": "Personel yetersiz",
+    "cancel_reason_musteri_iletisim_yok": "Müşteri ile iletişim kurulamadı",
+    "cancel_reason_diger": "Diğer"
   },
   "AdminSectors": {
     "aciklama": "Açıklama",

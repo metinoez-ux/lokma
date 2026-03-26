@@ -393,9 +393,13 @@ export default function ReservationsPage() {
             groups[timeKey].push(r);
         });
         return Object.keys(groups).sort().map(k => ({ time: k, reservations: groups[k] }));
-    }, [filteredReservations]);
-
-    const CANCEL_REASONS = ["Masa musait degil", "Isletme kapali", "Personel yetersiz", "Musteri ile iletisim kurulamadi", "Diger"];
+    const CANCEL_REASONS = [
+        t('cancel_reason_masa_musait_degil'),
+        t('cancel_reason_isletme_kapali'),
+        t('cancel_reason_personel_yetersiz'),
+        t('cancel_reason_musteri_iletisim_yok'),
+        t('cancel_reason_diger')
+    ];
 
     return (
         <div className="h-screen bg-background flex flex-col overflow-hidden">
@@ -406,10 +410,11 @@ export default function ReservationsPage() {
             )}
 
             {/* --- TOP NAVBAR --- */}
-            <div className="flex-none bg-card border-b border-border p-4 shadow-sm z-10 flex items-center justify-between">
+            <div className="flex-none bg-card border-b border-border shadow-sm z-10">
+              <div className="max-w-7xl mx-auto w-full p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
-                        🍽️ Rezervasyon
+                        {t('title_rezervasyon') || '🍽️ Rezervasyon'}
                     </h1>
                     <div className="h-6 w-px bg-border mx-2 hidden md:block"></div>
                     
@@ -422,8 +427,8 @@ export default function ReservationsPage() {
                         >
                             <option value="today">{t('bugun')}</option>
                             <option value="tomorrow">{t('yarin')}</option>
-                            <option value="week">📅 Bu Hafta</option>
-                            <option value="month">📅 Bu Ay</option>
+                            <option value="week">{t('bu_hafta')}</option>
+                            <option value="month">{t('bu_ay')}</option>
                             <option value="all">{t('tumu')}</option>
                         </select>
                         <select
@@ -489,14 +494,15 @@ export default function ReservationsPage() {
                             onClick={() => setShowTableManagement(!showTableManagement)}
                             className={`h-10 px-4 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${showTableManagement ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
                         >
-                            Masa Yönetimi
+                            {t('masa_yonetimi') || 'Masa Yönetimi'}
                         </button>
                     )}
                 </div>
+              </div>
             </div>
 
             {/* --- MAIN MASTER-DETAIL LAYOUT --- */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 w-full max-w-7xl mx-auto flex overflow-hidden border-x border-border shadow-2xl">
                 
                 {/* LEFT PANE: The Roster (Scrollable List) */}
                 <div className="w-full md:w-[380px] lg:w-[420px] flex-none border-r border-border bg-[#0f1115] overflow-y-auto flex flex-col">
@@ -576,13 +582,13 @@ export default function ReservationsPage() {
                 </div>
 
                 {/* RIGHT PANE: Detail & Command Center */}
-                <div className="hidden md:flex flex-1 flex-col bg-background overflow-hidden relative">
+                <div className="hidden md:flex flex-1 flex-col bg-background overflow-x-hidden overflow-y-auto relative">
                     {/* Inline Table Management Dashboard if toggled */}
                     {showTableManagement && adminBusinessId && (
-                         <div className="absolute inset-0 bg-background z-40 overflow-y-auto p-6">
+                         <div className="absolute inset-0 bg-background z-40 overflow-y-auto overflow-x-hidden p-6">
                              <div className="flex justify-between items-center mb-6">
-                                 <h2 className="text-2xl font-bold">Masa Yönetimi Dashboard</h2>
-                                 <button onClick={() => setShowTableManagement(false)} className="text-gray-400 hover:text-white px-4 py-2 bg-gray-800 rounded-lg">Kapat</button>
+                                 <h2 className="text-2xl font-bold">{t('masa_yonetimi_dashboard') || 'Masa Yönetimi Dashboard'}</h2>
+                                 <button onClick={() => setShowTableManagement(false)} className="text-gray-400 hover:text-white px-4 py-2 bg-gray-800 rounded-lg">{t('kapat')}</button>
                              </div>
                              <TableManagementPanel
                                 businessId={adminBusinessId}

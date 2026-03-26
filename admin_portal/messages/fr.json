@@ -5456,7 +5456,18 @@
     "status": "Status",
     "checking_table_status": "Verification du statut de la table...",
     "printer_ip_not_set": "IP imprimante non configuree.",
-    "reservation_printed": "Reservation imprimee"
+    "reservation_printed": "Reservation imprimee",
+    "title_rezervasyon": "🍽️ Réservations",
+    "bu_hafta": "📅 Cette Semaine",
+    "bu_ay": "📅 Ce Mois",
+    "masa_yonetimi": "Gestion des Tables",
+    "masa_yonetimi_dashboard": "Tableau de Bord de la Gestion",
+    "kapat": "Fermer",
+    "cancel_reason_masa_musait_degil": "Aucune table disponible",
+    "cancel_reason_isletme_kapali": "Établissement fermé",
+    "cancel_reason_personel_yetersiz": "Personnel insuffisant",
+    "cancel_reason_musteri_iletisim_yok": "Impossible de contacter le client",
+    "cancel_reason_diger": "Autre"
   },
   "AdminSectors": {
     "aciklama": "Descriptif",

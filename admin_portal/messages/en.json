@@ -5475,7 +5475,18 @@
     "status": "Status",
     "checking_table_status": "Checking table status...",
     "printer_ip_not_set": "Printer IP not set. Please configure in orders page.",
-    "reservation_printed": "Reservation printed"
+    "reservation_printed": "Reservation printed",
+    "title_rezervasyon": "🍽️ Reservations",
+    "bu_hafta": "📅 This Week",
+    "bu_ay": "📅 This Month",
+    "masa_yonetimi": "Table Management",
+    "masa_yonetimi_dashboard": "Table Management Dashboard",
+    "kapat": "Close",
+    "cancel_reason_masa_musait_degil": "No table available",
+    "cancel_reason_isletme_kapali": "Business closed",
+    "cancel_reason_personel_yetersiz": "Insufficient staff",
+    "cancel_reason_musteri_iletisim_yok": "Could not contact customer",
+    "cancel_reason_diger": "Other"
   },
   "AdminSectors": {
     "aciklama": "Description",
