@@ -403,7 +403,7 @@ export default function AdminHeader() {
                                 onClick={() => setTabletProfileOpen(!tabletProfileOpen)}
                                 className="flex items-center gap-1.5 hover:bg-white/10 rounded-lg px-2 py-1 transition"
                             >
-                                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
+                                <div className="w-8 h-8 flex-shrink-0 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
                                     {admin.photoURL ? (
                                         <img
                                             src={admin.photoURL}
@@ -416,7 +416,15 @@ export default function AdminHeader() {
                                         </span>
                                     )}
                                 </div>
-                                <span className="text-slate-400 text-[10px]">{`\u25BC`}</span>
+                                <div className="hidden sm:flex flex-col items-start ml-1">
+                                    <span className="text-white text-xs font-medium max-w-[110px] truncate leading-tight">
+                                        {admin.displayName || 'Super Admin'}
+                                    </span>
+                                    <span className="text-red-400 font-bold text-[10px] leading-tight uppercase tracking-wider">
+                                        {t('superAdmin')}
+                                    </span>
+                                </div>
+                                <span className="text-slate-400 text-[10px] ml-1">{`\u25BC`}</span>
                             </button>
                             {tabletProfileOpen && (
                             <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border z-50 min-w-[200px]">
@@ -693,11 +701,11 @@ export default function AdminHeader() {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="hidden md:flex flex-col items-start ml-1">
-                                        <span className="text-white text-xs font-medium max-w-[100px] truncate leading-tight">
-                                            {admin.displayName || 'Super Admin'}
+                                    <div className="hidden md:flex flex-col items-start ml-2">
+                                        <span className="text-foreground text-sm font-bold max-w-[120px] truncate leading-tight">
+                                            {admin.displayName || 'Metin Öz'}
                                         </span>
-                                        <span className="text-slate-400 text-[10px] leading-tight font-medium">
+                                        <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 mt-0.5 rounded text-[10px] font-bold leading-tight uppercase tracking-wider border border-red-500/20">
                                             {t('superAdmin')}
                                         </span>
                                     </div>
@@ -1205,6 +1213,7 @@ export default function AdminHeader() {
                                 </div>
                                 <nav className="py-2">
                                     <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
+                                    <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
                                     <Link href="/admin/statistics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
                                     <Link href="/admin/dashboard?view=customers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('customers')}</Link>
                                     <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('suppliers')}</Link>

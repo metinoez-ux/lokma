@@ -7,6 +7,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useTranslations } from 'next-intl';
 import TableManagementPanel from '@/components/TableManagementPanel';
+import ReservationCapacityConfig from '@/components/ReservationCapacityConfig';
 
 const reservationStatuses = {
     pending: { label: 'Beklemede', color: 'yellow', icon: '⏳' },
@@ -55,15 +56,20 @@ export default function ReservationsPage() {
     const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
     const [occupiedCards, setOccupiedCards] = useState<Set<number>>(new Set());
     const [cardModalLoading, setCardModalLoading] = useState(false);
-    // Cancel confirmation modal
+    // Cancel and Reject confirmation models
     const [showCancelModal, setShowCancelModal] = useState<{ reservation: Reservation } | null>(null);
     const [cancelReason, setCancelReason] = useState("");
     const [cancelNote, setCancelNote] = useState("");
+    const [showRejectModal, setShowRejectModal] = useState<{ reservation: Reservation } | null>(null);
+    const [rejectReason, setRejectReason] = useState("");
+    const [rejectNote, setRejectNote] = useState("");
     // Printer state
     const [printingId, setPrintingId] = useState<string | null>(null);
     const printedAutoRef = useRef<Set<string>>(new Set());
     // Table management
     const [showTableManagement, setShowTableManagement] = useState(false);
+    // UI Tabs
+    const [activeTab, setActiveTab] = useState<'list' | 'settings'>('list');
 
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
         name.toLowerCase().includes(businessSearch.toLowerCase())
@@ -145,6 +151,12 @@ export default function ReservationsPage() {
                 setLoading(false);
             }, (error) => { console.error(error); setLoading(false); });
             return () => unsubscribe();
+        }
+
+        // Only super admins should be allowed to run collectionGroup queries across all tenant reservations
+        if (admin.adminType !== 'super') {
+            setLoading(false);
+            return;
         }
 
         const q = query(
@@ -312,6 +324,29 @@ export default function ReservationsPage() {
         }
     }
 
+    async function handleReject() {
+        if (!showRejectModal || !rejectReason) return;
+        const reservation = showRejectModal.reservation;
+        try {
+            const resRef = doc(db, 'businesses', reservation.businessId, 'reservations', reservation.id);
+            await updateDoc(resRef, {
+                status: 'rejected',
+                rejectionReason: rejectReason,
+                rejectionNote: rejectNote.trim() || '',
+                rejectedBy: admin?.displayName || admin?.email || 'Admin',
+                rejectedAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            });
+            setShowRejectModal(null);
+            setSelectedReservation(null);
+            setRejectReason('');
+            setRejectNote('');
+            showToast('Rezervasyon reddedildi ❌', 'success');
+        } catch (err) {
+            showToast(t('durum_guncellenirken_hata_olustu'), 'error');
+        }
+    }
+
     async function handleReactivate(reservation: Reservation) {
         try {
             const resRef = doc(db, 'businesses', reservation.businessId, 'reservations', reservation.id);
@@ -382,7 +417,7 @@ export default function ReservationsPage() {
     const formatDate = (date: Date) => date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
     const formatTime = (date: Date) => date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-    if (adminLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>;
+    const targetBusinessId = admin?.adminType !== 'super' ? adminBusinessId : (businessFilter !== 'all' ? businessFilter : null);
 
     // Time Slot Grouping for Roster
     const timeGroups = useMemo(() => {
@@ -395,12 +430,21 @@ export default function ReservationsPage() {
         return Object.keys(groups).sort().map(k => ({ time: k, reservations: groups[k] }));
     }, [filteredReservations]);
 
+    if (adminLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>;
+
     const CANCEL_REASONS = [
-        t('cancel_reason_masa_musait_degil'),
-        t('cancel_reason_isletme_kapali'),
-        t('cancel_reason_personel_yetersiz'),
-        t('cancel_reason_musteri_iletisim_yok'),
-        t('cancel_reason_diger')
+        t('cancel_reason_masa_musait_degil') || 'Masa Müsait Değil',
+        t('cancel_reason_isletme_kapali') || 'İşletme Kapalı',
+        t('cancel_reason_personel_yetersiz') || 'Personel Yetersiz',
+        t('cancel_reason_musteri_iletisim_yok') || 'Müşteri İletişim Yok',
+        t('cancel_reason_diger') || 'Diğer'
+    ];
+
+    const REJECT_REASONS = [
+        t('reject_reason_masa_dolu') || 'Masa Dolu / Kapasite Aşımı',
+        t('reject_reason_saat_uygun_degil') || 'Saat Uygun Değil / Kapalıyız',
+        t('reject_reason_eksik_bilgi') || 'İletişim Bilgisi Eksik/Yanlış',
+        t('cancel_reason_diger') || 'Diğer'
     ];
 
     return (
@@ -444,6 +488,22 @@ export default function ReservationsPage() {
                             ))}
                         </select>
                         
+                        {/* Tab Switcher for all admins */}
+                        <div className="flex bg-gray-800 p-1 rounded-xl items-center">
+                            <button
+                                onClick={() => setActiveTab('list')}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'list' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+                            >
+                                Canlı Takip
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('settings')}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+                            >
+                                Kapasite & Ayarlar
+                            </button>
+                        </div>
+
                         {admin?.adminType === 'super' && (
                             <div ref={businessSearchRef} className="relative hidden md:block">
                                 <input
@@ -503,8 +563,15 @@ export default function ReservationsPage() {
               </div>
             </div>
 
-            {/* --- MAIN MASTER-DETAIL LAYOUT --- */}
-            <div className="flex-1 w-full max-w-7xl mx-auto flex overflow-hidden border-x border-border shadow-2xl">
+            {/* --- MAIN CONTENT --- */}
+            {activeTab === 'settings' && targetBusinessId ? (
+                <div className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto p-4 sm:p-6 pb-24 border-x border-border">
+                    <div className="bg-card shadow-sm rounded-2xl p-6 border border-border">
+                        <ReservationCapacityConfig businessId={targetBusinessId} />
+                    </div>
+                </div>
+            ) : (
+                <div className="flex-1 w-full max-w-7xl mx-auto flex overflow-hidden border-x border-border shadow-2xl">
                 
                 {/* LEFT PANE: The Roster (Scrollable List) */}
                 <div className="w-full md:w-[380px] lg:w-[420px] flex-none border-r border-border bg-[#0f1115] overflow-y-auto flex flex-col">
@@ -674,7 +741,7 @@ export default function ReservationsPage() {
                                             )}
                                             
                                             {selectedReservation.status === 'pending' && (
-                                                <button onClick={() => handleStatusChange(selectedReservation, 'rejected')} className="w-full py-3 text-center rounded-xl font-bold bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-900/50 transition-all">
+                                                <button onClick={() => { setShowRejectModal({ reservation: selectedReservation }); setRejectReason(''); setRejectNote(''); }} className="w-full py-3 text-center rounded-xl font-bold bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-900/50 transition-all">
                                                     ❌ Reddet
                                                 </button>
                                             )}
@@ -771,6 +838,7 @@ export default function ReservationsPage() {
                     )}
                 </div>
             </div>
+            )}
 
             {/* KEEP EXISTING CANCEL MODAL IN MOBILE/FALLBACK VİEW */}
             {showCancelModal && (
@@ -796,6 +864,35 @@ export default function ReservationsPage() {
                         <div className="p-4 border-t border-border flex gap-3">
                             <button onClick={() => { setShowCancelModal(null); setCancelReason(''); setCancelNote(''); }} className="flex-1 py-3.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition">Vazgeç</button>
                             <button disabled={!cancelReason} onClick={handleCancel} className={`flex-[2] py-3.5 rounded-xl font-bold transition ${!cancelReason ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/30'}`}>İptali Onayla</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* REJECT MODAL */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl border border-border">
+                        <div className="p-6 border-b border-border">
+                            <h2 className="text-xl font-bold text-foreground">Rezervasyonu Reddet</h2>
+                            <p className="text-muted-foreground text-sm mt-1">Lütfen ret sebebini işaretleyin (Müşteriye iletilebilir)</p>
+                        </div>
+                        <div className="p-6 space-y-3">
+                            {REJECT_REASONS.map((reason) => (
+                                <label key={reason} className={`flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition border ${rejectReason === reason ? 'bg-red-900/20 border-red-500/50' : 'bg-gray-800/50 border-transparent hover:bg-gray-800'}`}>
+                                    <input type="radio" value={reason} checked={rejectReason === reason} onChange={(e) => setRejectReason(e.target.value)} className="w-4 h-4 accent-red-500" />
+                                    <span className="text-sm font-medium text-gray-200">{reason}</span>
+                                </label>
+                            ))}
+                            <textarea
+                                value={rejectNote} onChange={(e) => setRejectNote(e.target.value)}
+                                placeholder="Ek açıklama (isteğe bağlı)..." rows={3}
+                                className="w-full mt-4 bg-gray-900 border border-gray-700 rounded-xl p-4 text-sm text-foreground focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50"
+                            />
+                        </div>
+                        <div className="p-4 border-t border-border flex gap-3">
+                            <button onClick={() => { setShowRejectModal(null); setRejectReason(''); setRejectNote(''); }} className="flex-1 py-3.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl font-bold transition">Vazgeç</button>
+                            <button disabled={!rejectReason} onClick={handleReject} className={`flex-[2] py-3.5 rounded-xl font-bold transition ${!rejectReason ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/30'}`}>Reddetmeyi Onayla</button>
                         </div>
                     </div>
                 </div>

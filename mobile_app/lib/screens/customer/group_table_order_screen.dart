@@ -1280,7 +1280,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             ),
             const SizedBox(height: 6),
             Text(
-              'Menuye giderek urunleri sepetine ekle',
+              tr('customer.menuye_giderek_urunleri_sepeti'),
               style: TextStyle(fontSize: 13, color: Colors.grey[500]),
             ),
             const SizedBox(height: 20),

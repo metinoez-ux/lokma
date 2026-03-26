@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
+import 'package:lokma_app/services/stripe_payment_service.dart';
 import 'package:lokma_app/widgets/main_scaffold.dart';
 
 /// OpenTable-style Reservation Booking Screen
@@ -20,12 +21,14 @@ class ReservationBookingScreen extends ConsumerStatefulWidget {
   final String businessId;
   final String businessName;
   final bool isPreOrder;
+  final bool requirePreorderPayment;
 
   const ReservationBookingScreen({
     super.key,
     required this.businessId,
     required this.businessName,
     this.isPreOrder = false,
+    this.requirePreorderPayment = false,
   });
 
   @override
@@ -316,11 +319,40 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
         customerFcmToken = await FirebaseMessaging.instance.getToken();
       } catch (_) {}
 
-      await FirebaseFirestore.instance
+      final docRef = FirebaseFirestore.instance
           .collection('businesses')
           .doc(widget.businessId)
           .collection('reservations')
-          .add({
+          .doc();
+
+      final double cartTotal = widget.isPreOrder ? ref.read(cartProvider).totalAmount : 0.0;
+      bool paymentSuccessful = false;
+      Map<String, dynamic>? feeBreakdown;
+      String? paymentIntentId;
+
+      if (widget.isPreOrder && widget.requirePreorderPayment && cartTotal > 0) {
+        // Collect payment first
+        final paymentResult = await StripePaymentService.processPayment(
+          amount: cartTotal,
+          businessId: widget.businessId,
+          orderId: docRef.id,
+          customerEmail: user.email?.isNotEmpty == true ? user.email : null,
+        );
+
+        if (!paymentResult.success) {
+          if (!paymentResult.wasCancelled && mounted) {
+            _showSnackBar(paymentResult.error ?? 'Ödeme tamamlanamadı', isError: true);
+          }
+          if (mounted) setState(() => _isSubmitting = false);
+          return;
+        }
+
+        paymentSuccessful = true;
+        feeBreakdown = paymentResult.feeBreakdown?.toMap();
+        paymentIntentId = paymentResult.paymentIntentId;
+      }
+
+      await docRef.set({
         'userId': user.uid,
         'userName': user.displayName ?? 'common.guest'.tr(),
         'userEmail': user.email ?? '',
@@ -340,13 +372,16 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
         
         if (widget.isPreOrder) 'isPreOrder': true,
         if (widget.isPreOrder) 'preOrderItems': ref.read(cartProvider).items.map((e) => e.toMap()).toList(),
-        if (widget.isPreOrder) 'preOrderTotal': ref.read(cartProvider).totalAmount,
+        if (widget.isPreOrder) 'preOrderTotal': cartTotal,
         
         // Continuous Tab (Phase 2)
-        if (widget.isPreOrder) 'tabStatus': 'pre_ordered',
-        if (widget.isPreOrder) 'prePaidAmount': 0.0,
+        if (widget.isPreOrder) 'tabStatus': paymentSuccessful ? 'pre_paid' : 'pre_ordered',
+        if (widget.isPreOrder) 'prePaidAmount': paymentSuccessful ? cartTotal : 0.0,
         if (widget.isPreOrder) 'tabItems': ref.read(cartProvider).items.map((e) => e.toMap()).toList(),
-        if (widget.isPreOrder) 'pendingBalance': ref.read(cartProvider).totalAmount,
+        if (widget.isPreOrder) 'pendingBalance': paymentSuccessful ? 0.0 : cartTotal,
+        if (paymentSuccessful) 'paymentStatus': 'paid',
+        if (paymentIntentId != null) 'paymentIntentId': paymentIntentId,
+        if (feeBreakdown != null) 'feeBreakdown': feeBreakdown,
       });
 
       if (widget.isPreOrder) {
@@ -1009,7 +1044,9 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                                 const Icon(Icons.restaurant, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'reservation.send_request'.tr(),
+                                  widget.isPreOrder && widget.requirePreorderPayment
+                                      ? ('reservation.pay_and_reserve'.tr() == 'reservation.pay_and_reserve' ? 'Öde & Rezervasyonu Tamamla' : 'reservation.pay_and_reserve'.tr())
+                                      : 'reservation.send_request'.tr(),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,

@@ -1438,7 +1438,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                         ),
                         alignment: Alignment.center,
                         child: Row(

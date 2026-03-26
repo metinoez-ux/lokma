@@ -599,6 +599,74 @@ export default function BusinessDetailsPage() {
     endDate: '',
   });
 
+  // Upcoming Reservation State
+  interface ReservationInfo {
+    id: string;
+    customerName: string;
+    partySize: number;
+    reservationDate: Date;
+    timeSlot: string;
+    status: string;
+    tableCardNumbers?: number[];
+  }
+  const [upcomingReservation, setUpcomingReservation] = useState<ReservationInfo | null>(null);
+
+  useEffect(() => {
+    if (!businessId || activeTab !== 'orders') return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const q = query(
+      collection(db, 'businesses', businessId, 'reservations'),
+      where('reservationDate', '>=', Timestamp.fromDate(today)),
+      orderBy('reservationDate', 'asc'),
+      limit(5)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const now = new Date();
+      const resList = snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          customerName: data.customerName || '',
+          partySize: data.partySize || 1,
+          reservationDate: data.reservationDate?.toDate() || new Date(),
+          timeSlot: data.timeSlot || '',
+          status: data.status || 'pending',
+          tableCardNumbers: data.tableCardNumbers || [],
+        };
+      }).filter(r => (r.status === 'pending' || r.status === 'confirmed'));
+
+      const upcoming = resList.filter(r => {
+        if (r.timeSlot) {
+          const [hh, mm] = r.timeSlot.split(':').map(Number);
+          const rTime = new Date(r.reservationDate);
+          rTime.setHours(hh, mm, 0, 0);
+          return rTime.getTime() > now.getTime() - 30 * 60000;
+        }
+        return r.reservationDate.getTime() > now.getTime() - 30 * 60000;
+      });
+
+      upcoming.sort((a, b) => {
+        const aTime = a.timeSlot ? parseInt(a.timeSlot.replace(':', '')) : parseInt(`${a.reservationDate.getHours()}${a.reservationDate.getMinutes()}`);
+        const bTime = b.timeSlot ? parseInt(b.timeSlot.replace(':', '')) : parseInt(`${b.reservationDate.getHours()}${b.reservationDate.getMinutes()}`);
+        const aDate = new Date(a.reservationDate).setHours(0,0,0,0);
+        const bDate = new Date(b.reservationDate).setHours(0,0,0,0);
+        if (aDate !== bDate) return aDate - bDate;
+        return aTime - bTime;
+      });
+
+      if (upcoming.length > 0) {
+        setUpcomingReservation(upcoming[0]);
+      } else {
+        setUpcomingReservation(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [businessId, activeTab]);
+
   // 📢 Load boost campaigns when Marketing tab is opened
   useEffect(() => {
     if (settingsSubTab !== 'marketing' || !businessId) return;
@@ -2226,6 +2294,8 @@ export default function BusinessDetailsPage() {
         // 🆕 Yerinde Sipariş Ayarları
         dineInPaymentMode: formData.dineInPaymentMode || 'payLater',
         hasTableService: formData.hasTableService || false,
+        groupOrderLinkEnabled: formData.groupOrderLinkEnabled || false,
+        groupOrderTableEnabled: formData.groupOrderTableEnabled || false,
         // 🎁 Promosyon
         freeDrinkEnabled: formData.freeDrinkEnabled !== false,
         freeDrinkProducts: (formData as any).freeDrinkProducts ?? [],
@@ -2556,56 +2626,19 @@ export default function BusinessDetailsPage() {
             </button>
             <button
               onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2 ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
             >
-              {!planFeatures.reservations && admin?.adminType !== 'super' && '🔒 '}{t('masaRezervasyonlari')}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              {t('masaRezervasyonlari')}
             </button>
 
-            {/* Ayarlar Dropdown */}
-            <div className="relative settings-dropdown-container">
-              <button
-                onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
-              >
-                {t('ayarlar')}
-                <svg className={`w-3.5 h-3.5 transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {showSettingsDropdown && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
-                  {([
-                    { key: "isletme", label: t('isletme'), action: "tab" },
-                    { key: "menu", label: t('menuUrunler'), action: "tab" },
-                    { key: "personel", label: t('personel_label'), action: "tab", featureKey: "staffShiftTracking" },
-                    { key: "masa", label: t('masa_label'), action: "tab", featureKey: "dineInQR" },
-                    { key: "abonelik", label: t('abonelikPlani'), action: "tab" },
-                    { key: "odeme", label: t('odemeBilgileri'), action: "tab" },
-                    { key: "promosyon", label: t('promosyon_label'), action: "tab", featureKey: "promotions" },
-                    { key: "marketing", label: t('marketing_boost'), action: "tab", featureKey: "marketing" },
-                  ] as { key: string; label: string; action: string; featureKey?: string }[]).map((item) => {
-                    const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
-                    return (
-                      <button
-                        key={item.key}
-                        onClick={() => {
-                          setActiveTab("settings");
-                          setSettingsSubTab(item.key as any);
-                          setShowSettingsDropdown(false);
-                        }}
-                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition w-full text-left ${activeTab === "settings" && settingsSubTab === item.key
-                          ? "bg-red-600/20 text-red-800 dark:text-red-400 font-medium"
-                          : "text-foreground hover:bg-muted hover:text-white"
-                          } ${isGated ? 'opacity-60' : ''}`}
-                      >
-                        <span>{isGated ? '🔒 ' : ''}{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {/* Ayarlar Tab (Unified) */}
+            <button
+              onClick={() => { setActiveTab("settings"); setShowSettingsDropdown(false); }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
+            >
+              {t('ayarlar')}
+            </button>
           </div>
         </div>
       </header>
@@ -2827,9 +2860,32 @@ export default function BusinessDetailsPage() {
             <div className="bg-card rounded-xl shadow-sm border border-border p-5">
               <div className="flex flex-col gap-3 mb-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-foreground font-bold text-lg">
-                    {t('bestellzentrum')}
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-foreground font-bold text-lg">
+                      {t('bestellzentrum')}
+                    </h3>
+                    {/* Compact Upcoming Reservation Chip */}
+                    {upcomingReservation && (
+                      <div
+                        onClick={() => setActiveTab('reservations')}
+                        className="cursor-pointer flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 rounded-full text-white text-xs font-semibold shadow-sm transition-all transform hover:scale-[1.02] border border-red-500/30"
+                      >
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                        </span>
+                        <span>
+                          🍽️ {upcomingReservation.customerName} - {(() => {
+                            const today = new Date();
+                            const resDate = new Date(upcomingReservation.reservationDate);
+                            const isToday = resDate.getDate() === today.getDate() && resDate.getMonth() === today.getMonth() && resDate.getFullYear() === today.getFullYear();
+                            const dateStr = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short' }).format(resDate);
+                            return isToday ? (upcomingReservation.timeSlot || 'Bugün') : `${dateStr} ${upcomingReservation.timeSlot || ''}`;
+                          })()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <span className="text-muted-foreground text-sm">
                     {t('suAnkiSiparisler')}
                   </span>
@@ -2838,7 +2894,7 @@ export default function BusinessDetailsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <select
                     value={orderDateFilter}
-                    onChange={(e) => setOrderDateFilter(e.target.value)}
+                    onChange={(e) => setOrderDateFilter(e.target.value as any)}
                     className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     <option value="today">{t('filter_heute')}</option>
@@ -3643,23 +3699,61 @@ export default function BusinessDetailsPage() {
           )
         }
 
-        {/* Settings Tab */}
+        {/* Settings Tab (Unified Layout) */}
         {
           activeTab === "settings" && (
-            <div className="bg-card rounded-xl p-6">
-              {/* Settings Sub-Tab Header */}
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-foreground font-bold text-xl">
-                  {settingsSubTab === "isletme" && t('isletmeAyarlari')}
-                  {settingsSubTab === "menu" && t('menuUrunler1')}
-                  {settingsSubTab === "personel" && t('personelYonetimi')}
-                  {settingsSubTab === "masa" && t('masaAyarlari')}
-                  {settingsSubTab === "abonelik" && t('abonelikPlani1')}
-
-                  {settingsSubTab === "odeme" && t('odemeBilgileri1')}
-                  {settingsSubTab === "promosyon" && t('promosyonAyarlari')}
-                  {settingsSubTab === "marketing" && t('marketing_boost')}
+            <div className="flex flex-col md:flex-row gap-6 mt-4 w-full h-full">
+              {/* Left Sidebar Menu */}
+              <div className="w-full md:w-64 flex-shrink-0 bg-card rounded-xl border border-border p-3 h-fit sticky top-24 shadow-sm">
+                <h3 className="text-lg font-bold text-foreground mb-4 px-3 flex items-center justify-between">
+                  {t('ayarlar')}
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{business?.companyName}</span>
                 </h3>
+                <nav className="flex flex-col gap-1">
+                  {([
+                    { key: "isletme", label: t('isletme'), icon: "🏢" },
+                    { key: "menu", label: t('menuUrunler'), icon: "🍽️" },
+                    { key: "personel", label: t('personel_label'), icon: "👥", featureKey: "staffShiftTracking" },
+                    // "masa" (Table Mgmt) was moved to Reservations tab
+                    { key: "abonelik", label: t('abonelikPlani'), icon: "⭐" },
+                    { key: "odeme", label: t('odemeBilgileri'), icon: "💳" },
+                    { key: "promosyon", label: t('promosyon_label'), icon: "🎁", featureKey: "promotions" },
+                    { key: "marketing", label: t('marketing_boost'), icon: "🚀", featureKey: "marketing" },
+                  ] as { key: string; label: string; icon: string; featureKey?: string }[]).map((item) => {
+                    const isGated = item.featureKey && !planFeatures[item.featureKey] && admin?.adminType !== 'super';
+                    if (isGated) return null; // Hide gated features in sidebar to keep UI clean, or show with lock
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => setSettingsSubTab(item.key as any)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left w-full ${
+                          settingsSubTab === item.key
+                            ? "bg-red-600/10 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <span className="text-lg opacity-80">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Right Content Pane */}
+              <div className="flex-1 w-full flex flex-col min-w-0">
+                <div className="bg-card rounded-xl border border-border p-6 shadow-sm min-h-[600px]">
+                  {/* Settings Sub-Tab Header */}
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-foreground font-bold text-2xl flex items-center gap-3">
+                      {settingsSubTab === "isletme" && t('isletmeAyarlari')}
+                      {settingsSubTab === "menu" && t('menuUrunler')}
+                      {settingsSubTab === "personel" && t('personelYonetimi')}
+                      {settingsSubTab === "abonelik" && t('abonelikPlani1')}
+                      {settingsSubTab === "odeme" && t('odemeBilgileri1')}
+                      {settingsSubTab === "promosyon" && t('promosyonAyarlari')}
+                      {settingsSubTab === "marketing" && t('marketing_boost')}
+                    </h3>
                 <div className="flex items-center gap-3">
                   {/* Kurye Aktif/Deaktif Toggle - only in İşletme > Teslimat tab */}
                   {settingsSubTab === "isletme" && isletmeInternalTab === "teslimat" && formData.supportsDelivery && (planFeatures.delivery || admin?.adminType === 'super') && (
@@ -3734,8 +3828,8 @@ export default function BusinessDetailsPage() {
                        {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
                      </button>
                    )}
-                   {/* Tüm isletme & masa tab'ları: Düzenle / İptal / Kaydet */}
-                   {(settingsSubTab === 'isletme' || settingsSubTab === 'masa') && (
+                   {/* Tüm isletme tab'ları: Düzenle / İptal / Kaydet */}
+                   {settingsSubTab === 'isletme' && (
                      <>
                        {!isEditing ? (
                          <button
@@ -4818,7 +4912,7 @@ export default function BusinessDetailsPage() {
                                 .replace(/ı/g, 'i')  // Turkish lowercase ı → i
                                 .toLowerCase()
                                 .normalize('NFD')
-                                .replace(/[\u0300-\u036f]/g, ''); // strip combining diacritics (ö→o, ü→u, ç→c, ş→s, ğ→g, etc.)
+                                .replace(/[\u0300-\u036f]/g, ''); // strip combining diacritics (ö→o, ü→u, ç→c, ş→s, g→g, etc.)
                             };
                             const q = normalizeSearch(productSearchQuery);
                             filtered = filtered.filter((p: any) => {
@@ -6512,159 +6606,7 @@ export default function BusinessDetailsPage() {
 
 
 
-              {/* Sub-Tab: Masa */}
-              {
-                settingsSubTab === "masa" && (
-                  <div className="space-y-6">
-                    <div className="space-y-6">
-                      {/* {t('masa_rezervasyonu')} */}
-                      <div className="space-y-4">
-                        <h4 className="text-foreground font-medium border-b border-border pb-2">
-                          {t('masa_rezervasyonu')}
-                        </h4>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={formData.hasReservation}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                hasReservation: e.target.checked,
-                              })
-                            }
-                            disabled={!isEditing}
-                            className="w-5 h-5 accent-amber-500"
-                          />
-                          <div>
-                            <span className="text-foreground">{t('masa_rezervasyonu_aktif')}</span>
-                            <p className="text-xs text-muted-foreground">
-                              {t('musterilerMobilUygulamadanMasaRezervasyonuYapabilir')}
-                            </p>
-                          </div>
-                        </div>
-                        {formData.hasReservation && (
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-muted-foreground text-sm">
-                                {t('oturmaKapasitesiKisi')}
-                              </label>
-                              <input
-                                type="number"
-                                value={formData.tableCapacity}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    tableCapacity: parseInt(e.target.value) || 0,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                min="0"
-                                className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
-                                placeholder={t('or50')}
-                              />
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {t('toplamOturmaKapasitesiKisi')}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-muted-foreground text-sm">
-                                Max Masa Rezervasyonu
-                              </label>
-                              <input
-                                type="number"
-                                value={formData.maxReservationTables}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    maxReservationTables: parseInt(e.target.value) || 0,
-                                  })
-                                }
-                                disabled={!isEditing}
-                                min="0"
-                                className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
-                                placeholder={t('or10')}
-                              />
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {t('ayniSaatDilimindeMaxRezervasyon')}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
 
-                      {/*  Yerinde Sipariş Ayarları */}
-                      <div className="space-y-4">
-                        <h4 className="text-foreground font-medium border-b border-border pb-2">
-                          {t('yerindeSiparisAyarlari')}
-                        </h4>
-
-                        {/* Ödeme Zamanlaması */}
-                        <div>
-                          <label className="text-muted-foreground text-sm block mb-2">{t('odemeZamanlamasi')}</label>
-                          <div className="flex gap-3">
-                            <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
-                              ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                              : 'bg-muted border-border text-foreground'
-                              } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                              <input
-                                type="radio"
-                                name="dineInPaymentMode"
-                                value="payFirst"
-                                checked={formData.dineInPaymentMode === 'payFirst'}
-                                onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })}
-                                disabled={!isEditing}
-                                className="accent-amber-500"
-                              />
-                              <div>
-                                <span className="font-medium">{t('hemenOde')}</span>
-                                <p className="text-xs text-muted-foreground">{t('fastFoodSiparisOncesiOdemeZorunlu')}</p>
-                              </div>
-                            </label>
-                            <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
-                              ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                              : 'bg-muted border-border text-foreground'
-                              } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                              <input
-                                type="radio"
-                                name="dineInPaymentMode"
-                                value="payLater"
-                                checked={formData.dineInPaymentMode === 'payLater'}
-                                onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })}
-                                disabled={!isEditing}
-                                className="accent-amber-500"
-                              />
-                              <div>
-                                <span className="font-medium">{t('cikistaOde')}</span>
-                                <p className="text-xs text-muted-foreground">{t('restoran_masada_hesap_isteme')}</p>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-
-                        {/* Garson Servisi */}
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={formData.hasTableService}
-                            onChange={(e) => setFormData({ ...formData, hasTableService: e.target.checked })}
-                            disabled={!isEditing}
-                            className="w-5 h-5 accent-amber-500"
-                          />
-                          <div>
-                            <span className="text-foreground">{t('garson_servisi_aktif')}</span>
-                            <p className="text-xs text-muted-foreground">
-                              {formData.hasTableService
-                                ? t('siparisHazirOluncaMusteriyeSiparisinizMasaniza')
-                                : t('siparisHazirOluncaMusteriyeGelipAlabilirsiniz')}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                )
-              }
 
               {/* Sub-Tab: Abonelik Planı */}
               {
@@ -7446,7 +7388,9 @@ export default function BusinessDetailsPage() {
                   </div>
                 )
               }
-            </div >
+                </div>
+              </div>
+            </div>
           )
         }
 
@@ -7456,7 +7400,6 @@ export default function BusinessDetailsPage() {
         {/*  Reservations Tab */}
         {
           activeTab === "reservations" && (
-            <LockedModuleOverlay featureKey="reservations">
             <div className="space-y-6">
               {/* Capacity Management Config */}
               <div className="bg-background rounded-2xl p-6 border border-border">
@@ -7471,14 +7414,12 @@ export default function BusinessDetailsPage() {
                 />
               </div>
             </div>
-            </LockedModuleOverlay>
           )
         }
 
-        {/* 🪑 Dine-In content — rendered within Masa sub-tab */}
+        {/* 🪑 Dine-In content — rendered within reservations tab */}
         {
-          activeTab === "settings" && settingsSubTab === "masa" && (
-            <LockedModuleOverlay featureKey="dineInQR">
+          activeTab === "reservations" && (
             <div className="space-y-6">
               {/* ── Header Stats Row ── */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -7502,9 +7443,69 @@ export default function BusinessDetailsPage() {
 
               {/* ── Table Management: Masa Yönetimi ── */}
               <div className="bg-background rounded-2xl p-6 border border-border">
-                <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
-                  {t('masaYonetimi')}
-                </h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                    {t('masaYonetimi')}
+                  </h2>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-5 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition disabled:opacity-50"
+                  >
+                    {saving ? '...' : t('kaydet')}
+                  </button>
+                </div>
+
+                {/* Masa & Yerinde Sipariş Ayarları (Consolidated from hidden Masa tab) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 p-5 bg-card/50 rounded-xl border border-border">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b border-border pb-2">{t('masa_rezervasyonu') || 'Masa Rezervasyonu'}</h3>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.hasReservation}
+                        onChange={(e) => setFormData({ ...formData, hasReservation: e.target.checked })}
+                        className="mt-1 w-5 h-5 accent-amber-500"
+                      />
+                      <div>
+                        <span className="text-foreground font-medium">{t('masa_rezervasyonu_aktif') || 'Masa Rezervasyonu Aktif'}</span>
+                        <p className="text-xs text-muted-foreground">{t('musterilerMobilUygulamadanMasaRezervasyonuYapabilir')}</p>
+                      </div>
+                    </label>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b border-border pb-2">{t('yerindeSiparisAyarlari') || 'Yerinde Sipariş Ayarları'}</h3>
+                    <label className="flex items-start gap-3 cursor-pointer mb-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.hasTableService}
+                        onChange={(e) => setFormData({ ...formData, hasTableService: e.target.checked })}
+                        className="mt-1 w-5 h-5 accent-amber-500"
+                      />
+                      <div>
+                        <span className="text-foreground font-medium">{t('garson_servisi_aktif') || 'Masa Servisi (Garson)'}</span>
+                        <p className="text-xs text-muted-foreground">
+                          {formData.hasTableService
+                            ? t('siparisHazirOluncaMusteriyeSiparisinizMasaniza')
+                            : t('siparisHazirOluncaMusteriyeGelipAlabilirsiniz')}
+                        </p>
+                      </div>
+                    </label>
+                    <div>
+                      <span className="text-sm font-medium text-foreground block mb-2">{t('odemeZamanlamasi') || 'Ödeme Zamanlaması'}</span>
+                      <div className="flex gap-3">
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border cursor-pointer transition-colors ${formData.dineInPaymentMode === 'payFirst' ? 'bg-amber-600/10 border-amber-500 text-amber-600' : 'bg-background border-border text-foreground hover:bg-muted'}`}>
+                          <input type="radio" value="payFirst" checked={formData.dineInPaymentMode === 'payFirst'} onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })} className="hidden" />
+                          <span className="text-sm font-medium">{t('hemenOde') || 'Önce Öde'}</span>
+                        </label>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border cursor-pointer transition-colors ${formData.dineInPaymentMode === 'payLater' ? 'bg-amber-600/10 border-amber-500 text-amber-600' : 'bg-background border-border text-foreground hover:bg-muted'}`}>
+                          <input type="radio" value="payLater" checked={formData.dineInPaymentMode === 'payLater'} onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })} className="hidden" />
+                          <span className="text-sm font-medium">{t('cikistaOde') || 'Sonra Öde'}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Quick setup row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -7734,7 +7735,7 @@ export default function BusinessDetailsPage() {
               </div>
 
               {/* ── Table QR Codes — Compact Table Layout ── */}
-              {(planFeatures.dineInQR || admin?.adminType === 'super') && formData.tables.length > 0 && (
+              {formData.tables.length > 0 && (
                 <div className="bg-background rounded-2xl p-6 border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -7820,8 +7821,7 @@ export default function BusinessDetailsPage() {
               )}
 
               {/* ── Garson Sipariş Card ── */}
-              {(planFeatures.waiterOrder || admin?.adminType === 'super') && (
-                <div className="bg-background rounded-2xl p-6 border border-border">
+              <div className="bg-background rounded-2xl p-6 border border-border">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-teal-600/20 flex items-center justify-center">
                       <span className="text-xl">👨‍🍳</span>
@@ -7849,11 +7849,8 @@ export default function BusinessDetailsPage() {
                     </div>
                   </div>
                 </div>
-              )}
-
               {/* ── Link İle Grup Siparişi Card ── */}
-              {(planFeatures.groupOrderLink || admin?.adminType === 'super') && (
-                <div className="bg-background rounded-2xl p-6 border border-border mt-6">
+              <div className="bg-background rounded-2xl p-6 border border-border mt-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
@@ -7889,11 +7886,8 @@ export default function BusinessDetailsPage() {
                     </div>
                   </div>
                 </div>
-              )}
-
               {/* ── Masada Grup Siparişi Card ── */}
-              {(planFeatures.groupOrderTable || admin?.adminType === 'super') && (
-                <div className="bg-background rounded-2xl p-6 border border-border mt-6">
+              <div className="bg-background rounded-2xl p-6 border border-border mt-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center">
@@ -7929,7 +7923,6 @@ export default function BusinessDetailsPage() {
                     </div>
                   </div>
                 </div>
-              )}
 
               {/* ── Plan Info Footer ── */}
               <div className="p-4 bg-card/50 rounded-xl border border-border mt-6">
@@ -7938,7 +7931,6 @@ export default function BusinessDetailsPage() {
                 </p>
               </div>
             </div>
-            </LockedModuleOverlay>
           )
         }
 

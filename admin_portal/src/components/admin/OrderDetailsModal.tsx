@@ -40,12 +40,33 @@ export default function OrderDetailsModal({
     disableBusinessLink = false,
 }: OrderDetailsModalProps) {
     const t = useTranslations('AdminPortal.Orders');
+    const tRes = useTranslations('AdminPortal.Reservations');
     // Local Modals State
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [showUnavailableModal, setShowUnavailableModal] = useState(false);
     const [unavailableItems, setUnavailableItems] = useState<any[]>([]);
     const [resLoading, setResLoading] = useState(false);
+
+    // Reservation Rejection/Cancellation Modal States
+    const [showResActionModal, setShowResActionModal] = useState<'reject' | 'cancel' | null>(null);
+    const [resActionReason, setResActionReason] = useState('');
+    const [resActionNote, setResActionNote] = useState('');
+
+    const RES_REJECT_REASONS = [
+        tRes('reject_reason_masa_dolu') || 'Masa Dolu / Kapasite Aşımı',
+        tRes('reject_reason_saat_uygun_degil') || 'Saat Uygun Değil / Kapalıyız',
+        tRes('reject_reason_eksik_bilgi') || 'İletişim Bilgisi Eksik/Yanlış',
+        tRes('cancel_reason_diger') || 'Diğer'
+    ];
+
+    const RES_CANCEL_REASONS = [
+        tRes('cancel_reason_masa_musait_degil') || 'Masa Müsait Değil',
+        tRes('cancel_reason_isletme_kapali') || 'İşletme Kapalı',
+        tRes('cancel_reason_personel_yetersiz') || 'Personel Yetersiz',
+        tRes('cancel_reason_musteri_iletisim_yok') || 'Müşteri İletişim Yok',
+        tRes('cancel_reason_diger') || 'Diğer'
+    ];
 
     // Reservation type flag
     const isReservation = order.type === 'dine_in_preorder';
@@ -105,7 +126,7 @@ export default function OrderDetailsModal({
             return null; // No action yet — need to check some items first
         }
 
-        if (status === 'accepted') {
+        if (status === 'accepted' || (status === 'confirmed' && hasItems && allChecked)) {
             return { label: t('hazirlamaya_basla'), action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: false };
         }
 
@@ -114,7 +135,7 @@ export default function OrderDetailsModal({
         }
 
         // For dine-in ready orders, mark as delivered (= completed/served)
-        if (status === 'ready' && order.type === 'dine_in') {
+        if (status === 'ready' && (order.type === 'dine_in' || order.type === 'dine_in_preorder')) {
             return { label: t('action_served'), action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
         }
 
@@ -490,7 +511,10 @@ export default function OrderDetailsModal({
                                             </button>
                                             <button
                                                 disabled={resLoading}
-                                                onClick={() => handleReservationUpdate({ status: 'rejected' })}
+                                                onClick={() => {
+                                                    setResActionReason(RES_REJECT_REASONS[0]);
+                                                    setShowResActionModal('reject');
+                                                }}
                                                 className="px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 disabled:opacity-50 text-red-700 dark:text-red-300 rounded-xl font-bold transition border border-red-200 dark:border-red-800"
                                             >
                                                 ❌ Reddet
@@ -510,7 +534,10 @@ export default function OrderDetailsModal({
                                             </button>
                                             <button
                                                 disabled={resLoading}
-                                                onClick={() => handleReservationUpdate({ status: 'cancelled' })}
+                                                onClick={() => {
+                                                    setResActionReason(RES_CANCEL_REASONS[0]);
+                                                    setShowResActionModal('cancel');
+                                                }}
                                                 className="w-full px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 disabled:opacity-50 text-red-600 dark:text-red-400 rounded-xl font-medium transition border border-red-200 dark:border-red-800"
                                             >
                                                 ❌ İptal Et
@@ -533,7 +560,10 @@ export default function OrderDetailsModal({
                                             </button>
                                             <button
                                                 disabled={resLoading}
-                                                onClick={() => handleReservationUpdate({ status: 'cancelled', tabStatus: '' })}
+                                                onClick={() => {
+                                                    setResActionReason(RES_CANCEL_REASONS[0]);
+                                                    setShowResActionModal('cancel');
+                                                }}
                                                 className="w-full px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 disabled:opacity-50 text-red-600 dark:text-red-400 rounded-xl font-medium transition border border-red-200 dark:border-red-800"
                                             >
                                                 ❌ İptal Et
@@ -757,6 +787,93 @@ export default function OrderDetailsModal({
                                     className="flex-1 px-4 py-3 bg-yellow-600 text-gray-900 rounded-xl hover:bg-yellow-500 transition shadow-sm font-bold flex items-center justify-center gap-2"
                                 >
                                     ⚠️ {t('missingModal.confirm')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reservation ACTION (Reject/Cancel) Modal */}
+            {showResActionModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[70] backdrop-blur-sm">
+                    <div className="bg-card rounded-2xl w-full max-w-md shadow-2xl border border-border">
+                        <div className="p-5 border-b border-border flex items-center justify-between bg-card/50">
+                            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                                ❌ {showResActionModal === 'reject' ? tRes('rezervasyon_reddet') || 'Rezervasyonu Reddet' : tRes('rezervasyon_iptal_et') || 'Rezervasyonu İptal Et'}
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setShowResActionModal(null);
+                                    setResActionNote('');
+                                }}
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-5">
+                            <div>
+                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    {showResActionModal === 'reject' ? tRes('choose_reject_reason') || 'Reddetme Sebebi Seçin:' : tRes('iptal_sebebi') || 'İptal Sebebi:'}
+                                </label>
+                                <select
+                                    value={resActionReason}
+                                    onChange={(e) => setResActionReason(e.target.value)}
+                                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                                >
+                                    {(showResActionModal === 'reject' ? RES_REJECT_REASONS : RES_CANCEL_REASONS).map((reason, idx) => (
+                                        <option key={idx} value={reason}>{reason}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    {tRes('ek_notlar') || 'Ek Notlar (İsteğe Bağlı)'}
+                                </label>
+                                <textarea
+                                    value={resActionNote}
+                                    onChange={(e) => setResActionNote(e.target.value)}
+                                    placeholder={tRes('musteriye_iletilecek_not') || "Müşteriye iletilecek notu yazın..."}
+                                    className="w-full bg-background border border-border rounded-xl p-4 text-foreground placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[100px] resize-none"
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => {
+                                        setShowResActionModal(null);
+                                        setResActionNote('');
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 transition font-medium"
+                                >
+                                    {t('cancelModal.cancel')}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const updateData: Record<string, any> = {
+                                            status: showResActionModal === 'reject' ? 'rejected' : 'cancelled'
+                                        };
+                                        if (showResActionModal === 'reject') {
+                                            updateData.status = 'rejected';
+                                            updateData.tabStatus = ''; // Clear tab status to unstick UI
+                                            updateData.rejectionReason = resActionReason;
+                                            updateData.rejectionNote = resActionNote.trim();
+                                            updateData.rejectedBy = 'Business Admin'; // We might not have admin object here readily available in full, but let's use a generic tag or existing user context
+                                        } else {
+                                            updateData.status = 'cancelled';
+                                            updateData.tabStatus = '';
+                                            updateData.cancellationReason = resActionReason;
+                                            updateData.cancellationNote = resActionNote.trim();
+                                            updateData.cancelledBy = 'Business Admin';
+                                        }
+                                        handleReservationUpdate(updateData);
+                                        setShowResActionModal(null);
+                                        setResActionNote('');
+                                    }}
+                                    disabled={resLoading}
+                                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-bold disabled:opacity-50"
+                                >
+                                    {showResActionModal === 'reject' ? tRes('reddet') || 'Reddet' : tRes('iptal_et') || 'İptal Et'}
                                 </button>
                             </div>
                         </div>

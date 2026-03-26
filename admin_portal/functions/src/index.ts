@@ -2260,8 +2260,13 @@ export const onReservationStatusChange = onDocumentUpdated(
         const after = event.data?.after.data();
         if (!before || !after) return;
 
-        // Only process if status changed
-        if (before.status === after.status) return;
+        const statusChanged = before.status !== after.status;
+        const beforeTables = before.tableCardNumbers || [];
+        const afterTables = after.tableCardNumbers || [];
+        const tableNumbersChanged = JSON.stringify(beforeTables) !== JSON.stringify(afterTables);
+
+        // Only process if status changed OR tableCardNumbers changed
+        if (!statusChanged && !tableNumbersChanged) return;
 
         const newStatus = after.status;
         const businessId = event.params.businessId;
@@ -2274,7 +2279,7 @@ export const onReservationStatusChange = onDocumentUpdated(
         const tableCardNumbers = after.tableCardNumbers || [];
 
         // ─── Customer-initiated cancellation → notify staff ───
-        if (newStatus === "cancelled") {
+        if (statusChanged && newStatus === "cancelled" && !after.cancelledBy) {
             console.log(`[Reservation] Customer cancelled reservation ${event.params.reservationId}`);
             try {
                 const staffTokens: string[] = [];
@@ -2369,20 +2374,39 @@ export const onReservationStatusChange = onDocumentUpdated(
             return;
         }
 
-        // ─── Staff-initiated status change → notify customer ───
-        if (newStatus !== "confirmed" && newStatus !== "rejected" && newStatus !== "reactivated") return;
+        // ─── Staff-initiated status change or table assignment → notify customer ───
+        if (newStatus !== "confirmed" && newStatus !== "rejected" && newStatus !== "reactivated" && newStatus !== "cancelled") return;
+
+        const isTableAssignmentOnly = !statusChanged && tableNumbersChanged && newStatus === "confirmed";
+        
+        // If the table assignment array was cleared, we probably don't need to notify "Your table has been unassigned", just skip or return
+        if (isTableAssignmentOnly && afterTables.length === 0) {
+            console.log(`[Reservation] Table numbers removed, not sending push notification`);
+            return;
+        }
 
         const customerFcmToken = after.customerFcmToken || after.userFcmToken;
 
         let title = "";
         let body = "";
+        let notifType = "reservation_status";
 
-        if (newStatus === "confirmed") {
-            title = "✅ Rezervasyonunuz Onaylandı!";
+        if (isTableAssignmentOnly) {
+            const tableText = (afterTables && afterTables.length > 0) ? `Masa ${afterTables.join(", ")}` : "Masanız";
+            title = `🪑 ${tableText} Atandı!`;
+            body = `${businessName} rezervasyonunuz (Bugün ${timeStr}) için masanız hazırlandı.`;
+            notifType = "table_assigned";
+        } else if (newStatus === "confirmed") {
+            const tableText = (tableCardNumbers && tableCardNumbers.length > 0) ? ` (Masa ${tableCardNumbers.join(", ")})` : "";
+            title = `✅ Rezervasyonunuz Onaylandı!${tableText}`;
             body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Afiyet olsun!`;
         } else if (newStatus === "reactivated") {
-            title = "✅ Rezervasyonunuz Tekrar Aktif!";
+            const tableText = (tableCardNumbers && tableCardNumbers.length > 0) ? ` (Masa ${tableCardNumbers.join(", ")})` : "";
+            title = `✅ Rezervasyonunuz Tekrar Aktif!${tableText}`;
             body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Rezervasyonunuz tekrar aktif edildi.`;
+        } else if (newStatus === "cancelled") {
+            title = "🚫 Rezervasyon İptal Edildi";
+            body = `${businessName} – ${dateStr} ${timeStr} için rezervasyonunuz işletme tarafından iptal edildi.`;
         } else {
             title = "❌ Rezervasyonunuz Reddedildi";
             body = `${businessName} – ${dateStr} ${timeStr} için rezervasyonunuz maalesef onaylanmadı.`;
@@ -2395,48 +2419,50 @@ export const onReservationStatusChange = onDocumentUpdated(
                 await messaging.send({
                     notification: { title, body },
                     data: {
-                        type: "reservation_status",
+                        type: notifType,
                         reservationId: event.params.reservationId,
                         businessId: businessId,
                         status: newStatus,
+                        tableCardNumbers: (tableCardNumbers && tableCardNumbers.length > 0) ? tableCardNumbers.join(",") : "",
                     },
                     ...buildSoundConfig(notifSound),
                     token: customerFcmToken,
                 });
-                console.log(`[Reservation] Sent ${newStatus} push notification to customer`);
+                console.log(`[Reservation] Sent ${isTableAssignmentOnly ? "table assigned" : newStatus} push notification to customer`);
             } catch (error) {
-                console.error(`[Reservation] Error sending ${newStatus} push notification:`, error);
+                console.error(`[Reservation] Error sending push notification:`, error);
             }
         }
 
         // ── Persist status change to customer's notification history ──
         const userId = after.userId;
-        console.log(`[Reservation] Notification persistence: userId=${userId}, status=${newStatus}`);
+        console.log(`[Reservation] Notification persistence: userId=${userId}, status=${newStatus}, isTableAssignmentOnly=${isTableAssignmentOnly}`);
         if (userId) {
             try {
                 await db.collection("users").doc(userId).collection("notifications").add({
                     title,
                     body,
-                    type: "reservation_status",
+                    type: notifType,
                     reservationId: event.params.reservationId,
                     businessId: businessId,
                     businessName: businessName,
                     status: newStatus,
                     partySize: partySize,
+                    tableCardNumbers: tableCardNumbers || [],
                     reservationDate: after.reservationDate,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     read: false,
                 });
-                console.log(`[Reservation] Saved ${newStatus} notification for user ${userId}`);
+                console.log(`[Reservation] Saved ${isTableAssignmentOnly ? "table assigned" : newStatus} notification for user ${userId}`);
             } catch (notifError) {
-                console.error(`[Reservation] Error saving ${newStatus} notification:`, notifError);
+                console.error(`[Reservation] Error saving notification history:`, notifError);
             }
         } else {
             console.log(`[Reservation] No userId found in reservation document, skipping notification persistence`);
         }
 
-        // ─── Send confirmation email with calendar links ───
-        if (newStatus === "confirmed") {
+        // ─── Send confirmation/rejection/cancellation email ───
+        if (!isTableAssignmentOnly && (newStatus === "confirmed" || newStatus === "rejected" || newStatus === "cancelled")) {
             try {
                 const userId = after.userId;
                 if (!userId) {
@@ -2524,22 +2550,61 @@ export const onReservationStatusChange = onDocumentUpdated(
                     </div>`
                     : "";
 
+                // Build conditional email content
+                let emailSubject = "";
+                let emailHeader = "";
+                let emailMessage = "";
+                let headerColor = "";
+
+                if (newStatus === "confirmed") {
+                    emailSubject = `✅ Rezervasyonunuz Onaylandı – ${businessName}`;
+                    emailHeader = "Rezervasyon Onaylandı ✓";
+                    emailMessage = "Masa rezervasyonunuz başarıyla onaylanmıştır. İşte detaylar:";
+                    headerColor = "#2E7D32"; // Green
+                } else if (newStatus === "cancelled") {
+                    emailSubject = `🚫 Rezervasyon İptal Edildi – ${businessName}`;
+                    emailHeader = "Rezervasyon İptal Edildi";
+                    emailMessage = "Masa rezervasyonunuz işletme tarafından iptal edilmiştir.";
+                    headerColor = "#d32f2f"; // Red
+                } else {
+                    emailSubject = `❌ Rezervasyonunuz Reddedildi – ${businessName}`;
+                    emailHeader = "Rezervasyon Reddedildi";
+                    emailMessage = "Masa rezervasyonunuz maalesef onaylanmamıştır.";
+                    headerColor = "#C62828"; // Dark Red
+                }
+
+                // Only add attachments and calendar links on confirmed
+                const emailAttachments = newStatus === "confirmed" ? [{
+                    filename: "rezervasyon.ics",
+                    content: icsBase64,
+                }] : [];
+
+                const calendarHtml = newStatus === "confirmed" ? `
+                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Rezervasyonu takviminize ekleyin:</p>
+                    <div style="text-align: center; margin: 15px 0;">
+                        <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 6px 10px;">
+                            📅 Google Takvim'e Ekle
+                        </a>
+                    </div>
+                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">iCal dosyası ektedir — Apple Takvim veya Outlook'a kolayca ekleyebilirsiniz.</p>
+                ` : "";
+
                 // Send email via Resend
                 const resend = new Resend(resendApiKey.value());
                 await resend.emails.send({
                     from: `${businessName} <noreply@lokma.shop>`,
                     to: customerEmail,
-                    subject: `✅ Rezervasyonunuz Onaylandı – ${businessName}`,
+                    subject: emailSubject,
                     html: `
                         <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
                             <div style="max-width: 600px; margin: 0 auto;">
-                                <div style="background: #2E7D32; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+                                <div style="background: ${headerColor}; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
                                     <h1 style="margin: 0; color: white; font-size: 22px;">LOKMA</h1>
-                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Rezervasyonunuz Onaylandı ✓</p>
+                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">${emailHeader}</p>
                                 </div>
                                 <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
                                     <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Merhaba <strong>${customerName}</strong>,</p>
-                                    <p style="color: #ccc; margin: 0 0 20px;">Masa rezervasyonunuz başarıyla onaylanmıştır. İşte detaylar:</p>
+                                    <p style="color: #ccc; margin: 0 0 20px;">${emailMessage}</p>
                                     
                                     <div style="background: #333; border-radius: 10px; padding: 18px; margin: 15px 0;">
                                         <table style="width: 100%; color: #ccc; font-size: 14px; border-collapse: collapse;">
@@ -2564,18 +2629,10 @@ export const onReservationStatusChange = onDocumentUpdated(
 
                                     ${tableCardHtml}
                                     ${preOrderHtml}
-
-                                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Rezervasyonu takviminize ekleyin:</p>
-                                    
-                                    <div style="text-align: center; margin: 15px 0;">
-                                        <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 6px 10px;">
-                                            📅 Google Takvim'e Ekle
-                                        </a>
-                                    </div>
-                                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">iCal dosyası ektedir — Apple Takvim veya Outlook'a kolayca ekleyebilirsiniz.</p>
+                                    ${calendarHtml}
                                     
                                     <div style="border-top: 1px solid #444; margin-top: 20px; padding-top: 20px; text-align: center;">
-                                        <p style="color: #ccc; font-size: 14px; margin: 0 0 10px;">Bizi tercih ettiğiniz için teşekkür ederiz. Afiyet olsun! 🍽️</p>
+                                        <p style="color: #ccc; font-size: 14px; margin: 0 0 10px;">Bizi tercih ettiğiniz için teşekkür ederiz.</p>
                                         <p style="color: #999; font-size: 13px; margin: 0;">Saygılarımızla,<br/><strong style="color: #fff;">${businessName} Ekibi</strong></p>
                                     </div>
                                 </div>
@@ -2583,12 +2640,7 @@ export const onReservationStatusChange = onDocumentUpdated(
                             </div>
                         </div>
                     `,
-                    attachments: [
-                        {
-                            filename: "rezervasyon.ics",
-                            content: icsBase64,
-                        },
-                    ],
+                    attachments: emailAttachments,
                 });
 
                 console.log(`[Reservation] Confirmation email sent to ${customerEmail}`);

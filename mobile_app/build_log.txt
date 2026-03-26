@@ -1,7 +1,7 @@
 Building shop.lokma.app for device (ios-release)...
 Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
 Running Xcode build...                                          
-Xcode build done.                                           27,3s
+Xcode build done.                                           65,5s
 Failed to build iOS app
 Error output from Xcode build:
 ↳
@@ -11,84 +11,13 @@ Error output from Xcode build:
 Xcode's output:
 ↳
     Writing result bundle at path:
-    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.HMaORk/flutter_ios_build_temp_dirScdwZN/temporary_xcresult_bundle
+    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.xBmZmH/flutter_ios_build_temp_dirLSItc6/temporary_xcresult_bundle
 
-    lib/screens/marketplace/market/market_screen.dart:1301:25: Error: Can't find ']' to match '['.
-                  children: [
-                            ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:1649:29: Error: Can't find ']' to match '['.
-                      children: [
-                                ^
-    lib/screens/marketplace/market/market_screen.dart:1685:11: Error: Expected an identifier, but got ']'.
-    Try inserting an identifier before ']'.
-              ],
-              ^
-    lib/screens/marketplace/market/market_screen.dart:1685:11: Error: Expected ')' before this.
-              ],
-              ^
-    lib/screens/marketplace/market/market_screen.dart:1282:23: Error: Too many positional arguments: 0 allowed, but 2 found.
-    Try removing the extra positional arguments.
-          child: Container(
-                          ^
-    /opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/container.dart:255:3: Context: Found this candidate, but the arguments don't match.
-      Container({
-      ^^^^^^^^^
-    lib/screens/marketplace/market/market_screen.dart:1687:7: Error: Expected ';' after this.
-          ),
-          ^
-    lib/screens/marketplace/market/market_screen.dart:1687:8: Error: Expected an identifier, but got ','.
-    Try inserting an identifier before ','.
-          ),
-           ^
-    lib/screens/marketplace/market/market_screen.dart:1687:8: Error: Unexpected token ';'.
-          ),
-           ^
-    lib/screens/marketplace/market/market_screen.dart:1688:5: Error: Expected an identifier, but got ')'.
-    Try inserting an identifier before ')'.
-        );
-        ^
-    lib/screens/marketplace/market/market_screen.dart:1687:8: Error: Expected ';' after this.
-          ),
-           ^
-    lib/screens/marketplace/market/market_screen.dart:1688:5: Error: Unexpected token ';'.
-        );
-        ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2049:11: Error: Expected an identifier, but got ']'.
-    Try inserting an identifier before ']'.
-              ],
-              ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2049:11: Error: Expected ')' before this.
-              ],
-              ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:1627:23: Error: Too many positional arguments: 0 allowed, but 1 found.
-    Try removing the extra positional arguments.
-          child: Container(
-                          ^
-    /opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/container.dart:255:3: Context: Found this candidate, but the arguments don't match.
-      Container({
-      ^^^^^^^^^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2051:7: Error: Expected ';' after this.
-          ),
-          ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2051:8: Error: Expected an identifier, but got ','.
-    Try inserting an identifier before ','.
-          ),
-           ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2051:8: Error: Unexpected token ';'.
-          ),
-           ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2052:5: Error: Expected an identifier, but got ')'.
-    Try inserting an identifier before ')'.
-        );
-        ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2051:8: Error: Expected ';' after this.
-          ),
-           ^
-    lib/screens/marketplace/restoran/restoran_screen.dart:2052:5: Error: Unexpected token ';'.
-        );
-        ^
+    lib/screens/driver/driver_delivery_screen.dart:1178:47: Error: Method invocation is not a constant expression.
+                                label: const Text(tr('driver.nfc_odeme'), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                                                  ^^
     Target kernel_snapshot_program failed: Exception
-    Failed to package /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/mobile_app.
+    Failed to package /Users/metinoz/Developer/LOKMA_MASTER/mobile_app.
     Command PhaseScriptExecution failed with a nonzero exit code
     warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'abseil' from project 'Pods')
     warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'BoringSSL-GRPC' from project 'Pods')

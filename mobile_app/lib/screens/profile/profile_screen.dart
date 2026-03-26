@@ -438,7 +438,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               fontWeight: FontWeight.w200,
                               letterSpacing: 0.5,
                               color: isDark
-                                  ? Colors.white.withOpacity(0.35)
+                                  ? Colors.white.withValues(alpha: 0.35)
                                   : Colors.grey[500],
                             ),
                           ),
@@ -448,7 +448,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             height: 20,
                             colorFilter: ColorFilter.mode(
                               isDark
-                                  ? Colors.white.withOpacity(0.45)
+                                  ? Colors.white.withValues(alpha: 0.45)
                                   : Colors.grey.shade500,
                               BlendMode.srcIn,
                             ),

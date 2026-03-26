@@ -27,7 +27,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
 
   late TabController _tabController;
   int _selectedIndex = 0;
-  String _businessFilter = 'all'; // 'all', 'tuna', 'kermes', 'kasap'
+  String _businessFilter = 'all'; // 'all', 'tuna', 'kermes', tr('common.kasap')
 
   @override
   void initState() {

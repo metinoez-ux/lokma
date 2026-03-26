@@ -25,6 +25,7 @@ interface WeeklyAvailability {
 
 interface ReservationConfig {
   reservationEnabled: boolean;
+  requirePreorderPayment?: boolean;
   totalSeats: number;
   slotDurationMinutes: number;
   maxPartySize: number;
@@ -63,6 +64,7 @@ const DEFAULT_WEEKLY: WeeklyAvailability = {
 
 const DEFAULT_CONFIG: ReservationConfig = {
   reservationEnabled: true,
+  requirePreorderPayment: false,
   totalSeats: 0,
   slotDurationMinutes: 30,
   maxPartySize: 10,
@@ -163,6 +165,8 @@ export default function ReservationCapacityConfig({
             },
             maxDailyReservations:
               saved.maxDailyReservations ?? DEFAULT_CONFIG.maxDailyReservations,
+            requirePreorderPayment:
+              saved.requirePreorderPayment ?? DEFAULT_CONFIG.requirePreorderPayment,
             autoConfirmUpTo:
               saved.autoConfirmUpTo ?? DEFAULT_CONFIG.autoConfirmUpTo,
             minAdvanceHours:
@@ -728,6 +732,37 @@ export default function ReservationCapacityConfig({
                 <span className="text-gray-500 text-xs">{t("rc_kisi")}</span>
               </div>
               <p className="text-gray-600 text-[10px] mt-1">{t("rc_otomatik_onay_aciklama")}</p>
+            </div>
+
+            {/* Preorder Payment Mandatory */}
+            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
+              <label className="text-amber-500 text-sm font-semibold flex items-center gap-2 mb-3">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                {t("rc_on_siparis_odeme") || "Ön Sipariş Ödeme Zorunluluğu"}
+              </label>
+              <button
+                onClick={() =>
+                  setConfig((p) => ({
+                    ...p,
+                    requirePreorderPayment: !p.requirePreorderPayment,
+                  }))
+                }
+                className={`w-full px-4 py-3.5 rounded-xl text-sm font-bold transition flex items-center justify-between group ${
+                  config.requirePreorderPayment
+                    ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20"
+                    : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500"
+                }`}
+              >
+                <span>{config.requirePreorderPayment ? (t("rc_odeme_zorunlu") || "Zorunlu (Online Kart)") : (t("rc_odeme_opsiyonel") || "Opsiyonel (Mekanda Ödeme)")}</span>
+                <div className={`w-10 h-6 rounded-full p-1 transition-colors ${config.requirePreorderPayment ? 'bg-white/30' : 'bg-gray-900 pointer-events-none'}`}>
+                    <div className={`w-4 h-4 rounded-full bg-white transition-transform ${config.requirePreorderPayment ? 'translate-x-4' : 'translate-x-0'}`} />
+                </div>
+              </button>
+              <p className="text-amber-500/70 text-xs mt-3 leading-relaxed">
+                {t("rc_on_siparis_odeme_aciklama") || "Müşterilerin ön siparişli rezervasyonlarda ödemeyi online olarak yapmasını zorunlu kılar."}
+              </p>
             </div>
 
             {/* Weekly Availability */}

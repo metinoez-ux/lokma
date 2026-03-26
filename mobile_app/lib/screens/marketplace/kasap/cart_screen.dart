@@ -3003,7 +3003,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     child: Text(
                       _butcherData!['companyName'] ?? 'Kasap',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                       ),
@@ -3086,7 +3086,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00C853).withOpacity(0.3),
+                        color: const Color(0xFF00C853).withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -3523,7 +3523,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             color: isDark ? const Color(0xFF1A2332) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF4FC3F7).withOpacity(0.4),
+              color: const Color(0xFF4FC3F7).withValues(alpha: 0.4),
             ),
           ),
           child: Column(
@@ -3535,8 +3535,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF4FC3F7).withOpacity(0.2),
-                      const Color(0xFF0288D1).withOpacity(0.1),
+                      const Color(0xFF4FC3F7).withValues(alpha: 0.2),
+                      const Color(0xFF0288D1).withValues(alpha: 0.1),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -3705,8 +3705,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF0D3B66).withOpacity(0.6)
-            : const Color(0xFF4FC3F7).withOpacity(0.15),
+            ? const Color(0xFF0D3B66).withValues(alpha: 0.6)
+            : const Color(0xFF4FC3F7).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -5169,11 +5169,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               Text(
                 'cart.delivery_fee'.tr(),
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
               ),
               Text(
                 '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
               ),
             ],
           ),
@@ -5276,6 +5276,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                    businessId: cartState.butcherId!,
                    businessName: cartState.butcherName ?? '',
                    isPreOrder: true,
+                   requirePreorderPayment: _butcherData?['reservationConfig']?['requirePreorderPayment'] == true,
                  ),
                ),
              );

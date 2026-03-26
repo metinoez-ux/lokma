@@ -64,20 +64,7 @@ export default function SettingsPage() {
                                 <span className="ml-auto text-gray-600 group-hover:text-muted-foreground transition text-xl">→</span>
                             </Link>
 
-                            {/* Masa */}
-                            <Link
-                                href={`/admin/table-orders${admin?.butcherId ? `?businessId=${admin.butcherId}` : ''}`}
-                                className="flex items-center gap-4 p-5 bg-background rounded-xl border border-border hover:border-teal-600 hover:bg-teal-950/20 transition-all group"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-teal-900/50 flex items-center justify-center text-2xl group-hover:bg-teal-800/50 transition">
-                                    🪑
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-foreground group-hover:text-teal-300 transition">{t('masa') || 'Masa'}</h3>
-                                    <p className="text-xs text-gray-500">{t('masa_oturumlari_ve_gruplari')}</p>
-                                </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-teal-400 transition text-xl">→</span>
-                            </Link>
+
 
                             {/* Teslimat */}
                             <Link

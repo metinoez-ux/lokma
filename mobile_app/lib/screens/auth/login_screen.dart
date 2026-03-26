@@ -744,7 +744,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _buildTextField(
             controller: _referralCodeController,
             label: tr('auth.davet_kodu'),
-            hint: 'Örn: ABC123',
+            hint: tr('auth.orn_abc123'),
             icon: Icons.card_giftcard_outlined,
           ),
         ],

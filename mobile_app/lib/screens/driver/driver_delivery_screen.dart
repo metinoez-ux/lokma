@@ -263,7 +263,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           // Kazançlarım (Earnings) button
           IconButton(
             icon: const Icon(Icons.monetization_on_outlined, size: 22),
-            tooltip: 'Kazançlarım',
+            tooltip: tr('driver.kazanclarim'),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const DriverEarningsScreen()),
@@ -1175,7 +1175,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.contactless, size: 18),
-                            label: const Text('NFC Ödeme', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            label: Text(tr('driver.nfc_odeme'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF6A0DAD),
                               foregroundColor: Colors.white,
@@ -1189,7 +1189,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                                 businessId: order.butcherId,
                                 orderId: order.id,
                                 courierId: FirebaseAuth.instance.currentUser?.uid,
-                                label: 'Kapıda Kart Ödemesi',
+                                label: tr('driver.kapida_kart_odemesi'),
                               );
                               if (result != null && result.success && mounted) {
                                 // Firestore'da ödeme durumunu güncelle

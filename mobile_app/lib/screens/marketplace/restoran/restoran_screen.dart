@@ -1970,7 +1970,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.1),
+                    color: accent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.storefront_outlined, size: 28, color: accent),
@@ -1998,18 +1998,18 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.5),
+                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Column(
                       children: [
                         if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
-                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
+                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
                         if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
-                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
+                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
                         if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
                       ],
                     ),
@@ -2028,7 +2028,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     fontSize: 13,
                     fontWeight: FontWeight.w200,
                     letterSpacing: 0.5,
-                    color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
+                    color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.9),
                     height: 1.3,
                   ),
                 ),
@@ -2063,7 +2063,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
                         letterSpacing: 0.5,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -2093,7 +2093,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       );
                     },
                     style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.7),
+                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(

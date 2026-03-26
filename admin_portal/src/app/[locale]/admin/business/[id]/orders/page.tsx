@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, addDoc, Timestamp, limit } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -18,6 +18,15 @@ interface MeatOrderItem {
     pricePerKg: number;
 }
 
+interface ReservationInfo {
+    id: string;
+    customerName: string;
+    partySize: number;
+    reservationDate: Date;
+    timeSlot: string;
+    status: string;
+    tableCardNumbers?: number[];
+}
 
 interface BusinessInfo {
     id: string;
@@ -47,6 +56,71 @@ const params = useParams();
     // Expanded order for inline detail (replaces modal)
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
+
+    // Upcoming Reservation Chip
+    const [upcomingReservation, setUpcomingReservation] = useState<ReservationInfo | null>(null);
+
+    useEffect(() => {
+        if (!businessId) return;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const q = query(
+            collection(db, 'businesses', businessId, 'reservations'),
+            where('reservationDate', '>=', Timestamp.fromDate(today)),
+            orderBy('reservationDate', 'asc'),
+            limit(5)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const now = new Date();
+            const resList = snapshot.docs.map(d => {
+                const data = d.data();
+                return {
+                    id: d.id,
+                    customerName: data.customerName || '',
+                    partySize: data.partySize || 1,
+                    reservationDate: data.reservationDate?.toDate() || new Date(),
+                    timeSlot: data.timeSlot || '',
+                    status: data.status || 'pending',
+                    tableCardNumbers: data.tableCardNumbers || [],
+                };
+            }).filter(r => (r.status === 'pending' || r.status === 'confirmed'));
+            
+            // Only upcoming by time
+            const upcoming = resList.filter(r => {
+                 if (r.timeSlot) {
+                     const [hh, mm] = r.timeSlot.split(':').map(Number);
+                     const rTime = new Date(r.reservationDate);
+                     rTime.setHours(hh, mm, 0, 0);
+                     // Allow up to 30 mins ago to still show as upcoming if they haven't been completed
+                     return rTime.getTime() > now.getTime() - 30 * 60000;
+                 }
+                 return r.reservationDate.getTime() > now.getTime() - 30 * 60000;
+            });
+
+            upcoming.sort((a, b) => {
+                 const aTime = a.timeSlot ? parseInt(a.timeSlot.replace(':', '')) : parseInt(`${a.reservationDate.getHours()}${a.reservationDate.getMinutes()}`);
+                 const bTime = b.timeSlot ? parseInt(b.timeSlot.replace(':', '')) : parseInt(`${b.reservationDate.getHours()}${b.reservationDate.getMinutes()}`);
+                 
+                 // If dates are different, sort by date first
+                 const aDate = new Date(a.reservationDate).setHours(0,0,0,0);
+                 const bDate = new Date(b.reservationDate).setHours(0,0,0,0);
+                 if (aDate !== bDate) return aDate - bDate;
+                 
+                 return aTime - bTime;
+            });
+
+            if (upcoming.length > 0) {
+                setUpcomingReservation(upcoming[0]);
+            } else {
+                setUpcomingReservation(null);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [businessId]);
 
     // Auto-hide completed orders (McDonald's style: hide after 10 min)
     const [showCompletedOrders, setShowCompletedOrders] = useState(false);
@@ -361,6 +435,52 @@ const params = useParams();
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-6">
+
+                {/* Upcoming Reservation Chip */}
+                {upcomingReservation && (
+                    <Link
+                        href={`/admin/business/${businessId}?tab=reservations`}
+                        className="mb-4 block bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white rounded-xl p-4 shadow-lg border border-red-500/30 transition-all transform hover:scale-[1.01]"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl shadow-inner">
+                                    🍽️
+                                </div>
+                                <div>
+                                    <div className="text-xs font-bold uppercase tracking-wider text-red-100 flex items-center gap-2">
+                                        <span className="relative flex h-2 w-2">
+                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
+                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                        Yaklaşan Rezervasyon
+                                    </div>
+                                    <div className="font-bold text-lg leading-tight mt-0.5">
+                                        {upcomingReservation.customerName} <span className="opacity-80 font-normal">({upcomingReservation.partySize} Kişi)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-xl md:text-2xl font-bold">
+                                    {(() => {
+                                        const today = new Date();
+                                        const resDate = new Date(upcomingReservation.reservationDate);
+                                        const isToday = resDate.getDate() === today.getDate() && resDate.getMonth() === today.getMonth() && resDate.getFullYear() === today.getFullYear();
+                                        const dateStr = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'short' }).format(resDate);
+                                        return isToday ? (upcomingReservation.timeSlot || 'Bugün') : `${dateStr} ${upcomingReservation.timeSlot || ''}`;
+                                    })()}
+                                </div>
+                                <div className="text-xs mt-1">
+                                    {upcomingReservation.status === 'confirmed' ? (
+                                        <span className="bg-green-500/80 text-white px-2 py-0.5 rounded shadow-sm">✅ Onaylı</span>
+                                    ) : (
+                                        <span className="bg-yellow-500/80 text-white px-2 py-0.5 rounded shadow-sm">⏳ İşlem Bekliyor</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                )}
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">

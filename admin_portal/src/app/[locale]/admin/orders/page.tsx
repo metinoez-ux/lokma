@@ -57,7 +57,63 @@ export default function OrdersPage() {
     const [dateFilter, setDateFilter] = useState<string>('all');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    
+
+    // ─── Fetch Next Upcoming Reservation ───
+    useEffect(() => {
+        if (!admin) return;
+
+        let qNext;
+        const activeBusinessId = (businessFilter && businessFilter !== 'all') ? businessFilter : adminBusinessId;
+        
+        if (activeBusinessId) {
+            qNext = query(
+                collection(db, 'businesses', activeBusinessId, 'reservations'),
+                where('status', 'in', ['pending', 'confirmed'])
+            );
+        } else {
+            qNext = query(
+                collectionGroup(db, 'reservations'),
+                where('status', 'in', ['pending', 'confirmed'])
+            );
+        }
+
+        const unsub = onSnapshot(qNext, (snapshot) => {
+            const currentTime = new Date().getTime();
+            let upcoming: any = null;
+
+            for (const docSnap of snapshot.docs) {
+                const data = docSnap.data();
+                if (!data.reservationDate) continue;
+                
+                try {
+                    // Handle both Firestore Timestamp and plain js Date string formats
+                    const resMillis = data.reservationDate?.toMillis?.() || (data.reservationDate?.seconds ? data.reservationDate.seconds * 1000 : new Date(data.reservationDate).getTime());
+                    const resDate = new Date(resMillis);
+                    
+                    // Support legacy timeSlot or reservationTime string overriding
+                    const legacyTimeStr = data.timeSlot || data.reservationTime;
+                    if (legacyTimeStr && typeof legacyTimeStr === 'string' && legacyTimeStr.includes(':')) {
+                        const [hours, mins] = legacyTimeStr.split(':').map(Number);
+                        resDate.setHours(hours, mins, 0, 0);
+                    }
+                    
+                    if (resDate.getTime() < currentTime - 30 * 60000) continue;
+
+                    const candidate = { id: docSnap.id, businessId: docSnap.ref.parent?.parent?.id, ...data, computedTime: resDate.getTime(), resDateObject: resDate };
+                    
+                    if (!upcoming || candidate.computedTime < upcoming.computedTime) {
+                        upcoming = candidate;
+                    }
+                } catch(e) {
+                    console.error("Error parsing reservation date for " + docSnap.id, e);
+                }
+            }
+            setNextReservation(upcoming);
+        });
+
+        return () => unsub();
+    }, [admin, adminBusinessId, businessFilter]);
+
     // Printer state
     const [printerSettings, setPrinterSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS);
     const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
@@ -71,6 +127,7 @@ export default function OrdersPage() {
     // --- Auto-print refs & system ---
     const autoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed new orders
     const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
+    const tabItemCountsRef = useRef<Record<string, number>>({}); // track item counts for reservation EK (additional) orders
     // Track both collections independently to prevent double auto-printing on load
     const initialLoadDoneRef = useRef({ meat: false, res: false }); // skip auto-print on first load
     const printerSettingsRef = useRef<PrinterSettings>(DEFAULT_PRINTER_SETTINGS); // ref mirror for closure
@@ -102,6 +159,9 @@ export default function OrdersPage() {
     const [showPickupTimerMenu, setShowPickupTimerMenu] = useState(false);
     const deliveryTimerRef = useRef<HTMLDivElement>(null);
     const pickupTimerRef = useRef<HTMLDivElement>(null);
+
+    // ─── Next Upcoming Reservation State ───
+    const [nextReservation, setNextReservation] = useState<any>(null);
 
     // Toggle item checked state and persist to Firestore
     const toggleItemChecked = async (orderId: string, itemIdx: number) => {
@@ -734,34 +794,63 @@ export default function OrdersPage() {
                 });
             setResOrders(mapped);
 
-            // --- Auto-print new reservation orders ---
+            // --- Auto-print new reservation orders & Check-Ins ---
             const ps = printerSettingsRef.current;
             const bf = businessFilterRef.current;
             const changes = snapshot.docChanges();
-            const addedChanges = changes.filter(change => change.type === 'added');
 
             if (initialLoadDoneRef.current.res && ps.enabled && ps.autoPrint && ps.printerIp) {
-                const newOrders = addedChanges
-                    .filter(change => {
-                        const d = change.doc.data();
-                        if (d.tabStatus === 'pre_ordered' || d.tabStatus === 'seated' || d.tabStatus === 'closed') return true;
-                        if (!d.tabStatus && (d.status === 'pending' || d.status === 'confirmed')) return true;
-                        return false;
-                    })
-                    .map(change => mapReservationToOrder(change.doc.id, change.doc.data()))
-                    .filter(o => {
-                        if (autoPrintedRef.current.has(o.id)) return false;
-                        if (o.status !== 'pending') return false;
-                        if (bf !== 'all' && o.businessId !== bf) return false;
-                        if (o.scheduledAt) return false;
-                        return true;
-                    });
+                changes.forEach(change => {
+                    const data = change.doc.data();
+                    const currentCount = (data.tabItems || data.preOrderItems || []).length;
+                    const prevCount = tabItemCountsRef.current[change.doc.id] || 0;
+                    
+                    // Always update current item count
+                    tabItemCountsRef.current[change.doc.id] = currentCount;
 
-                for (const newOrder of newOrders) {
-                    autoPrintedRef.current.add(newOrder.id);
-                    handlePrintOrder(newOrder as any);
-                }
+                    // Filter relevant reservations just like the main listener
+                    const isTab = data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+                    const isPlain = !data.tabStatus && (data.status === 'pending' || data.status === 'confirmed');
+                    if (!isTab && !isPlain) return;
+
+                    const mapped = mapReservationToOrder(change.doc.id, data);
+                    if (bf !== 'all' && mapped.businessId !== bf) return;
+                    if (mapped.scheduledAt) return; // Don't auto-print scheduled orders immediately
+
+                    if (change.type === 'added') {
+                        if (autoPrintedRef.current.has(mapped.id)) return;
+                        
+                        // Condition 1: Brand new pending reservation
+                        const isNewPending = mapped.status === 'pending';
+                        // Condition 2: Just checked in (entered query as 'seated' and has food items)
+                        const isNewlySeated = data.tabStatus === 'seated' && currentCount > 0;
+
+                        if (isNewPending || isNewlySeated) {
+                            autoPrintedRef.current.add(mapped.id);
+                            handlePrintOrder(mapped as any);
+                        }
+                    } else if (change.type === 'modified') {
+                        // EK SİPARİŞ (Added items to an already seated tab)
+                        if (data.tabStatus === 'seated' && currentCount > prevCount) {
+                            const ekOrder = {
+                                ...mapped,
+                                id: `${mapped.id}_ek_${currentCount}`, // Unique ID for print list
+                                orderNumber: `${mapped.orderNumber} (EK SİPARİŞ)`
+                            };
+                            handlePrintOrder(ekOrder as any);
+                        }
+                    } else if (change.type === 'removed') {
+                        delete tabItemCountsRef.current[change.doc.id];
+                    }
+                });
+            } else if (!initialLoadDoneRef.current.res) {
+                // Initial load: populate tab item counts
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    tabItemCountsRef.current[doc.id] = (data.tabItems || data.preOrderItems || []).length;
+                });
             }
+
             if (!initialLoadDoneRef.current.res) {
                 initialLoadDoneRef.current.res = true;
                 if (initialLoadDoneRef.current.meat) setLoading(false);
@@ -843,6 +932,10 @@ export default function OrdersPage() {
     // Actual status update function
     const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string, unavailableItemsList?: { idx: number; name: string; quantity: number; price: number }[]) => {
         try {
+            // Find the order to get info
+            const order = orders.find(o => o.id === orderId);
+            const isReservation = order?.type === 'dine_in_preorder';
+
             // Statuses that should clear courier assignment when set
             const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
             const shouldClearCourier = unclamedStatuses.includes(newStatus);
@@ -885,14 +978,16 @@ export default function OrdersPage() {
                 }));
             }
 
-            await updateDoc(doc(db, 'meat_orders', orderId), updateData);
+            // Route to correct collection
+            const orderRef = isReservation && order?.businessId
+                ? doc(db, 'businesses', order.businessId, 'reservations', orderId)
+                : doc(db, 'meat_orders', orderId);
+
+            await updateDoc(orderRef, updateData);
 
             // Send push notification to customer for cancellation
             if (newStatus === 'cancelled') {
                 try {
-                    // Find the order to get customer info and session info
-                    const order = orders.find(o => o.id === orderId);
-
                     // Check if the order is part of a table group session
                     if (order?.groupSessionId) {
                         try {
@@ -1114,9 +1209,42 @@ export default function OrdersPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                     <div className="flex flex-col gap-2">
-                        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-                            {t('siparis_merkezi')}
-                        </h1>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+                                {t('siparis_merkezi')}
+                            </h1>
+                            {nextReservation && (() => {
+                                const dateObj = nextReservation.resDateObject;
+                                let timeDisplay = nextReservation.timeSlot || '-';
+                                if (dateObj) {
+                                    const today = new Date();
+                                    const tomorrow = new Date(today);
+                                    tomorrow.setDate(tomorrow.getDate() + 1);
+                                    
+                                    const isToday = dateObj.getDate() === today.getDate() && dateObj.getMonth() === today.getMonth() && dateObj.getFullYear() === today.getFullYear();
+                                    const isTomorrow = dateObj.getDate() === tomorrow.getDate() && dateObj.getMonth() === tomorrow.getMonth() && dateObj.getFullYear() === tomorrow.getFullYear();
+                                    const timeStr = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                                    
+                                    if (isToday) timeDisplay = `Bugün ${timeStr}`;
+                                    else if (isTomorrow) timeDisplay = `Yarın ${timeStr}`;
+                                    else timeDisplay = `${dateObj.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })} ${timeStr}`;
+                                }
+                                
+                                const hasPreOrder = nextReservation.items?.length > 0 || nextReservation.hasPreOrder || nextReservation.tabStatus === 'pre_ordered';
+                                const icon = hasPreOrder ? '🍽️' : '🪑';
+                                
+                                return (
+                                    <Link 
+                                        href={`/${locale}/admin/reservations`}
+                                        className="flex items-center gap-2 px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800/60 transition-colors shadow-sm cursor-pointer animate-in fade-in zoom-in duration-300"
+                                    >
+                                        <span>{icon}</span>
+                                        <span className="font-semibold">Sıradaki Rzv:</span>
+                                        <span>{timeDisplay} - {nextReservation.customerName || nextReservation.userName || 'Misafir'} ({nextReservation.partySize || '-'} Kişi)</span>
+                                    </Link>
+                                );
+                            })()}
+                        </div>
                         {/* Filters inline */}
                         <div className="flex flex-wrap items-center gap-2">
                             <select
@@ -1499,9 +1627,41 @@ export default function OrdersPage() {
             <div className="max-w-7xl mx-auto mb-6">
                 <div className="bg-card rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-foreground font-bold">
-                            {t('siparis_durumlari_anlik')}
-                        </h3>
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-foreground font-bold">
+                                {t('siparis_durumlari_anlik')}
+                            </h3>
+                            {/* Upcoming Reservation Chip */}
+                            {nextReservation ? (
+                                <Link
+                                    href={`/admin/business/${nextReservation.businessId}?tab=reservations`}
+                                    className="cursor-pointer flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 rounded-full text-white text-xs font-semibold shadow-sm transition-all transform hover:scale-[1.02] border border-red-500/30"
+                                >
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                    </span>
+                                    <span>
+                                        🍽️ {nextReservation.userName || nextReservation.customerName || 'Misafir'} - {(() => {
+                                            const today = new Date();
+                                            const resDate = new Date(nextReservation.resDateObject || nextReservation.computedTime);
+                                            const isToday = resDate.getDate() === today.getDate() && resDate.getMonth() === today.getMonth() && resDate.getFullYear() === today.getFullYear();
+                                            const dateStr = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: 'short' }).format(resDate);
+                                            const timeStr = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(resDate);
+                                            return isToday ? timeStr : `${dateStr} ${timeStr}`;
+                                        })()}
+                                    </span>
+                                </Link>
+                            ) : (
+                                <Link
+                                    href={adminBusinessId ? `/admin/business/${adminBusinessId}?tab=reservations` : '#'}
+                                    className="cursor-pointer flex items-center gap-1.5 px-3 py-1 bg-muted/40 text-muted-foreground border border-border rounded-full text-xs font-medium hover:bg-muted/60 transition"
+                                >
+                                    <span>🗓️</span>
+                                    <span>Rezervasyon Yok</span>
+                                </Link>
+                            )}
+                        </div>
                         <span className="text-muted-foreground text-sm">
                             {t('su_anki_siparisler')}
                         </span>

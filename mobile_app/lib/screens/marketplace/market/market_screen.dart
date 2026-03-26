@@ -147,7 +147,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 color: Colors.white, fontWeight: FontWeight.w600))),
                     const SizedBox(height: 16),
                     Text(
-                      'Europas vertrauenswürdigste Halal-Fleischmarke',
+                      'marketplace.tuna_subtitle'.tr(),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                     ),
@@ -160,7 +160,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   padding: const EdgeInsets.all(24),
                   children: [
                     Text(
-                      'Unsere Reise begann 1987 als kleine Metzgerei in Köln und hat sich heute zu einer der modernsten integrierten Halal-Fleischproduktionsstätten Europas entwickelt.',
+                      '${'marketplace.tuna_description_1'.tr()}\n\n${'marketplace.tuna_description_2'.tr()}',
                       style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
                     ),
                     const SizedBox(height: 24),
@@ -180,6 +180,14 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
                     _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
                     _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
+                    const SizedBox(height: 24),
+                    Text('marketplace.production_standards'.tr(),
+                        style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 16),
+                    _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
+                    _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
+                    _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
+                    _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
                   ],
                 ),
               ),
@@ -626,7 +634,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.1),
+                    color: accent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.storefront_outlined, size: 28, color: accent),
@@ -654,18 +662,18 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withOpacity(0.35),
+                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.5),
+                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Column(
                       children: [
                         if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
-                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
+                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
                         if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
-                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
+                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
                         if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
                       ],
                     ),
@@ -684,7 +692,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     fontSize: 13,
                     fontWeight: FontWeight.w200,
                     letterSpacing: 0.5,
-                    color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
+                    color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.9),
                     height: 1.3,
                   ),
                 ),
@@ -719,7 +727,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
                         letterSpacing: 0.5,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -749,7 +757,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       );
                     },
                     style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.7),
+                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(
@@ -1598,7 +1606,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
     String distanceLabel;
     if (_currentStepIndex == _kmSteps.length - 1) {
-      distanceLabel = 'Tümü';
+      distanceLabel = tr('marketplace.distance_all');
     } else {
       distanceLabel = '${currentKm.toInt()} km';
     }

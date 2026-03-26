@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { collection, collectionGroup, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
@@ -29,6 +29,8 @@ export default function OrderListener() {
 const { admin } = useAdmin();
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const firstLoad = useRef(true);
+    const firstLoadTabs = useRef(true);
+    const tabItemCounts = useRef<Record<string, number>>({});
     const notificationPermissionAsked = useRef(false);
 
     // Register FCM web push token for background notifications
@@ -123,16 +125,17 @@ const { admin } = useAdmin();
         }
     }, [soundEnabled, flashScreen]);
 
-    // Listen for new orders
+    // Listen for new orders AND reservation check-ins (Normal Admin)
     useEffect(() => {
         if (!businessId) return;
         if (!enabled) return;
 
-        // Reset firstLoad flag when businessId or enabled changes
+        // Reset firstLoad flags when businessId or enabled changes
         firstLoad.current = true;
+        firstLoadTabs.current = true;
 
-        // Query: Pending orders for this business, ordered by creation
-        const q = query(
+        // 1. Listen for new pending meat_orders
+        const qOrders = query(
             collection(db, 'meat_orders'),
             where('businessId', '==', businessId),
             where('status', '==', 'pending'),
@@ -140,14 +143,12 @@ const { admin } = useAdmin();
             limit(10)
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            // Skip the very first snapshot (initial data load) to avoid alerting for existing orders
+        const unsubOrders = onSnapshot(qOrders, (snapshot) => {
             if (firstLoad.current) {
                 firstLoad.current = false;
                 return;
             }
 
-            // Only trigger for NEWLY ADDED documents
             snapshot.docChanges().forEach((change) => {
                 if (change.type === 'added') {
                     triggerAlert({ id: change.doc.id, ...change.doc.data() });
@@ -155,8 +156,63 @@ const { admin } = useAdmin();
             });
         });
 
-        return () => unsubscribe();
-    }, [businessId, enabled, triggerAlert]);
+        // 2. Listen for reservation check-ins (tabStatus === 'seated')
+        const qTabs = query(
+            collectionGroup(db, 'reservations'),
+            where('businessId', '==', businessId),
+            where('tabStatus', '==', 'seated')
+        );
+
+        const unsubTabs = onSnapshot(qTabs, (snapshot) => {
+            if (firstLoadTabs.current) {
+                firstLoadTabs.current = false;
+                snapshot.docs.forEach((doc) => {
+                    const data = doc.data();
+                    tabItemCounts.current[doc.id] = (data.tabItems || data.preOrderItems || []).length;
+                });
+                return;
+            }
+
+            snapshot.docChanges().forEach((change) => {
+                const data = change.doc.data();
+                const currentCount = (data.tabItems || data.preOrderItems || []).length;
+                const prevCount = tabItemCounts.current[change.doc.id] || 0;
+
+                if (change.type === 'added') {
+                    // It just checked in (transitioned to 'seated')
+                    tabItemCounts.current[change.doc.id] = currentCount;
+                    if (currentCount > 0) {
+                        triggerAlert({
+                            id: change.doc.id,
+                            orderNumber: `R-${change.doc.id.substring(0, 5).toUpperCase()}`,
+                            totalPrice: data.pendingBalance || data.preOrderTotal || 0,
+                            customerName: data.userName || data.customerName,
+                            ...data
+                        });
+                    }
+                } else if (change.type === 'modified') {
+                    // Added more items to an already seated tab
+                    if (currentCount > prevCount) {
+                        tabItemCounts.current[change.doc.id] = currentCount;
+                        triggerAlert({
+                            id: change.doc.id,
+                            orderNumber: `R-${change.doc.id.substring(0, 5).toUpperCase()} (EK SİPARİŞ)`,
+                            totalPrice: data.pendingBalance || data.preOrderTotal || 0,
+                            customerName: data.userName || data.customerName,
+                            ...data
+                        });
+                    }
+                } else if (change.type === 'removed') {
+                    delete tabItemCounts.current[change.doc.id];
+                }
+            });
+        });
+
+        return () => {
+            unsubOrders();
+            unsubTabs();
+        };
+    }, [businessId, enabled, triggerAlert, t]);
 
     // Also listen for super admins (all businesses)
     useEffect(() => {
@@ -164,15 +220,17 @@ const { admin } = useAdmin();
         if (!enabled) return;
 
         firstLoad.current = true;
+        firstLoadTabs.current = true;
 
-        const q = query(
+        // 1. All pending meat_orders
+        const qOrders = query(
             collection(db, 'meat_orders'),
             where('status', '==', 'pending'),
             orderBy('createdAt', 'desc'),
             limit(10)
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubOrders = onSnapshot(qOrders, (snapshot) => {
             if (firstLoad.current) {
                 firstLoad.current = false;
                 return;
@@ -185,7 +243,59 @@ const { admin } = useAdmin();
             });
         });
 
-        return () => unsubscribe();
+        // 2. All seated reservations
+        const qTabs = query(
+            collectionGroup(db, 'reservations'),
+            where('tabStatus', '==', 'seated')
+        );
+
+        const unsubTabs = onSnapshot(qTabs, (snapshot) => {
+            if (firstLoadTabs.current) {
+                firstLoadTabs.current = false;
+                snapshot.docs.forEach((doc) => {
+                    const data = doc.data();
+                    tabItemCounts.current[doc.id] = (data.tabItems || data.preOrderItems || []).length;
+                });
+                return;
+            }
+
+            snapshot.docChanges().forEach((change) => {
+                const data = change.doc.data();
+                const currentCount = (data.tabItems || data.preOrderItems || []).length;
+                const prevCount = tabItemCounts.current[change.doc.id] || 0;
+
+                if (change.type === 'added') {
+                    tabItemCounts.current[change.doc.id] = currentCount;
+                    if (currentCount > 0) {
+                        triggerAlert({
+                            id: change.doc.id,
+                            orderNumber: `R-${change.doc.id.substring(0, 5).toUpperCase()}`,
+                            totalPrice: data.pendingBalance || data.preOrderTotal || 0,
+                            customerName: data.userName || data.customerName,
+                            ...data
+                        });
+                    }
+                } else if (change.type === 'modified') {
+                    if (currentCount > prevCount) {
+                        tabItemCounts.current[change.doc.id] = currentCount;
+                        triggerAlert({
+                            id: change.doc.id,
+                            orderNumber: `R-${change.doc.id.substring(0, 5).toUpperCase()} (EK SİPARİŞ)`,
+                            totalPrice: data.pendingBalance || data.preOrderTotal || 0,
+                            customerName: data.userName || data.customerName,
+                            ...data
+                        });
+                    }
+                } else if (change.type === 'removed') {
+                    delete tabItemCounts.current[change.doc.id];
+                }
+            });
+        });
+
+        return () => {
+            unsubOrders();
+            unsubTabs();
+        };
     }, [admin?.adminType, enabled, triggerAlert]);
 
     return null; // Invisible component — renders nothing

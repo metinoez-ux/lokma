@@ -1,8 +1,6 @@
- /$unit
- · $typeLabel
- · ${cuisineType != null && cuisineType!.isNotEmpty ? cuisineType : sectorLabel}
- · ${cuisineType != null && cuisineType.isNotEmpty ? cuisineType : typeLabel}
-"$_promoCode" kodu aktif edildi! 🎉
+"$label" adresini silmek istediğinize emin misiniz?
+"$name" olarak favorilere eklendi
+"${_searchQuery}" icin sonuc yok
 "${participant.name}" adlı katılımcıyı gruptan çıkarmak istiyor musunuz?\n\nEklediği ürünler kaldırılacak.
 #$customerId
 #$displayId
@@ -11,565 +9,589 @@
 #$posNum
 #$positionNumber
 #${(data[
+#${group.rawOrderNumber} - ${group.businessName}
+#${o.orderNumber ?? o.id.substring(0, 6)}
 #${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}
+#${order.orderNumber ?? order.id.substring(0, 6)}
 %${day.maxRainProbability.round()}
 %${weather.rainProbability}
 (${sectionTables.length})
-+${deliveryFee.toStringAsFixed(2)} €
 +${items.length - 3} ürün daha
-+${order.items.length - 3} ürün daha
-+${pfandTotal.toStringAsFixed(2)} €
-- $butcherName
--€${session.paidTotal.toStringAsFixed(2)}
-15 dakikadır hiçbir ürün sipariş etmediniz. Masanın yeni müşterilere açılabilmesi için lütfen siparişinizi tamamlayınız veya masayı boşaltınız.
-15 dakikadır siparişinizi tamamlamadınız. Masanın başka müşterilere açılabilmesi için masa numaranız sıfırlanmıştır.
-1987 yılında Köln\
-4 haneli PIN girin
-6 haneli doğrulama kodunu girin
-6 haneli kodu girin
-AD.
++${o.tipAmount.toStringAsFixed(2)} bahsis
++${parent._donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
++${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
++${pfandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
+- $bName
+-${CurrencyUtils.getCurrencySymbol()}${session.paidTotal.toStringAsFixed(2)}
+-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
+-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
+-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
+/$unit
+15 dk
+30 dk
+ABHOLUNG
+ANZ.
 ARA
-Abbrechen
+ARTIKEL
 Acil Anons
 Acil Park Anonsu
-Acil anons gönderildi!
-Admin panelinden işletme ataması yapılmalı
-Adres bilgilerini doldurun
-Adres bulunamadı
-Adres doğru değil / Müşteriye ulaşılamadı
-Adres kopyalandı
+Adres Etiketi
 Adım ${_currentStep + 1} / 5
 Adınız
-Afiyet olsun
 Ailecek Sipariş Başlat
 Ailecek sipariş özelliği yakında kullanıma sunulacak!
-Akdeniz Toros (Türkiye)
-Aksiyon Kodu
-Aktif Rezervasyonlar
-Aktif Siparişinize Dönün
-Aktif Teslimat
-Aktif sipariş yok
+Aktif Rezervasyonunuz Bulundu
 Ana Sayfaya Dön
+Anladim
 Anladım
-Apple Haritalar
-Ara Toplam
 Ara Toplam: 
-Aranıyor...
-Atanmış İşletmeler
-Avantajlar
-Avrupa\
-Ayrıl
+Atla
 Açık
-Açık İşletmeleri Bul
-BAŞLA
-Bağlan
-Bağlantı Hatası: $e
-Bekleyen Teslimatlar
-Bekleyen teslimat yok
+Bagis yapmak isterseniz bir tutar secin
+Bahşiş Gönder 💝
 Benim Masalarım
-Benim Toplamım
+Benim Toplamim
 Bildirim Ayarları
-Bildirim ayarları kaydedildi
-Bildirimler
-Bilgi yüklenirken hata oluştu.
 Bilgileri Güncelle
 Bilgilerim & Adres
-Bilgileriniz başarıyla güncellendi
-Bir hata oluştu
-Bir hata oluştu.
-Bir işletmeye atanmış olmanız gerekiyor
-Bir şey mi unuttun?
-Birden fazla kişi mi sipariş verecek?
-Bitir
-Bize ulaşmak için:
 Boş masa
 Bu Ay Zaten Değerlendirdiniz
 Bu QR kodu tezgah personeline gösterin
-Bu filtrelerle rezervasyon yok
-Bu işletmede masada olduğunuzu onaylıyor musunuz?
-Bu kodu masadaki diğer kişilerle paylaşın.\nGruba katılmak için bu PIN gerekli.
-Bu kodu müşteriye verin.\nMüşteri bu kodla siparişlerini takip edebilir.
 Bu kriterlere uygun market bulunamadı
 Bu masa için aktif sipariş yok
-Bu masada $participantCount kişilik aktif bir grup siparişi var.
-Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak için PIN kodunu girin.
 Bu mesaj kermesteki tüm kullanıcılara push bildirim olarak gönderilecek.
 Bu park alanını silmek istediğinize emin misiniz?
-Bu rezervasyonu iptal etmek istediğinize emin misiniz?
+Bu restoranda bugün için bir rezervasyonunuz/ön siparişiniz var. Masaya giriş yapıp adisyonunuz üzerinden siparişe devam etmek ister misiniz?
 Bu sayfaya erişmek için işletme yöneticinize başvurun
-Bu siparişi üstlenmek istediğinize emin misiniz?\n\n
-Bu tarih için uygun saat bulunamadı
-Bu tarihte teslim edilecektir.
 Bu vardiyada hangi görevleri üstleneceksiniz?
 Bu vardiyada servis yapacağınız masaları seçin
-Bugün Toplam
-Bugün henüz teslimat yok
+Bugun Toplam
 Bugün: ${completedOrders.length}
 Bugün: ${completedOrders.length} teslimat
 CANLI
+Calisma
 Catering Hizmetleri
 Catering fiyatları üyelere özeldir
 Catering hizmeti veren işletmeler henüz eklenmedi
-DOLU
-Daha Fazla Göster
 Depozito ($pfandCount adet)
 Depozito ($pfandCount)
-Dernek Seç
-Detaylı saat bilgisi için işletmeyi arayın.
-Devam Et
-Değerlendirme Yap
-Değerlendirmeniz kaydedildi. Teşekkürler! 🎉
+Designed & Developed by
 Değişiklikleri Kaydet
-Değiştir
-Dieser Artikel ist zurzeit nicht verfügbar.
 Dikkat!
-Dilinizi seçin. Daha sonra profilden değiştirebilirsiniz.
 Diğer
 Diğer Kermesleri Keşfet
 Diğer Masalar
 Diğer Masalar (${unassigned.length})
-Doğrulama ID bulunamadı
-Düzenle
+Dr. Hep Sahin Vakfi
 Düğün • Nişan • Sünnet • Toplantı
-E-posta kopyalandı
-E-posta ve şifre gerekli
 Ekle
 Eklemek İstediğiniz Not
-Et ürünlerimiz, soğuk zincir kırılmadan özel korumalı kutularda maksimum hızla size ulaştırılır.
-Evet, Başlat
-Evet, Oturumu Kapat
-Evet, Yola Çıkıyorum
-Evet, İptal Et
+Evet
 Farklı Kermes Siparişi
 Farklı bir arama terimi deneyin
-Favorilerim
-Filtrele
+Favori
+Favoriler
+Favorilerden kaldirildi
+Favoriye Ekle
 Filtreler
-Filtreleri Temizle
 Filtreleri değiştirmeyi deneyin
 Fiyatları Görmek İçin Giriş Yapın
-Fresh. Fast. Local.
-FİYAT
+Fotoğrafı Büyüt
 G
-GEL AL
 GENEL TOPLAM
-Garson siparişlerine bağlandınız! ✓
+GRATIS
+Garson masanıza gelip hesabı alacaktır.
 Garson siparişlerine bağlı (${_linkedSession!.waiterName})
 Garson: ${session.waiterName} • PIN: ${session.pin}
-Gel Al
-Gel Al $pickupStartTime\
+Gel-Al
+Genel Toplam
 Geri Bildirim
-Geri bildirim için giriş yapmalısınız.
 Geri bildiriminiz anonim olarak işlenir.
-Geri bildiriminiz için teşekkürler! 🙏
-Gesponsert
-Geç
-Geçerli bir masa numarası girin
-Geçmiş Rezervasyonlar
+Giris yapiniz
 Giriş Gerekli
-Giriş Yap
-Giriş hatası: $e
-Giriş yapmalısınız
-Giriş yapmanız gerekiyor.
-Gizlilik Politikamızı
-Gizlilik Politikası yakında eklenecek
-Google API Hatası: ${data[
-Google Maps
-Google giriş hatası: $e
-Google harita uygulaması
-Gruba Katıl
-Gruba katılırken hata: $e
-Grubu İptal Et
-Grup PIN Kodu
-Grup Siparişi Başlat
+Gratis
+Grup
 Grup Siparişi Oluşturuldu!
-Grup oluşturulurken hata: $e
-Grup siparişi iptal edildi
-Grup siparişinden ayrılmak istediğinize emin misiniz?\n\nEklediğiniz ürünler kaldırılacak.
-Grup siparişini iptal etmek istediğinize emin misiniz?\n\nTüm katılımcılar gruptan çıkarılacak.
-Grup yöneticisi tarafından oturumdan çıkarıldınız.
 Gruptan Ayrıl
-Gruptan ayrıldınız
 Gönder
 Görev Seçimi
-Görevler
 Görmek istediğin sektörleri seç
-Güncelle
 GİT
 HADEF
-Haftalık Çalışma Saatleri
-Harita Uygulaması Seçin
 Haritayı Seç
-Hata oluştu. Tekrar deneyin.
+Hassas Konuma Git
 Hata: $e
-Hata: ${error.message ?? error.code}
-Hata: ${snapshot.error}
 Hava Durumu
-Hayır
-Hayır, tek başıma sipariş vereyim
-Henüz bildiriminiz yok.
-Henüz işletme atanmamış
-Henüz rezervasyonunuz yok
+Hayir icin Yuvarlama
+Henuz tahsilat yok
+Henüz kayıtlı adresiniz yok
+Henüz mesaj yok
+Henüz sipariş vermediniz.
 Henüz sipariş yok
 Henüz vardiya kaydı yok
-Henüz yorum yapılmamış.
-Henüz ürün eklemediniz
 Her ay bir kez geri bildirim verebilirsiniz.\nGelecek ay tekrar değerlendirebilirsiniz!
-Hesabı Göster
+Hesabinizi yuvarlayarak Dr. Hep Sahin Vakfi\
+Hesabı Nasıl Ödemek İstersiniz?
 Hesabım
-Hesabımı Öde
+Hesabınız alındı.\nAfiyet olsun!
 Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz silinecektir.
-Hesap
-Hesap Oluştur
-Hesap oluşturarak sipariş geçmişinizi kaydedin ve bir sonraki siparişinizde kolayca erişin!
-Hesap oluşturmak zorunlu değil — sadece gruba isminizle katılın.
-Hızlı Filtreler
-KART SAHİBİ
+Hesap istenirken hata oluştu: $e
+Hesap talebiniz iletildi. Bizi tercih ettiğiniz için teşekkürler!
+Impressum
+Islemler
+Isletme Bazinda
 KERMESİ KAYDET
-KURYE
+KURIER
 Kahve Shop
+Kalan ${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)} tutarı (${session.unpaidCount} kişi) ödemek üzeresiniz. Lütfen ödeme yöntemini seçin.
 Kalan Hesap
-Kalan €${session.remainingBalance.toStringAsFixed(2)} tutarı (${session.unpaidCount} kişi) ödemek üzeresiniz. Lütfen ödeme yöntemini seçin.
-Kalan: €${session.remainingBalance.toStringAsFixed(2)}
+Kalan: ${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}
+Kampanya
 Kapat
-Kart ile
-Kart ile Öde
-Kart paylaşımı yakında aktif olacak!
-Kart ödemesi yakında aktif olacak!
-Kasaya teslim edilecek nakit
 Kategoriler
 Katılımcılar bu süre içinde sipariş verebilir
-Katılımcıyı Çıkar
-Kaydedilirken hata oluştu: $e
 Kaydediliyor...
 Kaydet
-Kendi hesabınız olan €${groupState.myParticipant!.subtotal.toStringAsFixed(2)} tutarını ödemek için lütfen bir yöntem seçin.
+Kendi hesabınız olan ${CurrencyUtils.getCurrencySymbol()}${groupState.myParticipant!.subtotal.toStringAsFixed(2)} tutarını ödemek için lütfen bir yöntem seçin.
 Kermes
 Kermes Adresi
-Kermes Menüsüne Dön
-Kermes Toplamı
 Kermes alanındaki kasada bu QR kodu göstererek nakit ödeme yapabilirsiniz.
-Kermes başarıyla eklendi! Onay bekleniyor.
 Kermes bilgilerini eksiksiz doldurun. Eklenen kermes admin onayından sonra yayınlanacaktır.
-Kermes bulunamadı
-Kermes etkinlikleri\nStantlar & ön sipariş
-Kermes menüsünden sipariş verin
-Kişi Bazlı
-Kişi Sayısı
-Kodu Tekrar Gönder
+Kermes bulunamadi
 Konum Bul
 Konum alınamadı: $e
-Konum hatası: $e
-Kopyala
 Kopyalandı
+Kredi Kartı ile Şimdi Öde
 Kullanıcı bilgileri yüklenemedi: $e
-Kullanım Koşulları yakında eklenecek
-Kullanım Koşullarımızı
-Kuru Yolum Nedir?
+Kurye
 Kurye Değerlendirmesi
 Kurye Siparişleri
-Kurye Takibi
-Kurye için minimum sipariş tutarı: ${minOrder.toStringAsFixed(0)} €
-Kurye konumu bekleniyor...
-Kurye teslimatı için adres seçimi yakında eklenecek.
 Kurye: ${widget.event.deliveryFee > 0 ? 
+Kuryenize mesaj gönderin
 LOKASYON
 LOKMA
-LOKMA Cüzdan
-Link Oluştur
-Link kopyalandı!
 Link oluşturulduktan sonra WhatsApp ile paylaşabilirsiniz
 Link panoya kopyalandı! WhatsApp\
-Lütfen e-posta adresinizi girin
-Lütfen en az 3 karakter girin.
-Lütfen en az bir kategoriyi puanlayın.
-Lütfen giriş yapın
-Lütfen işletmeden onay bildirimini bekleyin. 
-Lütfen işletmeyi puanlayın
-Lütfen masa numaranızı girin
+Lutfen bir isim secin veya yazin
 Lütfen tezgahta personel ile iletişime geçin.
-Lütfen yöneticinize başvurun
 MEMBER
 MENÜ
-MEVCUT KONUM
-Manuel masa numarası gir
 Market, ürün veya şehir ara...
-Marketler
 Masa $_scannedTableNumber
-Masa $_scannedTableNumber  ✓
 Masa $_scannedTableNumber${_scannedBusinessName != null ? 
-Masa $_selectedTable için PIN:
-Masa $_selectedTable siparişi mutfağa gönderildi!
 Masa $_tableNumber
 Masa $tableNum
-Masa $tableNum doğrulandı ✓
-Masa $tableNum seçildi ✓
-Masa $tableNum — $businessName
-Masa $tableNum — Aktif Grup Siparişi
 Masa $tableNum — Siparişler
 Masa $tableNumber
-Masa $tableNumber için yeni sipariş oturumu başlatmak istiyor musunuz?
 Masa $tableNumber — Toptan Hesap
 Masa ${session.tableNumber}
-Masa ${session.tableNumber} Hesabı
-Masa ${session.tableNumber} hesabı kapatıldı!
 Masa ${session.tableNumber} • ${session.waiterName}
-Masa ${tableCardNumbers.join(
-Masa ${widget.tableNumber}
 Masa Durumu
-Masa Hesabını Öde
 Masa Kart Numaranız
 Masa Numaraları
-Masa Numarası
-Masa PIN Kodu
-Masa Rezervasyonlarım
-Masa Rezervasyonu
-Masa Servisleri
 Masa Seçimi
 Masa Toplam
-Masa numaranızı girerek doğrudan mutfağa sipariş verebilirsiniz.
-Masada Sipariş
-Masada sipariş modu aktif! Menüden ürün ekleyin.
-Masanızdaki QR Kodu Okutun
-Masanızdaki QR kodu okutun
-Masanızdan Sipariş Verin
+Masa yonetimi aktif degil
+Masaya Giriş Yap (Adisyona Devam)
 Mağaza Türleri
+Menuye giderek urunleri sepetine ekle
 Menü ve\nSipariş
-Menü Öğesi Ekle
 Menüde ürün bulunmuyor
-Menüden sipariş verin veya\ngarson PIN ile bağlanın
-Menüye git →
-Menüyü Aç
-Menüyü Gör
 Menüyü Gör & Sipariş Ver
 Mesafe:
-Min. ${data![
-Min. ${minOrder.toStringAsFixed(0)} € ✓ Teslimat için yeterli
-Min. ${minOrderAmount.toStringAsFixed(0)}€
-Misafir giriş hatası: $e
-Misafir olarak devam et
+Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}
+Min. ${parseSafelyDouble(data?[
 Mola
-Molayı Bitir ve Üstlen
+Mola Ver
 Monte Bueno & diğer markalar\nOnline Shop
-Mutfağa Gönder • $_cartItemCount ürün • €${_cartTotal.toStringAsFixed(2)}
-MÜŞTERİ NO
+Mutfağa Gönder • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}
 Müsait Park Alanı
 Müsait park alanı
-Müşteri Kartınız
-Müşteri kendi telefonundan ödeme yapacak
-Müşteri Öder (Online)
-Müşteriye verilecek masa kartını seçin
+Müşteriden 4 haneli teslimat PIN kodunu isteyin.
+Müşterinin konumuna doğru yürüyün
 NAVİGASYON
-Nakit Öde
+NFC Ödeme
+Nakit (Garson Çağır)
 Nakit Ödeme
 Nasıl Almak İstersiniz?
 Nasıl sipariş vermek istersiniz?
-Nasıl Çalışır?
-Nerede rezervasyon yapmak istersiniz?
-Nicht verfügbar
-Notlar
+Ne kadar süre durdurmak istiyorsunuz?
 ONLİNE SİPARİŞ
 Onayla
-Onaylıyorum
-Opsiyonel
-Oturum yenilenemedi. Lütfen tekrar katılın.
-Oturumu Kapat
+One Cikanlar
 P
 P${index + 1}
 PIN
 PIN hatalı veya oturum bulunamadı
-PIN kopyalandı
-Paketinizde bu özellik aktif değil. Lütfen yöneticinizle iletişime geçin.
+PREIS
 Parayı müşteriden tahsil ettiniz mi?
 Park Alanı ${index + 1} Düzenle
 Park Alanı Ekle
 Park Alanını Sil
 Park Bilgisi
 Park Ekle
-Park alanı eklendi
-Park alanı silindi
 Park bilgisi bulunamadı
 Park İmkanları
 Personel yetkisi bulunamadı
-Premium kalite. %100 Yerli.
-Produktinfo
-Puan Ver
-QR Sipariş
-QR Tarayıcı yakında aktif olacak!
-QR ile Sipariş Ver
-QR kod ile doğrulandı ✓
-QR kodu okutarak hızlıca sipariş verebilir veya masa rezervasyonu yapabilirsiniz
+Preis/kg
+QR-Code am Tisch scannen
 R
-Reddet
+Reklam
 Rezervasyon
-Rezervasyon Talebi Gönder
-Rezervasyon Talebiniz Alındı!
 Rezervasyon bulunamadı
-Rezervasyon iptal edildi
-Rezervasyon yapılabilecek işletme bulunamadı
-Rezervasyonlar
-Rezervasyonlar yüklenirken hata oluştu
-Rezervasyonu İptal Et
 SAAT
 SAATLİK TAHMİN
-SMS Hatası: $e
-SMS ile doğrulama kodu gönderilecek
-Saat
-Saat bilgisi boş.
-Saat formatı desteklenmiyor.
+Sadece Tuna onaylu kermesler
 Sahipsiz masalar: ${orphans.join(", ")}
 Sebep: $reason
 Sepet ${widget.event.city} için güncellendi
-Sepet yüklenirken hata oluştu
-Sepeti Değiştir
 Sepeti Görüntüle
 Sepetiniz boş
 Sepetinizde "$currentKermesName" kermesinden ürünler var.
-Sepetinize Eklendi!
-Servis Edildi
 Seçilen Dernek:
 Seçimimi Tamamla (${myItems.where((i) => !i.isSubmitted).length} yeni ürün)
+Sifirla
 Sil
 Sipariş #$displayOrderId masaya servis edildi olarak işaretlenecek.\n\n
 Sipariş #${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}
-Sipariş Alındı!
-Sipariş Başlat
 Sipariş Ekle
-Sipariş No: ${order.id}
 Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}
-Sipariş No: ${orderId.substring(0, 6).toUpperCase()}
 Sipariş Numarası
 Sipariş Süresi
 Sipariş Türü
-Sipariş Ver • $_cartItemCount ürün • €${_cartTotal.toStringAsFixed(2)}
+Sipariş Ver • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}
 Sipariş alacağınız masayı seçin
 Sipariş almak için bir işletmeye atanmış olmanız gerekir.
 Sipariş bildirimlerini kapatırsanız, siparişleriniz hakkında önemli güncellemeleri alamazsınız.\n\nDevam etmek istiyor musunuz?
 Sipariş bulunamadı
-Sipariş gönderilemedi: $e
-Sipariş hatası: $e
-Sipariş numarası kopyalandı
-Sipariş oluşturulamadı: $e
-Sipariş oturumu bulunamadı veya süresi dolmuş.
 Sipariş tekrar havuza düşecek.
 Sipariş verirken hangi ödeme yöntemlerini kullanmak istediğinizi seçin.
-Sipariş vermek için giriş yapmalısınız
-Sipariş vermek için masanızdaki QR kodu taratın
-Sipariş yok
-Sipariş Özeti
 Sipariş İptal Edildi
 Sipariş İptali
-Sipariş: ${order.id}
 Sipariş: ${widget.orderNumber}
 Siparişe Devam Et
-Siparişi Görüntüle
-Siparişi Onayla
-Siparişi aldınız ve yola çıkıyor musunuz?
 Siparişi nasıl teslim ettiniz?
-Siparişimi Değiştir
-Siparişiniz ${order.kermesName} Kermesi\
+Siparişin teslim edildi!
+Siparişiniz adisyona eklendi!
 Siparişiniz hazırlanmaya başladığı için artık iptal edilemiyor. 🍳
-Siparişiniz henüz tamamlanmadı. Teslim edildikten sonra puan verebilirsiniz.
 Siparişiniz için bilgilerinizi girin
-Siparişiniz mutfağa gönderildi! 🎉
 Siparişiniz ödeme yapıldıktan sonra\nhazırlanmaya başlanacaktır
 Siparişinizi iptal etmek istediğinize emin misiniz?
 Siparişinizi nasıl almak istersiniz?
-Siparişlerim
+Siparişleriniz hazırlanıyor veya masanıza servis edildi.
 Son güncelleme: ${_formatTime(order.lastLocationUpdate!)}
-Sonra Ödeyeceğim
 Sonuç bulunamadı
-Sonuçları Filtrele
-Soğuk Zincir Teslimat
-Sponsor Yok
-Sürücü yetkisi bulunamadı
+Suchergebnisse (${searchResults.length})
 SİPARİŞ İPTAL EDİLDİ
-Sıfırla
-Sıkça Sorulan Sorular
+Sık kullandığınız adresleri kaydedin,\nsipariş verirken hızlıca seçin
 Sıralama
 TARİH
-TEŞEKKÜR EDERİZ!
+TESLİMAT TAMAMLANDI
 TOPLAM
 TUNA
-TUNA Kasaplar
-Takvim dosyası açılamadı
-Takvime Ekle
 Tamam
-Tamam, Anladım
-Tarih
-Tedarik Standartları
-Tek Kişi Sipariş
-Tekrar Sipariş Ver
-Tekrarla
-Telefon açılamadı
-Telefon numarası bulunamadı
-Telefon numarası gerekli
 Temizle
-Teslimat $deliveryStartTime\
-Teslimat Ücreti
-Teslimat üstlenmek için molanız sonlandırılacak.\n\n
+Teslim Edilecek Siparisler
+Teslimat PIN Doğrulama
+Teslimat PIN: Müşteriden isteyin
 Teslimatlarım
-Teslimatı Üstlen
 Toplam
 Toplam Hesap
 Toplam Tutar
-Toplam Ürünler
-Toplam:
-Tuna Et Mamülleri (Avrupa)
-Tuna Kasaplarını Göster
 Tükendi
-Tüm Siparişler
-Tüm katılımcılar henüz hazır değil
 Tümü
-Uygulama Dili / Language
-Vardiya Tamamlandı
+Unsere Fleischprodukte werden in speziellen Schutzboxen geliefert, ohne die Kühlkette zu unterbrechen.\n\nWährend der Lieferung bleiben Ihre Produkte gekühlt und frisch.
+Uygulama üzerinden hızlı ve güvenli ödeme.
+VIELEN DANK!
 Vardiya geçmişi yüklenemedi: $e
-Vardiyayı Bitir
-Vardiyayı sonlandırmak istediğinize emin misiniz?
 Varsayılan
-Varsayılan iOS harita uygulaması
 Vazgeç
-WhatsApp açılamadı. Link panoya kopyalandı.
 YETKİLİ KİŞİ
 Yakında Catering İşletmeleri
 Yakınlaştırmak için sıkıştırın
-Yanlış PIN kodu girdiniz. Lütfen grup siparişini başlatan kişiye kodu sorun.
-Yardım
-Yardıma mı ihtiyacınız var?
-Yemek nasıldı? ${widget.businessName}
-Yemek veya restoran ara...
-Yemek, restoran veya mutfak ara...
+Yeni Ekle
 Yeni Kermes Ekle
 Yeni Park Alanı
-Yeni Sipariş
 Yetkili Kişi
-Yol Tarifi
-Yolda
-Yorum Yazın
-Yorumlar
 Yükleniyor...
-Zaman Aşımı Uyarısı
-Zutaten / Tags
-ab €${product.price.toStringAsFixed(2)}${isByWeight ? 
+\u2744\uFE0F
+\ud83c\udf81
+ab ${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}
+business_details.about_us
+cart.apply
 cart.cart_empty
+cart.delivery_fee
 cart.have_a_problem
 cart.helper_can_assist
 cart.login
 cart.login_required
 cart.login_to_see_orders
-cart.my_cart
 cart.no_active_orders
+cart.note_allergy_disclaimer
+cart.note_food_label
+cart.note_recipient_hint_desc
+cart.note_recipient_label
+cart.pickup
+cart.please_enter_street_city
+cart.please_select_pickup_time
+cart.privacy_coming_soon
+cart.privacy_policy
 cart.rate
 cart.reorder
 cart.select_business
 cart.show_on_map
+cart.single_person_order
 cart.start_chat
+cart.start_group_order
+cart.table_group_order
+cart.table_number
+cart.table_verified
+cart.terms_coming_soon
+cart.terms_of_use
 cart.total_paid
 cart.user_info_error
 cart.view_order
 cart.view_receipt
+cart.your_note
+checkout.add_new_address
+checkout.business_closed_schedule
+checkout.calendar_prompt
+checkout.cancel
+checkout.cart_title
+checkout.confirm
+checkout.confirm_address
+checkout.confirm_address_data
+checkout.coupon_discount
+checkout.delivery_fee
+checkout.delivery_notes
+checkout.delivery_time_label
+checkout.donation
+checkout.donation_charity_ref
+checkout.donation_learn_more
+checkout.donation_sheet_body
+checkout.donation_sheet_title
+checkout.donation_subtitle
+checkout.donation_title
+checkout.done
+checkout.find_me
+checkout.find_my_location
+checkout.first_name
+checkout.go_back
+checkout.last_name
+checkout.legal_disclaimer_and
+checkout.legal_disclaimer_prefix
+checkout.legal_disclaimer_privacy
+checkout.legal_disclaimer_suffix
+checkout.legal_disclaimer_terms
+checkout.move_pin_instruction
+checkout.no_available_slots
+checkout.no_thanks
+checkout.or_search
+checkout.order_details
+checkout.order_summary
+checkout.out_of_range_body
+checkout.out_of_range_title
+checkout.payment_methods
+checkout.payment_title
+checkout.phone
+checkout.pickup
+checkout.pin_moved_far_warning
+checkout.required
+checkout.save
+checkout.save_and_use
+checkout.save_calendar
+checkout.save_to_calendar
+checkout.scheduled_calendar_hint
+checkout.scheduled_info
+checkout.scheduled_tracking_info
+checkout.select_delivery_address
+checkout.select_delivery_time_first
+checkout.select_on_map
+checkout.select_payment_first
+checkout.select_payment_method
+checkout.set_delivery_location
+checkout.subtotal
+checkout.tip
+checkout.tip_custom
+checkout.tip_info_body
+checkout.tip_info_dismiss
+checkout.tip_info_title
+checkout.tip_subtitle
+checkout.tip_title
+checkout.title
+checkout.total
+checkout.try_different_location
+checkout.understood
+checkout.use_only
+checkout.use_wallet
+checkout.vouchers
+checkout.wallet
+checkout.welcome_discount
+checkout.when
+checkout.your_details
+common.address
+common.cancel
+common.change
+common.close
+common.confirm
+common.continue_button
+common.give_up
+common.no_results
+common.ok
+common.ok_got_it
+common.operation_failed
+common.save
+common.understood
+common.yes_cancel
+driver.earnings_bank_saved
+driver.earnings_bank_title
+driver.earnings_confirm_and_enable
+driver.earnings_deliveries_count
+driver.earnings_delivery_tip_history
+driver.earnings_iban_must_be_yours
+driver.earnings_legal_accept
+driver.earnings_legal_info
+driver.earnings_min_payout
+driver.earnings_my_earnings
+driver.earnings_no_deliveries
+driver.earnings_not_logged_in
+driver.earnings_payout_description
+driver.earnings_payout_label
+driver.earnings_payout_saved
+driver.earnings_payout_title
+driver.earnings_please_accept_legal
+driver.earnings_privacy_notice
+driver.earnings_save
+group_order.join_group
+home.added_to_cart
+home.categories
+home.my_orders
+home.reorder
+home.repeat
+home.search_hint
 info@lokma.shop
+marketplace.active_group_at_table
+marketplace.active_group_desc
+marketplace.added_to_cart
+marketplace.additives
+marketplace.allergens
+marketplace.back_to_menu
+marketplace.bon_appetit
+marketplace.business_hours
+marketplace.business_hours_not_entered
+marketplace.business_type_${data![
+marketplace.call_store_for_hours
+marketplace.clear_filters
+marketplace.cold_chain_delivery
+marketplace.cold_chain_label
+marketplace.cold_chain_short_desc
+marketplace.create_group_error
+marketplace.cuisine
+marketplace.currently_closed
+marketplace.disclaimer_text
+marketplace.enter_table_manually
+marketplace.error
+marketplace.error_occurred
+marketplace.filter_tuna_verified
+marketplace.find_open_businesses
+marketplace.find_us
+marketplace.forgot_something_de
+marketplace.group_create_error_msg
+marketplace.group_order_active_info
+marketplace.group_order_active_warning
+marketplace.hours_cannot_display
+marketplace.hours_loading
+marketplace.hours_not_found
+marketplace.if_product_unavailable
+marketplace.info_load_error
+marketplace.join_group
+marketplace.join_group_error
+marketplace.kuru_yolum_full_desc
+marketplace.legal_report_confirm_text
+marketplace.legal_report_error
+marketplace.legal_report_privacy
+marketplace.legal_report_submit
+marketplace.legal_report_success_body
+marketplace.legal_report_success_title
+marketplace.markets
+marketplace.min_order_add_text
+marketplace.multiple_people_ordering
+marketplace.no_info_available
+marketplace.no_open_partners_body
+marketplace.no_open_partners_title
+marketplace.no_results_found
+marketplace.no_review_yet
+marketplace.online_table_reservation_badge
+marketplace.open_maps
+marketplace.open_partners_map_title
+marketplace.order_from_kermes
+marketplace.payment_error
+marketplace.phone_label
+marketplace.product_info
+marketplace.production_standards
+marketplace.promo_applied
+marketplace.report_legal_concerns
+marketplace.reviews
+marketplace.reviews_count
+marketplace.same_as_general
+marketplace.scan_qr_to_order
+marketplace.session_timeout_message
+marketplace.session_timeout_warning
+marketplace.single_order
+marketplace.sponsored_de
+marketplace.start_group_order
+marketplace.supply_standards
+marketplace.table_at_business
+marketplace.table_selected
+marketplace.table_verified
+marketplace.tuna_subtitle
+marketplace.unavailability_info_text
+marketplace.weekly_hours
+marketplace.what_if_unavailable
+marketplace.what_is_kuru_yolum
+marketplace.yes_close_session
+marketplace.your_cart_is_empty
+masa.preorder_desc
+masa.preorder_no
+masa.preorder_title
+masa.preorder_yes
+notification.open_map
+notifications.cancel
+notifications.delete
+notifications.delete_permanently
+notifications.delivery_address_label
+notifications.filter_all
+notifications.filter_orders
+notifications.filter_promotions
+notifications.filter_reservations
+notifications.items_selected
+notifications.notification_trashed
+notifications.payment_method_label
+notifications.products_header
+notifications.rate_business
+notifications.rate_courier
+notifications.rating_saved
+notifications.restore
+notifications.restored
+notifications.submit_rating
+notifications.total
+notifications.trash
+notifications.trash_empty
+notifications.trash_selected
+order_confirmation.estimated_time
+order_confirmation.notification_reminder
+order_confirmation.ok_button
+order_confirmation.served_at_table
+order_confirmation.title
+orders.cancel
 orders.delivery_photo
+orders.delivery_pin
+orders.delivery_pin_info
+orders.delivery_proof
+orders.favorite_name_title
+orders.favorite_removed
+orders.favorite_saved
+orders.leave_tip
 orders.login_button
 orders.login_prompt
 orders.my_order
@@ -577,10 +599,15 @@ orders.no_active_orders
 orders.no_orders_subtitle
 orders.no_orders_title
 orders.order_detail
+orders.order_number
+orders.order_number_label
 orders.rate_order
 orders.reorder
+orders.save
+orders.send_message
 orders.tap_to_enlarge
 orders.their_order
+orders.tip_send_failed
 orders.title
 orders.total
 orders.total_group
@@ -588,157 +615,115 @@ orders.total_my_share
 orders.track_courier
 orders.view_order
 profile.account_deleted
-profile.apple_coming_soon
-profile.camera
+profile.active_reservations
+profile.can_make_reservation_from_business_page
 profile.cancel
-profile.choose_from_gallery
-profile.continue_as_guest
 profile.delete
 profile.delete_account
-profile.gallery
-profile.login_register_button
-profile.login_subtitle
+profile.delete_address
+profile.error_loading_reservations
+profile.invite_friend
+profile.invite_reward
 profile.logout
 profile.my_account
-profile.profile_photo
-profile.staff_login
-profile.take_new_photo
+profile.my_table_reservations
+profile.no_reservations_yet
+profile.past_reservations
+profile.please_login
+profile.street_city_required
+profile.wallet_balance
+reservation.await_confirmation
+reservation.business_approval_required
+reservation.date_label
+reservation.no_slots_available
+reservation.notes_label
+reservation.optional
+reservation.party_size_label
+reservation.request_received
+reservation.slot_full_label
+reservation.slots_remaining
+reservation.table_reservation
+reservation.time_label
+sponsored_ads.buy_from_nearby
+sponsored_ads.go_to_store
+sponsored_ads.no_nearby_market
+sponsored_ads.searching_nearby
+sponsored_ads.sponsored
+staff.address_wrong_unreachable
+staff.cancel_reservation
+staff.card_payment_received
+staff.cash_handover
+staff.cash_reset_confirm
+staff.cash_reset_success
+staff.cash_reset_title
+staff.cash_to_business
+staff.must_be_assigned
+staff.no_business_assigned
+staff.no_reservations_filter
+staff.payment_not_collected
+staff.person_count
+staff.reject
+staff.reservations_title
+staff.start_order
+staff.table_card_select_desc
+staff.table_numbers
+staff.yes_on_my_way
 ~$etaMinutes dk
 ~${order.etaMinutes} dk
 Çalışma
-Çalışma Saatleri
 Çalışma Saatlerim
-Çalışma saatleri bilgisi bulunamadı.
-Çalışma saatleri bilgisi girilmemiş.
-Çalışma saatleri bilgisi yükleniyor...
-Çalışma saatleri görüntülenemiyor.
-Çıkar
 Ödeme Tamamlandı!
-Ödeme Tamamlandı! 🎉
 Ödeme Yöntemi
 Ödeme Yöntemleri
-Ödeme tamamlandı ✓
-Ödeme tamamlandı! Sipariş geçmişinize kaydedildi.
+Ödeme başarısız: $e
+Ödeme başarıyla alındı. Teşekkürler!
 Ödeme yapılamadı: $e
 Ödemeniz 2-3 iş günü içinde iade edilecektir.
 Ödemeniz iade edildi.
-Ödenen
-Ön Sipariş Aktif
-Önceden masa ayırtın
-Önceki masanıza hemen geçin
-Önceki oturum kapatıldı. Şimdi yeni bir başlangıç yapabilirsiniz.
-Önerilen
-ÜRÜN
-Ülke Seçin
-Üretim Standartları
-Ürün Notu
-Ürün bulunamadı
-Ürün yüklenemedi
-Ürünler
-Üstlen
-Üstlenebilecek teslimat yok
-İlk Park Alanını Ekle
-İndirim veya kampanya kodu girin
+Önce kart ödemesini NFC ile tahsil etmeniz gerekiyor.
+Özel Tutar
 İptal
 İptal Edilemiyor
-İptal Et
 İptal sebebini seçin:
-İslami usullere göre kesimi yapılan tavuğun, haşlama kazanı, ilaçlı ve yüksek sıcaklıkta su kullanılmadan tüylerinin temizlenmesi işlemidir. Kuru yolum işlemi uygulanan tavuklarda bakteri, toz ve necaset bulunmaz.
-İsminiz
-İsteğe bağlı - ${_commentController.text.length}/255
-İşletme Türü
-İşletme adresi bulunamadı
-İşletme bilgisi bulunamadı. Garsondan yardım isteyin.
 İşletme bulunamadı
-İşletme detay sayfasından masa rezervasyonu yapabilirsiniz
-İşletme onayı gereklidir
-İşletme Şu An Kapalı
-İşletmeleri Göster
-İşletmeyi Puanla
-Şifreler eşleşmiyor
-Şifremi Unuttum
-Şifreye ulaşamıyor musunuz? Masadaki mevcut sipariş oturumunu kapatıp baştan başlayabilirsiniz. Bu işlem mevcut gruptakilerin siparişe devam etmesini engeller. Devam etmek istiyor musunuz?
-Şifreyi Öğrenemiyorum / Oturumu Sıfırla
-Şu an kapalı, ama yine de menüye göz atabilirsiniz.
+Şimdilik geç
+Şu an müsait zaman dilimi bulunamadı.
 • ${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)} ${item.unit} ${item.name}
-€${((item[
-€${(data[
-€${(item.price * item.quantity).toStringAsFixed(2)}
-€${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}
-€${cart.totalAmount.toStringAsFixed(2)}
-€${ci.unitPrice.toStringAsFixed(2)}
-€${grandTotal.toStringAsFixed(2)}
-€${item.totalPrice.toStringAsFixed(2)}
-€${item.unitPrice.toStringAsFixed(2)} × ${item.quantity}
-€${kermesCart.totalAmount.toStringAsFixed(2)}
-€${myParticipant!.subtotal.toStringAsFixed(2)}
-€${myParticipant.subtotal.toStringAsFixed(2)}
-€${myTotal.toStringAsFixed(2)}
-€${order.totalAmount.toStringAsFixed(2)}
-€${p.subtotal.toStringAsFixed(2)}
-€${price.toStringAsFixed(2)}
-€${product.price.toStringAsFixed(2)}
-€${product.price.toStringAsFixed(2)} / ${product.unitType}
-€${product.price.toStringAsFixed(2)}${isByWeight ? 
-€${session.grandTotal.toStringAsFixed(2)}
-€${session.remainingBalance.toStringAsFixed(2)}
-€${total.toStringAsFixed(2)}
-€${unpaidTotal.toStringAsFixed(2)}
-⏳ Seçiyor
+€${threshold.toStringAsFixed(2)}
 ★ Popüler
-☕ Molanız Devam Ediyor
-⚠️ Teslimatı İptal Et
-✅ ${unpaidOrders.length} sipariş kart ile toptan ödendi! (€${grandTotal.toStringAsFixed(2)})
-✅ ${unpaidOrders.length} sipariş nakit olarak toptan ödendi! (€${grandTotal.toStringAsFixed(2)})
-✅ Kart ödeme alındı!
-✅ Kayıt başarılı! Doğrulama e-postası gönderildi.
-✅ Nakit ödeme alındı!
-✅ Park alanı eklendi!
-✅ Park alanı güncellendi!
-✅ Rezervasyon onaylandı!$cardStr
+✅ ${unpaidOrders.length} sipariş kart ile toptan ödendi! (${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)})
+✅ ${unpaidOrders.length} sipariş nakit olarak toptan ödendi! (${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)})
 ✅ Servis Ettim
-✅ Seçimi Tamam
-✅ Sipariş servis edildi!
-✅ TESLİMAT TAMAMLANDI
-✅ Teslimat tamamlandı!
-✅ Ödeme tercihleri kaydedildi
 ✅ Ödendi${data[
 ✅ Ödendi${order.paymentMethod == 
+✓ Doğrula
 ✓ Evet, Tahsil Ettim
-❌ Fotoğraf gerekli!
-❌ Mola sonlandırılamadı. Lütfen tekrar deneyin.
-❌ Teslimat iptal edildi
-❌ Teslimat zaten başka biri tarafından üstlenilmiş.
-🃏 Masa Kart Numarası Seçin
-🍳 Yeni Ürünleri Mutfağa Yolla
+🍽️ Masa Adisyonunuz
 🍽️ Servis Et
 🍽️ Servis Ettim
-🍽️ Siparişi Servis Et
 🎉 Catering Hizmeti
+🎉 Davet kodu uygulandı!
 👤 Müşteri
-💡 Güçlü şifre için:
 💡 İade tutarı 2-3 iş günü içinde hesabınıza yansıyacaktır. Bu teknik bir işlem süresidir.
-💰 ${cashTotal.toStringAsFixed(2)}€
+💰 ${cashTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}
+💰 ${totalTips.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()} ($tippedCount)
+💰 +${entry.tipAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}
+💰 +${order.tipAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}
 💰 Fiyat teklifi için iletişime geçin
-💳 ${cardTotal.toStringAsFixed(2)}€
+💳 ${cardTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}
+💳 Hesabı İste / Öde
 💳 Kart
-💳 Ödendi
-💵 ${cashTotal.toStringAsFixed(2)}€
-💵 Adım 1: Ödeme Tahsili
+💵 ${cashTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}
 💵 Nakit
 💵 Nakit Ödeme
 📍 $city
 📍 ${_selectedOrganization![
 📍 Adres
 📍 Adres Bilgileri
-📍 Kermes adresi eklendi!
-📍 Konum alındı!
 📝 ${item.itemNote}
 📝 Açıklama
 📝 Görüşleriniz Bizim İçin Değerli
-📤 Fotoğraf yükleniyor...
-📧 Şifre sıfırlama e-postası gönderildi
-📱 SMS kodu gönderildi
+📱 Kart ile Tahsil Et
 📷 Resimler
 📷 Resimler (Max 3)
 🔍 Adres Ara (Google)
@@ -746,9 +731,6 @@ profile.take_new_photo
 🕌 Dernek Seç
 🚀 Hızlı Ekle
 🚗 YOL AL
-🚗 Yola Çık
-🚗 Yoldasınız! İyi teslimatlar.
-🚚 Kurye şu an hizmet vermiyor
 🛒 Sipariş İçeriği (${order.items.length} ürün)
 🛣️ ${totalKm.toStringAsFixed(1)} km
 🧑‍🍳 $waiterName

@@ -95,8 +95,10 @@ function mapDocToOrder(docId: string, d: any): Order {
 export function mapReservationToOrder(docId: string, d: any): Order {
   // Map tabStatus to standard order status for Kanban rendering
   let status = 'pending';
+  // Always prioritize cancelled/rejected states so they don't get stuck in pending
+  if (d.status === 'cancelled' || d.status === 'rejected') status = 'cancelled';
   // If seated, we want kitchen to see it as preparing/ready to serve
-  if (d.tabStatus === 'seated') status = 'preparing'; 
+  else if (d.tabStatus === 'seated') status = 'preparing'; 
   else if (d.tabStatus === 'closed') status = 'completed';
   else if (d.tabStatus === 'pre_ordered') status = 'pending';
   else if (d.status === 'confirmed') status = 'accepted';
@@ -300,6 +302,7 @@ export function OrdersProvider({
       // Include pre-order/tab reservations AND plain pending/confirmed reservations
       const relevantDocs = snapshot.docs.filter(d => {
         const data = d.data();
+        if (data.status === 'cancelled' || data.status === 'rejected') return true; // Keep in history
         if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
         if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
         return false;
@@ -457,6 +460,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
       // Include pre-order/tab reservations AND plain pending/confirmed reservations
       const relevantDocs = snapshot.docs.filter(d => {
         const data = d.data();
+        if (data.status === 'cancelled' || data.status === 'rejected') return true; // Keep in history
         if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
         if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
         return false;

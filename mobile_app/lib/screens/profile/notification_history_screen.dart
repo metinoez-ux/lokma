@@ -1114,6 +1114,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   Future<void> _addToFavoriteOrders(_OrderGroup group, String favoriteName) async {
     final user = _auth.currentUser;
     if (user == null) return;
+    if (group.orderId.isEmpty) return;
+    
     await FirebaseFirestore.instance
         .collection('users').doc(user.uid)
         .collection('favoriteOrders').doc(group.orderId)
@@ -1139,6 +1141,8 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
   Future<void> _removeFavoriteOrder(_OrderGroup group) async {
     final user = _auth.currentUser;
     if (user == null) return;
+    if (group.orderId.isEmpty) return;
+    
     await FirebaseFirestore.instance
         .collection('users').doc(user.uid)
         .collection('favoriteOrders').doc(group.orderId)
@@ -3638,7 +3642,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
   }
 
   Future<void> _loadUserInfo() async {
-    if (widget.userId.isEmpty) return;
+    if (widget.userId.isEmpty || widget.orderId.isEmpty) return;
     try {
       final orderDoc = await FirebaseFirestore.instance
           .collection('meat_orders')
@@ -4134,28 +4138,57 @@ class _ReservationCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // ── Status badge ──
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(statusIcon, color: statusColor, size: 15),
-                  const SizedBox(width: 5),
-                  Text(
-                    statusLabelKey.tr(),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+            // ── Status & Table Badge Row ──
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, color: statusColor, size: 15),
+                      const SizedBox(width: 5),
+                      Text(
+                        statusLabelKey.tr(),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if ((group.statuses.last['tableCardNumbers'] as List<dynamic>? ?? []).isNotEmpty) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFEAEAEA),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.chair_alt_rounded, color: textSecondary, size: 15),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${'tab_table'.tr()} ${(group.statuses.last['tableCardNumbers'] as List<dynamic>).join(", ")}',
+                          style: TextStyle(
+                            color: textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
           ],
         ),

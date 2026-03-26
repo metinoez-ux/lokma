@@ -81,7 +81,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     return _defaultBrandColor;
   }
   
-  String _selectedCategory = 'Tümü';
+  String _selectedCategory = 'marketplace.category_all'.tr();
 
   final Map<String, GlobalKey> _categoryKeys = {};
   final Map<String, GlobalKey> _tabKeys = {};
@@ -113,7 +113,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (mounted) _updatePillPosition(category);
     });
     
-    if (category == 'Tümü') {
+    if (category == 'marketplace.category_all'.tr()) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
       }
@@ -199,14 +199,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     // When scrolled to the very top, always select 'Tümü'
     if (_scrollController.hasClients && _scrollController.offset < 10) {
-      if (_selectedCategory != 'Tümü') {
+      if (_selectedCategory != 'marketplace.category_all'.tr()) {
         HapticFeedback.selectionClick();
-        setState(() => _selectedCategory = 'Tümü');
+        setState(() => _selectedCategory = 'marketplace.category_all'.tr());
         // Delay chip scroll to avoid conflicting with main scroll
         Future.delayed(const Duration(milliseconds: 50), () {
           if (mounted) {
-            _scrollChipBarToSelected('Tümü');
-            _updatePillPosition('Tümü');
+            _scrollChipBarToSelected('marketplace.category_all'.tr());
+            _updatePillPosition('marketplace.category_all'.tr());
           }
         });
       }
@@ -284,7 +284,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   
   // 🔄 Dynamic categories loaded from Firestore
   List<Map<String, dynamic>> _categories = [
-    {'name': 'Tümü', 'icon': Icons.grid_view, 'emoji': '🏠'},
+    {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
   ];
 
   Map<String, dynamic>? _placeDetails;
@@ -368,7 +368,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       
       if (snapshot.docs.isNotEmpty) {
         final dynamicCategories = <Map<String, dynamic>>[
-          {'name': 'Tümü', 'icon': Icons.grid_view, 'emoji': '🏠'},
+          {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
         ];
         
         // Sort by order field client-side
@@ -402,8 +402,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (mounted) {
           setState(() {
             _categories = [
-              {'name': 'Tümü', 'icon': Icons.grid_view, 'emoji': '🏠'},
-              {'name': 'Tüm Ürünler', 'icon': Icons.shopping_bag, 'emoji': '🛒'},
+              {'name': 'marketplace.category_all'.tr(), 'icon': Icons.grid_view, 'emoji': '🏠'},
+              {'name': 'marketplace.all_products'.tr(), 'icon': Icons.shopping_bag, 'emoji': '🛒'},
             ];
           });
         }
@@ -1225,7 +1225,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.w600))),
                     SizedBox(height: 16),
                     Text(
-                      'Europas vertrauenswürdigste Halal-Fleischmarke',
+                      'marketplace.tuna_subtitle'.tr(),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                     ),
@@ -1240,8 +1240,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   children: [
                      // Intro Text
                      Text(
-                       'Unsere Reise begann 1987 als kleine Metzgerei in Köln und hat sich heute zu einer der modernsten integrierten Halal-Fleischproduktionsstätten Europas entwickelt.',
-                       style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+                       '${'marketplace.tuna_description_1'.tr()}\n\n${'marketplace.tuna_description_2'.tr()}',
+                       style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
                      ),
                      SizedBox(height: 24),
                      
@@ -1297,7 +1297,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      Text('marketplace.production_standards'.tr(), style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
-                     _buildCheckItem('Ohne E621', 'Kein Glutamat/Geschmacksverstärker'),
+                     _buildCheckItem('marketplace.without_e621'.tr(), 'marketplace.no_msg'.tr()),
+                     _buildCheckItem('marketplace.without_mms'.tr(), 'marketplace.pure_meat'.tr()),
+                     _buildCheckItem('marketplace.gluten_free'.tr(), 'marketplace.no_wheat'.tr()),
                      
                      const SizedBox(height: 40),
                   ],
@@ -4380,7 +4382,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              product.outOfStock ? 'Stokta Yok' : tr('marketplace.unavailable'),
+                              product.outOfStock ? tr('marketplace.out_of_stock') : tr('marketplace.unavailable'),
                               style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                             ),
                           ),
