@@ -761,105 +761,105 @@ export default function AdminHeader() {
                                 </div>
                                 <nav className="py-2">
                                     {/* 1. Analytik */}
-                                    <Link href="/admin/analytics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('analytics')}</Link>
+                                    <Link href="/admin/analytics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('analytics')}</Link>
 
                                     {/* 2. Lokma Partner - Super Admin Only */}
                                     {admin?.adminType === 'super' && (
                                     <div>
-                                        <button onClick={() => toggleSection('business')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('business')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             Lokma Partner
                                             <span className={`text-xs transition-transform ${expandedSection === 'business' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'business' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/business" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('businesses')}</Link>
-                                                <Link href="/admin/benutzerverwaltung" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('benutzerverwaltung')}</Link>
-                                                <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('sectors')}</Link>
-                                                <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('kermes')}</Link>
-                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('sponsoredAds')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/business" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('businesses')}</Link>
+                                                <Link href="/admin/benutzerverwaltung" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('benutzerverwaltung')}</Link>
+                                                <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sectors')}</Link>
+                                                <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('kermes')}</Link>
+                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
                                             </div>
                                         )}
                                     </div>
                                     )}
 
                                     {/* 2. Bestellungen */}
-                                    <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('orders')}</Link>
+                                    <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
 
                                     {/* 3. Reservierungen */}
-                                    <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('reservations')}</Link>
+                                    <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reservations')}</Link>
 
                                     {/* 4. Produkte & Kategorien */}
                                     <div>
-                                        <button onClick={() => toggleSection('products')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('products')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('productsCategories')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'products' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'products' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('productsCategories')}</Link>
-                                                <Link href="/admin/ai-menu" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('aiMenu')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('productsCategories')}</Link>
+                                                <Link href="/admin/ai-menu" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('aiMenu')}</Link>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* 5. Buchhaltung */}
                                     <div>
-                                        <button onClick={() => toggleSection('accounting')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('accounting')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('accounting')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'accounting' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'accounting' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/invoices" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('invoices')}</Link>
-                                                <Link href="/admin/commissions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('commissions')}</Link>
-                                                <Link href="/admin/plans" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('plans')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/invoices" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('invoices')}</Link>
+                                                <Link href="/admin/commissions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('commissions')}</Link>
+                                                <Link href="/admin/plans" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('plans')}</Link>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* 6. Kampagnen */}
                                     <div>
-                                        <button onClick={() => toggleSection('promotions')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('promotions')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('promotions')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'promotions' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'promotions' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('businessCampaigns')}</Link>
-                                                <Link href="/admin/coupons" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('coupons')}</Link>
-                                                <Link href="/admin/deals" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('deals')}</Link>
-                                                <Link href="/admin/promotion-templates" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('campaignTemplates')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('businessCampaigns')}</Link>
+                                                <Link href="/admin/coupons" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('coupons')}</Link>
+                                                <Link href="/admin/deals" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('deals')}</Link>
+                                                <Link href="/admin/promotion-templates" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('campaignTemplates')}</Link>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* 8. Service */}
                                     <div>
-                                        <button onClick={() => toggleSection('service')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('service')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('service')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'service' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'service' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/activity-logs" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('activityLogs')}</Link>
-                                                <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('reports')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/activity-logs" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('activityLogs')}</Link>
+                                                <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('reports')}</Link>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* 9. Einstellungen */}
                                     <div className="border-t border-border mt-1 pt-1">
-                                        <button onClick={() => toggleSection('platform')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('platform')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('settings')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'platform' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
                                         </button>
                                         {expandedSection === 'platform' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('iotSettings')}</Link>
-                                                <Link href="/admin/settings/company" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('companySettings')}</Link>
-                                                <Link href="/admin/ui-translations" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('uiTranslations')}</Link>
-                                                <Link href="/admin/image-generator" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('imageGen')}</Link>
-                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('ameise')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('iotSettings')}</Link>
+                                                <Link href="/admin/settings/company" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('companySettings')}</Link>
+                                                <Link href="/admin/ui-translations" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('uiTranslations')}</Link>
+                                                <Link href="/admin/image-generator" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('imageGen')}</Link>
+                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('ameise')}</Link>
                                             </div>
                                         )}
                                     </div>
