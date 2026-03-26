@@ -692,7 +692,11 @@ export default function OrdersPage() {
         const unsubReservations = onSnapshot(qReservations, (snapshot) => {
             const relevantDocs = snapshot.docs.filter(d => {
                 const data = d.data();
-                return data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+                // Include pre-order/tab reservations (tabStatus set)
+                if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
+                // Also include plain reservations (no tabStatus) that are pending or confirmed
+                if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
+                return false;
             });
 
             const mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
@@ -708,7 +712,9 @@ export default function OrdersPage() {
                 const newOrders = addedChanges
                     .filter(change => {
                         const d = change.doc.data();
-                        return d.tabStatus === 'pre_ordered' || d.tabStatus === 'seated' || d.tabStatus === 'closed';
+                        if (d.tabStatus === 'pre_ordered' || d.tabStatus === 'seated' || d.tabStatus === 'closed') return true;
+                        if (!d.tabStatus && (d.status === 'pending' || d.status === 'confirmed')) return true;
+                        return false;
                     })
                     .map(change => mapReservationToOrder(change.doc.id, change.doc.data()))
                     .filter(o => {
