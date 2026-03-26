@@ -92,7 +92,7 @@ function mapDocToOrder(docId: string, d: any): Order {
 // Normalizes active reservations into the Order interface
 // ============================================================
 
-function mapReservationToOrder(docId: string, d: any): Order {
+export function mapReservationToOrder(docId: string, d: any): Order {
   // Map tabStatus to standard order status for Kanban rendering
   let status = 'pending';
   // If seated, we want kitchen to see it as preparing/ready to serve
@@ -254,14 +254,18 @@ export function OrdersProvider({
     const startDate = getStartDateForFilter(dateFilter);
     
     // 1. Standard Orders Stream
-    const qOrders = query(
-      collection(db, 'meat_orders'),
+    const constraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
       orderBy('createdAt', 'desc'),
-    );
+    ];
+    if (fixedBusinessId) {
+      constraints.unshift(where('businessId', '==', fixedBusinessId));
+    }
+    const qOrders = query(collection(db, 'meat_orders'), ...constraints);
 
     const unsubOrders = onSnapshot(qOrders, (snapshot) => {
       let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
+      // Secondary fallback filter for legacy butcherId documents that bypassed query
       if (fixedBusinessId) {
         mapped = mapped.filter(o => 
           o.businessId === fixedBusinessId || o._raw.butcherId === fixedBusinessId
@@ -275,11 +279,14 @@ export function OrdersProvider({
     });
 
     // 2. Continuous Tab Reservations Stream
-    const qReservations = query(
-      collectionGroup(db, 'reservations'),
+    const resConstraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
       orderBy('createdAt', 'desc'),
-    );
+    ];
+    if (fixedBusinessId) {
+      resConstraints.unshift(where('businessId', '==', fixedBusinessId));
+    }
+    const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
     const unsubReservations = onSnapshot(qReservations, (snapshot) => {
       // Filter logically relevant tabs
@@ -290,6 +297,7 @@ export function OrdersProvider({
 
       let mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
       
+      // Keep safety filter
       if (fixedBusinessId) {
         mapped = mapped.filter(o => o.businessId === fixedBusinessId);
       }
@@ -394,11 +402,14 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
     const startDate = getStartDateForFilter(dateFilter);
     
     // 1. Orders
-    const qOrders = query(
-      collection(db, 'meat_orders'),
+    const constraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
       orderBy('createdAt', 'desc'),
-    );
+    ];
+    if (businessId) {
+      constraints.unshift(where('businessId', '==', businessId));
+    }
+    const qOrders = query(collection(db, 'meat_orders'), ...constraints);
 
     const unsubOrders = onSnapshot(qOrders, (snapshot) => {
       let mapped = snapshot.docs.map(doc => mapDocToOrder(doc.id, doc.data()));
@@ -413,11 +424,14 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
     });
 
     // 2. Reservations
-    const qReservations = query(
-      collectionGroup(db, 'reservations'),
+    const resConstraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
       orderBy('createdAt', 'desc'),
-    );
+    ];
+    if (businessId) {
+      resConstraints.unshift(where('businessId', '==', businessId));
+    }
+    const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
     const unsubReservations = onSnapshot(qReservations, (snapshot) => {
       const relevantDocs = snapshot.docs.filter(d => {

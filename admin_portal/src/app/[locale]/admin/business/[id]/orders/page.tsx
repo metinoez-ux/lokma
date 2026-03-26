@@ -7,7 +7,7 @@ import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, 
 import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { type Order } from '@/hooks/useOrders';
+import { type Order, useOrdersStandalone } from '@/hooks/useOrders';
 import { mapFirestoreOrder } from '@/lib/utils/orderMapper';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 
@@ -32,9 +32,8 @@ export default function OrdersPage() {
 const params = useParams();
     const businessId = params.id as string;
 
-    const [orders, setOrders] = useState<Order[]>([]);
     const [butcher, setBusiness] = useState<BusinessInfo | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { orders, loading } = useOrdersStandalone({ businessId, initialDateFilter: 'all' });
     const [isVendorUser, setIsVendorUser] = useState(false);
 
     // Filters
@@ -91,32 +90,8 @@ const params = useParams();
         loadBusiness();
     }, [businessId]);
 
-    // Load orders with real-time listener
-    useEffect(() => {
-        // Use meat_orders collection (canonical for LOKMA/MIRA - matches mobile app)
-        const ordersRef = collection(db, 'meat_orders');
-        // Filter by butcherId (legacy field name used across the system)
-        const q = query(
-            ordersRef,
-            where('butcherId', '==', businessId)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => mapFirestoreOrder(doc));
-
-            // Sort client-side by createdAt desc
-            ordersData.sort((a, b) => (b.createdAt?.toDate?.()?.getTime() || 0) - (a.createdAt?.toDate?.()?.getTime() || 0));
-
-            setOrders(ordersData);
-            setLoading(false);
-        }, (error) => {
-            console.error('Error loading orders:', error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, [businessId]);
-
+    // Load orders logic is now handled by useOrdersStandalone
+    // Removing manual meat_orders onSnapshot loop
     // Filtered orders
     const filteredOrders = useMemo(() => {
         return orders.filter(order => {
@@ -754,6 +729,7 @@ const params = useParams();
                         dateLocale="de-DE"
                         onUpdateOrderStatus={updateOrderStatus}
                         onToggleItemChecked={toggleItemChecked}
+                        disableBusinessLink={true}
                     />
                 )}
             </main>

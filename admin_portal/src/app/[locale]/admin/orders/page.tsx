@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment, addDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { collection, collectionGroup, getDocs, doc, updateDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment, addDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
-import { ORDER_STATUSES, ORDER_TYPES, type Order, type OrderStatus } from '@/hooks/useOrders';
+import { ORDER_STATUSES, ORDER_TYPES, type Order, type OrderStatus, mapReservationToOrder } from '@/hooks/useOrders';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
 import OrderCard from '@/components/admin/OrderCard';
 
@@ -32,7 +32,19 @@ export default function OrdersPage() {
     const dateLocale = locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'en' ? 'en-US' : locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : locale === 'nl' ? 'nl-NL' : 'de-DE';
     const { admin, loading: adminLoading } = useAdmin();
     const adminBusinessId = useAdminBusinessId();
-    const [orders, setOrders] = useState<Order[]>([]);
+
+    const [meatOrders, setMeatOrders] = useState<Order[]>([]);
+    const [resOrders, setResOrders] = useState<Order[]>([]);
+    
+    // Derived orders array from both canonical streams
+    const orders = useMemo(() => {
+        return [...meatOrders, ...resOrders].sort((a, b) => {
+            const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
+            const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
+            return bTime - aTime;
+        });
+    }, [meatOrders, resOrders]);
+
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -56,9 +68,11 @@ export default function OrdersPage() {
     const [cancelReason, setCancelReason] = useState('');
     const [showPrinterPanel, setShowPrinterPanel] = useState(false);
     const [testingPrint, setTestingPrint] = useState(false);
-    const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
+    // --- Auto-print refs & system ---
     const autoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed new orders
-    const initialLoadDoneRef = useRef(false); // skip auto-print on first load
+    const scheduledAutoPrintedRef = useRef<Set<string>>(new Set()); // track auto-printed scheduled orders
+    // Track both collections independently to prevent double auto-printing on load
+    const initialLoadDoneRef = useRef({ meat: false, res: false }); // skip auto-print on first load
     const printerSettingsRef = useRef<PrinterSettings>(DEFAULT_PRINTER_SETTINGS); // ref mirror for closure
     const businessFilterRef = useRef<string>('all'); // ref mirror for closure
 
@@ -542,7 +556,7 @@ export default function OrdersPage() {
         return () => clearInterval(interval);
     }, [orders, printerSettings, businesses]);
 
-    // Real-time orders subscription
+    // Real-time orders & reservations subscriptions
     useEffect(() => {
         setLoading(true);
 
@@ -558,14 +572,14 @@ export default function OrdersPage() {
             startDate = new Date(2020, 0, 1); // Far past
         }
 
-        // Query meat_orders (canonical collection for LOKMA/MIRA orders)
-        const q = query(
+        // 1. Listen to meat_orders
+        const qOrders = query(
             collection(db, 'meat_orders'),
             where('createdAt', '>=', Timestamp.fromDate(startDate)),
             orderBy('createdAt', 'desc')
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubOrders = onSnapshot(qOrders, (snapshot) => {
             const data = snapshot.docs.map(doc => {
                 const d = doc.data();
                 return {
@@ -583,7 +597,6 @@ export default function OrdersPage() {
                     status: d.status || 'pending',
                     type: (() => {
                         const raw = d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup';
-                        // Normalize camelCase to snake_case (Dart stores 'dineIn', admin expects 'dine_in')
                         if (raw === 'dineIn') return 'dine_in';
                         return raw;
                     })(),
@@ -592,7 +605,6 @@ export default function OrdersPage() {
                     isScheduledOrder: !!d.isScheduledOrder,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
                     notes: d.notes || d.orderNote || d.customerNote || '',
-                    // Dine-in fields
                     tableNumber: d.tableNumber,
                     waiterName: d.waiterName,
                     groupSessionId: d.groupSessionId,
@@ -601,9 +613,10 @@ export default function OrdersPage() {
                     paymentStatus: d.paymentStatus || 'unpaid',
                     paymentMethod: d.paymentMethod,
                     stripePaymentIntentId: d.stripePaymentIntentId,
-                };
-            }) as Order[];
-            setOrders(data);
+                } as Order;
+            });
+            setMeatOrders(data);
+
             // Hydrate KDS checklist state from Firestore
             const checks: Record<string, Record<number, boolean>> = {};
             snapshot.docs.forEach(d => {
@@ -614,18 +627,14 @@ export default function OrdersPage() {
                 }
             });
             setCheckedItems(prev => ({ ...prev, ...checks }));
-            setLoading(false);
 
             // --- Auto-print new orders ---
             const ps = printerSettingsRef.current;
             const bf = businessFilterRef.current;
             const changes = snapshot.docChanges();
             const addedChanges = changes.filter(change => change.type === 'added');
-            console.log('[AutoPrint] Snapshot received - initialLoadDone:', initialLoadDoneRef.current, 
-                'totalChanges:', changes.length, 'addedChanges:', addedChanges.length,
-                'enabled:', ps.enabled, 'autoPrint:', ps.autoPrint, 'printerIp:', ps.printerIp);
             
-            if (initialLoadDoneRef.current && ps.enabled && ps.autoPrint && ps.printerIp) {
+            if (initialLoadDoneRef.current.meat && ps.enabled && ps.autoPrint && ps.printerIp) {
                 const newOrders = addedChanges
                     .map(change => {
                         const d = change.doc.data();
@@ -652,45 +661,82 @@ export default function OrdersPage() {
                         } as any;
                     })
                     .filter((o: any) => {
-                        if (autoPrintedRef.current.has(o.id)) {
-                            console.log('[AutoPrint] Skipping already printed:', o.id);
-                            return false;
-                        }
-                        if (o.status !== 'pending') {
-                            console.log('[AutoPrint] Skipping non-pending order:', o.id, 'status:', o.status);
-                            return false;
-                        }
-                        if (bf !== 'all' && o.businessId !== bf) {
-                            console.log('[AutoPrint] Skipping business mismatch:', o.id, 'order biz:', o.businessId, 'filter:', bf);
-                            return false;
-                        }
-                        // Skip scheduled orders -- they print 15 min before via separate interval
-                        if (o.scheduledAt) {
-                            console.log('[AutoPrint] Skipping scheduled order (will print 15min before):', o.id);
-                            return false;
-                        }
+                        if (autoPrintedRef.current.has(o.id)) return false;
+                        if (o.status !== 'pending') return false;
+                        if (bf !== 'all' && o.businessId !== bf) return false;
+                        if (o.scheduledAt) return false;
                         return true;
                     });
 
-                console.log('[AutoPrint] Orders to print:', newOrders.length);
                 for (const newOrder of newOrders) {
                     autoPrintedRef.current.add(newOrder.id);
                     handlePrintOrder(newOrder as any);
-                    console.log('[AutoPrint] Printing new order:', newOrder.id, newOrder.orderNumber);
                 }
-            } else if (initialLoadDoneRef.current) {
-                console.log('[AutoPrint] Skipped - enabled:', ps.enabled, 'autoPrint:', ps.autoPrint, 'printerIp:', ps.printerIp);
             }
-            // Mark initial load as done after first snapshot
-            if (!initialLoadDoneRef.current) {
-                initialLoadDoneRef.current = true;
+            if (!initialLoadDoneRef.current.meat) {
+                initialLoadDoneRef.current.meat = true;
+                if (initialLoadDoneRef.current.res) setLoading(false);
             }
         }, (error) => {
-            console.error('Error loading orders:', error);
+            console.error('Error loading meat_orders:', error);
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        // 2. Listen to reservations (collectionGroup)
+        const qReservations = query(
+            collectionGroup(db, 'reservations'),
+            where('createdAt', '>=', Timestamp.fromDate(startDate)),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubReservations = onSnapshot(qReservations, (snapshot) => {
+            const relevantDocs = snapshot.docs.filter(d => {
+                const data = d.data();
+                return data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed';
+            });
+
+            const mapped = relevantDocs.map(doc => mapReservationToOrder(doc.id, doc.data()));
+            setResOrders(mapped);
+
+            // --- Auto-print new reservation orders ---
+            const ps = printerSettingsRef.current;
+            const bf = businessFilterRef.current;
+            const changes = snapshot.docChanges();
+            const addedChanges = changes.filter(change => change.type === 'added');
+
+            if (initialLoadDoneRef.current.res && ps.enabled && ps.autoPrint && ps.printerIp) {
+                const newOrders = addedChanges
+                    .filter(change => {
+                        const d = change.doc.data();
+                        return d.tabStatus === 'pre_ordered' || d.tabStatus === 'seated' || d.tabStatus === 'closed';
+                    })
+                    .map(change => mapReservationToOrder(change.doc.id, change.doc.data()))
+                    .filter(o => {
+                        if (autoPrintedRef.current.has(o.id)) return false;
+                        if (o.status !== 'pending') return false;
+                        if (bf !== 'all' && o.businessId !== bf) return false;
+                        if (o.scheduledAt) return false;
+                        return true;
+                    });
+
+                for (const newOrder of newOrders) {
+                    autoPrintedRef.current.add(newOrder.id);
+                    handlePrintOrder(newOrder as any);
+                }
+            }
+            if (!initialLoadDoneRef.current.res) {
+                initialLoadDoneRef.current.res = true;
+                if (initialLoadDoneRef.current.meat) setLoading(false);
+            }
+        }, (error) => {
+            console.error('Error loading reservations:', error);
+            setLoading(false);
+        });
+
+        return () => {
+            unsubOrders();
+            unsubReservations();
+        };
     }, [dateFilter]);
 
     // Filter orders

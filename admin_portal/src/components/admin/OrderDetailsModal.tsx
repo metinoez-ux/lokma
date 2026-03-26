@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ORDER_STATUSES, ORDER_TYPES, OrderStatus } from '@/hooks/useOrders';
@@ -20,12 +21,13 @@ interface OrderDetailsModalProps {
     printingOrderId?: string | null;
     onPrint?: (order: any) => void;
     onShowPrinterPanel?: () => void;
+    disableBusinessLink?: boolean;
 }
 
 export default function OrderDetailsModal({
     order,
     onClose,
-    t,
+    t: _parentT,
     businesses,
     checkedItems,
     dateLocale,
@@ -35,7 +37,9 @@ export default function OrderDetailsModal({
     printingOrderId,
     onPrint,
     onShowPrinterPanel,
+    disableBusinessLink = false,
 }: OrderDetailsModalProps) {
+    const t = useTranslations('AdminPortal.Orders');
     // Local Modals State
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
@@ -153,9 +157,15 @@ export default function OrderDetailsModal({
                         {/* Business */}
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground">{t('modal.business')}</span>
-                            <Link href={`/admin/butchers/${order.businessId}`} className="text-blue-800 dark:text-blue-400 hover:underline">
-                                {businesses[order.businessId] || order.businessId}
-                            </Link>
+                            {disableBusinessLink ? (
+                                <span className="text-foreground font-medium">
+                                    {businesses[order.businessId] || order.businessId}
+                                </span>
+                            ) : (
+                                <Link href={`/admin/business/${order.businessId}`} className="text-blue-800 dark:text-blue-400 hover:underline font-medium">
+                                    {businesses[order.businessId] || order.businessId}
+                                </Link>
+                            )}
                         </div>
 
                         {/* Type */}

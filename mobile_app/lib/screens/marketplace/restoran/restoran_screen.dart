@@ -1887,7 +1887,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   /// 🆕 Show unified dialog for closed/unavailable business (ported from kasap)
   void _showClosedBusinessDialog(
-      BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData) {
+      BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData, { VoidCallback? onContinue }) {
     final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
     
     // Calculate next opening time
@@ -2042,9 +2042,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   child: FilledButton(
                     onPressed: () {
                       Navigator.pop(dialogCtx);
-                      final businessId = _currentBusinessIdForDialog;
-                      if (businessId != null) {
-                        context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
+                      if (onContinue != null) {
+                        onContinue();
+                      } else {
+                        final businessId = _currentBusinessIdForDialog;
+                        if (businessId != null) {
+                          context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
+                        }
                       }
                     },
                     style: FilledButton.styleFrom(
@@ -2220,7 +2224,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         // No conflict -- proceed with normal flow
         if (!isAvailable) {
           _currentBusinessIdForDialog = id;
-          _showClosedBusinessDialog(context, name, unavailableReason ?? tr('marketplace.currently_closed'), data);
+          _showClosedBusinessDialog(context, name, unavailableReason ?? tr('marketplace.currently_closed'), data, onContinue: () {
+            final hasReservation = data['hasReservation'] == true;
+            if (_deliveryMode == 'masa' && hasReservation) {
+              _showMasaActionSheet(id, name, data, isClosedAck: true);
+            } else {
+              _navigateOrShowConflict(id, name, isClosedAck: true);
+            }
+          });
         } else {
           final hasReservation = data['hasReservation'] == true;
           if (_deliveryMode == 'masa' && hasReservation) {
@@ -2235,7 +2246,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   }
 
   /// Check for cart conflict before navigating to a business
-  void _navigateOrShowConflict(String targetBusinessId, String targetBusinessName, {bool isReservationIntent = false}) {
+  void _navigateOrShowConflict(String targetBusinessId, String targetBusinessName, {bool isReservationIntent = false, bool isClosedAck = false}) {
     final cartState = ref.read(cartProvider);
     debugPrint('[CART-CONFLICT] targetId=$targetBusinessId, cartButcherId=${cartState.butcherId}, cartItems=${cartState.items.length}, isNotEmpty=${cartState.isNotEmpty}');
     if (cartState.isNotEmpty && cartState.butcherId != null && cartState.butcherId != targetBusinessId) {
@@ -2246,16 +2257,18 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         existingItemCount: cartState.items.length,
         targetBusinessId: targetBusinessId,
         targetBusinessName: targetBusinessName,
+        isClosedAck: isClosedAck,
+        isReservationIntent: isReservationIntent,
       );
     } else {
       debugPrint('[CART-CONFLICT] No conflict -> navigating directly');
       final encodedName = Uri.encodeComponent(targetBusinessName);
-      context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName&isReservationIntent=$isReservationIntent');
+      context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName&isReservationIntent=$isReservationIntent${isClosedAck ? "&closedAck=true" : ""}');
     }
   }
 
   /// Displays the choice to either make a reservation or browse the menu
-  void _showMasaActionSheet(String businessId, String businessName, Map<String, dynamic> data) {
+  void _showMasaActionSheet(String businessId, String businessName, Map<String, dynamic> data, {bool isClosedAck = false}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -2354,7 +2367,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   InkWell(
                     onTap: () {
                       Navigator.pop(ctx);
-                      _navigateOrShowConflict(businessId, businessName, isReservationIntent: true);
+                      _navigateOrShowConflict(businessId, businessName, isReservationIntent: true, isClosedAck: isClosedAck);
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
@@ -2415,6 +2428,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     bool targetIsAvailable = true,
     String? targetUnavailableReason,
     Map<String, dynamic>? targetData,
+    bool isClosedAck = false,
+    bool isReservationIntent = false,
   }) {
     showModalBottomSheet(
       context: context,
@@ -2498,17 +2513,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ref.read(cartProvider.notifier).clearCart();
                         Navigator.pop(ctx);
                         // After clearing cart, respect target's availability
-                        if (!targetIsAvailable && targetData != null) {
+                        if (!targetIsAvailable && targetData != null && !isClosedAck) {
                           _currentBusinessIdForDialog = targetBusinessId;
                           _showClosedBusinessDialog(
                             context,
                             targetBusinessName,
                             targetUnavailableReason ?? tr('marketplace.currently_closed'),
                             targetData!,
+                            onContinue: () {
+                              final encodedName = Uri.encodeComponent(targetBusinessName);
+                              context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName&isReservationIntent=$isReservationIntent&closedAck=true');
+                            }
                           );
                         } else {
                           final encodedName = Uri.encodeComponent(targetBusinessName);
-                          context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName');
+                          context.push('/kasap/$targetBusinessId?mode=$_deliveryMode&businessName=$encodedName&isReservationIntent=$isReservationIntent${isClosedAck ? "&closedAck=true" : ""}');
                         }
                       },
                       style: OutlinedButton.styleFrom(

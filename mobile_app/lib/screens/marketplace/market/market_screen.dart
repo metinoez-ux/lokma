@@ -544,7 +544,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
   /// 🆕 Show unified dialog for closed/unavailable business (ported from restoran)
   void _showClosedBusinessDialog(
-      BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData) {
+      BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData, { VoidCallback? onContinue }) {
     final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
     
     // Multi-hour display logic
@@ -698,9 +698,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   child: FilledButton(
                     onPressed: () {
                       Navigator.pop(dialogCtx);
-                      final businessId = _currentBusinessIdForDialog;
-                      if (businessId != null) {
-                        context.push('/kasap/$businessId?mode=$_deliveryMode&closedAck=true');
+                      if (onContinue != null) {
+                        onContinue();
+                      } else {
+                        final businessId = _currentBusinessIdForDialog;
+                        if (businessId != null) {
+                          context.push('/kasap/$businessId?mode=$_deliveryMode&closedAck=true');
+                        }
                       }
                     },
                     style: FilledButton.styleFrom(
@@ -1885,9 +1889,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         HapticFeedback.lightImpact();
         if (!isAvailable) {
           _currentBusinessIdForDialog = id;
-          _showClosedBusinessDialog(context, name, availability.reason ?? tr('marketplace.currently_closed'), data);
+          _showClosedBusinessDialog(context, name, availability.reason ?? tr('marketplace.currently_closed'), data, onContinue: () {
+            context.push('/kasap/$id?mode=$_deliveryMode&closedAck=true');
+          });
         } else {
-          context.push('/kasap/$id');
+          context.push('/kasap/$id?mode=$_deliveryMode');
         }
       },
       showClosedDialog: _showClosedBusinessDialog,

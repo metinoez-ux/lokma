@@ -1,7 +1,7 @@
 'use client';
 
 import { Timestamp } from 'firebase/firestore';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 import { ORDER_STATUSES, ORDER_TYPES, type Order } from '@/hooks/useOrders';
 
@@ -27,7 +27,7 @@ export default function OrderCard({
     businesses,
     checkedItems,
     onClick,
-    t,
+    t: _parentT,
     isPreOrder = false,
 }: {
     order: Order;
@@ -38,6 +38,7 @@ export default function OrderCard({
     isPreOrder?: boolean;
 }) {
     const locale = useLocale();
+    const t = useTranslations('AdminPortal.Orders');
     const dateLocale = locale === 'de' ? 'de-DE' : locale === 'tr' ? 'tr-TR' : locale === 'en' ? 'en-US' : locale === 'fr' ? 'fr-FR' : locale === 'es' ? 'es-ES' : locale === 'it' ? 'it-IT' : locale === 'nl' ? 'nl-NL' : 'de-DE';
     const statusInfo = orderStatuses[order.status];
     const typeInfo = orderTypes[order.type];
@@ -73,7 +74,7 @@ export default function OrderCard({
             onClick={onClick}
             className={`w-full text-left rounded-xl p-3 transition ${isPreOrder || order.type === 'dine_in_preorder'
                 ? 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border-l-4 border-purple-500 shadow-sm'
-                : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 shadow-sm'
+                : 'bg-card hover:bg-muted border border-border text-foreground shadow-sm'
                 }`}
         >
             <div className="flex items-center justify-between mb-2">
@@ -144,11 +145,11 @@ export default function OrderCard({
                 <span className="text-green-800 dark:text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
                 <div className="flex items-center gap-2">
                     {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${checkedCount >= itemCount ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${checkedCount >= itemCount ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                             ✓{checkedCount}/{itemCount}
                         </span>
                     )}
-                    <span className="text-gray-500 text-xs">
+                    <span className="text-muted-foreground text-xs">
                         {order.createdAt ? (typeof order.createdAt.toDate === 'function' ? order.createdAt.toDate() : new Date((order.createdAt as any))).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' }) : ''}
                     </span>
                 </div>

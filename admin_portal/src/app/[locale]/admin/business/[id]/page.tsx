@@ -6,6 +6,7 @@ import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 import { normalizeTimeString, getScheduleForToday, parseOpeningHoursBlock } from "@/utils/timeUtils";
 // Removing onAuthStateChanged import as it is no longer needed in this file
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   doc,
   getDoc,
@@ -43,7 +44,7 @@ import { subscriptionService } from "@/services/subscriptionService";
 
 import { Star, History } from "lucide-react";
 import OrderCard from "@/components/admin/OrderCard";
-import { type Order } from "@/hooks/useOrders";
+import { useOrdersStandalone, type Order } from "@/hooks/useOrders";
 import OrderDetailsModal from "@/components/admin/OrderDetailsModal";
 import { mapFirestoreOrder } from '@/lib/utils/orderMapper';
 import ReservationsPanel from "./ReservationsPanel";
@@ -99,6 +100,7 @@ declare global {
 
 export default function BusinessDetailsPage() {
   const t = useTranslations('AdminBusiness');
+  const tOrders = useTranslations('AdminPortal.Orders');
 
   // formatTo24h: paylasimli utility uzerinden -- AM/PM, 24h, nokta seperator hepsini handle eder
   function formatTo24h(timeStr: string): string {
@@ -133,8 +135,8 @@ export default function BusinessDetailsPage() {
     preparing: { label: t('hazirlaniyor'), color: "bg-blue-600" },
     ready: { label: t('hazir'), color: "bg-green-600" },
     onTheWay: { label: t('order_onTheWay'), color: "bg-indigo-600" },
-    delivered: { label: t('order_delivered'), color: "bg-gray-600" },
-    completed: { label: t('tamamlandi'), color: "bg-gray-600" },
+    delivered: { label: t('order_delivered'), color: "bg-muted border border-border text-foreground" },
+    completed: { label: t('tamamlandi'), color: "bg-muted border border-border text-foreground" },
     cancelled: { label: t('iptal1'), color: "bg-red-600" },
     payment_failed: { label: t('order_payment_failed'), color: "bg-red-800" },
   };
@@ -162,12 +164,12 @@ export default function BusinessDetailsPage() {
     kafeterya: { label: "Kafeterya", emoji: "☕", color: "bg-yellow-700" },
     baklava: { label: "Baklava", emoji: "🍯", color: "bg-amber-600" },
     doner: { label: t('doner'), emoji: "🌯", color: "bg-yellow-600" },
-    berber: { label: "Berber", emoji: "✂️", color: "bg-gray-600" },
+    berber: { label: "Berber", emoji: "✂️", color: "bg-muted border border-border text-foreground" },
   };
 
   // Helper to get business type display info (supports single type or array)
   function getBusinessTypeLabel(type?: string | string[]) {
-    const defaultLabel = { label: t('isletme'), emoji: "🏪", color: "bg-gray-600" };
+    const defaultLabel = { label: t('isletme'), emoji: "🏪", color: "bg-muted border border-border text-foreground" };
 
     if (!type) return defaultLabel;
 
@@ -183,7 +185,7 @@ export default function BusinessDetailsPage() {
       return {
         label: labels,
         emoji: firstType?.emoji || "🏪",
-        color: firstType?.color || "bg-gray-600"
+        color: firstType?.color || "bg-muted border border-border text-foreground"
       };
     }
 
@@ -202,10 +204,18 @@ export default function BusinessDetailsPage() {
   const dynamicSectorTypes = getActiveSectors();
   const [loading, setLoading] = useState(true); // Data loading state
   const [business, setBusiness] = useState<ButcherPartner | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [orderDateFilter, setOrderDateFilter] = useState<string>('all');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
-  const [orderTypeFilter, setOrderTypeFilter] = useState<string>('all');
+  
+  const {
+    orders,
+    loading: ordersLoading,
+    dateFilter: orderDateFilter,
+    setDateFilter: setOrderDateFilter,
+    statusFilter: orderStatusFilter,
+    setStatusFilter: setOrderStatusFilter,
+    typeFilter: orderTypeFilter,
+    setTypeFilter: setOrderTypeFilter,
+  } = useOrdersStandalone({ businessId, initialDateFilter: 'all' });
+  
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
@@ -898,61 +908,6 @@ export default function BusinessDetailsPage() {
     setLoading(false);
   }, [businessId]);
 
-   // Real-time orders listener - uses EXACT same approach as Bestellzentrum (/admin/orders)
-  // Bestellzentrum fetches orders by date, then filters by businessId client-side
-  // We do the same to guarantee 100% parity
-  useEffect(() => {
-    if (!businessId) {
-      console.warn('[ORDERS DEBUG] No businessId - skipping order fetch');
-      return;
-    }
-    console.log('[ORDERS DEBUG] Setting up orders listener for businessId:', businessId, 'dateFilter:', orderDateFilter);
-    
-    // Same date logic as Bestellzentrum
-    let startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
-    
-    if (orderDateFilter === 'week') {
-      startDate.setDate(startDate.getDate() - 7);
-    } else if (orderDateFilter === 'month') {
-      startDate.setDate(startDate.getDate() - 30);
-    } else if (orderDateFilter === 'all') {
-      startDate = new Date(2020, 0, 1); // Far past - same as Bestellzentrum
-    }
-    // else 'today' - startDate is already start of today
-    
-    const ordersQuery = query(
-      collection(db, "meat_orders"),
-      where("createdAt", ">=", Timestamp.fromDate(startDate)),
-      orderBy("createdAt", "desc"),
-    );
-
-    const unsubOrders = onSnapshot(ordersQuery, (snapshot) => {
-      console.log('[ORDERS DEBUG] Total docs from Firestore:', snapshot.docs.length);
-      
-      // Client-side filter: match orders where butcherId OR businessId equals this business
-      // This is exactly how Bestellzentrum filters: businessId: d.businessId || d.butcherId
-      const businessOrders = snapshot.docs
-        .filter((doc) => {
-          const d = doc.data();
-          return d.butcherId === businessId || d.businessId === businessId;
-        })
-        .map((doc) => mapFirestoreOrder(doc))
-        .sort((a, b) => {
-          const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
-          const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
-          return bTime - aTime;
-        });
-
-      console.log('[ORDERS DEBUG] Business orders:', businessOrders.length);
-      console.log('[ORDERS DEBUG] Statuses:', businessOrders.map(o => `${o.orderNumber}:${o.status}`));
-      setOrders(businessOrders);
-    }, (error) => {
-      console.error("[ORDERS DEBUG] Error loading orders:", error);
-    });
-
-    return () => unsubOrders();
-  }, [businessId, orderDateFilter]);
 
   //  Load Suppliers
   const loadSuppliers = useCallback(async () => {
@@ -1870,7 +1825,7 @@ export default function BusinessDetailsPage() {
         setAvailablePlans(plans.map(p => ({
           code: p.code || p.id,
           name: p.name,
-          color: p.color || 'bg-gray-600',
+          color: p.color || 'bg-muted border border-border text-foreground',
         })));
       } catch (error) {
         console.error('Error loading subscription plans:', error);
@@ -2517,9 +2472,9 @@ export default function BusinessDetailsPage() {
   // Build dynamic planLabels from loaded plans
   const planLabels: Record<string, { label: string; color: string }> = { ...defaultPlanLabels };
   availablePlans.forEach(p => {
-    planLabels[p.code] = { label: `LOKMA ${p.name}`, color: p.color || 'bg-gray-600' };
+    planLabels[p.code] = { label: `LOKMA ${p.name}`, color: p.color || 'bg-muted border border-border text-foreground' };
   });
-  const planInfo = planLabels[business?.subscriptionPlan || "none"] || { label: business?.subscriptionPlan || t('yok'), color: 'bg-gray-600' };
+  const planInfo = planLabels[business?.subscriptionPlan || "none"] || { label: business?.subscriptionPlan || t('yok'), color: 'bg-muted border border-border text-foreground' };
 
   return (
     <div className="min-h-screen bg-background">
@@ -2559,6 +2514,7 @@ export default function BusinessDetailsPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               {businessId !== 'new' && (
                 <span
                   className={`px-3 py-1 rounded-full text-sm ${planInfo.color} text-white`}
@@ -2574,7 +2530,7 @@ export default function BusinessDetailsPage() {
             {/* Main Navigation Tabs */}
             <button
               onClick={() => { setActiveTab("overview"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
             >
                {t('dashboard')}
             </button>
@@ -2588,19 +2544,19 @@ export default function BusinessDetailsPage() {
             )}
             <button
               onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
             >
               {t('siparisler')}{orders.length})
             </button>
             <button
               onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
             >
                {t('tedarik')} ({supplierOrders.length})
             </button>
             <button
               onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"} ${!planFeatures.reservations && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
             >
               {!planFeatures.reservations && admin?.adminType !== 'super' && '🔒 '}{t('masaRezervasyonlari')}
             </button>
@@ -2609,7 +2565,7 @@ export default function BusinessDetailsPage() {
             <div className="relative settings-dropdown-container">
               <button
                 onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"}`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1 ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"}`}
               >
                 {t('ayarlar')}
                 <svg className={`w-3.5 h-3.5 transition-transform ${showSettingsDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2618,7 +2574,7 @@ export default function BusinessDetailsPage() {
               </button>
 
               {showSettingsDropdown && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-gray-600 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                   {([
                     { key: "isletme", label: t('isletme'), action: "tab" },
                     { key: "menu", label: t('menuUrunler'), action: "tab" },
@@ -2640,7 +2596,7 @@ export default function BusinessDetailsPage() {
                         }}
                         className={`flex items-center gap-3 px-4 py-2.5 text-sm transition w-full text-left ${activeTab === "settings" && settingsSubTab === item.key
                           ? "bg-red-600/20 text-red-800 dark:text-red-400 font-medium"
-                          : "text-foreground hover:bg-gray-700 hover:text-white"
+                          : "text-foreground hover:bg-muted hover:text-white"
                           } ${isGated ? 'opacity-60' : ''}`}
                       >
                         <span>{isGated ? '🔒 ' : ''}{item.label}</span>
@@ -2660,7 +2616,7 @@ export default function BusinessDetailsPage() {
           <div className="space-y-6">
 
             {/* Active Staff & Couriers Panel */}
-            <div className="bg-card rounded-xl p-4">
+            <div className="bg-card rounded-xl shadow-sm border border-border p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-foreground font-bold">
                   {t('aktif_personel_kuryeler')}
@@ -2674,14 +2630,14 @@ export default function BusinessDetailsPage() {
               {/* Online Staff Grid */}
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Mağaza Çalışanları */}
-                <div className="bg-gray-700/50 rounded-lg p-4">
+                <div className="bg-muted/30 dark:bg-muted/10 border border-border rounded-lg p-4">
                   <h4 className="text-foreground text-sm font-medium mb-3 flex items-center gap-2">
                     {t('magazaCalisanlari')}
                   </h4>
                   <div className="space-y-2">
                     {staffList.filter((s) => s.isActive !== false).length ===
                       0 ? (
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-muted-foreground text-sm">
                         {t('henuzAktifPersonelYok')}
                       </p>
                     ) : (
@@ -2690,7 +2646,7 @@ export default function BusinessDetailsPage() {
                         .map((staff) => (
                           <div
                             key={staff.id}
-                            className="flex items-center justify-between bg-gray-600/50 rounded-lg px-3 py-2"
+                            className="flex items-center justify-between bg-background border border-border rounded-lg px-3 py-2 shadow-sm"
                           >
                             <div className="flex items-center gap-2">
                               <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
@@ -2710,7 +2666,7 @@ export default function BusinessDetailsPage() {
                 </div>
 
                 {/* Aktif Kuryeler */}
-                <div className="bg-gray-700/50 rounded-lg p-4">
+                <div className="bg-muted/30 dark:bg-muted/10 border border-border rounded-lg p-4">
                   <h4 className="text-foreground text-sm font-medium mb-3 flex items-center gap-2">
                     {t('kuryelerDagitimda')}
                   </h4>
@@ -2747,10 +2703,10 @@ export default function BusinessDetailsPage() {
                       }
                       return (
                         <div className="text-center py-4">
-                          <p className="text-gray-500 text-sm">
+                          <p className="text-muted-foreground text-sm">
                             {t('suAnDagitimdaKuryeYok')}
                           </p>
-                          <p className="text-gray-600 text-xs mt-1">
+                          <p className="text-muted-foreground text-xs mt-1">
                             {t('teslimatBasladigindaBuradaGorunecek')}
                           </p>
                         </div>
@@ -2761,8 +2717,114 @@ export default function BusinessDetailsPage() {
               </div>
             </div>
 
+            {/* 🔴 NEW: Super Admin Parity - Quick Stats & Visual Order Workflow */}
+            {(() => {
+              const pendingOrders = orders.filter((o) => o.status === "pending" || o.status === "accepted");
+              const preparingOrders = orders.filter((o) => o.status === "preparing");
+              const readyOrders = orders.filter((o) => o.status === "ready");
+              const inTransitOrders = orders.filter((o) => o.status === "onTheWay");
+              const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "served");
+              
+              const stats = {
+                total: orders.length,
+                pending: pendingOrders.length,
+                preparing: preparingOrders.length,
+                ready: readyOrders.length,
+                inTransit: inTransitOrders.length,
+                completed: completedOrders.length,
+                revenue: orders.filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + (o.total || 0), 0),
+              };
+              
+              return (
+                <div className="space-y-6">
+                  {/* Quick Stats */}
+                  <div className="flex gap-2">
+                      <div className="bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                          <p className="text-xl font-bold text-blue-900 dark:text-blue-300">{stats.total}</p>
+                          <p className="text-[10px] font-semibold text-blue-900/80 dark:text-blue-400">{t('toplamSiparis')}</p>
+                      </div>
+                      <div className="bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                          <p className="text-xl font-bold text-yellow-800 dark:text-yellow-300">{stats.pending}</p>
+                          <p className="text-[10px] font-semibold text-yellow-700 dark:text-yellow-400">{t('bekleyen')}</p>
+                      </div>
+                      <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                          <p className="text-xl font-bold text-amber-800 dark:text-amber-300">{stats.preparing}</p>
+                          <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">{t('hazirlanan')}</p>
+                      </div>
+                      <div className="bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 rounded-xl px-3 py-1.5 text-center shadow-sm">
+                          <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{formatCurrency(stats.revenue, business?.currency)}</p>
+                          <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">{t('toplam_ciro')}</p>
+                      </div>
+                  </div>
+
+                  {/* Visual Order Status Workflow - Matching Super Admin Dashboard */}
+                  <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+                      <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-foreground font-bold">
+                              {t('siparis_durumlari_anlik')}
+                          </h3>
+                          <span className="text-muted-foreground text-sm">
+                              {t('su_anki_siparisler')}
+                          </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                          {/* Bekleyen - Yanıp söner */}
+                          <div className={`flex-1 min-w-[100px] bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-300 dark:border-yellow-600 rounded-xl p-4 text-center relative shadow-sm ${stats.pending > 0 ? "animate-pulse" : ""}`}>
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-yellow-400 dark:bg-yellow-500 rounded-full border-2 border-border shadow-sm"></div>
+                              <p className={`text-yellow-900 dark:text-yellow-400 text-3xl font-bold ${stats.pending > 0 ? "animate-bounce" : ""}`}>
+                                  {stats.pending}
+                              </p>
+                              <p className="text-yellow-900/80 dark:text-yellow-300 text-sm font-semibold mt-1">
+                                  🔔 {tOrders('workflow.pending')}
+                              </p>
+                          </div>
+                          <div className="text-muted-foreground text-xl">→</div>
+                          {/* Hazırlanıyor */}
+                          <div className="flex-1 min-w-[100px] bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-200 dark:border-amber-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-400 dark:bg-amber-500 rounded-full border-2 border-border shadow-sm"></div>
+                              <p className="text-amber-900 dark:text-amber-400 text-3xl font-bold">
+                                  {stats.preparing}
+                              </p>
+                              <p className="text-amber-900/80 dark:text-amber-300 text-sm font-semibold mt-1">👨‍🍳 {tOrders('workflow.preparing')}</p>
+                          </div>
+                          <div className="text-muted-foreground text-xl">→</div>
+                          {/* Hazır */}
+                          <div className="flex-1 min-w-[100px] bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-400 dark:bg-green-500 rounded-full border-2 border-border shadow-sm"></div>
+                              <p className="text-green-900 dark:text-green-400 text-3xl font-bold">
+                                  {stats.ready}
+                              </p>
+                              <p className="text-green-900/80 dark:text-green-300 text-sm font-semibold mt-1">📦 {tOrders('workflow.ready')}</p>
+                          </div>
+                          <div className="text-muted-foreground text-xl">→</div>
+                          {/* Yolda */}
+                          <div className="flex-1 min-w-[100px] bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-200 dark:border-indigo-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-400 dark:bg-indigo-500 rounded-full border-2 border-border shadow-sm"></div>
+                              <p className="text-indigo-900 dark:text-indigo-400 text-3xl font-bold">
+                                  {stats.inTransit}
+                              </p>
+                              <p className="text-indigo-900/80 dark:text-indigo-300 text-sm font-semibold mt-1">🛵 {tOrders('workflow.inTransit')}</p>
+                          </div>
+                          <div className="text-muted-foreground text-xl">→</div>
+                          {/* Tamamlanan */}
+                          <div className="flex-1 min-w-[100px] bg-emerald-50 dark:bg-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-700/50 rounded-xl p-4 text-center relative shadow-sm">
+                              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-400 dark:bg-emerald-500 rounded-full border-2 border-border shadow-sm"></div>
+                              <p className="text-emerald-900 dark:text-emerald-400 text-3xl font-bold">
+                                  {stats.completed}
+                              </p>
+                              <p className="text-emerald-900/80 dark:text-emerald-300 text-sm font-semibold mt-1">✓ {tOrders('workflow.completed')}</p>
+                          </div>
+                      </div>
+                      {/* Timeline line */}
+                      <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-amber-500 via-green-500 via-indigo-500 to-emerald-500 rounded-full opacity-50"></div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Kanban Board - matches partner Bestellzentrum layout */}
-            <div className="bg-card rounded-xl p-4">
+            <div className="bg-card rounded-xl shadow-sm border border-border p-5">
               <div className="flex flex-col gap-3 mb-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-foreground font-bold text-lg">
@@ -2777,7 +2839,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderDateFilter}
                     onChange={(e) => setOrderDateFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     <option value="today">{t('filter_heute')}</option>
                     <option value="week">{t('filter_diese_woche')}</option>
@@ -2788,7 +2850,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderStatusFilter}
                     onChange={(e) => setOrderStatusFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     <option value="all">{t('filter_alle_status')}</option>
                     <option value="pending">{t('order_pending')}</option>
@@ -2804,7 +2866,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={orderTypeFilter}
                     onChange={(e) => setOrderTypeFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm rounded-lg border border-gray-600"
+                    className="px-3 py-1.5 bg-background text-foreground text-sm rounded-lg border border-border focus:ring-2 focus:ring-red-500 outline-none hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                   >
                     <option value="all">{t('filter_alle_typen')}</option>
                     <option value="pickup">{t('pickup_label')}</option>
@@ -2824,167 +2886,124 @@ export default function BusinessDetailsPage() {
                   return true;
                 });
 
+                const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
+                const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
+                const readyOrders = filteredOrders.filter(o => o.status === 'ready');
+                const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
+                const completedOrders = filteredOrders.filter(o => ['delivered', 'served'].includes(o.status));
+
+                const preOrders = pendingOrders.filter(o => (o as any).isScheduledOrder || (o as any).isPreOrder);
+                const immediatePendingOrders = pendingOrders.filter(o => !(o as any).isScheduledOrder && !(o as any).isPreOrder);
+
                 return (
-              <div className="grid grid-cols-5 gap-3" style={{ minHeight: '300px' }}>
-                {/* Column: Ausstehend (Pending) */}
-                <div className="bg-background/50 rounded-xl p-3 border border-yellow-600/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-yellow-800 dark:text-yellow-400 font-semibold text-sm">
-                      {t('order_pending')} ({filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status)).length})
-                    </span>
-                  </div>
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {filteredOrders.filter(o => o.status === 'pending' || o.status === 'accepted').map(order => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        businesses={{ [business?.id || '']: business?.companyName || '' }}
-                        checkedItems={{}}
-                        onClick={() => setSelectedOrder(order)}
-                        t={t}
-                        isPreOrder={(order as any).isScheduledOrder}
-                      />
-                    ))}
-                  </div>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4" style={{ minHeight: '300px' }}>
+                        {/* Pending Column */}
+                        <div className="bg-yellow-50/50 dark:bg-card rounded-xl p-4 border border-yellow-200/50 dark:border-transparent">
+                            <h3 className="text-yellow-900 dark:text-yellow-400 font-medium mb-4 flex items-center gap-2">
+                                <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
+                                {tOrders('workflow.pending')} ({pendingOrders.length})
+                            </h3>
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
+                                {/* Immediate orders */}
+                                {immediatePendingOrders.slice(0, 10).map(order => (
+                                    <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
+                                ))}
+                                {immediatePendingOrders.length > 10 && (
+                                    <p className="text-muted-foreground text-center text-sm mb-2">+{immediatePendingOrders.length - 10} {tOrders('kanban.more')}</p>
+                                )}
+                                {/* Pre-orders separator */}
+                                {preOrders.length > 0 && (
+                                    <>
+                                        <div className="flex items-center gap-2 pt-3 mb-2">
+                                            <div className="flex-1 h-px bg-purple-500/30"></div>
+                                            <span className="text-purple-800 dark:text-purple-400 text-xs font-medium whitespace-nowrap">🕐 {tOrders('preOrders')} ({preOrders.length})</span>
+                                            <div className="flex-1 h-px bg-purple-500/30"></div>
+                                        </div>
+                                        {preOrders.slice(0, 10).map(order => (
+                                            <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} isPreOrder />
+                                        ))}
+                                        {preOrders.length > 10 && (
+                                            <p className="text-muted-foreground text-center text-sm mt-2">+{preOrders.length - 10} {tOrders('kanban.more')}</p>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
 
-                {/* Column: In Zubereitung (Preparing) */}
-                <div className="bg-background/50 rounded-xl p-3 border border-blue-600/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="text-blue-800 dark:text-blue-400 font-semibold text-sm">
-                      {t('filter_in_zubereitung')} ({filteredOrders.filter(o => o.status === 'preparing').length})
-                    </span>
-                  </div>
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {filteredOrders.filter(o => o.status === 'preparing').map(order => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        businesses={{ [business?.id || '']: business?.companyName || '' }}
-                        checkedItems={{}}
-                        onClick={() => setSelectedOrder(order)}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                </div>
+                        {/* Preparing Column */}
+                        <div className="bg-amber-50/50 dark:bg-card rounded-xl p-4 border border-amber-200/50 dark:border-transparent">
+                            <h3 className="text-amber-900 dark:text-amber-400 font-medium mb-4 flex items-center gap-2">
+                                <span className="w-3 h-3 bg-amber-400 rounded-full"></span>
+                                {tOrders('workflow.preparing')} ({preparingOrders.length})
+                            </h3>
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
+                                {preparingOrders.slice(0, 10).map(order => (
+                                    <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
+                                ))}
+                                {preparingOrders.length > 10 && (
+                                    <p className="text-muted-foreground text-center text-sm mt-2">+{preparingOrders.length - 10} {tOrders('kanban.more')}</p>
+                                )}
+                            </div>
+                        </div>
 
-                {/* Column: Bereit (Ready) */}
-                <div className="bg-background/50 rounded-xl p-3 border border-green-600/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-green-800 dark:text-green-400 font-semibold text-sm">
-                      {t('filter_bereit')} ({filteredOrders.filter(o => o.status === 'ready').length})
-                    </span>
-                  </div>
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {filteredOrders.filter(o => o.status === 'ready').map(order => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        businesses={{ [business?.id || '']: business?.companyName || '' }}
-                        checkedItems={{}}
-                        onClick={() => setSelectedOrder(order)}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                </div>
+                        {/* Ready Column */}
+                        <div className="bg-green-50/50 dark:bg-card rounded-xl p-4 border border-green-200/50 dark:border-transparent">
+                            <h3 className="text-green-900 dark:text-green-400 font-medium mb-4 flex items-center gap-2">
+                                <span className="w-3 h-3 bg-green-400 rounded-full"></span>
+                                {tOrders('workflow.ready')} ({readyOrders.length})
+                            </h3>
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
+                                {readyOrders.slice(0, 10).map(order => (
+                                    <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
+                                ))}
+                                {readyOrders.length > 10 && (
+                                    <p className="text-muted-foreground text-center text-sm mt-2">+{readyOrders.length - 10} {tOrders('kanban.more')}</p>
+                                )}
+                            </div>
+                        </div>
 
-                {/* Column: Auf dem Weg (On the Way) */}
-                <div className="bg-background/50 rounded-xl p-3 border border-amber-600/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-amber-800 dark:text-amber-400 font-semibold text-sm">
-                      {t('filter_auf_dem_weg')} ({filteredOrders.filter(o => o.status === 'onTheWay').length})
-                    </span>
-                  </div>
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {filteredOrders.filter(o => o.status === 'onTheWay').map(order => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        businesses={{ [business?.id || '']: business?.companyName || '' }}
-                        checkedItems={{}}
-                        onClick={() => setSelectedOrder(order)}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                </div>
+                        {/* In Transit Column */}
+                        <div className="bg-indigo-50/50 dark:bg-card rounded-xl p-4 border border-indigo-200/50 dark:border-transparent">
+                            <h3 className="text-indigo-900 dark:text-indigo-400 font-medium mb-4 flex items-center gap-2">
+                                <span className="w-3 h-3 bg-indigo-400 rounded-full"></span>
+                                {tOrders('workflow.inTransit')} ({inTransitOrders.length})
+                            </h3>
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
+                                {inTransitOrders.slice(0, 10).map(order => (
+                                    <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
+                                ))}
+                                {inTransitOrders.length > 10 && (
+                                    <p className="text-muted-foreground text-center text-sm mt-2">+{inTransitOrders.length - 10} {tOrders('kanban.more')}</p>
+                                )}
+                            </div>
+                        </div>
 
-                {/* Column: Abgeschlossen (Completed) */}
-                <div className="bg-background/50 rounded-xl p-3 border border-green-600/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-green-800 dark:text-green-400 font-semibold text-sm">
-                      {t('filter_abgeschlossen')} ({filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length})
-                    </span>
-                  </div>
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).map(order => (
-                      <OrderCard
-                        key={order.id}
-                        order={order}
-                        businesses={{ [business?.id || '']: business?.companyName || '' }}
-                        checkedItems={{}}
-                        onClick={() => setSelectedOrder(order)}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+                        {/* Completed Column */}
+                        <div className="bg-emerald-50/50 dark:bg-card rounded-xl p-4 border border-emerald-200/50 dark:border-transparent">
+                            <h3 className="text-emerald-900 dark:text-emerald-400 font-medium mb-4 flex items-center gap-2">
+                                <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
+                                {tOrders('workflow.completed')} ({completedOrders.length})
+                            </h3>
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 pb-2">
+                                {completedOrders.slice(0, 10).map(order => (
+                                    <OrderCard key={order.id} order={order} businesses={{ [business?.id || '']: business?.companyName || '' }} checkedItems={{}} onClick={() => setSelectedOrder(order)} t={t} />
+                                ))}
+                                {completedOrders.length > 10 && (
+                                    <p className="text-muted-foreground text-center text-sm mt-2">+{completedOrders.length - 10} {tOrders('kanban.more')}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 );
               })()}
             </div>
 
-            {/* Revenue Summary */}
-            <div className="bg-card rounded-xl p-4">
-              <h3 className="text-foreground font-bold mb-4">{t('gelirOzeti')}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-green-800 dark:text-green-400 text-2xl font-bold">
-                    {formatCurrency(orders
-                      .filter(o => o.status !== 'cancelled')
-                      .reduce((sum, o) => sum + (o.total || 0), 0), business?.currency)}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{t('toplam_ciro')}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-blue-800 dark:text-blue-400 text-2xl font-bold">
-                    {orders.length}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{t('toplamSiparis')}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-purple-800 dark:text-purple-400 text-2xl font-bold">
-                    {formatCurrency(orders.length > 0
-                      ? (
-                        orders.reduce(
-                          (sum, o) => sum + (o.total || 0),
-                          0,
-                        ) / orders.length
-                      )
-                      : 0, business?.currency)}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{t('ortalamaSiparis')}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-4 text-center">
-                  <p className="text-yellow-800 dark:text-yellow-400 text-2xl font-bold">
-                    {staffList.length}
-                  </p>
-                  <p className="text-muted-foreground text-sm">{t('personel_label')}</p>
-                </div>
-              </div>
-            </div>
+
 
             {/* Contact Info & Membership Details */}
             <div className="grid md:grid-cols-2 gap-4">
               {/* Contact Info */}
-              <div className="bg-card rounded-xl p-4">
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
                 <h3 className="text-foreground font-bold mb-4">
                   {t('iletisimBilgileri')}
                 </h3>
@@ -2997,7 +3016,7 @@ export default function BusinessDetailsPage() {
                           ? `${business?.contactPerson?.name} ${business?.contactPerson?.surname || ""}`
                           : t('belirtilmemis')}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {business?.contactPerson?.role}
                       </p>
                     </div>
@@ -3041,14 +3060,14 @@ export default function BusinessDetailsPage() {
                       <div className="flex w-full bg-background/50 rounded-lg p-1 mb-3">
                         <button
                           onClick={() => setOverviewHoursTab('genel')}
-                          className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'genel' ? 'bg-gray-700 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                          className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'genel' ? 'bg-foreground text-background shadow-md shadow' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                           Genel
                         </button>
                         {hasPickup && (
                           <button
                             onClick={() => setOverviewHoursTab('gelal')}
-                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'gelal' ? 'bg-gray-700 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'gelal' ? 'bg-foreground text-background shadow-md shadow' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             Gel-Al
                           </button>
@@ -3056,7 +3075,7 @@ export default function BusinessDetailsPage() {
                         {hasDelivery && (
                           <button
                             onClick={() => setOverviewHoursTab('kurye')}
-                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'kurye' ? 'bg-gray-700 text-white shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`flex-1 py-1 text-xs font-medium rounded-md transition ${overviewHoursTab === 'kurye' ? 'bg-foreground text-background shadow-md shadow' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             Kurye
                           </button>
@@ -3077,7 +3096,7 @@ export default function BusinessDetailsPage() {
                             <div className="text-xs text-foreground bg-card/50 rounded-lg p-3 space-y-1">
                               <div className="flex justify-between"><span className="text-muted-foreground">{t('gelAlBaslangic')}:</span><span>{start || '-'}</span></div>
                               <div className="flex justify-between"><span className="text-muted-foreground">{t('gelAlBitis')}:</span><span>{end || '-'}</span></div>
-                              <p className="text-gray-500 italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
+                              <p className="text-muted-foreground italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
                             </div>
                           );
                         }
@@ -3090,7 +3109,7 @@ export default function BusinessDetailsPage() {
                             <div className="text-xs text-foreground bg-card/50 rounded-lg p-3 space-y-1">
                               <div className="flex justify-between"><span className="text-muted-foreground">{t('kuryeBaslangic')}:</span><span>{start || '-'}</span></div>
                               <div className="flex justify-between"><span className="text-muted-foreground">{t('kuryeBitis')}:</span><span>{end || '-'}</span></div>
-                              <p className="text-gray-500 italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
+                              <p className="text-muted-foreground italic mt-2">{t('acikSaatleriIcinAyarlaraGidin') || 'Detayli gun bazli saatler icin Ayarlar > Acilis Saatleri bolumune gidin'}</p>
                             </div>
                           );
                         }
@@ -3125,7 +3144,7 @@ export default function BusinessDetailsPage() {
                           })}
                         </ul>
                       ) : (
-                        <span className="text-xs text-gray-500 italic">
+                        <span className="text-xs text-muted-foreground italic">
                           {t('bilgi_yok')}
                         </span>
                       );
@@ -3137,7 +3156,7 @@ export default function BusinessDetailsPage() {
                       {business?.address?.street}, {business?.address?.postalCode}{" "}
                       {business?.address?.city}
                     </p>
-                    <p className="text-gray-500 text-xs mt-1">
+                    <p className="text-muted-foreground text-xs mt-1">
                       {business?.address?.country}
                     </p>
                   </div>
@@ -3145,7 +3164,7 @@ export default function BusinessDetailsPage() {
               </div>
 
               {/* Subscription & Membership Status */}
-              <div className="bg-card rounded-xl p-4">
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
                 <h3 className="text-foreground font-bold mb-4">
                   {t('uyelikAbonelik')}
                 </h3>
@@ -3161,7 +3180,7 @@ export default function BusinessDetailsPage() {
                           {planInfo.label}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {(business?.monthlyFee ?? 0) > 0
                           ? `${formatCurrency(business?.monthlyFee || 0, business?.currency)}/ay`
                           : t('ucretsiz')}
@@ -3225,13 +3244,13 @@ export default function BusinessDetailsPage() {
                 <div className="flex border-b border-border">
                   <button
                     onClick={() => setProductMode('standard')}
-                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'standard' ? "bg-gray-700 text-white" : "text-muted-foreground hover:bg-gray-750"}`}
+                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'standard' ? "bg-foreground text-background shadow-md" : "text-muted-foreground hover:bg-muted/40 dark:bg-muted/10 border-border"}`}
                   >
                     {t('hizliSecStandart')}
                   </button>
                   <button
                     onClick={() => setProductMode('custom')}
-                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'custom' ? "bg-gray-700 text-white" : "text-muted-foreground hover:bg-gray-750"}`}
+                    className={`flex-1 py-3 text-sm font-medium ${productMode === 'custom' ? "bg-foreground text-background shadow-md" : "text-muted-foreground hover:bg-muted/40 dark:bg-muted/10 border-border"}`}
                   >
                     {t('ozelUrunTalep')}
                   </button>
@@ -3245,7 +3264,7 @@ export default function BusinessDetailsPage() {
                         <select
                           value={selectedMasterId}
                           onChange={(e) => setSelectedMasterId(e.target.value)}
-                          className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
+                          className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                         >
                           <option value="">{t('seciniz')}</option>
                           {(firestoreMasterProducts.length > 0 ? firestoreMasterProducts : MASTER_PRODUCTS).map(mp => (
@@ -3267,7 +3286,7 @@ export default function BusinessDetailsPage() {
                           value={customProductForm.price}
                           onChange={(e) => setCustomProductForm({ ...customProductForm, price: e.target.value })}
                           placeholder="0.00"
-                          className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
+                          className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                         />
                       </div>
                     </div>
@@ -3283,13 +3302,13 @@ export default function BusinessDetailsPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-muted-foreground text-sm block mb-1">Fiyat (€)</label>
+                          <label className="text-muted-foreground text-sm block mb-1">{t('price_eur') || "Fiyat (€)"}</label>
                           <input
                             type="number"
                             value={customProductForm.price}
                             onChange={(e) => setCustomProductForm({ ...customProductForm, price: e.target.value })}
                             placeholder="0.00"
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
+                            className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                           />
                         </div>
                         <div>
@@ -3297,9 +3316,9 @@ export default function BusinessDetailsPage() {
                           <select
                             value={customProductForm.unit}
                             onChange={(e) => setCustomProductForm({ ...customProductForm, unit: e.target.value })}
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
+                            className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
                           >
-                            <option value="kg">Kg</option>
+                            <option value="kg">{t('kg') || "Kg"}</option>
                             <option value="ad">{t('adet')}</option>
                             <option value="pk">{t('paket')}</option>
                           </select>
@@ -3325,7 +3344,7 @@ export default function BusinessDetailsPage() {
                   )}
                 </div>
 
-                <div className="p-4 bg-gray-750 flex justify-end gap-3">
+                <div className="p-4 bg-muted/40 dark:bg-muted/10 border-border flex justify-end gap-3">
                   <button
                     onClick={() => setProductModalOpen(false)}
                     className="px-4 py-2 text-muted-foreground hover:text-white"
@@ -3390,13 +3409,13 @@ export default function BusinessDetailsPage() {
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setProcurementSubTab('orders')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
                 >
                    {t('procurement_orders')} ({supplierOrders.length})
                 </button>
                 <button
                   onClick={() => setProcurementSubTab('suppliers')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'}`}
                 >
                    {t('procurement_suppliers')} ({suppliers.length})
                 </button>
@@ -3431,7 +3450,7 @@ export default function BusinessDetailsPage() {
                   ) : (
                     <div className="divide-y divide-border">
                       {suppliers.map((supplier: any) => (
-                        <div key={supplier.id} className="p-4 hover:bg-gray-750 flex items-center justify-between">
+                        <div key={supplier.id} className="p-4 hover:bg-muted/40 dark:bg-muted/10 border-border flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
                               <span className="text-lg"></span>
@@ -3525,7 +3544,7 @@ export default function BusinessDetailsPage() {
                     </div>
                   ) : (
                     <table className="w-full text-left">
-                      <thead className="bg-gray-750 text-muted-foreground text-sm">
+                      <thead className="bg-muted/40 dark:bg-muted/10 border-border text-muted-foreground text-sm">
                         <tr>
                           <th className="px-4 py-3">{t('siparis_no')}</th>
                           <th className="px-4 py-3">{t('tedarikci')}</th>
@@ -3539,7 +3558,7 @@ export default function BusinessDetailsPage() {
                       <tbody className="text-foreground">
                         {supplierOrders.map((order: any) => {
                           const statusColors: any = {
-                            draft: 'bg-gray-600 text-gray-200',
+                            draft: 'bg-muted border border-border text-foreground text-gray-200',
                             ordered: 'bg-blue-600 text-blue-100',
                             partiallyDelivered: 'bg-yellow-600 text-yellow-100',
                             delivered: 'bg-green-600 text-green-100',
@@ -3553,13 +3572,13 @@ export default function BusinessDetailsPage() {
                             cancelled: ` ${t('iptal')}`,
                           };
                           return (
-                            <tr key={order.id} className="border-t border-border hover:bg-gray-750">
+                            <tr key={order.id} className="border-t border-border hover:bg-muted/40 dark:bg-muted/10 border-border">
                               <td className="px-4 py-3 font-mono text-sm text-blue-800 dark:text-blue-400">{order.orderNumber}</td>
                               <td className="px-4 py-3">{order.supplierName}</td>
                               <td className="px-4 py-3 text-sm text-muted-foreground">{order.items?.length || 0} {t('procurement_items_count')}</td>
                               <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-gray-600'}`}>
+                                <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-muted border border-border text-foreground'}`}>
                                   {statusLabels[order.status] || order.status}
                                 </span>
                               </td>
@@ -3605,7 +3624,7 @@ export default function BusinessDetailsPage() {
                                       });
                                       setShowOrderModal(true);
                                     }}
-                                    className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs"
+                                    className="px-2 py-1 bg-muted border border-border text-foreground hover:bg-gray-500 text-white rounded text-xs"
                                   >
                                     
                                   </button>
@@ -3708,8 +3727,8 @@ export default function BusinessDetailsPage() {
                      <button
                        onClick={toggleActiveStatus}
                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${business.isActive
-                         ? "bg-gray-700 text-red-800 dark:text-red-400 border border-red-500/30 hover:bg-red-900/30 hover:border-red-500/60"
-                         : "bg-gray-700 text-green-800 dark:text-green-400 border border-green-500/30 hover:bg-green-900/30 hover:border-green-500/60"
+                         ? "bg-muted text-red-800 dark:text-red-400 border border-red-500/30 hover:bg-red-900/30 hover:border-red-500/60"
+                         : "bg-muted text-green-800 dark:text-green-400 border border-green-500/30 hover:bg-green-900/30 hover:border-green-500/60"
                          }`}
                      >
                        {business.isActive ? t('tumFaaliyetleriDurdur') : t('aktif_et')}
@@ -3729,7 +3748,7 @@ export default function BusinessDetailsPage() {
                          <>
                            <button
                              onClick={() => setIsEditing(false)}
-                             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition text-sm"
+                             className="px-4 py-2 bg-muted border border-border text-foreground text-white rounded-lg hover:bg-gray-500 font-medium transition text-sm"
                            >
                              {t('iptal1') || 'İptal'}
                            </button>
@@ -3765,7 +3784,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setIsletmeInternalTab(tab.id)}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${isletmeInternalTab === tab.id
                           ? "bg-red-600 text-white"
-                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                          : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
                           }`}
                       >
                         {tab.label}
@@ -3779,13 +3798,13 @@ export default function BusinessDetailsPage() {
                       {/* Şirket Adı */}
                       <div>
                         <label className="text-muted-foreground text-sm">{t('sirketAdi')}</label>
-                        <input type="text" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                        <input type="text" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                       </div>
                       {/* Mutfak Türü */}
                       <div>
                         <label className="text-muted-foreground text-sm">{t('mutfakTuruAltBaslik')}</label>
-                        <input type="text" value={formData.cuisineType} onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })} disabled={!isEditing} placeholder={t('ornKebapDonerTurkisch')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
-                        <p className="text-xs text-gray-500 mt-1">{t('kartlardaIsletmeAdiAltindaGosterilir')}</p>
+                        <input type="text" value={formData.cuisineType} onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })} disabled={!isEditing} placeholder={t('ornKebapDonerTurkisch')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
+                        <p className="text-xs text-muted-foreground mt-1">{t('kartlardaIsletmeAdiAltindaGosterilir')}</p>
                       </div>
                       {/* İşletme Türleri */}
                       <div>
@@ -3794,7 +3813,7 @@ export default function BusinessDetailsPage() {
                           {dynamicSectorTypes.map((sector) => {
                             const isSelected = formData.types?.includes(sector.id);
                             return (
-                              <button key={sector.id} type="button" onClick={() => { if (!isEditing) return; const newTypes = isSelected ? formData.types.filter(t => t !== sector.id) : [...(formData.types || []), sector.id]; setFormData({ ...formData, types: newTypes }); }} disabled={!isEditing} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'bg-blue-600 text-white ring-2 ring-white/50' : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                              <button key={sector.id} type="button" onClick={() => { if (!isEditing) return; const newTypes = isSelected ? formData.types.filter(t => t !== sector.id) : [...(formData.types || []), sector.id]; setFormData({ ...formData, types: newTypes }); }} disabled={!isEditing} className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? 'bg-blue-600 text-white ring-2 ring-white/50' : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                                 <span>{sector.icon}</span><span>{sector.label}</span>{isSelected && <span className="text-white/80">✓</span>}
                               </button>
                             );
@@ -3805,30 +3824,30 @@ export default function BusinessDetailsPage() {
                       {/* Müşteri No */}
                       <div>
                         <label className="text-muted-foreground text-sm">{t('musteriNo')}</label>
-                        <input type="text" value={formData.customerId} readOnly disabled={true} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 opacity-50 cursor-not-allowed" />
-                        <p className="text-xs text-gray-500 mt-1">{t('musteriNoDegistirilemez')}</p>
+                        <input type="text" value={formData.customerId} readOnly disabled={true} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 opacity-50 cursor-not-allowed" />
+                        <p className="text-xs text-muted-foreground mt-1">{t('musteriNoDegistirilemez')}</p>
                       </div>
                       {/* Vergi UID */}
                       <div>
                         <label className="text-muted-foreground text-sm">{t('vergi_uid_nummer_vat')}</label>
-                        <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
-                        <p className="text-xs text-gray-500 mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
+                        <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
+                        <p className="text-xs text-muted-foreground mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
                       </div>
                       {/* Adres */}
                       <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-foreground font-medium pb-2"> {t('adres_baslik')}</h4>
                         <div>
                           <label className="text-muted-foreground text-sm">{t('sokakCadde')}</label>
-                          <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                          <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('postaKodu')}</label>
-                            <input type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">{t('sehir1')}</label>
-                            <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                       </div>
@@ -3838,16 +3857,16 @@ export default function BusinessDetailsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('telefon_label')}</label>
-                            <input type="tel" value={formData.shopPhone || ''} onChange={(e) => setFormData({ ...formData, shopPhone: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="tel" value={formData.shopPhone || ''} onChange={(e) => setFormData({ ...formData, shopPhone: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">{t('ePosta')}</label>
-                            <input type="email" value={formData.shopEmail || ''} onChange={(e) => setFormData({ ...formData, shopEmail: e.target.value })} disabled={!isEditing} placeholder="info@example.com" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="email" value={formData.shopEmail || ''} onChange={(e) => setFormData({ ...formData, shopEmail: e.target.value })} disabled={!isEditing} placeholder="info@example.com" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                         <div>
                           <label className="text-muted-foreground text-sm">{t('webSitesi')}</label>
-                          <input type="url" value={formData.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} disabled={!isEditing} placeholder="https://www.example.com" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                          <input type="url" value={formData.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} disabled={!isEditing} placeholder="https://www.example.com" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                         </div>
                       </div>
                       {/* Sosyal Medya */}
@@ -3856,23 +3875,23 @@ export default function BusinessDetailsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('instagram')}</label>
-                            <input type="text" value={formData.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">📘 Facebook</label>
-                            <input type="text" value={formData.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} disabled={!isEditing} placeholder="facebook.com/..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} disabled={!isEditing} placeholder="facebook.com/..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">💬 WhatsApp</label>
-                            <input type="tel" value={formData.whatsapp || ''} onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="tel" value={formData.whatsapp || ''} onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })} disabled={!isEditing} placeholder="+49..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">🎵 TikTok</label>
-                            <input type="text" value={formData.tiktok || ''} onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.tiktok || ''} onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">▶️ YouTube</label>
-                            <input type="text" value={formData.youtube || ''} onChange={(e) => setFormData({ ...formData, youtube: e.target.value })} disabled={!isEditing} placeholder="youtube.com/..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.youtube || ''} onChange={(e) => setFormData({ ...formData, youtube: e.target.value })} disabled={!isEditing} placeholder="youtube.com/..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                       </div>
@@ -3880,22 +3899,22 @@ export default function BusinessDetailsPage() {
                       <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-blue-800 dark:text-blue-400 font-medium text-sm">{t('lokmaYetkiliIrtibatKisisi')}</h4>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-muted-foreground text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
-                          <div><label className="text-muted-foreground text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
-                          <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
+                          <div><label className="text-muted-foreground text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:opacity-50" /></div>
                         </div>
                       </div>
                       {/* Impressum / Rechtliche Angaben */}
                       <div className="space-y-4 pt-4 border-t border-border">
                         <h4 className="text-foreground font-medium pb-2">📜 {t('impressumBaslik')}</h4>
-                        <p className="text-gray-500 text-xs -mt-2">{t('impressumAciklama')}</p>
+                        <p className="text-muted-foreground text-xs -mt-2">{t('impressumAciklama')}</p>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('rechtsform')}</label>
-                            <select value={formData.legalForm || ''} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
+                            <select value={formData.legalForm || ''} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50">
                               <option value="">{t('bitteWaehlen')}</option>
                               {Object.entries(GERMAN_LEGAL_FORM_LABELS).map(([key, label]) => (
                                 <option key={key} value={key}>{label}</option>
@@ -3904,21 +3923,21 @@ export default function BusinessDetailsPage() {
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">{t('geschaeftsfuehrer')}</label>
-                            <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                         <div>
                           <label className="text-muted-foreground text-sm">{t('vertretungsberechtigter')}</label>
-                          <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                          <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-muted-foreground text-sm">{t('registergericht')}</label>
-                            <input type="text" value={formData.registerCourt || ''} onChange={(e) => setFormData({ ...formData, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Mönchengladbach" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                            <input type="text" value={formData.registerCourt || ''} onChange={(e) => setFormData({ ...formData, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Mönchengladbach" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                           </div>
                           <div>
                             <label className="text-muted-foreground text-sm">{t('handelsregisternummer')}</label>
-                            <input type="text" value={formData.registerNumber || ''} onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. HRB 12345" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
+                            <input type="text" value={formData.registerNumber || ''} onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. HRB 12345" className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
                           </div>
                         </div>
                       </div>
@@ -3929,25 +3948,25 @@ export default function BusinessDetailsPage() {
                           <label className="text-muted-foreground text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
                           {isEditing && (
                             <div className="flex gap-2 mt-1 mb-2">
-                              <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500" />
+                              <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-foreground text-background shadow-md px-3 py-2 rounded-lg border border-border focus:border-blue-500" />
                               <button type="button" onClick={() => handleGooglePlacesSearch()} disabled={googleSearchLoading || googleSearchQuery.length < 3} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 {googleSearchLoading ? (<span className="animate-spin"></span>) : (<span></span>)} {t('ara_button')}
                               </button>
                             </div>
                           )}
                           {showGoogleDropdown && googleSearchResults.length > 0 && (
-                            <div className="absolute z-50 mt-1 w-full bg-card border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                            <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
                               {googleSearchResults.map((place, index) => (
-                                <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-gray-700 border-b border-border last:border-0 transition">
+                                <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-muted border-b border-border last:border-0 transition">
                                   <p className="text-foreground font-medium">{place.name}</p>
                                   <p className="text-muted-foreground text-sm">{place.formatted_address}</p>
                                   {place.rating && (<p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
                                 </button>
                               ))}
-                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-muted-foreground hover:text-foreground text-sm">✕ {t('kapat_button')}</button>
+                              <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-muted text-muted-foreground hover:text-foreground text-sm">✕ {t('kapat_button')}</button>
                             </div>
                           )}
-                          <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
+                          <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono text-sm" />
                           {formData.googlePlaceId && (<p className="text-xs text-green-800 dark:text-green-400 mt-1">{t('google_place_id_set')}</p>)}
                         </div>
                       </div>
@@ -3962,30 +3981,30 @@ export default function BusinessDetailsPage() {
                           <input type="checkbox" checked={formData.hasDifferentBillingAddress || false} onChange={(e) => setFormData({ ...formData, hasDifferentBillingAddress: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-500" />
                           <span className="text-foreground font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
                         </label>
-                        <p className="text-xs text-gray-500 mb-4">{t('geneldeIsletmeIsmiIleFaturaIsmi')}</p>
+                        <p className="text-xs text-muted-foreground mb-4">{t('geneldeIsletmeIsmiIleFaturaIsmi')}</p>
                         {formData.hasDifferentBillingAddress && (
                           <div className="space-y-4 pt-4 border-t border-border">
                             <div>
                               <label className="text-muted-foreground text-sm">{t('faturaFirmaKisiAdi')}</label>
-                              <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder={t('ornAbcGmbh')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder={t('ornAbcGmbh')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                             </div>
                             <div>
                               <label className="text-muted-foreground text-sm">{t('fatura_adresi')}</label>
-                              <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder={t('sokakCadde')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder={t('sokakCadde')} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="text-muted-foreground text-sm">{t('postaKodu')}</label>
-                                <input type="text" value={formData.billingPostalCode || ''} onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="text" value={formData.billingPostalCode || ''} onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                               </div>
                               <div>
                                 <label className="text-muted-foreground text-sm">{t('sehir1')}</label>
-                                <input type="text" value={formData.billingCity || ''} onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="text" value={formData.billingCity || ''} onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                               </div>
                             </div>
                             <div>
                               <label className="text-muted-foreground text-sm">{t('fatura_vergi_no')}</label>
-                              <input type="text" value={formData.billingVatNumber || ''} onChange={(e) => setFormData({ ...formData, billingVatNumber: e.target.value })} disabled={!isEditing} placeholder="DE..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
+                              <input type="text" value={formData.billingVatNumber || ''} onChange={(e) => setFormData({ ...formData, billingVatNumber: e.target.value })} disabled={!isEditing} placeholder="DE..." className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50 font-mono" />
                             </div>
                           </div>
                         )}
@@ -4000,22 +4019,22 @@ export default function BusinessDetailsPage() {
                         <>
                           <div className="bg-card/50 border border-border rounded-xl p-6">
                             <label className="text-muted-foreground text-sm"> LOKMA Label <span className="text-xs text-purple-800 dark:text-purple-400">(Super Admin)</span></label>
-                            <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
+                            <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50">
                               <option value="">{t('secilmedi')}</option>
                               <option value="tuna">🔴 TUNA</option>
                               <option value="akdeniz_toros">⚫ Akdeniz Toros</option>
                             </select>
-                            <p className="text-xs text-gray-500 mt-1">{t('buAyarSadeceSuperAdminTarafindan')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('buAyarSadeceSuperAdminTarafindan')}</p>
                           </div>
                           <div className="bg-card/50 border border-border rounded-xl p-6">
                             <label className="text-muted-foreground text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-800 dark:text-blue-400">{t('filtrelemeIcin')}</span></label>
-                            <p className="text-xs text-gray-500 mb-3 mt-1">{t('buIsletmeHangiMarkalarinUrunleriniSatiyor')}</p>
+                            <p className="text-xs text-muted-foreground mb-3 mt-1">{t('buIsletmeHangiMarkalarinUrunleriniSatiyor')}</p>
                             <div className="flex flex-wrap gap-3">
-                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-gray-700 border border-gray-600 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-muted border border-border text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-red-500" />
                                 <span className="text-lg">🔴</span><span className="font-medium">{t('tunaUrunleri')}</span>
                               </label>
-                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTorosProducts ? 'bg-green-600/30 border-2 border-green-500 text-green-300' : 'bg-gray-700 border border-gray-600 text-muted-foreground hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTorosProducts ? 'bg-green-600/30 border-2 border-green-500 text-green-300' : 'bg-muted border border-border text-muted-foreground hover:bg-muted border border-border text-foreground'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-green-500" />
                                 <span className="text-lg">🟢</span><span className="font-medium">{t('akdenizTorosUrunleri')}</span>
                               </label>
@@ -4038,14 +4057,14 @@ export default function BusinessDetailsPage() {
                       <div className="bg-card/50 border border-border rounded-xl p-6">
                         <h4 className="text-foreground font-medium mb-4">{t('isletmeKartGorseli')}</h4>
                         <div className="flex items-start gap-4">
-                          <div className="w-32 h-32 bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center border border-gray-600 shrink-0">
+                          <div className="w-32 h-32 bg-muted rounded-lg overflow-hidden flex items-center justify-center border border-border shrink-0">
                             {formData.imageUrl ? (<img src={formData.imageUrl} alt="Business" className="w-full h-full object-cover" />) : (<span className="text-4xl">{getBusinessTypeLabel((business as any)?.types || (business as any)?.type).emoji}</span>)}
                           </div>
                           {isEditing && (
                             <div className="flex flex-col gap-2 w-full">
                               <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
-                              <div className="flex items-center gap-2 my-1"><span className="text-gray-600 text-xs">{t('veya')}</span></div>
-                              <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-card text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
+                              <div className="flex items-center gap-2 my-1"><span className="text-muted-foreground text-xs">{t('veya')}</span></div>
+                              <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-card text-foreground rounded-lg hover:bg-muted dark:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
                                 {uploading && !imageFile ? (<span className="animate-spin mr-2"></span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
                               </button>
                               {!formData.googlePlaceId && (<p className="text-xs text-red-800 dark:text-red-400">{t('google_id_gerekli')}</p>)}
@@ -4057,7 +4076,7 @@ export default function BusinessDetailsPage() {
                       <div className="bg-card/50 border border-border rounded-xl p-6">
                         <h4 className="text-foreground font-medium mb-4">{t('isletmeLogosuKare')}</h4>
                         <div className="flex items-center gap-4">
-                          {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-gray-600" />) : (<div className="w-20 h-20 rounded-lg bg-gray-700 border border-dashed border-gray-500 flex items-center justify-center text-gray-500 text-3xl">🏪</div>)}
+                          {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-border" />) : (<div className="w-20 h-20 rounded-lg bg-muted border border-dashed border-gray-500 flex items-center justify-center text-muted-foreground text-3xl">🏪</div>)}
                           {isEditing && (
                             <div className="flex flex-col gap-2">
                               <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer text-sm">
@@ -4068,7 +4087,7 @@ export default function BusinessDetailsPage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">{t('onerilenBoyut64x64PikselKare')}</p>
+                        <p className="text-xs text-muted-foreground mt-2">{t('onerilenBoyut64x64PikselKare')}</p>
                       </div>
                     </div>
                   )}
@@ -4090,7 +4109,7 @@ export default function BusinessDetailsPage() {
                               onClick={() => setSaatlerSubTab(tab.id)}
                               className={`w-full text-left px-4 py-3.5 text-sm font-medium transition border-b border-border/50 last:border-0 ${saatlerSubTab === tab.id
                                 ? "bg-blue-600/20 text-blue-800 dark:text-blue-400 border-l-2 border-l-blue-500"
-                                : "text-muted-foreground hover:bg-gray-700/50 hover:text-white border-l-2 border-l-transparent"
+                                : "text-muted-foreground hover:bg-muted/50 hover:text-white border-l-2 border-l-transparent"
                                 }`}
                             >
                               {tab.label}
@@ -4133,12 +4152,12 @@ export default function BusinessDetailsPage() {
                                   return (
                                     <div key={day.display} className="flex items-center gap-3">
                                       <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
-                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                      <span className="text-gray-500 font-bold">–</span>
-                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                      <span className="text-muted-foreground font-bold">–</span>
+                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <label className="flex items-center cursor-pointer ml-auto relative">
                                         <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                        <div className="w-9 h-5 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                                         <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                       </label>
                                     </div>
@@ -4206,12 +4225,12 @@ export default function BusinessDetailsPage() {
                                     return (
                                       <div key={day.display} className="flex items-center gap-3">
                                         <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
-                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                        <span className="text-gray-500 font-bold">–</span>
-                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <span className="text-muted-foreground font-bold">–</span>
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                          <div className="w-9 h-5 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                                           <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                       </div>
@@ -4279,12 +4298,12 @@ export default function BusinessDetailsPage() {
                                     return (
                                       <div key={day.display} className="flex items-center gap-3">
                                         <span className="w-24 text-sm text-muted-foreground font-medium">{day.display}</span>
-                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                        <span className="text-gray-500 font-bold">–</span>
-                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-gray-600 rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <span className="text-muted-foreground font-bold">–</span>
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                         <label className="flex items-center cursor-pointer ml-auto relative">
                                           <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                          <div className="w-9 h-5 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                                           <span className="ml-2 text-xs text-muted-foreground font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                         </label>
                                       </div>
@@ -4315,15 +4334,15 @@ export default function BusinessDetailsPage() {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               <div>
                                 <label className="text-muted-foreground text-sm">{t('minSiparis')}</label>
-                                <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="number" value={formData.minDeliveryOrder} onChange={(e) => setFormData({ ...formData, minDeliveryOrder: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                               </div>
                               <div>
                                 <label className="text-muted-foreground text-sm">{t('teslimatUcreti')}</label>
-                                <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                               </div>
                               <div>
                                 <label className="text-muted-foreground text-sm">{t('maksMesafe')}</label>
-                                <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                                <input type="number" value={formData.deliveryRadius || 5} onChange={(e) => setFormData({ ...formData, deliveryRadius: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50" />
                               </div>
                             </div>
                           )}
@@ -4332,10 +4351,10 @@ export default function BusinessDetailsPage() {
                           <div className="mt-3">
                             <label className="text-muted-foreground text-sm flex items-center gap-1">{t('ucretsizTeslimatEsigi')}</label>
                             <div className="flex items-center gap-2 mt-1">
-                              <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-32 bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
+                              <input type="number" value={formData.freeDeliveryThreshold || 0} onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })} onFocus={(e) => e.target.select()} disabled={!isEditing} className="w-32 bg-foreground text-background shadow-md px-3 py-2 rounded-lg disabled:opacity-50" min="0" step="0.01" />
                               <span className="text-muted-foreground text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">{t('0HerZamanTeslimatUcretiUygulanir')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t('0HerZamanTeslimatUcretiUygulanir')}</p>
                           </div>
 
                           {/* Ön Sipariş Checkbox */}
@@ -4373,7 +4392,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("kategoriler")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "kategoriler"
                           ? "bg-red-600 text-white"
-                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                          : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
                           }`}
                       >
                         {t('kategoriler')} ({inlineCategories.length})
@@ -4382,7 +4401,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("urunler")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "urunler"
                           ? "bg-red-600 text-white"
-                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                          : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
                           }`}
                       >
                         {t('urunler')}{inlineProducts.length})
@@ -4391,7 +4410,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setMenuInternalTab("sponsored")}
                         className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
                           ? "bg-amber-600 text-white"
-                          : "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                          : "bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm"
                           } ${!planFeatures.sponsoredProducts && admin?.adminType !== 'super' ? 'opacity-60' : ''}`}
                       >
                         {!planFeatures.sponsoredProducts && admin?.adminType !== 'super' && '🔒 '}{t('one_cikan')} ({sponsoredProducts.length})
@@ -4492,13 +4511,13 @@ export default function BusinessDetailsPage() {
                                   <button
                                     onClick={() => moveCategoryInline(index, 'up')}
                                     disabled={index === 0}
-                                    className="text-gray-500 hover:text-white disabled:opacity-20 text-xs"
+                                    className="text-muted-foreground hover:text-white disabled:opacity-20 text-xs"
                                   >▲</button>
-                                  <span className="text-[10px] text-gray-600">{index + 1}</span>
+                                  <span className="text-[10px] text-muted-foreground">{index + 1}</span>
                                   <button
                                     onClick={() => moveCategoryInline(index, 'down')}
                                     disabled={index === inlineCategories.length - 1}
-                                    className="text-gray-500 hover:text-white disabled:opacity-20 text-xs"
+                                    className="text-muted-foreground hover:text-white disabled:opacity-20 text-xs"
                                   >▼</button>
                                 </div>
 
@@ -4508,7 +4527,7 @@ export default function BusinessDetailsPage() {
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-foreground font-bold text-sm">{typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name}</h5>
-                                  <p className="text-gray-500 text-xs">
+                                  <p className="text-muted-foreground text-xs">
                                     {inlineProducts.filter((p: any) => p.category === (typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name) || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? ' Aktif' : t('pasif')}
                                   </p>
                                 </div>
@@ -4553,7 +4572,7 @@ export default function BusinessDetailsPage() {
                                       onClick={() => setCategoryForm({ ...categoryForm, icon })}
                                       className={`w-10 h-10 text-2xl rounded-lg transition ${categoryForm.icon === icon
                                         ? 'bg-violet-600 ring-2 ring-violet-400'
-                                        : 'bg-gray-700 hover:bg-gray-600'
+                                        : 'bg-muted hover:bg-muted border border-border text-foreground'
                                         }`}
                                     >
                                       {icon}
@@ -4579,7 +4598,7 @@ export default function BusinessDetailsPage() {
                                     type="checkbox"
                                     checked={categoryForm.isActive}
                                     onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
-                                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500"
+                                    className="w-5 h-5 rounded bg-muted border-border text-violet-500"
                                   />
                                   <span className="text-foreground">{t('aktifUygulamadaGorunsun')}</span>
                                 </label>
@@ -4589,7 +4608,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex gap-3">
                                 <button
                                   onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
-                                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600 transition"
+                                  className="flex-1 px-4 py-3 bg-accent text-foreground dark:bg-muted dark:text-gray-100 rounded-lg hover:bg-muted border border-border text-foreground transition"
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={handleSaveCategory}
@@ -4615,7 +4634,7 @@ export default function BusinessDetailsPage() {
                               <div className="flex gap-3 mt-5">
                                 <button
                                   onClick={() => setDeletingCategoryId(null)}
-                                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-lg hover:bg-gray-600"
+                                  className="flex-1 px-4 py-2.5 bg-accent text-foreground dark:bg-muted dark:text-gray-100 rounded-lg hover:bg-muted border border-border text-foreground"
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={() => handleDeleteCategory(deletingCategoryId)}
@@ -4670,9 +4689,9 @@ export default function BusinessDetailsPage() {
                                 setProductCurrentPage(1);
                               }}
                               placeholder={t('urun_ara_placeholder')}
-                              className="w-full px-4 py-2.5 pl-10 bg-card border border-gray-600 rounded-lg text-foreground text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                              className="w-full px-4 py-2.5 pl-10 bg-card border border-border rounded-lg text-foreground text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background transition"
                             />
-                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                             {productSearchQuery && (
@@ -4681,7 +4700,7 @@ export default function BusinessDetailsPage() {
                                   setProductSearchQuery('');
                                   setProductCurrentPage(1);
                                 }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition"
                               >
                                 ✕
                               </button>
@@ -4707,7 +4726,7 @@ export default function BusinessDetailsPage() {
                                 onClick={() => { setInlineCategoryFilter('all'); setProductCurrentPage(1); }}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === 'all'
                                   ? 'bg-green-600 text-white'
-                                  : 'bg-gray-700/80 text-foreground hover:bg-gray-600'
+                                  : 'bg-muted/80 text-foreground hover:bg-muted border border-border text-foreground'
                                   }`}
                               >
                                  Tümü {inlineProducts.length}
@@ -4720,7 +4739,7 @@ export default function BusinessDetailsPage() {
                                     onClick={() => { setInlineCategoryFilter(cn); setProductCurrentPage(1); }}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === cn
                                       ? 'bg-blue-600 text-white'
-                                      : 'bg-gray-700/80 text-foreground hover:bg-gray-600'
+                                      : 'bg-muted/80 text-foreground hover:bg-muted border border-border text-foreground'
                                       }`}
                                   >
                                     {catInfo?.icon || ''} {cn} {catCounts[cn]}
@@ -4730,11 +4749,11 @@ export default function BusinessDetailsPage() {
 
                               {/* Status filter dropdown — pushed right */}
                               <div className="ml-auto flex items-center gap-2">
-                                <span className="text-muted-foreground text-xs">Durum Filtresi:</span>
+                                <span className="text-muted-foreground text-xs">{t('status_filter') || "Durum Filtresi:"}</span>
                                 <select
                                   value={inlineStatusFilter}
                                   onChange={(e) => { setInlineStatusFilter(e.target.value); setProductCurrentPage(1); }}
-                                  className="bg-gray-700 text-white text-xs rounded-lg px-3 py-1.5 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                  className="bg-foreground text-background shadow-md text-xs rounded-lg px-3 py-1.5 border border-border focus:border-blue-500 focus:outline-none"
                                 >
                                   <option value="all"> Tümü ({inlineProducts.length})</option>
                                   <option value="active">{t('aktif')}</option>
@@ -4846,7 +4865,7 @@ export default function BusinessDetailsPage() {
                                   <span className="text-green-800 dark:text-green-400 text-sm font-bold flex items-center gap-1">
                                     ☑ {selectedInlineProducts.size} ürün seçili
                                   </span>
-                                  <span className="w-px h-5 bg-gray-600"></span>
+                                  <span className="w-px h-5 bg-muted border border-border text-foreground"></span>
 
                                   {/* Status */}
                                   <select
@@ -4912,7 +4931,7 @@ export default function BusinessDetailsPage() {
                                     </button>
                                     <button
                                       onClick={() => setSelectedInlineProducts(new Set())}
-                                      className="bg-gray-600 hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+                                      className="bg-muted border border-border text-foreground hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
                                     >
                                       {t('iptal')}
                                     </button>
@@ -4922,7 +4941,7 @@ export default function BusinessDetailsPage() {
 
                               <div className="bg-card/60 rounded-xl border border-border overflow-hidden">
                                 {/* Table Header */}
-                                <div className="px-4 py-2.5 bg-gray-700/50 border-b border-border grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-muted-foreground font-medium">
+                                <div className="px-4 py-2.5 bg-muted/50 border-b border-border grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-muted-foreground font-medium">
                                   <div className="flex justify-center">
                                     <input
                                       type="checkbox"
@@ -4939,8 +4958,8 @@ export default function BusinessDetailsPage() {
                                   </div>
                                   <div></div>
                                   <div>{t('urun_adi')}</div>
-                                  <div>SKU</div>
-                                  <div>Fiyat (Netto / Brutto)</div>
+                                  <div>{t('sku') || "SKU"}</div>
+                                  <div>{t('price_netto_brutto') || "Fiyat (Netto / Brutto)"}</div>
                                   <div>{t('birim')}</div>
                                   <div>{t('durum_col')}</div>
                                   <div className="text-right">{t('islemler')}</div>
@@ -4966,7 +4985,7 @@ export default function BusinessDetailsPage() {
                                     return (
                                       <Fragment key={product.id}>
                                         <div
-                                          className={`px-4 py-2 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center hover:bg-gray-700/30 transition cursor-pointer ${isSelected ? 'bg-blue-900/20' : ''} ${editingInlineProduct?.id === product.id ? 'bg-blue-900/30 border-l-2 border-blue-500' : ''} ${!isActive ? 'opacity-60' : ''}`}
+                                          className={`px-4 py-2 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center hover:bg-muted/30 transition cursor-pointer ${isSelected ? 'bg-blue-900/20' : ''} ${editingInlineProduct?.id === product.id ? 'bg-blue-900/30 border-l-2 border-blue-500' : ''} ${!isActive ? 'opacity-60' : ''}`}
                                         >
                                           {/* Checkbox */}
                                           <div className="flex justify-center">
@@ -4992,7 +5011,7 @@ export default function BusinessDetailsPage() {
                                                 className="w-9 h-9 rounded-lg object-cover"
                                               />
                                             ) : (
-                                              <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-xs">
+                                              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs">
                                                 📷
                                               </div>
                                             )}
@@ -5000,7 +5019,7 @@ export default function BusinessDetailsPage() {
                                           {/* Name + Description */}
                                           <div className="min-w-0">
                                             <p className="text-foreground text-sm font-medium truncate">{productName}</p>
-                                            <p className="text-gray-500 text-xs truncate">
+                                            <p className="text-muted-foreground text-xs truncate">
                                               {getLocalizedText(product.description) || ''}
                                             </p>
                                           </div>
@@ -5010,11 +5029,11 @@ export default function BusinessDetailsPage() {
                                           <div className="text-right">
                                             {appPrice ? (
                                               <div className="space-y-0.5">
-                                                <div className="text-green-800 dark:text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">{t('brutto')}</span></div>
-                                                <div className="text-muted-foreground text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">{t('netto')}</span></div>
+                                                <div className="text-green-800 dark:text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-muted-foreground text-[10px] font-normal">{t('brutto')}</span></div>
+                                                <div className="text-muted-foreground text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-muted-foreground text-[10px]">{t('netto')}</span></div>
                                               </div>
                                             ) : (
-                                              <span className="text-gray-600 text-xs">—</span>
+                                              <span className="text-muted-foreground text-xs">—</span>
                                             )}
                                           </div>
                                           {/* Unit */}
@@ -5133,7 +5152,7 @@ export default function BusinessDetailsPage() {
                                                       onClick={() => setEditInlineTab(tab.key as any)}
                                                       className={`px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap transition ${editInlineTab === tab.key
                                                         ? 'bg-blue-500 text-white'
-                                                        : 'text-muted-foreground hover:text-white hover:bg-gray-700/50'
+                                                        : 'text-muted-foreground hover:text-white hover:bg-muted/50'
                                                         }`}
                                                     >
                                                       {tab.label}
@@ -5153,7 +5172,7 @@ export default function BusinessDetailsPage() {
                                                 {editInlineTab === 'general' && (
                                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     <div>
-                                                      <label className="text-xs text-muted-foreground mb-1 block">SKU (ID)</label>
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('sku_id') || "SKU (ID)"}</label>
                                                       <input value={editFormFull.sku || editingInlineProduct?.id || ''} readOnly className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border" />
                                                     </div>
                                                     <div>
@@ -5181,7 +5200,7 @@ export default function BusinessDetailsPage() {
                                                       <div className="flex-1">
                                                         <label className="text-xs text-muted-foreground mb-1 block">{t('birim')}</label>
                                                         <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
-                                                          <option value="kg">Kg</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
+                                                          <option value="kg">{t('kg') || "Kg"}</option><option value="adet">{t('adet')}</option><option value="litre">{t('litre')}</option><option value="paket">{t('paket')}</option>
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
@@ -5191,7 +5210,7 @@ export default function BusinessDetailsPage() {
                                                         </select>
                                                       </div>
                                                       <div className="flex-1">
-                                                        <label className="text-xs text-muted-foreground mb-1 block">KDV</label>
+                                                        <label className="text-xs text-muted-foreground mb-1 block">{t('tax_vat') || "KDV"}</label>
                                                         <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                           <option value="7">%7</option><option value="19">%19</option><option value="0">%0</option>
                                                         </select>
@@ -5222,10 +5241,10 @@ export default function BusinessDetailsPage() {
                                                       <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-3">
                                                           <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400">{t('vergi_orani')}</h3>
-                                                          <span className="text-xs text-gray-500">{t('netto_brutto_hint')}</span>
+                                                          <span className="text-xs text-muted-foreground">{t('netto_brutto_hint')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-background border border-gray-600 rounded-lg px-3 py-2 text-sm text-foreground">
+                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground">
                                                             <option value="0">{t('tax_zero')}</option>
                                                             <option value="7">{t('tax_reduced')}</option>
                                                             <option value="19">{t('tax_standard')}</option>
@@ -5241,7 +5260,7 @@ export default function BusinessDetailsPage() {
                                                       <div className="border-b border-border pb-4">
                                                         <div className="flex items-center justify-between mb-4">
                                                           <h3 className="text-sm font-medium text-amber-800 dark:text-amber-400"> {t('fiyatlandirma')}</h3>
-                                                          <div className="flex items-center bg-card rounded-lg p-0.5 border border-gray-600">
+                                                          <div className="flex items-center bg-card rounded-lg p-0.5 border border-border">
                                                             <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-muted-foreground hover:text-white'}`}>
                                                               {t('netto_input')}
                                                             </button>
@@ -5256,22 +5275,22 @@ export default function BusinessDetailsPage() {
                                                           <label className="block text-sm text-foreground font-medium mb-2">{t('alis_fiyati')}</label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
                                                               {priceInputMode === 'netto' ? (
                                                                 <input type="number" step="0.01" value={editFormFull.purchasePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, purchasePrice: e.target.value }))} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
                                                                 <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
-                                                                  {pp > 0 ? `€${pp.toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                  {pp > 0 ? `€${pp.toFixed(2)}` : <span className="text-muted-foreground">--</span>}
                                                                 </div>
                                                               )}
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">Brutto (€) <span className="text-muted-foreground">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
                                                                 <input type="number" step="0.01" value={pp > 0 ? calcBrutto(pp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, purchasePrice: String(calcNetto(brutto)) })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
                                                                 <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
-                                                                  {pp > 0 ? `€${calcBrutto(pp).toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                  {pp > 0 ? `€${calcBrutto(pp).toFixed(2)}` : <span className="text-muted-foreground">--</span>}
                                                                 </div>
                                                               )}
                                                             </div>
@@ -5283,22 +5302,22 @@ export default function BusinessDetailsPage() {
                                                           <label className="block text-sm text-foreground font-medium mb-2">{t('satis_fiyati')}</label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
                                                               {priceInputMode === 'netto' ? (
                                                                 <input type="number" step="0.01" value={editFormFull.sellingPrice || ''} onChange={e => { setEditFormFull((p: any) => ({ ...p, sellingPrice: e.target.value })); setCustomProductForm((prev: any) => ({ ...prev, price: e.target.value })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
                                                                 <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
-                                                                  {sp > 0 ? `€${sp.toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                  {sp > 0 ? `€${sp.toFixed(2)}` : <span className="text-muted-foreground">--</span>}
                                                                 </div>
                                                               )}
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">Brutto (€) <span className="text-muted-foreground">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
                                                                 <input type="number" step="0.01" value={sp > 0 ? calcBrutto(sp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; const netto = calcNetto(brutto); setEditFormFull((p: any) => ({ ...p, sellingPrice: String(netto) })); setCustomProductForm((prev: any) => ({ ...prev, price: String(netto) })); }} className="w-full bg-background border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
                                                               ) : (
                                                                 <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
-                                                                  {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                  {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : <span className="text-muted-foreground">--</span>}
                                                                 </div>
                                                               )}
                                                             </div>
@@ -5317,22 +5336,22 @@ export default function BusinessDetailsPage() {
                                                           </label>
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
                                                               {priceInputMode === 'netto' ? (
                                                                 <input type="number" step="0.01" value={editFormFull.discountedPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, discountedPrice: e.target.value }))} className="w-full bg-background border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00 (opsiyonel)" />
                                                               ) : (
                                                                 <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
-                                                                  {dp > 0 ? `€${dp.toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                  {dp > 0 ? `€${dp.toFixed(2)}` : <span className="text-muted-foreground">--</span>}
                                                                 </div>
                                                               )}
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. {taxRate}% MwSt.</span></label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">Brutto (€) <span className="text-muted-foreground">inkl. {taxRate}% MwSt.</span></label>
                                                               {priceInputMode === 'brutto' ? (
                                                                 <input type="number" step="0.01" value={dp > 0 ? calcBrutto(dp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, discountedPrice: String(calcNetto(brutto)) })); }} className="w-full bg-background border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00" />
                                                               ) : (
                                                                 <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
-                                                                  {dp > 0 ? `€${calcBrutto(dp).toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                  {dp > 0 ? `€${calcBrutto(dp).toFixed(2)}` : <span className="text-muted-foreground">--</span>}
                                                                 </div>
                                                               )}
                                                             </div>
@@ -5343,19 +5362,19 @@ export default function BusinessDetailsPage() {
                                                         <div className="bg-card/50 rounded-lg p-3 border border-border">
                                                           <div className="grid grid-cols-3 gap-3 text-center">
                                                             <div>
-                                                              <span className="block text-xs text-gray-500 mb-1">{t('kar_marji')}</span>
+                                                              <span className="block text-xs text-muted-foreground mb-1">{t('kar_marji')}</span>
                                                               <span className="text-sm font-medium text-emerald-800 dark:text-emerald-400">
                                                                 {sp > 0 && pp > 0 ? `%${(((sp - pp) / pp) * 100).toFixed(1)}` : '--'}
                                                               </span>
                                                             </div>
                                                             <div>
-                                                              <span className="block text-xs text-gray-500 mb-1">{t('vergi_tutari')}</span>
+                                                              <span className="block text-xs text-muted-foreground mb-1">{t('vergi_tutari')}</span>
                                                               <span className="text-sm font-medium text-amber-800 dark:text-amber-400">
                                                                 {sp > 0 ? `€${(sp * taxRate / 100).toFixed(2)}` : '--'}
                                                               </span>
                                                             </div>
                                                             <div>
-                                                              <span className="block text-xs text-gray-500 mb-1">{t('brutto_satis')}</span>
+                                                              <span className="block text-xs text-muted-foreground mb-1">{t('brutto_satis')}</span>
                                                               <span className="text-sm font-medium text-foreground">
                                                                 {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : '--'}
                                                               </span>
@@ -5373,15 +5392,15 @@ export default function BusinessDetailsPage() {
                                                             <span className="text-xs text-muted-foreground">{t('farkli_fiyat_uygula')}</span>
                                                           </label>
                                                         </div>
-                                                        <p className="text-xs text-gray-500 mb-3">{t('app_price_desc')}</p>
+                                                        <p className="text-xs text-muted-foreground mb-3">{t('app_price_desc')}</p>
                                                         {editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0 ? (
                                                           <div className="grid grid-cols-2 gap-3">
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">{t('netto_eur') || "Netto (€)"}</label>
                                                               <input type="number" step="0.01" value={editFormFull.appPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, appPrice: e.target.value }))} className="w-full bg-background border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
                                                             </div>
                                                             <div>
-                                                              <label className="block text-xs text-gray-500 mb-1">{t('brutto')} <span className="text-gray-600">inkl. {taxRate}%</span></label>
+                                                              <label className="block text-xs text-muted-foreground mb-1">{t('brutto')} <span className="text-muted-foreground">inkl. {taxRate}%</span></label>
                                                               <div className="px-4 py-2 bg-background/60 border border-border rounded-lg text-sm text-foreground">
                                                                 {parseFloat(editFormFull.appPrice) > 0 ? `€${calcBrutto(parseFloat(editFormFull.appPrice)).toFixed(2)}` : '--'}
                                                               </div>
@@ -5389,7 +5408,7 @@ export default function BusinessDetailsPage() {
                                                           </div>
                                                         ) : (
                                                           <div className="px-4 py-3 bg-card/40 border border-border rounded-lg text-center">
-                                                            <span className="text-sm text-gray-500">{t('same_as_selling_price')}{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
+                                                            <span className="text-sm text-muted-foreground">{t('same_as_selling_price')}{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
                                                           </div>
                                                         )}
                                                       </div>
@@ -5397,17 +5416,17 @@ export default function BusinessDetailsPage() {
                                                       {/*  Kanal Fiyatları (Konsolide) */}
                                                       <div className="pb-4">
                                                         <h3 className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-3"> {t('kanal_fiyatlari')}</h3>
-                                                        <p className="text-xs text-gray-500 mb-3">{t('esl_price_hint')}</p>
+                                                        <p className="text-xs text-muted-foreground mb-3">{t('esl_price_hint')}</p>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                           <div>
                                                             <label className="text-xs text-muted-foreground mb-1 block">{t('esl_store_pickup_price')} (€)</label>
                                                             <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
-                                                            <span className="text-[10px] text-gray-600 mt-1 block">{t('esl_price_hint')}</span>
+                                                            <span className="text-[10px] text-muted-foreground mt-1 block">{t('esl_price_hint')}</span>
                                                           </div>
                                                           <div>
                                                             <label className="text-xs text-muted-foreground mb-1 block">{t('courier_price_label')} (€)</label>
                                                             <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-emerald-500 focus:outline-none" placeholder={t('esl_price_placeholder')} />
-                                                            <span className="text-[10px] text-gray-600 mt-1 block">{t('kurye_fiyat_aciklama')}</span>
+                                                            <span className="text-[10px] text-muted-foreground mt-1 block">{t('kurye_fiyat_aciklama')}</span>
                                                           </div>
                                                         </div>
                                                       </div>
@@ -5476,7 +5495,7 @@ export default function BusinessDetailsPage() {
                                                           </div>
                                                         ))}
                                                         {!editingInlineProduct?.imageUrl && !(editFormFull.images || editingInlineProduct?.images || []).length && (
-                                                          <p className="text-gray-500 text-sm">{t('gorsel_yok')}</p>
+                                                          <p className="text-muted-foreground text-sm">{t('gorsel_yok')}</p>
                                                         )}
                                                       </div>
                                                     </div>
@@ -5515,7 +5534,7 @@ export default function BusinessDetailsPage() {
                                                         }}
                                                         className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
                                                       />
-                                                      <p className="text-xs text-gray-500 mt-1">Birden fazla dosya seçebilirsiniz. JPG, PNG, WebP formatları desteklenir.</p>
+                                                      <p className="text-xs text-muted-foreground mt-1">Birden fazla dosya seçebilirsiniz. JPG, PNG, WebP formatları desteklenir.</p>
                                                     </div>
 
                                                     {/* URL ile ekle */}
@@ -5548,12 +5567,12 @@ export default function BusinessDetailsPage() {
                                                           <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-muted-foreground mb-1 block">Herkunft / Menşe</label>
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('origin') || "Herkunft / Menşe"}</label>
                                                           <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                           <label className="inline-flex items-center gap-2 cursor-pointer">
-                                                            <input type="checkbox" checked={editFormFull.containsAlcohol || false} onChange={e => setEditFormFull((p: any) => ({ ...p, containsAlcohol: e.target.checked }))} className="w-4 h-4 rounded border-gray-600 bg-card" />
+                                                            <input type="checkbox" checked={editFormFull.containsAlcohol || false} onChange={e => setEditFormFull((p: any) => ({ ...p, containsAlcohol: e.target.checked }))} className="w-4 h-4 rounded border-border bg-card" />
                                                             <span className="text-xs text-foreground">🍷 Alkol İçerir (Alkoholhaltig)</span>
                                                           </label>
                                                         </div>
@@ -5595,7 +5614,7 @@ export default function BusinessDetailsPage() {
                                                               }))}
                                                               className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition ${checked
                                                                 ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                                                                : 'bg-card/50 border-border text-gray-500 hover:border-gray-500'
+                                                                : 'bg-card/50 border-border text-muted-foreground hover:border-gray-500'
                                                                 }`}
                                                             >
                                                               <span className="text-lg">{allergen.emoji}</span>
@@ -5629,7 +5648,7 @@ export default function BusinessDetailsPage() {
                                                           { key: 'staerke', label: t('nutrition_staerke'), unit: 'g', required: false },
                                                         ].map(item => (
                                                           <div key={item.key}>
-                                                            <span className={`text-[9px] block mb-0.5 ${item.required ? 'text-green-500 font-medium' : 'text-gray-600'}`}>
+                                                            <span className={`text-[9px] block mb-0.5 ${item.required ? 'text-green-500 font-medium' : 'text-muted-foreground'}`}>
                                                               {item.label} ({item.unit}){item.required ? ' *' : ''}
                                                             </span>
                                                             <input
@@ -5645,7 +5664,7 @@ export default function BusinessDetailsPage() {
                                                           </div>
                                                         ))}
                                                       </div>
-                                                      <p className="text-[10px] text-gray-600 mt-1">{t('eu_big7_note')}</p>
+                                                      <p className="text-[10px] text-muted-foreground mt-1">{t('eu_big7_note')}</p>
                                                     </div>
 
                                                     <hr className="border-border/50" />
@@ -5728,15 +5747,15 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                                         <div className="bg-background/30 rounded p-3 border border-border/50">
-                                                          <p className="text-xs text-gray-500 mb-1">{t('olusturulma')}</p>
+                                                          <p className="text-xs text-muted-foreground mb-1">{t('olusturulma')}</p>
                                                           <p className="text-xs text-foreground">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
                                                         </div>
                                                         <div className="bg-background/30 rounded p-3 border border-border/50">
-                                                          <p className="text-xs text-gray-500 mb-1">{t('guncelleme')}</p>
+                                                          <p className="text-xs text-muted-foreground mb-1">{t('guncelleme')}</p>
                                                           <p className="text-xs text-foreground">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('de-DE') : '—'}</p>
                                                         </div>
                                                         <div className="bg-background/30 rounded p-3 border border-border/50">
-                                                          <p className="text-xs text-gray-500 mb-1">SKU / Master ID</p>
+                                                          <p className="text-xs text-muted-foreground mb-1">{t('sku_master_id') || "SKU / Master ID"}</p>
                                                           <p className="text-xs text-foreground">{editingInlineProduct?.id || '—'}</p>
                                                           <p className="text-xs text-muted-foreground">{editingInlineProduct?.masterId ? `Master: ${editingInlineProduct.masterId}` : ''}</p>
                                                         </div>
@@ -5752,15 +5771,15 @@ export default function BusinessDetailsPage() {
                                                       </h4>
                                                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                                                         <div>
-                                                          <label className="text-xs text-muted-foreground mb-1 block">Gewicht (Ağırlık)</label>
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('weight') || "Gewicht (Ağırlık)"}</label>
                                                           <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-muted-foreground mb-1 block">Packung (Ambalaj)</label>
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('packaging') || "Packung (Ambalaj)"}</label>
                                                           <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
-                                                          <label className="text-xs text-muted-foreground mb-1 block">Gehäusetemperatur (Saklama)</label>
+                                                          <label className="text-xs text-muted-foreground mb-1 block">{t('storage_temp') || "Gehäusetemperatur (Saklama)"}</label>
                                                           <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                                                         </div>
                                                         <div>
@@ -5796,31 +5815,31 @@ export default function BusinessDetailsPage() {
                                                       </select>
                                                     </div>
                                                     <div>
-                                                      <label className="text-xs text-muted-foreground mb-1 block">Stok Durumu (App)</label>
+                                                      <label className="text-xs text-muted-foreground mb-1 block">{t('stock_status_app') || "Stok Durumu (App)"}</label>
                                                       <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border">
                                                         <option value="in">{t('stokta')}</option>
                                                         <option value="out">{t('stokta_yok')}</option>
                                                       </select>
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3">
-                                                      <label className="text-xs text-muted-foreground mb-2 block">Seçenek Grupları (Opsiyonlar/Extras)</label>
+                                                      <label className="text-xs text-muted-foreground mb-2 block">{t('option_groups') || "Seçenek Grupları (Opsiyonlar/Extras)"}</label>
                                                       {(editFormFull.optionGroups || []).length > 0 ? (
                                                         <div className="space-y-2">
                                                           {(editFormFull.optionGroups || []).map((group: any, i: number) => (
                                                             <div key={i} className="bg-background/30 rounded p-2 border border-border/50 text-sm text-foreground">
                                                               <span className="font-medium text-foreground">{group.name || `Grup ${i + 1}`}</span>
                                                               {group.options?.length > 0 && (
-                                                                <span className="text-gray-500 ml-2">({group.options.length} seçenek)</span>
+                                                                <span className="text-muted-foreground ml-2">({group.options.length} seçenek)</span>
                                                               )}
                                                             </div>
                                                           ))}
                                                         </div>
                                                       ) : (
-                                                        <p className="text-gray-500 text-sm">{t('secenek_grubu_tanimlanmamis')}</p>
+                                                        <p className="text-muted-foreground text-sm">{t('secenek_grubu_tanimlanmamis')}</p>
                                                       )}
                                                     </div>
                                                     <div className="md:col-span-2 lg:col-span-3 bg-background/20 rounded p-3 border border-border/30">
-                                                      <p className="text-xs text-gray-500">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. {t('fiyatlandirma')} farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
+                                                      <p className="text-xs text-muted-foreground">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. {t('fiyatlandirma')} farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
                                                     </div>
                                                   </div>
                                                 )}
@@ -5848,12 +5867,12 @@ export default function BusinessDetailsPage() {
                                 {/* Pagination Controls */}
                                 {
                                   totalPages > 1 && (
-                                    <div className="px-4 py-3 bg-gray-700/30 border-t border-border flex items-center justify-between flex-wrap gap-2">
+                                    <div className="px-4 py-3 bg-muted/30 border-t border-border flex items-center justify-between flex-wrap gap-2">
                                       {/* Left: Info */}
                                       <div className="text-muted-foreground text-xs">
                                         {startIdx + 1}–{Math.min(endIdx, totalFiltered)} / {totalFiltered} ürün
                                         {productSearchQuery.trim() && (
-                                          <span className="text-blue-800 dark:text-blue-400 ml-1">(arama sonuçları)</span>
+                                          <span className="text-blue-800 dark:text-blue-400 ml-1">({t('search_results') || "arama sonuçları"})</span>
                                         )}
                                       </div>
 
@@ -5862,27 +5881,27 @@ export default function BusinessDetailsPage() {
                                         <button
                                           onClick={() => setProductCurrentPage(1)}
                                           disabled={safeCurrentPage === 1}
-                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           «
                                         </button>
                                         <button
                                           onClick={() => setProductCurrentPage(Math.max(1, safeCurrentPage - 1))}
                                           disabled={safeCurrentPage === 1}
-                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           ‹
                                         </button>
                                         {getPageNumbers().map((pg, idx) => (
                                           pg === '...' ? (
-                                            <span key={`dots-${idx}`} className="px-1 text-gray-500 text-xs">…</span>
+                                            <span key={`dots-${idx}`} className="px-1 text-muted-foreground text-xs">…</span>
                                           ) : (
                                             <button
                                               key={pg}
                                               onClick={() => setProductCurrentPage(pg)}
                                               className={`px-2.5 py-1 rounded text-xs font-medium transition ${pg === safeCurrentPage
                                                 ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
+                                                : 'bg-muted/50 text-foreground hover:bg-muted dark:bg-muted/20 dark:hover:bg-muted/40 border border-border shadow-sm'
                                                 }`}
                                             >
                                               {pg}
@@ -5892,14 +5911,14 @@ export default function BusinessDetailsPage() {
                                         <button
                                           onClick={() => setProductCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
                                           disabled={safeCurrentPage === totalPages}
-                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           ›
                                         </button>
                                         <button
                                           onClick={() => setProductCurrentPage(totalPages)}
                                           disabled={safeCurrentPage === totalPages}
-                                          className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                          className="px-2 py-1 rounded text-xs bg-accent text-foreground dark:bg-muted dark:text-gray-100 hover:bg-muted border border-border text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
                                           »
                                         </button>
@@ -5907,14 +5926,14 @@ export default function BusinessDetailsPage() {
 
                                       {/* Right: Per page selector */}
                                       <div className="flex items-center gap-2">
-                                        <span className="text-gray-500 text-xs">Sayfa başı:</span>
+                                        <span className="text-muted-foreground text-xs">{t('per_page') || "Sayfa başı:"}</span>
                                         <select
                                           value={productsPerPage}
                                           onChange={(e) => {
                                             setProductsPerPage(Number(e.target.value));
                                             setProductCurrentPage(1);
                                           }}
-                                          className="bg-gray-700 text-white text-xs rounded px-2 py-1 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                          className="bg-foreground text-background shadow-md text-xs rounded px-2 py-1 border border-border focus:border-blue-500 focus:outline-none"
                                         >
                                           <option value={10}>10</option>
                                           <option value={20}>20</option>
@@ -5978,7 +5997,7 @@ export default function BusinessDetailsPage() {
                               {sponsoredProducts.length} / {sponsoredSettings.maxProductsPerBusiness}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="w-full bg-muted rounded-full h-2.5">
                             <div
                               className={`h-2.5 rounded-full transition-all duration-500 ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
                                 ? 'bg-red-500'
@@ -5990,7 +6009,7 @@ export default function BusinessDetailsPage() {
                             />
                           </div>
                           {sponsoredSettings.feePerConversion > 0 && (
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-muted-foreground mt-2">
                                {t('sponsored_donusum_ucret')} {sponsoredSettings.feePerConversion}€
                             </p>
                           )}
@@ -6034,7 +6053,7 @@ export default function BusinessDetailsPage() {
                                         setSponsoredProducts(prev => [...prev, product.id]);
                                       }
                                     }}
-                                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-500 accent-amber-500"
+                                    className="w-5 h-5 rounded bg-muted border-border text-amber-500 focus:ring-amber-500 accent-amber-500"
                                   />
                                   {/* Product image */}
                                   {product.imageUrl || (product.images && product.images[0]) ? (
@@ -6044,7 +6063,7 @@ export default function BusinessDetailsPage() {
                                       className="w-10 h-10 rounded-lg object-cover"
                                     />
                                   ) : (
-                                    <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-lg">
                                       📷
                                     </div>
                                   )}
@@ -6053,7 +6072,7 @@ export default function BusinessDetailsPage() {
                                     <p className="text-foreground text-sm font-medium truncate">
                                       {typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}
                                     </p>
-                                    <p className="text-gray-500 text-xs truncate">
+                                    <p className="text-muted-foreground text-xs truncate">
                                       {product.category || ''}
                                     </p>
                                   </div>
@@ -6195,7 +6214,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setStaffStatusFilter('active')}
                         className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'active'
                           ? 'bg-green-600 text-white'
-                          : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
+                          : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'
                           }`}
                       >
                         {t('aktif')}{staffList.filter(s => s.isActive !== false).length})
@@ -6204,7 +6223,7 @@ export default function BusinessDetailsPage() {
                         onClick={() => setStaffStatusFilter('archived')}
                         className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'archived'
                           ? 'bg-amber-600 text-white'
-                          : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
+                          : 'bg-muted text-muted-foreground hover:bg-muted border border-border text-foreground'
                           }`}
                       >
                         {t('arsivlenmis')}{staffList.filter(s => s.isActive === false).length})
@@ -6219,7 +6238,7 @@ export default function BusinessDetailsPage() {
                         placeholder={t('isimEpostaVeyaTelefonIleAra')}
                         value={staffSearchQuery}
                         onChange={(e) => setStaffSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:focus:ring-offset-background"
                       />
                     </div>
 
@@ -6275,12 +6294,12 @@ export default function BusinessDetailsPage() {
                                 s.phoneNumber?.includes(staffSearchQuery);
                               return matchesStatus && matchesSearch;
                             }).map((staff) => (
-                              <tr key={staff.id} className="border-b border-border hover:bg-gray-750">
+                              <tr key={staff.id} className="border-b border-border hover:bg-muted/40 dark:bg-muted/10 border-border">
                                 <td className="py-4">
                                   <div>
                                     <p className="font-medium">{staff.displayName}</p>
                                     <p className="text-muted-foreground text-sm">{staff.email || '-'}</p>
-                                    <p className="text-gray-500 text-xs">{staff.phoneNumber}</p>
+                                    <p className="text-muted-foreground text-xs">{staff.phoneNumber}</p>
                                   </div>
                                 </td>
                                 <td className="py-4">
@@ -6398,21 +6417,21 @@ export default function BusinessDetailsPage() {
                           placeholder={t('isim')}
                           value={inviteFirstName}
                           onChange={(e) => setInviteFirstName(e.target.value)}
-                          className="bg-gray-700 text-white px-3 py-2 rounded-lg"
+                          className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
                         />
                         <input
                           type="text"
                           placeholder={t('soyisim_opsiyonel')}
                           value={inviteLastName}
                           onChange={(e) => setInviteLastName(e.target.value)}
-                          className="bg-gray-700 text-white px-3 py-2 rounded-lg"
+                          className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
                         />
                       </div>
                       <div className="flex gap-2 mt-3">
                         <select
                           value={inviteCountryCode}
                           onChange={(e) => setInviteCountryCode(e.target.value)}
-                          className="bg-gray-700 text-white px-3 py-2 rounded-lg w-24"
+                          className="bg-foreground text-background shadow-md px-3 py-2 rounded-lg w-24"
                         >
                           <option value="+49">🇩🇪 +49</option>
                           <option value="+90">🇹🇷 +90</option>
@@ -6425,7 +6444,7 @@ export default function BusinessDetailsPage() {
                           onChange={(e) =>
                             setInvitePhone(e.target.value.replace(/\D/g, ""))
                           }
-                          className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg"
+                          className="flex-1 bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
                         />
                       </div>
                       <input
@@ -6433,14 +6452,14 @@ export default function BusinessDetailsPage() {
                         placeholder={t('epostaOpsiyonelBildirimIcin')}
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
-                        className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
+                        className="w-full mt-3 bg-foreground text-background shadow-md px-3 py-2 rounded-lg"
                       />
                       <div className="mt-3">
                         <label className="text-muted-foreground text-sm">{t('rol')}</label>
                         <select
                           value={inviteRole}
                           onChange={(e) => setInviteRole(e.target.value)}
-                          className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
+                          className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1"
                         >
                           <option value="Personel">{t('personel_rol')}</option>
                           <option value="Admin">{t('isletmeAdmin')}</option>
@@ -6466,13 +6485,13 @@ export default function BusinessDetailsPage() {
                           </div>
                           {inviteResult.notifications && (
                             <div className="flex flex-wrap gap-2 text-xs">
-                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
                                 {inviteResult.notifications.email?.sent ? '✓' : '✗'} Email
                               </span>
-                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
                                 {inviteResult.notifications.whatsapp?.sent ? '✓' : '✗'} WhatsApp
                               </span>
-                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
                                 {inviteResult.notifications.sms?.sent ? '✓' : '✗'} SMS
                               </span>
                             </div>
@@ -6540,10 +6559,10 @@ export default function BusinessDetailsPage() {
                                 }
                                 disabled={!isEditing}
                                 min="0"
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                                className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
                                 placeholder={t('or50')}
                               />
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 {t('toplamOturmaKapasitesiKisi')}
                               </p>
                             </div>
@@ -6562,10 +6581,10 @@ export default function BusinessDetailsPage() {
                                 }
                                 disabled={!isEditing}
                                 min="0"
-                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                                className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
                                 placeholder={t('or10')}
                               />
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 {t('ayniSaatDilimindeMaxRezervasyon')}
                               </p>
                             </div>
@@ -6585,7 +6604,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex gap-3">
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
                               ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                              : 'bg-gray-700 border-gray-600 text-foreground'
+                              : 'bg-muted border-border text-foreground'
                               } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <input
                                 type="radio"
@@ -6603,7 +6622,7 @@ export default function BusinessDetailsPage() {
                             </label>
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
                               ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                              : 'bg-gray-700 border-gray-600 text-foreground'
+                              : 'bg-muted border-border text-foreground'
                               } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <input
                                 type="radio"
@@ -6662,7 +6681,7 @@ export default function BusinessDetailsPage() {
                             (formData.subscriptionPlan === 'standard') ? 'bg-blue-500 text-white' :
                             (formData.subscriptionPlan === 'basic') ? 'bg-green-600 text-white' :
                             (formData.subscriptionPlan === 'free') ? 'bg-gray-500 text-white' :
-                            'bg-gray-600 text-foreground'
+                            'bg-muted border border-border text-foreground text-foreground'
                           }`}>
                             {formData.subscriptionPlan?.toUpperCase() || 'NONE'}
                           </span>
@@ -6670,7 +6689,7 @@ export default function BusinessDetailsPage() {
 
                         {/* Plan Selection */}
                         <div>
-                          <label className="text-muted-foreground text-sm block mb-2">Plan</label>
+                          <label className="text-muted-foreground text-sm block mb-2">{t('plan') || "Plan"}</label>
                           <select
                             value={formData.subscriptionPlan}
                             onChange={async (e) => {
@@ -6696,7 +6715,7 @@ export default function BusinessDetailsPage() {
                                 setSaving(false);
                               }
                             }}
-                            className="w-full bg-gray-700 text-white px-3 py-2.5 rounded-lg border border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                            className="w-full bg-foreground text-background shadow-md px-3 py-2.5 rounded-lg border border-border focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
                           >
                             <option value="none">{t('yok')}</option>
                             <option value="free">LOKMA Free</option>
@@ -6736,7 +6755,7 @@ export default function BusinessDetailsPage() {
                               setSaving(false);
                             }
                           }}
-                          className={`${saving ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} w-full text-foreground font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-4`}
+                          className={`${saving ? 'bg-muted border border-border text-foreground cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} w-full text-foreground font-semibold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 mt-4`}
                         >
                           {saving ? 'Kaydediliyor...' : 'Plan Kaydet'}
                         </button>
@@ -6744,10 +6763,10 @@ export default function BusinessDetailsPage() {
 
                       {/* Plan Features Info */}
                       <div className="bg-card/30 border border-border/50 rounded-xl p-4 space-y-3">
-                        <h5 className="text-foreground text-sm font-medium">Plan Ozellikleri</h5>
+                        <h5 className="text-foreground text-sm font-medium">{t('plan_features') || "Plan Özellikleri"}</h5>
                         <div className="grid grid-cols-2 gap-3 text-xs">
                           <div className="bg-card/50 rounded-lg p-3">
-                            <span className="text-gray-500 font-bold">FREE</span>
+                            <span className="text-muted-foreground font-bold">FREE</span>
                             <p className="text-muted-foreground mt-1">Temel profil, sinirli siparis</p>
                           </div>
                           <div className="bg-card/50 rounded-lg p-3">
@@ -6795,7 +6814,7 @@ export default function BusinessDetailsPage() {
                             }
                             disabled={!isEditing}
                             placeholder={t('ornAhmetYilmaz')}
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                            className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
                           />
                         </div>
                         <div>
@@ -6808,7 +6827,7 @@ export default function BusinessDetailsPage() {
                             }
                             disabled={!isEditing}
                             placeholder={t('ornSparkasse')}
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                            className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
@@ -6822,7 +6841,7 @@ export default function BusinessDetailsPage() {
                               }
                               disabled={!isEditing}
                               placeholder="DE..."
-                              className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                              className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
                             />
                           </div>
                           <div>
@@ -6834,7 +6853,7 @@ export default function BusinessDetailsPage() {
                                 setFormData({ ...formData, bankBic: e.target.value })
                               }
                               disabled={!isEditing}
-                              className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                              className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1 disabled:opacity-50"
                             />
                           </div>
                         </div>
@@ -6860,7 +6879,7 @@ export default function BusinessDetailsPage() {
                           <div className="text-center">
                             <span className="text-4xl">🎁</span>
                             <p className="text-muted-foreground mt-3 text-sm">{t('promosyonAyarlari')}</p>
-                            <p className="text-gray-500 text-xs mt-1">{t('kampanyaOlusturVeYonet')}</p>
+                            <p className="text-muted-foreground text-xs mt-1">{t('kampanyaOlusturVeYonet')}</p>
                           </div>
                         </div>
                       );
@@ -6901,17 +6920,17 @@ export default function BusinessDetailsPage() {
                           <div className="text-center">
                             <span className="text-2xl">🎯</span>
                             <p className="text-white text-xs font-medium mt-1">{t('boost_step1')}</p>
-                            <p className="text-gray-500 text-[10px] mt-0.5">{t('boost_step1_desc')}</p>
+                            <p className="text-muted-foreground text-[10px] mt-0.5">{t('boost_step1_desc')}</p>
                           </div>
                           <div className="text-center">
                             <span className="text-2xl">💰</span>
                             <p className="text-white text-xs font-medium mt-1">{t('boost_step2')}</p>
-                            <p className="text-gray-500 text-[10px] mt-0.5">{t('boost_step2_desc')}</p>
+                            <p className="text-muted-foreground text-[10px] mt-0.5">{t('boost_step2_desc')}</p>
                           </div>
                           <div className="text-center">
                             <span className="text-2xl">🚀</span>
                             <p className="text-white text-xs font-medium mt-1">{t('boost_step3')}</p>
-                            <p className="text-gray-500 text-[10px] mt-0.5">{t('boost_step3_desc')}</p>
+                            <p className="text-muted-foreground text-[10px] mt-0.5">{t('boost_step3_desc')}</p>
                           </div>
                         </div>
                       </div>
@@ -6932,7 +6951,7 @@ export default function BusinessDetailsPage() {
                             <div key={f.label} className="flex items-center gap-1.5 bg-background/60 px-2.5 py-1.5 rounded-lg">
                               <div className={`w-2 h-2 rounded-full ${f.color}`} />
                               <span className="text-foreground text-xs">{f.label}</span>
-                              <span className="text-gray-500 text-[10px] font-bold">%{f.pct}</span>
+                              <span className="text-muted-foreground text-[10px] font-bold">%{f.pct}</span>
                             </div>
                           ))}
                         </div>
@@ -6953,7 +6972,7 @@ export default function BusinessDetailsPage() {
                               placeholder={t('boost_kampanya_adi_placeholder')}
                               value={boostForm.campaignName}
                               onChange={e => setBoostForm(p => ({ ...p, campaignName: e.target.value }))}
-                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+                              className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
                             />
                           </div>
 
@@ -7009,11 +7028,11 @@ export default function BusinessDetailsPage() {
                                   min="0.10"
                                   value={boostForm.bidAmount}
                                   onChange={e => setBoostForm(p => ({ ...p, bidAmount: e.target.value }))}
-                                  className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
+                                  className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                                 />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€</span>
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">€</span>
                               </div>
-                              <p className="text-gray-600 text-[10px] mt-1">{t('boost_min_bid')}</p>
+                              <p className="text-muted-foreground text-[10px] mt-1">{t('boost_min_bid')}</p>
                             </div>
                             <div>
                               <label className="text-sm text-muted-foreground mb-1 block">{t('boost_butce')}</label>
@@ -7021,7 +7040,7 @@ export default function BusinessDetailsPage() {
                                 <select
                                   value={boostForm.budgetType}
                                   onChange={e => setBoostForm(p => ({ ...p, budgetType: e.target.value as any }))}
-                                  className="bg-background border border-gray-600 rounded-lg px-2 py-2.5 text-white text-xs focus:border-purple-500 outline-none"
+                                  className="bg-background border border-border rounded-lg px-2 py-2.5 text-white text-xs focus:border-purple-500 outline-none"
                                   title={t('boost_butce_turu')}
                                 >
                                   <option value="daily">{t('boost_gunluk')}</option>
@@ -7033,7 +7052,7 @@ export default function BusinessDetailsPage() {
                                   min="5"
                                   value={boostForm.budgetAmount}
                                   onChange={e => setBoostForm(p => ({ ...p, budgetAmount: e.target.value }))}
-                                  className="flex-1 bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
+                                  className="flex-1 bg-background border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                                 />
                               </div>
                               {boostForm.model === 'cpc' && parseFloat(boostForm.bidAmount) > 0 && (
@@ -7066,7 +7085,7 @@ export default function BusinessDetailsPage() {
                                     className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
                                       isActive
                                         ? 'bg-purple-600 text-white'
-                                        : 'bg-card text-gray-500 hover:bg-gray-700'
+                                        : 'bg-card text-muted-foreground hover:bg-muted'
                                     }`}
                                   >
                                     {day}
@@ -7084,7 +7103,7 @@ export default function BusinessDetailsPage() {
                                 type="time"
                                 value={boostForm.activeHoursStart}
                                 onChange={e => setBoostForm(p => ({ ...p, activeHoursStart: e.target.value }))}
-                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                               />
                             </div>
                             <div>
@@ -7093,7 +7112,7 @@ export default function BusinessDetailsPage() {
                                 type="time"
                                 value={boostForm.activeHoursEnd}
                                 onChange={e => setBoostForm(p => ({ ...p, activeHoursEnd: e.target.value }))}
-                                className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
+                                className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                               />
                             </div>
                           </div>
@@ -7105,10 +7124,10 @@ export default function BusinessDetailsPage() {
                               type="date"
                               value={boostForm.endDate}
                               onChange={e => setBoostForm(p => ({ ...p, endDate: e.target.value }))}
-                              className="w-full bg-background border border-gray-600 rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
+                              className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-purple-500 outline-none"
                               placeholder={t('boost_bitis_placeholder')}
                             />
-                            <p className="text-gray-600 text-[10px] mt-1">{t('boost_bitis_aciklama')}</p>
+                            <p className="text-muted-foreground text-[10px] mt-1">{t('boost_bitis_aciklama')}</p>
                           </div>
 
                           {/* Summary Card */}
@@ -7116,12 +7135,12 @@ export default function BusinessDetailsPage() {
                             <div className="bg-gradient-to-r from-purple-100 dark:from-purple-900/40 to-indigo-900/30 border border-purple-500/40 rounded-xl p-4">
                               <h5 className="text-purple-300 font-bold text-sm mb-2">{t('boost_kampanya_ozeti')}</h5>
                               <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div><span className="text-gray-500">{t('boost_ozet_ad')}</span> <span className="text-foreground">{boostForm.campaignName}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_model')}</span> <span className="text-foreground">{boostForm.model === 'cpc' ? t('boost_cpc_label') : t('boost_ppo_label')}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_bid')}</span> <span className="text-foreground">{boostForm.bidAmount}€ / {boostForm.model === 'cpc' ? t('boost_per_tiklama') : t('boost_per_siparis')}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_butce')}</span> <span className="text-foreground">{boostForm.budgetAmount}€ / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_gunler')}</span> <span className="text-foreground">{boostForm.activeDays.length === 7 ? t('boost_her_gun') : `${boostForm.activeDays.length} ${t('boost_gun')}`}</span></div>
-                                <div><span className="text-gray-500">{t('boost_ozet_saatler')}</span> <span className="text-foreground">{boostForm.activeHoursStart} - {boostForm.activeHoursEnd}</span></div>
+                                <div><span className="text-muted-foreground">{t('boost_ozet_ad')}</span> <span className="text-foreground">{boostForm.campaignName}</span></div>
+                                <div><span className="text-muted-foreground">{t('boost_ozet_model')}</span> <span className="text-foreground">{boostForm.model === 'cpc' ? t('boost_cpc_label') : t('boost_ppo_label')}</span></div>
+                                <div><span className="text-muted-foreground">{t('boost_ozet_bid')}</span> <span className="text-foreground">{boostForm.bidAmount}€ / {boostForm.model === 'cpc' ? t('boost_per_tiklama') : t('boost_per_siparis')}</span></div>
+                                <div><span className="text-muted-foreground">{t('boost_ozet_butce')}</span> <span className="text-foreground">{boostForm.budgetAmount}€ / {boostForm.budgetType === 'daily' ? t('boost_gun') : boostForm.budgetType === 'weekly' ? t('boost_hafta') : t('boost_toplam_label')}</span></div>
+                                <div><span className="text-muted-foreground">{t('boost_ozet_gunler')}</span> <span className="text-foreground">{boostForm.activeDays.length === 7 ? t('boost_her_gun') : `${boostForm.activeDays.length} ${t('boost_gun')}`}</span></div>
+                                <div><span className="text-muted-foreground">{t('boost_ozet_saatler')}</span> <span className="text-foreground">{boostForm.activeHoursStart} - {boostForm.activeHoursEnd}</span></div>
                               </div>
                             </div>
                           )}
@@ -7131,7 +7150,7 @@ export default function BusinessDetailsPage() {
                             <button
                               type="button"
                               onClick={() => setShowBoostForm(false)}
-                              className="px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 rounded-xl text-sm transition-all"
+                              className="px-4 py-2.5 bg-accent hover:bg-gray-300 text-foreground dark:bg-muted dark:hover:bg-muted border border-border text-foreground dark:text-gray-100 rounded-xl text-sm transition-all"
                             >
                               {t('boost_iptal')}
                             </button>
@@ -7207,7 +7226,7 @@ export default function BusinessDetailsPage() {
                           <div className="bg-background/50 rounded-xl p-8 text-center border border-border">
                             <span className="text-4xl">📭</span>
                             <h4 className="text-foreground font-medium mt-3">{t('boost_kampanya_yok')}</h4>
-                            <p className="text-gray-500 text-sm mt-1">{t('boost_kampanya_yok_aciklama')}</p>
+                            <p className="text-muted-foreground text-sm mt-1">{t('boost_kampanya_yok_aciklama')}</p>
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -7260,29 +7279,29 @@ export default function BusinessDetailsPage() {
                                   {/* Stats Row */}
                                   <div className="grid grid-cols-4 gap-3 mb-3">
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
-                                      <p className="text-gray-500 text-[10px]">Bid</p>
+                                      <p className="text-muted-foreground text-[10px]">Bid</p>
                                       <p className="text-foreground font-bold text-sm">{campaign.bidAmount}€</p>
                                     </div>
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
-                                      <p className="text-gray-500 text-[10px]">{t('boost_gosterim')}</p>
+                                      <p className="text-muted-foreground text-[10px]">{t('boost_gosterim')}</p>
                                       <p className="text-foreground font-bold text-sm">{campaign.metrics?.impressions || 0}</p>
                                     </div>
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
-                                      <p className="text-gray-500 text-[10px]">{campaign.model === 'cpc' ? t('boost_tiklama') : t('boost_siparis')}</p>
+                                      <p className="text-muted-foreground text-[10px]">{campaign.model === 'cpc' ? t('boost_tiklama') : t('boost_siparis')}</p>
                                       <p className="text-foreground font-bold text-sm">{campaign.model === 'cpc' ? (campaign.metrics?.clicks || 0) : (campaign.metrics?.orders || 0)}</p>
                                     </div>
                                     <div className="bg-background/60 rounded-lg p-2 text-center">
-                                      <p className="text-gray-500 text-[10px]">ROAS</p>
+                                      <p className="text-muted-foreground text-[10px]">ROAS</p>
                                       <p className="text-foreground font-bold text-sm">{campaign.metrics?.roas ? `${campaign.metrics.roas}x` : '—'}</p>
                                     </div>
                                   </div>
                                   {/* Budget Progress */}
                                   <div>
                                     <div className="flex justify-between text-[10px] mb-1">
-                                      <span className="text-gray-500">{t('boost_harcanan')} {campaign.budgetSpent?.toFixed(2) || '0.00'}€</span>
-                                      <span className="text-gray-500">{t('boost_butce_label')} {campaign.budgetAmount}€ ({campaign.budgetType === 'daily' ? t('boost_gunluk_label') : campaign.budgetType === 'weekly' ? t('boost_haftalik_label') : t('boost_toplam_label')})</span>
+                                      <span className="text-muted-foreground">{t('boost_harcanan')} {campaign.budgetSpent?.toFixed(2) || '0.00'}€</span>
+                                      <span className="text-muted-foreground">{t('boost_butce_label')} {campaign.budgetAmount}€ ({campaign.budgetType === 'daily' ? t('boost_gunluk_label') : campaign.budgetType === 'weekly' ? t('boost_haftalik_label') : t('boost_toplam_label')})</span>
                                     </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                    <div className="w-full bg-muted rounded-full h-1.5">
                                       <div
                                         className={`h-1.5 rounded-full transition-all ${budgetPct >= 90 ? 'bg-red-500' : budgetPct >= 70 ? 'bg-yellow-500' : 'bg-purple-500'}`}
                                         style={{ width: `${Math.min(budgetPct, 100)}%` }}
@@ -7302,7 +7321,7 @@ export default function BusinessDetailsPage() {
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs">
                             <thead>
-                              <tr className="text-gray-500 border-b border-border">
+                              <tr className="text-muted-foreground border-b border-border">
                                 <th className="text-left pb-2">{t('boost_platform')}</th>
                                 <th className="text-left pb-2">{t('boost_model')}</th>
                                 <th className="text-left pb-2">{t('boost_ort_maliyet')}</th>
@@ -7340,7 +7359,7 @@ export default function BusinessDetailsPage() {
                               <h3 className="font-semibold text-gray-200">
                                 {t('googleYorumlari')}
                               </h3>
-                              <span className="text-xs text-gray-500 bg-card px-2 py-0.5 rounded-full border border-border">
+                              <span className="text-xs text-muted-foreground bg-card px-2 py-0.5 rounded-full border border-border">
                                 {formData.rating?.toFixed(1)} ({formData.reviewCount})
                               </span>
                             </div>
@@ -7368,7 +7387,7 @@ export default function BusinessDetailsPage() {
                                       </div>
                                       <div className="flex text-yellow-500 text-[10px]">
                                         {"★".repeat(Math.round(review.rating))}
-                                        <span className="text-gray-600 ml-1">
+                                        <span className="text-muted-foreground ml-1">
                                           {review.relative_time_description}
                                         </span>
                                       </div>
@@ -7401,9 +7420,9 @@ export default function BusinessDetailsPage() {
                           </div>
                           <div className="overflow-x-auto bg-card/30 rounded-lg border border-border/50">
                             <table className="w-full text-xs text-left text-muted-foreground">
-                              <thead className="text-gray-500 bg-background/50 uppercase">
+                              <thead className="text-muted-foreground bg-background/50 uppercase">
                                 <tr>
-                                  <th className="px-4 py-2">Plan</th>
+                                  <th className="px-4 py-2">{t('plan') || "Plan"}</th>
                                   <th className="px-4 py-2">{t('baslangic1')}</th>
                                   <th className="px-4 py-2">{t('bitis')}</th>
                                   <th className="px-4 py-2">{t('degistiren')}</th>
@@ -7415,7 +7434,7 @@ export default function BusinessDetailsPage() {
                                     <td className="px-4 py-2 font-medium text-foreground uppercase">{h.plan}</td>
                                     <td className="px-4 py-2">{h.startDate?.seconds ? new Date(h.startDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.startDate).toLocaleDateString('de-DE')}</td>
                                     <td className="px-4 py-2">{h.endDate?.seconds ? new Date(h.endDate.seconds * 1000).toLocaleDateString('de-DE') : new Date(h.endDate).toLocaleDateString('de-DE')}</td>
-                                    <td className="px-4 py-2 text-gray-500">{h.changedBy?.split('@')[0]}</td>
+                                    <td className="px-4 py-2 text-muted-foreground">{h.changedBy?.split('@')[0]}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -7502,7 +7521,7 @@ export default function BusinessDetailsPage() {
                       }
                       min="0"
                       max="200"
-                      className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none text-lg font-medium"
+                      className="w-full bg-foreground text-background shadow-md px-4 py-2.5 rounded-lg border border-border focus:border-amber-500 focus:outline-none text-lg font-medium"
                       placeholder={t('or20')}
                     />
                   </div>
@@ -7518,7 +7537,7 @@ export default function BusinessDetailsPage() {
                         })
                       }
                       min="0"
-                      className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none text-lg font-medium"
+                      className="w-full bg-foreground text-background shadow-md px-4 py-2.5 rounded-lg border border-border focus:border-amber-500 focus:outline-none text-lg font-medium"
                       placeholder={t('or80')}
                     />
                   </div>
@@ -7573,19 +7592,19 @@ export default function BusinessDetailsPage() {
                           }
                           setFormData({ ...formData, tableSections: [...formData.tableSections, name.trim()] });
                         }}
-                        className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 rounded-md transition"
+                        className="px-2 py-1 text-xs bg-accent hover:bg-gray-300 text-foreground dark:bg-muted dark:hover:bg-muted border border-border text-foreground dark:text-gray-100 rounded-md transition"
                       >
                         {t('bolumEkle')}
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.tableSections.length === 0 && (
-                        <span className="text-xs text-gray-500 italic">{t('henuzBolumYokTumMasalarTek')}</span>
+                        <span className="text-xs text-muted-foreground italic">{t('henuzBolumYokTumMasalarTek')}</span>
                       )}
                       {formData.tableSections.map((section: string, idx: number) => (
-                        <div key={idx} className="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-1.5 text-sm">
+                        <div key={idx} className="flex items-center gap-1 bg-muted rounded-lg px-3 py-1.5 text-sm">
                           <span className="text-foreground">{section}</span>
-                          <span className="text-gray-500 text-xs ml-1">
+                          <span className="text-muted-foreground text-xs ml-1">
                             ({formData.tables.filter((t: any) => t.section === section).length} masa)
                           </span>
                           <button
@@ -7635,13 +7654,13 @@ export default function BusinessDetailsPage() {
                             {sec && (
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-amber-800 dark:text-amber-400 text-sm font-bold"> {sec}</span>
-                                <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
+                                <span className="text-muted-foreground text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
                             {!sec && formData.tableSections.length > 0 && tablesInSection.length > 0 && (
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-muted-foreground text-sm font-bold">{t('bolumAtanmamis')}</span>
-                                <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
+                                <span className="text-muted-foreground text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -7652,7 +7671,7 @@ export default function BusinessDetailsPage() {
                                 >
                                   {/* Table label */}
                                   <div className="flex items-center gap-1">
-                                    <span className="text-gray-500 text-xs">M</span>
+                                    <span className="text-muted-foreground text-xs">M</span>
                                     <input
                                       type="text"
                                       value={table.label}
@@ -7661,7 +7680,7 @@ export default function BusinessDetailsPage() {
                                         updated[table._idx] = { ...updated[table._idx], label: e.target.value };
                                         setFormData({ ...formData, tables: updated });
                                       }}
-                                      className="w-full bg-gray-700 text-white text-center px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-sm font-bold"
+                                      className="w-full bg-foreground text-background shadow-md text-center px-2 py-1 rounded border border-border focus:border-amber-500 focus:outline-none text-sm font-bold"
                                       placeholder="#"
                                     />
                                   </div>
@@ -7674,7 +7693,7 @@ export default function BusinessDetailsPage() {
                                         updated[table._idx] = { ...updated[table._idx], section: e.target.value };
                                         setFormData({ ...formData, tables: updated });
                                       }}
-                                      className="w-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-xs"
+                                      className="w-full bg-accent text-foreground dark:bg-muted dark:text-gray-100 px-2 py-1 rounded border border-border focus:border-amber-500 focus:outline-none text-xs"
                                     >
                                       <option value="">—</option>
                                       {formData.tableSections.map((s: string) => (
@@ -7704,7 +7723,7 @@ export default function BusinessDetailsPage() {
 
                 {/* Empty state */}
                 {formData.tables.length === 0 && (
-                  <div className="bg-card/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
+                  <div className="bg-card/50 rounded-xl p-8 border border-dashed border-border text-center">
                     <span className="text-4xl">&#x1FA91;</span>
                     <p className="text-foreground font-semibold mt-3">{t('henuzMasaTanimlanmadi')}</p>
                     <p className="text-muted-foreground text-sm mt-1">
@@ -7757,7 +7776,7 @@ export default function BusinessDetailsPage() {
                             document.body.removeChild(link);
                           }
                         }}
-                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                        className="px-4 py-2 bg-muted hover:bg-muted border border-border text-foreground text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
                       >
                         QR PNG
                       </button>
@@ -7776,7 +7795,7 @@ export default function BusinessDetailsPage() {
                               const { downloadTableCardPDF } = await import('@/utils/tableCardPdfGenerator');
                               await downloadTableCardPDF(table.label, businessId, formData.companyName || 'Isletme');
                             }}
-                            className="bg-card rounded-lg border border-border p-2 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-gray-700/50 transition cursor-pointer group"
+                            className="bg-card rounded-lg border border-border p-2 flex flex-col items-center gap-1 hover:border-red-500 hover:bg-muted/50 transition cursor-pointer group"
                             title={`Masa ${table.label} PDF kart indir`}
                           >
                             <div className="w-full aspect-square bg-card rounded flex items-center justify-center overflow-hidden">
@@ -7789,14 +7808,14 @@ export default function BusinessDetailsPage() {
                             </div>
                             <span className="text-xs font-bold text-foreground group-hover:text-red-800 dark:text-red-400 transition">
                               M{table.label}
-                              {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
+                              {table.section && <span className="text-muted-foreground font-normal ml-0.5 text-[10px]">· {table.section}</span>}
                             </span>
                           </button>
                         </div>
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-500 mt-3">Masa kartina tiklayarak A6 PDF kart indirebilirsiniz. Ustteki butonlarla toplu indirme yapabilirsiniz.</p>
+                  <p className="text-xs text-muted-foreground mt-3">Masa kartina tiklayarak A6 PDF kart indirebilirsiniz. Ustteki butonlarla toplu indirme yapabilirsiniz.</p>
                 </div>
               )}
 
@@ -7855,7 +7874,7 @@ export default function BusinessDetailsPage() {
                               checked={!!formData.groupOrderLinkEnabled}
                               onChange={(e) => setFormData({ ...formData, groupOrderLinkEnabled: e.target.checked })}
                             />
-                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-muted border border-border text-foreground'}`}></div>
                             <div className={`absolute left-1 top-1 bg-card dark:bg-slate-800 w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                           <span className="ml-3 text-sm font-medium text-foreground">
@@ -7863,7 +7882,7 @@ export default function BusinessDetailsPage() {
                           </span>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-foreground ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-foreground ${business?.groupOrderLinkEnabled ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
                           {business?.groupOrderLinkEnabled ? t('aktif') : t('kapali')}
                         </span>
                       )}
@@ -7895,7 +7914,7 @@ export default function BusinessDetailsPage() {
                               checked={!!formData.groupOrderTableEnabled}
                               onChange={(e) => setFormData({ ...formData, groupOrderTableEnabled: e.target.checked })}
                             />
-                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                            <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-muted border border-border text-foreground'}`}></div>
                             <div className={`absolute left-1 top-1 bg-card dark:bg-slate-800 w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>
                           </div>
                           <span className="ml-3 text-sm font-medium text-foreground">
@@ -7903,7 +7922,7 @@ export default function BusinessDetailsPage() {
                           </span>
                         </label>
                       ) : (
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-foreground ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-gray-600'}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold text-foreground ${business?.groupOrderTableEnabled ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
                           {business?.groupOrderTableEnabled ? t('aktif') : t('kapali')}
                         </span>
                       )}
@@ -7942,7 +7961,7 @@ export default function BusinessDetailsPage() {
                   <select
                     value={selectedNewRole}
                     onChange={(e) => setSelectedNewRole(e.target.value)}
-                    className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
+                    className="w-full bg-background text-foreground border border-border px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 outline-none mt-1"
                   >
                     <option value="">{t('rolSec')}</option>
                     <option value={t('isletmeAdmin1')}>{t('isletmeAdmin1')}</option>
@@ -7956,7 +7975,7 @@ export default function BusinessDetailsPage() {
                   onClick={() =>
                     setConfirmModal({ ...confirmModal, show: false })
                   }
-                  className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium"
+                  className="flex-1 px-4 py-3 bg-foreground text-background shadow-md rounded-lg hover:bg-muted border border-border text-foreground font-medium"
                 >
                   {t('iptal1')}
                 </button>
@@ -7992,7 +8011,7 @@ export default function BusinessDetailsPage() {
                   </div>
                   <button
                     onClick={() => setShowTemplateModal(false)}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition text-muted-foreground hover:text-white"
+                    className="p-2 hover:bg-muted rounded-lg transition text-muted-foreground hover:text-white"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -8020,13 +8039,13 @@ export default function BusinessDetailsPage() {
                       value={templateSearch}
                       onChange={(e) => setTemplateSearch(e.target.value)}
                       placeholder="{t('urun_ara')}"
-                      className="w-full px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-foreground text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-1.5 bg-card border border-border rounded-lg text-foreground text-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <select
                     value={templateFilter}
                     onChange={(e) => setTemplateFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-card border border-gray-600 rounded-lg text-foreground text-sm focus:ring-2 focus:ring-amber-500"
+                    className="px-3 py-1.5 bg-card border border-border rounded-lg text-foreground text-sm focus:ring-2 focus:ring-amber-500"
                   >
                     <option value="all"> {t('tum_kategoriler')}</option>
                     {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
@@ -8089,7 +8108,7 @@ export default function BusinessDetailsPage() {
                               className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-lg">
+                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-lg">
                               {categoryIcon}
                             </div>
                           )}
@@ -8111,7 +8130,7 @@ export default function BusinessDetailsPage() {
                               className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition
                               ${isSelected
                                   ? 'bg-card border-amber-600/50 text-amber-300 focus:ring-2 focus:ring-amber-500'
-                                  : 'bg-card/50 border-gray-600 text-gray-500'
+                                  : 'bg-card/50 border-border text-muted-foreground'
                                 }`}
                               disabled={!isSelected}
                             >
@@ -8140,7 +8159,7 @@ export default function BusinessDetailsPage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setShowTemplateModal(false)}
-                    className="px-4 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium text-sm transition"
+                    className="px-4 py-2.5 bg-foreground text-background shadow-md rounded-lg hover:bg-muted border border-border text-foreground font-medium text-sm transition"
                   >
                     {t('iptal')}
                   </button>
@@ -8174,13 +8193,13 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
             <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-border flex justify-between items-center">
-                <h2 className="text-xl font-bold text-foreground">{editingSupplier ? ' Tedarikçi Düzenle' : ' Yeni Tedarikçi Ekle'}</h2>
+                <h2 className="text-xl font-bold text-foreground">{editingSupplier ?  t('tedarikci_duzenle', { defaultValue: 'Tedarikçi Düzenle' }) :  t('yeni_tedarikci_ekle', { defaultValue: 'Yeni Tedarikçi Ekle' })}</h2>
                 <button onClick={() => setShowSupplierModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Firma Adı *</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('firma_adi', { defaultValue: 'Firma Adı *' })}</label>
                     <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
                       placeholder={t('tedarikci_adi_placeholder')}
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
@@ -8198,13 +8217,13 @@ export default function BusinessDetailsPage() {
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">E-Posta</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('email') || "E-Posta"}</label>
                     <input value={supplierForm.email} onChange={e => setSupplierForm((p: any) => ({ ...p, email: e.target.value }))}
                       placeholder="info@firma.de"
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Vergi No (USt-IdNr)</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('vergi_no', { defaultValue: 'Vergi No (USt-IdNr)' })}</label>
                     <input value={supplierForm.taxId} onChange={e => setSupplierForm((p: any) => ({ ...p, taxId: e.target.value }))}
                       placeholder="DE123456789"
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
@@ -8222,13 +8241,13 @@ export default function BusinessDetailsPage() {
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Teslimat Süresi (gün)</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('teslimat_suresi_gun', { defaultValue: 'Teslimat Süresi (gün)' })}</label>
                     <input type="number" value={supplierForm.deliveryDays} onChange={e => setSupplierForm((p: any) => ({ ...p, deliveryDays: e.target.value }))}
                       placeholder="2"
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Min. Sipariş Tutarı (€)</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('min_siparis_tutari', { defaultValue: 'Min. Sipariş Tutarı (€)' })}</label>
                     <input type="number" value={supplierForm.minOrderValue} onChange={e => setSupplierForm((p: any) => ({ ...p, minOrderValue: e.target.value }))}
                       placeholder="100"
                       className="w-full bg-background/50 text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none" />
@@ -8250,10 +8269,10 @@ export default function BusinessDetailsPage() {
                 </div>
               </div>
               <div className="p-6 border-t border-border flex justify-end gap-3">
-                <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
+                <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-foreground text-background shadow-md rounded-lg text-sm">{t('iptal')}</button>
                 <button onClick={saveSupplier} disabled={savingSupplier || !supplierForm.name.trim()}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                  {savingSupplier ? ' Kaydediliyor...' : editingSupplier ? ' Güncelle' : ' Kaydet'}
+                  {savingSupplier ?  t('kaydediliyor', { defaultValue: ' Kaydediliyor...' }) : editingSupplier ?  t('guncelle', { defaultValue: ' Güncelle' }) :  t('kaydet', { defaultValue: ' Kaydet' })}
                 </button>
               </div>
             </div>
@@ -8269,14 +8288,14 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
             <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-border flex justify-between items-center">
-                <h2 className="text-xl font-bold text-foreground">{editingOrder ? ' Sipariş Düzenle' : ' Yeni Tedarik Siparişi'}</h2>
+                <h2 className="text-xl font-bold text-foreground">{editingOrder ?  t('siparis_duzenle', { defaultValue: 'Sipariş Düzenle' }) :  t('yeni_tedarik_siparisi', { defaultValue: 'Yeni Tedarik Siparişi' })}</h2>
                 <button onClick={() => setShowOrderModal(false)} className="text-muted-foreground hover:text-foreground text-2xl">&times;</button>
               </div>
               <div className="p-6 space-y-5">
                 {/* Supplier Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Tedarikçi *</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('supplier') || "Tedarikçi"} *</label>
                     <select
                       value={orderForm.supplierId}
                       onChange={e => {
@@ -8320,7 +8339,7 @@ export default function BusinessDetailsPage() {
                     {orderForm.items.map((item: any, idx: number) => (
                       <div key={idx} className="bg-background/50 rounded-lg p-4 border border-border">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs text-gray-500 font-semibold">Kalem #{idx + 1}</span>
+                          <span className="text-xs text-muted-foreground font-semibold">Kalem #{idx + 1}</span>
                           {orderForm.items.length > 1 && (
                             <button
                               onClick={() => setOrderForm((p: any) => ({ ...p, items: p.items.filter((_: any, i: number) => i !== idx) }))}
@@ -8342,7 +8361,7 @@ export default function BusinessDetailsPage() {
                                   setOrderForm((p: any) => ({ ...p, items: newItems }));
                                 }}
                                 placeholder={t('urun_adi_sec_placeholder')}
-                                className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none"
                                 list={`product-list-${idx}`}
                               />
                               <datalist id={`product-list-${idx}`}>
@@ -8355,7 +8374,7 @@ export default function BusinessDetailsPage() {
                             </div>
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">SKU / Artikelnr</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t('sku_artikelnr', { defaultValue: 'SKU / Artikelnr' })}</label>
                             <input
                               value={item.sku || ''}
                               onChange={e => {
@@ -8364,7 +8383,7 @@ export default function BusinessDetailsPage() {
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
                               placeholder="Art.Nr."
-                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
@@ -8376,16 +8395,16 @@ export default function BusinessDetailsPage() {
                                 newItems[idx] = { ...newItems[idx], unit: e.target.value };
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
-                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600">
-                              <option value="kg">kg</option>
-                              <option value="adet">Adet (Stück)</option>
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border">
+                              <option value="kg">{t('kg') || "kg"}</option>
+                              <option value="adet">{t('pieces') || "Adet (Stück)"}</option>
                               <option value="paket">{t('paket')}</option>
-                              <option value="kutu">Kutu (Karton)</option>
+                              <option value="kutu">{t('box_carton') || "Kutu (Karton)"}</option>
                               <option value="lt">{t('litre')}</option>
                             </select>
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground mb-1 block">Sipariş Miktarı *</label>
+                            <label className="text-xs text-muted-foreground mb-1 block">{t('siparis_miktari', { defaultValue: 'Sipariş Miktarı *' })}</label>
                             <input
                               type="number"
                               min="0" step="0.1"
@@ -8395,7 +8414,7 @@ export default function BusinessDetailsPage() {
                                 newItems[idx] = { ...newItems[idx], orderedQuantity: e.target.value };
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
-                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
@@ -8410,7 +8429,7 @@ export default function BusinessDetailsPage() {
                                 setOrderForm((p: any) => ({ ...p, items: newItems }));
                               }}
                               placeholder="€"
-                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-blue-500 focus:outline-none"
                             />
                           </div>
                           <div>
@@ -8425,7 +8444,7 @@ export default function BusinessDetailsPage() {
                   </div>
                   {/* Total */}
                   <div className="mt-4 text-right">
-                    <span className="text-muted-foreground text-sm">Toplam: </span>
+                    <span className="text-muted-foreground text-sm">{t('toplam', { defaultValue: 'Toplam: ' })}</span>
                     <span className="text-foreground text-lg font-bold">
                       {formatCurrency(
                         orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0),
@@ -8444,10 +8463,10 @@ export default function BusinessDetailsPage() {
                 </div>
               </div>
               <div className="p-6 border-t border-border flex justify-end gap-3">
-                <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
+                <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-foreground text-background shadow-md rounded-lg text-sm">{t('iptal')}</button>
                 <button onClick={saveSupplierOrder} disabled={savingOrder || !orderForm.supplierId}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                  {savingOrder ? ' Kaydediliyor...' : editingOrder ? ' Güncelle' : ' Sipariş Oluştur'}
+                  {savingOrder ?  t('kaydediliyor', { defaultValue: ' Kaydediliyor...' }) : editingOrder ?  t('guncelle', { defaultValue: ' Güncelle' }) :  t('siparis_olustur', { defaultValue: ' Sipariş Oluştur' })}
                 </button>
               </div>
             </div>
@@ -8463,7 +8482,7 @@ export default function BusinessDetailsPage() {
           <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowGoodsReceiptModal(false)}>
             <div className="bg-card rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <div className="p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-foreground">📥 Mal Kabul (Wareneingang)</h2>
+                <h2 className="text-xl font-bold text-foreground">📥 {t('mal_kabul', { defaultValue: 'Mal Kabul (Wareneingang)' })}</h2>
                 <p className="text-muted-foreground text-sm mt-1">
                   Sipariş: <span className="text-blue-800 dark:text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
                 </p>
@@ -8474,7 +8493,7 @@ export default function BusinessDetailsPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <span className="text-foreground font-semibold">{item.productName}</span>
-                        {item.sku && <span className="text-gray-500 text-xs ml-2">(#{item.sku})</span>}
+                        {item.sku && <span className="text-muted-foreground text-xs ml-2">(#{item.sku})</span>}
                       </div>
                       <span className="text-muted-foreground text-sm">
                         Sipariş: <strong className="text-foreground">{item.orderedQuantity} {item.unit}</strong>
@@ -8492,11 +8511,11 @@ export default function BusinessDetailsPage() {
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
                           placeholder="0"
-                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Parti / Charge No</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('batch_no') || "Parti / Charge No"}</label>
                         <input
                           value={item.batchNumber || ''}
                           onChange={e => {
@@ -8505,7 +8524,7 @@ export default function BusinessDetailsPage() {
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
                           placeholder="LOT-001"
-                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -8518,11 +8537,11 @@ export default function BusinessDetailsPage() {
                             newItems[idx] = { ...newItems[idx], productionDate: e.target.value };
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
-                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Son Kullanma (MHD)</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('expiration_date') || "Son Kullanma (MHD)"}</label>
                         <input
                           type="date"
                           value={item.expirationDate || ''}
@@ -8531,7 +8550,7 @@ export default function BusinessDetailsPage() {
                             newItems[idx] = { ...newItems[idx], expirationDate: e.target.value };
                             setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
                           }}
-                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                          className="w-full bg-card text-foreground text-sm rounded px-3 py-2 border border-border focus:border-green-500 focus:outline-none"
                         />
                       </div>
                       <div className="flex items-end">
@@ -8539,7 +8558,7 @@ export default function BusinessDetailsPage() {
                           ? 'bg-green-600/30 text-green-300'
                           : Number(item.receivedQuantity || 0) > 0
                             ? 'bg-yellow-600/30 text-yellow-300'
-                            : 'bg-gray-700 text-muted-foreground'
+                            : 'bg-muted text-muted-foreground'
                           }`}>
                           {Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
                             ? ' Tam'
@@ -8557,15 +8576,19 @@ export default function BusinessDetailsPage() {
                   {goodsReceiptOrder.items.filter((it: any) => Number(it.receivedQuantity || 0) >= Number(it.orderedQuantity)).length} / {goodsReceiptOrder.items.length} kalem tam teslim
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">{t('iptal')}</button>
+                  <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-foreground text-background shadow-md rounded-lg text-sm">{t('iptal')}</button>
                   <button onClick={processGoodsReceipt} disabled={savingOrder}
                     className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {savingOrder ? ' Kaydediliyor...' : '📥 Mal Kabulü Kaydet'}
+                    {savingOrder ?  t('kaydediliyor', { defaultValue: ' Kaydediliyor...' }) :  '📥 ' + t('mal_kabulu_kaydet', { defaultValue: 'Mal Kabulü Kaydet'})}
                   </button>
                 </div>
               </div>
             </div>
           
+      {/* (Kapanıs uyarilarindan dolayi bilerek alta alindi) */}
+        </div>
+      )}
+
       {/* Order Details Modal */}
       {selectedOrder && (
         <OrderDetailsModal
@@ -8577,11 +8600,9 @@ export default function BusinessDetailsPage() {
           dateLocale="de-DE"
           onUpdateOrderStatus={updateOrderStatus}
           onToggleItemChecked={toggleItemChecked}
+          disableBusinessLink={true}
         />
       )}
-</div>
-        )
-      }
 
     </div >
   );

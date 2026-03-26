@@ -381,7 +381,7 @@ export default function AdminHeader() {
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                 </svg>
-                                <span className={`w-1.5 h-1.5 rounded-full ${!printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-500' : printerHealth.status === 'online' ? 'bg-green-400' : printerHealth.status === 'offline' ? 'bg-red-500' : 'bg-yellow-400'}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${!printerSettings.enabled || !printerSettings.printerIp ? 'bg-slate-500 dark:bg-slate-400' : printerHealth.status === 'online' ? 'bg-green-400' : printerHealth.status === 'offline' ? 'bg-red-500' : 'bg-yellow-400'}`} />
                             </Link>
                         </div>
 
@@ -420,7 +420,7 @@ export default function AdminHeader() {
                             </button>
                             {tabletProfileOpen && (
                             <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border z-50 min-w-[200px]">
-                                <Link href="/admin/settings" onClick={() => setTabletProfileOpen(false)} className="block px-4 py-3 border-b border-border hover:bg-gray-700/50 transition">
+                                <Link href="/admin/settings" onClick={() => setTabletProfileOpen(false)} className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
                                     <p className="text-foreground text-sm font-medium truncate">{admin.displayName || 'Super Admin'}</p>
                                     <p className="text-muted-foreground text-xs truncate">{admin.email || ''}</p>
                                 </Link>
@@ -431,7 +431,7 @@ export default function AdminHeader() {
                                             <button
                                                 key={l}
                                                 onClick={() => { handleLocaleChange(l); setTabletProfileOpen(false); }}
-                                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-muted-foreground hover:bg-gray-700 hover:text-white'}`}
+                                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                             >
                                                 <span>{localeFlags[l]}</span>
                                                 <span>{localeNames[l]}</span>
@@ -483,26 +483,26 @@ export default function AdminHeader() {
                                 {/* Dropdown */}
                                 <div className="absolute left-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
                                     <div className="py-1">
-                                        <Link href="/admin/business" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/business" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('businesses')}
                                         </Link>
-                                        <Link href="/admin/benutzerverwaltung" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/benutzerverwaltung" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('benutzerverwaltung')}
                                         </Link>
-                                        <Link href="/admin/sectors" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/sectors" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('sectors')}
                                         </Link>
-                                        <Link href="/admin/kermes" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/kermes" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('kermes')}
                                         </Link>
                                         <div className="border-t border-border my-1" />
-                                        <Link href="/admin/drivers/tips" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/drivers/tips" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('trinkgeld')}
                                         </Link>
-                                        <Link href="/admin/staff-shifts" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/staff-shifts" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('arbeitszeiten')}
                                         </Link>
-                                        <Link href="/admin/sponsored-ads" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/sponsored-ads" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('sponsoredAds')}
                                         </Link>
                                     </div>
@@ -545,10 +545,10 @@ export default function AdminHeader() {
                                 </button>
                                 <div className="absolute left-0 top-full pt-1 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50">
                                     <div className="bg-card border border-border rounded-xl shadow-2xl shadow-black/50 py-2 min-w-[200px] overflow-hidden">
-                                        <Link href="/admin/products" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/products" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('productsCategories')}
                                         </Link>
-                                        <Link href="/admin/ai-menu" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/ai-menu" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('aiMenu')}
                                         </Link>
                                     </div>
@@ -569,13 +569,13 @@ export default function AdminHeader() {
                                 </Link>
                                 <div className="absolute left-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[180px] overflow-hidden">
                                     <div className="py-1">
-                                        <Link href="/admin/invoices" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/invoices" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('invoices')}
                                         </Link>
-                                        <Link href="/admin/commissions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/commissions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('commissions')}
                                         </Link>
-                                        <Link href="/admin/plans" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/plans" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('plans')}
                                         </Link>
                                     </div>
@@ -596,17 +596,17 @@ export default function AdminHeader() {
                                 </Link>
                                 <div className="absolute left-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
                                     <div className="py-1">
-                                        <Link href="/admin/promotions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/promotions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('businessCampaigns')}
                                         </Link>
-                                        <Link href="/admin/coupons" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/coupons" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('coupons')}
                                         </Link>
-                                        <Link href="/admin/deals" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/deals" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('deals')}
                                         </Link>
-                                        <div className="border-t border-gray-600 my-1"></div>
-                                        <Link href="/admin/promotion-templates" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <div className="border-t border-border my-1"></div>
+                                        <Link href="/admin/promotion-templates" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('campaignTemplates')}
                                         </Link>
                                     </div>
@@ -629,10 +629,10 @@ export default function AdminHeader() {
                                 </Link>
                                 <div className="absolute left-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
                                     <div className="py-1">
-                                        <Link href="/admin/activity-logs" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/activity-logs" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('activityLogs')}
                                         </Link>
-                                        <Link href="/admin/reports" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white">
+                                        <Link href="/admin/reports" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground">
                                             {t('reports')}
                                         </Link>
                                     </div>
@@ -660,19 +660,19 @@ export default function AdminHeader() {
                                 <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[240px] overflow-hidden">
                                     <div className="py-1">
                                         <p className="px-4 py-1.5 text-[10px] uppercase font-bold text-gray-500 tracking-wider">{t('settings')}</p>
-                                        <Link href="/admin/settings" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/settings" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('iotSettings')}
                                         </Link>
-                                        <Link href="/admin/settings/company" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/settings/company" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('companySettings')}
                                         </Link>
-                                        <Link href="/admin/ui-translations" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/ui-translations" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('uiTranslations')}
                                         </Link>
-                                        <Link href="/admin/image-generator" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/image-generator" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('imageGen')}
                                         </Link>
-                                        <Link href="/admin/ameise" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-gray-700 hover:text-white block">
+                                        <Link href="/admin/ameise" className="px-4 py-2.5 text-xs transition-colors text-foreground hover:bg-muted hover:text-foreground block">
                                             {t('ameise')}
                                         </Link>
                                     </div>
@@ -706,7 +706,7 @@ export default function AdminHeader() {
 
                                 {/* Dropdown Menu (including Settings) */}
                                 <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
-                                    <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-gray-700/50 transition">
+                                    <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
                                         <p className="text-foreground text-sm font-medium truncate">
                                             {admin.displayName || 'Super Admin'}
                                         </p>
@@ -723,7 +723,7 @@ export default function AdminHeader() {
                                                 <button
                                                     key={l}
                                                     onClick={() => handleLocaleChange(l)}
-                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-muted-foreground hover:bg-gray-700 hover:text-white'}`}
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                                 >
                                                     <span>{localeFlags[l]}</span>
                                                     <span>{localeNames[l]}</span>
@@ -772,11 +772,11 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'business' && (
                                             <div className="bg-card/50 py-1">
-                                                <Link href="/admin/business" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('businesses')}</Link>
-                                                <Link href="/admin/benutzerverwaltung" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('benutzerverwaltung')}</Link>
-                                                <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('sectors')}</Link>
-                                                <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('kermes')}</Link>
-                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('sponsoredAds')}</Link>
+                                                <Link href="/admin/business" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('businesses')}</Link>
+                                                <Link href="/admin/benutzerverwaltung" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('benutzerverwaltung')}</Link>
+                                                <Link href="/admin/sectors" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('sectors')}</Link>
+                                                <Link href="/admin/kermes" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('kermes')}</Link>
+                                                <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('sponsoredAds')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -796,8 +796,8 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'products' && (
                                             <div className="bg-card/50 py-1">
-                                                <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('productsCategories')}</Link>
-                                                <Link href="/admin/ai-menu" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('aiMenu')}</Link>
+                                                <Link href="/admin/products" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('productsCategories')}</Link>
+                                                <Link href="/admin/ai-menu" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('aiMenu')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -810,9 +810,9 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'accounting' && (
                                             <div className="bg-card/50 py-1">
-                                                <Link href="/admin/invoices" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('invoices')}</Link>
-                                                <Link href="/admin/commissions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('commissions')}</Link>
-                                                <Link href="/admin/plans" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('plans')}</Link>
+                                                <Link href="/admin/invoices" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('invoices')}</Link>
+                                                <Link href="/admin/commissions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('commissions')}</Link>
+                                                <Link href="/admin/plans" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('plans')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -825,10 +825,10 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'promotions' && (
                                             <div className="bg-card/50 py-1">
-                                                <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('businessCampaigns')}</Link>
-                                                <Link href="/admin/coupons" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('coupons')}</Link>
-                                                <Link href="/admin/deals" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('deals')}</Link>
-                                                <Link href="/admin/promotion-templates" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('campaignTemplates')}</Link>
+                                                <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('businessCampaigns')}</Link>
+                                                <Link href="/admin/coupons" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('coupons')}</Link>
+                                                <Link href="/admin/deals" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('deals')}</Link>
+                                                <Link href="/admin/promotion-templates" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('campaignTemplates')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -841,8 +841,8 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'service' && (
                                             <div className="bg-card/50 py-1">
-                                                <Link href="/admin/activity-logs" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('activityLogs')}</Link>
-                                                <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('reports')}</Link>
+                                                <Link href="/admin/activity-logs" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('activityLogs')}</Link>
+                                                <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('reports')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -855,11 +855,11 @@ export default function AdminHeader() {
                                         </button>
                                         {expandedSection === 'platform' && (
                                             <div className="bg-card/50 py-1">
-                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('iotSettings')}</Link>
-                                                <Link href="/admin/settings/company" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('companySettings')}</Link>
-                                                <Link href="/admin/ui-translations" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('uiTranslations')}</Link>
-                                                <Link href="/admin/image-generator" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('imageGen')}</Link>
-                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('ameise')}</Link>
+                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('iotSettings')}</Link>
+                                                <Link href="/admin/settings/company" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('companySettings')}</Link>
+                                                <Link href="/admin/ui-translations" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('uiTranslations')}</Link>
+                                                <Link href="/admin/image-generator" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('imageGen')}</Link>
+                                                <Link href="/admin/ameise" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-muted">{t('ameise')}</Link>
                                             </div>
                                         )}
                                     </div>
@@ -955,7 +955,7 @@ export default function AdminHeader() {
                                     }`}
                                 >
                                     <span className={`w-1.5 h-1.5 rounded-full ${
-                                        !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-500' :
+                                        !printerSettings.enabled || !printerSettings.printerIp ? 'bg-slate-500 dark:bg-slate-400' :
                                         printerHealth.status === 'online' ? 'bg-green-400' :
                                         printerHealth.status === 'offline' ? 'bg-red-500' :
                                         'bg-yellow-400'
@@ -992,8 +992,8 @@ export default function AdminHeader() {
                                         key={href}
                                         href={href}
                                         className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav(href)
-                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
-                                            : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
+                                            ? 'bg-accent border border-border text-foreground shadow-inner'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                                             }`}
                                     >
                                         {label}
@@ -1004,8 +1004,8 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/sponsored-ads"
                                     className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/sponsored-ads')
-                                        ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
-                                        : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
+                                        ? 'bg-accent border border-border text-foreground shadow-inner'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                                         }`}
                                 >
                                     {t('sponsoredAds')}
@@ -1016,8 +1016,8 @@ export default function AdminHeader() {
                                     <button
                                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/staff-dashboard') ||
                                             isActiveNav('/admin/staff-shifts')
-                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
-                                            : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
+                                            ? 'bg-accent border border-border text-foreground shadow-inner'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                                             }`}
                                     >
                                         {t('staff')}
@@ -1029,13 +1029,13 @@ export default function AdminHeader() {
                                         <div className="py-1">
                                             <Link
                                                 href="/admin/staff-dashboard"
-                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-dashboard') ? 'bg-slate-700 text-white' : 'text-foreground hover:bg-slate-700 hover:text-white'}`}
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-dashboard') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
                                             >
                                                 {t('staff')}
                                             </Link>
                                             <Link
                                                 href="/admin/staff-shifts"
-                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-shifts') ? 'bg-slate-700 text-white' : 'text-foreground hover:bg-slate-700 hover:text-white'}`}
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-shifts') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
                                             >
                                                 {t('shifts')}
                                             </Link>
@@ -1048,8 +1048,8 @@ export default function AdminHeader() {
                                     <button
                                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/settings') ||
                                             isActiveNav('/admin/delivery-settings')
-                                            ? 'bg-white/10 border border-[var(--header-border)] text-white shadow-inner'
-                                            : 'text-muted-foreground hover:text-slate-200 hover:bg-white/5'
+                                            ? 'bg-accent border border-border text-foreground shadow-inner'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                                             }`}
                                     >
                                         {t('settings')}
@@ -1061,13 +1061,13 @@ export default function AdminHeader() {
                                         <div className="py-1">
                                             <Link
                                                 href="/admin/settings"
-                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/settings') ? 'bg-slate-700 text-white' : 'text-foreground hover:bg-slate-700 hover:text-white'}`}
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/settings') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
                                             >
                                                 {t('settings')}
                                             </Link>
                                             <Link
                                                 href="/admin/delivery-settings"
-                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/delivery-settings') ? 'bg-slate-700 text-white' : 'text-foreground hover:bg-slate-700 hover:text-white'}`}
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/delivery-settings') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
                                             >
                                                 {t('teslimat_ayarlari')}
                                             </Link>
@@ -1075,7 +1075,7 @@ export default function AdminHeader() {
                                             {admin?.adminType === 'restoran' && (
                                                 <Link
                                                     href="/admin/ai-menu"
-                                                    className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-slate-700 text-white' : 'text-foreground hover:bg-slate-700 hover:text-white'}`}
+                                                    className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-accent text-accent-foreground' : 'text-foreground hover:bg-muted hover:text-foreground'}`}
                                                 >
                                                     {t('aiMenu')}
                                                 </Link>
@@ -1087,29 +1087,30 @@ export default function AdminHeader() {
 
                             {/* Printer Status + Profile & Role */}
                             <div className="flex items-center shrink-0 gap-3 z-50">
+                                <ThemeToggle />
                                 {/* Printer Health Indicator (Hidden for non-super admins temporarily) */}
                                 {(admin?.adminType as string) === 'super' && (
                                     <Link
                                         href="/admin/settings/printer"
                                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                                             !printerSettings.enabled || !printerSettings.printerIp
-                                                ? 'bg-gray-700/50 border border-gray-600 text-muted-foreground'
+                                                ? 'bg-muted/50 border border-border text-muted-foreground'
                                                 : printerHealth.status === 'online'
                                                 ? 'bg-green-600/20 border border-green-500/50 text-green-800 dark:text-green-400'
                                                 : printerHealth.status === 'offline'
                                                 ? 'bg-red-600/20 border border-red-500/50 text-red-800 dark:text-red-400 animate-pulse'
                                                 : printerHealth.status === 'checking'
                                                 ? 'bg-yellow-600/20 border border-yellow-500/50 text-yellow-800 dark:text-yellow-400'
-                                                : 'bg-gray-700/50 border border-gray-600 text-muted-foreground'
+                                                : 'bg-muted/50 border border-border text-muted-foreground'
                                         }`}
                                         title={`Drucker: ${printerHealth.status === 'online' ? 'Online' : printerHealth.status === 'offline' ? 'OFFLINE' : printerHealth.status === 'checking' ? 'Pruefe...' : 'Nicht konfiguriert'}${printerHealth.responseTimeMs ? ` (${printerHealth.responseTimeMs}ms)` : ''}`}
                                     >
                                         <span className={`w-2 h-2 rounded-full inline-block flex-shrink-0 ${
-                                            !printerSettings.enabled || !printerSettings.printerIp ? 'bg-gray-500' :
+                                            !printerSettings.enabled || !printerSettings.printerIp ? 'bg-slate-500 dark:bg-slate-400' :
                                             printerHealth.status === 'online' ? 'bg-green-400' :
                                             printerHealth.status === 'offline' ? 'bg-red-500 animate-ping' :
                                             printerHealth.status === 'checking' ? 'bg-yellow-400 animate-pulse' :
-                                            'bg-gray-500'
+                                            'bg-slate-500 dark:bg-slate-400'
                                         }`} />
                                         <span className="truncate max-w-[80px]">
                                             {!printerSettings.enabled || !printerSettings.printerIp
@@ -1122,8 +1123,8 @@ export default function AdminHeader() {
                                     </Link>
                                 )}
                                 <div className="relative group">
-                                    <button className="flex items-center gap-1.5 hover:bg-white/5 rounded-lg px-2 py-1 transition">
-                                        <div className="w-7 h-7 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
+                                    <button className="flex items-center gap-1.5 hover:bg-accent/50 rounded-lg px-2 py-1 transition">
+                                        <div className="w-7 h-7 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-primary/10">
                                             {admin.photoURL ? (
                                                 <img
                                                     src={admin.photoURL}
@@ -1137,17 +1138,17 @@ export default function AdminHeader() {
                                             )}
                                         </div>
                                         <div className="hidden md:flex flex-col items-start">
-                                            <span className="text-white text-xs font-medium max-w-[100px] truncate leading-tight">
+                                            <span className="text-foreground text-xs font-medium max-w-[100px] truncate leading-tight">
                                                 {admin.displayName || admin.email?.split('@')[0] || 'Admin'}
                                             </span>
-                                            <span className="text-slate-500 text-[10px] leading-tight">
+                                            <span className="text-muted-foreground text-[10px] leading-tight">
                                                 {getRoleLabel(admin.adminType) || adminTypeLabels[admin.adminType as AdminType] || admin.adminType}
                                             </span>
                                         </div>
-                                        <span className="text-slate-500 text-[10px]">▼</span>
+                                        <span className="text-muted-foreground text-[10px]">▼</span>
                                     </button>
                                     <div className="absolute right-0 top-full mt-2 bg-card rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
-                                        <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-gray-700/50 transition">
+                                        <Link href="/admin/settings" className="block px-4 py-3 border-b border-border hover:bg-muted/50 transition">
                                             <p className="text-foreground text-sm font-medium truncate">
                                                 {admin.displayName || 'Admin'}
                                             </p>
@@ -1163,7 +1164,7 @@ export default function AdminHeader() {
                                                     <button
                                                         key={l}
                                                         onClick={() => handleLocaleChange(l)}
-                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-muted-foreground hover:bg-gray-700 hover:text-white'}`}
+                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition ${l === currentLocale ? 'bg-blue-600/30 text-blue-300 font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                                     >
                                                         <span>{localeFlags[l]}</span>
                                                         <span>{localeNames[l]}</span>
@@ -1199,44 +1200,43 @@ export default function AdminHeader() {
                             />
                             <div className="min-[1921px]:hidden fixed top-0 left-0 h-full w-72 bg-background border-r border-border z-50 overflow-y-auto shadow-2xl">
                                 <div className="p-4 border-b border-border flex items-center justify-between">
-                                    <span className="text-white font-semibold text-sm">Menu</span>
-                                    <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-white text-xl">{`\u2715`}</button>
+                                    <span className="text-foreground font-semibold text-sm">Menu</span>
+                                    <button onClick={closeMobileMenu} className="text-muted-foreground hover:text-foreground text-xl">{`\u2715`}</button>
                                 </div>
                                 <nav className="py-2">
-                                    <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('orders')}</Link>
-                                    <Link href="/admin/statistics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('dashboard')}</Link>
-                                    <Link href="/admin/reservations" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('reservations')}</Link>
-                                    <Link href="/admin/dashboard?view=customers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('customers')}</Link>
-                                    <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('suppliers')}</Link>
-                                    <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('productsCategories')}</Link>
-                                    <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('promotions')}</Link>
-                                    <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('reports')}</Link>
-                                    <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-gray-200 hover:bg-card">{t('sponsoredAds')}</Link>
+                                    <Link href="/admin/orders" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('orders')}</Link>
+                                    <Link href="/admin/statistics" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('dashboard')}</Link>
+                                    <Link href="/admin/dashboard?view=customers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('customers')}</Link>
+                                    <Link href="/admin/orders/suppliers" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('suppliers')}</Link>
+                                    <Link href="/admin/products" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('productsCategories')}</Link>
+                                    <Link href="/admin/promotions" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('promotions')}</Link>
+                                    <Link href="/admin/reports" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('reports')}</Link>
+                                    <Link href="/admin/sponsored-ads" onClick={closeMobileMenu} className="block px-4 py-3 text-sm text-foreground hover:bg-muted">{t('sponsoredAds')}</Link>
 
                                     {/* Personel section */}
                                     <div className="border-t border-border mt-1 pt-1">
-                                        <button onClick={() => toggleSection('staff')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('staff')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('staff')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'staff' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
                                         </button>
                                         {expandedSection === 'staff' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/staff-dashboard" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('staff')}</Link>
-                                                <Link href="/admin/staff-shifts" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('shifts')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/staff-dashboard" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('staff')}</Link>
+                                                <Link href="/admin/staff-shifts" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('shifts')}</Link>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Settings section */}
                                     <div>
-                                        <button onClick={() => toggleSection('settings')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-200 hover:bg-card">
+                                        <button onClick={() => toggleSection('settings')} className="w-full flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted">
                                             {t('settings')}
                                             <span className={`text-xs transition-transform ${expandedSection === 'settings' ? 'rotate-180' : ''}`}>{`\u25BC`}</span>
                                         </button>
                                         {expandedSection === 'settings' && (
-                                            <div className="bg-card/50 py-1">
-                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('settings')}</Link>
-                                                <Link href="/admin/delivery-settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-white hover:bg-gray-700">{t('teslimat_ayarlari')}</Link>
+                                            <div className="bg-muted/50 py-1">
+                                                <Link href="/admin/settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('settings')}</Link>
+                                                <Link href="/admin/delivery-settings" onClick={closeMobileMenu} className="block px-6 py-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted">{t('teslimat_ayarlari')}</Link>
                                             </div>
                                         )}
                                     </div>

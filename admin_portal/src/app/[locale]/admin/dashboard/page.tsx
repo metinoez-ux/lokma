@@ -1889,8 +1889,8 @@ export default function SuperAdminDashboard() {
                 <div className="fixed inset-0 z-[100] flex items-start justify-center pointer-events-none pt-20">
                     <div
                         className={`pointer-events-auto px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4 animate-bounce-in border-2 min-w-[400px] max-w-[600px] ${toast.type === 'success'
-                            ? 'bg-green-600 text-white border-green-400'
-                            : 'bg-red-600 text-white border-red-400'
+                            ? 'bg-green-600 text-foreground border-green-400'
+                            : 'bg-red-600 text-foreground border-red-400'
                             }`}
                         style={{
                             boxShadow: toast.type === 'success'
@@ -1903,7 +1903,7 @@ export default function SuperAdminDashboard() {
                         <span className="font-bold text-lg flex-1">{toast.message}</span>
                         <button
                             onClick={() => setToast(null)}
-                            className="ml-2 text-white/80 hover:text-foreground text-2xl font-bold hover:scale-110 transition-transform"
+                            className="ml-2 text-foreground/80 hover:text-foreground text-2xl font-bold hover:scale-110 transition-transform"
                         >
                             ✕
                         </button>
@@ -1940,7 +1940,7 @@ export default function SuperAdminDashboard() {
                                         }
                                         setShowNewUserModal(true);
                                     }}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
+                                    className="px-4 py-2 bg-green-600 text-foreground rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
                                 >
                                     {tNav('yeni_kullanici_ekle')}
                                 </button>
@@ -1952,8 +1952,8 @@ export default function SuperAdminDashboard() {
                             <button
                                 onClick={() => setUserStatusFilter('active')}
                                 className={`px-4 py-2 rounded-lg font-medium transition ${userStatusFilter === 'active'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
+                                    ? 'bg-green-600 text-foreground'
+                                    : 'bg-muted border border-border text-muted-foreground hover:bg-muted/80'
                                     }`}
                             >
                                 ✅ {tNav('aktif')} ({users.filter(u => (u as any).isActive !== false).length})
@@ -1961,8 +1961,8 @@ export default function SuperAdminDashboard() {
                             <button
                                 onClick={() => setUserStatusFilter('archived')}
                                 className={`px-4 py-2 rounded-lg font-medium transition ${userStatusFilter === 'archived'
-                                    ? 'bg-amber-600 text-white'
-                                    : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
+                                    ? 'bg-amber-600 text-foreground'
+                                    : 'bg-muted border border-border text-muted-foreground hover:bg-muted/80'
                                     }`}
                             >
                                 {tNav('arsivlenmis')}{users.filter(u => (u as any).isActive === false).length})
@@ -1987,7 +1987,7 @@ export default function SuperAdminDashboard() {
                                             }
                                         }}
                                         placeholder={tNav('i_sim_e_posta_veya_telefon_ile_ara')}
-                                        className="w-full px-4 py-3 pl-12 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-4 py-3 pl-12 bg-background text-foreground border border-border rounded-xl border border-border focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                                     />
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xl">🔍</span>
                                     {searchLoading && (
@@ -2002,12 +2002,12 @@ export default function SuperAdminDashboard() {
 
                             {/* Sorting Controls (only when showing all users) */}
                             {showAllUsers && (
-                                <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
+                                <div className="flex items-center gap-3 p-3 bg-muted border border-border/50 rounded-lg">
                                     <span className="text-muted-foreground text-sm">{tNav('sirala')}</span>
                                     <select
                                         value={allUsersSortBy}
                                         onChange={(e) => setAllUsersSortBy(e.target.value as 'createdAt' | 'firstName' | 'lastName')}
-                                        className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
+                                        className="px-3 py-2 bg-gray-600 text-foreground rounded-lg border border-gray-500"
                                     >
                                         <option value="createdAt">{tNav('kayit_tarihi')}</option>
                                         <option value="firstName">👤 {tNav('adi')} (A-Z)</option>
@@ -2016,7 +2016,7 @@ export default function SuperAdminDashboard() {
                                     <select
                                         value={allUsersSortOrder}
                                         onChange={(e) => setAllUsersSortOrder(e.target.value as 'asc' | 'desc')}
-                                        className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
+                                        className="px-3 py-2 bg-gray-600 text-foreground rounded-lg border border-gray-500"
                                     >
                                         <option value="desc">⬇️ {tNav('yeniden_eskiye')}</option>
                                         <option value="asc">⬆️ {tNav('eskiden_yeniye')}</option>
@@ -2026,7 +2026,7 @@ export default function SuperAdminDashboard() {
                                     <select
                                         value={userTypeFilter}
                                         onChange={(e) => setUserTypeFilter(e.target.value as 'all' | 'user' | 'admin' | 'staff' | 'super' | 'driver' | 'driver_lokma' | 'driver_business')}
-                                        className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
+                                        className="px-3 py-2 bg-gray-600 text-foreground rounded-lg border border-gray-500"
                                     >
                                         <option value="all">{tNav('tumu')}</option>
                                         <option value="user">{tNav('sadece_kullanicilar')}</option>
@@ -2049,14 +2049,14 @@ export default function SuperAdminDashboard() {
                                     <button
                                         onClick={() => loadAllUsers(allUsersPage - 1)}
                                         disabled={allUsersPage <= 1}
-                                        className="px-3 py-2 bg-gray-600 text-white rounded-lg disabled:opacity-50"
+                                        className="px-3 py-2 bg-gray-600 text-foreground rounded-lg disabled:opacity-50"
                                     >
                                         {tNav('onceki')}
                                     </button>
                                     <button
                                         onClick={() => loadAllUsers(allUsersPage + 1)}
                                         disabled={allUsersPage >= Math.ceil(allUsersTotal / USERS_PER_PAGE)}
-                                        className="px-3 py-2 bg-gray-600 text-white rounded-lg disabled:opacity-50"
+                                        className="px-3 py-2 bg-gray-600 text-foreground rounded-lg disabled:opacity-50"
                                     >
                                         {tNav('sonraki')} ▶
                                     </button>
@@ -2195,7 +2195,7 @@ export default function SuperAdminDashboard() {
                                                     longitude: (user as any).longitude,
                                                 });
                                             }}
-                                            className={`flex items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition cursor-pointer group border-l-4 relative overflow-hidden ${(user as any).isActive !== false ? 'border-green-500' : 'border-red-500 opacity-90'
+                                            className={`flex items-center p-4 bg-muted border border-border rounded-lg hover:bg-muted/80 transition cursor-pointer group border-l-4 relative overflow-hidden ${(user as any).isActive !== false ? 'border-green-500' : 'border-red-500 opacity-90'
                                                 }`}
 
                                         >
@@ -2205,7 +2205,7 @@ export default function SuperAdminDashboard() {
                                                     <img
                                                         src={(user as any).photoURL || (user as any).profileImageUrl}
                                                         alt=""
-                                                        className={`w-12 h-12 rounded-full object-cover border-2 shrink-0 ${(user as any).isActive !== false ? 'border-gray-600 group-hover:border-gray-500' : 'border-red-500/50'
+                                                        className={`w-12 h-12 rounded-full object-cover border-2 shrink-0 ${(user as any).isActive !== false ? 'border-border group-hover:border-gray-500' : 'border-red-500/50'
                                                             }`}
                                                     />
                                                 ) : (
@@ -2217,7 +2217,7 @@ export default function SuperAdminDashboard() {
                                                 <div className="flex-1 min-w-0">
                                                     {/* Name with Role Badge and Location */}
                                                     <div className="flex items-center gap-3 flex-wrap">
-                                                        <p className={`font-medium ${(user as any).isActive !== false ? 'text-white' : 'text-foreground'
+                                                        <p className={`font-medium ${(user as any).isActive !== false ? 'text-foreground' : 'text-foreground'
                                                             }`}>
                                                             {(user as any).firstName && (user as any).lastName
                                                                 ? `${(user as any).firstName} ${(user as any).lastName}`
@@ -2238,18 +2238,18 @@ export default function SuperAdminDashboard() {
                                                         {user.isAdmin ? (
                                                             user.adminType === 'super' ? (
                                                                 // 🔴 SUPER ADMIN - Red
-                                                                <span className="px-2 py-0.5 bg-red-600 text-white rounded-full text-xs font-medium">
+                                                                <span className="px-2 py-0.5 bg-red-600 text-foreground rounded-full text-xs font-medium">
                                                                     {tNav('super_admin')}
                                                                 </span>
                                                             ) : user.adminType?.includes('_staff') ? (
                                                                 // 🟢 STAFF/PERSONEL - Green
-                                                                <span className="px-2 py-0.5 bg-green-600 text-white rounded-full text-xs font-medium">
+                                                                <span className="px-2 py-0.5 bg-green-600 text-foreground rounded-full text-xs font-medium">
                                                                     {(getRoleLabel(user.adminType as string) || user.adminType || 'Personel').toUpperCase()}
                                                                     {(user.adminProfile as any)?.butcherName && ` | ${(user.adminProfile as any).butcherName}`}
                                                                 </span>
                                                             ) : (
                                                                 // 🟠 BUSINESS ADMIN - Orange (or 🟣 Purple if Primary Admin)
-                                                                <span className={`px-2 py-0.5 text-white rounded-full text-xs font-medium ${(user.adminProfile as any)?.isPrimaryAdmin
+                                                                <span className={`px-2 py-0.5 text-foreground rounded-full text-xs font-medium ${(user.adminProfile as any)?.isPrimaryAdmin
                                                                     ? 'bg-purple-600'
                                                                     : 'bg-amber-500'
                                                                     }`}>
@@ -2260,15 +2260,15 @@ export default function SuperAdminDashboard() {
                                                             )
                                                         ) : (
                                                             // 🔵 USER/KULLANICI - Blue
-                                                            <span className="px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs font-medium">
+                                                            <span className="px-2 py-0.5 bg-blue-600 text-foreground rounded-full text-xs font-medium">
                                                                 {tNav('kullanici')}
                                                             </span>
                                                         )}
                                                         {/* 🚚 Driver Type Badge */}
                                                         {(user.adminProfile as any)?.isDriver && (
                                                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(user.adminProfile as any)?.driverType === 'lokma_fleet'
-                                                                ? 'bg-emerald-600 text-white'
-                                                                : 'bg-amber-600 text-white'
+                                                                ? 'bg-emerald-600 text-foreground'
+                                                                : 'bg-amber-600 text-foreground'
                                                                 }`}>
                                                                 {(user.adminProfile as any)?.driverType === 'lokma_fleet' ? `🚚 ${tNav('lokma_filosu_surucusu')}` : tNav('i_sletme_surucu')}
                                                             </span>
@@ -2364,7 +2364,7 @@ export default function SuperAdminDashboard() {
                                                                 longitude: (user as any).longitude,
                                                             });
                                                         }}
-                                                        className="p-2 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg hover:bg-blue-600 hover:text-white transition"
+                                                        className="p-2 bg-blue-600/20 text-blue-800 dark:text-blue-400 rounded-lg hover:bg-blue-600 hover:text-foreground transition"
                                                         title={tNav('duzenle')}
                                                     >
                                                         ✏
@@ -2410,14 +2410,14 @@ export default function SuperAdminDashboard() {
                                                             });
                                                         }}
                                                         className={`p-2 rounded-lg transition ${(user as any).isActive !== false
-                                                            ? 'bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-white'
-                                                            : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600 hover:text-white'}`}
+                                                            ? 'bg-amber-600/20 text-amber-800 dark:text-amber-400 hover:bg-amber-600 hover:text-foreground'
+                                                            : 'bg-green-600/20 text-green-800 dark:text-green-400 hover:bg-green-600 hover:text-foreground'}`}
                                                         title={(user as any).isActive !== false ? tNav('arsivle') : tNav('aktiflestir')}
                                                     >
                                                         {(user as any).isActive !== false ? '📦' : '✅'}
                                                     </button>
                                                     {/* Arrow indicator */}
-                                                    <div className="text-gray-500 group-hover:text-white transition text-xl">
+                                                    <div className="text-gray-500 group-hover:text-foreground transition text-xl">
                                                         →
                                                     </div>
                                                 </div>
@@ -2467,7 +2467,7 @@ export default function SuperAdminDashboard() {
                                         }));
                                         setShowNewUserModal(true);
                                     }}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
+                                    className="px-4 py-2 bg-green-600 text-foreground rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
                                 >
                                     {tNav('yeni_personel_ekle')}
                                 </button>
@@ -2478,8 +2478,8 @@ export default function SuperAdminDashboard() {
                                 <button
                                     onClick={() => setAdminStatusFilter('active')}
                                     className={`px-4 py-2 rounded-lg font-medium transition ${adminStatusFilter === 'active'
-                                        ? 'bg-green-600 text-white'
-                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
+                                        ? 'bg-green-600 text-foreground'
+                                        : 'bg-muted border border-border text-muted-foreground hover:bg-muted/80'
                                         }`}
                                 >
                                     ✅ Aktif ({admins.filter(a => a.isActive !== false).length})
@@ -2487,8 +2487,8 @@ export default function SuperAdminDashboard() {
                                 <button
                                     onClick={() => setAdminStatusFilter('archived')}
                                     className={`px-4 py-2 rounded-lg font-medium transition ${adminStatusFilter === 'archived'
-                                        ? 'bg-amber-600 text-white'
-                                        : 'bg-gray-700 text-muted-foreground hover:bg-gray-600'
+                                        ? 'bg-amber-600 text-foreground'
+                                        : 'bg-muted border border-border text-muted-foreground hover:bg-muted/80'
                                         }`}
                                 >
                                     {tNav('arsivlenmis')}{admins.filter(a => a.isActive === false).length})
@@ -2506,18 +2506,18 @@ export default function SuperAdminDashboard() {
                                             placeholder={tNav('i_sim_e_posta_veya_telefon_ile_ara')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full pl-10 pr-4 py-3 bg-muted border border-border border border-border rounded-lg text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Filter Controls */}
-                                <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
+                                <div className="flex items-center gap-3 p-3 bg-muted border border-border/50 rounded-lg">
                                     <span className="text-muted-foreground text-sm">{tNav('filtrele')}:</span>
                                     <select
                                         value={adminFilter}
                                         onChange={(e) => setAdminFilter(e.target.value as 'all' | 'business' | 'staff' | 'super')}
-                                        className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
+                                        className="px-3 py-2 bg-gray-600 text-foreground rounded-lg border border-gray-500"
                                     >
                                         <option value="all">{tNav('tumu')}</option>
                                         <option value="business">🎫 {t('businessAdmins')}</option>
@@ -2594,7 +2594,7 @@ export default function SuperAdminDashboard() {
                                             : a.isActive === false;
                                         return matchesSearch && matchesFilter && matchesStatus;
                                     }).map((a) => (
-                                        <tr key={a.id} className="border-b border-border hover:bg-gray-750">
+                                        <tr key={a.id} className="border-b border-border hover:bg-muted/40 dark:bg-muted/10 border-border">
                                             <td className="py-4">
                                                 <div>
                                                     <p className="font-medium">{a.displayName}</p>
@@ -2609,15 +2609,15 @@ export default function SuperAdminDashboard() {
                                                         👑 {getRoleLabel(a.adminType) || a.adminType} {tNav('i_sletme_sahibi')}
                                                     </span>
                                                 ) : a.adminType === 'super' ? (
-                                                    <span className="px-2 py-1 rounded text-xs bg-red-600 text-white">
+                                                    <span className="px-2 py-1 rounded text-xs bg-red-600 text-foreground">
                                                         👑 Super Admin
                                                     </span>
                                                 ) : String(a.adminType || '').includes('_staff') ? (
-                                                    <span className="px-2 py-1 rounded text-xs bg-green-600 text-white">
+                                                    <span className="px-2 py-1 rounded text-xs bg-green-600 text-foreground">
                                                         {getRoleIcon(a.adminType)} {getRoleLabel(a.adminType) || a.adminType}
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2 py-1 rounded text-xs bg-amber-500 text-white">
+                                                    <span className="px-2 py-1 rounded text-xs bg-amber-500 text-foreground">
                                                         {getRoleIcon(a.adminType)} {getRoleLabel(a.adminType) || a.adminType}
                                                     </span>
                                                 )}
@@ -2756,7 +2756,7 @@ export default function SuperAdminDashboard() {
                         <div className="bg-card rounded-2xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-foreground mb-4">{tNav('admin_rolu_ata')}</h3>
 
-                            <div className="bg-gray-700 rounded-lg p-4 mb-6">
+                            <div className="bg-muted border border-border rounded-lg p-4 mb-6">
                                 <p className="text-foreground font-medium">{selectedUser.displayName || t('unnamed')}</p>
                                 <p className="text-muted-foreground text-sm">{selectedUser.email}</p>
                             </div>
@@ -2767,7 +2767,7 @@ export default function SuperAdminDashboard() {
                                     <select
                                         value={assignRole}
                                         onChange={(e) => setAssignRole(e.target.value as AdminType)}
-                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600"
+                                        className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border"
                                     >
                                         {getAllRoles().map((role) => (
                                             <option key={role.value} value={role.value}>{role.icon} {role.label}</option>
@@ -2797,10 +2797,10 @@ export default function SuperAdminDashboard() {
                                             placeholder={tNav('i_sletme_ara')}
                                             value={assignLocation}
                                             onChange={(e) => setAssignLocation(e.target.value)}
-                                            className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600"
+                                            className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border"
                                         />
                                         {assignLocation && (
-                                            <div className="mt-2 max-h-40 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
+                                            <div className="mt-2 max-h-40 overflow-y-auto bg-muted border border-border rounded-lg border border-border">
                                                 {butcherList
                                                     .filter(b => matchesBusinessSearch(b, assignLocation))
                                                     .slice(0, 5)
@@ -2811,7 +2811,7 @@ export default function SuperAdminDashboard() {
                                                                 setSelectedButcherId(b.id);
                                                                 setAssignLocation('');
                                                             }}
-                                                            className="w-full px-4 py-3 text-left hover:bg-gray-600 border-b border-gray-600 last:border-b-0 text-white"
+                                                            className="w-full px-4 py-3 text-left hover:bg-muted/80 border-b border-border last:border-b-0 text-foreground"
                                                         >
                                                             <p className="font-medium">{b.name}</p>
                                                             <p className="text-xs text-muted-foreground">
@@ -2832,7 +2832,7 @@ export default function SuperAdminDashboard() {
                             <div className="flex space-x-3">
                                 <button
                                     onClick={() => setSelectedUser(null)}
-                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                                    className="flex-1 px-4 py-3 bg-background text-foreground border border-border rounded-lg hover:bg-muted/80"
                                     disabled={assigning}
                                 >
                                     İptal
@@ -2840,7 +2840,7 @@ export default function SuperAdminDashboard() {
                                 <button
                                     onClick={handleAssignRole}
                                     disabled={assigning}
-                                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50"
+                                    className="flex-1 px-4 py-3 bg-green-600 text-foreground rounded-lg hover:bg-green-700 font-medium disabled:opacity-50"
                                 >
                                     {assigning ? tNav('ataniyor') : tNav('rolu_ata')}
                                 </button>
@@ -2883,7 +2883,7 @@ export default function SuperAdminDashboard() {
                                         value={newUserPhone}
                                         onChange={(e) => setNewUserPhone(e.target.value)}
                                         placeholder="+49 178 444 3475"
-                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500 text-lg"
+                                        className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-green-500 text-lg"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
                                         {tNav('bu_numaraya_davet_sms_i_gonderilecek')}
@@ -2905,7 +2905,7 @@ export default function SuperAdminDashboard() {
                                                 loadButchersHelper();
                                             }
                                         }}
-                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500"
+                                        className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-green-500"
                                     >
                                         <option value="user" disabled>{tNav('rol_secin')}</option>
                                         <option value="kasap">🥩 Kasap Sahibi (Owner)</option>
@@ -2936,7 +2936,7 @@ export default function SuperAdminDashboard() {
                                                 </p>
                                             </div>
                                         ) : loadingButchers ? (
-                                            <div className="w-full px-4 py-3 bg-gray-700 text-muted-foreground rounded-lg">
+                                            <div className="w-full px-4 py-3 bg-muted border border-border text-muted-foreground rounded-lg">
                                                 {tNav('kasaplar_yukleniyor')}
                                             </div>
                                         ) : (
@@ -2956,7 +2956,7 @@ export default function SuperAdminDashboard() {
                                                                 setSelectedButcherId('');
                                                                 setBusinessSearchFilter('');
                                                             }}
-                                                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                            className="px-3 py-2 bg-red-600 text-foreground rounded-lg hover:bg-red-500"
                                                         >
                                                             ✕
                                                         </button>
@@ -2968,7 +2968,7 @@ export default function SuperAdminDashboard() {
                                                             value={businessSearchFilter}
                                                             onChange={(e) => setBusinessSearchFilter(e.target.value)}
                                                             placeholder={tNav('i_sletme_adi_veya_sehir_yazin_en_az_3_ka')}
-                                                            className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500"
+                                                            className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-green-500"
                                                         />
                                                         {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
                                                             <p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">
@@ -2978,7 +2978,7 @@ export default function SuperAdminDashboard() {
 
                                                         {/* Arama Sonuçları */}
                                                         {businessSearchFilter.length >= 3 && (
-                                                            <div className="mt-2 max-h-48 overflow-y-auto bg-card border border-gray-600 rounded-lg">
+                                                            <div className="mt-2 max-h-48 overflow-y-auto bg-card border border-border rounded-lg">
                                                                 {(() => {
                                                                     const filtered = butcherList.filter(b =>
                                                                         matchesBusinessSearch(b, businessSearchFilter)
@@ -3006,7 +3006,7 @@ export default function SuperAdminDashboard() {
                                                                             <div className="text-sm text-muted-foreground">
                                                                                 {b.country === 'TR' ? '🇹🇷' : '🇩🇪'} {b.postalCode && `${b.postalCode}`} {b.city}
                                                                                 {b.types?.length > 0 && (
-                                                                                    <span className="ml-2 text-xs bg-gray-700 px-2 py-0.5 rounded">
+                                                                                    <span className="ml-2 text-xs bg-muted border border-border px-2 py-0.5 rounded">
                                                                                         {b.types.join(', ').toUpperCase()}
                                                                                     </span>
                                                                                 )}
@@ -3031,7 +3031,7 @@ export default function SuperAdminDashboard() {
                                 )}
 
                                 {/* Info Box */}
-                                <div className="bg-gray-700/50 rounded-lg p-3 mt-2">
+                                <div className="bg-muted border border-border/50 rounded-lg p-3 mt-2">
                                     <p className="text-muted-foreground text-xs">
                                         <strong>{tNav('davetiye_icerigi')}</strong><br />
                                         &quot;{admin?.displayName || 'Admin'} {tNav('sizi_mira_admin_olarak_davet_etti')}
@@ -3052,14 +3052,14 @@ export default function SuperAdminDashboard() {
                                         setNewUserRole('user');
                                         setSelectedButcherId('');
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
+                                    className="flex-1 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500"
                                 >
                                     İptal
                                 </button>
                                 <button
                                     onClick={handleSendInvitation}
                                     disabled={creating || !newUserPhone || newUserRole === 'user'}
-                                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-3 bg-green-600 text-foreground rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {creating ? (
                                         <>{tNav('gonderiliyor')}</>
@@ -3099,7 +3099,7 @@ export default function SuperAdminDashboard() {
                                         type="text"
                                         value={invitationLink}
                                         readOnly
-                                        className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm"
+                                        className="flex-1 px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border text-sm"
                                     />
                                     <button
                                         onClick={() => {
@@ -3108,8 +3108,8 @@ export default function SuperAdminDashboard() {
                                             setTimeout(() => setLinkCopied(false), 2000);
                                         }}
                                         className={`px-4 py-2 rounded-lg font-medium transition-colors ${linkCopied
-                                            ? 'bg-green-600 text-white'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            ? 'bg-green-600 text-foreground'
+                                            : 'bg-blue-600 text-foreground hover:bg-blue-700'
                                             }`}
                                     >
                                         {linkCopied ? tNav('kopyalandi') : '📋 Kopyala'}
@@ -3132,7 +3132,7 @@ export default function SuperAdminDashboard() {
                                     )}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-3 w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    className="flex items-center gap-3 w-full px-4 py-3 bg-green-600 text-foreground rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     <span className="text-xl">📱</span>
                                     <span className="font-medium">{tNav('whatsapp_ile_gonder')}</span>
@@ -3143,7 +3143,7 @@ export default function SuperAdminDashboard() {
                                     href={`sms:${invitationPhone}?body=${encodeURIComponent(
                                         `MIRA Admin Davetiyesi: ${invitationLink}`
                                     )}`}
-                                    className="flex items-center gap-3 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex items-center gap-3 w-full px-4 py-3 bg-blue-600 text-foreground rounded-lg hover:bg-blue-700 transition-colors"
                                 >
                                     <span className="text-xl">💬</span>
                                     <span className="font-medium">{tNav('sms_ile_gonder')}</span>
@@ -3159,7 +3159,7 @@ export default function SuperAdminDashboard() {
                                         `\nProfilinizi tamamlamak için aşağıdaki linke tıklayın:\n${invitationLink}\n\n` +
                                         `Saygılarımızla,\nMIRA Ekibi`
                                     )}`}
-                                    className="flex items-center gap-3 w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                    className="flex items-center gap-3 w-full px-4 py-3 bg-purple-600 text-foreground rounded-lg hover:bg-purple-700 transition-colors"
                                 >
                                     <span className="text-xl">📧</span>
                                     <span className="font-medium">{tNav('e_posta_ile_gonder')}</span>
@@ -3172,7 +3172,7 @@ export default function SuperAdminDashboard() {
                                     )}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-3 w-full px-4 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                                    className="flex items-center gap-3 w-full px-4 py-3 bg-sky-600 text-foreground rounded-lg hover:bg-sky-700 transition-colors"
                                 >
                                     <span className="text-xl">✈️</span>
                                     <span className="font-medium">{tNav('telegram_ile_gonder')}</span>
@@ -3181,7 +3181,7 @@ export default function SuperAdminDashboard() {
 
                             <button
                                 onClick={() => setShowShareModal(false)}
-                                className="w-full mt-6 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium"
+                                className="w-full mt-6 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium"
                             >
                                 {t('close')}
                             </button>
@@ -3221,7 +3221,7 @@ export default function SuperAdminDashboard() {
                                                         displayName: `${e.target.value} ${lastName}`.trim()
                                                     });
                                                 }}
-                                                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                 placeholder="Ad"
                                             />
                                         </div>
@@ -3237,7 +3237,7 @@ export default function SuperAdminDashboard() {
                                                         displayName: `${firstName} ${e.target.value}`.trim()
                                                     });
                                                 }}
-                                                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                 placeholder="Soyad"
                                             />
                                         </div>
@@ -3256,7 +3256,7 @@ export default function SuperAdminDashboard() {
                                                 type="email"
                                                 value={editingAdmin.email || ''}
                                                 onChange={(e) => setEditingAdmin({ ...editingAdmin, email: e.target.value })}
-                                                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
                                                 placeholder={tNav('orn_email_example_com')}
                                             />
                                         </div>
@@ -3266,7 +3266,7 @@ export default function SuperAdminDashboard() {
                                                 <select
                                                     value={(editingAdmin as any).dialCode || '+49'}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, dialCode: e.target.value } as any)}
-                                                    className="w-28 px-2 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 text-sm"
+                                                    className="w-28 px-2 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 text-sm"
                                                 >
                                                     {COUNTRY_CODES.map(c => (
                                                         <option key={c.code} value={c.dial}>
@@ -3278,7 +3278,7 @@ export default function SuperAdminDashboard() {
                                                     type="tel"
                                                     value={(editingAdmin as any).phone || ''}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, phone: e.target.value } as any)}
-                                                    className="flex-1 px-3 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                    className="flex-1 px-3 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
                                                     placeholder={tNav('orn_xxx_xxx_xxxx')}
                                                 />
                                             </div>
@@ -3304,16 +3304,16 @@ export default function SuperAdminDashboard() {
                                                     }}
                                                     onFocus={() => { if (addressSuggestions.length > 0) setShowAddressSuggestions(true); }}
                                                     onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
                                                     placeholder={tNav('orn_musterstra_e')}
                                                     autoComplete="off"
                                                 />
                                                 {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                         {addressSuggestions.map((s) => (
                                                             <div
                                                                 key={s.place_id}
-                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm"
+                                                                className="px-3 py-2 hover:bg-muted border border-border cursor-pointer text-foreground text-sm"
                                                                 onClick={() => handleAddressSelect(s.place_id, s.description, false)}
                                                             >
                                                                 📍 {s.description}
@@ -3328,7 +3328,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={(editingAdmin as any).houseNumber || ''}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, houseNumber: e.target.value } as any)}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
                                                     placeholder="No"
                                                 />
                                             </div>
@@ -3345,15 +3345,15 @@ export default function SuperAdminDashboard() {
                                                     }}
                                                     onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }}
                                                     onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
                                                     placeholder={tNav('orn_berlin')}
                                                 />
                                                 {showCitySuggestions && citySuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                                         {citySuggestions.map((s) => (
                                                             <div
                                                                 key={s.place_id}
-                                                                className="px-2 py-1 hover:bg-gray-700 cursor-pointer text-white text-xs"
+                                                                className="px-2 py-1 hover:bg-muted border border-border cursor-pointer text-foreground text-xs"
                                                                 onClick={() => {
                                                                     setShowCitySuggestions(false);
                                                                     setCitySuggestions([]);
@@ -3372,7 +3372,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={(editingAdmin as any).postalCode || ''}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, postalCode: e.target.value } as any)}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     placeholder="41836"
                                                 />
                                             </div>
@@ -3381,7 +3381,7 @@ export default function SuperAdminDashboard() {
                                                 <select
                                                     value={(editingAdmin as any).country || 'Deutschland'}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, country: e.target.value } as any)}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                 >
                                                     <option value="Deutschland">🇩🇪 Almanya</option>
                                                     <option value={tNav('osterreich')}>🇦🇹 Avusturya</option>
@@ -3414,7 +3414,7 @@ export default function SuperAdminDashboard() {
                                                         loadButchersHelper();
                                                     }
                                                 }}
-                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                                className="w-full px-4 py-3 bg-muted border border-border border border-border rounded-lg text-foreground"
                                                 title={tNav('rol_secin')}
                                             >
                                                 {admin?.adminType === 'super' ? (
@@ -3448,7 +3448,7 @@ export default function SuperAdminDashboard() {
                                                 value={editLocation}
                                                 onChange={(e) => setEditLocation(e.target.value)}
                                                 placeholder={tNav('orn_huckelhoven_almanya')}
-                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder:text-gray-500"
+                                                className="w-full px-4 py-3 bg-muted border border-border border border-border rounded-lg text-foreground placeholder:text-gray-500"
                                                 title={t('admin_location_title')}
                                             />
                                         </div>
@@ -3468,12 +3468,12 @@ export default function SuperAdminDashboard() {
                                                             value={businessSearchFilter}
                                                             onChange={(e) => setBusinessSearchFilter(e.target.value)}
                                                             placeholder={tNav('i_sletme_ara')}
-                                                            className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder:text-muted-foreground text-sm"
+                                                            className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-foreground placeholder:text-muted-foreground text-sm"
                                                         />
                                                         <select
                                                             value={editButcherId}
                                                             onChange={(e) => setEditButcherId(e.target.value)}
-                                                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                                            className="w-full px-4 py-3 bg-muted border border-border border border-border rounded-lg text-foreground"
                                                             title={tNav('i_sletme_secin')}
                                                             size={Math.min(butcherList.filter(b => {
                                                                 if (!businessSearchFilter.trim()) return true;
@@ -3547,7 +3547,7 @@ export default function SuperAdminDashboard() {
                             <div className="flex space-x-3 mt-6">
                                 <button
                                     onClick={() => setEditingAdmin(null)}
-                                    className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium"
+                                    className="flex-1 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium"
                                     disabled={saving}
                                 >
                                     İptal
@@ -3555,7 +3555,7 @@ export default function SuperAdminDashboard() {
                                 <button
                                     onClick={handleSaveAdmin}
                                     disabled={saving}
-                                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+                                    className="flex-1 px-4 py-3 bg-blue-600 text-foreground rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
                                 >
                                     {saving ? 'Kaydediliyor...' : tNav('kaydet')}
                                 </button>
@@ -3576,7 +3576,7 @@ export default function SuperAdminDashboard() {
                                 </h3>
                                 <button
                                     onClick={() => setShowNewUserModal(false)}
-                                    className="text-muted-foreground hover:text-white text-xl"
+                                    className="text-muted-foreground hover:text-foreground text-xl"
                                 >
                                     ✕
                                 </button>
@@ -3591,7 +3591,7 @@ export default function SuperAdminDashboard() {
                                             type="text"
                                             value={newUserData.firstName}
                                             onChange={(e) => setNewUserData({ ...newUserData, firstName: e.target.value })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                             placeholder={tNav('adi')}
                                         />
                                     </div>
@@ -3601,7 +3601,7 @@ export default function SuperAdminDashboard() {
                                             type="text"
                                             value={newUserData.lastName}
                                             onChange={(e) => setNewUserData({ ...newUserData, lastName: e.target.value })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                             placeholder={tNav('soyadi')}
                                         />
                                     </div>
@@ -3614,7 +3614,7 @@ export default function SuperAdminDashboard() {
                                         type="email"
                                         value={newUserData.email}
                                         onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                        className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                         placeholder="ornek@email.com"
                                     />
                                 </div>
@@ -3626,7 +3626,7 @@ export default function SuperAdminDashboard() {
                                         <select
                                             value={newUserData.dialCode}
                                             onChange={(e) => setNewUserData({ ...newUserData, dialCode: e.target.value })}
-                                            className="w-28 px-2 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 text-sm"
+                                            className="w-28 px-2 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 text-sm"
                                         >
                                             {COUNTRY_CODES.map((cc) => (
                                                 <option key={cc.code} value={cc.dial}>
@@ -3638,7 +3638,7 @@ export default function SuperAdminDashboard() {
                                             type="tel"
                                             value={newUserData.phone}
                                             onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value.replace(/[^0-9]/g, '') })}
-                                            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                            className="flex-1 px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                             placeholder="1771234567"
                                         />
                                     </div>
@@ -3665,17 +3665,17 @@ export default function SuperAdminDashboard() {
                                                     onBlur={() => {
                                                         setTimeout(() => setShowAddressSuggestions(false), 200);
                                                     }}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     placeholder={tNav('en_az_3_karakter_yazin')}
                                                     autoComplete="off"
                                                 />
                                                 {/* Custom Autocomplete Dropdown */}
                                                 {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                         {addressSuggestions.map((suggestion) => (
                                                             <div
                                                                 key={suggestion.place_id}
-                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm flex items-center gap-2"
+                                                                className="px-3 py-2 hover:bg-muted border border-border cursor-pointer text-foreground text-sm flex items-center gap-2"
                                                                 onClick={() => handleAddressSelect(suggestion.place_id, suggestion.description, true)}
                                                             >
                                                                 <span className="text-red-500">📍</span>
@@ -3694,7 +3694,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={newUserData.houseNumber}
                                                     onChange={(e) => setNewUserData({ ...newUserData, houseNumber: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     placeholder="12a"
                                                 />
                                             </div>
@@ -3706,7 +3706,7 @@ export default function SuperAdminDashboard() {
                                                 type="text"
                                                 value={newUserData.addressLine2}
                                                 onChange={(e) => setNewUserData({ ...newUserData, addressLine2: e.target.value })}
-                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                 placeholder="2. Kat, Daire 5"
                                             />
                                         </div>
@@ -3724,15 +3724,15 @@ export default function SuperAdminDashboard() {
                                                     onBlur={() => {
                                                         setTimeout(() => setShowCitySuggestions(false), 200);
                                                     }}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     placeholder={tNav('sehir_yazin')}
                                                 />
                                                 {showCitySuggestions && citySuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                                                    <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                                                         {citySuggestions.map((suggestion) => (
                                                             <div
                                                                 key={suggestion.place_id}
-                                                                className="px-2 py-1 hover:bg-gray-700 cursor-pointer text-white text-xs"
+                                                                className="px-2 py-1 hover:bg-muted border border-border cursor-pointer text-foreground text-xs"
                                                                 onClick={() => handleCitySelect(suggestion.description, true)}
                                                             >
                                                                 🏙️ {suggestion.description.split(',')[0]}
@@ -3747,7 +3747,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={newUserData.postalCode}
                                                     onChange={(e) => setNewUserData({ ...newUserData, postalCode: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     placeholder="12345"
                                                 />
                                             </div>
@@ -3757,7 +3757,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={newUserData.country}
                                                     onChange={(e) => setNewUserData({ ...newUserData, country: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     placeholder="Almanya"
                                                 />
                                             </div>
@@ -3771,7 +3771,7 @@ export default function SuperAdminDashboard() {
                                     <select
                                         value={newUserData.role}
                                         onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value as any, sector: '' })}
-                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                        className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                     >
                                         {/* Normal Kullanıcı option - ONLY visible to Super Admins */}
                                         {admin?.adminType === 'super' && (
@@ -3795,7 +3795,7 @@ export default function SuperAdminDashboard() {
                                         <select
                                             value={newUserData.sector}
                                             onChange={(e) => setNewUserData({ ...newUserData, sector: e.target.value })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                         >
                                             <option value="">{tNav('sektor_secin')}</option>
                                             {/* Filter sectors based on admin's access */}
@@ -3839,7 +3839,7 @@ export default function SuperAdminDashboard() {
                                                 }}
                                                 onFocus={() => setShowBusinessSuggestions(true)}
                                                 onBlur={() => setTimeout(() => setShowBusinessSuggestions(false), 200)}
-                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                 placeholder={tNav('i_sletme_secin')}
                                             />
                                             {/* Clear selection button */}
@@ -3849,7 +3849,7 @@ export default function SuperAdminDashboard() {
                                                         setNewUserData(prev => ({ ...prev, businessId: '' }));
                                                         setBusinessSearchQuery('');
                                                     }}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                                     title={tNav('iptal')}
                                                 >
                                                     ✕
@@ -3859,14 +3859,14 @@ export default function SuperAdminDashboard() {
 
                                         {/* Dropdown suggestions */}
                                         {showBusinessSuggestions && (
-                                            <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                 {butcherList
                                                     .filter(b => (!newUserData.sector || (b.types && b.types.includes(newUserData.sector))) &&
                                                                  matchesBusinessSearch(b, businessSearchQuery))
                                                     .map(b => (
                                                         <div
                                                             key={b.id}
-                                                            className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm"
+                                                            className="px-3 py-2 hover:bg-muted border border-border cursor-pointer text-foreground text-sm"
                                                             onClick={() => {
                                                                 setNewUserData(prev => ({ ...prev, businessId: b.id }));
                                                                 setBusinessSearchQuery(`${b.name} - ${b.city || ''}`);
@@ -3894,7 +3894,7 @@ export default function SuperAdminDashboard() {
                                             type="text"
                                             value={newUserData.password}
                                             onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
-                                            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                            className="flex-1 px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                             placeholder={tNav('gecici_sifre_en_az_6_karakter')}
                                         />
                                         <button
@@ -3905,7 +3905,7 @@ export default function SuperAdminDashboard() {
                                                 for (let i = 0; i < 12; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
                                                 setNewUserData({ ...newUserData, password: pw });
                                             }}
-                                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm font-medium whitespace-nowrap"
+                                            className="px-3 py-2 bg-blue-600 text-foreground rounded-lg hover:bg-blue-500 text-sm font-medium whitespace-nowrap"
                                         >
                                             {tNav('guclu_sifre_olustur') || 'Generieren'}
                                         </button>
@@ -3926,7 +3926,7 @@ export default function SuperAdminDashboard() {
                                             role: 'user', sector: '', password: '', businessId: ''
                                         });
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition"
+                                    className="flex-1 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium transition"
                                 >
                                     {tNav('iptal')}
                                 </button>
@@ -4085,7 +4085,7 @@ export default function SuperAdminDashboard() {
                                         }
                                     }}
                                     disabled={creatingUser}
-                                    className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 font-bold transition disabled:opacity-50"
+                                    className="flex-1 px-4 py-3 bg-green-600 text-foreground rounded-lg hover:bg-green-500 font-bold transition disabled:opacity-50"
                                 >
                                     {creatingUser ? tNav('olusturuluyor') : tNav('kullanici_olustur')}
                                 </button>
@@ -4106,7 +4106,7 @@ export default function SuperAdminDashboard() {
                                 </h3>
                                 <button
                                     onClick={() => setEditingUserProfile(null)}
-                                    className="text-muted-foreground hover:text-white text-xl"
+                                    className="text-muted-foreground hover:text-foreground text-xl"
                                 >
                                     ✕
                                 </button>
@@ -4123,7 +4123,7 @@ export default function SuperAdminDashboard() {
                                                 navigator.clipboard.writeText(editingUserProfile.userId);
                                                 showToast('UID kopyalandi', 'success');
                                             }}
-                                            className="ml-auto text-[10px] text-gray-500 hover:text-white transition px-1.5 py-0.5 rounded hover:bg-gray-700"
+                                            className="ml-auto text-[10px] text-gray-500 hover:text-foreground transition px-1.5 py-0.5 rounded hover:bg-muted border border-border"
                                             title="UID kopyala"
                                         >
                                             Kopieren
@@ -4131,23 +4131,23 @@ export default function SuperAdminDashboard() {
                                     </div>
                                 )}
                                 {/* Profile Picture Upload Section */}
-                                <div className="flex items-center gap-6 p-4 bg-gray-750/50 rounded-xl border border-border/50">
+                                <div className="flex items-center gap-6 p-4 bg-muted/40 dark:bg-muted/10 border-border/50 rounded-xl border border-border/50">
                                     <div className="relative group shrink-0">
                                         {editingUserProfile.photoURL ? (
                                             <img
                                                 src={editingUserProfile.photoURL}
                                                 alt="Profile"
-                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-600 shadow-md bg-card"
+                                                className="w-20 h-20 rounded-full object-cover border-2 border-border shadow-md bg-card"
                                             />
                                         ) : (
-                                            <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center text-2xl font-bold text-gray-500 border-2 border-gray-600 shadow-inner">
+                                            <div className="w-20 h-20 rounded-full bg-muted border border-border flex items-center justify-center text-2xl font-bold text-gray-500 border-2 border-border shadow-inner">
                                                 {String(editingUserProfile.firstName || '').charAt(0).toUpperCase() || String(editingUserProfile.email || '').charAt(0).toUpperCase() || '?'}
                                             </div>
                                         )}
                                         {/* Upload Overlay */}
                                         <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer backdrop-blur-[2px]">
-                                            <span className="text-white text-[10px] font-bold uppercase tracking-wider mb-1">{tNav('degistir')}</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <span className="text-foreground text-[10px] font-bold uppercase tracking-wider mb-1">{tNav('degistir')}</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
@@ -4237,7 +4237,7 @@ export default function SuperAdminDashboard() {
                                                         type="text"
                                                         value={editingUserProfile.firstName}
                                                         onChange={(e) => setEditingUserProfile({ ...editingUserProfile, firstName: e.target.value })}
-                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     />
                                                 </div>
                                                 <div>
@@ -4246,13 +4246,13 @@ export default function SuperAdminDashboard() {
                                                         type="text"
                                                         value={editingUserProfile.lastName}
                                                         onChange={(e) => setEditingUserProfile({ ...editingUserProfile, lastName: e.target.value })}
-                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     />
                                                 </div>
                                             </div>
 
                                             {/* Active/Inactive Toggle */}
-                                            <div className="mt-4 flex items-center justify-between p-3 bg-gray-750 rounded-lg border border-gray-600">
+                                            <div className="mt-4 flex items-center justify-between p-3 bg-muted/40 dark:bg-muted/10 border-border rounded-lg border border-border">
                                                 <div className="flex-1">
                                                     <span className="text-foreground font-medium">{tNav('hesap_durumu')}</span>
                                                     <p className="text-muted-foreground text-xs">{tNav('pasif_hesaplar_giris_yapamaz_ama_veriler')}</p>
@@ -4303,7 +4303,7 @@ export default function SuperAdminDashboard() {
                                                             type="email"
                                                             value={editingUserProfile.email}
                                                             onChange={(e) => setEditingUserProfile({ ...editingUserProfile, email: e.target.value })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                         />
                                                     </div>
                                                     <div>
@@ -4312,7 +4312,7 @@ export default function SuperAdminDashboard() {
                                                             <select
                                                                 value={editingUserProfile.dialCode || '+90'}
                                                                 onChange={(e) => setEditingUserProfile({ ...editingUserProfile, dialCode: e.target.value })}
-                                                                className="w-28 px-2 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 text-sm appearance-none"
+                                                                className="w-28 px-2 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 text-sm appearance-none"
                                                             >
                                                                 {COUNTRY_CODES.map(c => (
                                                                     <option key={c.code} value={c.dial}>
@@ -4324,7 +4324,7 @@ export default function SuperAdminDashboard() {
                                                                 type="tel"
                                                                 value={editingUserProfile.phone}
                                                                 onChange={(e) => setEditingUserProfile({ ...editingUserProfile, phone: e.target.value })}
-                                                                className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                                className="flex-1 px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
                                                                 placeholder={tNav('orn_xxx_xxx_xx_xx')}
                                                             />
                                                         </div>
@@ -4366,7 +4366,7 @@ export default function SuperAdminDashboard() {
                                                     type="button"
                                                     onClick={handleReverseGeocode}
                                                     disabled={isGeocoding}
-                                                    className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded flex items-center gap-1 transition disabled:opacity-50"
+                                                    className="text-xs bg-blue-600 hover:bg-blue-500 text-foreground px-2 py-1 rounded flex items-center gap-1 transition disabled:opacity-50"
                                                 >
                                                     {isGeocoding ? tNav('araniyor') : tNav('gps_ten_adres_cek')}
                                                 </button>
@@ -4388,17 +4388,17 @@ export default function SuperAdminDashboard() {
                                                                 // Delay to allow click on suggestion
                                                                 setTimeout(() => setShowAddressSuggestions(false), 200);
                                                             }}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                             placeholder={tNav('en_az_3_karakter_yazin')}
                                                             autoComplete="off"
                                                         />
                                                         {/* Custom Autocomplete Dropdown */}
                                                         {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                            <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                            <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                                                 {addressSuggestions.map((suggestion, index) => (
                                                                     <div
                                                                         key={suggestion.place_id}
-                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm flex items-center gap-2"
+                                                                        className="px-3 py-2 hover:bg-muted border border-border cursor-pointer text-foreground text-sm flex items-center gap-2"
                                                                         onClick={() => handleAddressSelect(suggestion.place_id, suggestion.description, false)}
                                                                     >
                                                                         <span className="text-red-500">📍</span>
@@ -4417,7 +4417,7 @@ export default function SuperAdminDashboard() {
                                                             type="text"
                                                             value={editingUserProfile.houseNumber}
                                                             onChange={(e) => setEditingUserProfile({ ...editingUserProfile, houseNumber: e.target.value })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                             placeholder="No"
                                                         />
                                                     </div>
@@ -4432,7 +4432,7 @@ export default function SuperAdminDashboard() {
                                                         type="text"
                                                         value={editingUserProfile.addressLine2}
                                                         onChange={(e) => setEditingUserProfile({ ...editingUserProfile, addressLine2: e.target.value })}
-                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                         placeholder={tNav('zorunlu_alan_daire_kat_veya_site_apartma')}
                                                     />
                                                 </div>
@@ -4445,7 +4445,7 @@ export default function SuperAdminDashboard() {
                                                             type="text"
                                                             value={editingUserProfile.postalCode}
                                                             onChange={(e) => setEditingUserProfile({ ...editingUserProfile, postalCode: e.target.value })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                         />
                                                     </div>
                                                     <div className="relative">
@@ -4460,16 +4460,16 @@ export default function SuperAdminDashboard() {
                                                             onBlur={() => {
                                                                 setTimeout(() => setShowCitySuggestions(false), 200);
                                                             }}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                             placeholder={tNav('sehir_yazin')}
                                                         />
                                                         {/* City Autocomplete Dropdown */}
                                                         {showCitySuggestions && citySuggestions.length > 0 && (
-                                                            <div className="absolute z-50 w-full mt-1 bg-card border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                            <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                                                 {citySuggestions.map((suggestion) => (
                                                                     <div
                                                                         key={suggestion.place_id}
-                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-foreground text-sm flex items-center gap-2"
+                                                                        className="px-3 py-2 hover:bg-muted border border-border cursor-pointer text-foreground text-sm flex items-center gap-2"
                                                                         onClick={() => handleCitySelect(suggestion.description, false)}
                                                                     >
                                                                         <span className="text-blue-800 dark:text-blue-400">&#x1f3d9;&#xfe0f;</span>
@@ -4488,7 +4488,7 @@ export default function SuperAdminDashboard() {
                                                             type="text"
                                                             value={editingUserProfile.country}
                                                             onChange={(e) => setEditingUserProfile({ ...editingUserProfile, country: e.target.value })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                         />
                                                     </div>
                                                 </div>
@@ -4523,7 +4523,7 @@ export default function SuperAdminDashboard() {
                                                                 });
                                                             }
                                                         }}
-                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                     >
                                                         <option value="user">{tNav('kullanici')}</option>
                                                         {/* 🆕 KONSOLİDE ROLLER */}
@@ -4565,7 +4565,7 @@ export default function SuperAdminDashboard() {
                                                                         });
                                                                         setBusinessSearchFilter('');
                                                                     }}
-                                                                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                                    className="px-3 py-2 bg-red-600 text-foreground rounded-lg hover:bg-red-500"
                                                                 >
                                                                     {tNav('degistir')}
                                                                 </button>
@@ -4578,7 +4578,7 @@ export default function SuperAdminDashboard() {
                                                                         value={businessSearchFilter}
                                                                         onChange={(e) => setBusinessSearchFilter(e.target.value)}
                                                                         placeholder={tNav('i_sletme_adi_veya_sehir_yazin_en_az_3_ka')}
-                                                                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                                        className="w-full px-4 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-blue-500"
                                                                     />
                                                                     {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
                                                                         <p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">
@@ -4589,7 +4589,7 @@ export default function SuperAdminDashboard() {
 
                                                                 {/* Arama Sonuçları */}
                                                                 {businessSearchFilter.length >= 3 && (
-                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-card border border-gray-600 rounded-lg">
+                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-card border border-border rounded-lg">
                                                                         {loadingButchers ? (
                                                                             <div className="p-3 text-muted-foreground text-center">
                                                                                 ⏳ {t('loading')}
@@ -4626,7 +4626,7 @@ export default function SuperAdminDashboard() {
                                                                                         <div className="text-sm text-muted-foreground">
                                                                                             📍 {b.city} {b.postalCode && `- ${b.postalCode}`}
                                                                                             {b.types?.length > 0 && (
-                                                                                                <span className="ml-2 text-xs bg-gray-700 px-2 py-0.5 rounded">
+                                                                                                <span className="ml-2 text-xs bg-muted border border-border px-2 py-0.5 rounded">
                                                                                                     {b.types.join(', ').toUpperCase()}
                                                                                                 </span>
                                                                                             )}
@@ -4671,7 +4671,7 @@ export default function SuperAdminDashboard() {
                                                                         });
                                                                         setOrganizationSearchFilter('');
                                                                     }}
-                                                                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                                    className="px-3 py-2 bg-red-600 text-foreground rounded-lg hover:bg-red-500"
                                                                 >
                                                                     {tNav('degistir')}
                                                                 </button>
@@ -4684,7 +4684,7 @@ export default function SuperAdminDashboard() {
                                                                         value={organizationSearchFilter}
                                                                         onChange={(e) => setOrganizationSearchFilter(e.target.value)}
                                                                         placeholder={tNav('posta_kodu_sehir_veya_dernek_adi_yazin_e')}
-                                                                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500"
+                                                                        className="w-full px-4 py-2 bg-background text-foreground border border-border rounded-lg border border-border focus:border-emerald-500"
                                                                     />
                                                                     {organizationSearchFilter.length > 0 && organizationSearchFilter.length < 3 && (
                                                                         <p className="text-yellow-800 dark:text-yellow-400 text-xs mt-1">
@@ -4695,7 +4695,7 @@ export default function SuperAdminDashboard() {
 
                                                                 {/* Organizasyon Arama Sonuçları */}
                                                                 {organizationSearchFilter.length >= 3 && (
-                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-card border border-gray-600 rounded-lg">
+                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-card border border-border rounded-lg">
                                                                         {loadingOrganizations ? (
                                                                             <div className="p-3 text-muted-foreground text-center">
                                                                                 {tNav('organizasyonlar_yukleniyor')}
@@ -4834,7 +4834,7 @@ export default function SuperAdminDashboard() {
                                                                     <label
                                                                         className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType === 'lokma_fleet'
                                                                             ? 'border-emerald-400 bg-emerald-800/40'
-                                                                            : 'border-gray-600 bg-card/40 hover:border-gray-500'
+                                                                            : 'border-border bg-card/40 hover:border-gray-500'
                                                                             }`}
                                                                         onClick={() => setEditingUserProfile({
                                                                             ...editingUserProfile,
@@ -4856,7 +4856,7 @@ export default function SuperAdminDashboard() {
                                                                     <label
                                                                         className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType !== 'lokma_fleet'
                                                                             ? 'border-amber-400 bg-amber-800/30'
-                                                                            : 'border-gray-600 bg-card/40 hover:border-gray-500'
+                                                                            : 'border-border bg-card/40 hover:border-gray-500'
                                                                             }`}
                                                                         onClick={() => setEditingUserProfile({
                                                                             ...editingUserProfile,
@@ -4917,7 +4917,7 @@ export default function SuperAdminDashboard() {
                                                                         className={`flex items-center justify-between p-3 rounded-lg border ${role.isPrimary
                                                                             ? 'bg-yellow-900/30 border-yellow-600'
                                                                             : role.isActive
-                                                                                ? 'bg-card/50 border-gray-600'
+                                                                                ? 'bg-card/50 border-border'
                                                                                 : 'bg-background/50 border-border opacity-50'
                                                                             }`}
                                                                     >
@@ -5078,8 +5078,8 @@ export default function SuperAdminDashboard() {
                                             });
                                         }}
                                         className={`px-4 py-3 rounded-lg font-medium transition ${editingUserProfile.isAdmin
-                                            ? 'bg-amber-600 text-white hover:bg-amber-500'
-                                            : 'bg-red-600 text-white hover:bg-red-500'
+                                            ? 'bg-amber-600 text-foreground hover:bg-amber-500'
+                                            : 'bg-red-600 text-foreground hover:bg-red-500'
                                             }`}
                                     >
                                         {editingUserProfile.isAdmin ? tNav('arsivle') : tNav('sil')}
@@ -5087,7 +5087,7 @@ export default function SuperAdminDashboard() {
                                 )}
                                 <button
                                     onClick={() => setEditingUserProfile(null)}
-                                    className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition"
+                                    className="flex-1 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium transition"
                                 >
                                     İptal
                                 </button>
@@ -5299,7 +5299,7 @@ export default function SuperAdminDashboard() {
                                         }
                                     }}
                                     disabled={savingProfile}
-                                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-bold transition disabled:opacity-50"
+                                    className="flex-1 px-4 py-3 bg-blue-600 text-foreground rounded-lg hover:bg-blue-500 font-bold transition disabled:opacity-50"
                                 >
                                     {savingProfile ? '⏳ Kaydediliyor...' : tNav('kaydet')}
                                 </button>
@@ -5329,13 +5329,13 @@ export default function SuperAdminDashboard() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setDeleteModal(null)}
-                                    className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition"
+                                    className="flex-1 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium transition"
                                 >
                                     İptal
                                 </button>
                                 <button
                                     onClick={confirmDeleteUser}
-                                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500 font-bold transition"
+                                    className="flex-1 px-4 py-3 bg-red-600 text-foreground rounded-lg hover:bg-red-500 font-bold transition"
                                 >
                                     {tNav('evet_sil')}
                                 </button>
@@ -5375,7 +5375,7 @@ export default function SuperAdminDashboard() {
                                         setNewRoleOrganizationId('');
                                         setNewRoleOrganizationName('');
                                     }}
-                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-indigo-500"
+                                    className="w-full px-4 py-3 bg-background text-foreground border border-border rounded-lg border border-border focus:border-indigo-500"
                                 >
                                     <option value="">{tNav('rol_secin')}</option>
                                     <optgroup label={tNav('i_sletme_rolleri')}>
@@ -5407,7 +5407,7 @@ export default function SuperAdminDashboard() {
                                                     setNewRoleBusinessName('');
                                                     setNewRoleBusinessSearch('');
                                                 }}
-                                                className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                className="px-3 py-2 bg-red-600 text-foreground rounded-lg hover:bg-red-500"
                                             >
                                                 ✕
                                             </button>
@@ -5421,21 +5421,21 @@ export default function SuperAdminDashboard() {
                                                     value={newRoleBusinessSearch}
                                                     onChange={(e) => setNewRoleBusinessSearch(e.target.value)}
                                                     placeholder={tNav('i_sletme_adi_veya_sehir_ara')}
-                                                    className="w-full px-4 py-2.5 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                                    className="w-full px-4 py-2.5 bg-background text-foreground border border-border rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                                                     autoFocus
                                                 />
                                                 {newRoleBusinessSearch && (
                                                     <button
                                                         type="button"
                                                         onClick={() => setNewRoleBusinessSearch('')}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                                     >
                                                         ✕
                                                     </button>
                                                 )}
                                             </div>
                                             {/* Sonuç Listesi */}
-                                            <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
+                                            <div className="max-h-48 overflow-y-auto bg-muted border border-border rounded-lg border border-border">
                                                 {loadingButchers ? (
                                                     <div className="p-3 text-center text-muted-foreground">⏳ {t('loading')}</div>
                                                 ) : (
@@ -5463,7 +5463,7 @@ export default function SuperAdminDashboard() {
                                                         return (
                                                             <>
                                                                 {searchLower && (
-                                                                    <div className="px-3 py-1.5 bg-indigo-900/30 text-indigo-300 text-xs border-b border-gray-600">
+                                                                    <div className="px-3 py-1.5 bg-indigo-900/30 text-indigo-300 text-xs border-b border-border">
                                                                         🔍 {results.length} {tNav('sonuc_bulundu')}
                                                                     </div>
                                                                 )}
@@ -5476,7 +5476,7 @@ export default function SuperAdminDashboard() {
                                                                             setNewRoleBusinessName(`${b.name} - ${b.city}`);
                                                                             setNewRoleBusinessSearch('');
                                                                         }}
-                                                                        className="w-full text-left px-3 py-2 hover:bg-indigo-600/30 border-b border-gray-600 last:border-b-0 transition"
+                                                                        className="w-full text-left px-3 py-2 hover:bg-indigo-600/30 border-b border-border last:border-b-0 transition"
                                                                     >
                                                                         <div className="text-foreground text-sm font-medium">{b.name}</div>
                                                                         <div className="text-muted-foreground text-xs">📍 {b.city}</div>
@@ -5510,7 +5510,7 @@ export default function SuperAdminDashboard() {
                                                     setNewRoleOrganizationName('');
                                                     setNewRoleOrgSearch('');
                                                 }}
-                                                className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                className="px-3 py-2 bg-red-600 text-foreground rounded-lg hover:bg-red-500"
                                             >
                                                 ✕
                                             </button>
@@ -5524,21 +5524,21 @@ export default function SuperAdminDashboard() {
                                                     value={newRoleOrgSearch}
                                                     onChange={(e) => setNewRoleOrgSearch(e.target.value)}
                                                     placeholder={tNav('posta_kodu_sehir_veya_dernek_adi_ara')}
-                                                    className="w-full px-4 py-2.5 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                                                    className="w-full px-4 py-2.5 bg-background text-foreground border border-border rounded-lg border border-border focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                                                     autoFocus
                                                 />
                                                 {newRoleOrgSearch && (
                                                     <button
                                                         type="button"
                                                         onClick={() => setNewRoleOrgSearch('')}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                                     >
                                                         ✕
                                                     </button>
                                                 )}
                                             </div>
                                             {/* Sonuç Listesi */}
-                                            <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
+                                            <div className="max-h-48 overflow-y-auto bg-muted border border-border rounded-lg border border-border">
                                                 {loadingOrganizations ? (
                                                     <div className="p-3 text-center text-muted-foreground">⏳ {t('loading')}</div>
                                                 ) : (
@@ -5567,7 +5567,7 @@ export default function SuperAdminDashboard() {
                                                         return (
                                                             <>
                                                                 {searchLower && (
-                                                                    <div className="px-3 py-1.5 bg-emerald-900/30 text-emerald-300 text-xs border-b border-gray-600">
+                                                                    <div className="px-3 py-1.5 bg-emerald-900/30 text-emerald-300 text-xs border-b border-border">
                                                                         🔍 {results.length} {tNav('sonuc_bulundu')}
                                                                     </div>
                                                                 )}
@@ -5580,7 +5580,7 @@ export default function SuperAdminDashboard() {
                                                                             setNewRoleOrganizationName(`${o.shortName || o.name} - ${o.city}`);
                                                                             setNewRoleOrgSearch('');
                                                                         }}
-                                                                        className="w-full text-left px-3 py-2 hover:bg-emerald-600/30 border-b border-gray-600 last:border-b-0 transition"
+                                                                        className="w-full text-left px-3 py-2 hover:bg-emerald-600/30 border-b border-border last:border-b-0 transition"
                                                                     >
                                                                         <div className="text-foreground text-sm font-medium">🕌 {o.shortName || o.name}</div>
                                                                         <div className="text-muted-foreground text-xs">📍 {o.postalCode && `${o.postalCode} `}{o.city}</div>
@@ -5601,7 +5601,7 @@ export default function SuperAdminDashboard() {
                         <div className="flex gap-3 mt-6 pt-4 border-t border-border">
                             <button
                                 onClick={() => setShowAddRoleModal(false)}
-                                className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition"
+                                className="flex-1 px-4 py-3 bg-gray-600 text-foreground rounded-lg hover:bg-gray-500 font-medium transition"
                             >
                                 İptal
                             </button>
@@ -5658,7 +5658,7 @@ export default function SuperAdminDashboard() {
                                     showToast(`${getRoleLabel(newRoleType) || newRoleType} rolü eklendi`, 'success');
                                 }}
                                 disabled={!newRoleType || addingRole}
-                                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 px-4 py-3 bg-indigo-600 text-foreground rounded-lg hover:bg-indigo-500 font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {addingRole ? '⏳ Ekleniyor...' : tNav('rol_ekle')}
                             </button>
