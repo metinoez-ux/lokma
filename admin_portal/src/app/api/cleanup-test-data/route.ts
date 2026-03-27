@@ -169,6 +169,19 @@ export async function POST(req: NextRequest) {
             await deleteCollection(adminDb, 'delivery_proofs');
             await deleteCollection(adminDb, 'carts');
             await deleteCollection(adminDb, 'kermes_carts');
+
+            // Delete order status notifications across all users to clear order history on mobile
+            let hasMoreNotifs = true;
+            while (hasMoreNotifs) {
+                const snap = await adminDb.collectionGroup('notifications')
+                    .where('type', '==', 'order_status')
+                    .limit(400)
+                    .get();
+                if (snap.empty) { hasMoreNotifs = false; break; }
+                const batch = adminDb.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
         }
 
         // ── Ratings category ──
@@ -226,6 +239,19 @@ export async function POST(req: NextRequest) {
         // ── Reservations category ──
         if (selectedCategories.has('reservations')) {
             stats.reservationsDeleted = await deleteCollection(adminDb, 'reservations');
+
+            // Delete reservation status notifications across all users to clear reservation history on mobile
+            let hasMoreNotifs = true;
+            while (hasMoreNotifs) {
+                const snap = await adminDb.collectionGroup('notifications')
+                    .where('type', '==', 'reservation_status')
+                    .limit(400)
+                    .get();
+                if (snap.empty) { hasMoreNotifs = false; break; }
+                const batch = adminDb.batch();
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
         }
 
         // ── Activity Logs category ──

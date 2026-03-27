@@ -106,7 +106,7 @@ export default function AmeisePage() {
         setPhase('loading');
         setErrorMsg('');
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await auth.currentUser?.getIdToken(true);
             if (!token) throw new Error('Keine Authentifizierung');
             const res = await fetch('/api/cleanup-test-data', {
                 method: 'POST',
@@ -130,7 +130,7 @@ export default function AmeisePage() {
     const handleExport = async () => {
         setExporting(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await auth.currentUser?.getIdToken(true);
             if (!token) throw new Error('Keine Authentifizierung');
             const res = await fetch('/api/businesses/export', {
                 method: 'POST',
@@ -177,7 +177,7 @@ export default function AmeisePage() {
         setImporting(true);
         setImportResult(null);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await auth.currentUser?.getIdToken(true);
             if (!token) throw new Error('Keine Authentifizierung');
             const res = await fetch('/api/businesses/import', {
                 method: 'POST',
@@ -202,7 +202,7 @@ export default function AmeisePage() {
         setDemoFoundPlaces([]);
         setDemoSelectedIds(new Set());
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await auth.currentUser?.getIdToken(true);
             if (!token) throw new Error('Keine Authentifizierung');
             const res = await fetch('/api/demo-data/seed', {
                 method: 'POST',
@@ -235,7 +235,7 @@ export default function AmeisePage() {
         setDemoSavedBusinesses([]);
         setDemoErrors([]);
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await auth.currentUser?.getIdToken(true);
             if (!token) throw new Error('Keine Authentifizierung');
             const selectedPlaces = demoFoundPlaces
                 .filter((p: any) => demoSelectedIds.has(p.placeId))
@@ -266,7 +266,7 @@ export default function AmeisePage() {
     const handleDemoCleanup = async () => {
         setDemoPhase('cleaning');
         try {
-            const token = await auth.currentUser?.getIdToken();
+            const token = await auth.currentUser?.getIdToken(true);
             if (!token) throw new Error('Keine Authentifizierung');
             const res = await fetch('/api/demo-data/cleanup', {
                 method: 'POST',
