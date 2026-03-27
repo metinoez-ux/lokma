@@ -2273,6 +2273,15 @@ export const onReservationStatusChange = onDocumentUpdated(
         const newStatus = after.status;
         const businessId = event.params.businessId;
         const businessName = after.businessName || "Geschäft";
+        let businessAddress = "Adres bulunamadı";
+        try {
+            const bizDoc = await db.collection("businesses").doc(businessId).get();
+            if (bizDoc.exists) {
+                const bizData = bizDoc.data();
+                businessAddress = bizData?.address || "Adres bulunamadı";
+            }
+        } catch(e) { console.error("Error fetching biz address", e); }
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(businessAddress)}`;
         const resDate = after.reservationDate?.toDate?.() ?? new Date();
         const dateStr = resDate.toLocaleDateString("de-DE", { day: "numeric", month: "long" });
         const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
@@ -2664,26 +2673,31 @@ export const onReservationStatusChange = onDocumentUpdated(
         <div class="email-body">
             <div class="header">
                 <img src="https://lokma.shop/lokma_red_pink.png" alt="LOKMA Logo" />
-                <p>\${emailHeader}</p>
+                <p>${emailHeader}</p>
             </div>
             <div class="content">
-                <p class="greeting">Merhaba <strong>\${customerName}</strong>,</p>
-                <p class="message">\${emailMessage}</p>
+                <p class="greeting">Merhaba <strong>${customerName}</strong>,</p>
+                <p class="message">${emailMessage}</p>
                 <div class="details-box">
                     <table>
-                        <tr><td class="label">İşletme</td><td class="value">\${businessName}</td></tr>
-                        <tr><td class="label">Tarih</td><td class="value">\${dateStr}</td></tr>
-                        <tr><td class="label">Saat</td><td class="value">\${timeStr}</td></tr>
-                        <tr><td class="label">Kişi Sayısı</td><td class="value highlight">\${partySize} Kişi</td></tr>
+                        <tr><td class="label">İşletme</td><td class="value">${businessName}</td></tr>
+                        <tr><td class="label">Adres</td><td class="value">${businessAddress}</td></tr>
+                        <tr><td class="label">Tarih</td><td class="value">${dateStr}</td></tr>
+                        <tr><td class="label">Saat</td><td class="value">${timeStr}</td></tr>
+                        <tr><td class="label">Kişi Sayısı</td><td class="value highlight">${partySize} Kişi</td></tr>
                     </table>
                 </div>
-                \${tableCardHtml}
-                \${preOrderHtml}
-                \${calendarHtml}
+                ${tableCardHtml}
+                ${preOrderHtml}
+                ${calendarHtml}
+                <div class="calendar-section" style="margin-top: 10px; border-top: none; padding-top: 0;">
+                    <a href="${mapsUrl}" target="_blank" class="calendar-btn" style="background-color: #E91E63; color: #ffffff !important;">📍 Yol Tarifi Al</a>
+                    <p class="calendar-note">Haritalar uygulamasında yol tarifi için tıklayın.</p>
+                </div>
                 <div class="sign-off">
                     <p style="color: #666; font-size: 14px; margin: 0 0 5px;">Bizi tercih ettiğiniz için teşekkür ederiz.</p>
                     <p class="handwritten">Afiyet olsun!</p>
-                    <p style="color: #888; font-size: 13px; margin: 0;">Saygılarımızla,<br/><strong>\${businessName} Ekibi</strong></p>
+                    <p style="color: #888; font-size: 13px; margin: 0;">Saygılarımızla,<br/><strong>${businessName} Ekibi</strong></p>
                 </div>
             </div>
             <div class="footer">
