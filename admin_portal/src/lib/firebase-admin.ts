@@ -18,23 +18,26 @@ function initializeFirebaseAdmin() {
         // Fall back to FIREBASE_SERVICE_ACCOUNT_KEY for local development
         const serviceAccount = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-        if (!serviceAccount) {
-            // During Next.js build, env vars may not be available.
-            // Skip initialization — actual runtime calls will fail with a clear error.
-            console.warn('[firebase-admin] Service account not set — skipping init (expected during build).');
-            return;
-        }
-
         try {
-            const parsedServiceAccount = JSON.parse(serviceAccount);
-            adminApp = initializeApp({
-                credential: cert(parsedServiceAccount),
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-            });
+            if (serviceAccount) {
+                const parsedServiceAccount = JSON.parse(serviceAccount);
+                adminApp = initializeApp({
+                    credential: cert(parsedServiceAccount),
+                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+                });
+            } else {
+                // Fall back to application default credentials for local dev or GCP environments
+                const { applicationDefault } = require('firebase-admin/app');
+                adminApp = initializeApp({
+                    credential: applicationDefault(),
+                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+                });
+            }
         } catch (error) {
-            console.error('Failed to parse service account:', error);
-            throw error;
+            console.error('[firebase-admin] Failed to initialize (expected if variables are missing during build):', error);
+            return;
         }
     } else {
         adminApp = getApps()[0];
