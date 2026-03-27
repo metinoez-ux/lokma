@@ -304,7 +304,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('marketplace.clear_cart_warning'.tr(args: [currentKermesName]), style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 15)),
+            Text('marketplace.clear_cart_warning'.tr(args: [currentKermesName ?? '']), style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 15)),
             const SizedBox(height: 12),
             Text('${widget.event.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.', style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white54 : Colors.black54, fontSize: 14)),
           ],
@@ -534,7 +534,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     tabs: [
                       TabItem(title: 'Kurye', icon: Icons.delivery_dining, subtitle: 'Standart'),
                       TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined, subtitle: 'Sıra bekleme'),
-                      TabItem(title: 'Yerinde', icon: Icons.restaurant, subtitle: 'Kermeste ye'),
+                      TabItem(title: '(Masa)', icon: Icons.restaurant, subtitle: 'Kermeste ye'),
                     ],
                     onTabSelected: (index) {
                       setState(() => _deliveryModeIndex = index);
@@ -718,60 +718,32 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               ),
             )
           else
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final category = _categoriesWithoutAll[index];
-                    if (!grouped.containsKey(category)) return const SizedBox.shrink();
-                    final categoryItems = grouped[category]!;
-                    if (categoryItems.isEmpty) return const SizedBox.shrink();
-                    
-                    return Column(
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final category = _categoriesWithoutAll[index];
+                  if (!grouped.containsKey(category)) return const SizedBox.shrink();
+                  final categoryItems = grouped[category]!;
+                  if (categoryItems.isEmpty) return const SizedBox.shrink();
+                  
+                  return Container(
+                    key: menuKeys[category],
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      key: menuKeys[category],
                       children: [
                         // Category Header
-                        Padding(
-                          padding: const EdgeInsets.only(top: 24, bottom: 16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 4,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: lokmaPink,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                category.toUpperCase(),
-                                style: TextStyle(
-                                  color: textPrimary,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: lokmaPink.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${categoryItems.length}',
-                                  style: const TextStyle(
-                                    color: lokmaPink,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        Container(
+                          width: double.infinity,
+                          color: isDark ? const Color(0xFF2C2C2C).withValues(alpha: 0.6) : const Color(0xFFF2EEE9),
+                          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                          child: Text(
+                            category,
+                            style: TextStyle(
+                              color: isDark ? lokmaPink : Colors.black87,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
                         // Items
@@ -781,12 +753,14 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         }),
                         // Extra bottom padding for last item
                         if (index == _categoriesWithoutAll.length - 1)
-                          const SizedBox(height: 120),
+                          const SizedBox(height: 120)
+                        else
+                          const SizedBox(height: 16),
                       ],
-                    );
-                  },
-                  childCount: _categoriesWithoutAll.length,
-                ),
+                    ),
+                  );
+                },
+                childCount: _categoriesWithoutAll.length,
               ),
             ),
         ],
@@ -796,68 +770,77 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   }
 
   Widget _buildCartBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
+    final cartTotal = _totalPrice;
+    final itemCount = _totalItems;
+    
+    if (itemCount == 0) {
+      return const SizedBox.shrink();
+    }
+    
+    final accent = lokmaPink;
+    final currency = CurrencyUtils.getCurrencySymbol();
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final cartButton = Material(
+      color: accent,
+      borderRadius: BorderRadius.circular(28),
+      elevation: 4,
+      shadowColor: accent.withValues(alpha: 0.4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          showKermesCheckoutSheet(context, widget.event);
+        },
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
+              // Cart icon with badge
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
+                  Positioned(
+                    top: -6,
+                    right: -8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1A1A1A),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$itemCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 14),
+              // Center text
               Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$_totalItems Ürün',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '${_totalPrice.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  _deliveryModeIndex == 1 ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(), // Masa vs Stand
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  showKermesCheckoutSheet(context, widget.event);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: lokmaPink,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('marketplace.go_to_cart'.tr(), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_ios, size: 14),
-                  ],
+              // Price on right
+              Text(
+                '${cartTotal.toStringAsFixed(2).replaceAll('.', ',')} $currency',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -865,281 +848,278 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         ),
       ),
     );
+
+    return Container(
+      margin: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding + 12),
+      child: cartButton,
+    );
   }
 
   Widget _buildMenuItem(KermesMenuItem item, int cartQuantity, {bool isDark = true}) {
     final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
-    final isSoldOut = !item.isAvailable;  
-    final cardColor = _cardBg(isDark);
+    final isAvailable = item.isAvailable;
+    final isSoldOut = !isAvailable;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final accent = lokmaPink;
     
-    return GestureDetector(
-      onTap: isSoldOut
-          ? null 
-          : () {
-              HapticFeedback.selectionClick();
-              showKermesProductDetailSheet(
-                context,
-                item: item,
-                cartQuantity: cartQuantity,
-                onAdd: () => _addToCart(item),
-                onRemove: () => _removeFromCart(item),
-              );
-            },
-      child: Opacity(
-        opacity: isSoldOut ? 0.5 : 1.0,
+    // The ADD button or the increment/decrement pill
+    Widget trailingWidget;
+    if (cartQuantity == 0) {
+      trailingWidget = GestureDetector(
+        onTap: isAvailable ? () {
+          HapticFeedback.mediumImpact();
+          _addToCart(item);
+        } : null,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
-            color: isSoldOut ? cardColor.withValues(alpha: 0.6) : cardColor,
-            borderRadius: BorderRadius.circular(16),
+            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+            shape: BoxShape.circle,
             border: Border.all(
-              color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05),
+              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
               width: 1,
             ),
-            boxShadow: cartQuantity > 0 && !isSoldOut
-                ? [
-                    BoxShadow(
-                      color: lokmaPink.withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              children: [
-                if (cartQuantity > 0 && !isSoldOut)
-                  Positioned(
-                    left: 0, top: 0, bottom: 0,
-                    width: 4,
-                    child: Container(color: lokmaPink),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Hero(
-                        tag: 'product_image_${item.name}',
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: !hasImage
-                                ? LinearGradient(
-                                    colors: [lokmaPink.withValues(alpha: 0.1), lokmaPink.withValues(alpha: 0.05)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : null,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+          child: Icon(
+            Icons.add,
+            color: accent,
+            size: 20,
+          ),
+        ),
+      );
+    } else {
+      trailingWidget = Container(
+        height: 34,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(
+            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Minus
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _removeFromCart(item);
+              },
+              child: Container(
+                width: 34,
+                alignment: Alignment.center,
+                child: Icon(
+                  cartQuantity == 1 ? Icons.delete_outline : Icons.remove,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                  size: 18,
+                ),
+              ),
+            ),
+            // Count
+            Container(
+              constraints: const BoxConstraints(minWidth: 20),
+              alignment: Alignment.center,
+              child: Text(
+                '$cartQuantity',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            // Plus
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _addToCart(item);
+              },
+              child: Container(
+                width: 34,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.add,
+                  color: accent,
+                  size: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Opacity(
+          opacity: isAvailable ? 1.0 : 0.55,
+          child: InkWell(
+            onTap: isAvailable
+                ? () {
+                    HapticFeedback.selectionClick();
+                    showKermesProductDetailSheet(
+                      context,
+                      item: item,
+                      cartQuantity: cartQuantity,
+                      onAdd: () => _addToCart(item),
+                      onRemove: () => _removeFromCart(item),
+                    );
+                  }
+                : null,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+              color: Colors.transparent,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Info (Left)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          item.name,
+                          style: TextStyle(
+                            color: isAvailable ? textColor : subtleTextColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            height: 1.2,
+                            letterSpacing: -0.2, // Small touch from kermes original
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (isSoldOut) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'marketplace.sold_out'.tr(),
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                          child: hasImage
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
+                        ],
+                        const SizedBox(height: 6),
+                        // Description
+                        if (item.description != null && item.description!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Text(
+                              item.description!,
+                              style: TextStyle(
+                                color: subtleTextColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w300,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        // Price
+                        Text(
+                          '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
+                          style: TextStyle(
+                            color: isAvailable ? textColor : subtleTextColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300, 
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Image & Add Button (Right)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (hasImage)
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Hero(
+                              tag: 'product_image_${item.name}',
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  color: isDark ? Colors.white10 : Colors.grey[100],
                                   child: Image.network(
                                     item.imageUrl!,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Center(
-                                      child: Icon(
-                                        _getIconForItem(item.name),
-                                        color: lokmaPink.withValues(alpha: 0.5),
-                                        size: 32,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Center(
-                                  child: Icon(
-                                    _getIconForItem(item.name),
-                                    color: lokmaPink.withValues(alpha: 0.5),
-                                    size: 32,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.name,
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                      letterSpacing: -0.2,
+                                    errorBuilder: (_, __, ___) => Icon(
+                                      _getIconForItem(item.name),
+                                      size: 40,
+                                      color: isDark ? Colors.white24 : Colors.grey[400],
                                     ),
                                   ),
                                 ),
-                                if (item.hasDetailInfo || hasImage)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 4, top: 2),
-                                    child: Icon(
-                                      Icons.info_outline,
-                                      color: isDark ? Colors.grey[600] : Colors.grey[400],
-                                      size: 16,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            if (item.description != null && item.description!.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                item.description!,
-                                style: TextStyle(
-                                  color: subtleTextColor,
-                                  fontSize: 13,
-                                  height: 1.3,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${item.price.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.green[400] : Colors.green[700],
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    if (item.allergens.isNotEmpty) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.warning_amber, size: 12, color: Colors.amber[700]),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${item.allergens.length}',
-                                              style: TextStyle(color: Colors.amber[800], fontSize: 11, fontWeight: FontWeight.bold),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                
-                                // Quantity Controls
-                                if (isSoldOut)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text('marketplace.sold_out'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12, fontWeight: FontWeight.w700)),
-                                  )
-                                else if (cartQuantity == 0)
-                                  GestureDetector(
-                                    onTap: () => _addToCart(item),
-                                    child: Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(18),
-                                      ),
-                                      child: Icon(Icons.add, color: lokmaPink, size: 20),
-                                    ),
-                                  )
-                                else
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: lokmaPink,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: lokmaPink.withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () => _removeFromCart(item),
-                                          child: Container(
-                                            width: 36,
-                                            height: 36,
-                                            color: Colors.transparent,
-                                            child: Icon(Icons.remove, color: Colors.white, size: 18),
-                                          ),
-                                        ),
-                                        Container(
-                                          constraints: const BoxConstraints(minWidth: 24),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            cartQuantity.toString(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () => _addToCart(item),
-                                          child: Container(
-                                            width: 36,
-                                            height: 36,
-                                            color: Colors.transparent,
-                                            child: Icon(Icons.add, color: Colors.white, size: 18),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
                             ),
+                            // + / - pill button overlay
+                            if (isAvailable)
+                              Positioned(
+                                right: cartQuantity > 0 ? -12 : -8,
+                                bottom: -12,
+                                child: trailingWidget,
+                              ),
                           ],
+                        )
+                      else if (isAvailable)
+                        // No image standalone button
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0, top: 20.0),
+                          child: trailingWidget,
                         ),
-                      ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
+        // Separator Line
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Divider(
+            height: 1,
+            thickness: 0.5,
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[200]!,
+          ),
+        ),
+      ],
     );
   }
 
