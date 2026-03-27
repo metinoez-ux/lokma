@@ -2522,21 +2522,19 @@ export const onReservationStatusChange = onDocumentUpdated(
                         // Options
                         let optionsTxt = "";
                         if (Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0) {
-                            optionsTxt = `<div style="color: #aaa; font-size: 12px; margin-top: 4px;">+ ${item.selectedOptions.map((o: any) => o.name || "").filter(Boolean).join(", ")}</div>`;
+                            optionsTxt = `<div class="preorder-item-options">+ ${item.selectedOptions.map((o: any) => o.name || "").filter(Boolean).join(", ")}</div>`;
                         }
                         return `
-                            <div style="padding: 10px 0; border-bottom: 1px solid #444;">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span style="color: #fff; font-weight: bold;">${qty}x ${pName}</span>
-                                </div>
+                            <div class="preorder-item">
+                                <div class="preorder-item-name">${qty}x ${pName}</div>
                                 ${optionsTxt}
                             </div>
                         `;
                     }).join("");
 
                     preOrderHtml = `
-                        <div style="background: #333; border-radius: 10px; padding: 18px; margin: 20px 0 15px;">
-                            <h3 style="margin: 0 0 12px; color: #fff; font-size: 16px;">Sipariş Detaylarınız</h3>
+                        <div class="preorder-box">
+                            <h3 class="preorder-title">Sipariş Detaylarınız</h3>
                             ${itemsListHtml}
                         </div>
                     `;
@@ -2544,10 +2542,10 @@ export const onReservationStatusChange = onDocumentUpdated(
 
                 // Table card display
                 const tableCardHtml = tableCardNumbers.length > 0
-                    ? `<div style="background: #1b3a1b; border: 1px solid #2E7D32; border-radius: 8px; padding: 12px; margin: 15px 0;">
-                        <p style="color: #81C784; font-size: 12px; margin: 0 0 8px; font-weight: 600;">MASA NUMARANIZ</p>
-                        <div style="display: flex; gap: 8px;">
-                            ${tableCardNumbers.map((n: number) => `<span style="background: #2E7D32; color: white; padding: 6px 14px; border-radius: 8px; font-size: 18px; font-weight: bold;">${n}</span>`).join("")}
+                    ? `<div class="table-card">
+                        <p class="table-card-title">MASA NUMARANIZ</p>
+                        <div class="table-card-numbers-wrapper">
+                            ${tableCardNumbers.map((n: number) => `<span class="table-card-numbers">${n}</span>`).join(" ")}
                         </div>
                     </div>`
                     : "";
@@ -2582,13 +2580,11 @@ export const onReservationStatusChange = onDocumentUpdated(
                 }] : [];
 
                 const calendarHtml = newStatus === "confirmed" ? `
-                    <p style="color: #aaa; font-size: 13px; margin: 20px 0 15px; text-align: center;">Rezervasyonu takviminize ekleyin:</p>
-                    <div style="text-align: center; margin: 15px 0;">
-                        <a href="${googleCalendarUrl}" target="_blank" style="display: inline-block; background: #4285F4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 0 6px 10px;">
-                            📅 Google Takvim'e Ekle
-                        </a>
+                    <div class="calendar-section">
+                        <p class="calendar-label">Rezervasyonu takviminize ekleyin:</p>
+                        <a href="${googleCalendarUrl}" target="_blank" class="calendar-btn">📅 Google Takvim'e Ekle</a>
+                        <p class="calendar-note">iCal dosyası ektedir — Apple Takvim veya Outlook'a kolayca ekleyebilirsiniz.</p>
                     </div>
-                    <p style="color: #777; font-size: 11px; text-align: center; margin: 10px 0 0;">iCal dosyası ektedir — Apple Takvim veya Outlook'a kolayca ekleyebilirsiniz.</p>
                 ` : "";
 
                 // Send email via Resend
@@ -2598,49 +2594,106 @@ export const onReservationStatusChange = onDocumentUpdated(
                     to: customerEmail,
                     subject: emailSubject,
                     html: `
-                        <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
-                            <div style="max-width: 600px; margin: 0 auto;">
-                                <div style="background: ${headerColor}; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-                                    <h1 style="margin: 0; color: white; font-size: 22px;">LOKMA</h1>
-                                    <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">${emailHeader}</p>
-                                </div>
-                                <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
-                                    <p style="color: #eee; margin: 0 0 20px; font-size: 15px;">Merhaba <strong>${customerName}</strong>,</p>
-                                    <p style="color: #ccc; margin: 0 0 20px;">${emailMessage}</p>
-                                    
-                                    <div style="background: #333; border-radius: 10px; padding: 18px; margin: 15px 0;">
-                                        <table style="width: 100%; color: #ccc; font-size: 14px; border-collapse: collapse;">
-                                            <tr>
-                                                <td style="padding: 6px 0; color: #999;">İşletme</td>
-                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #fff;">${businessName}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 6px 0; color: #999;">Tarih</td>
-                                                <td style="padding: 6px 0; text-align: right; color: #fff;">${dateStr}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 6px 0; color: #999;">Saat</td>
-                                                <td style="padding: 6px 0; text-align: right; color: #fff;">${timeStr}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 6px 0; color: #999;">Kişi Sayısı</td>
-                                                <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4CAF50; font-size: 16px;">${partySize} Kişi</td>
-                                            </tr>
-                                        </table>
-                                    </div>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Base / Light Mode Defaults */
+        body, .email-container { background-color: #f4f6f8; color: #333333; font-family: Arial, sans-serif; margin: 0; padding: 0; line-height: 1.6; }
+        .email-body { background-color: #ffffff; max-width: 600px; margin: 30px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { background-color: ${headerColor}; padding: 30px 20px; text-align: center; }
+        .header img { max-height: 50px; margin-bottom: 15px; }
+        .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 600; }
+        .header p { color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px; }
+        .content { padding: 30px; }
+        .greeting { font-size: 16px; color: #111111; margin-bottom: 10px; }
+        .message { font-size: 15px; color: #444444; margin-bottom: 25px; }
+        .details-box { background-color: #f9fafb; border-radius: 10px; padding: 20px; margin-bottom: 20px; border: 1px solid #eef0f2; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 8px 0; font-size: 15px; }
+        .label { color: #666666; }
+        .value { text-align: right; color: #111111; font-weight: 500; }
+        .value.highlight { color: #2E7D32; font-weight: 700; font-size: 17px; }
+        .sign-off { border-top: 1px solid #eeeeee; margin-top: 30px; padding-top: 25px; text-align: center; }
+        .handwritten { font-family: 'Dancing Script', cursive, Arial; font-size: 28px; color: ${headerColor}; margin: 15px 0; font-weight: 700; }
+        .footer { text-align: center; padding: 20px; color: #888888; font-size: 12px; background-color: #f4f6f8; }
+        .table-card { background-color: #e8f5e9; border: 1px solid #81c784; border-radius: 10px; padding: 15px; margin: 20px 0; text-align: center; }
+        .table-card-title { color: #2e7d32; font-size: 12px; font-weight: bold; margin: 0 0 10px; text-transform: uppercase; }
+        .table-card-numbers-wrapper { display: flex; gap: 8px; justify-content: center; }
+        .table-card-numbers { background-color: #2e7d32; color: white; padding: 6px 14px; border-radius: 8px; font-size: 18px; font-weight: bold; }
+        .preorder-box { background-color: #ffffff; border: 1px solid #eeeeee; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .preorder-title { margin: 0 0 15px; color: #111; font-size: 16px; font-weight: 600; }
+        .preorder-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; }
+        .preorder-item:last-child { border-bottom: none; }
+        .preorder-item-name { color: #111; font-weight: 600; }
+        .preorder-item-options { color: #666; font-size: 13px; margin-top: 4px; }
+        .calendar-section { text-align: center; margin: 25px 0 15px; }
+        .calendar-label { color: #666; font-size: 13px; margin: 0 0 15px; }
+        .calendar-btn { display: inline-block; background: #4285F4; color: white !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .calendar-note { color: #888; font-size: 11px; margin-top: 12px; }
 
-                                    ${tableCardHtml}
-                                    ${preOrderHtml}
-                                    ${calendarHtml}
-                                    
-                                    <div style="border-top: 1px solid #444; margin-top: 20px; padding-top: 20px; text-align: center;">
-                                        <p style="color: #ccc; font-size: 14px; margin: 0 0 10px;">Bizi tercih ettiğiniz için teşekkür ederiz.</p>
-                                        <p style="color: #999; font-size: 13px; margin: 0;">Saygılarımızla,<br/><strong style="color: #fff;">${businessName} Ekibi</strong></p>
-                                    </div>
-                                </div>
-                                <p style="color: #555; font-size: 11px; text-align: center; margin-top: 15px;">Bu e-posta LOKMA Marketplace üzerinden gönderilmiştir.</p>
-                            </div>
-                        </div>
+        /* Dark Mode Preferences */
+        @media (prefers-color-scheme: dark) {
+            body, .email-container, .footer { background-color: #121212 !important; color: #ffffff !important; }
+            .email-body { background-color: #1e1e1e !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
+            .greeting { color: #ffffff !important; }
+            .message { color: #dddddd !important; }
+            .details-box { background-color: #2a2a2a !important; border-color: #333333 !important; }
+            .label { color: #aaaaaa !important; }
+            .value { color: #ffffff !important; }
+            .value.highlight { color: #66bb6a !important; }
+            .sign-off { border-color: #333333 !important; }
+            .table-card { background-color: #1b3a1b !important; border-color: #2e7d32 !important; }
+            .table-card-title { color: #81c784 !important; }
+            .preorder-box { background-color: #2a2a2a !important; border-color: #333333 !important; }
+            .preorder-title { color: #ffffff !important; }
+            .preorder-item { border-color: #333333 !important; }
+            .preorder-item-name { color: #ffffff !important; }
+            .preorder-item-options { color: #aaaaaa !important; }
+            .calendar-label { color: #aaaaaa !important; }
+            .calendar-note { color: #777777 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!--[if mso]><table align="center" border="0" cellspacing="0" cellpadding="0" width="600" style="width:600px; background-color: #ffffff;"><tr><td><![endif]-->
+        <div class="email-body">
+            <div class="header">
+                <img src="https://lokma.shop/lokma_red_pink.png" alt="LOKMA Logo" />
+                <p>\${emailHeader}</p>
+            </div>
+            <div class="content">
+                <p class="greeting">Merhaba <strong>\${customerName}</strong>,</p>
+                <p class="message">\${emailMessage}</p>
+                <div class="details-box">
+                    <table>
+                        <tr><td class="label">İşletme</td><td class="value">\${businessName}</td></tr>
+                        <tr><td class="label">Tarih</td><td class="value">\${dateStr}</td></tr>
+                        <tr><td class="label">Saat</td><td class="value">\${timeStr}</td></tr>
+                        <tr><td class="label">Kişi Sayısı</td><td class="value highlight">\${partySize} Kişi</td></tr>
+                    </table>
+                </div>
+                \${tableCardHtml}
+                \${preOrderHtml}
+                \${calendarHtml}
+                <div class="sign-off">
+                    <p style="color: #666; font-size: 14px; margin: 0 0 5px;">Bizi tercih ettiğiniz için teşekkür ederiz.</p>
+                    <p class="handwritten">Afiyet olsun!</p>
+                    <p style="color: #888; font-size: 13px; margin: 0;">Saygılarımızla,<br/><strong>\${businessName} Ekibi</strong></p>
+                </div>
+            </div>
+            <div class="footer">
+                Bu e-posta <strong>LOKMA Marketplace</strong> üzerinden gönderilmiştir.<br/>&copy; 2026 LOKMA. Tüm hakları saklıdır.
+            </div>
+        </div>
+        <!--[if mso]></td></tr></table><![endif]-->
+    </div>
+</body>
+</html>
                     `,
                     attachments: emailAttachments,
                 });
