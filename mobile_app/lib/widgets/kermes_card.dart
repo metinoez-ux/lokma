@@ -167,9 +167,21 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       badgeIcon = Icons.event_busy;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => KermesMenuScreen(
+              event: widget.event,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
         color: isDark ? cardDark : cardLight,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
@@ -198,7 +210,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
           Stack(
             children: [
               SizedBox(
-                height: 192,
+                height: 230,
                 width: double.infinity,
                 child: imagePath != null
                     ? (isNetworkImage
@@ -301,15 +313,17 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                 ),
               ),
 
-              // TUNA Sponsor Badge (bottom-left, standardized style)
-              if (widget.event.sponsor == KermesSponsor.tuna)
+              // Sponsor Badge (bottom-left, standardized style)
+              if (widget.event.sponsor != KermesSponsor.none)
                 Positioned(
                   bottom: 12,
                   left: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFA01E22),
+                      color: widget.event.sponsor == KermesSponsor.tuna
+                          ? const Color(0xFFA01E22) // TUNA Red
+                          : const Color(0xFFD97706), // Akdeniz Toros Orange
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -319,14 +333,14 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         ),
                       ],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.verified, color: Colors.white, size: 13),
-                        SizedBox(width: 4),
+                        const Icon(Icons.verified, color: Colors.white, size: 13),
+                        const SizedBox(width: 4),
                         Text(
-                          'TUNA',
-                          style: TextStyle(
+                          widget.event.sponsor == KermesSponsor.tuna ? 'TUNA' : 'AKDENİZ TOROS',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -342,68 +356,52 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
 
           // --- CONTENT SECTION ---
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title Header - Tappable for expand/collapse
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    widget.onExpandToggle?.call();
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.event.title,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
-                                color: isDark ? Colors.white : textDark,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                // Title Header
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.event.title,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                              color: isDark ? Colors.white : textDark,
                             ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(Icons.flag, size: 16, color: primaryRose),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    '${widget.event.country} • ${widget.event.city}',
-                                    style: TextStyle(
-                                      color: isDark ? Colors.grey[400] : Colors.grey[500],
-                                      fontSize: 13,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.flag, size: 16, color: primaryRose),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  '${widget.event.country} • ${widget.event.city}',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                    fontSize: 13,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      AnimatedRotation(
-                        turns: widget.isExpanded ? 0.25 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.chevron_right,
-                          color: isDark ? Colors.grey[600] : Colors.grey[400],
-                          size: 28,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 16),
@@ -466,34 +464,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   ],
                 ),
 
-                // --- COLLAPSIBLE DETAIL SECTION ---
-                SizeTransition(
-                  sizeFactor: _expandAnimation,
-                  axisAlignment: -1,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      Divider(color: isDark ? Colors.grey[800] : Colors.grey[200], height: 1),
-                      const SizedBox(height: 16),
-                      
-                      // --- PARK BİLGİSİ ---
-                      if (widget.event.hasParking)
-                        _buildParkingCard(isDark),
-                      
-                      if (widget.event.hasParking) const SizedBox(height: 12),
-                      
-                      // --- HAVA DURUMU PREVIEW ---
-                      if (widget.event.weatherForecast.isNotEmpty)
-                        _buildWeatherPreview(isDark),
-                      
-                      if (widget.event.weatherForecast.isNotEmpty) const SizedBox(height: 12),
-                      
-                      // --- YETKİLİ KİŞİ ---
-                      if (widget.event.phoneNumber.isNotEmpty || widget.event.contactName?.isNotEmpty == true)
-                        _buildContactCard(isDark),
-                    ],
-                  ),
-                ),
+
 
                 // --- SPONSORED PRODUCTS (Reklam Altyapisi) ---
                 if (widget.event.sponsoredMenuItems.isNotEmpty)
@@ -501,61 +472,6 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     padding: const EdgeInsets.only(top: 16),
                     child: _buildSponsoredProductsSection(isDark),
                   ),
-
-                const SizedBox(height: 16),
-
-                // CTA Button
-                Container(
-                  width: double.infinity,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(26), // Tam pill şekli
-                    gradient: const LinearGradient(
-                      colors: [primaryRose, Color(0xFFE11D48)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFE11D48).withValues(alpha: 0.25),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => KermesMenuScreen(
-                              event: widget.event,
-                            ),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(26),
-                      child: const Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.shopping_bag, color: Colors.white, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Menüyü Gör & Sipariş Ver',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
 
               ],
             ),

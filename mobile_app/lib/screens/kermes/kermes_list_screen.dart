@@ -53,6 +53,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   bool _filterLiveMusic = false;
   bool _filterParking = false;
   bool _filterTuna = false;
+  bool _filterAkdenizToros = false;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _kermesSubscription;
 
@@ -344,6 +345,15 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               country = data['country'].toString();
             }
 
+            // Parse sponsor
+            KermesSponsor sponsor = KermesSponsor.none;
+            final sponsorStr = data['sponsor']?.toString().toUpperCase() ?? data['brandLabel']?.toString().toUpperCase();
+            if (sponsorStr == 'TUNA') {
+              sponsor = KermesSponsor.tuna;
+            } else if (sponsorStr == 'AKDENIZ TOROS' || sponsorStr == 'AKDENIZ_TOROS') {
+              sponsor = KermesSponsor.akdenizToros;
+            }
+
             final event = KermesEvent(
               id: doc.id,
               city: city,
@@ -384,6 +394,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               headerImage: data['headerImage']?.toString(),
               openingTime: openingTime,
               closingTime: closingTime,
+              sponsor: sponsor,
             );
 
             loadedEvents.add(event);
@@ -499,7 +510,15 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (_filterVegetarian) events = events.where((e) => e.hasVegetarian).toList();
     if (_filterLiveMusic) events = events.where((e) => e.hasLiveMusic).toList();
     if (_filterParking) events = events.where((e) => e.hasParking).toList();
-    if (_filterTuna) events = events.where((e) => e.sponsor == KermesSponsor.tuna).toList();
+    
+    // Apply TUNA / Akdeniz Toros filters
+    if (_filterTuna && _filterAkdenizToros) {
+      events = events.where((e) => e.sponsor == KermesSponsor.tuna || e.sponsor == KermesSponsor.akdenizToros).toList();
+    } else if (_filterTuna) {
+      events = events.where((e) => e.sponsor == KermesSponsor.tuna).toList();
+    } else if (_filterAkdenizToros) {
+      events = events.where((e) => e.sponsor == KermesSponsor.akdenizToros).toList();
+    }
 
     // Sort
     events.sort((a, b) {
@@ -539,6 +558,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (_filterLiveMusic) count++;
     if (_filterParking) count++;
     if (_filterTuna) count++;
+    if (_filterAkdenizToros) count++;
     if (_sortBy != 'date_asc') count++;
     return count;
   }
@@ -634,6 +654,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               _filterLiveMusic = false;
                               _filterParking = false;
                               _filterTuna = false;
+                              _filterAkdenizToros = false;
                             });
                             setStateSheet(() {});
                           },
@@ -668,9 +689,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 20),
-
-                          // TUNA Sertifika Filtresi
+                          const Sized                          // TUNA Sertifika Filtresi
                           GestureDetector(
                             onTap: () {
                               HapticFeedback.lightImpact();
@@ -735,6 +754,82 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                       onChanged: (val) {
                                         HapticFeedback.lightImpact();
                                         setState(() => _filterTuna = val);
+                                        setStateSheet(() {});
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // AKDENİZ TOROS Sertifika Filtresi
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() => _filterAkdenizToros = !_filterAkdenizToros);
+                              setStateSheet(() {});
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFD97706),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: _filterAkdenizToros
+                                          ? [
+                                              BoxShadow(
+                                                color: const Color(0xFFD97706).withValues(alpha: 0.4),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.verified, color: Colors.white, size: 16),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'AKDENİZ TOROS',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Sadece Akdeniz Toros onaylı kermesler',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    height: 28,
+                                    child: Switch.adaptive(
+                                      value: _filterAkdenizToros,
+                                      activeColor: Colors.white,
+                                      activeTrackColor: lokmaPink,
+                                      onChanged: (val) {
+                                        HapticFeedback.lightImpact();
+                                        setState(() => _filterAkdenizToros = val);
                                         setStateSheet(() {});
                                       },
                                     ),
