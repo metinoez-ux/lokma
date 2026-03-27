@@ -750,7 +750,7 @@ export default function KermesDetailPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/business?type=kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
+                        <Link href="/admin/kermes" className="text-muted-foreground hover:text-white">← Geri</Link>
                         <div>
                             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">🎪 {kermes.title}</h1>
                             {kermes.organizationName && <p className="text-muted-foreground text-sm">🕌 {kermes.organizationName}</p>}
