@@ -61,8 +61,9 @@ export async function POST(req: NextRequest) {
         if (!callerDoc.exists || callerDoc.data()?.adminType !== 'super') {
             return NextResponse.json({ error: 'Forbidden: Super Admin only' }, { status: 403 });
         }
-    } catch {
-        return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    } catch (error: any) {
+        console.error('Test Data Cleanup Auth Error:', error);
+        return NextResponse.json({ error: 'Invalid token: ' + error.message }, { status: 401 });
     }
 
     // Parse selected categories from request body
@@ -171,16 +172,26 @@ export async function POST(req: NextRequest) {
             await deleteCollection(adminDb, 'kermes_carts');
 
             // Delete order status notifications across all users to clear order history on mobile
+            // Use in-memory filtering to avoid requiring a composite CollectionGroup index (9 FAILED_PRECONDITION)
             let hasMoreNotifs = true;
+            let lastDoc: any = null;
             while (hasMoreNotifs) {
-                const snap = await adminDb.collectionGroup('notifications')
-                    .where('type', '==', 'order_status')
-                    .limit(400)
-                    .get();
+                let query = adminDb.collectionGroup('notifications').limit(500);
+                if (lastDoc) query = query.startAfter(lastDoc);
+                const snap = await query.get();
+                
                 if (snap.empty) { hasMoreNotifs = false; break; }
+                lastDoc = snap.docs[snap.docs.length - 1];
+
                 const batch = adminDb.batch();
-                snap.docs.forEach(d => batch.delete(d.ref));
-                await batch.commit();
+                let batchCount = 0;
+                snap.docs.forEach(d => {
+                    if (d.data().type === 'order_status') {
+                        batch.delete(d.ref);
+                        batchCount++;
+                    }
+                });
+                if (batchCount > 0) await batch.commit();
             }
         }
 
@@ -241,16 +252,26 @@ export async function POST(req: NextRequest) {
             stats.reservationsDeleted = await deleteCollection(adminDb, 'reservations');
 
             // Delete reservation status notifications across all users to clear reservation history on mobile
+            // Use in-memory filtering to avoid requiring a composite CollectionGroup index (9 FAILED_PRECONDITION)
             let hasMoreNotifs = true;
+            let lastDoc: any = null;
             while (hasMoreNotifs) {
-                const snap = await adminDb.collectionGroup('notifications')
-                    .where('type', '==', 'reservation_status')
-                    .limit(400)
-                    .get();
+                let query = adminDb.collectionGroup('notifications').limit(500);
+                if (lastDoc) query = query.startAfter(lastDoc);
+                const snap = await query.get();
+                
                 if (snap.empty) { hasMoreNotifs = false; break; }
+                lastDoc = snap.docs[snap.docs.length - 1];
+
                 const batch = adminDb.batch();
-                snap.docs.forEach(d => batch.delete(d.ref));
-                await batch.commit();
+                let batchCount = 0;
+                snap.docs.forEach(d => {
+                    if (d.data().type === 'reservation_status') {
+                        batch.delete(d.ref);
+                        batchCount++;
+                    }
+                });
+                if (batchCount > 0) await batch.commit();
             }
         }
 

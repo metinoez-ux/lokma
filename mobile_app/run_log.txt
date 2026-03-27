@@ -9,3 +9,4 @@ h List all available interactive commands.
 c Clear the screen
 q Quit (terminate the application on the device).
 
+Application finished.

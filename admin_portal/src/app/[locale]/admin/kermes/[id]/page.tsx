@@ -188,6 +188,7 @@ export default function KermesDetailPage() {
         // Başlık görseli
         headerImage: '',
         headerImageId: '',
+        sponsor: 'none' as 'tuna' | 'akdeniz_toros' | 'none',
     });
     const [editFeatures, setEditFeatures] = useState<string[]>([]);
     const [editCustomFeatures, setEditCustomFeatures] = useState<string[]>([]); // Max 3 özel özellik
@@ -309,6 +310,7 @@ export default function KermesDetailPage() {
                 // Başlık görseli
                 headerImage: data.headerImage || '',
                 headerImageId: data.headerImageId || '',
+                sponsor: data.sponsor || 'none',
             });
             setEditFeatures(data.features || []);
             setEditCustomFeatures(data.customFeatures || []);
@@ -471,6 +473,7 @@ export default function KermesDetailPage() {
                 // Başlık görseli
                 headerImage: editForm.headerImage || null,
                 headerImageId: editForm.headerImageId || null,
+                sponsor: editForm.sponsor !== 'none' ? editForm.sponsor : null,
                 // Sistem
                 updatedAt: new Date(),
             };
@@ -487,8 +490,9 @@ export default function KermesDetailPage() {
             setKermes({ ...kermes, ...updateData });
             setIsEditing(false);
             showToast('✅ Kaydedildi');
-        } catch (error) {
-            showToast(t('kaydetme_hatasi'), 'error');
+        } catch (error: any) {
+            console.error('Kermes error:', error);
+            showToast(`${t('kaydetme_hatasi')}: ${error.message || 'Bilinmeyen hata'}`, 'error');
         } finally {
             setSaving(false);
         }
@@ -820,6 +824,7 @@ export default function KermesDetailPage() {
                                             pricesIncludeKdv: kermes?.pricesIncludeKdv !== false,
                                             headerImage: kermes?.headerImage || '',
                                             headerImageId: kermes?.headerImageId || '',
+                                            sponsor: kermes?.sponsor || 'none',
                                         });
                                         setEditFeatures(kermes?.features || []);
                                         setEditCustomFeatures(kermes?.customFeatures || []);
@@ -1028,38 +1033,20 @@ export default function KermesDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Yetkili Kişi Bilgileri */}
+                                    {/* Removed deprecated Yetkili Kişi Bilgileri (Moved to modular card below) */}
+
+                                    {/* Sponsor / Marka Etiketi */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-foreground font-medium mb-3">{t('yetkili_kisi')}</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('first_name')}</label>
-                                                <input type="text" value={editForm.contactFirstName} onChange={(e) => setEditForm({ ...editForm, contactFirstName: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
-                                            </div>
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('last_name')}</label>
-                                                <input type="text" value={editForm.contactLastName} onChange={(e) => setEditForm({ ...editForm, contactLastName: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
-                                            </div>
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('ulke_kodu')}</label>
-                                                <select value={editForm.phoneCountryCode} onChange={(e) => setEditForm({ ...editForm, phoneCountryCode: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600">
-                                                    <option value="+49">🇩🇪 +49 (Almanya)</option>
-                                                    <option value="+90">{t('90_turkiye')}</option>
-                                                    <option value="+31">🇳🇱 +31 (Hollanda)</option>
-                                                    <option value="+32">{t('32_belcika')}</option>
-                                                    <option value="+33">🇫🇷 +33 (Fransa)</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('telefon_numarasi')}</label>
-                                                <input type="tel" value={editForm.contactPhone} onChange={(e) => setEditForm({ ...editForm, contactPhone: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                                    placeholder={t('orn_17612345678')} />
-                                            </div>
-                                        </div>
+                                        <h4 className="text-foreground font-medium mb-3">🏷️ Sponsor / Marka Etiketi</h4>
+                                        <select
+                                            value={editForm.sponsor}
+                                            onChange={(e) => setEditForm({ ...editForm, sponsor: e.target.value as any })}
+                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 outline-none"
+                                        >
+                                            <option value="none">Yok</option>
+                                            <option value="tuna">🐟 TUNA</option>
+                                            <option value="akdeniz_toros">🏔️ Akdeniz Toros</option>
+                                        </select>
                                     </div>
 
                                     {/* Kurumsal Ayarlar (Pfand & KDV) */}
@@ -1111,108 +1098,6 @@ export default function KermesDetailPage() {
                                         </div>
                                     </div>
 
-                                    {/* Nakliyat & Kurye */}
-                                    <div className="pt-4 border-t border-border">
-                                        <h4 className="text-foreground font-medium mb-3">{t('hizmet_secenekleri')}</h4>
-                                        <div className="bg-card p-4 rounded-lg border border-gray-600">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <span className="text-foreground font-medium">{t('eve_teslimat_kurye')}</span>
-                                                <label className="relative inline-flex items-center cursor-pointer">
-                                                    <input type="checkbox" checked={editForm.hasDelivery} onChange={(e) => setEditForm({ ...editForm, hasDelivery: e.target.checked })} className="sr-only peer" />
-                                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
-                                                </label>
-                                            </div>
-                                            {editForm.hasDelivery && (
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <div>
-                                                        <label className="text-muted-foreground text-xs block mb-1">{t('teslimat_ucreti')}</label>
-                                                        <input type="number" step="0.50" value={editForm.deliveryFee} onChange={(e) => setEditForm({ ...editForm, deliveryFee: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-muted-foreground text-xs block mb-1">{t('min_siparis_tutari')}</label>
-                                                        <input type="number" step="1.00" value={editForm.minOrderAmount} onChange={(e) => setEditForm({ ...editForm, minOrderAmount: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-muted-foreground text-xs block mb-1">{t('ucretsiz_teslimat_limiti')}</label>
-                                                        <input type="number" step="5.00" value={editForm.minCartForFreeDelivery} onChange={(e) => setEditForm({ ...editForm, minCartForFreeDelivery: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Park İmkanları */}
-                                    <div className="pt-4 border-t border-border">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h4 className="text-foreground font-medium">{t('park_i_mkanlari')}</h4>
-                                            <button type="button" onClick={() => setEditForm({ ...editForm, parkingLocations: [...editForm.parkingLocations, { street: '', city: '', postalCode: '', country: '', note: '', images: [] }] })}
-                                                className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-500">
-                                                {t('park_alani_ekle')}
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            {editForm.parkingLocations.map((loc, idx) => (
-                                                <div key={idx} className="bg-card p-3 rounded-lg border border-gray-600 relative">
-                                                    <button type="button" onClick={() => {
-                                                        const updated = [...editForm.parkingLocations];
-                                                        updated.splice(idx, 1);
-                                                        setEditForm({ ...editForm, parkingLocations: updated });
-                                                    }} className="absolute top-2 right-2 text-red-800 dark:text-red-400 hover:text-red-300 text-xs">{t('sil')}</button>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
-                                                        <div className="md:col-span-2">
-                                                            <label className="text-muted-foreground text-xs block mb-1">📍 Park Yeri Adresi / İsim <span className="text-blue-800 dark:text-blue-400">{t('google_ile_ara')}</span></label>
-                                                            <PlacesAutocomplete
-                                                                value={loc.street || ''}
-                                                                onChange={(value) => {
-                                                                    const updated = [...editForm.parkingLocations];
-                                                                    updated[idx].street = value;
-                                                                    setEditForm({ ...editForm, parkingLocations: updated });
-                                                                }}
-                                                                onPlaceSelect={(place) => {
-                                                                    const updated = [...editForm.parkingLocations];
-                                                                    updated[idx] = {
-                                                                        ...updated[idx],
-                                                                        street: place.street,
-                                                                        city: place.city,
-                                                                        postalCode: place.postalCode,
-                                                                        country: place.country
-                                                                    };
-                                                                    setEditForm({ ...editForm, parkingLocations: updated });
-                                                                }}
-                                                                placeholder={t('orn_cami_otoparki_veya_sokak_adi')}
-                                                                className="text-sm"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-muted-foreground text-xs block mb-1">{t('not_aciklama')}</label>
-                                                            <input type="text" value={loc.note} onChange={(e) => {
-                                                                const updated = [...editForm.parkingLocations];
-                                                                updated[idx].note = e.target.value;
-                                                                setEditForm({ ...editForm, parkingLocations: updated });
-                                                            }} className="w-full px-2 py-1 bg-gray-700 text-white rounded border border-gray-600 text-sm" placeholder={t('orn_50_arac_kapasiteli_ucretsiz')} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            {editForm.parkingLocations.length === 0 && (
-                                                <div className="text-gray-500 text-sm italic text-center py-4 bg-card/50 rounded-lg">
-                                                    {t('henuz_park_alani_eklenmemis')}
-                                                </div>
-                                            )}
-
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('genel_park_notu_tum_alanlar_icin')}</label>
-                                                <textarea value={editForm.generalParkingNote} onChange={(e) => setEditForm({ ...editForm, generalParkingNote: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm" rows={2} placeholder={t('suruculer_icin_genel_uyarilar')} />
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -1254,23 +1139,6 @@ export default function KermesDetailPage() {
                                         )}
                                     </div>
 
-                                    {/* Yetkili Kişi */}
-                                    {(kermes.contactFirstName || kermes.contactName) && (
-                                        <div className="pt-4 border-t border-border">
-                                            <span className="text-gray-500 text-sm block mb-2">{t('yetkili_kisi')}</span>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <div className="text-foreground">
-                                                    {kermes.contactFirstName ? `${kermes.contactFirstName} ${kermes.contactLastName}` : kermes.contactName}
-                                                </div>
-                                                {kermes.contactPhone && (
-                                                    <div className="text-muted-foreground">
-                                                        {kermes.phoneCountryCode} {kermes.contactPhone}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
                                     {/* Kurumsal Bilgiler */}
                                     {(kermes.hasPfandSystem || kermes.showKdv) && (
                                         <div className="pt-4 border-t border-border">
@@ -1286,34 +1154,6 @@ export default function KermesDetailPage() {
                                                     <div className="bg-card p-2 rounded border border-gray-600">
                                                         <span className="text-muted-foreground block text-xs">KDV ({kermes.kdvRate}%)</span>
                                                         <span className="text-blue-800 dark:text-blue-400 font-medium">{kermes.pricesIncludeKdv ? 'Dahil' : t('haric')}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Lojistik & Park */}
-                                    {(kermes.hasDelivery || (kermes.parkingLocations && kermes.parkingLocations.length > 0)) && (
-                                        <div className="pt-4 border-t border-border">
-                                            <h4 className="text-gray-500 text-sm font-medium mb-2">{t('lojistik_ulasim')}</h4>
-                                            <div className="space-y-3">
-                                                {kermes.hasDelivery && (
-                                                    <div className="flex items-center gap-2 text-sm text-amber-300 bg-card p-2 rounded border border-gray-600">
-                                                        <span>{t('eve_teslimat_var')}</span>
-                                                        <span className="text-xs text-muted-foreground">({kermes.deliveryFee}{t('min_siparis')} {kermes.minOrderAmount}€)</span>
-                                                    </div>
-                                                )}
-                                                {kermes.parkingLocations && kermes.parkingLocations.length > 0 && (
-                                                    <div>
-                                                        <span className="text-muted-foreground text-xs block mb-1">{t('park_alanlari')}{kermes.parkingLocations.length})</span>
-                                                        <div className="space-y-2">
-                                                            {kermes.parkingLocations.map((loc, i) => (
-                                                                <div key={i} className="text-xs text-foreground bg-card p-2 rounded border border-gray-600">
-                                                                    <div className="font-medium text-foreground">{loc.street}</div>
-                                                                    <div className="text-gray-500">{loc.note} {loc.city && `(${loc.city})`}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

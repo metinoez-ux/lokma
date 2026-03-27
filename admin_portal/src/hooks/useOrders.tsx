@@ -92,22 +92,40 @@ function mapDocToOrder(docId: string, d: any): Order {
 // Normalizes active reservations into the Order interface
 // ============================================================
 
-export function mapReservationToOrder(docId: string, d: any): Order {
+export function mapReservationToOrder(docId: string, d: any, businessIdFallback?: string): Order {
   // Map tabStatus to standard order status for Kanban rendering
   let status = 'pending';
   // Always prioritize cancelled/rejected states so they don't get stuck in pending
   if (d.status === 'cancelled' || d.status === 'rejected') status = 'cancelled';
-  // If seated, we want kitchen to see it as preparing/ready to serve
-  else if (d.tabStatus === 'seated') status = 'preparing'; 
   else if (d.tabStatus === 'closed') status = 'completed';
-  else if (d.tabStatus === 'pre_ordered') status = 'pending';
+  else if (d.tabStatus === 'seated') {
+      // Allow independent food order tracking (preparing -> ready -> served) while customer is seated
+      if (['preparing', 'ready', 'served', 'delivered', 'completed'].includes(d.orderStatus)) {
+          status = d.orderStatus;
+      } else if (['preparing', 'ready', 'served', 'delivered', 'completed'].includes(d.status)) {
+          // Fallback honoring the legacy broken behavior so old ready/served orders don't revert
+          status = d.status;
+      } else {
+          status = 'preparing';
+      }
+  }
+  else if (d.tabStatus === 'pre_ordered') {
+      // Allow independent food order tracking (preparing -> ready -> served) early before seated
+      if (['preparing', 'ready', 'served', 'delivered', 'completed'].includes(d.orderStatus)) {
+          status = d.orderStatus;
+      } else if (d.status === 'confirmed') {
+          status = 'accepted';
+      } else {
+          status = 'pending';
+      }
+  }
   else if (d.status === 'confirmed') status = 'accepted';
   else status = d.status || 'pending';
 
   return {
     id: docId,
     orderNumber: `R-${docId.slice(0, 5).toUpperCase()}`,
-    businessId: d.businessId || '',
+    businessId: d.businessId || businessIdFallback || '',
     businessName: d.businessName || '',
     customerId: d.userId || '',
     customerName: d.userName || '',
@@ -286,25 +304,37 @@ export function OrdersProvider({
     });
 
     // 2. Continuous Tab Reservations Stream
-    // NOTE: orderBy(createdAt) requires a COLLECTION_GROUP index.
-    // We only use it when businessId is available (composite index [businessId, createdAt] exists).
-    // Without businessId, we skip orderBy and sort client-side to avoid silent failures.
     const resConstraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
     ];
+    let qReservations;
     if (fixedBusinessId) {
-      resConstraints.unshift(where('businessId', '==', fixedBusinessId));
       resConstraints.push(orderBy('createdAt', 'desc'));
+      qReservations = query(collection(db, 'businesses', fixedBusinessId, 'reservations'), ...resConstraints);
+    } else {
+      qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
     }
-    const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
     const unsubReservations = onSnapshot(qReservations, (snapshot) => {
       // Include pre-order/tab reservations AND plain pending/confirmed reservations
       const relevantDocs = snapshot.docs.filter(d => {
         const data = d.data();
-        if (data.status === 'cancelled' || data.status === 'rejected') return true; // Keep in history
-        if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
-        if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed')) return true;
+        
+        // Has food items attached (either pending pre-order or active tab)
+        const hasFoodItems = (data.preOrderItems && data.preOrderItems.length > 0) || 
+                             (data.tabItems && data.tabItems.length > 0) ||
+                             data.isPreOrder === true;
+                             
+        // If it's a cancelled/rejected pre-order, keep it in history for accounting
+        if ((data.status === 'cancelled' || data.status === 'rejected') && data.type === 'dine_in_preorder') return true; 
+        
+        // If it specifically has the pre_ordered tab status, or is seated/closed tab
+        if (data.tabStatus === 'pre_ordered' || data.tabStatus === 'pre_paid' || data.tabStatus === 'seated' || data.tabStatus === 'closed') return true;
+        
+        // If it's just a raw plain reservation ('pending'/'confirmed') BUT it has food items attached, show it.
+        // Otherwise, completely hide plain table reservations from the Kitchen and Orders workflow!
+        if (!data.tabStatus && (data.status === 'pending' || data.status === 'confirmed') && hasFoodItems) return true;
+        
         return false;
       });
 
@@ -350,7 +380,7 @@ export function OrdersProvider({
     preparing: filteredOrders.filter(o => o.status === 'preparing').length,
     ready: filteredOrders.filter(o => o.status === 'ready').length,
     onTheWay: filteredOrders.filter(o => o.status === 'onTheWay').length,
-    completed: filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length,
+    completed: filteredOrders.filter(o => ['delivered', 'served', 'completed'].includes(o.status)).length,
     cancelled: filteredOrders.filter(o => o.status === 'cancelled').length,
     revenue: filteredOrders
       .filter(o => o.status !== 'cancelled')
@@ -445,16 +475,16 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
     });
 
     // 2. Reservations
-    // NOTE: orderBy(createdAt) on collectionGroup requires COLLECTION_GROUP index.
-    // Only use it when businessId is present (composite [businessId, createdAt] index exists).
     const resConstraints: any[] = [
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
     ];
+    let qReservations;
     if (businessId) {
-      resConstraints.unshift(where('businessId', '==', businessId));
       resConstraints.push(orderBy('createdAt', 'desc'));
+      qReservations = query(collection(db, 'businesses', businessId, 'reservations'), ...resConstraints);
+    } else {
+      qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
     }
-    const qReservations = query(collectionGroup(db, 'reservations'), ...resConstraints);
 
     const unsubReservations = onSnapshot(qReservations, (snapshot) => {
       // Include pre-order/tab reservations AND plain pending/confirmed reservations
@@ -502,7 +532,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
     preparing: filteredOrders.filter(o => o.status === 'preparing').length,
     ready: filteredOrders.filter(o => o.status === 'ready').length,
     onTheWay: filteredOrders.filter(o => o.status === 'onTheWay').length,
-    completed: filteredOrders.filter(o => ['delivered', 'served'].includes(o.status)).length,
+    completed: filteredOrders.filter(o => ['delivered', 'served', 'completed'].includes(o.status)).length,
     cancelled: filteredOrders.filter(o => o.status === 'cancelled').length,
     revenue: filteredOrders
       .filter(o => o.status !== 'cancelled')

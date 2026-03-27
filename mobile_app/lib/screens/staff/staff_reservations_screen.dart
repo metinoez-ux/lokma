@@ -384,6 +384,43 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
   Future<void> _updateStatus(String reservationId, String newStatus) async {
     if (_businessId == null) return;
 
+    // For 'seated' action -> update tabStatus to seated
+    if (newStatus == 'seated') {
+      try {
+        await _db
+            .collection('businesses')
+            .doc(_businessId)
+            .collection('reservations')
+            .doc(reservationId)
+            .update({
+          'tabStatus': 'seated',
+          'seatedAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        if (mounted) {
+          HapticFeedback.mediumImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Müşteri masaya oturdu olarak işaretlendi'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('[StaffReservations] Error marking seated: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr('common.error_occurred_try_again')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
     // For confirmation → show card number selection first
     if (newStatus == 'confirmed') {
       final cardNumbers = await _showCardSelectionModal();
@@ -734,6 +771,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
 
   Widget _buildReservationCard(String id, Map<String, dynamic> data, bool isDark) {
     final status = data['status'] ?? 'pending';
+    final tabStatus = data['tabStatus'];
     final customerName = data['customerName'] ?? 'staff.guest'.tr();
     final customerPhone = data['customerPhone'] as String?;
     final partySize = data['partySize'] ?? 1;
@@ -780,7 +818,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white54 : Colors.grey.shade600;
-    final borderColor = status == 'pending'
+    final borderColor = (status == 'pending' || status == 'pre_ordered')
         ? (isDark ? const Color(0xFFFF9500).withValues(alpha: 0.4) : const Color(0xFFFF9500).withValues(alpha: 0.3))
         : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade200);
 
@@ -869,7 +907,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
             ],
 
             // Action buttons — only for actionable states
-            if (status == 'pending') ...[
+            if (status == 'pending' || status == 'pre_ordered') ...[
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -909,7 +947,41 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
 
             // Cancel — subtle text button for confirmed
             if (status == 'confirmed') ...[
-              const SizedBox(height: 10),
+              if (tabStatus != 'seated') ...[
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 40,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _updateStatus(id, 'seated'),
+                          icon: const Icon(Icons.chair_alt, size: 18),
+                          label: const Text('Müşteri Geldi (Masaya Oturt)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5856D6), // Deep purple / Indigo for Action
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ] else if (tabStatus == 'seated') ...[
+                const SizedBox(height: 12),
+                const Center(
+                   child: Text(
+                     '✅ Müşteri Masada', 
+                     style: TextStyle(color: Color(0xFF34C759), fontWeight: FontWeight.w600, fontSize: 13)
+                   )
+                ),
+                const SizedBox(height: 4),
+              ],
+              
+              // Always show cancel
               Center(
                 child: TextButton(
                   onPressed: () => _updateStatus(id, 'cancelled'),

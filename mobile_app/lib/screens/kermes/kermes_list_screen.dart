@@ -357,6 +357,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             final event = KermesEvent(
               id: doc.id,
               city: city,
+              postalCode: data['postalCode']?.toString() ?? '',
               country: country,
               state: data['state'],
               title: data['name'] ?? data['title'] ?? 'Kermes',
@@ -689,7 +690,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Sized                          // TUNA Sertifika Filtresi
+                          const SizedBox(height: 16),
+                          // TUNA Sertifika Filtresi
                           GestureDetector(
                             onTap: () {
                               HapticFeedback.lightImpact();
@@ -1223,7 +1225,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                   child: Text(
-                    '${_filteredEvents.length} kermes bulundu',
+                    'kermes.events_found_count'.tr(args: [_filteredEvents.length.toString()]),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -1250,7 +1252,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                               const SizedBox(height: 16),
                               Text(
-                                'Kermes bulunamadi',
+                                'kermes.no_events_found'.tr(),
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                                   fontSize: 16,
@@ -1259,7 +1261,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               if (_searchQuery.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  '"${_searchQuery}" icin sonuc yok',
+                                  'marketplace.no_results_for_query'.tr(args: [_searchQuery]),
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                                     fontSize: 13,

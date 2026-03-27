@@ -158,8 +158,7 @@ const { admin } = useAdmin();
 
         // 2. Listen for reservation check-ins (tabStatus === 'seated')
         const qTabs = query(
-            collectionGroup(db, 'reservations'),
-            where('businessId', '==', businessId),
+            collection(db, 'businesses', businessId, 'reservations'),
             where('tabStatus', '==', 'seated')
         );
 

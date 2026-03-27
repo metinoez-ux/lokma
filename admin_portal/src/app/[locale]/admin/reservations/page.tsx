@@ -12,6 +12,14 @@ import ReservationCapacityConfig from '@/components/ReservationCapacityConfig';
 const reservationStatuses = {
     pending: { label: 'Beklemede', color: 'yellow', icon: '⏳' },
     confirmed: { label: 'Onaylandı', color: 'green', icon: '✅' },
+    pre_ordered: { label: 'Ön Sipariş', color: 'purple', icon: '📝' },
+    seated: { label: 'Masa Açıldı', color: 'blue', icon: '🍽️' },
+    preparing: { label: 'Hazırlanıyor', color: 'orange', icon: '🍳' },
+    ready: { label: 'Hazır', color: 'cyan', icon: '📦' },
+    served: { label: 'Servis Edildi', color: 'teal', icon: '🍽️' },
+    closed: { label: 'Tamamlanmış Oturum', color: 'gray', icon: '🏁' },
+    completed: { label: 'Tamamlandı', color: 'gray', icon: '🏁' },
+    delivered: { label: 'Servis Edildi', color: 'teal', icon: '🍽️' },
     rejected: { label: 'Reddedildi', color: 'red', icon: '❌' },
     cancelled: { label: 'İptal', color: 'gray', icon: '🚫' },
 } as const;
@@ -291,7 +299,7 @@ export default function ReservationsPage() {
                 updateData.tableCardAssignedAt = deleteField();
             }
             await updateDoc(resRef, updateData);
-            showToast(newStatus === 'rejected' ? 'Rezervasyon reddedildi ❌' : t('rezervasyon_iptal_edildi'), 'success');
+            showToast(newStatus === 'confirmed' ? 'Rezervasyon onaylandı ✅' : (newStatus === 'rejected' ? 'Rezervasyon reddedildi ❌' : t('rezervasyon_iptal_edildi')), 'success');
             if (newStatus === 'rejected') setSelectedReservation(null);
         } catch (error) {
             showToast(t('durum_guncellenirken_hata_olustu'), 'error');
@@ -734,13 +742,13 @@ export default function ReservationsPage() {
                                     <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
                                         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Aksiyonlar</h3>
                                         <div className="flex flex-col gap-3">
-                                            {selectedReservation.status === 'pending' && (
+                                            {(selectedReservation.status === 'pending' || selectedReservation.status === 'pre_ordered') && (
                                                 <button onClick={() => handleStatusChange(selectedReservation, 'confirmed')} className="w-full py-4 text-center rounded-xl font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/20 transition-all active:scale-[0.98]">
                                                     ✅ Onayla (Kabul Et)
                                                 </button>
                                             )}
                                             
-                                            {selectedReservation.status === 'pending' && (
+                                            {(selectedReservation.status === 'pending' || selectedReservation.status === 'pre_ordered') && (
                                                 <button onClick={() => { setShowRejectModal({ reservation: selectedReservation }); setRejectReason(''); setRejectNote(''); }} className="w-full py-3 text-center rounded-xl font-bold bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-900/50 transition-all">
                                                     ❌ Reddet
                                                 </button>
@@ -785,7 +793,7 @@ export default function ReservationsPage() {
                                             </div>
                                         </div>
 
-                                        {(selectedReservation.status === 'pending' || selectedReservation.status === 'confirmed') ? (
+                                        {(selectedReservation.status === 'pending' || selectedReservation.status === 'pre_ordered' || selectedReservation.status === 'confirmed') ? (
                                             cardModalLoading ? (
                                                 <div className="h-64 flex flex-col items-center justify-center">
                                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-4"></div>

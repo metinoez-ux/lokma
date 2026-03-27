@@ -746,10 +746,12 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             }
             else {
                 // Check if dine-in
-                const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
-                if (isDineInReady && after.tableNumber != null) {
+                const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.orderType === "dine_in_preorder" || after.tableNumber != null;
+                if (isDineInReady) {
+                    // For pre-orders without a table assigned yet, show generic "Dine-In" instead of "Table null"
+                    const tableLabel = after.tableNumber ? `${trans.table || "Tisch"} ${after.tableNumber}` : `${trans.orderTypeDineIn || "Vor-Ort"}`;
                     title = `${trans.orderReadyDineInTitle}${orderTag}`;
-                    body = `${orderNumber} - ${trans.table || "Tisch"} ${after.tableNumber}: ${trans.orderReadyDineInBody}`;
+                    body = `${orderNumber} - ${tableLabel}: ${trans.orderReadyDineInBody}`;
                 }
                 else {
                     // Pickup order: customer should come pick it up
@@ -844,8 +846,8 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     console.error("Error notifying drivers:", staffErr);
                 }
             }
-            // If dine-in (table) order, notify assigned waiters
-            const isDineIn = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+            // If dine-in (table or pre-order) order, notify assigned waiters
+            const isDineIn = after.orderType === "dine-in" || after.orderType === "masa" || after.orderType === "dine_in_preorder" || after.tableNumber != null;
             console.log(`[Waiter Debug] isDineIn=${isDineIn}, orderType=${after.orderType}, tableNumber=${after.tableNumber}`);
             if (isDineIn && after.tableNumber != null) {
                 const butcherId = after.butcherId || after.businessId;
@@ -916,9 +918,9 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             break;
         case "served": {
             // Dine-in order served at the table
-            const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+            const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.orderType === "dine_in_preorder" || after.tableNumber != null;
             const servedByName = after.servedByName || "";
-            if (isDineInServed && after.tableNumber != null) {
+            if (isDineInServed) {
                 title = `${trans.orderServedTitle || trans.orderDeliveredTitle}${orderTag}`;
                 body = `${orderNumber} - ${trans.orderServedBody || trans.orderDeliveredBody}`;
             }
@@ -3128,7 +3130,7 @@ exports.cleanupTestData = (0, https_1.onRequest)({ secrets: [], cors: true, time
             console.log(`[Cleanup] Cleared FCM tokens from ${butcherAdminsSnap.size} butcher_admins`);
         }
         // ── Step 15: Delete reservations ──────────────────────────────
-        const reservationsSnap = await db.collection("reservations").limit(500).get();
+        const reservationsSnap = await db.collectionGroup("reservations").limit(500).get();
         if (!reservationsSnap.empty) {
             const batch = db.batch();
             reservationsSnap.docs.forEach(d => batch.delete(d.ref));
@@ -3137,7 +3139,7 @@ exports.cleanupTestData = (0, https_1.onRequest)({ secrets: [], cors: true, time
             console.log(`[Cleanup] reservations deleted: ${reservationsSnap.size}`);
         }
         // ── Step 16: Delete table_sessions ────────────────────────────
-        const tableSessionsSnap = await db.collection("table_sessions").limit(500).get();
+        const tableSessionsSnap = await db.collectionGroup("table_sessions").limit(500).get();
         if (!tableSessionsSnap.empty) {
             const batch = db.batch();
             tableSessionsSnap.docs.forEach(d => batch.delete(d.ref));

@@ -2894,6 +2894,9 @@
       }
     },
     "Reservations": {
+    "tarih_saat": "Tarih & Saat",
+    "saat": "Saat",
+    "iptal_et": "İptal Et",
       "rezervasyon_reddet": "Reservering afwijzen",
       "rezervasyon_iptal_et": "Reservering annuleren",
       "choose_reject_reason": "Kies afwijzingsreden:",
@@ -6797,4 +6800,4 @@
   "LOKMA": "LOKMA",
   "App Store": "App Store",
   "Google Play": "Google Play"
-}\n
+}

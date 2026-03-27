@@ -5299,6 +5299,9 @@
       "copy_count_title": "Copy count title"
     },
     "Reservations": {
+    "tarih_saat": "Tarih & Saat",
+    "saat": "Saat",
+    "iptal_et": "İptal Et",
       "rezervasyon_reddet": "Rechazar reserva",
       "rezervasyon_iptal_et": "Cancelar reserva",
       "choose_reject_reason": "Elija la razón de rechazo:",
@@ -8291,4 +8294,4 @@
   "LOKMA": "LOKMA",
   "App Store": "App Store",
   "Google Play": "Google Play"
-}\n
+}

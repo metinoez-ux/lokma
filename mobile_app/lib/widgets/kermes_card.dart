@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/currency_utils.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class KermesCard extends StatefulWidget {
   final KermesEvent event;
@@ -115,38 +116,63 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    // 1. Image Logic
-    String? imagePath;
-    bool isNetworkImage = false;
-
+  String? _getImagePath() {
     if (widget.event.headerImage != null && widget.event.headerImage!.isNotEmpty) {
-      imagePath = widget.event.headerImage;
+      return widget.event.headerImage;
     } else if (widget.event.flyers.isNotEmpty) {
-      imagePath = widget.event.flyers.first;
+      return widget.event.flyers.first;
     } else if (widget.event.menu.isNotEmpty && 
                widget.event.menu.any((m) => m.imageUrl != null || m.imageUrls.isNotEmpty)) {
         final item = widget.event.menu.firstWhere((m) => m.imageUrl != null || m.imageUrls.isNotEmpty);
-        imagePath = item.imageUrls.isNotEmpty ? item.imageUrls.first : item.imageUrl;
+        return item.imageUrls.isNotEmpty ? item.imageUrls.first : item.imageUrl;
     }
-    if (imagePath != null && (imagePath.startsWith('http') || imagePath.startsWith('https'))) {
-      isNetworkImage = true;
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    // Theme Colors (Marketplace Standards)
+    final Color cardLight = Colors.white;
+    final Color cardDark = const Color(0xFF1E1E1E); // Refined dark mode card color
+    final Color textDark = const Color(0xFF2D3748);
+    final Color primaryRose = const Color(0xFFE50914);
+
+    final String? imagePath = _getImagePath();
+    final bool isNetworkImage = imagePath != null && imagePath.startsWith('http');
+
+    // Date formatting for "1.4 - 7.4.2026"
+    final DateFormat formatter = DateFormat('d.M.yyyy');
+    final String dateRangeText = '${DateFormat('d.M').format(widget.event.startDate)} - ${formatter.format(widget.event.endDate)}';
+    
+    // Address format logic
+    final parts = <String>[];
+    if (widget.event.city.isNotEmpty) {
+      if (widget.event.postalCode.isNotEmpty) {
+        parts.add('${widget.event.postalCode} ${widget.event.city}');
+      } else {
+        parts.add(widget.event.city);
+      }
     }
+    if (widget.event.state != null && widget.event.state!.isNotEmpty && widget.event.country.toLowerCase() == 'almanya') {
+      parts.add(widget.event.state!);
+    }
+    if (widget.event.country.isNotEmpty) {
+      parts.add(widget.event.country);
+    }
+    final formattedLocation = parts.join(' • ');
 
-    // 2. Date Text
-    final startFormat = DateFormat('d.M').format(widget.event.startDate);
-    final endFormat = DateFormat('d.M.yyyy').format(widget.event.endDate);
-    final dateRangeText = '$startFormat - $endFormat';
-
-    // 3. Status/Countdown
+    // Live/Countdown logic
     final now = DateTime.now();
     final isLive = now.isAfter(widget.event.startDate) && now.isBefore(widget.event.endDate);
     final daysLeft = widget.event.startDate.difference(now).inDays;
     
-    String statusText = '';
+    // WalletBusinessCard standard banner height
+    const double bannerHeight = 32.0;
+    
+    String statusText;
     List<Color> badgeGradient = [Colors.blue, Colors.indigo];
     IconData? badgeIcon = Icons.hourglass_top;
 
@@ -170,316 +196,386 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => KermesMenuScreen(
-              event: widget.event,
-            ),
-          ),
-        );
+        widget.onExpandToggle?.call();
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-        color: isDark ? cardDark : cardLight,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
-          width: 0.5,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // --- TOP SECTION: IMAGE ---
-          Stack(
-            children: [
-              SizedBox(
-                height: 230,
-                width: double.infinity,
-                child: imagePath != null
-                    ? (isNetworkImage
-                        ? CachedNetworkImage(
-                            imageUrl: imagePath,
-                            fit: BoxFit.cover,
-                            memCacheHeight: 600,
-                            maxWidthDiskCache: 800,
-                            fadeInDuration: Duration.zero,
-                            fadeOutDuration: Duration.zero,
-                            useOldImageOnUrlChange: true,
-                            placeholder: (context, url) => Container(color: Colors.grey[200]),
-                            errorWidget: (context, url, error) => Container(
-                              color: Colors.grey[200],
-                              child: const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
-                            ),
-                          )
-                        : Image.asset(imagePath, fit: BoxFit.cover))
-                    : _buildFallbackGradient(),
-              ),
-
-              // Top Left: Date Badge
-              Positioned(
-                top: 12,
-                left: 12,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      color: isDark ? Colors.black.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.9),
-                      child: Text(
-                        dateRangeText,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.grey[800],
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+        child: Stack(
+          children: [
+            // 🗓️ DATE BANNER (Nested Wallet Style)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: bannerHeight,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark 
+                      ? [const Color(0xFF1E3A8A), const Color(0xFF1E40AF)] // Deep Blue gradient
+                      : [const Color(0xFFDBEAFE), const Color(0xFFBFDBFE)], // Light Blue gradient
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
                   ),
                 ),
-              ),
-
-              // Top Right: Favorite Button
-              Positioned(
-                top: 12,
-                right: 12,
-                child: GestureDetector(
-                  onTap: _toggleFavorite,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(50),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        color: Colors.white.withValues(alpha: 0.2),
-                        child: Icon(
-                          _isFavorite ? Icons.favorite : Icons.favorite_outline,
-                          color: _isFavorite ? primaryRose : Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Bottom Right: Countdown Badge
-              Positioned(
-                bottom: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(colors: badgeGradient),
-                    boxShadow: [
-                       BoxShadow(color: badgeGradient.last.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ...[
-                      Icon(badgeIcon, color: Colors.white, size: 14),
-                      const SizedBox(width: 4),
-                    ],
-                      Text(
-                        statusText,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Sponsor Badge (bottom-left, standardized style)
-              if (widget.event.sponsor != KermesSponsor.none)
-                Positioned(
-                  bottom: 12,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: widget.event.sponsor == KermesSponsor.tuna
-                          ? const Color(0xFFA01E22) // TUNA Red
-                          : const Color(0xFFD97706), // Akdeniz Toros Orange
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.verified, color: Colors.white, size: 13),
-                        const SizedBox(width: 4),
-                        Text(
-                          widget.event.sponsor == KermesSponsor.tuna ? 'TUNA' : 'AKDENİZ TOROS',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          // --- CONTENT SECTION ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title Header
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.event.title,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              height: 1.2,
-                              color: isDark ? Colors.white : textDark,
+                    Icon(Icons.calendar_month, size: 14, color: isDark ? Colors.white : const Color(0xFF1E3A8A)),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateRangeText,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                        color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ⬜ MAIN FRONT CARD
+            Container(
+              margin: const EdgeInsets.only(top: bannerHeight),
+              decoration: BoxDecoration(
+                color: isDark ? cardDark : cardLight,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                border: Border(
+                  top: BorderSide.none,
+                  bottom: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+                    width: 0.5,
+                  ),
+                  left: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+                    width: 0.5,
+                  ),
+                  right: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- TOP SECTION: IMAGE ---
+                  Stack(
+                    children: [
+                      SizedBox(
+                        height: 230,
+                        width: double.infinity,
+                        child: imagePath != null
+                            ? (isNetworkImage
+                                ? CachedNetworkImage(
+                                    imageUrl: imagePath,
+                                    fit: BoxFit.cover,
+                                    memCacheHeight: 600,
+                                    maxWidthDiskCache: 800,
+                                    fadeInDuration: Duration.zero,
+                                    fadeOutDuration: Duration.zero,
+                                    useOldImageOnUrlChange: true,
+                                    placeholder: (context, url) => Container(color: Colors.grey[200]),
+                                    errorWidget: (context, url, error) => Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
+                                    ),
+                                  )
+                                : Image.asset(imagePath, fit: BoxFit.cover))
+                            : _buildFallbackGradient(),
+                      ),
+
+                      // Top Right: Favorite Button
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: GestureDetector(
+                          onTap: _toggleFavorite,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                color: Colors.white.withValues(alpha: 0.2),
+                                child: Icon(
+                                  _isFavorite ? Icons.favorite : Icons.favorite_outline,
+                                  color: _isFavorite ? primaryRose : Colors.white,
+                                  size: 24,
+                                ),
+                              ),
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
-                          Row(
+                        ),
+                      ),
+        
+                      // Bottom Right: Countdown Badge
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(colors: badgeGradient),
+                            boxShadow: [
+                              BoxShadow(color: badgeGradient.last.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.flag, size: 16, color: primaryRose),
+                              ...[
+                              Icon(badgeIcon, color: Colors.white, size: 14),
                               const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  '${widget.event.country} • ${widget.event.city}',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.grey[400] : Colors.grey[500],
-                                    fontSize: 13,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                            ],
+                              Text(
+                                statusText,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Tags
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _buildFeatureTags(isDark),
-                ),
-
-                const SizedBox(height: 16),
-                
-                // Divider
-                Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
-                const SizedBox(height: 16),
-
-                // Info Row (Distance + Courier)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (widget.currentPosition != null)
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          final lat = widget.event.latitude;
-                          final lng = widget.event.longitude;
-                          final label = Uri.encodeComponent(widget.event.title);
-                          // Apple Maps with driving directions
-                          final url = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
-                          launchUrl(url, mode: LaunchMode.externalApplication);
-                        },
-                        child: Row(
-                          children: [
-                            _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
-                            const SizedBox(width: 12),
-                            _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
-                          ],
                         ),
-                      )
-                    else 
-                      const SizedBox(),
-
-                    if (widget.event.hasDelivery)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.two_wheeler, size: 16, color: isDark ? Colors.green[400] : const Color(0xFF059669)),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
-                            style: TextStyle(
-                              color: isDark ? Colors.green[400] : const Color(0xFF059669),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                      ),
+        
+                      // Sponsor Badge (bottom-left, standardized style)
+                      if (widget.event.sponsor != KermesSponsor.none)
+                        Positioned(
+                          bottom: 12,
+                          left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: widget.event.sponsor == KermesSponsor.tuna
+                                  ? const Color(0xFFA01E22) // TUNA Red
+                                  : const Color(0xFFD97706), // Akdeniz Toros Orange
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.verified, color: Colors.white, size: 13),
+                                const SizedBox(width: 4),
+                                Text(
+                                  widget.event.sponsor == KermesSponsor.tuna ? 'TUNA' : 'AKDENİZ TOROS',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                  ],
-                ),
+                        ),
+                    ],
+                  ),
+        
+                  // --- BOTTOM SECTION: CONTENT ---
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title Header
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.event.title,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.2,
+                                      color: isDark ? Colors.white : textDark,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.flag, size: 14, color: primaryRose),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          formattedLocation,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                            fontSize: 13,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+        
+                        // EXPANDABLE SECTION
+                        AnimatedCrossFade(
+                          firstChild: const SizedBox(height: 8),
+                          secondChild: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 12),
+                              // Thin & Smaller Feature Chips
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: _buildFeatureTags(isDark),
+                              ),
+                              const SizedBox(height: 14),
+                              
+                              if (widget.event.hasParking) ...[
+                                _buildParkingCard(isDark),
+                                const SizedBox(height: 12),
+                              ],
+                              if (isLive && widget.event.weatherForecast.isNotEmpty) ...[
+                                _buildWeatherPreview(isDark),
+                                const SizedBox(height: 16),
+                              ],
 
-
-
-                // --- SPONSORED PRODUCTS (Reklam Altyapisi) ---
+                              // View Menu & Order CTA Button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryRose,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  onPressed: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (c) => KermesMenuScreen(event: widget.event),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Menüyü Gör ve Sipariş Ver', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                            ],
+                          ),
+                          crossFadeState: widget.isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                          duration: const Duration(milliseconds: 300),
+                        ),
+        
+                        // Thin Full-width Divider
+                        const SizedBox(height: 8),
+                        Divider(color: isDark ? Colors.grey[800] : Colors.grey[200], height: 1),
+                        const SizedBox(height: 12),
+        
+                        // Info Row (Distance + Courier)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (widget.currentPosition != null)
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  final lat = widget.event.latitude;
+                                  final lng = widget.event.longitude;
+                                  final label = Uri.encodeComponent(widget.event.title);
+                                  // Apple Maps with driving directions
+                                  final url = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
+                                  launchUrl(url, mode: LaunchMode.externalApplication);
+                                },
+                                child: Row(
+                                  children: [
+                                    _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
+                                    const SizedBox(width: 12),
+                                    _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
+                                  ],
+                                ),
+                              )
+                            else 
+                              const SizedBox(),
+        
+                            if (widget.event.hasDelivery)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.two_wheeler, size: 16, color: isDark ? Colors.green[400] : const Color(0xFF059669)),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
+                                    style: TextStyle(
+                                      color: isDark ? Colors.green[400] : const Color(0xFF059669),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),                // --- SPONSORED PRODUCTS (Reklam Altyapisi) ---
                 if (widget.event.sponsoredMenuItems.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
                     child: _buildSponsoredProductsSection(isDark),
                   ),
-
               ],
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   // --- Park İmkanları Card (Tappable) ---
   Widget _buildParkingCard(bool isDark) {

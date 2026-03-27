@@ -10,8 +10,9 @@ enum KermesSponsor {
 class KermesEvent {
   final String id;
   final String city;
-  final String country; // Ülke (Almanya, Avusturya, Sırbistan, vb.)
-  final String? state; // Eyalet (Nordrhein-Westfalen, Bayern, vb.)
+  final String postalCode;
+  final String country; // Ülke
+  final String? state; // Eyalet
   final String title;
   final String address;
   final String phoneNumber;
@@ -82,6 +83,7 @@ class KermesEvent {
   KermesEvent({
     required this.id,
     required this.city,
+    this.postalCode = '',
     this.country = 'Almanya', // Varsayılan: Almanya
     this.state, // Eyalet opsiyonel
     required this.title,

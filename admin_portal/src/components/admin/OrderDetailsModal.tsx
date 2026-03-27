@@ -226,7 +226,9 @@ export default function OrderDetailsModal({
                             return (
                                 <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
                                     <span className={isFuture ? 'text-purple-700 dark:text-purple-300 font-medium' : 'text-muted-foreground'}>
-                                        {isFuture ? `🕐 ${t('scheduledPickup')}` : t('pickupTime')}
+                                        {isFuture 
+                                            ? `🕐 ${order.type === 'dine_in_preorder' ? (tRes('tarih_saat') || 'Rezervasyon Zamanı') : t('scheduledPickup')}`
+                                            : (order.type === 'dine_in_preorder' ? (tRes('saat') || 'Saat') : t('pickupTime'))}
                                     </span>
                                     <span className={isFuture ? 'text-purple-900 dark:text-purple-200 font-bold' : 'text-foreground'}>
                                         {d.toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
@@ -500,7 +502,7 @@ export default function OrderDetailsModal({
                                     )}
 
                                     {/* PENDING → confirm or reject */}
-                                    {(rawStatus === 'pending' || rawTabStatus === 'pre_ordered') && (
+                                    {rawStatus === 'pending' && (
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
                                                 disabled={resLoading}
@@ -522,9 +524,26 @@ export default function OrderDetailsModal({
                                         </div>
                                     )}
 
+                                    {/* ALREADY PROCESSED STATES (Disabled indicators) */}
+                                    {rawStatus === 'confirmed' && (
+                                        <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold shadow-inner">
+                                            ✅ Onaylandı
+                                        </div>
+                                    )}
+                                    {rawStatus === 'rejected' && (
+                                        <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold shadow-inner">
+                                            ❌ Reddedildi
+                                        </div>
+                                    )}
+                                    {rawStatus === 'cancelled' && (
+                                        <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold shadow-inner">
+                                            ❌ İptal Edildi
+                                        </div>
+                                    )}
+
                                     {/* CONFIRMED + not seated yet → seated or cancel */}
-                                    {rawStatus === 'confirmed' && !rawTabStatus && (
-                                        <div className="space-y-2">
+                                    {rawStatus === 'confirmed' && (!rawTabStatus || rawTabStatus === 'pre_ordered') && (
+                                        <div className="space-y-2 mt-4">
                                             <button
                                                 disabled={resLoading}
                                                 onClick={() => handleReservationUpdate({ tabStatus: 'seated', status: 'confirmed' })}
@@ -547,7 +566,7 @@ export default function OrderDetailsModal({
 
                                     {/* SEATED → complete */}
                                     {rawTabStatus === 'seated' && (
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 mt-4">
                                             <div className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3 text-center text-purple-700 dark:text-purple-300 font-semibold">
                                                 🪑 Müşteri şu an masada
                                             </div>
@@ -572,9 +591,31 @@ export default function OrderDetailsModal({
                                     )}
 
                                     {/* DONE states */}
-                                    {(rawStatus === 'cancelled' || rawStatus === 'rejected' || rawStatus === 'completed' || rawTabStatus === 'closed') && (
-                                        <div className="bg-gray-100 dark:bg-gray-700/30 rounded-lg p-3 text-center text-muted-foreground text-sm">
-                                            Bu rezervasyon tamamlandı veya iptal edildi.
+                                    {(rawStatus === 'completed' || rawTabStatus === 'closed') && (
+                                        <div className="bg-gray-100 dark:bg-gray-700/30 rounded-lg p-3 text-center text-muted-foreground text-sm mt-4">
+                                            Bu rezervasyon tamamlandı.
+                                        </div>
+                                    )}
+
+                                    {/* --- KITCHEN STATUS INTEGRATION (For Pre-Orders) --- */}
+                                    {order.type === 'dine_in_preorder' && (rawStatus === 'confirmed' || rawStatus === 'pending') && (
+                                        <div className="mt-6 pt-4 border-t border-border">
+                                            <h4 className="text-foreground text-sm font-medium mb-3">🍳 {t('modal.updateStatus')} (Mutfak Durumu)</h4>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {mainStatuses.filter(([k]) => ['preparing', 'ready', 'served', 'completed'].includes(k)).map(([key, value]) => (
+                                                    <button
+                                                        key={key}
+                                                        onClick={() => handleStatusChangeInternal(key as OrderStatus)}
+                                                        disabled={order.status === key}
+                                                        className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${order.status === key
+                                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700'
+                                                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 shadow-sm'
+                                                            }`}
+                                                    >
+                                                        {value.labelKey ? t(value.labelKey) : key}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>

@@ -71,6 +71,7 @@ export default function OrdersPage() {
                 where('status', 'in', ['pending', 'confirmed'])
             );
         } else {
+            if (admin.adminType !== 'super') return; // Prevent unauthorized collectionGroup queries
             qNext = query(
                 collectionGroup(db, 'reservations'),
                 where('status', 'in', ['pending', 'confirmed'])
@@ -912,7 +913,7 @@ export default function OrdersPage() {
     const readyOrders = filteredOrders.filter(o => o.status === 'ready');
     // Note: 'served' orders (legacy dine-in) are included in completedOrders below
     const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
-    const completedOrders = filteredOrders.filter(o => ['delivered', 'served'].includes(o.status));
+    const completedOrders = filteredOrders.filter(o => ['delivered', 'served', 'completed'].includes(o.status));
 
     // Update order status
     // When status is reset backward (pending/preparing/ready), clear courier assignment
@@ -933,18 +934,31 @@ export default function OrdersPage() {
     const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string, unavailableItemsList?: { idx: number; name: string; quantity: number; price: number }[]) => {
         try {
             // Find the order to get info
-            const order = orders.find(o => o.id === orderId);
-            const isReservation = order?.type === 'dine_in_preorder';
+            const order = allPendingOrders.find(o => o.id === orderId);
+            const isReservation = order?.type === 'dine_in_preorder' || order?.type === 'dine_in';
 
             // Statuses that should clear courier assignment when set
             const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
             const shouldClearCourier = unclamedStatuses.includes(newStatus);
 
             const updateData: Record<string, any> = {
-                status: newStatus,
-                [`statusHistory.${newStatus}`]: new Date(),
                 updatedAt: new Date(),
             };
+
+            if (isReservation) {
+                // Ensure independent food tracking (preparing -> ready -> served) without breaking reservation 'confirmed' status
+                updateData.orderStatus = newStatus;
+                updateData[`orderStatusHistory.${newStatus}`] = new Date();
+                
+                // For terminal states, sync fallback 'status' as well for clean UI filtering
+                if (['cancelled', 'completed'].includes(newStatus)) {
+                    updateData.status = newStatus;
+                    updateData[`statusHistory.${newStatus}`] = new Date();
+                }
+            } else {
+                updateData.status = newStatus;
+                updateData[`statusHistory.${newStatus}`] = new Date();
+            }
 
             if (shouldClearCourier) {
                 updateData.courierId = deleteField();

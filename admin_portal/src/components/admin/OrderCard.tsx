@@ -21,6 +21,14 @@ export interface OrderItem {
     notes?: string;
 }
 
+const TYPE_COLOR_CLASSES: Record<string, string> = {
+  green: 'bg-green-100 dark:bg-green-600/30 text-green-700 dark:text-green-400',
+  blue: 'bg-blue-100 dark:bg-blue-600/30 text-blue-700 dark:text-blue-400',
+  amber: 'bg-amber-100 dark:bg-amber-600/30 text-amber-700 dark:text-amber-400',
+  purple: 'bg-purple-100 dark:bg-purple-600/30 text-purple-700 dark:text-purple-400',
+  gray: 'bg-gray-100 dark:bg-gray-600/30 text-gray-700 dark:text-gray-400',
+};
+
 // Order interface is now imported from useOrders.tsx
 export default function OrderCard({
     order,
@@ -82,7 +90,7 @@ export default function OrderCard({
                     #{order.orderNumber || order.id.slice(0, 6).toUpperCase()}
                 </span>
                 <div className="flex items-center gap-1">
-                    <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-100 dark:bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-700 dark:text-${typeInfo?.color || 'gray'}-400 font-medium`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${TYPE_COLOR_CLASSES[typeInfo?.color || 'gray'] || TYPE_COLOR_CLASSES['gray']}`}>
                         {t(typeInfo?.labelKey || 'type_pickup')}
                     </span>
                 </div>
