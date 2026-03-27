@@ -347,32 +347,34 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   }
 
   // Check if business is currently open based on openingHours, deliveryHours, and pickupHours
-  bool _isBusinessOpenNow(Map<String, dynamic> data) {
+  bool _isBusinessOpenNow(Map<String, dynamic> data, {String? mode}) {
     final now = DateTime.now();
     
-    // 1. Check general openingHours first
+    // Segment-priority logic
+    if (mode == 'teslimat') {
+      if (data['deliveryHours'] != null && OpeningHoursHelper(data['deliveryHours']).isOpenAt(now)) return true;
+      if (data['pickupHours'] != null && OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
+      if (data['openingHours'] != null && OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+    } else if (mode == 'gelal') {
+      if (data['pickupHours'] != null && OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
+      if (data['openingHours'] != null && OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+    }
+    
+    // Default fallback if open in any capacity
     final openingHoursData = data['openingHours'];
     if (openingHoursData != null) {
-      final openingHelper = OpeningHoursHelper(openingHoursData);
-      if (openingHelper.isOpenAt(now)) return true;
+      if (OpeningHoursHelper(openingHoursData).isOpenAt(now)) return true;
     }
-    
-    // 2. Fallback: Check deliveryHours (Kurier-Öffnungszeiten)
-    //    These are stored as List<String> arrays like ["Montag: 11:30 - 22:00", ...]
     final deliveryHoursData = data['deliveryHours'];
     if (deliveryHoursData != null) {
-      final deliveryHelper = OpeningHoursHelper(deliveryHoursData);
-      if (deliveryHelper.isOpenAt(now)) return true;
+      if (OpeningHoursHelper(deliveryHoursData).isOpenAt(now)) return true;
     }
-    
-    // 3. Fallback: Check pickupHours (Abhol-Öffnungszeiten)
     final pickupHoursData = data['pickupHours'];
     if (pickupHoursData != null) {
-      final pickupHelper = OpeningHoursHelper(pickupHoursData);
-      if (pickupHelper.isOpenAt(now)) return true;
+      if (OpeningHoursHelper(pickupHoursData).isOpenAt(now)) return true;
     }
     
-    // 4. If no hours data exists at all, default to open (avoid blocking sales)
+    // If no hours data exists at all, default to open (avoid blocking sales)
     if (openingHoursData == null && deliveryHoursData == null && pickupHoursData == null) {
       return true;
     }
@@ -1677,17 +1679,22 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     if (deliveryTodayStart != null) deliveryStartTime = deliveryTodayStart;
     if (pickupTodayStart != null) pickupStartTime = pickupTodayStart;
 
-    // 🆕 First check openingHours — if business is closed per its schedule, mark unavailable
-    if (!_isBusinessOpenNow(data)) {
+    // 🆕 First check segment-specific hours — if business is closed per its schedule, mark unavailable
+    if (!_isBusinessOpenNow(data, mode: mode)) {
       String? nextOpenText;
       
       OpeningHoursHelper? openingHelper;
-      if (data['openingHours'] != null) {
-        openingHelper = OpeningHoursHelper(data['openingHours']);
-      } else if (data['deliveryHours'] != null) {
-        openingHelper = OpeningHoursHelper(data['deliveryHours']);
-      } else if (data['pickupHours'] != null) {
-        openingHelper = OpeningHoursHelper(data['pickupHours']);
+      if (mode == 'teslimat') {
+        if (data['deliveryHours'] != null) openingHelper = OpeningHoursHelper(data['deliveryHours']);
+        else if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        else if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+      } else if (mode == 'gelal') {
+        if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        else if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+      } else {
+        if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+        else if (data['deliveryHours'] != null) openingHelper = OpeningHoursHelper(data['deliveryHours']);
+        else if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
       }
       
       if (openingHelper != null) {

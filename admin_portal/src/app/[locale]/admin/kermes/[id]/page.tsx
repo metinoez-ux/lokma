@@ -779,7 +779,7 @@ export default function KermesDetailPage() {
                 </div>
 
                 {/* Tab Content - Bilgi */}
-                {activeTab === t(t('bilgi')) && (
+                {activeTab === 'bilgi' && (
                     <div className="space-y-6">
                         {/* Main Info Card */}
                         <div className="bg-card rounded-xl p-6">

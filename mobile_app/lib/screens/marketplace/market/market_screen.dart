@@ -367,8 +367,20 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   }
   
   // Check if business is currently open based on openingHours, deliveryHours, pickupHours
-  bool _isBusinessOpenNow(Map<String, dynamic> data) {
+  bool _isBusinessOpenNow(Map<String, dynamic> data, {String? mode}) {
     final now = DateTime.now();
+    
+    // Segment-priority logic
+    if (mode == 'teslimat') {
+      if (data['deliveryHours'] != null && OpeningHoursHelper(data['deliveryHours']).isOpenAt(now)) return true;
+      if (data['pickupHours'] != null && OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
+      if (data['openingHours'] != null && OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+    } else if (mode == 'gelal') {
+      if (data['pickupHours'] != null && OpeningHoursHelper(data['pickupHours']).isOpenAt(now)) return true;
+      if (data['openingHours'] != null && OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
+    }
+    
+    // Default fallback if open in any capacity
     if (data['openingHours'] != null) {
       if (OpeningHoursHelper(data['openingHours']).isOpenAt(now)) return true;
     }
@@ -405,17 +417,22 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final deliveryStartTime = data['deliveryStartTime'] as String?;
     final pickupStartTime = data['pickupStartTime'] as String?;
 
-    // First check openingHours — if business is closed per its schedule, mark unavailable
-    if (!_isBusinessOpenNow(data)) {
+    // First check segment-specific hours — if business is closed per its schedule, mark unavailable
+    if (!_isBusinessOpenNow(data, mode: mode)) {
       String? nextOpenText;
       
       OpeningHoursHelper? openingHelper;
-      if (data['openingHours'] != null) {
-        openingHelper = OpeningHoursHelper(data['openingHours']);
-      } else if (data['deliveryHours'] != null) {
-        openingHelper = OpeningHoursHelper(data['deliveryHours']);
-      } else if (data['pickupHours'] != null) {
-        openingHelper = OpeningHoursHelper(data['pickupHours']);
+      if (mode == 'teslimat') {
+        if (data['deliveryHours'] != null) openingHelper = OpeningHoursHelper(data['deliveryHours']);
+        else if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        else if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+      } else if (mode == 'gelal') {
+        if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
+        else if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+      } else {
+        if (data['openingHours'] != null) openingHelper = OpeningHoursHelper(data['openingHours']);
+        else if (data['deliveryHours'] != null) openingHelper = OpeningHoursHelper(data['deliveryHours']);
+        else if (data['pickupHours'] != null) openingHelper = OpeningHoursHelper(data['pickupHours']);
       }
       
       if (openingHelper != null) {
