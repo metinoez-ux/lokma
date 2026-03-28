@@ -516,13 +516,13 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         }).toList();
       }
     } else if (_maxDistance == 110) {
-      // Eyalet filtresi (State filter)
+      // Eyalet filtresi — state alani bos olan eventler dahil edilir
       if (userState.isNotEmpty) {
-        final stateLower = _normalizeTurkish(userState.toLowerCase());
+        final userStateLower = _normalizeTurkish(userState.toLowerCase());
         events = events.where((event) {
-          if (event.state == null || event.state!.isEmpty) return false;
-          final eventState = _normalizeTurkish(event.state!.toLowerCase());
-          return eventState.contains(stateLower) || stateLower.contains(eventState);
+          // State alani bos ise goster (koordinat/state kaydedilmemis olabilir)
+          if (event.state == null || event.state!.isEmpty) return true;
+          return _statesMatch(userStateLower, _normalizeTurkish(event.state!.toLowerCase()));
         }).toList();
       }
     }
@@ -571,6 +571,23 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       event.latitude,
       event.longitude,
     ) / 1000;
+  }
+
+  /// State adi / kisaltma eslesmesi — alias tablosunu kullanir
+  bool _statesMatch(String userState, String eventState) {
+    if (userState == eventState) return true;
+    if (userState.contains(eventState) || eventState.contains(userState)) return true;
+    for (final entry in stateAliases.entries) {
+      final fullName = _normalizeTurkish(entry.key);
+      final aliases = entry.value.map(_normalizeTurkish).toList();
+      final allNames = [fullName, ...aliases];
+      final userMatchesThis = allNames.any((n) => userState.contains(n) || n.contains(userState));
+      if (userMatchesThis) {
+        final eventMatchesThis = allNames.any((n) => eventState.contains(n) || n.contains(eventState));
+        if (eventMatchesThis) return true;
+      }
+    }
+    return false;
   }
 
   // ============== ACTIVE FILTER COUNT ==============
@@ -1702,49 +1719,32 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Widget _buildDistanceSlider() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    double nearestKermesDistance = 10;
-    if (_currentPosition != null && _kermesEvents.isNotEmpty) {
-      final distances = _kermesEvents.map((e) => _getDistance(e)).toList();
-      distances.sort();
-      nearestKermesDistance = distances.first.clamp(1.0, 100.0);
-    }
-
     if (_maxDistance < 10) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _maxDistance = 120);
       });
     }
 
-    String distanceLabel;
+    // Sag etiket: secili filtre degeri (dinamik)
+    final String distanceLabel;
     if (_maxDistance >= 120) {
-      distanceLabel = 'marketplace.all_country'.tr(); // 'Ülke Geneli' / 'Tümü'
+      distanceLabel = 'Deutschlandweit';
     } else if (_maxDistance >= 110) {
-      distanceLabel = 'marketplace.state_only'.tr(); // 'Eyalet' / 'State'
+      // Bundesland kısaltmasını goster (NRW gibi)
+      final locationAsync = ref.read(userLocationProvider);
+      final userState = locationAsync.value?.state ?? '';
+      final bundeslandShort = _getBundeslandAbbr(userState);
+      distanceLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
     } else {
       distanceLabel = '${_maxDistance.round()} km';
     }
-
-    String nearestLabel = '${nearestKermesDistance.round()} km';
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 6),
       child: Row(
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.near_me, color: lokmaPink, size: 14),
-              const SizedBox(width: 4),
-              Text(
-                nearestLabel,
-                style: const TextStyle(
-                  color: lokmaPink,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+          // Sol: sadece GPS ikonu — kafa karistiran mesafe sayisi kaldirildi
+          Icon(Icons.near_me, color: lokmaPink, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: SliderTheme(
@@ -1774,16 +1774,25 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
+          // Sag: secili filtre degeri
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isDark ? Colors.grey[800] : Colors.grey[100],
+              color: _maxDistance >= 110
+                  ? lokmaPink.withValues(alpha: 0.12)
+                  : (isDark ? Colors.grey[800] : Colors.grey[100]),
               borderRadius: BorderRadius.circular(20),
+              border: _maxDistance >= 110
+                  ? Border.all(color: lokmaPink.withValues(alpha: 0.4), width: 1)
+                  : null,
             ),
             child: Text(
               distanceLabel,
               style: TextStyle(
-                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                color: _maxDistance >= 110
+                    ? lokmaPink
+                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -1792,5 +1801,51 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         ],
       ),
     );
+  }
+
+  /// Bundesland tam adini kısaltmaya cevir ("Nordrhein-Westfalen" -> "NRW")
+  String _getBundeslandAbbr(String fullName) {
+    if (fullName.isEmpty) return '';
+    final norm = _normalizeTurkish(fullName.toLowerCase());
+    const abbrs = {
+      'nordrhein-westfalen': 'NRW',
+      'nordrhein westfalen': 'NRW',
+      'nrw': 'NRW',
+      'bayern': 'BY',
+      'bavaria': 'BY',
+      'berlin': 'BE',
+      'hamburg': 'HH',
+      'bremen': 'HB',
+      'hessen': 'HE',
+      'niedersachsen': 'NI',
+      'lower saxony': 'NI',
+      'sachsen': 'SN',
+      'saxony': 'SN',
+      'sachsen-anhalt': 'ST',
+      'sachsen anhalt': 'ST',
+      'thuringen': 'TH',
+      'thuringia': 'TH',
+      'thüringen': 'TH',
+      'brandenburgo': 'BB',
+      'brandenburg': 'BB',
+      'mecklenburg-vorpommern': 'MV',
+      'mecklenburg vorpommern': 'MV',
+      'rheinland-pfalz': 'RP',
+      'rheinland pfalz': 'RP',
+      'rhineland palatinate': 'RP',
+      'saarland': 'SL',
+      'schleswig-holstein': 'SH',
+      'schleswig holstein': 'SH',
+      'bw': 'BW',
+      'bad wurttemberg': 'BW',
+      'bad württemberg': 'BW',
+      'baden-württemberg': 'BW',
+      'baden württemberg': 'BW',
+    };
+    for (final entry in abbrs.entries) {
+      if (norm.contains(_normalizeTurkish(entry.key))) return entry.value;
+    }
+    // Bilinmiyorsa ilk 4 harf buyuk harf
+    return fullName.length > 4 ? fullName.substring(0, 4).toUpperCase() : fullName.toUpperCase();
   }
 }
