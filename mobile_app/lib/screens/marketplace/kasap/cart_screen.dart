@@ -18,7 +18,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
-import 'package:lokma_app/providers/kermes_cart_provider.dart';
+
 import 'package:lokma_app/providers/auth_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
@@ -1085,7 +1085,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     // Force rebuild on language change
     context.locale;
     final cart = ref.watch(cartProvider);
-    final kermesCart = ref.watch(kermesCartProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
@@ -1134,7 +1133,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 child: _buildCheckoutStepIndicator(0),
               ),
       ),
-      body: _buildCartTabContent(cart, kermesCart),
+      body: _buildCartTabContent(cart),
     );
   }
   
@@ -1242,18 +1241,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
   
   /// Sepet Tab İçeriği
-  Widget _buildCartTabContent(CartState cart, KermesCartState kermesCart) {
+  Widget _buildCartTabContent(CartState cart) {
     if (widget.reservationTabId != null && cart.items.isEmpty) {
       return _buildActiveTabContent(widget.reservationTabId!);
     }
 
-    final bothEmpty = cart.items.isEmpty && kermesCart.isEmpty;
-    
-    if (bothEmpty) {
+    if (cart.items.isEmpty) {
       return _buildEmptyCart();
     }
     
-    return _buildLieferandoCartContent(cart, kermesCart);
+    return _buildLieferandoCartContent(cart);
   }
 
   /// 🍽 Masa Adisyonu (Aktif Adisyon) - Phase 4
@@ -2972,15 +2969,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   // 🍊 LIEFERANDO-STYLE CART LAYOUT
   // ═══════════════════════════════════════════════════════════════════════════
   
-  Widget _buildLieferandoCartContent(CartState cart, KermesCartState kermesCart) {
-    final hasKermes = kermesCart.isNotEmpty;
+  Widget _buildLieferandoCartContent(CartState cart) {
     final hasKasap = cart.items.isNotEmpty;
     
     // Calculate totals
-    final kermesTotal = hasKermes ? kermesCart.totalAmount : 0.0;
     final kasapTotal = hasKasap ? cart.totalAmount : 0.0;
     final deliveryFee = (!_isPickUp && !_isDineIn) ? ((_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50) : 0.0;
-    final grandTotal = kermesTotal + kasapTotal + deliveryFee;
+    final grandTotal = kasapTotal + deliveryFee;
     
     return Stack(
       children: [
@@ -3018,16 +3013,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               
               // No minimum order bar here - integrated into the checkout button at the bottom
               
-              // 📦 Kermes Items (if any)
-              if (hasKermes) ...[
-                _buildLieferandoSectionHeader(kermesCart.eventName ?? 'Kermes'),
-                ...kermesCart.items.map((item) => _buildLieferandoKermesItem(item)),
-                SizedBox(height: 16),
-              ],
-              
               // 🥩 Kasap Items (if any)  
               if (hasKasap) ...[
-                if (hasKermes) const Divider(height: 32),
                 ...cart.items.asMap().entries.map((entry) => _buildLieferandoCartItem(entry.value, entry.key + 1)),
                 // + Urun Ekle button
                 if (cart.butcherId != null && cart.butcherId!.isNotEmpty)
@@ -3173,7 +3160,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               }(),
               
               // 💰 Price Summary
-              _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
+              _buildLieferandoPriceSummary(kasapTotal, grandTotal),
               
               const SizedBox(height: 120),
             ],
@@ -3797,79 +3784,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
-  /// 📦 Lieferando-style Kermes item
-  Widget _buildLieferandoKermesItem(dynamic item) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name + Price on same line
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.menuItem.name,
-                        style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                      style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                // Quantity controls
-                Row(
-                  children: [
-                    // Delete button
-                    GestureDetector(
-                      onTap: () => ref.read(kermesCartProvider.notifier).removeItem(item.menuItem.id),
-                      child: const Icon(Icons.delete_outline, color: Colors.grey, size: 22),
-                    ),
-                    SizedBox(width: 16),
-                    // Quantity
-                    Text(
-                      '${item.quantity}',
-                      style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    // Add button
-                    GestureDetector(
-                      onTap: () => ref.read(kermesCartProvider.notifier).addItem(item.menuItem),
-                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface, size: 22),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
   
   /// 🥩 Cart item — Reference design: Icon | Name + Qty | Price + Delete
   Widget _buildLieferandoCartItem(CartItem item, int positionNumber) {
@@ -5143,7 +5058,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
 
   /// 💰 Price Summary
-  Widget _buildLieferandoPriceSummary(double kermesTotal, double kasapTotal, double grandTotal) {
+  Widget _buildLieferandoPriceSummary(double kasapTotal, double grandTotal) {
     return Column(
       children: [
         SizedBox(height: 8),
@@ -5156,7 +5071,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
             Text(
-              '${(kermesTotal + kasapTotal).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+              '${kasapTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
           ],

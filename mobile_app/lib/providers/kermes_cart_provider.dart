@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/kermes_model.dart';
+import '../models/product_option.dart';
 
 /// Kermes sepet öğesi
 class KermesCartItem {
@@ -9,15 +10,28 @@ class KermesCartItem {
   final int quantity;
   final String eventId;
   final String eventName;
+  final List<SelectedOption> selectedOptions; // Multi-step combo secenekleri
 
   KermesCartItem({
     required this.menuItem,
     required this.quantity,
     required this.eventId,
     required this.eventName,
+    this.selectedOptions = const [],
   });
 
-  double get totalPrice => menuItem.price * quantity;
+  /// Toplam fiyat: urun fiyati + secilen opsiyonlarin fiyat farklari
+  double get totalPrice {
+    final optionModifier = selectedOptions.fold(0.0, (sum, o) => sum + o.priceModifier);
+    return (menuItem.price + optionModifier) * quantity;
+  }
+
+  /// Benzersiz kimlik: isim + secilen opsiyonlar (ayni urunden farkli combo secenekleriyle birden fazla olabilir)
+  String get uniqueKey {
+    if (selectedOptions.isEmpty) return menuItem.name;
+    final optionKeys = selectedOptions.map((o) => '${o.groupId}:${o.optionId}').toList()..sort();
+    return '${menuItem.name}|${optionKeys.join(',')}';
+  }
 
   KermesCartItem copyWith({int? quantity}) {
     return KermesCartItem(
@@ -25,10 +39,11 @@ class KermesCartItem {
       quantity: quantity ?? this.quantity,
       eventId: eventId,
       eventName: eventName,
+      selectedOptions: selectedOptions,
     );
   }
 
-  /// JSON'a dönüştür (persistence için)
+  /// JSON'a donustur (persistence icin)
   Map<String, dynamic> toJson() {
     return {
       'menuItem': {
@@ -36,14 +51,18 @@ class KermesCartItem {
         'description': menuItem.description,
         'price': menuItem.price,
         'imageUrl': menuItem.imageUrl,
+        'category': menuItem.category,
+        'secondaryName': menuItem.secondaryName,
+        'hasPfand': menuItem.hasPfand,
       },
       'quantity': quantity,
       'eventId': eventId,
       'eventName': eventName,
+      'selectedOptions': selectedOptions.map((o) => o.toMap()).toList(),
     };
   }
 
-  /// JSON'dan oluştur
+  /// JSON'dan olustur
   factory KermesCartItem.fromJson(Map<String, dynamic> json) {
     final menuItemJson = json['menuItem'] as Map<String, dynamic>;
     return KermesCartItem(
@@ -52,10 +71,16 @@ class KermesCartItem {
         description: menuItemJson['description'],
         price: (menuItemJson['price'] ?? 0.0).toDouble(),
         imageUrl: menuItemJson['imageUrl'],
+        category: menuItemJson['category'],
+        secondaryName: menuItemJson['secondaryName'],
+        hasPfand: menuItemJson['hasPfand'] ?? false,
       ),
       quantity: json['quantity'] ?? 1,
       eventId: json['eventId'] ?? '',
       eventName: json['eventName'] ?? '',
+      selectedOptions: (json['selectedOptions'] as List<dynamic>?)
+          ?.map((o) => SelectedOption.fromMap(o as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 }
@@ -138,23 +163,22 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     }
   }
 
-  /// Sepete ürün ekle
-  /// Farklı kermes'ten ekleme yapılıyorsa false döner (uyarı gösterilmeli)
-  /// Aynı kermes'ten ekleme yapılıyorsa true döner
-  bool addToCart(KermesMenuItem menuItem, String eventId, String eventName) {
-    // Farklı bir kermes'ten ekleme yapılıyorsa false döndür
-    // UI'da kullanıcıya uyarı gösterilmeli
+  /// Sepete urun ekle
+  /// Farkli kermes'ten ekleme yapiliyorsa false doner (uyari gosterilmeli)
+  /// Ayni kermes'ten ekleme yapiliyorsa true doner
+  bool addToCart(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const []}) {
+    // Farkli bir kermes'ten ekleme yapiliyorsa false dondur
     if (state.eventId != null && state.eventId != eventId) {
-      return false; // Ekleme yapılmadı, çakışma var
+      return false;
     }
 
-    _addItemInternal(menuItem, eventId, eventName);
-    _saveCartToStorage(); // Kalıcı kaydet
-    return true; // Başarıyla eklendi
+    _addItemInternal(menuItem, eventId, eventName, selectedOptions: selectedOptions);
+    _saveCartToStorage();
+    return true;
   }
 
-  /// Sepeti temizle ve yeni kermes'ten ekle (kullanıcı onayladıktan sonra)
-  void clearAndAddFromNewKermes(KermesMenuItem menuItem, String eventId, String eventName) {
+  /// Sepeti temizle ve yeni kermes'ten ekle (kullanici onayladiktan sonra)
+  void clearAndAddFromNewKermes(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const []}) {
     state = KermesCartState(
       eventId: eventId,
       eventName: eventName,
@@ -164,10 +188,11 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
           quantity: 1,
           eventId: eventId,
           eventName: eventName,
+          selectedOptions: selectedOptions,
         ),
       ],
     );
-    _saveCartToStorage(); // Kalıcı kaydet
+    _saveCartToStorage();
   }
 
   /// Farklı bir kermes'ten mi ekleme yapılıyor kontrol et
@@ -178,15 +203,16 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
   /// Mevcut kermes bilgisi
   String? get currentKermesName => state.eventName;
 
-  /// İç ekleme metoduName
-  void _addItemInternal(KermesMenuItem menuItem, String eventId, String eventName) {
-    // Aynı ürün var mı kontrol et (menuItem.name ile eşleştir)
+  /// Ic ekleme metodu
+  void _addItemInternal(KermesMenuItem menuItem, String eventId, String eventName, {List<SelectedOption> selectedOptions = const []}) {
+    // Benzersiz key ile eslestir (combo secenekleri dahil)
+    final newKey = _buildUniqueKey(menuItem.name, selectedOptions);
     final existingIndex = state.items.indexWhere(
-      (item) => item.menuItem.name == menuItem.name,
+      (item) => item.uniqueKey == newKey,
     );
 
     if (existingIndex >= 0) {
-      // Miktarı artır
+      // Miktari artir
       final updatedItems = List<KermesCartItem>.from(state.items);
       final existingItem = updatedItems[existingIndex];
       updatedItems[existingIndex] = existingItem.copyWith(
@@ -198,7 +224,7 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
         items: updatedItems,
       );
     } else {
-      // Yeni ürün ekle
+      // Yeni urun ekle
       state = KermesCartState(
         eventId: state.eventId ?? eventId,
         eventName: state.eventName ?? eventName,
@@ -209,10 +235,18 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
             quantity: 1,
             eventId: eventId,
             eventName: eventName,
+            selectedOptions: selectedOptions,
           ),
         ],
       );
     }
+  }
+
+  /// UniqueKey hesapla (combo menu eslestirmesi icin)
+  String _buildUniqueKey(String name, List<SelectedOption> options) {
+    if (options.isEmpty) return name;
+    final optionKeys = options.map((o) => '${o.groupId}:${o.optionId}').toList()..sort();
+    return '$name|${optionKeys.join(',')}';
   }
 
   /// Sepetten ürün çıkar (miktarı azalt)

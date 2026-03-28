@@ -143,9 +143,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     final String? imagePath = _getImagePath();
     final bool isNetworkImage = imagePath != null && imagePath.startsWith('http');
 
-    // Date formatting for "1.4 - 7.4.2026"
-    final DateFormat formatter = DateFormat('d.M.yyyy');
-    final String dateRangeText = '${DateFormat('d.M').format(widget.event.startDate)} - ${formatter.format(widget.event.endDate)}';
+    // Date formatting for "01.04 - 07.04.2026"
+    final DateFormat formatter = DateFormat('dd.MM.yyyy');
+    final String dateRangeText = '${DateFormat('dd.MM').format(widget.event.startDate)} - ${formatter.format(widget.event.endDate)}';
     
     // Address format logic
     final parts = <String>[];
@@ -169,8 +169,27 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     final isLive = now.isAfter(widget.event.startDate) && now.isBefore(widget.event.endDate);
     final daysLeft = widget.event.startDate.difference(now).inDays;
     
-    // WalletBusinessCard standard banner height
-    const double bannerHeight = 32.0;
+    // Banner top right status logic
+    String bannerRightText = '';
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime startDateLocal = DateTime(widget.event.startDate.year, widget.event.startDate.month, widget.event.startDate.day);
+    final DateTime endDateLocal = DateTime(widget.event.endDate.year, widget.event.endDate.month, widget.event.endDate.day);
+    
+    if (today.isBefore(startDateLocal)) {
+      final int daysUntilStart = startDateLocal.difference(today).inDays;
+      bannerRightText = '$daysUntilStart gün kaldı';
+    } else if (today.isAfter(endDateLocal)) {
+      bannerRightText = 'Sona erdi';
+    } else if (today.isAtSameMomentAs(endDateLocal)) {
+      bannerRightText = 'Son gün';
+    } else {
+      final currentDay = today.difference(startDateLocal).inDays + 1;
+      bannerRightText = '$currentDay. gün';
+    }
+    
+    // Wallet-stack: Blue date card peeks from behind main card
+    const double bannerHeight = 120.0;   // Full blue wallet card height (most hidden behind main card)
+    const double bannerPeekHeight = 30.0; // Visible peek strip
     
     String statusText;
     List<Color> badgeGradient = [Colors.blue, Colors.indigo];
@@ -201,8 +220,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+        margin: const EdgeInsets.only(bottom: 8),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             // 🗓️ DATE BANNER (Nested Wallet Style)
             Positioned(
@@ -214,30 +234,57 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isDark 
-                      ? [const Color(0xFF1E3A8A), const Color(0xFF1E40AF)] // Deep Blue gradient
-                      : [const Color(0xFFDBEAFE), const Color(0xFFBFDBFE)], // Light Blue gradient
+                      ? [const Color(0xFF1E3A8A), const Color(0xFF1E40AF)]
+                      : [const Color(0xFFDBEAFE), const Color(0xFFBFDBFE)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Stack(
                   children: [
-                    Icon(Icons.calendar_month, size: 14, color: isDark ? Colors.white : const Color(0xFF1E3A8A)),
-                    const SizedBox(width: 8),
-                    Text(
-                      dateRangeText,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                        color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.calendar_month, size: 14, color: isDark ? Colors.white : const Color(0xFF1E3A8A)),
+                            const SizedBox(width: 6),
+                            Text(
+                              dateRangeText,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                                color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                    if (bannerRightText.isNotEmpty)
+                      Positioned(
+                        right: 12,
+                        top: 5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            bannerRightText,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -245,7 +292,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
 
             // ⬜ MAIN FRONT CARD
             Container(
-              margin: const EdgeInsets.only(top: bannerHeight),
+              margin: const EdgeInsets.only(top: bannerPeekHeight),
               decoration: BoxDecoration(
                 color: isDark ? cardDark : cardLight,
                 borderRadius: BorderRadius.circular(16),
@@ -493,8 +540,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                   ),
                                   onPressed: () {
                                     HapticFeedback.lightImpact();
-                                    Navigator.push(
-                                      context,
+                                    Navigator.of(context, rootNavigator: true).push(
                                       MaterialPageRoute(
                                         builder: (c) => KermesMenuScreen(event: widget.event),
                                       ),

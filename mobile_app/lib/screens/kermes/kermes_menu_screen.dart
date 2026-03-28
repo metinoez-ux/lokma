@@ -8,12 +8,13 @@ import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
+import 'package:lokma_app/data/kermes_menu_templates.dart';
 import 'dart:math' as math;
 import '../../utils/currency_utils.dart';
 
 const Color lokmaPink = Color(0xFFEA184A);
 
-Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
+Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
 Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
 class KermesMenuScreen extends ConsumerStatefulWidget {
@@ -233,22 +234,27 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   }
 
   String _getCategoryForItem(KermesMenuItem item) {
+    // i18n: categoryData varsa locale'e gore cozumle
+    if (item.categoryData != null) {
+      final locale = context.locale.languageCode;
+      final resolved = resolveCategory(item.categoryData, locale: locale);
+      if (resolved.isNotEmpty) return resolved;
+    }
     if (item.category != null && item.category!.isNotEmpty) {
       return item.category!;
     }
     final name = item.name.toLowerCase();
-    if (name.contains('çay') || name.contains('ayran') || name.contains('kahve') || 
-        name.contains('şıra') || name.contains('limon') || name.contains('salep') ||
-        name.contains('şalgam') || name.contains('su') || name.contains('kola') ||
+    if (name.contains('cay') || name.contains('ayran') || name.contains('kahve') || 
+        name.contains('su') || name.contains('kola') ||
         name.contains('fanta') || name.contains('sprite')) {
-      return 'İçecek';
-    } else if (name.contains('baklava') || name.contains('künefe') || name.contains('lokum') || 
-               name.contains('dondurma') || name.contains('kadayıf') || name.contains('höşmerim') ||
-               name.contains('sütlaç') || name.contains('kazandibi') || name.contains('lokma') ||
+      return 'Icecekler';
+    } else if (name.contains('baklava') || name.contains('kunefe') || name.contains('lokum') || 
+               name.contains('dondurma') || name.contains('kadayif') ||
+               name.contains('sutlac') || name.contains('lokma') ||
                name.contains('tulumba') || name.contains('revani')) {
-      return 'Tatlı';
-    } else if (name.contains('çorba') || name.contains('mercimek') || name.contains('ezogelin')) {
-      return 'Çorba';
+      return 'Tatlilar';
+    } else if (name.contains('corba') || name.contains('mercimek') || name.contains('ezogelin')) {
+      return 'Corba';
     } else {
       return 'Ana Yemek';
     }
@@ -454,6 +460,12 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     // Watch cart state for updates
     ref.watch(kermesCartProvider);
 
+    // Force pill recalculation after every build to fix stale positioning
+    // (e.g. after returning from checkout sheet or product detail modal)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition();
+    });
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = _darkBg(isDark);
     final textPrimary = isDark ? Colors.white : Colors.black87;
@@ -559,7 +571,33 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             ],
           ),
           
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          // HERO IMAGE (kermes flyer/header)
+          SliverToBoxAdapter(
+            child: Builder(
+              builder: (context) {
+                final heroImage = widget.event.headerImage 
+                    ?? (widget.event.flyers.isNotEmpty ? widget.event.flyers.first : null);
+                if (heroImage == null) return const SizedBox.shrink();
+
+                final isAsset = heroImage.startsWith('assets/');
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 200,
+                      child: isAsset
+                          ? Image.asset(heroImage, fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const SizedBox.shrink())
+                          : Image.network(heroImage, fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
 
           // 2. Info Section (Extremely clean & simple)
           SliverToBoxAdapter(
@@ -617,79 +655,130 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-          // 3. Category Tabs (Sticky Header)
+          // 3. Category Tabs (Sticky Header) - Business Detail Screen pattern
           SliverPersistentHeader(
             pinned: true,
             delegate: _StickyTabDelegate(
-              minHeight: 60,
-              maxHeight: 60,
+              minHeight: 52,
+              maxHeight: 52,
               child: Container(
                 color: scaffoldBg,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Container(
-                      height: 59,
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Stack(
-                        children: [
-                          if (_pillInitialized)
-                            AnimatedPositioned(
-                              duration: const Duration(milliseconds: 250),
-                              curve: Curves.easeOutCubic,
-                              left: _pillLeft,
-                              top: 6,
-                              bottom: 6,
-                              width: _pillWidth,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).brightness == Brightness.dark 
-                                      ? lokmaPink.withValues(alpha: 0.25)
-                                      : lokmaPink.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: _chipScrollController,
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
+                        child: Stack(
+                          alignment: Alignment.centerLeft,
+                          children: [
+                            // 1. Sliding pill indicator (behind text)
+                            if (_pillInitialized)
+                              AnimatedPositioned(
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeOutBack,
+                                left: _pillLeft,
+                                top: 0,
+                                bottom: 0,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeOutBack,
+                                  width: _pillWidth,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.white : const Color(0xFF3E3E3F),
+                                    borderRadius: BorderRadius.circular(50),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            key: _chipRowKey,
-                            controller: _chipScrollController,
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Row(
+                            // 2. Chip texts row (on top of pill)
+                            Row(
+                              key: _chipRowKey,
                               children: _categories.map((category) {
-                                // Provide keys per tab iteratively, or fetch if missing
                                 _tabKeys.putIfAbsent(category, () => GlobalKey());
                                 final isSelected = category == _selectedCategory;
-                                
-                                return GestureDetector(
-                                  key: _tabKeys[category],
-                                  onTap: () {
-                                    HapticFeedback.selectionClick();
-                                    _selectCategory(category);
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    child: Center(
-                                      child: Text(
-                                        category,
-                                        style: TextStyle(
-                                          color: isSelected ? lokmaPink : textSecondary,
-                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      _selectCategory(category);
+                                    },
+                                    child: Container(
+                                      key: _tabKeys[category],
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          AnimatedDefaultTextStyle(
+                                            duration: const Duration(milliseconds: 300),
+                                            curve: Curves.easeOutCubic,
+                                            style: TextStyle(
+                                              color: isSelected 
+                                                ? (isDark ? Colors.black : Colors.white) 
+                                                : (isDark ? Colors.white70 : Colors.black54),
+                                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                              fontSize: 14,
+                                            ),
+                                            child: Text(category),
+                                          ),
+                                          // Cart count badge per category (business_detail_screen pattern)
+                                          Builder(builder: (context) {
+                                            final kermesCart = ref.watch(kermesCartProvider);
+                                            final catCartCount = category == 'Alle'
+                                                ? kermesCart.totalItems
+                                                : kermesCart.items
+                                                    .where((ci) => ci.menuItem.category == category)
+                                                    .fold<int>(0, (sum, ci) => sum + ci.quantity);
+                                            if (catCartCount <= 0) return const SizedBox.shrink();
+                                            return Padding(
+                                              padding: const EdgeInsets.only(left: 6),
+                                              child: AnimatedContainer(
+                                                duration: const Duration(milliseconds: 300),
+                                                curve: Curves.easeOutBack,
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  color: isSelected
+                                                      ? (isDark ? Colors.black87 : Colors.white)
+                                                      : Colors.red,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  '$catCartCount',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: isSelected
+                                                        ? (isDark ? Colors.white : Colors.black87)
+                                                        : Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                        ],
                                       ),
                                     ),
                                   ),
                                 );
                               }).toList(),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     const Divider(height: 1, thickness: 1),
@@ -731,19 +820,46 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Category Header
+                        // Category Header (business_detail_screen pattern)
                         Container(
                           width: double.infinity,
                           color: isDark ? const Color(0xFF2C2C2C).withValues(alpha: 0.6) : const Color(0xFFF2EEE9),
                           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-                          child: Text(
-                            category,
-                            style: TextStyle(
-                              color: isDark ? lokmaPink : Colors.black87,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.5,
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  category,
+                                  style: TextStyle(
+                                    color: isDark ? lokmaPink : Colors.black87,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ),
+                              Builder(builder: (context) {
+                                final catCartCount = grouped[category]!.fold<int>(0, (sum, item) => sum + _getCartQuantity(item));
+                                if (catCartCount <= 0) return const SizedBox.shrink();
+                                return Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.white : Colors.black87,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '$catCartCount',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? Colors.black : Colors.white,
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
                           ),
                         ),
                         // Items
@@ -863,107 +979,65 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     final accent = lokmaPink;
     
-    // The ADD button or the increment/decrement pill
-    Widget trailingWidget;
-    if (cartQuantity == 0) {
-      trailingWidget = GestureDetector(
+    // The ADD button or count badge (business_detail_screen pattern)
+    final bool inCart = cartQuantity > 0;
+    
+    // + button with image overlay (36px) or standalone (44px)
+    Widget buildAddButton({required double size}) {
+      return GestureDetector(
         onTap: isAvailable ? () {
           HapticFeedback.mediumImpact();
           _addToCart(item);
         } : null,
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+        child: inCart
+          ? Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white : Colors.black87,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Icon(
-            Icons.add,
-            color: accent,
-            size: 20,
-          ),
-        ),
-      );
-    } else {
-      trailingWidget = Container(
-        height: 34,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-          borderRadius: BorderRadius.circular(17),
-          border: Border.all(
-            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Minus
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                _removeFromCart(item);
-              },
-              child: Container(
-                width: 34,
-                alignment: Alignment.center,
-                child: Icon(
-                  cartQuantity == 1 ? Icons.delete_outline : Icons.remove,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                  size: 18,
-                ),
-              ),
-            ),
-            // Count
-            Container(
-              constraints: const BoxConstraints(minWidth: 20),
               alignment: Alignment.center,
               child: Text(
                 '$cartQuantity',
                 style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 14,
+                  color: isDark ? Colors.black : Colors.white,
+                  fontSize: size == 36 ? 14 : 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-            // Plus
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                _addToCart(item);
-              },
-              child: Container(
-                width: 34,
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.add,
-                  color: accent,
-                  size: 18,
+            )
+          : Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                  width: 1,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: size == 36 ? 0.1 : 0.05),
+                    blurRadius: size == 36 ? 6 : 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.add,
+                color: accent,
+                size: size == 36 ? 20 : 24,
               ),
             ),
-          ],
-        ),
       );
     }
 
@@ -981,6 +1055,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       context,
                       item: item,
                       cartQuantity: cartQuantity,
+                      eventId: widget.event.id,
+                      eventName: widget.event.city,
                       onAdd: () => _addToCart(item),
                       onRemove: () => _removeFromCart(item),
                     );
@@ -1059,7 +1135,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   ),
                   const SizedBox(width: 16),
                   
-                  // Image & Add Button (Right)
+                  // Image & Add Button (Right) - business_detail_screen pattern
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1068,41 +1144,34 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            Hero(
-                              tag: 'product_image_${item.name}',
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  color: isDark ? Colors.white10 : Colors.grey[100],
-                                  child: Image.network(
-                                    item.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Icon(
-                                      _getIconForItem(item.name),
-                                      size: 40,
-                                      color: isDark ? Colors.white24 : Colors.grey[400],
-                                    ),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                color: isDark ? Colors.white10 : Colors.grey[100],
+                                child: Image.network(
+                                  item.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    _getIconForItem(item.name),
+                                    size: 40,
+                                    color: isDark ? Colors.white24 : Colors.grey[400],
                                   ),
                                 ),
                               ),
                             ),
-                            // + / - pill button overlay
+                            // + button overlay: bottom-right corner
                             if (isAvailable)
                               Positioned(
-                                right: cartQuantity > 0 ? -12 : -8,
-                                bottom: -12,
-                                child: trailingWidget,
+                                right: -4,
+                                bottom: -4,
+                                child: buildAddButton(size: 36),
                               ),
                           ],
                         )
                       else if (isAvailable)
-                        // No image standalone button
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0, top: 20.0),
-                          child: trailingWidget,
-                        ),
+                        buildAddButton(size: 44),
                     ],
                   ),
                 ],
@@ -1110,14 +1179,11 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             ),
           ),
         ),
-        // Separator Line
-        Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: Divider(
-            height: 1,
-            thickness: 0.5,
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[200]!,
-          ),
+        // Separator Line (business_detail_screen pattern)
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.2),
         ),
       ],
     );

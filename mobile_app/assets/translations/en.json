@@ -798,7 +798,21 @@
     "tab_everyone": "Everyone",
     "tab_table": "Table",
     "items_short": "items",
-    "invite_more": "Invite more"
+    "invite_more": "Invite more",
+    "guest_welcome_title": "Order Together!",
+    "guest_welcome_subtitle": "No account needed. Jump in and pick your items.",
+    "guest_order_for": "Ordering from",
+    "guest_step_1": "Browse the menu and pick your favorites",
+    "guest_step_2": "Your choices are automatically added to the group",
+    "guest_step_3": "{hostName} will confirm and place the order",
+    "guest_nickname_label": "Your Name (Optional)",
+    "guest_nickname_hint": "e.g. John, Sarah...",
+    "guest_add_items": "Add Items",
+    "guest_waiting_title": "Selection Complete!",
+    "guest_waiting_subtitle": "{hostName} hasn't placed the order yet.\nYou can still change your items.",
+    "guest_waiting_edit_cart": "Edit My Cart",
+    "guest_waiting_your_items": "Your Items",
+    "group_order_of": "Group order by {hostName}"
   },
   "home": {
     "courier_on_the_way": "Courier on the way",

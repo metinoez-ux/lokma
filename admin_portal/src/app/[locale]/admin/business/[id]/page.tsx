@@ -7869,7 +7869,17 @@ export default function BusinessDetailsPage() {
                               type="checkbox" 
                               className="sr-only" 
                               checked={!!formData.groupOrderLinkEnabled}
-                              onChange={(e) => setFormData({ ...formData, groupOrderLinkEnabled: e.target.checked })}
+                              onChange={async (e) => {
+                                const newVal = e.target.checked;
+                                setFormData({ ...formData, groupOrderLinkEnabled: newVal });
+                                // Auto-save to Firestore
+                                try {
+                                  await updateDoc(doc(db, 'businesses', businessId), { groupOrderLinkEnabled: newVal });
+                                  setBusiness(prev => prev ? { ...prev, groupOrderLinkEnabled: newVal } as any : prev);
+                                } catch (err) {
+                                  console.error('Failed to save groupOrderLinkEnabled:', err);
+                                }
+                              }}
                             />
                             <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderLinkEnabled ? 'bg-green-500' : 'bg-muted border border-border text-foreground'}`}></div>
                             <div className={`absolute left-1 top-1 bg-card dark:bg-slate-800 w-4 h-4 rounded-full transition ${formData.groupOrderLinkEnabled ? 'transform translate-x-4' : ''}`}></div>
@@ -7906,7 +7916,17 @@ export default function BusinessDetailsPage() {
                               type="checkbox" 
                               className="sr-only" 
                               checked={!!formData.groupOrderTableEnabled}
-                              onChange={(e) => setFormData({ ...formData, groupOrderTableEnabled: e.target.checked })}
+                              onChange={async (e) => {
+                                const newVal = e.target.checked;
+                                setFormData({ ...formData, groupOrderTableEnabled: newVal });
+                                // Auto-save to Firestore
+                                try {
+                                  await updateDoc(doc(db, 'businesses', businessId), { groupOrderTableEnabled: newVal });
+                                  setBusiness(prev => prev ? { ...prev, groupOrderTableEnabled: newVal } as any : prev);
+                                } catch (err) {
+                                  console.error('Failed to save groupOrderTableEnabled:', err);
+                                }
+                              }}
                             />
                             <div className={`block w-10 h-6 rounded-full transition ${formData.groupOrderTableEnabled ? 'bg-green-500' : 'bg-muted border border-border text-foreground'}`}></div>
                             <div className={`absolute left-1 top-1 bg-card dark:bg-slate-800 w-4 h-4 rounded-full transition ${formData.groupOrderTableEnabled ? 'transform translate-x-4' : ''}`}></div>

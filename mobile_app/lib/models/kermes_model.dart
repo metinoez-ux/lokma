@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'product_option.dart';
 
 // Sponsor enum for kermes events
 enum KermesSponsor {
@@ -152,11 +153,16 @@ class KermesMenuItem {
   final dynamic detailedDescriptionData; // Raw localization map
   final String? imageUrl;  // Legacy single image (backward compatibility)
   final List<String> imageUrls;  // Multiple images (up to 3)
-  final String? category;  // Kategori: 'Yemekler', 'İçecekler', vb.
+  final String? category;  // Kategori fallback (TR)
+  final dynamic categoryData; // Raw localization map {'tr': '...', 'de': '...', 'en': '...'}
   final List<String> allergens;  // Alerjenler: ["Gluten", "Süt", "Fındık"]
   final List<String> ingredients;  // İçerikler/Zutaten: ["Un", "Su", "Tuz"]
-  final bool hasPfand;  // Pfand/Depozito gerektiriyor mu? (içecekler için)
-  final bool isAvailable;  // Stok durumu: true=mevcut, false=tükendi
+  final bool hasPfand;  // Pfand/Depozito gerektiriyor mu? (icecekler icin)
+  final bool isAvailable;  // Stok durumu: true=mevcut, false=tukendi
+  final List<OptionGroup> optionGroups; // Multi-step menu secenekleri (yan urun, icecek vb.)
+
+  /// Bu urun multi-step combo menu mu? (ornegin: Tavuk Sis Menu = ana urun + yan urun + icecek secimi)
+  bool get isComboMenu => optionGroups.isNotEmpty;
 
   KermesMenuItem({
     required this.name,
@@ -170,10 +176,12 @@ class KermesMenuItem {
     this.imageUrl,
     this.imageUrls = const [],
     this.category,
+    this.categoryData,
     this.allergens = const [],
     this.ingredients = const [],
     this.hasPfand = false,
-    this.isAvailable = true,  // Varsayılan: mevcut
+    this.isAvailable = true,
+    this.optionGroups = const [],
   });
   
   /// Tüm resimleri getir (imageUrls varsa onu, yoksa imageUrl'i)
@@ -183,13 +191,14 @@ class KermesMenuItem {
     return [];
   }
   
-  /// Detay gösterilmeli mi? (2. isim, detaylı açıklama, alerjen, içerik veya birden fazla resim varsa)
+  /// Detay gosterilmeli mi? (2. isim, detayli aciklama, alerjen, icerik, birden fazla resim veya combo menu varsa)
   bool get hasDetailInfo => 
     secondaryName != null || 
     detailedDescription != null || 
     allergens.isNotEmpty || 
     ingredients.isNotEmpty ||
-    imageUrls.length > 1;
+    imageUrls.length > 1 ||
+    optionGroups.isNotEmpty;
 
   // Helper factory if you ever create these from JSON
   factory KermesMenuItem.fromJson(Map<String, dynamic> json) {
@@ -204,11 +213,13 @@ class KermesMenuItem {
       detailedDescriptionData: json['detailedDescription'],
       imageUrl: json['imageUrl'] as String?,
       imageUrls: (json['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [],
-      category: json['category'] as String?,
+      category: _extractString(json['category'], isNullable: true),
+      categoryData: json['category'],
       allergens: (json['allergens'] as List<dynamic>?)?.cast<String>() ?? [],
       ingredients: (json['ingredients'] as List<dynamic>?)?.cast<String>() ?? [],
       hasPfand: json['hasPfand'] ?? false,
       isAvailable: json['isAvailable'] ?? true,
+      optionGroups: _parseOptionGroups(json['optionGroups']),
     );
   }
 
@@ -220,6 +231,17 @@ class KermesMenuItem {
       if (data.values.isNotEmpty) return data.values.first.toString();
     }
     return isNullable ? null : '';
+  }
+
+  static List<OptionGroup> _parseOptionGroups(dynamic value) {
+    if (value == null) return [];
+    if (value is Iterable) {
+      return value.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>)).toList();
+    }
+    if (value is Map) {
+      return value.values.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>)).toList();
+    }
+    return [];
   }
 }
 
@@ -415,11 +437,13 @@ final List<KermesEvent> mockKermesEvents = [
     openingTime: '10:00',
     closingTime: '20:00',
     menu: [
-      KermesMenuItem(name: 'Adana Kebap', price: 12.0),
-      KermesMenuItem(name: 'Lahmacun', price: 5.0),
-      KermesMenuItem(name: 'Ayran', price: 2.0),
-      KermesMenuItem(name: 'Baklava (Porsiyon)', price: 6.0),
-      KermesMenuItem(name: 'Çay', price: 1.5),
+      KermesMenuItem(name: 'Tavuk Sis Durum', secondaryName: 'Hahnchenspies in Teigrolle', price: 8.00, category: 'Izgara'),
+      KermesMenuItem(name: 'Tavuk Sis Menu', secondaryName: 'Hahnchenspies-Teller', price: 9.50, category: 'Izgara'),
+      KermesMenuItem(name: 'Adana Durum', secondaryName: 'Adana Kebap in Teigrolle', price: 8.00, category: 'Izgara'),
+      KermesMenuItem(name: 'Adana Menu', secondaryName: 'Adana Kebap-Teller', price: 9.50, category: 'Izgara'),
+      KermesMenuItem(name: 'Lahmacun', secondaryName: 'Turkische Pizza', price: 2.00, category: 'Hamur Isleri'),
+      KermesMenuItem(name: 'Ayran', secondaryName: 'Ayran', price: 1.50, category: 'Icecekler'),
+      KermesMenuItem(name: 'Cay (Kucuk)', secondaryName: 'Schwarzer Tee', price: 0.50, category: 'Icecekler'),
     ],
     parking: [
       KermesParkingInfo(

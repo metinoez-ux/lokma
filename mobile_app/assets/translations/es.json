@@ -798,7 +798,21 @@
     "tab_everyone": "Todos",
     "tab_table": "Mesa",
     "items_short": "articulos",
-    "invite_more": "Invitar mas"
+    "invite_more": "Invitar mas",
+    "guest_welcome_title": "Pide Junto!",
+    "guest_welcome_subtitle": "No necesitas cuenta. Unete y elige tus productos.",
+    "guest_order_for": "Pedido en",
+    "guest_step_1": "Elige tus platos favoritos del menu",
+    "guest_step_2": "Tu seleccion se agrega automaticamente al grupo",
+    "guest_step_3": "{hostName} confirmara y enviara el pedido",
+    "guest_nickname_label": "Tu Nombre (Opcional)",
+    "guest_nickname_hint": "Ej: Carlos, Maria...",
+    "guest_add_items": "Agregar Articulos",
+    "guest_waiting_title": "Seleccion Completada!",
+    "guest_waiting_subtitle": "{hostName} aun no ha enviado el pedido.\nAun puedes cambiar tus articulos.",
+    "guest_waiting_edit_cart": "Editar Mi Carrito",
+    "guest_waiting_your_items": "Tus Articulos",
+    "group_order_of": "Pedido grupal de {hostName}"
   },
   "home": {
     "courier_on_the_way": "Mensajero en camino",

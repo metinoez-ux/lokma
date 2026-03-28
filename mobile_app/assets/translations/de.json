@@ -799,7 +799,21 @@
     "tab_everyone": "Alle",
     "tab_table": "Tisch",
     "items_short": "Artikel",
-    "invite_more": "Weitere einladen"
+    "invite_more": "Weitere einladen",
+    "guest_welcome_title": "Zusammen bestellen!",
+    "guest_welcome_subtitle": "Kein Konto noetig. Einfach mitmachen und Artikel auswaehlen.",
+    "guest_order_for": "Bestellung bei",
+    "guest_step_1": "Waehle deine Lieblingsgerichte aus dem Menu",
+    "guest_step_2": "Deine Auswahl wird automatisch zur Gruppe hinzugefuegt",
+    "guest_step_3": "{hostName} wird die Bestellung bestaetigen und absenden",
+    "guest_nickname_label": "Dein Name (Optional)",
+    "guest_nickname_hint": "z.B. Max, Lisa...",
+    "guest_add_items": "Artikel hinzufuegen",
+    "guest_waiting_title": "Auswahl abgeschlossen!",
+    "guest_waiting_subtitle": "{hostName} hat die Bestellung noch nicht abgeschickt.\nDu kannst deine Artikel noch aendern.",
+    "guest_waiting_edit_cart": "Warenkorb bearbeiten",
+    "guest_waiting_your_items": "Deine Artikel",
+    "group_order_of": "Gruppenbestellung von {hostName}"
   },
   "home": {
     "courier_on_the_way": "Kurier ist unterwegs",

@@ -798,7 +798,21 @@
     "tab_everyone": "Herkes",
     "tab_table": "Masa",
     "items_short": "urun",
-    "invite_more": "Daha fazla davet et"
+    "invite_more": "Daha fazla davet et",
+    "guest_welcome_title": "Hep Birlikte Siparis Ver!",
+    "guest_welcome_subtitle": "Hesap olusturmak zorunlu degil. Hemen katil ve urunlerini sec.",
+    "guest_order_for": "Siparis Verilecek Isletme",
+    "guest_step_1": "Menuden istedigin urunleri sec",
+    "guest_step_2": "Secimlerin otomatik olarak gruba eklenir",
+    "guest_step_3": "{hostName} siparisi onaylayip gonderecek",
+    "guest_nickname_label": "Ismin (Opsiyonel)",
+    "guest_nickname_hint": "Orn: Ali, Ayse...",
+    "guest_add_items": "Urunleri Sec",
+    "guest_waiting_title": "Secimini Tamamladin!",
+    "guest_waiting_subtitle": "{hostName} henuz siparisi gondermedi.\nUrunlerini hala degistirebilirsin.",
+    "guest_waiting_edit_cart": "Sepetimi Duzenle",
+    "guest_waiting_your_items": "Senin Urunlerin",
+    "group_order_of": "{hostName} tarafindan grup siparisi"
   },
   "home": {
     "courier_on_the_way": "Kurye Yolda",

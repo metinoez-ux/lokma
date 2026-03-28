@@ -725,8 +725,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
+        Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             builder: (context) => KermesMenuScreen(event: widget.event),
           ),

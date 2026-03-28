@@ -68,7 +68,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     if (cachedId == null) return null;
     
     try {
-      final doc = await FirebaseFirestore.instance.collection('table_groups').doc(cachedId).get();
+      final doc = await FirebaseFirestore.instance.collection('table_group_sessions').doc(cachedId).get();
       if (!doc.exists) {
         await prefs.remove('table_group_session_id');
         return null;
@@ -268,14 +268,27 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   }
 
   /// Join a group session via shared link (no PIN required)
+  /// Supports anonymous guests -- no LOKMA account needed (Lieferando-style)
   Future<bool> joinViaLink(String sessionId, {String? displayName}) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('LOGIN_REQUIRED');
+    var user = FirebaseAuth.instance.currentUser;
+    
+    // Guest: anonim giris yap (hesap acmadan katilim)
+    if (user == null) {
+      try {
+        final cred = await FirebaseAuth.instance.signInAnonymously();
+        user = cred.user;
+        debugPrint('Guest anonim auth olusturuldu: ${user?.uid}');
+      } catch (e) {
+        debugPrint('Anonim auth basarisiz: $e');
+        throw Exception('AUTH_FAILED');
+      }
+    }
+    if (user == null) throw Exception('AUTH_FAILED');
     
     final userId = user.uid;
     final userName = displayName?.isNotEmpty == true 
         ? displayName! 
-        : (user.displayName ?? user.email?.split('@').first ?? 'Guest');
+        : (user.displayName ?? user.email?.split('@').first ?? 'Misafir');
     
     state = state.copyWith(isLoading: true, error: null);
     

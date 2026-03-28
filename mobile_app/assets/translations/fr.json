@@ -798,7 +798,21 @@
     "tab_everyone": "Tous",
     "tab_table": "Table",
     "items_short": "articles",
-    "invite_more": "Inviter plus"
+    "invite_more": "Inviter plus",
+    "guest_welcome_title": "Commandez Ensemble!",
+    "guest_welcome_subtitle": "Pas besoin de compte. Rejoignez et choisissez vos articles.",
+    "guest_order_for": "Commander chez",
+    "guest_step_1": "Parcourez le menu et choisissez vos plats",
+    "guest_step_2": "Vos choix sont automatiquement ajoutes au groupe",
+    "guest_step_3": "{hostName} confirmera et passera la commande",
+    "guest_nickname_label": "Votre Nom (Facultatif)",
+    "guest_nickname_hint": "Ex: Pierre, Marie...",
+    "guest_add_items": "Ajouter des Articles",
+    "guest_waiting_title": "Selection Terminee!",
+    "guest_waiting_subtitle": "{hostName} n'a pas encore passe la commande.\nVous pouvez encore modifier vos articles.",
+    "guest_waiting_edit_cart": "Modifier Mon Panier",
+    "guest_waiting_your_items": "Vos Articles",
+    "group_order_of": "Commande de groupe par {hostName}"
   },
   "home": {
     "courier_on_the_way": "Coursier en route",

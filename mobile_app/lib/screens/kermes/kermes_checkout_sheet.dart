@@ -6,11 +6,13 @@ import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/models/guest_profile_model.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
+import 'package:lokma_app/providers/group_order_provider.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/services/guest_profile_service.dart';
 import 'package:lokma_app/widgets/kermes/order_qr_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
+import 'package:lokma_app/widgets/kermes/group_order_share_sheet.dart';
 import '../../utils/currency_utils.dart';
 
 /// Unified Checkout Sheet - Tüm sipariş akışı tek bir tam ekran bottom sheet'te
@@ -39,6 +41,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   // Loading state
   bool _isSubmitting = false;
+  bool _isCreatingGroup = false;
+  String? _activeGroupOrderId;
   
   // Bagis/yuvarlama
   double _donationAmount = 0.0;
@@ -54,6 +58,65 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     _phoneController.dispose();
     _tableController.dispose();
     super.dispose();
+  }
+
+  /// Grup siparisi olustur ve paylasim sheet'ini goster
+  Future<void> _createAndShareGroupOrder() async {
+    final hostName = _nameController.text.trim();
+    if (hostName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lutfen isminizi girin'),
+          backgroundColor: Colors.amber,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isCreatingGroup = true);
+    HapticFeedback.mediumImpact();
+
+    try {
+      final orderId = await ref.read(groupOrderProvider.notifier).createGroupOrder(
+        kermesId: widget.event.id,
+        kermesName: widget.event.title,
+        hostName: hostName,
+        expirationMinutes: 30,
+      );
+
+      if (orderId != null && mounted) {
+        setState(() {
+          _isCreatingGroup = false;
+          _activeGroupOrderId = orderId;
+        });
+
+        // Show share sheet
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (ctx) => GroupOrderShareSheet(
+            orderId: orderId,
+            kermesName: widget.event.title,
+            hostName: hostName,
+            expirationMinutes: 30,
+            expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCreatingGroup = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Grup siparisi olusturulamadi: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
   
   /// Kermes aktiflik durumu kontrolleri
@@ -286,7 +349,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   ),
                   child: Icon(
                     _currentStep > 0 ? Icons.arrow_back_ios_new : Icons.close,
-                    color: Theme.of(context).colorScheme.surface,
+                    color: textColor,
                     size: 20,
                   ),
                 ),
@@ -462,13 +525,16 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 margin: const EdgeInsets.only(top: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [lokmaPink.withValues(alpha: 0.2), lokmaPink.withValues(alpha: 0.05)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: lokmaPink.withValues(alpha: 0.3)),
+                  border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -542,10 +608,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ),
                         Text(
                           '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                          style: const TextStyle(
-                            color: Colors.greenAccent,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -591,54 +657,55 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   ),
                   // Controls
                   Container(
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: lokmaPink.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         GestureDetector(
-                          onTap: () {
-                            ref.read(kermesCartProvider.notifier).removeFromCart(item.name);
-                          },
+                          onTap: () => ref.read(kermesCartProvider.notifier).removeFromCart(item.name),
+                          behavior: HitTestBehavior.opaque,
                           child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: lokmaPink,
-                              borderRadius: BorderRadius.horizontal(left: Radius.circular(8)),
-                            ),
-                            child: Icon(Icons.remove, color: Theme.of(context).colorScheme.surface, size: 18),
+                            width: 36,
+                            height: 36,
+                            alignment: Alignment.center,
+                            child: Icon(Icons.remove, size: 18, color: isDark ? Colors.white70 : Colors.black87),
                           ),
                         ),
                         Container(
-                          width: 36,
+                          width: 30,
                           alignment: Alignment.center,
                           child: Text(
                             quantity.toString(),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.surface,
-                              fontWeight: FontWeight.w600,
                               fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            ref.read(kermesCartProvider.notifier).addToCart(
-                              item,
-                              widget.event.id,
-                              widget.event.city,
-                            );
-                          },
+                          onTap: () => ref.read(kermesCartProvider.notifier).addToCart(item, widget.event.id, widget.event.city),
+                          behavior: HitTestBehavior.opaque,
                           child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: lokmaPink,
-                              borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
-                            ),
-                            child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 18),
+                            width: 36,
+                            height: 36,
+                            alignment: Alignment.center,
+                            child: Icon(Icons.add, size: 18, color: lokmaPink),
                           ),
                         ),
                       ],
@@ -691,26 +758,120 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           
           if (_isGroupOrder) ...[
             const SizedBox(height: 24),
+            // Name input for group host
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: _cardBg(isDark),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, color: Colors.green[400], size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Ailecek sipariş özelliği yakında kullanıma sunulacak!',
-                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 13),
+                  Text(
+                    'Isminiz (Grup Yoneticisi)',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _nameController,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: 'Orn: Metin',
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                      filled: true,
+                      fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            // Create group order button
+            if (_activeGroupOrderId == null)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isCreatingGroup ? null : _createAndShareGroupOrder,
+                  icon: _isCreatingGroup
+                      ? const SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                        )
+                      : const Icon(Icons.link, size: 20),
+                  label: Text(_isCreatingGroup ? 'Olusturuluyor...' : 'Link Olustur ve Paylas'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF25D366),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              )
+            else
+              // Group order created - show active state
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green[400], size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Grup siparisi olusturuldu!',
+                            style: TextStyle(color: Colors.green[400], fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (ctx) => GroupOrderShareSheet(
+                              orderId: _activeGroupOrderId!,
+                              kermesName: widget.event.title,
+                              hostName: _nameController.text.trim(),
+                              expirationMinutes: 30,
+                              expiresAt: DateTime.now().add(const Duration(minutes: 30)),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.share, size: 18),
+                        label: const Text('Linki Tekrar Paylas'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.green[400],
+                          side: BorderSide(color: Colors.green.withValues(alpha: 0.4)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ],
       ),
@@ -1050,12 +1211,16 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [lokmaPink.withValues(alpha: 0.15), lokmaPink.withValues(alpha: 0.05)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -1101,10 +1266,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     Text('Toplam', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
                     Text(
                       '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                      style: const TextStyle(
-                        color: Colors.greenAccent,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
                         fontSize: 24,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -1389,11 +1554,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? lokmaPink.withValues(alpha: 0.15) : _cardBg(isDark),
+          color: isSelected ? lokmaPink.withValues(alpha: 0.05) : _cardBg(isDark),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? lokmaPink : Colors.transparent,
-            width: 2,
+            color: isSelected ? lokmaPink : (isDark ? Colors.grey[800]! : Colors.grey[200]!),
+            width: isSelected ? 2 : 1.5,
           ),
         ),
         child: Opacity(
@@ -1633,6 +1798,7 @@ void showKermesCheckoutSheet(BuildContext context, KermesEvent event) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (context) => KermesCheckoutSheet(event: event),
   );

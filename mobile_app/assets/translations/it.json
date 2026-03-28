@@ -798,7 +798,21 @@
     "tab_everyone": "Tutti",
     "tab_table": "Tavolo",
     "items_short": "articoli",
-    "invite_more": "Invita altri"
+    "invite_more": "Invita altri",
+    "guest_welcome_title": "Ordina Insieme!",
+    "guest_welcome_subtitle": "Non serve un account. Unisciti e scegli i tuoi articoli.",
+    "guest_order_for": "Ordine da",
+    "guest_step_1": "Sfoglia il menu e scegli i tuoi preferiti",
+    "guest_step_2": "Le tue scelte vengono aggiunte automaticamente al gruppo",
+    "guest_step_3": "{hostName} confermera e inviera l'ordine",
+    "guest_nickname_label": "Il Tuo Nome (Facoltativo)",
+    "guest_nickname_hint": "Es: Marco, Giulia...",
+    "guest_add_items": "Aggiungi Articoli",
+    "guest_waiting_title": "Selezione Completata!",
+    "guest_waiting_subtitle": "{hostName} non ha ancora inviato l'ordine.\nPuoi ancora modificare i tuoi articoli.",
+    "guest_waiting_edit_cart": "Modifica Carrello",
+    "guest_waiting_your_items": "I Tuoi Articoli",
+    "group_order_of": "Ordine di gruppo di {hostName}"
   },
   "home": {
     "courier_on_the_way": "Corriere in arrivo",

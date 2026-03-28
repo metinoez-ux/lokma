@@ -1,17 +1,20 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/models/kermes_model.dart';
+import '../../providers/kermes_cart_provider.dart';
 import '../../utils/currency_utils.dart';
 
-const Color lokmaPink = Color(0xFFEA184A);
-Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
-Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
+const Color _lokmaPink = Color(0xFFEA184A);
 
-/// Kermes ürün detay bottom sheet'ini göster
+/// Kermes product detail bottom sheet -- yemek segment ProductCustomizationSheet parity
 void showKermesProductDetailSheet(
   BuildContext context, {
   required KermesMenuItem item,
   required int cartQuantity,
+  required String eventId,
+  required String eventName,
   required VoidCallback onAdd,
   required VoidCallback onRemove,
 }) {
@@ -20,521 +23,653 @@ void showKermesProductDetailSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => KermesProductDetailSheet(
+    builder: (ctx) => _KermesProductSheet(
       item: item,
       cartQuantity: cartQuantity,
+      eventId: eventId,
+      eventName: eventName,
       onAdd: onAdd,
       onRemove: onRemove,
     ),
   );
 }
 
-class KermesProductDetailSheet extends StatefulWidget {
+class _KermesProductSheet extends ConsumerStatefulWidget {
   final KermesMenuItem item;
   final int cartQuantity;
+  final String eventId;
+  final String eventName;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
 
-  const KermesProductDetailSheet({
-    super.key,
+  const _KermesProductSheet({
     required this.item,
     required this.cartQuantity,
+    required this.eventId,
+    required this.eventName,
     required this.onAdd,
     required this.onRemove,
   });
 
   @override
-  State<KermesProductDetailSheet> createState() => _KermesProductDetailSheetState();
+  ConsumerState<_KermesProductSheet> createState() => _KermesProductSheetState();
 }
 
-class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
-  int _currentImageIndex = 0;
-  
+class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
+  int _quantity = 1;
+  final _noteController = TextEditingController();
+  String? _recipientName;
+
   KermesMenuItem get item => widget.item;
-  int get cartQuantity => widget.cartQuantity;
-  VoidCallback get onAdd => widget.onAdd;
-  VoidCallback get onRemove => widget.onRemove;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantity = widget.cartQuantity > 0 ? widget.cartQuantity : 1;
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  double get _totalPrice => item.price * _quantity;
+
+  String _buildNotePreview() {
+    final hasRecipient = _recipientName?.trim().isNotEmpty ?? false;
+    final hasNote = _noteController.text.trim().isNotEmpty;
+    if (hasRecipient && hasNote) {
+      return '${_recipientName!.trim()} · ${_noteController.text.trim()}';
+    } else if (hasRecipient) {
+      return _recipientName!.trim();
+    } else if (hasNote) {
+      return _noteController.text.trim();
+    }
+    return tr('marketplace.add_note_hint');
+  }
+
+  void _showNoteSheet(bool isDark) {
+    final recipientController = TextEditingController(text: _recipientName ?? '');
+    final noteSheetController = TextEditingController(text: _noteController.text);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A28) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Title
+                  Text(
+                    'cart.your_note'.tr(),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Recipient field
+                  Text(
+                    'cart.note_recipient_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'cart.note_recipient_hint_desc'.tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: recipientController,
+                      maxLength: 40,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'cart.note_recipient_placeholder'.tr(),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          size: 20,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Note field
+                  Text(
+                    'cart.note_food_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'cart.note_allergy_disclaimer'.tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${noteSheetController.text.length}/160',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 80),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: noteSheetController,
+                      maxLength: 160,
+                      maxLines: 3,
+                      minLines: 2,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'cart.note_placeholder'.tr(),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(16),
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(ctx),
+                          child: Container(
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: Text(
+                              'common.cancel'.tr(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: isDark ? Colors.white70 : Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _recipientName = recipientController.text.trim();
+                              _noteController.text = noteSheetController.text.trim();
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: _lokmaPink,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'common.save'.tr(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _addToCartAndClose() {
+    // Set quantity in cart
+    final cartNotifier = ref.read(kermesCartProvider.notifier);
+    
+    // Remove existing if any, then add with correct quantity
+    final existingQty = cartNotifier.getQuantity(item.name);
+    if (existingQty > 0) {
+      // Remove all existing
+      for (int i = 0; i < existingQty; i++) {
+        cartNotifier.removeFromCart(item.name);
+      }
+    }
+    // Add with desired quantity
+    for (int i = 0; i < _quantity; i++) {
+      cartNotifier.addToCart(item, widget.eventId, widget.eventName);
+    }
+    
+    Navigator.pop(context);
+    HapticFeedback.heavyImpact();
+  }
+
+  Widget _qtyButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        alignment: Alignment.center,
+        child: Icon(icon, color: color, size: 22),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-    
-    return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          color: _cardBg(isDark),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            // Drag handle
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
+    final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white54 : Colors.black45;
+    final divider = isDark ? Colors.white12 : Colors.grey[200]!;
+    final hasImage = item.imageUrl?.isNotEmpty == true;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Container(
+              width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                color: isDark ? Colors.white24 : Colors.black12,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            
-                  // Content
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(20),
+          ),
+
+          // Scrollable Content
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 16, right: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ürün Resimleri (Carousel)
-                  _buildImageCarousel(context),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Ürün Adı + 2. İsim
+                  const SizedBox(height: 8),
+
+                  // Product Image (full width, 180px)
+                  if (hasImage)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 180,
+                        child: Image.network(
+                          item.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: _lokmaPink.withValues(alpha: 0.1),
+                            child: const Center(
+                              child: Icon(Icons.restaurant, size: 48, color: _lokmaPink),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (hasImage) const SizedBox(height: 14),
+
+                  // Product Name
                   Text(
                     item.name,
                     style: TextStyle(
-                      color: textColor,
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
+                      color: textPrimary,
                     ),
                   ),
                   if (item.secondaryName != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       item.secondaryName!,
                       style: TextStyle(
-                        color: subtleTextColor,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontStyle: FontStyle.italic,
+                        color: textSecondary,
                       ),
                     ),
                   ],
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Fiyat
+                  const SizedBox(height: 4),
+
+                  // Price
                   Text(
-                    '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
+                    'ab ${CurrencyUtils.getCurrencySymbol()}${item.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  
-                  // Açıklama
-                  if (item.description != null || item.detailedDescription != null) ...[
-                    const SizedBox(height: 16),
-                    Divider(color: isDark ? Colors.grey : Colors.grey[300]),
-                    const SizedBox(height: 12),
+
+                  // Description
+                  if (item.description != null) ...[
+                    const SizedBox(height: 8),
                     Text(
                       item.detailedDescription ?? item.description!,
                       style: TextStyle(
-                        color: isDark ? Colors.grey[300] : Colors.grey[700],
-                        fontSize: 15,
-                        height: 1.5,
+                        fontSize: 13,
+                        color: textSecondary,
+                        height: 1.4,
                       ),
                     ),
                   ],
-                  
-                  // Alerjenler
+
+                  // Allergens
                   if (item.allergens.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    _buildSectionTitle('⚠️ Alerjenler'),
+                    const SizedBox(height: 14),
+                    Divider(color: divider, height: 1),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Allergenhinweise',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: item.allergens.map((allergen) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(_getAllergenIcon(allergen), size: 16, color: Colors.amber),
-                            const SizedBox(width: 6),
-                            Text(
-                              allergen,
-                              style: const TextStyle(color: Colors.amber, fontSize: 13),
-                            ),
-                          ],
+                        child: Text(
+                          allergen,
+                          style: TextStyle(
+                            color: isDark ? Colors.amber[200] : Colors.amber[800],
+                            fontSize: 12,
+                          ),
                         ),
                       )).toList(),
                     ),
                   ],
-                  
-                  // İçerikler / Zutaten
+
+                  // Ingredients
                   if (item.ingredients.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    _buildSectionTitle('🥘 İçerikler / Zutaten'),
+                    const SizedBox(height: 14),
+                    Divider(color: divider, height: 1),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Zutaten',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                      spacing: 6,
+                      runSpacing: 6,
                       children: item.ingredients.map((ingredient) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey[800] : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           ingredient,
-                          style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 13),
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                            fontSize: 12,
+                          ),
                         ),
                       )).toList(),
                     ),
                   ],
-                  
-                  // Bottom spacing for cart buttons
-                  const SizedBox(height: 100),
-                ],
-              ),
-            ),
-            
-            // Sepet Kontrolleri (Sticky Footer)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _darkBg(isDark),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    if (cartQuantity > 0) ...[
-                      // Quantity controls
-                      Container(
-                        decoration: BoxDecoration(
-                          color: lokmaPink.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: lokmaPink.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                HapticFeedback.selectionClick();
-                                onRemove();
-                              },
-                              icon: const Icon(Icons.remove, color: lokmaPink),
-                            ),
-                            Text(
-                              cartQuantity.toString(),
-                              style: TextStyle(
-                                color: textColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                HapticFeedback.selectionClick();
-                                onAdd();
-                              },
-                              icon: const Icon(Icons.add, color: lokmaPink),
-                            ),
-                          ],
-                        ),
+
+                  // Note chip (tappable, matching yemek segment)
+                  const SizedBox(height: 16),
+                  Divider(color: divider, height: 1),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () => _showNoteSheet(isDark),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(width: 12),
-                    ],
-                    
-                    // Add to cart button
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          onAdd();
-                          if (cartQuantity == 0) {
-                            Navigator.pop(context);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: lokmaPink,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.add_shopping_cart),
-                            const SizedBox(width: 8),
-                            Text(
-                              cartQuantity > 0 
-                                ? 'Bir Tane Daha Ekle' 
-                                : 'Sepete Ekle • ${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_note_rounded, color: _lokmaPink, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _buildNotePreview(),
+                              style: TextStyle(
+                                color: (_noteController.text.trim().isNotEmpty || (_recipientName?.trim().isNotEmpty ?? false))
+                                    ? textPrimary
+                                    : textSecondary,
+                                fontSize: 13,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                        ),
+                          ),
+                          if (_noteController.text.trim().isNotEmpty || (_recipientName?.trim().isNotEmpty ?? false))
+                            Icon(Icons.check_circle, color: _lokmaPink, size: 16),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Resim carousel veya placeholder
-  Widget _buildImageCarousel(BuildContext context) {
-    final images = item.allImages;
-    
-    if (images.isEmpty) {
-      // Placeholder if no image
-      return Container(
-        height: 120,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [lokmaPink.withValues(alpha: 0.3), lokmaPink.withValues(alpha: 0.1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: Icon(Icons.restaurant, size: 56, color: lokmaPink),
-        ),
-      );
-    }
-    
-    if (images.length == 1) {
-      // Single image  
-      return GestureDetector(
-        onTap: () => _showFullScreenImage(context, images[0]),
-        child: Hero(
-          tag: 'product_image_${item.name}',
-          child: Container(
-            height: 200,
-            width: double.infinity,
+
+          // Bottom Bar: Quantity + Add Button (matching yemek segment)
+          Container(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 12,
+            ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+              color: bg,
+              border: Border(top: BorderSide(color: divider)),
+            ),
+            child: Row(
+              children: [
+                // Quantity selector pill
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white10 : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _qtyButton(
+                        icon: _quantity <= 1 ? Icons.delete_outline : Icons.remove,
+                        color: _quantity <= 1 ? textSecondary : textPrimary,
+                        onTap: () {
+                          if (_quantity <= 1) {
+                            // Remove from cart entirely and close
+                            if (widget.cartQuantity > 0) {
+                              final cartNotifier = ref.read(kermesCartProvider.notifier);
+                              final existingQty = cartNotifier.getQuantity(item.name);
+                              for (int i = 0; i < existingQty; i++) {
+                                cartNotifier.removeFromCart(item.name);
+                              }
+                            }
+                            Navigator.pop(context);
+                            return;
+                          }
+                          setState(() => _quantity--);
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Text(
+                          _quantity.toString(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: textPrimary,
+                          ),
+                        ),
+                      ),
+                      _qtyButton(
+                        icon: Icons.add,
+                        color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
+                        onTap: () {
+                          setState(() => _quantity++);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Add to cart button
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _addToCartAndClose,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _lokmaPink,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        widget.cartQuantity > 0
+                            ? '${tr('marketplace.update_item')}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}'
+                            : '${tr('marketplace.add_to_cart')}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                images[0],
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: lokmaPink.withValues(alpha: 0.2),
-                  child: const Icon(Icons.restaurant, size: 64, color: lokmaPink),
-                ),
-              ),
-            ),
           ),
-        ),
-      );
-    }
-    
-    // Multiple images - carousel
-    return Column(
-      children: [
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: PageView.builder(
-              itemCount: images.length,
-              onPageChanged: (index) {
-                setState(() => _currentImageIndex = index);
-              },
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => _showFullScreenImage(context, images[index]),
-                  child: Image.network(
-                    images[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: lokmaPink.withValues(alpha: 0.2),
-                      child: const Icon(Icons.restaurant, size: 64, color: lokmaPink),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        // Dot indicators
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(images.length, (index) {
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: _currentImageIndex == index ? 24 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: _currentImageIndex == index 
-                    ? lokmaPink 
-                    : Colors.grey[600],
-                borderRadius: BorderRadius.circular(4),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  IconData _getAllergenIcon(String allergen) {
-    final lower = allergen.toLowerCase();
-    if (lower.contains('gluten') || lower.contains('buğday')) return Icons.grain;
-    if (lower.contains('süt') || lower.contains('milk')) return Icons.water_drop;
-    if (lower.contains('yumurta') || lower.contains('egg')) return Icons.egg;
-    if (lower.contains('fındık') || lower.contains('nut') || lower.contains('badem')) return Icons.forest;
-    if (lower.contains('soya')) return Icons.grass;
-    if (lower.contains('balık') || lower.contains('fish')) return Icons.set_meal;
-    return Icons.warning_amber;
-  }
-
-  void _showFullScreenImage(BuildContext context, String imageUrl) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false,
-        barrierColor: Colors.black87,
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return _FullScreenImageViewer(
-            imageUrl: imageUrl,
-            heroTag: 'product_image_${item.name}',
-          );
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
-  }
-}
-
-/// Tam ekran resim görüntüleyici (Pinch to zoom)
-class _FullScreenImageViewer extends StatelessWidget {
-  final String imageUrl;
-  final String heroTag;
-
-  const _FullScreenImageViewer({
-    required this.imageUrl,
-    required this.heroTag,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: Stack(
-          children: [
-            // Background
-            Container(color: Colors.black87),
-            
-            // Image with zoom
-            Center(
-              child: Hero(
-                tag: heroTag,
-                child: InteractiveViewer(
-                  minScale: 0.5,
-                  maxScale: 4.0,
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.broken_image,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            
-            // Close button
-            Positioned(
-              top: 50,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Icon(Icons.close, color: Colors.white),
-                ),
-              ),
-            ),
-            
-            // Hint text
-            Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  'Yakınlaştırmak için sıkıştırın',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -2330,6 +2330,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // LIEFERANDO STYLE: Theme-aware color system
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // Force pill recalculation after every build to fix stale positioning
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition();
+    });
     
     // Dynamic colors based on theme
     final scaffoldBg = isDark ? const Color(0xFF2B2929) : Colors.white;
