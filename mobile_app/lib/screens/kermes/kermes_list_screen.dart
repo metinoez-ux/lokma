@@ -33,7 +33,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   List<KermesEvent> _kermesEvents = [];
   Position? _currentPosition;
   String _userCountryCode = '';
-  String _sortBy = 'date_asc';
+  String _sortBy = 'distance_asc';
   double _maxDistance = 120; // default: Deutschlandweit
   Set<String> _favoriteKermesIds = {};
   String _searchQuery = '';
