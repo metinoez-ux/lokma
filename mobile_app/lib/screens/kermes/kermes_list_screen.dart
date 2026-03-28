@@ -34,7 +34,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Position? _currentPosition;
   String _userCountryCode = '';
   String _sortBy = 'date_asc';
-  double _maxDistance = 300; // km
+  double _maxDistance = 120; // default: Deutschlandweit
   Set<String> _favoriteKermesIds = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -1615,7 +1615,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
         setState(() {
           _deliveryMode = newMode;
-          _maxDistance = 300;
+          _maxDistance = 120;
         });
       },
     );
@@ -1715,86 +1715,77 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     );
   }
 
-  // ============== DISTANCE SLIDER ==============
+  // ============== DISTANCE PILLS ==============
   Widget _buildDistanceSlider() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (_maxDistance < 10) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _maxDistance = 120);
-      });
-    }
+    // Bundesland kisaltmasini al
+    final locationAsync = ref.read(userLocationProvider);
+    final userState = locationAsync.value?.state ?? '';
+    final bundeslandShort = _getBundeslandAbbr(userState);
 
-    // Sag etiket: secili filtre degeri (dinamik)
-    final String distanceLabel;
-    if (_maxDistance >= 120) {
-      distanceLabel = 'Deutschlandweit';
-    } else if (_maxDistance >= 110) {
-      // Bundesland kısaltmasını goster (NRW gibi)
-      final locationAsync = ref.read(userLocationProvider);
-      final userState = locationAsync.value?.state ?? '';
-      final bundeslandShort = _getBundeslandAbbr(userState);
-      distanceLabel = bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet';
-    } else {
-      distanceLabel = '${_maxDistance.round()} km';
-    }
+    // Preset pill tanimlari: {deger, etiket}
+    final List<(double, String)> pills = [
+      (10, '10 km'),
+      (25, '25 km'),
+      (50, '50 km'),
+      (100, '100 km'),
+      (110, bundeslandShort.isNotEmpty ? bundeslandShort : 'Eyalet'),
+      (120, 'DE'),
+    ];
 
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 6),
+      padding: const EdgeInsets.only(left: 12, right: 12, top: 6),
       child: Row(
         children: [
-          // Sol: sadece GPS ikonu — kafa karistiran mesafe sayisi kaldirildi
-          Icon(Icons.near_me, color: lokmaPink, size: 16),
+          Icon(Icons.near_me, color: lokmaPink, size: 15),
           const SizedBox(width: 8),
           Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: lokmaPink,
-                inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[400],
-                thumbColor: lokmaPink,
-                overlayColor: Colors.transparent,
-                trackHeight: 4,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
-                activeTickMarkColor: Colors.transparent,
-                inactiveTickMarkColor: Colors.transparent,
-              ),
-              child: Slider(
-                value: _maxDistance.clamp(10.0, 120.0),
-                min: 10,
-                max: 120,
-                divisions: 11,
-                onChanged: (value) {
-                  if (value.round() != _maxDistance.round()) {
-                    HapticFeedback.selectionClick();
-                  }
-                  setState(() => _maxDistance = value);
-                },
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Sag: secili filtre degeri
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _maxDistance >= 110
-                  ? lokmaPink.withValues(alpha: 0.12)
-                  : (isDark ? Colors.grey[800] : Colors.grey[100]),
-              borderRadius: BorderRadius.circular(20),
-              border: _maxDistance >= 110
-                  ? Border.all(color: lokmaPink.withValues(alpha: 0.4), width: 1)
-                  : null,
-            ),
-            child: Text(
-              distanceLabel,
-              style: TextStyle(
-                color: _maxDistance >= 110
-                    ? lokmaPink
-                    : (isDark ? Colors.grey[300] : Colors.grey[700]),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: pills.map((pill) {
+                  final (val, label) = pill;
+                  final isSelected = _maxDistance.round() == val.round();
+                  final isSpecial = val >= 110; // Bundesland veya DE
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _maxDistance = val);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? lokmaPink
+                              : (isSpecial && !isSelected
+                                  ? lokmaPink.withValues(alpha: 0.08)
+                                  : (isDark ? Colors.grey[800] : Colors.grey[100])),
+                          borderRadius: BorderRadius.circular(20),
+                          border: isSpecial && !isSelected
+                              ? Border.all(color: lokmaPink.withValues(alpha: 0.35), width: 1)
+                              : null,
+                        ),
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : (isSpecial
+                                    ? lokmaPink
+                                    : (isDark ? Colors.grey[300] : Colors.grey[700])),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
           ),
