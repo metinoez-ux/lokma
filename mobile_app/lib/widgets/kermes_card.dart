@@ -406,7 +406,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                       // Sponsor Badge (bottom-left, standardized style)
                       if (widget.event.sponsor != KermesSponsor.none)
                         Positioned(
-                          bottom: 12,
+                          top: 12,
                           left: 12,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -553,8 +553,10 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         const SizedBox(height: 12),
         
                         // Info Row (Distance + Courier)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          runSpacing: 8,
                           children: [
                             if (widget.currentPosition != null)
                               GestureDetector(
@@ -568,6 +570,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                   launchUrl(url, mode: LaunchMode.externalApplication);
                                 },
                                 child: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
                                     const SizedBox(width: 12),
@@ -576,20 +579,24 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                 ),
                               )
                             else 
-                              const SizedBox(),
-        
+                              const SizedBox(width: 1), // Takes min space for WrapAlignment to work if needed
+
                             if (widget.event.hasDelivery)
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.two_wheeler, size: 16, color: isDark ? Colors.green[400] : const Color(0xFF059669)),
                                   const SizedBox(width: 5),
-                                  Text(
-                                    'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
-                                    style: TextStyle(
-                                      color: isDark ? Colors.green[400] : const Color(0xFF059669),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                  Flexible(
+                                    child: Text(
+                                      'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.green[400] : const Color(0xFF059669),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],

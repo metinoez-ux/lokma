@@ -502,6 +502,21 @@ export default function KermesDetailPage() {
         setEditFeatures(prev => prev.includes(featureId) ? prev.filter(f => f !== featureId) : [...prev, featureId]);
     };
 
+    const handleDeleteKermes = async () => {
+        if (!kermes) return;
+        if (!confirm('DİKKAT! Bu Kermes tamamen silinecek. İlgili tüm ürünleri ve verileri kaybolacaktır. Onaylıyor musunuz?')) return;
+        setSaving(true);
+        try {
+            await deleteDoc(doc(db, 'kermes_events', kermesId));
+            showToast('✅ Kermes silindi');
+            router.push('/admin/kermes');
+        } catch (error) {
+            console.error('Error deleting kermes:', error);
+            showToast('Silinirken hata oluştu', 'error');
+            setSaving(false);
+        }
+    };
+
     // Yeni kategori ekle - Firebase'e global olarak kaydet
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
@@ -767,6 +782,11 @@ export default function KermesDetailPage() {
                             className={`px-3 py-1 rounded-lg text-sm font-medium ${kermes.isActive ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                             {kermes.isActive ? t('aktif') : t('kapali')}
                         </button>
+                        {admin?.role === 'super_admin' && (
+                            <button onClick={handleDeleteKermes} disabled={saving} className="px-3 py-1 bg-red-800/80 hover:bg-red-700 text-white rounded-lg text-sm">
+                                🗑️ Sil
+                            </button>
+                        )}
                     </div>
                 </div>
 
