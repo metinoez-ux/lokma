@@ -256,7 +256,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                               dateRangeText,
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w300,
                                 letterSpacing: 0.5,
                                 color: isDark ? Colors.white : const Color(0xFF1E3A8A),
                               ),
@@ -379,39 +379,30 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         ),
                       ),
         
-                      // Bottom Right: Countdown Badge
-                      Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(colors: badgeGradient),
-                            boxShadow: [
-                              BoxShadow(color: badgeGradient.last.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ...[
-                              Icon(badgeIcon, color: Colors.white, size: 14),
-                              const SizedBox(width: 4),
-                            ],
-                              Text(
-                                statusText,
-                                style: const TextStyle(
+
+        
+                      // Bottom Right: Delivery Icon
+                      if (widget.event.hasDelivery)
+                        Positioned(
+                          bottom: 12,
+                          right: 12,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                color: Colors.black.withOpacity(0.4),
+                                child: const Icon(
+                                  Icons.two_wheeler,
                                   color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                                  size: 18,
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-        
+
                       // Sponsor Badge (bottom-left, standardized style)
                       if (widget.event.sponsor != KermesSponsor.none)
                         Positioned(
@@ -628,11 +619,12 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => KermesParkingScreen(event: widget.event),
-          ),
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          barrierColor: Colors.black.withValues(alpha: 0.6),
+          builder: (context) => KermesParkingScreen(event: widget.event),
         );
       },
       child: Container(
@@ -925,11 +917,12 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
             GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => KermesParkingScreen(event: widget.event),
-                  ),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  barrierColor: Colors.black.withValues(alpha: 0.6),
+                  builder: (context) => KermesParkingScreen(event: widget.event),
                 );
               },
               child: _buildDynamicColorTag(feature.icon, feature.label, feature.colorValue, isDark),

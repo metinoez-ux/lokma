@@ -59,12 +59,19 @@ class _SplashScreenState extends State<SplashScreen> {
     // Phase 1: Show whole O for 1.5 seconds
     await Future.delayed(const Duration(milliseconds: 1500));
 
-    // Phase 2: Switch to bitten O + play bite sound
+    // Phase 2: Switch to bitten O + play bite sound once per day
     if (mounted) {
       setState(() => _showBitten = true);
-      // Play bite crunch sound
       try {
-        await _audioPlayer.play(AssetSource('sounds/bite_crunch.mp3'));
+        final prefs = await SharedPreferences.getInstance();
+        final now = DateTime.now();
+        final todayStr = '${now.year}-${now.month}-${now.day}';
+        final lastPlayedDate = prefs.getString('last_bite_sound_date');
+
+        if (lastPlayedDate != todayStr) {
+          await _audioPlayer.play(AssetSource('sounds/bite_crunch.mp3'));
+          await prefs.setString('last_bite_sound_date', todayStr);
+        }
       } catch (_) {}
     }
 
