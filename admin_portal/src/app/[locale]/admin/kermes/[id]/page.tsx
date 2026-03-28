@@ -528,7 +528,11 @@ export default function KermesDetailPage() {
                 updateData.endDate = Timestamp.fromDate(new Date(editForm.endDate));
             }
             await updateDoc(doc(db, 'kermes_events', kermesId), updateData);
-            setKermes({ ...kermes, ...updateData });
+            // Taze veri ile local state guncelle (stale closure sorununu onler)
+            const freshDoc = await getDoc(doc(db, 'kermes_events', kermesId));
+            if (freshDoc.exists()) {
+                setKermes({ id: freshDoc.id, ...freshDoc.data() } as KermesEvent);
+            }
             setIsEditing(false);
             showToast('✅ Kaydedildi');
         } catch (error: any) {
