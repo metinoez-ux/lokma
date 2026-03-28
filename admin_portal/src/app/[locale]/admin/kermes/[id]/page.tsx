@@ -811,14 +811,18 @@ export default function KermesDetailPage() {
                                 <h3 className="text-foreground font-bold">📋 Kermes Bilgileri</h3>
                                 {!isEditing ? (
                                     <button onClick={() => {
+                                        setEditMode(true);
+                                        const startD = kermes?.date?.toDate?.() || kermes?.startDate?.toDate?.() || (kermes?.date?.seconds ? new Date(kermes.date.seconds * 1000) : (kermes?.startDate?.seconds ? new Date(kermes.startDate.seconds * 1000) : null));
+                                        const endD = kermes?.endDate?.toDate?.() || (kermes?.endDate?.seconds ? new Date(kermes.endDate.seconds * 1000) : null);
+                                        
                                         setEditForm({
                                             title: kermes?.title || '',
                                             titleSecondary: kermes?.titleSecondary || '',
                                             description: kermes?.description || '',
                                             descriptionSecondary: kermes?.descriptionSecondary || '',
                                             secondaryLanguage: kermes?.secondaryLanguage || 'de',
-                                            date: kermes?.date ? new Date((kermes.date as any).seconds * 1000).toISOString().split('T')[0] : '',
-                                            endDate: kermes?.endDate ? new Date((kermes.endDate as any).seconds * 1000).toISOString().split('T')[0] : '',
+                                            date: startD ? startD.toISOString().split('T')[0] : '',
+                                            endDate: endD ? endD.toISOString().split('T')[0] : '',
                                             openingTime: normalizeTimeString(kermes?.openingTime || '') || '',
                                             closingTime: normalizeTimeString(kermes?.closingTime || '') || '',
                                             address: kermes?.address || '',
