@@ -238,12 +238,19 @@ class KermesMenuItem {
       imageUrls: (json['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [],
       category: _extractString(json['category'], isNullable: true),
       categoryData: json['category'],
-      allergens: (json['allergens'] as List<dynamic>?)?.cast<String>() ?? [],
-      ingredients: (json['ingredients'] as List<dynamic>?)?.cast<String>() ?? [],
+      allergens: _parseStringList(json['allergens']),
+      ingredients: _parseStringList(json['ingredients']),
       hasPfand: json['hasPfand'] ?? false,
       isAvailable: json['isAvailable'] ?? true,
       optionGroups: _parseOptionGroups(json['optionGroups']),
     );
+  }
+
+  static List<String> _parseStringList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) return data.map((e) => e.toString()).toList();
+    if (data is String) return data.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return [];
   }
 
   static String? _extractString(dynamic data, {bool isNullable = false}) {

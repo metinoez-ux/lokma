@@ -221,43 +221,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 for (final productDoc in productsSnapshot.docs) {
                   final productData = productDoc.data();
 
-                  List<String> allergens = [];
-                  if (productData['allergens'] != null) {
-                    if (productData['allergens'] is List) {
-                      allergens = (productData['allergens'] as List).map((e) => e.toString()).toList();
-                    } else if (productData['allergens'] is String) {
-                      allergens = (productData['allergens'] as String).split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                    }
-                  }
-
-                  List<String> ingredients = [];
-                  if (productData['ingredients'] != null) {
-                    if (productData['ingredients'] is List) {
-                      ingredients = (productData['ingredients'] as List).map((e) => e.toString()).toList();
-                    } else if (productData['ingredients'] is String) {
-                      ingredients = (productData['ingredients'] as String).split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                    }
-                  }
-
-                  List<String> imageUrls = [];
-                  if (productData['imageUrls'] != null && productData['imageUrls'] is List) {
-                    imageUrls = (productData['imageUrls'] as List).map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
-                  }
-
-                  menuItems.add(KermesMenuItem(
-                    name: productData['name'] ?? '',
-                    price: (productData['price'] ?? 0).toDouble(),
-                    description: productData['description'],
-                    secondaryName: productData['secondaryName'],
-                    detailedDescription: productData['detailedDescription'],
-                    imageUrl: productData['imageUrl'],
-                    imageUrls: imageUrls,
-                    category: productData['category'],
-                    allergens: allergens,
-                    ingredients: ingredients,
-                    hasPfand: productData['hasPfand'] == true,
-                    isAvailable: productData['isAvailable'] ?? true,
-                  ));
+                  menuItems.add(KermesMenuItem.fromJson(productData));
                 }
               }
             } catch (e) {
@@ -394,8 +358,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               minCartForFreeDelivery: (data['minCartForFreeDelivery'] ?? 0).toDouble(),
               minOrderAmount: (data['minOrderAmount'] ?? 0).toDouble(),
               isMenuOnly: data['isMenuOnly'] == true,
-              hasTakeaway: data['hasTakeaway'] ?? true, // Eski veri için default true
-              hasDineIn: data['hasDineIn'] == true,
+              hasTakeaway: true, // Kermesler için her zaman Gel-Al açıktır
+              hasDineIn: true, // Kermesler için her zaman Yerinde (Masa) açıktır
               contactName: contactName,
               headerImage: data['headerImage']?.toString(),
               openingTime: openingTime,
