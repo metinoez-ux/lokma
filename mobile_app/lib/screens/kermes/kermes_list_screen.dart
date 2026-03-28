@@ -32,6 +32,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   bool _isLoading = true;
   List<KermesEvent> _kermesEvents = [];
   Position? _currentPosition;
+  String _userCountryCode = '';
   String _sortBy = 'date_asc';
   double _maxDistance = 300; // km
   Set<String> _favoriteKermesIds = {};
@@ -140,6 +141,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         speed: 0,
         speedAccuracy: 0,
       );
+      _userCountryCode = location.countryCode.toUpperCase();
     }
   }
 
@@ -489,17 +491,34 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     }
 
     // Distance filter
-    if (_currentPosition != null && _maxDistance < 300) {
-      events = events.where((event) {
-        final distance = Geolocator.distanceBetween(
-          _currentPosition!.latitude,
-          _currentPosition!.longitude,
-          event.latitude,
-          event.longitude,
-        ) / 1000;
-        return distance <= _maxDistance;
-      }).toList();
+    final locationAsync = ref.read(userLocationProvider);
+    final userState = locationAsync.value?.state ?? '';
+
+    // Distance & Region filter
+    if (_maxDistance <= 100) {
+      if (_currentPosition != null) {
+        events = events.where((event) {
+          final distance = Geolocator.distanceBetween(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+            event.latitude,
+            event.longitude,
+          ) / 1000;
+          return distance <= _maxDistance;
+        }).toList();
+      }
+    } else if (_maxDistance == 110) {
+      // Eyalet filtresi (State filter)
+      if (userState.isNotEmpty) {
+        final stateLower = _normalizeTurkish(userState.toLowerCase());
+        events = events.where((event) {
+          if (event.state == null || event.state!.isEmpty) return false;
+          final eventState = _normalizeTurkish(event.state!.toLowerCase());
+          return eventState.contains(stateLower) || stateLower.contains(eventState);
+        }).toList();
+      }
     }
+    // _maxDistance >= 120 is "Tümü" (All/Country), so no filter needed.
 
     // Quick filters
     if (_filterKidsActivities) events = events.where((e) => e.hasKidsActivities).toList();
@@ -691,157 +710,160 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 16),
-                          // TUNA Sertifika Filtresi
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              setState(() => _filterTuna = !_filterTuna);
-                              setStateSheet(() {});
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFA01E22),
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: _filterTuna
-                                          ? [
-                                              BoxShadow(
-                                                color: const Color(0xFFA01E22).withValues(alpha: 0.4),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.verified, color: Colors.white, size: 16),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'TUNA',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 1.5,
+                          
+                          if (_userCountryCode != 'TR') ...[
+                            // TUNA Sertifika Filtresi
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() => _filterTuna = !_filterTuna);
+                                setStateSheet(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFA01E22),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: _filterTuna
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFFA01E22).withValues(alpha: 0.4),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.verified, color: Colors.white, size: 16),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            'TUNA',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 1.5,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Sadece Tuna onaylu kermesler',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.3,
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  SizedBox(
-                                    height: 28,
-                                    child: Switch.adaptive(
-                                      value: _filterTuna,
-                                      activeColor: Colors.white,
-                                      activeTrackColor: lokmaPink,
-                                      onChanged: (val) {
-                                        HapticFeedback.lightImpact();
-                                        setState(() => _filterTuna = val);
-                                        setStateSheet(() {});
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // AKDENİZ TOROS Sertifika Filtresi
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              setState(() => _filterAkdenizToros = !_filterAkdenizToros);
-                              setStateSheet(() {});
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFD97706),
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: _filterAkdenizToros
-                                          ? [
-                                              BoxShadow(
-                                                color: const Color(0xFFD97706).withValues(alpha: 0.4),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.verified, color: Colors.white, size: 16),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'AKDENİZ TOROS',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.5,
-                                          ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Sadece Tuna onaylu kermesler',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.3,
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      'Sadece Akdeniz Toros onaylı kermesler',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.3,
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  SizedBox(
-                                    height: 28,
-                                    child: Switch.adaptive(
-                                      value: _filterAkdenizToros,
-                                      activeColor: Colors.white,
-                                      activeTrackColor: lokmaPink,
-                                      onChanged: (val) {
-                                        HapticFeedback.lightImpact();
-                                        setState(() => _filterAkdenizToros = val);
-                                        setStateSheet(() {});
-                                      },
+                                    const SizedBox(width: 8),
+                                    SizedBox(
+                                      height: 28,
+                                      child: Switch.adaptive(
+                                        value: _filterTuna,
+                                        activeColor: Colors.white,
+                                        activeTrackColor: lokmaPink,
+                                        onChanged: (val) {
+                                          HapticFeedback.lightImpact();
+                                          setState(() => _filterTuna = val);
+                                          setStateSheet(() {});
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 24),
+                          ],
 
-                          const SizedBox(height: 24),
+                          if (_userCountryCode == 'TR') ...[
+                            // AKDENİZ TOROS Sertifika Filtresi
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() => _filterAkdenizToros = !_filterAkdenizToros);
+                                setStateSheet(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD97706),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: _filterAkdenizToros
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFFD97706).withValues(alpha: 0.4),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.verified, color: Colors.white, size: 16),
+                                          SizedBox(width: 6),
+                                          Text(
+                                            'AKDENİZ TOROS',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Sadece Akdeniz Toros onaylı kermesler',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    SizedBox(
+                                      height: 28,
+                                      child: Switch.adaptive(
+                                        value: _filterAkdenizToros,
+                                        activeColor: Colors.white,
+                                        activeTrackColor: lokmaPink,
+                                        onChanged: (val) {
+                                          HapticFeedback.lightImpact();
+                                          setState(() => _filterAkdenizToros = val);
+                                          setStateSheet(() {});
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
 
                           // Siralama Section
                           _buildSectionHeader('SIRALAMA'),
@@ -1672,24 +1694,24 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Widget _buildDistanceSlider() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    double nearestKermesDistance = 5;
+    double nearestKermesDistance = 10;
     if (_currentPosition != null && _kermesEvents.isNotEmpty) {
       final distances = _kermesEvents.map((e) => _getDistance(e)).toList();
       distances.sort();
-      nearestKermesDistance = distances.first.clamp(1, 300);
+      nearestKermesDistance = distances.first.clamp(1.0, 100.0);
     }
 
-    final sliderMin = nearestKermesDistance.clamp(1.0, 50.0);
-
-    if (_maxDistance < sliderMin) {
+    if (_maxDistance < 10) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _maxDistance = 300);
+        if (mounted) setState(() => _maxDistance = 120);
       });
     }
 
     String distanceLabel;
-    if (_maxDistance >= 300) {
-      distanceLabel = 'Tumu';
+    if (_maxDistance >= 120) {
+      distanceLabel = 'marketplace.all_country'.tr(); // 'Ülke Geneli' / 'Tümü'
+    } else if (_maxDistance >= 110) {
+      distanceLabel = 'marketplace.state_only'.tr(); // 'Eyalet' / 'State'
     } else {
       distanceLabel = '${_maxDistance.round()} km';
     }
@@ -1730,10 +1752,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 inactiveTickMarkColor: Colors.transparent,
               ),
               child: Slider(
-                value: _maxDistance.clamp(sliderMin, 300),
-                min: sliderMin,
-                max: 300,
-                divisions: 15,
+                value: _maxDistance.clamp(10.0, 120.0),
+                min: 10,
+                max: 120,
+                divisions: 11,
                 onChanged: (value) {
                   if (value.round() != _maxDistance.round()) {
                     HapticFeedback.selectionClick();

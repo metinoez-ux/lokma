@@ -12,6 +12,8 @@ class UserLocation {
   final String address;
   final String street;
   final String city;
+  final String state;
+  final String countryCode;
   final bool hasPermission;
   final String? error;
 
@@ -21,6 +23,8 @@ class UserLocation {
     required this.address,
     required this.street,
     required this.city,
+    this.state = '',
+    this.countryCode = '',
     this.hasPermission = true,
     this.error,
   });
@@ -32,6 +36,8 @@ class UserLocation {
     address: '',
     street: '',
     city: '',
+    state: '',
+    countryCode: '',
     hasPermission: false,
   );
 
@@ -42,6 +48,8 @@ class UserLocation {
     address: 'Konum izni verilmedi',
     street: '',
     city: '',
+    state: '',
+    countryCode: '',
     hasPermission: false,
     error: 'Konum izni verilmedi',
   );
@@ -104,6 +112,8 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
             address: 'Konum servisleri kapalı',
             street: '',
             city: '',
+            state: '',
+            countryCode: '',
             hasPermission: false,
             error: 'Konum servisleri kapalı'));
         return;
@@ -127,12 +137,16 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
       String address = '';
       String street = '';
       String city = '';
+      String regionState = '';
+      String countryCode = '';
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
         street = place.thoroughfare ?? '';
         final number = place.subThoroughfare ?? '';
-        city = place.locality ?? place.administrativeArea ?? '';
+        city = place.locality ?? place.subAdministrativeArea ?? '';
+        regionState = place.administrativeArea ?? '';
+        countryCode = place.isoCountryCode ?? '';
 
         // Include house number in street for display
         if (number.isNotEmpty && street.isNotEmpty) {
@@ -151,7 +165,7 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
         }
       }
 
-      debugPrint('📍 Location cached: $address');
+      debugPrint('📍 Location cached: $address ($countryCode)');
       _hasFetched = true;
       state = AsyncValue.data(UserLocation(
         latitude: position.latitude,
@@ -159,6 +173,8 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
         address: address,
         street: street,
         city: city,
+        state: regionState,
+        countryCode: countryCode,
         hasPermission: true,
       ));
     } catch (e, st) {
@@ -172,6 +188,8 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
             address: 'Konum alınamadı (Zaman aşımı)',
             street: '',
             city: '',
+            state: '',
+            countryCode: '',
             hasPermission: true, // Izin var ama alamadi
             error: 'Konum zaman aşımı'));
       } else {
