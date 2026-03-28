@@ -31,8 +31,22 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   // Form değerleri
   bool _isGroupOrder = false; // Step 1: Bireysel/Ailecek
-  DeliveryType _deliveryType = DeliveryType.gelAl; // Step 2: Teslimat
+  late DeliveryType _deliveryType; // Step 2: Teslimat
   PaymentMethodType _paymentMethod = PaymentMethodType.cash; // Step 4: Ödeme
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.event.hasTakeaway) {
+      _deliveryType = DeliveryType.gelAl;
+    } else if (widget.event.hasDineIn) {
+      _deliveryType = DeliveryType.masada;
+    } else if (widget.event.hasDelivery) {
+      _deliveryType = DeliveryType.kurye;
+    } else {
+      _deliveryType = DeliveryType.gelAl;
+    }
+  }
   
   // Kişisel bilgiler
   final _nameController = TextEditingController();
@@ -46,6 +60,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   // Bagis/yuvarlama
   double _donationAmount = 0.0;
+  String _donationTarget = 'none'; // 'kermesOrg' | 'fund' | 'none'
   
   // Renkler
   static const Color lokmaPink = Color(0xFFEA184A);
@@ -897,8 +912,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             iconColor: Colors.amber,
             title: 'Gel Al',
             subtitle: 'Tezgahtan kendiniz alın',
+            badge: widget.event.hasTakeaway ? null : 'KAPALI',
+            badgeColor: Colors.grey,
             isSelected: _deliveryType == DeliveryType.gelAl,
-            onTap: () => setState(() => _deliveryType = DeliveryType.gelAl),
+            isDisabled: !widget.event.hasTakeaway,
+            onTap: widget.event.hasTakeaway
+                ? () => setState(() => _deliveryType = DeliveryType.gelAl)
+                : null,
           ),
           const SizedBox(height: 12),
           
@@ -908,8 +928,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             iconColor: Colors.purple,
             title: 'Masaya Servis',
             subtitle: 'Masanıza getirelim',
+            badge: widget.event.hasDineIn ? null : 'KAPALI',
+            badgeColor: Colors.grey,
             isSelected: _deliveryType == DeliveryType.masada,
-            onTap: () => setState(() => _deliveryType = DeliveryType.masada),
+            isDisabled: !widget.event.hasDineIn,
+            onTap: widget.event.hasDineIn
+                ? () => setState(() => _deliveryType = DeliveryType.masada)
+                : null,
           ),
           const SizedBox(height: 12),
           
@@ -1274,6 +1299,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     ),
                   ],
                 ),
+                
+                // Yuvarlama ile Destek widget'i (sadece acceptsDonations == true ise)
+                if (widget.event.acceptsDonations) ...[
+                  const SizedBox(height: 16),
+                  _buildRoundUpWidget(isDark, grandTotal),
+                ],
                 
                 const Divider(color: Colors.white24, height: 20),
                 
@@ -1790,6 +1821,159 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       case DeliveryType.kurye:
         return 'Kurye ile Teslimat';
     }
+  }
+
+  /// Yuvarlama ile Destek widget'i
+  Widget _buildRoundUpWidget(bool isDark, double subtotal) {
+    final double roundedUp = subtotal == subtotal.ceilToDouble() ? subtotal + 1 : subtotal.ceilToDouble();
+    final double roundUpAmount = double.parse((roundedUp - subtotal).toStringAsFixed(2));
+    final String kermesOrgName = widget.event.title;
+    final String? fundName = widget.event.selectedDonationFundName;
+    final bool hasFund = fundName != null && fundName.isNotEmpty;
+
+    void selectTarget(String target) {
+      HapticFeedback.selectionClick();
+      setState(() {
+        if (_donationTarget == target) {
+          _donationTarget = 'none';
+          _donationAmount = 0;
+        } else {
+          _donationTarget = target;
+          _donationAmount = roundUpAmount;
+        }
+      });
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2A2E) : const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _donationTarget != 'none'
+              ? Colors.green.withValues(alpha: 0.5)
+              : isDark ? Colors.white12 : Colors.grey.shade300,
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.volunteer_activism, color: Colors.green, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Yuvarlama ile Destek',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (roundUpAmount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '+${roundUpAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                    style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${subtotal.toStringAsFixed(2)} € → ${roundedUp.toStringAsFixed(2)} €',
+            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 11),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildDonationPill(
+                isDark: isDark,
+                label: kermesOrgName,
+                isSelected: _donationTarget == 'kermesOrg',
+                icon: Icons.mosque,
+                onTap: () => selectTarget('kermesOrg'),
+              ),
+              if (hasFund)
+                _buildDonationPill(
+                  isDark: isDark,
+                  label: fundName,
+                  isSelected: _donationTarget == 'fund',
+                  icon: Icons.favorite,
+                  onTap: () => selectTarget('fund'),
+                ),
+              _buildDonationPill(
+                isDark: isDark,
+                label: 'Hayir, tesekkurler',
+                isSelected: _donationTarget == 'none',
+                icon: Icons.close,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _donationTarget = 'none';
+                    _donationAmount = 0;
+                  });
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDonationPill({
+    required bool isDark,
+    required String label,
+    required bool isSelected,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.green.withValues(alpha: 0.2)
+              : isDark ? const Color(0xFF2A2A2A) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? Colors.green : (isDark ? Colors.white24 : Colors.grey.shade300),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: isSelected ? Colors.green : (isDark ? Colors.white54 : Colors.grey)),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? Colors.green : (isDark ? Colors.white70 : Colors.black54),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

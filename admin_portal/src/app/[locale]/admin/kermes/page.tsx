@@ -25,8 +25,11 @@ export default function KermesListPage() {
 const { admin, loading: adminLoading } = useAdmin();
     const [loading, setLoading] = useState(true);
     const [events, setEvents] = useState<KermesWithOrg[]>([]);
+    const [badges, setBadges] = useState<{id: string, name: string, iconUrl: string}[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [timeStatusFilter, setTimeStatusFilter] = useState<'all' | 'past' | 'active' | 'future' | 'archived'>('all');
+    const [selectedBadge, setSelectedBadge] = useState<string>('all');
+    const [selectedModality, setSelectedModality] = useState<string>('all');
     const router = useRouter();
 
     // Calculate kermes status based on dates
@@ -220,6 +223,22 @@ const { admin, loading: adminLoading } = useAdmin();
         }
     }, [adminLoading, admin, loadEvents]);
 
+    useEffect(() => {
+        const loadBadges = async () => {
+            try {
+                const snapshot = await getDocs(query(collection(db, 'kermes_badges'), orderBy('createdAt', 'desc')));
+                setBadges(snapshot.docs.map(d => ({ 
+                    id: d.id, 
+                    name: d.data().name,
+                    iconUrl: d.data().iconUrl || ''
+                })));
+            } catch (error) {
+                console.error('Error loading badges:', error);
+            }
+        };
+        loadBadges();
+    }, []);
+
     // Turkish character normalization for search
     const normalizeForSearch = (text: string | null | undefined): string => {
         if (!text) return '';
@@ -247,6 +266,20 @@ const { admin, loading: adminLoading } = useAdmin();
             if (timeStatusFilter !== 'all' && timeStatusFilter !== 'archived') {
                 const timeStatus = getKermesTimeStatus(event);
                 if (timeStatus !== timeStatusFilter) return false;
+            }
+
+            // Rozet Filtresi
+            if (selectedBadge !== 'all') {
+                if (!event.activeBadgeIds?.includes(selectedBadge)) return false;
+            }
+
+            // Sipariş Türü Filtresi
+            if (selectedModality !== 'all') {
+                const e = event as any;
+                if (selectedModality === 'menu_only' && !e.isMenuOnly) return false;
+                if (selectedModality === 'takeaway' && (e.isMenuOnly || !e.hasTakeaway)) return false;
+                if (selectedModality === 'delivery' && (e.isMenuOnly || !e.hasDelivery)) return false;
+                if (selectedModality === 'dine_in' && (e.isMenuOnly || !e.hasDineIn)) return false;
             }
 
             if (!searchQuery) return true;
@@ -363,6 +396,20 @@ const { admin, loading: adminLoading } = useAdmin();
                                     {t('kermes_ozellikleri')}
                                 </Link>
                                 <Link
+                                    href="/admin/settings/kermes-badges"
+                                    className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
+                                >
+                                    <span>🏅</span>
+                                    Zertifikate & Badges
+                                </Link>
+                                <Link
+                                    href="/admin/settings/donation-funds"
+                                    className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
+                                >
+                                    <span>💝</span>
+                                    Bagis Fonlari
+                                </Link>
+                                <Link
                                     href="/admin/settings/kermes-stock-images"
                                     className="px-4 py-2.5 bg-gradient-to-r from-cyan-700 to-teal-700 hover:from-cyan-600 hover:to-teal-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-cyan-600"
                                 >
@@ -401,11 +448,36 @@ const { admin, loading: adminLoading } = useAdmin();
                             />
                         </div>
 
+                        {/* Modality Filter */}
+                        <select
+                            value={selectedModality}
+                            onChange={(e) => setSelectedModality(e.target.value)}
+                            className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+                        >
+                            <option value="all">Tüm Sipariş Türleri</option>
+                            <option value="menu_only">Sadece Menü</option>
+                            <option value="takeaway">Gel-Al</option>
+                            <option value="delivery">Kurye</option>
+                            <option value="dine_in">Masa</option>
+                        </select>
+
+                        {/* Badge Filter */}
+                        <select
+                            value={selectedBadge}
+                            onChange={(e) => setSelectedBadge(e.target.value)}
+                            className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
+                        >
+                            <option value="all">Tüm Badgeler</option>
+                            {badges.map(b => (
+                                <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                        </select>
+
                         {/* Time Status Filter */}
                         <select
                             value={timeStatusFilter}
                             onChange={(e) => setTimeStatusFilter(e.target.value as 'all' | 'past' | 'active' | 'future' | 'archived')}
-                            className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 min-w-[180px]"
+                            className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 w-full sm:w-auto"
                         >
                             <option value="all">{t('tum_kermesler')}</option>
                             <option value="active">{t('aktif_devam_eden')}</option>
@@ -475,6 +547,47 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 {event.organizationName && (
                                                     <p className="text-muted-foreground text-sm truncate">{event.organizationName}</p>
                                                 )}
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {e.isMenuOnly ? (
+                                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded text-[10px] font-medium border border-gray-200 dark:border-gray-700">
+                                                            Sadece Menü
+                                                        </span>
+                                                    ) : (
+                                                        <>
+                                                            {e.hasTakeaway && (
+                                                                <span className="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded text-[10px] font-medium border border-amber-200 dark:border-amber-800/50">
+                                                                    🛍️ Gel-Al
+                                                                </span>
+                                                            )}
+                                                            {e.hasDelivery && (
+                                                                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded text-[10px] font-medium border border-blue-200 dark:border-blue-800/50">
+                                                                    🛵 Kurye
+                                                                </span>
+                                                            )}
+                                                            {e.hasDineIn && (
+                                                                <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 rounded text-[10px] font-medium border border-green-200 dark:border-green-800/50">
+                                                                    🍽️ Masa
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    )}
+
+                                                    {/* Real Badges (e.g. Tuna, Helal) */}
+                                                    {event.activeBadgeIds && event.activeBadgeIds.map(badgeId => {
+                                                        const badgeDef = badges.find(b => b.id === badgeId);
+                                                        if (!badgeDef) return null;
+                                                        return (
+                                                            <span key={badgeId} className="px-2 py-0.5 bg-white text-gray-800 dark:bg-gray-800/80 dark:text-gray-200 rounded text-[10px] font-bold border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-1.5">
+                                                                {badgeDef.iconUrl ? (
+                                                                    <img src={badgeDef.iconUrl} alt={badgeDef.name} className="w-3.5 h-3.5 object-contain" />
+                                                                ) : (
+                                                                    <span>🏆</span>
+                                                                )}
+                                                                {badgeDef.name}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
 
                                             {/* Date */}

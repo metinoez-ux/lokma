@@ -64,6 +64,11 @@ class KermesEvent {
   final double minCartForFreeDelivery;
   final double minOrderAmount; // Minimum sipariş tutarı (kurye için)
   
+  // Sipariş Yöntemleri (Order Modalities)
+  final bool isMenuOnly; // Sadece Menü (Sipariş kapalı)
+  final bool hasTakeaway; // Gel-Al (Takeaway)
+  final bool hasDineIn; // Masa (Dine-in)
+  
   // Yetkili Kişi
   final String? contactName; // Admin Portal'dan gelen yetkili adı
   final String? headerImage; // Admin Portal'dan seçilen baslik gorseli
@@ -72,6 +77,14 @@ class KermesEvent {
   final List<int> sponsoredMenuItems; // Menudan one cikarilacak urun indeksleri
   final List<String> sponsoredProductIds; // Firestore urun ID'leri (ileride reklam sistemi icin)
   
+  // Rozetler (Badges)
+  final List<String> activeBadgeIds;
+
+  // Yuvarlama ile Destek (Bagis)
+  final bool acceptsDonations; // Bu kermes bagis kabul ediyor mu?
+  final String? selectedDonationFundId; // Super admin tarafindan tanimlanan fonun ID'si
+  final String? selectedDonationFundName; // Mobilde gosterilecek fon adi
+
   // Legacy - keep for backwards compatibility
   @Deprecated('Use hasOutdoor instead')
   bool get hasShoppingStands => hasOutdoor;
@@ -123,12 +136,22 @@ class KermesEvent {
     this.deliveryFee = 0,
     this.minCartForFreeDelivery = 0,
     this.minOrderAmount = 0,
+    // Sipariş Yöntemleri (Order Modalities)
+    this.isMenuOnly = false,
+    this.hasTakeaway = true, // Eski kermesler için varsayılan Gel-Al açıktır
+    this.hasDineIn = false,
     this.contactName,
     this.headerImage,
     this.generalParkingNote,
     // Sponsorlu urunler
     this.sponsoredMenuItems = const [],
     this.sponsoredProductIds = const [],
+    // Rozetler
+    this.activeBadgeIds = const [],
+    // Bagis
+    this.acceptsDonations = false,
+    this.selectedDonationFundId,
+    this.selectedDonationFundName,
     // Pfand sistemi
     this.hasPfandSystem = false,
     this.pfandAmount = 0.25,

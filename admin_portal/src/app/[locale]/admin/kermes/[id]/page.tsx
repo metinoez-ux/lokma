@@ -100,6 +100,12 @@ interface KermesEvent {
     // Başlık görseli (Stok veya özel)
     headerImage?: string;
     headerImageId?: string; // Stok görsel ID'si (kullanım sayacı için)
+    // Badges / Sertifikalar
+    activeBadgeIds?: string[];
+    // Yuvarlama ile Destek
+    acceptsDonations?: boolean;
+    selectedDonationFundId?: string;
+    selectedDonationFundName?: string;
 }
 
 interface KermesProduct {
@@ -146,6 +152,8 @@ export default function KermesDetailPage() {
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [activeTab, setActiveTab] = useState<'bilgi' | 'menu'>('bilgi');
     const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
+    const [availableBadges, setAvailableBadges] = useState<any[]>([]);
+    const [donationFunds, setDonationFunds] = useState<{ id: string; name: string; description?: string }[]>([]);
 
     // Edit mode
     const [isEditing, setIsEditing] = useState(false);
@@ -170,7 +178,10 @@ export default function KermesDetailPage() {
         contactLastName: '',
         contactPhone: '',
         phoneCountryCode: '+49',
-        // Nakliyat/Kurye
+        // Sipariş Yöntemleri ve İstisnalar
+        isMenuOnly: false,
+        hasTakeaway: true,
+        hasDineIn: false,
         hasDelivery: false,
         deliveryFee: 0,
         minCartForFreeDelivery: 0,
@@ -189,6 +200,11 @@ export default function KermesDetailPage() {
         headerImage: '',
         headerImageId: '',
         sponsor: 'none' as 'tuna' | 'akdeniz_toros' | 'none',
+        activeBadgeIds: [] as string[],
+        // Bagis
+        acceptsDonations: false,
+        selectedDonationFundId: '',
+        selectedDonationFundName: '',
     });
     const [editFeatures, setEditFeatures] = useState<string[]>([]);
     const [editCustomFeatures, setEditCustomFeatures] = useState<string[]>([]); // Max 3 özel özellik
@@ -292,7 +308,10 @@ export default function KermesDetailPage() {
                 contactLastName: data.contactLastName || '',
                 contactPhone: data.contactPhone || '',
                 phoneCountryCode: data.phoneCountryCode || '+49',
-                // Nakliyat/Kurye
+                // Sipariş Yöntemleri ve Nakliyat
+                isMenuOnly: data.isMenuOnly || false,
+                hasTakeaway: data.hasTakeaway !== false,
+                hasDineIn: data.hasDineIn || false,
                 hasDelivery: data.hasDelivery || false,
                 deliveryFee: data.deliveryFee || 0,
                 minCartForFreeDelivery: data.minCartForFreeDelivery || 0,
@@ -311,6 +330,10 @@ export default function KermesDetailPage() {
                 headerImage: data.headerImage || '',
                 headerImageId: data.headerImageId || '',
                 sponsor: data.sponsor || 'none',
+                activeBadgeIds: data.activeBadgeIds || [],
+                acceptsDonations: data.acceptsDonations || false,
+                selectedDonationFundId: data.selectedDonationFundId || '',
+                selectedDonationFundName: data.selectedDonationFundName || '',
             });
             setEditFeatures(data.features || []);
             setEditCustomFeatures(data.customFeatures || []);
@@ -373,9 +396,9 @@ export default function KermesDetailPage() {
 
     useEffect(() => { loadKermes(); loadCategories(); }, [loadKermes, loadCategories]);
 
-    // Kermes özelliklerini Firestore'dan yükle (Super Admin ayarlarından)
+    // Kermes özelliklerini ve Rozetleri Firestore'dan yükle
     useEffect(() => {
-        const loadFeatures = async () => {
+        const loadFeaturesAndBadges = async () => {
             try {
                 const docRef = doc(db, 'settings', 'kermes_features');
                 const docSnap = await getDoc(docRef);
@@ -384,12 +407,23 @@ export default function KermesDetailPage() {
                     const activeFeatures = (data.features || []).filter((f: KermesFeature) => f.isActive);
                     setEventFeatures(activeFeatures);
                 }
+
+                // Rozetleri yükle
+                const badgesQ = query(collection(db, 'kermes_badges'), where('isActive', '==', true));
+                const badgesSnap = await getDocs(badgesQ);
+                const loadedBadges = badgesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                loadedBadges.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+                setAvailableBadges(loadedBadges);
+
+                // Bagis fonlarini yukle
+                const fundsQ = query(collection(db, 'donation_funds'), where('isActive', '==', true));
+                const fundsSnap = await getDocs(fundsQ);
+                setDonationFunds(fundsSnap.docs.map(d => ({ id: d.id, name: d.data().name, description: d.data().description })));
             } catch (error) {
-                console.error(t('ozellikler_yuklenemedi'), error);
-                // Hata durumunda varsayılan özellikleri kullan
+                console.error('Özellikler veya rozetler yüklenemedi:', error);
             }
         };
-        loadFeatures();
+        loadFeaturesAndBadges();
     }, []);
 
     // Stok görselleri yükle
@@ -455,11 +489,14 @@ export default function KermesDetailPage() {
                 // Özellikler
                 features: editFeatures,
                 customFeatures: editCustomFeatures,
-                // Nakliyat/Kurye
-                hasDelivery: editForm.hasDelivery,
-                deliveryFee: editForm.deliveryFee || 0,
-                minCartForFreeDelivery: editForm.minCartForFreeDelivery || 0,
-                minOrderAmount: editForm.minOrderAmount || 0,
+                // Sipariş Yöntemleri ve Nakliyat
+                isMenuOnly: editForm.isMenuOnly || false,
+                hasTakeaway: editForm.isMenuOnly ? false : editForm.hasTakeaway,
+                hasDineIn: editForm.isMenuOnly ? false : editForm.hasDineIn,
+                hasDelivery: editForm.isMenuOnly ? false : editForm.hasDelivery,
+                deliveryFee: editForm.hasDelivery ? (editForm.deliveryFee || 0) : 0,
+                minCartForFreeDelivery: editForm.hasDelivery ? (editForm.minCartForFreeDelivery || 0) : 0,
+                minOrderAmount: editForm.hasDelivery ? (editForm.minOrderAmount || 0) : 0,
                 // Park alanları
                 parkingLocations: editForm.parkingLocations || [],
                 generalParkingNote: editForm.generalParkingNote || '',
@@ -474,6 +511,10 @@ export default function KermesDetailPage() {
                 headerImage: editForm.headerImage || null,
                 headerImageId: editForm.headerImageId || null,
                 sponsor: editForm.sponsor !== 'none' ? editForm.sponsor : null,
+                activeBadgeIds: editForm.activeBadgeIds || [],
+                acceptsDonations: editForm.acceptsDonations || false,
+                selectedDonationFundId: editForm.selectedDonationFundId || null,
+                selectedDonationFundName: editForm.selectedDonationFundName || null,
                 // Sistem
                 updatedAt: new Date(),
             };
@@ -811,7 +852,6 @@ export default function KermesDetailPage() {
                                 <h3 className="text-foreground font-bold">📋 Kermes Bilgileri</h3>
                                 {!isEditing ? (
                                     <button onClick={() => {
-                                        setEditMode(true);
                                         const startD = kermes?.date?.toDate?.() || kermes?.startDate?.toDate?.() || (kermes?.date?.seconds ? new Date(kermes.date.seconds * 1000) : (kermes?.startDate?.seconds ? new Date(kermes.startDate.seconds * 1000) : null));
                                         const endD = kermes?.endDate?.toDate?.() || (kermes?.endDate?.seconds ? new Date(kermes.endDate.seconds * 1000) : null);
                                         
@@ -835,6 +875,9 @@ export default function KermesDetailPage() {
                                             contactLastName: kermes?.contactLastName || '',
                                             contactPhone: kermes?.contactPhone || '',
                                             phoneCountryCode: kermes?.phoneCountryCode || '+49',
+                                            isMenuOnly: kermes?.isMenuOnly || false,
+                                            hasTakeaway: kermes?.hasTakeaway !== false,
+                                            hasDineIn: kermes?.hasDineIn || false,
                                             hasDelivery: kermes?.hasDelivery || false,
                                             deliveryFee: kermes?.deliveryFee || 0,
                                             minCartForFreeDelivery: kermes?.minCartForFreeDelivery || 0,
@@ -849,6 +892,7 @@ export default function KermesDetailPage() {
                                             headerImage: kermes?.headerImage || '',
                                             headerImageId: kermes?.headerImageId || '',
                                             sponsor: kermes?.sponsor || 'none',
+                                            activeBadgeIds: kermes?.activeBadgeIds || [],
                                         });
                                         setEditFeatures(kermes?.features || []);
                                         setEditCustomFeatures(kermes?.customFeatures || []);
@@ -1059,18 +1103,46 @@ export default function KermesDetailPage() {
 
                                     {/* Removed deprecated Yetkili Kişi Bilgileri (Moved to modular card below) */}
 
-                                    {/* Sponsor / Marka Etiketi */}
+                                    {/* Marka ve Sertifika Rozetleri */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-foreground font-medium mb-3">🏷️ Sponsor / Marka Etiketi</h4>
-                                        <select
-                                            value={editForm.sponsor}
-                                            onChange={(e) => setEditForm({ ...editForm, sponsor: e.target.value as any })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 outline-none"
-                                        >
-                                            <option value="none">Yok</option>
-                                            <option value="tuna">🐟 TUNA</option>
-                                            <option value="akdeniz_toros">🏔️ Akdeniz Toros</option>
-                                        </select>
+                                        <h4 className="text-foreground font-medium mb-3">🏷️ Marka & Sertifika Rozetleri</h4>
+                                        <div className="flex flex-wrap gap-3">
+                                            {availableBadges.map((badge) => {
+                                                const isSelected = editForm.activeBadgeIds?.includes(badge.id);
+                                                return (
+                                                    <button
+                                                        key={badge.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const currentIds = editForm.activeBadgeIds || [];
+                                                            setEditForm({
+                                                                ...editForm,
+                                                                activeBadgeIds: isSelected
+                                                                    ? currentIds.filter(id => id !== badge.id)
+                                                                    : [...currentIds, badge.id]
+                                                            });
+                                                        }}
+                                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                                                            isSelected
+                                                                ? 'bg-pink-600/20 border-pink-500 text-pink-500'
+                                                                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                                                        }`}
+                                                    >
+                                                        {badge.iconUrl && (
+                                                            <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center p-0.5" style={{ backgroundColor: badge.backgroundColor || '#ffffff' }}>
+                                                                <img src={badge.iconUrl} alt={badge.name} className="w-full h-full object-contain" />
+                                                            </div>
+                                                        )}
+                                                        <span className="text-sm font-medium">{badge.name}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                            {availableBadges.length === 0 && (
+                                                <p className="text-sm text-muted-foreground w-full py-2">
+                                                    Henüz aktif rozet bulunmuyor.
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Kurumsal Ayarlar (Pfand & KDV) */}
@@ -1237,42 +1309,85 @@ export default function KermesDetailPage() {
                             )}
                         </div>
 
-                        {/* Nakliyat/Kurye Servisi Card */}
+                        {/* Sipariş ve Teslimat Seçenekleri */}
                         <div className="bg-card rounded-xl p-6">
-                            <h3 className="text-foreground font-bold mb-4">{t('kurye_nakliyat_servisi')}</h3>
+                            <h3 className="text-foreground font-bold mb-4">Sipariş ve Teslimat Seçenekleri</h3>
                             {isEditing ? (
                                 <div className="space-y-4">
                                     <label className="flex items-center gap-3 cursor-pointer">
-                                        <input type="checkbox" checked={editForm.hasDelivery}
-                                            onChange={(e) => setEditForm({ ...editForm, hasDelivery: e.target.checked })}
+                                        <input type="checkbox" checked={editForm.isMenuOnly}
+                                            onChange={(e) => {
+                                                const val = e.target.checked;
+                                                setEditForm({ ...editForm, isMenuOnly: val, hasTakeaway: val ? false : editForm.hasTakeaway, hasDelivery: val ? false : editForm.hasDelivery, hasDineIn: val ? false : editForm.hasDineIn });
+                                            }}
                                             className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
-                                        <span className="text-foreground">{t('kurye_servisi_mevcut')}</span>
+                                        <span className="text-foreground">Sadece Menü Gösterimi <span className="text-muted-foreground text-xs">(Sipariş Kapalı)</span></span>
                                     </label>
-                                    {editForm.hasDelivery && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('nakliyat_ucreti')}</label>
-                                                <input type="number" step="0.50" min="0" value={editForm.deliveryFee || ''}
-                                                    onChange={(e) => setEditForm({ ...editForm, deliveryFee: parseFloat(e.target.value) || 0 })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="3.00" />
+                                    
+                                    {!editForm.isMenuOnly && (
+                                        <>
+                                            <div className="pl-6 space-y-3 border-l-2 border-gray-700 ml-2 mt-4">
+                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" checked={editForm.hasTakeaway}
+                                                        onChange={(e) => setEditForm({ ...editForm, hasTakeaway: e.target.checked })}
+                                                        className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
+                                                    <span className="text-foreground">Gel-Al İmkanı (Takeaway)</span>
+                                                </label>
+                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" checked={editForm.hasDineIn}
+                                                        onChange={(e) => setEditForm({ ...editForm, hasDineIn: e.target.checked })}
+                                                        className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
+                                                    <span className="text-foreground">Masa İmkanı (Dine-in)</span>
+                                                </label>
+                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" checked={editForm.hasDelivery}
+                                                        onChange={(e) => setEditForm({ ...editForm, hasDelivery: e.target.checked })}
+                                                        className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
+                                                    <span className="text-foreground">{t('kurye_servisi_mevcut')}</span>
+                                                </label>
                                             </div>
-                                            <div>
-                                                <label className="text-muted-foreground text-xs block mb-1">{t('minimum_siparis_tutari')} <span className="text-yellow-800 dark:text-yellow-400">{t('bu_tutarin_altinda_kurye_kabul_edilmez')}</span></label>
-                                                <input type="number" step="1" min="0" value={editForm.minOrderAmount || ''}
-                                                    onChange={(e) => setEditForm({ ...editForm, minOrderAmount: parseFloat(e.target.value) || 0 })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="15" />
-                                            </div>
-                                        </div>
+
+                                            {editForm.hasDelivery && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 mt-4">
+                                                    <div>
+                                                        <label className="text-muted-foreground text-xs block mb-1">{t('nakliyat_ucreti')}</label>
+                                                        <input type="number" step="0.50" min="0" value={editForm.deliveryFee || ''}
+                                                            onChange={(e) => setEditForm({ ...editForm, deliveryFee: parseFloat(e.target.value) || 0 })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="3.00" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-muted-foreground text-xs block mb-1">{t('minimum_siparis_tutari')} <span className="text-yellow-800 dark:text-yellow-400">{t('bu_tutarin_altinda_kurye_kabul_edilmez')}</span></label>
+                                                        <input type="number" step="1" min="0" value={editForm.minOrderAmount || ''}
+                                                            onChange={(e) => setEditForm({ ...editForm, minOrderAmount: parseFloat(e.target.value) || 0 })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="15" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3 text-sm">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasDelivery ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-gray-600/30 text-muted-foreground'}`}>
-                                            {kermes.hasDelivery ? t('kurye_var') : t('kurye_yok')}
-                                        </span>
-                                    </div>
-                                    {kermes.hasDelivery && (
+                                <div className="space-y-4">
+                                    {kermes.isMenuOnly ? (
+                                        <div className="flex items-center gap-3 text-sm">
+                                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-600/30 text-white">
+                                                Sadece Menü Gösterimi (Sipariş Kapalı)
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2 text-sm mt-2">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasTakeaway !== false ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
+                                                {kermes.hasTakeaway !== false ? 'Gel-Al (Var)' : 'Gel-Al (Yok)'}
+                                            </span>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasDineIn ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
+                                                {kermes.hasDineIn ? 'Masa (Var)' : 'Masa (Yok)'}
+                                            </span>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${kermes.hasDelivery ? 'bg-green-600/30 text-green-800 dark:text-green-400' : 'bg-red-600/30 text-red-800 dark:text-red-400'}`}>
+                                                {kermes.hasDelivery ? t('kurye_var') : t('kurye_yok')}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {kermes.hasDelivery && !kermes.isMenuOnly && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <span className="text-gray-500">{t('nakliyat_ucreti')}</span>
@@ -1290,7 +1405,58 @@ export default function KermesDetailPage() {
                             )}
                         </div>
 
-                        {/* Park İmkanları Card */}
+                        {/* Yuvarlama ile Destek */}
+                        <div className="bg-card rounded-xl p-6">
+                            <h3 className="text-foreground font-bold mb-1">Yuvarlama ile Destek</h3>
+                            <p className="text-muted-foreground text-xs mb-4">Aktifse, checkout'ta kullaniciya siparis tutamini yuvarlamasina ve farki bagis olarak gondermesine imkan tanirsaniz.</p>
+                            {isEditing ? (
+                                <div className="space-y-4">
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" checked={editForm.acceptsDonations}
+                                            onChange={(e) => setEditForm({ ...editForm, acceptsDonations: e.target.checked, selectedDonationFundId: e.target.checked ? editForm.selectedDonationFundId : '', selectedDonationFundName: e.target.checked ? editForm.selectedDonationFundName : '' })}
+                                            className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500" />
+                                        <span className="text-foreground">Yuvarlama ile Destek Aktif</span>
+                                    </label>
+                                    {editForm.acceptsDonations && (
+                                        <div className="pl-6 border-l-2 border-gray-700 ml-2 space-y-3">
+                                            <p className="text-muted-foreground text-xs">Kullanici her zaman <strong className="text-white">kendi kermes kurulasuna</strong> yuvarlayabilir. Asagidan bir 2. bagis fonu da sec:</p>
+                                            {donationFunds.length > 0 ? (
+                                                <select
+                                                    value={editForm.selectedDonationFundId}
+                                                    onChange={(e) => {
+                                                        const fund = donationFunds.find(f => f.id === e.target.value);
+                                                        setEditForm({ ...editForm, selectedDonationFundId: e.target.value, selectedDonationFundName: fund?.name || '' });
+                                                    }}
+                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm"
+                                                >
+                                                    <option value="">-- 2. Fon secme (sadece kendi kurulusu gosterilir) --</option>
+                                                    {donationFunds.map(f => (
+                                                        <option key={f.id} value={f.id}>{f.name}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <p className="text-yellow-400 text-xs">Henuz aktif bagis fonu tanimlanmamis. Super Admin &gt; Ayarlar &gt; Bagis Fonlari kisminda ekleyin.</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                        (kermes as any).acceptsDonations ? 'bg-green-600/30 text-green-400' : 'bg-gray-600/30 text-gray-400'
+                                    }`}>
+                                        {(kermes as any).acceptsDonations ? 'Yuvarlama Aktif' : 'Yuvarlama Pasif'}
+                                    </span>
+                                    {(kermes as any).selectedDonationFundName && (
+                                        <span className="px-3 py-1 rounded-full text-xs bg-blue-600/30 text-blue-400">
+                                            2. Fon: {(kermes as any).selectedDonationFundName}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Park Imkanlari Card */}
                         <div className="bg-card rounded-xl p-6">
                             <h3 className="text-foreground font-bold mb-4">{t('park_i_mkanlari')}</h3>
                             {isEditing ? (

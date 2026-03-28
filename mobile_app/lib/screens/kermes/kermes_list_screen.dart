@@ -393,11 +393,18 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               deliveryFee: (data['deliveryFee'] ?? 0).toDouble(),
               minCartForFreeDelivery: (data['minCartForFreeDelivery'] ?? 0).toDouble(),
               minOrderAmount: (data['minOrderAmount'] ?? 0).toDouble(),
+              isMenuOnly: data['isMenuOnly'] == true,
+              hasTakeaway: data['hasTakeaway'] ?? true, // Eski veri için default true
+              hasDineIn: data['hasDineIn'] == true,
               contactName: contactName,
               headerImage: data['headerImage']?.toString(),
               openingTime: openingTime,
               closingTime: closingTime,
               sponsor: sponsor,
+              activeBadgeIds: (data['activeBadgeIds'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+              acceptsDonations: data['acceptsDonations'] == true,
+              selectedDonationFundId: data['selectedDonationFundId']?.toString(),
+              selectedDonationFundName: data['selectedDonationFundName']?.toString(),
             );
 
             loadedEvents.add(event);
@@ -436,10 +443,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     if (_deliveryMode == 'teslimat') {
       events = events.where((event) => event.hasDelivery).toList();
     }
-    // 'gelal' = hepsini goster (pickup hep mumkun)
-    // 'masa' = indoor area olan kermesler (oturma alani)
+    if (_deliveryMode == 'gelal') {
+      events = events.where((event) => event.hasTakeaway).toList();
+    }
     if (_deliveryMode == 'masa') {
-      events = events.where((event) => event.hasIndoorArea || event.hasFamilyArea).toList();
+      events = events.where((event) => event.hasDineIn).toList();
     }
 
     // Smart search with normalization
