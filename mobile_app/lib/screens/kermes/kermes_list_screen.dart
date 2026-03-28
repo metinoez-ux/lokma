@@ -1752,7 +1752,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 activeTrackColor: lokmaPink,
                 inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[400],
                 thumbColor: lokmaPink,
-                overlayColor: lokmaPink.withValues(alpha: 0.2),
+                overlayColor: Colors.transparent,
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
