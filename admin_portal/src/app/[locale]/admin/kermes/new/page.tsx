@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { addDoc, collection, doc, getDoc, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';

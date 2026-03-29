@@ -77,10 +77,16 @@ interface KermesEvent {
     features?: string[];
     customCategories?: string[];
     // Nakliyat/Kurye
+    isMenuOnly?: boolean;
+    hasTakeaway?: boolean;
+    hasDineIn?: boolean;
     hasDelivery?: boolean;
     deliveryFee?: number;
     minCartForFreeDelivery?: number;
     minOrderAmount?: number; // Minimum sipariş tutarı (kurye için)
+    // Personel Atamaları
+    assignedStaff?: any[];
+    assignedDrivers?: any[];
     // Park imkanları
     parkingLocations?: {
         street: string;
@@ -790,7 +796,7 @@ export default function KermesDetailPage() {
                     businessId: kermes.id,
                     businessName: kermes.title,
                     businessType: 'kermes',
-                    createdBy: admin?.firebaseUid || 'admin_panel',
+                    createdBy: (admin as any)?.firebaseUid || 'admin_panel',
                     locale: params.locale || 'de',
                     assignerName: admin ? `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.displayName : undefined,
                     assignerEmail: admin?.email,
@@ -1066,6 +1072,8 @@ export default function KermesDetailPage() {
                                             acceptsDonations: kermes?.acceptsDonations || false,
                                             selectedDonationFundId: kermes?.selectedDonationFundId || '',
                                             selectedDonationFundName: kermes?.selectedDonationFundName || '',
+                                            latitude: kermes?.latitude || null,
+                                            longitude: kermes?.longitude || null,
                                         });
                                         setEditFeatures(kermes?.features || []);
                                         setEditCustomFeatures(kermes?.customFeatures || []);
