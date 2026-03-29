@@ -860,6 +860,7 @@ export interface KermesEvent {
 
     // Sponsor
     sponsor?: 'tuna' | 'akdeniz_toros' | 'none';
+    activeBadgeIds?: string[];
 
     // Items (legacy field for backward compatibility)
     items?: KermesItem[];

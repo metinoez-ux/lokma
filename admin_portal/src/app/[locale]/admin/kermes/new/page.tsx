@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PlacesAutocomplete } from '@/components/PlacesAutocomplete';
 import OrganizationSearchModal from '@/components/OrganizationSearchModal';
+import { MapLocationPicker, SelectedLocation } from '@/components/MapLocationPicker';
 import { useTranslations } from 'next-intl';
 import { normalizeTimeString } from '@/utils/timeUtils';
 
@@ -99,6 +100,8 @@ function NewKermesContent() {
         city: '',
         postalCode: '',
         country: '', // Google Places'tan otomatik algılanır
+        latitude: null as number | null,
+        longitude: null as number | null,
         // Konum bilgileri - 2. Sokak Adı
         alternativeAddress: '',
         // Yetkili kişi bilgileri
@@ -106,6 +109,8 @@ function NewKermesContent() {
         contactLastName: '',
         contactPhone: '',
         phoneCountryCode: '+49',
+        // Rozetler
+        activeBadgeIds: [] as string[],
     });
 
     // Ülke seçenekleri
@@ -138,7 +143,10 @@ function NewKermesContent() {
         }
     };
 
-    // 🚚 Kurye/Nakliyat Servisi
+    // 🚚 Sipariş ve Teslimat Yöntemleri
+    const [isMenuOnly, setIsMenuOnly] = useState(false);
+    const [hasTakeaway, setHasTakeaway] = useState(true);
+    const [hasDineIn, setHasDineIn] = useState(true);
     const [hasDelivery, setHasDelivery] = useState(false);
     const [deliveryFee, setDeliveryFee] = useState(2.95);
     const [minOrderAmount, setMinOrderAmount] = useState(25);
@@ -161,10 +169,12 @@ function NewKermesContent() {
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>(['halal']);
     const [customFeatures, setCustomFeatures] = useState<string[]>([]);
     const [newCustomFeature, setNewCustomFeature] = useState('');
+    const [availableBadges, setAvailableBadges] = useState<any[]>([]);
+    const [mainMapOpen, setMainMapOpen] = useState(false);
 
-    // Kermes özelliklerini Firestore'dan yükle
+    // Kermes özelliklerini ve Rozetleri Firestore'dan yükle
     useEffect(() => {
-        const loadFeatures = async () => {
+        const loadFeaturesAndBadges = async () => {
             try {
                 const docRef = doc(db, 'settings', 'kermes_features');
                 const docSnap = await getDoc(docRef);
@@ -175,12 +185,19 @@ function NewKermesContent() {
                 } else {
                     setEventFeatures(DEFAULT_FEATURES);
                 }
+
+                // Rozetleri yükle
+                const badgesQ = query(collection(db, 'kermes_badges'), where('isActive', '==', true));
+                const badgesSnap = await getDocs(badgesQ);
+                const loadedBadges = badgesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                loadedBadges.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+                setAvailableBadges(loadedBadges);
             } catch (error) {
-                console.error('Özellikler yüklenemedi:', error);
+                console.error('Özellikler veya rozetler yüklenemedi:', error);
                 setEventFeatures(DEFAULT_FEATURES);
             }
         };
-        loadFeatures();
+        loadFeaturesAndBadges();
     }, []);
 
     useEffect(() => {
@@ -296,6 +313,8 @@ function NewKermesContent() {
                 city: formData.city || null,
                 postalCode: formData.postalCode || null,
                 country: formData.country || null,
+                latitude: formData.latitude,
+                longitude: formData.longitude,
                 // Konum bilgileri - 2. Sokak Adı
                 secondStreetName: formData.alternativeAddress || null,
                 // Yetkili kişi
@@ -304,11 +323,15 @@ function NewKermesContent() {
                 contactName: `${formData.contactFirstName} ${formData.contactLastName}`.trim() || null, // Eski uyumluluk için
                 contactPhone: formData.phoneCountryCode + ' ' + formData.contactPhone.replace(/^[\+0-9\s]+/, ''),
                 phoneCountryCode: formData.phoneCountryCode,
-                // Etkinlik özellikleri
+                // Etkinlik özellikleri ve Rozetler
                 features: selectedFeatures,
                 customFeatures: customFeatures,
-                // 🚚 Kurye/Nakliyat
-                hasDelivery: hasDelivery,
+                activeBadgeIds: formData.activeBadgeIds,
+                // 🚚 Sipariş ve Teslimat Yöntemleri
+                isMenuOnly: isMenuOnly,
+                hasTakeaway: isMenuOnly ? false : hasTakeaway,
+                hasDineIn: isMenuOnly ? false : hasDineIn,
+                hasDelivery: isMenuOnly ? false : hasDelivery,
                 deliveryFee: hasDelivery ? deliveryFee : 0,
                 minOrderAmount: hasDelivery ? minOrderAmount : 0,
                 minCartForFreeDelivery: hasDelivery ? minCartForFreeDelivery : 0,
@@ -462,20 +485,39 @@ function NewKermesContent() {
                             <label className="block text-sm font-medium text-foreground mb-1">
                                 Ana Adres
                             </label>
-                            <PlacesAutocomplete
-                                value={formData.address}
-                                onChange={(value) => setFormData({ ...formData, address: value })}
-                                onPlaceSelect={(place) => {
-                                    setFormData({
-                                        ...formData,
-                                        address: place.street || place.formattedAddress || formData.address,
-                                        city: place.city || formData.city,
-                                        postalCode: place.postalCode || formData.postalCode,
-                                        country: place.country || formData.country,
-                                    });
-                                }}
-                                placeholder="Tam adres girin veya arayın..."
-                            />
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <PlacesAutocomplete
+                                        value={formData.address}
+                                        onChange={(value) => setFormData({ ...formData, address: value })}
+                                        onPlaceSelect={(place) => {
+                                            setFormData({
+                                                ...formData,
+                                                address: place.street || place.formattedAddress || formData.address,
+                                                city: place.city || formData.city,
+                                                postalCode: place.postalCode || formData.postalCode,
+                                                country: place.country || formData.country,
+                                                latitude: place.lat || formData.latitude,
+                                                longitude: place.lng || formData.longitude,
+                                            });
+                                        }}
+                                        placeholder="Tam adres girin veya arayın..."
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setMainMapOpen(true)}
+                                    className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition flex items-center gap-2 flex-shrink-0"
+                                    title="Haritada Koordinat İşaretle"
+                                >
+                                    <span>📍</span>
+                                </button>
+                            </div>
+                            {(formData.latitude && formData.longitude) && (
+                                <p className="text-xs text-green-400 mt-1">
+                                    Koordinatlar ayarlandı: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -700,64 +742,107 @@ function NewKermesContent() {
                     </div>
                 </div>
 
-                {/* 🚚 Kurye/Nakliyat Servisi */}
+                {/* 🚚 Sipariş ve Teslimat Seçenekleri */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-foreground">🚚 Kurye / Nakliyat Servisi</h2>
+                    <h2 className="text-lg font-bold text-foreground mb-4">Sipariş ve Teslimat Seçenekleri</h2>
+                    
+                    <div className="space-y-4">
                         <label className="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="checkbox"
-                                checked={hasDelivery}
-                                onChange={(e) => setHasDelivery(e.target.checked)}
-                                className="w-5 h-5 rounded text-pink-600 focus:ring-pink-500"
+                                checked={isMenuOnly}
+                                onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setIsMenuOnly(val);
+                                    if (val) {
+                                        setHasTakeaway(false);
+                                        setHasDineIn(false);
+                                        setHasDelivery(false);
+                                    }
+                                }}
+                                className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
                             />
-                            <span className="text-foreground">Kurye Servisi Mevcut</span>
+                            <span className="text-foreground">Sadece Menü Gösterimi <span className="text-muted-foreground text-xs">(Sipariş Kapalı)</span></span>
                         </label>
-                    </div>
+                        
+                        {!isMenuOnly && (
+                            <>
+                                <div className="pl-6 space-y-3 border-l-2 border-gray-700 ml-2 mt-4">
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={hasTakeaway}
+                                            onChange={(e) => setHasTakeaway(e.target.checked)}
+                                            className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
+                                        />
+                                        <span className="text-foreground">Gel-Al İmkanı (Takeaway)</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={hasDineIn}
+                                            onChange={(e) => setHasDineIn(e.target.checked)}
+                                            className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
+                                        />
+                                        <span className="text-foreground">Masa İmkanı (Dine-in)</span>
+                                    </label>
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={hasDelivery}
+                                            onChange={(e) => setHasDelivery(e.target.checked)}
+                                            className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-pink-600 focus:ring-pink-500"
+                                        />
+                                        <span className="text-foreground">{t('kurye_servisi_mevcut')}</span>
+                                    </label>
+                                </div>
 
-                    {hasDelivery && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Nakliyat Ücreti (€)
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={deliveryFee}
-                                    onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
-                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Minimum Sipariş Tutarı (€)
-                                    <span className="text-yellow-800 dark:text-yellow-400 text-xs ml-2">(Bu tutarın altında kurye kabul edilmez)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={minOrderAmount}
-                                    onChange={(e) => setMinOrderAmount(parseFloat(e.target.value) || 0)}
-                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Ücretsiz Teslimat İçin Min. (€)
-                                    <span className="text-green-800 dark:text-green-400 text-xs ml-2">(Bu tutardan sonra teslimat ücretsiz)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={minCartForFreeDelivery}
-                                    onChange={(e) => setMinCartForFreeDelivery(parseFloat(e.target.value) || 0)}
-                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
-                                    placeholder="0 = yok"
-                                />
-                            </div>
-                        </div>
-                    )}
+                                {hasDelivery && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8 mt-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                Nakliyat Ücreti (€)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={deliveryFee}
+                                                onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                Minimum Sipariş Tutarı (€)
+                                                <span className="text-yellow-800 dark:text-yellow-400 text-xs ml-2">(Bu tutarın altında kurye kabul edilmez)</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={minOrderAmount}
+                                                onChange={(e) => setMinOrderAmount(parseFloat(e.target.value) || 0)}
+                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground mb-1">
+                                                Ücretsiz Teslimat İçin Min. (€)
+                                                <span className="text-green-800 dark:text-green-400 text-xs ml-2">(Bu tutardan sonra teslimat ücretsiz)</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={minCartForFreeDelivery}
+                                                onChange={(e) => setMinCartForFreeDelivery(parseFloat(e.target.value) || 0)}
+                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-pink-500"
+                                                placeholder="0 = yok"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {/* ⚙️ Genel Ayarlar (Pfand + KDV) */}
@@ -961,6 +1046,48 @@ function NewKermesContent() {
                     </div>
                 </div>
 
+                {/* 🏷️ Marka & Sertifika Rozetleri */}
+                <div className="bg-card rounded-xl shadow-md p-6 border border-border">
+                    <h2 className="text-lg font-bold text-foreground mb-4">🏷️ Marka & Sertifika Rozetleri</h2>
+                    <div className="flex flex-wrap gap-3">
+                        {availableBadges.map((badge) => {
+                            const isSelected = formData.activeBadgeIds.includes(badge.id);
+                            return (
+                                <button
+                                    key={badge.id}
+                                    type="button"
+                                    onClick={() => {
+                                        const currentIds = formData.activeBadgeIds;
+                                        setFormData({
+                                            ...formData,
+                                            activeBadgeIds: isSelected
+                                                ? currentIds.filter(id => id !== badge.id)
+                                                : [...currentIds, badge.id]
+                                        });
+                                    }}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                                        isSelected
+                                            ? 'bg-pink-600/20 border-pink-500 text-pink-500'
+                                            : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                                    }`}
+                                >
+                                    {badge.iconUrl && (
+                                        <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center p-0.5" style={{ backgroundColor: badge.backgroundColor || '#ffffff' }}>
+                                            <img src={badge.iconUrl} alt={badge.name} className="w-full h-full object-contain" />
+                                        </div>
+                                    )}
+                                    <span className="text-sm font-medium">{badge.name}</span>
+                                </button>
+                            );
+                        })}
+                        {availableBadges.length === 0 && (
+                            <p className="text-sm text-muted-foreground w-full">
+                                Henüz aktif rozet bulunmuyor.
+                            </p>
+                        )}
+                    </div>
+                </div>
+
                 {/* ✨ Etkinlik Özellikleri */}
                 <div className="bg-card rounded-xl shadow-md p-6 border border-border">
                     <h2 className="text-lg font-bold text-foreground mb-2">✨ Etkinlik Özellikleri</h2>
@@ -1043,6 +1170,25 @@ function NewKermesContent() {
                 isOpen={showOrgSearchModal}
                 onClose={() => setShowOrgSearchModal(false)}
                 onSelect={handleOrganizationSelect}
+            />
+
+            {/* Harita Seçici - Ana Konum */}
+            <MapLocationPicker
+                isOpen={mainMapOpen}
+                onClose={() => setMainMapOpen(false)}
+                initialLat={formData.latitude || 51.0}
+                initialLng={formData.longitude || 9.0}
+                onLocationSelect={(loc: SelectedLocation) => {
+                    setFormData({
+                        ...formData,
+                        address: loc.street || loc.address || formData.address,
+                        city: loc.city || formData.city,
+                        postalCode: loc.postalCode || formData.postalCode,
+                        country: loc.country || formData.country,
+                        latitude: loc.lat,
+                        longitude: loc.lng,
+                    });
+                }}
             />
         </div>
     );

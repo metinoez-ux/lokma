@@ -375,7 +375,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                   color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(tr('Varsayılan'), style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
+                child: Text(tr('Varsayılan'), style: const TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
               ),
             const SizedBox(width: 8),
             Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 16),
@@ -586,7 +586,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         children: [
                           Icon(Icons.add_location_alt, color: const Color(0xFF2563EB), size: 16),
                           const SizedBox(width: 6),
-                          const Text(tr('Park Ekle'), style: TextStyle(color: Color(0xFF2563EB), fontSize: 13, fontWeight: FontWeight.w600)),
+                          Text(tr('Park Ekle'), style: const TextStyle(color: Color(0xFF2563EB), fontSize: 13, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -605,7 +605,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         children: [
                           const Icon(Icons.campaign, color: Colors.red, size: 16),
                           const SizedBox(width: 6),
-                          const Text(tr('Acil Anons'), style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w600)),
+                          Text(tr('Acil Anons'), style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -2207,7 +2207,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       builder: (context) => AlertDialog(
         backgroundColor: _surfaceDark(isDark),
         title: Text(tr('Park Alanını Sil'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: const Text(tr('Bu park alanını silmek istediğinize emin misiniz?'), style: TextStyle(color: Colors.grey)),
+        content: Text(tr('Bu park alanını silmek istediğinize emin misiniz?'), style: const TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

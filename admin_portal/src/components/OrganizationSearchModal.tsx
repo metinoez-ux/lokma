@@ -88,6 +88,8 @@ const [organizations, setOrganizations] = useState<Organization[]>([]);
             normalizeTurkish(org.name.toLowerCase()).includes(normalizedQuery) ||
             normalizeTurkish(org.shortName?.toLowerCase() || '').includes(normalizedQuery) ||
             normalizeTurkish(org.city.toLowerCase()).includes(normalizedQuery) ||
+            normalizeTurkish(org.state?.toLowerCase() || '').includes(normalizedQuery) ||
+            normalizeTurkish(org.address?.toLowerCase() || '').includes(normalizedQuery) ||
             (org.postalCode || '').includes(searchQuery)
         );
     });

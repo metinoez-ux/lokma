@@ -10,6 +10,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import { KERMES_MENU_CATALOG, KermesMenuItemData } from '@/lib/kermes_menu_catalog';
 import { PlacesAutocomplete } from '@/components/PlacesAutocomplete';
 import { MapLocationPicker, SelectedLocation } from '@/components/MapLocationPicker';
+import OrganizationSearchModal from '@/components/OrganizationSearchModal';
 import { useTranslations } from 'next-intl';
 import { normalizeTimeString } from '@/utils/timeUtils';
 
@@ -56,6 +57,8 @@ interface KermesEvent {
     secondStreetName?: string;
     postalCode?: string;
     country?: string;
+    latitude?: number | null;
+    longitude?: number | null;
     date?: any;
     startDate?: any;
     endDate?: any;
@@ -172,6 +175,8 @@ export default function KermesDetailPage() {
         city: '',
         postalCode: '',
         country: '',
+        latitude: null as number | null,
+        longitude: null as number | null,
         // Yetkili kişi - Ayrı alanlar
         contactName: '',
         contactFirstName: '',
@@ -181,7 +186,7 @@ export default function KermesDetailPage() {
         // Sipariş Yöntemleri ve İstisnalar
         isMenuOnly: false,
         hasTakeaway: true,
-        hasDineIn: false,
+        hasDineIn: true,
         hasDelivery: false,
         deliveryFee: 0,
         minCartForFreeDelivery: 0,
@@ -210,6 +215,26 @@ export default function KermesDetailPage() {
     const [editCustomFeatures, setEditCustomFeatures] = useState<string[]>([]); // Max 3 özel özellik
     const [mapPickerOpen, setMapPickerOpen] = useState(false);
     const [mapPickerIndex, setMapPickerIndex] = useState<number | 'new'>('new'); // Hangi park alanı için
+    const [mainMapOpen, setMainMapOpen] = useState(false); // Yeni Ana Adres icin
+    const [showOrgSearchModal, setShowOrgSearchModal] = useState(false); // Dernek Sec modal
+    
+    // Personel & Sürücü Yönetimi
+    const [assignedStaff, setAssignedStaff] = useState<string[]>([]);
+    const [assignedDrivers, setAssignedDrivers] = useState<string[]>([]);
+    const [staffSearchQuery, setStaffSearchQuery] = useState('');
+    const [driverSearchQuery, setDriverSearchQuery] = useState('');
+    const [staffResults, setStaffResults] = useState<any[]>([]);
+    const [driverResults, setDriverResults] = useState<any[]>([]);
+    const [searchingStaff, setSearchingStaff] = useState(false);
+    const [searchingDriver, setSearchingDriver] = useState(false);
+    
+    // Yeni Personel & Sürücü Ekleme
+    const [isAddingStaff, setIsAddingStaff] = useState(false);
+    const [isAddingDriver, setIsAddingDriver] = useState(false);
+    const [newStaffForm, setNewStaffForm] = useState({ name: '', phone: '', email: '', countryCode: '+49' });
+    const [newDriverForm, setNewDriverForm] = useState({ name: '', phone: '', email: '', countryCode: '+49' });
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
+
 
     // Categories - dinamik
     const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -302,6 +327,8 @@ export default function KermesDetailPage() {
                 city: data.city || '',
                 postalCode: data.postalCode || '',
                 country: data.country || '',
+                latitude: data.latitude || null,
+                longitude: data.longitude || null,
                 // Yetkili kişi
                 contactName: data.contactName || '',
                 contactFirstName: data.contactFirstName || '',
@@ -311,7 +338,7 @@ export default function KermesDetailPage() {
                 // Sipariş Yöntemleri ve Nakliyat
                 isMenuOnly: data.isMenuOnly || false,
                 hasTakeaway: data.hasTakeaway !== false,
-                hasDineIn: data.hasDineIn || false,
+                hasDineIn: data.hasDineIn ?? true,
                 hasDelivery: data.hasDelivery || false,
                 deliveryFee: data.deliveryFee || 0,
                 minCartForFreeDelivery: data.minCartForFreeDelivery || 0,
@@ -337,6 +364,8 @@ export default function KermesDetailPage() {
             });
             setEditFeatures(data.features || []);
             setEditCustomFeatures(data.customFeatures || []);
+            setAssignedStaff(data.assignedStaff || []);
+            setAssignedDrivers(data.assignedDrivers || []);
 
             const productsQuery = query(collection(db, 'kermes_events', kermesId, 'products'), orderBy('name'));
             const productsSnapshot = await getDocs(productsQuery);
@@ -460,6 +489,62 @@ export default function KermesDetailPage() {
         }
     };
 
+    // Personel Arama
+    const searchStaff = async (q: string) => {
+        setStaffSearchQuery(q);
+        if (q.length < 2) {
+            setStaffResults([]);
+            return;
+        }
+        setSearchingStaff(true);
+        try {
+            // Sadece role='admin' veya role='staff' olanları aramada filtreleyemeyebiliriz, client-side filtre
+            const usersRef = collection(db, 'admins');
+            const snapshot = await getDocs(usersRef);
+            const results = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as any))
+                .filter(user => 
+                    (user.name?.toLowerCase().includes(q.toLowerCase()) || 
+                     user.email?.toLowerCase().includes(q.toLowerCase())) &&
+                    !assignedStaff.includes(user.id)
+                )
+                .slice(0, 5); // Max 5 sonuç
+            setStaffResults(results);
+        } catch (error) {
+            console.error('Error searching staff:', error);
+        } finally {
+            setSearchingStaff(false);
+        }
+    };
+
+    // Sürücü Arama
+    const searchDriver = async (q: string) => {
+        setDriverSearchQuery(q);
+        if (q.length < 2) {
+            setDriverResults([]);
+            return;
+        }
+        setSearchingDriver(true);
+        try {
+            const usersRef = collection(db, 'admins');
+            const snapshot = await getDocs(usersRef);
+            const results = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as any))
+                .filter(user => 
+                    (user.isDriver === true || user.role === 'driver') &&
+                    (user.name?.toLowerCase().includes(q.toLowerCase()) || 
+                     user.email?.toLowerCase().includes(q.toLowerCase())) &&
+                    !assignedDrivers.includes(user.id)
+                )
+                .slice(0, 5);
+            setDriverResults(results);
+        } catch (error) {
+            console.error('Error searching drivers:', error);
+        } finally {
+            setSearchingDriver(false);
+        }
+    };
+
     const handleSaveEdits = async () => {
         if (!kermes) return;
         setSaving(true);
@@ -480,6 +565,8 @@ export default function KermesDetailPage() {
                 city: editForm.city || null,
                 postalCode: editForm.postalCode || null,
                 country: editForm.country || null,
+                latitude: editForm.latitude || null,
+                longitude: editForm.longitude || null,
                 // Yetkili kişi
                 contactName: editForm.contactName || `${editForm.contactFirstName} ${editForm.contactLastName}`.trim() || null,
                 contactFirstName: editForm.contactFirstName || null,
@@ -515,6 +602,9 @@ export default function KermesDetailPage() {
                 acceptsDonations: editForm.acceptsDonations || false,
                 selectedDonationFundId: editForm.selectedDonationFundId || null,
                 selectedDonationFundName: editForm.selectedDonationFundName || null,
+                // Personel ve Sürücüler
+                assignedStaff: assignedStaff,
+                assignedDrivers: assignedDrivers,
                 // Sistem
                 updatedAt: new Date(),
             };
@@ -654,6 +744,66 @@ export default function KermesDetailPage() {
             price: item.defaultPrice || 0,
             category: item.category || t('diger'),
         });
+    };
+
+    // Inline Personel / Sürücü Oluşturma
+    const handleCreateUser = async (type: 'kermes_staff' | 'kermes_driver') => {
+        if (!kermes?.id) {
+            showToast(t('isletme_bilgisi_bulunamadi') || 'İşletme bilgisi bulunamadı.', 'error');
+            return;
+        }
+        
+        const form = type === 'kermes_staff' ? newStaffForm : newDriverForm;
+        if (!form.name || !form.phone) {
+            showToast(t('isim_ve_telefon_zorunlu') || 'İsim ve telefon numarası zorunludur.', 'error');
+            return;
+        }
+
+        setIsCreatingUser(true);
+        try {
+            // Şifre boşsa, rastgele bir şifre olarak telefonu verelim. Firebase en az 6 karakter ister.
+            const tempPassword = form.phone.replace(/[^0-9]/g, '').padEnd(6, '0').slice(0, 10);
+            
+            const response = await fetch('/api/admin/create-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: form.email || undefined,
+                    password: tempPassword,
+                    displayName: form.name.trim(),
+                    phone: form.phone.replace(/[^0-9+]/g, ''),
+                    dialCode: form.countryCode,
+                    role: 'admin',
+                    adminType: type,
+                    businessId: kermes.id,
+                    businessName: kermes.title,
+                    businessType: 'kermes',
+                    createdBy: 'admin_panel'
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || t('bir_hata_olustu'));
+            }
+
+            if (type === 'kermes_staff') {
+                showToast(t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.');
+                setAssignedStaff(prev => [...prev, data.uid]);
+                setIsAddingStaff(false);
+                setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49' });
+            } else {
+                showToast(t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.');
+                setAssignedDrivers(prev => [...prev, data.uid]);
+                setIsAddingDriver(false);
+                setNewDriverForm({ name: '', phone: '', email: '', countryCode: '+49' });
+            }
+        } catch (error: any) {
+            console.error('Create user error:', error);
+            showToast(error.message, 'error');
+        } finally {
+            setIsCreatingUser(false);
+        }
     };
 
     // Mevcut ürünü kaydet (tüm alanları güncelle)
@@ -881,7 +1031,7 @@ export default function KermesDetailPage() {
                                             phoneCountryCode: kermes?.phoneCountryCode || '+49',
                                             isMenuOnly: kermes?.isMenuOnly || false,
                                             hasTakeaway: kermes?.hasTakeaway !== false,
-                                            hasDineIn: kermes?.hasDineIn || false,
+                                            hasDineIn: kermes?.hasDineIn ?? true,
                                             hasDelivery: kermes?.hasDelivery || false,
                                             deliveryFee: kermes?.deliveryFee || 0,
                                             minCartForFreeDelivery: kermes?.minCartForFreeDelivery || 0,
@@ -897,6 +1047,9 @@ export default function KermesDetailPage() {
                                             headerImageId: kermes?.headerImageId || '',
                                             sponsor: kermes?.sponsor || 'none',
                                             activeBadgeIds: kermes?.activeBadgeIds || [],
+                                            acceptsDonations: kermes?.acceptsDonations || false,
+                                            selectedDonationFundId: kermes?.selectedDonationFundId || '',
+                                            selectedDonationFundName: kermes?.selectedDonationFundName || '',
                                         });
                                         setEditFeatures(kermes?.features || []);
                                         setEditCustomFeatures(kermes?.customFeatures || []);
@@ -964,25 +1117,58 @@ export default function KermesDetailPage() {
                                     {/* Konum Bilgileri */}
                                     <div className="pt-4 border-t border-border">
                                         <h4 className="text-foreground font-medium mb-3">📍 Konum Bilgileri</h4>
+                                        
+                                        {/* Dernek Sec Button */}
+                                        <div className="mb-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowOrgSearchModal(true)}
+                                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
+                                            >
+                                                <span>🕌</span>
+                                                <span>Dernek Sec</span>
+                                            </button>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                VIKZ derneklerinden birini secerek konum bilgilerini otomatik doldurabilirsiniz
+                                            </p>
+                                        </div>
+                                        
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="md:col-span-2">
                                                 <label className="text-muted-foreground text-xs block mb-1">Ana Adres <span className="text-blue-800 dark:text-blue-400">{t('google_ile_ara')}</span></label>
-                                                <PlacesAutocomplete
-                                                    value={editForm.address || ''}
-                                                    onChange={(value) => setEditForm({ ...editForm, address: value })}
-                                                    onPlaceSelect={(place) => {
-                                                        // Ana adresi ve diğer bilgileri otomatik doldur
-                                                        setEditForm({
-                                                            ...editForm,
-                                                            address: place.street,
-                                                            city: place.city,
-                                                            postalCode: place.postalCode,
-                                                            country: place.country
-                                                        });
-                                                    }}
-                                                    placeholder={t('orn_hauptstra_e_10_koln')}
-                                                    className="text-sm"
-                                                />
+                                                <div className="flex gap-2">
+                                                    <div className="flex-1">
+                                                        <PlacesAutocomplete
+                                                            value={editForm.address || ''}
+                                                            onChange={(value) => setEditForm({ ...editForm, address: value })}
+                                                            onPlaceSelect={(place) => {
+                                                                // Ana adresi ve diğer bilgileri otomatik doldur
+                                                                setEditForm({
+                                                                    ...editForm,
+                                                                    address: place.street || place.formattedAddress || editForm.address,
+                                                                    city: place.city || editForm.city,
+                                                                    postalCode: place.postalCode || editForm.postalCode,
+                                                                    country: place.country || editForm.country,
+                                                                    latitude: place.lat || editForm.latitude,
+                                                                    longitude: place.lng || editForm.longitude
+                                                                });
+                                                            }}
+                                                            placeholder={t('orn_hauptstra_e_10_koln')}
+                                                            className="text-sm"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setMainMapOpen(true)}
+                                                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg border border-gray-600 transition flex items-center gap-2 flex-shrink-0"
+                                                        title="Haritada Koordinat İşaretle"
+                                                    >
+                                                        <span>📍</span>
+                                                    </button>
+                                                </div>
+                                                {(editForm.latitude && editForm.longitude) && (
+                                                    <p className="text-xs text-green-400 mt-1">Koordinatlar ayarlandı: {editForm.latitude.toFixed(4)}, {editForm.longitude.toFixed(4)}</p>
+                                                )}
                                             </div>
                                             <div className="md:col-span-2">
                                                 <label className="text-muted-foreground text-xs block mb-1">{t('2_sokak_adi_opsiyonel')}</label>
@@ -1149,9 +1335,250 @@ export default function KermesDetailPage() {
                                         </div>
                                     </div>
 
+                                    {/* Personel ve Sürücü Yönetimi */}
+                                    <div className="pt-4 border-t border-border">
+                                        <h4 className="text-foreground font-medium mb-3">👥 {t('personel_ve_suruculer') || 'Personel & Sürücüler'}</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            
+                                            {/* Personel Atama */}
+                                            <div className="bg-gray-700/30 p-4 rounded-xl border border-gray-600">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <label className="text-sm font-medium text-white block">👔 {t('personel_ata') || 'Personel Ata'}</label>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setIsAddingStaff(!isAddingStaff)}
+                                                        className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
+                                                    >
+                                                        {isAddingStaff ? t('iptal_et') || 'İptal Et' : `+ ${t('yeni_personel_ekle') || 'Yeni Personel Ekle'}`}
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mb-3">
+                                                    {t('kermes_personel_aciklama') || 'Bu Kermes için siparişleri kabul edecek ve hazırlayacak personel.'}
+                                                </p>
+                                                
+                                                {isAddingStaff && (
+                                                    <div className="mb-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                                                        <h5 className="text-xs font-semibold text-white mb-2">{t('personel_bilgileri') || 'Personel Bilgileri'}</h5>
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder={t('ad_soyad') || 'Ad Soyad'}
+                                                            className="w-full mb-2 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none"
+                                                            value={newStaffForm.name}
+                                                            onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
+                                                        />
+                                                        <div className="flex gap-2 mb-2">
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder="+49"
+                                                                className="w-16 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none text-center"
+                                                                value={newStaffForm.countryCode}
+                                                                onChange={e => setNewStaffForm({...newStaffForm, countryCode: e.target.value})}
+                                                            />
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder={t('telefon_numarasi') || 'Telefon Numarası'}
+                                                                className="flex-1 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none"
+                                                                value={newStaffForm.phone}
+                                                                onChange={e => setNewStaffForm({...newStaffForm, phone: e.target.value})}
+                                                            />
+                                                        </div>
+                                                        <input 
+                                                            type="email" 
+                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (Opsiyonel)'}`}
+                                                            className="w-full mb-3 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none"
+                                                            value={newStaffForm.email}
+                                                            onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleCreateUser('kermes_staff')}
+                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone}
+                                                            className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
+                                                        >
+                                                            {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                <div className="relative mb-4">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder={t('personel_ara') || 'İsim veya e-posta ile ara...'}
+                                                        value={staffSearchQuery}
+                                                        onChange={(e) => searchStaff(e.target.value)}
+                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
+                                                    />
+                                                    {searchingStaff && (
+                                                        <div className="absolute right-3 top-2 w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+                                                    )}
+                                                    
+                                                    {/* Personel Arama Sonuçları */}
+                                                    {staffResults.length > 0 && (
+                                                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg overflow-hidden">
+                                                            {staffResults.map(user => (
+                                                                <button
+                                                                    key={user.id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setAssignedStaff([...assignedStaff, user.id]);
+                                                                        setStaffSearchQuery('');
+                                                                        setStaffResults([]);
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-700 border-b border-gray-700 last:border-0 flex justify-between items-center"
+                                                                >
+                                                                    <span className="text-sm text-white font-medium">{user.name || user.email}</span>
+                                                                    <span className="text-xs text-cyan-400 capitalize">{user.role || 'staff'}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Atanmış Personel Listesi */}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {assignedStaff.map(staffId => (
+                                                        <div key={staffId} className="px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-lg flex items-center gap-2">
+                                                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold">
+                                                                {staffId.substring(0, 2).toUpperCase()}
+                                                            </div>
+                                                            <span className="text-xs text-blue-100">{staffId.length > 8 ? staffId.substring(0, 8) + '...' : staffId}</span>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => setAssignedStaff(assignedStaff.filter(id => id !== staffId))}
+                                                                className="w-4 h-4 ml-1 rounded-full bg-blue-800/80 hover:bg-red-500 text-white flex items-center justify-center text-[10px]"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    {assignedStaff.length === 0 && (
+                                                        <p className="text-xs text-gray-400 italic py-1">{t('henuz_personel_yok') || 'Henüz personel atanmamış.'}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Sürücü Atama */}
+                                            <div className="bg-gray-700/30 p-4 rounded-xl border border-gray-600">
+                                                <div className="flex justify-between items-center mb-2">
+                                                    <label className="text-sm font-medium text-white block">🚗 {t('surucu_ata') || 'Sürücü Ata'}</label>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setIsAddingDriver(!isAddingDriver)}
+                                                        className="text-xs text-amber-400 hover:text-amber-300 font-medium"
+                                                    >
+                                                        {isAddingDriver ? t('iptal_et') || 'İptal Et' : `+ ${t('yeni_surucu_ekle') || 'Yeni Sürücü Ekle'}`}
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mb-3">
+                                                    {t('kermes_surucu_aciklama') || 'Bu Kermes siparişlerini teslim edecek gönüllü sürücüler.'}
+                                                </p>
+                                                
+                                                {isAddingDriver && (
+                                                    <div className="mb-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                                                        <h5 className="text-xs font-semibold text-white mb-2">{t('surucu_bilgileri') || 'Sürücü Bilgileri'}</h5>
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder={t('ad_soyad') || 'Ad Soyad'}
+                                                            className="w-full mb-2 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none"
+                                                            value={newDriverForm.name}
+                                                            onChange={e => setNewDriverForm({...newDriverForm, name: e.target.value})}
+                                                        />
+                                                        <div className="flex gap-2 mb-2">
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder="+49"
+                                                                className="w-16 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none text-center"
+                                                                value={newDriverForm.countryCode}
+                                                                onChange={e => setNewDriverForm({...newDriverForm, countryCode: e.target.value})}
+                                                            />
+                                                            <input 
+                                                                type="text" 
+                                                                placeholder={t('telefon_numarasi') || 'Telefon Numarası'}
+                                                                className="flex-1 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none"
+                                                                value={newDriverForm.phone}
+                                                                onChange={e => setNewDriverForm({...newDriverForm, phone: e.target.value})}
+                                                            />
+                                                        </div>
+                                                        <input 
+                                                            type="email" 
+                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (Opsiyonel)'}`}
+                                                            className="w-full mb-3 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none"
+                                                            value={newDriverForm.email}
+                                                            onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleCreateUser('kermes_driver')}
+                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone}
+                                                            className="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
+                                                        >
+                                                            {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                <div className="relative mb-4">
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder={t('surucu_ara') || 'İsim veya e-posta ile ara...'}
+                                                        value={driverSearchQuery}
+                                                        onChange={(e) => searchDriver(e.target.value)}
+                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"
+                                                    />
+                                                    {searchingDriver && (
+                                                        <div className="absolute right-3 top-2 w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+                                                    )}
+                                                    
+                                                    {/* Sürücü Arama Sonuçları */}
+                                                    {driverResults.length > 0 && (
+                                                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg overflow-hidden">
+                                                            {driverResults.map(user => (
+                                                                <button
+                                                                    key={user.id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setAssignedDrivers([...assignedDrivers, user.id]);
+                                                                        setDriverSearchQuery('');
+                                                                        setDriverResults([]);
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-700 border-b border-gray-700 last:border-0 flex justify-between items-center"
+                                                                >
+                                                                    <span className="text-sm text-white font-medium">{user.name || user.email}</span>
+                                                                    <span className="text-xs text-amber-400">{user.driverType === 'lokma_fleet' ? 'Fleet' : 'Gönüllü'}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Atanmış Sürücü Listesi */}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {assignedDrivers.map(driverId => (
+                                                        <div key={driverId} className="px-3 py-1.5 bg-amber-900/30 border border-amber-700/50 rounded-lg flex items-center gap-2">
+                                                            <div className="w-5 h-5 rounded-full bg-amber-600 flex items-center justify-center text-[10px] text-white font-bold">
+                                                                {driverId.substring(0, 2).toUpperCase()}
+                                                            </div>
+                                                            <span className="text-xs text-amber-100">{driverId.length > 8 ? driverId.substring(0, 8) + '...' : driverId}</span>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => setAssignedDrivers(assignedDrivers.filter(id => id !== driverId))}
+                                                                className="w-4 h-4 ml-1 rounded-full bg-amber-800/80 hover:bg-red-500 text-white flex items-center justify-center text-[10px]"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    {assignedDrivers.length === 0 && (
+                                                        <p className="text-xs text-gray-400 italic py-1">{t('henuz_surucu_yok') || 'Henüz sürücü atanmamış.'}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Kurumsal Ayarlar (Pfand & KDV) */}
                                     <div className="pt-4 border-t border-border">
-                                        <h4 className="text-foreground font-medium mb-3">🏢 Kurumsal Ayarlar</h4>
+                                        <h4 className="text-foreground font-medium mb-3">🏢 {t('kurumsal_ayarlar') || 'Kurumsal Ayarlar'}</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Pfand Sistemi */}
                                             <div className="bg-card p-4 rounded-lg border border-gray-600">
@@ -2274,6 +2701,26 @@ export default function KermesDetailPage() {
                 </div>
             )}
 
+            {/* Ana Adres Harita Seçici Modalı */}
+            <MapLocationPicker
+                isOpen={mainMapOpen}
+                onClose={() => setMainMapOpen(false)}
+                initialLat={editForm.latitude || 51.0}
+                initialLng={editForm.longitude || 9.0}
+                onLocationSelect={(loc: SelectedLocation) => {
+                    setEditForm({
+                        ...editForm,
+                        address: loc.street || loc.address || editForm.address,
+                        city: loc.city || editForm.city,
+                        postalCode: loc.postalCode || editForm.postalCode,
+                        country: loc.country || editForm.country,
+                        latitude: loc.lat,
+                        longitude: loc.lng,
+                    });
+                }}
+            />
+
+            {/* Park Alanı / Yeni Seçim */}
             <MapLocationPicker
                 isOpen={mapPickerOpen}
                 onClose={() => setMapPickerOpen(false)}
@@ -2305,6 +2752,21 @@ export default function KermesDetailPage() {
                 }}
                 initialLat={51.0}
                 initialLng={9.0}
+            />
+
+            {/* Organization Search Modal */}
+            <OrganizationSearchModal
+                isOpen={showOrgSearchModal}
+                onClose={() => setShowOrgSearchModal(false)}
+                onSelect={(org) => {
+                    setEditForm({
+                        ...editForm,
+                        address: org.address || editForm.address,
+                        city: org.city || editForm.city,
+                        postalCode: org.postalCode || editForm.postalCode,
+                        country: org.country || editForm.country,
+                    });
+                }}
             />
         </div>
     );

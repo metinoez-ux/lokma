@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef as reactRef } from 'react';
 import { collection, query, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -25,6 +26,27 @@ export default function DonationFundsPage() {
     const [newFund, setNewFund] = useState({ name: '', description: '', websiteUrl: '', logoUrl: '' });
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<DonationFund | null>(null);
+    const [editingFund, setEditingFund] = useState<DonationFund | null>(null);
+
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const fileInputRef = reactRef<HTMLInputElement>(null);
+
+    const handleCloseModal = () => {
+        setShowAddModal(false);
+        setEditingFund(null);
+        setNewFund({ name: '', description: '', websiteUrl: '', logoUrl: '' });
+    };
+
+    const handleEditClick = (fund: DonationFund) => {
+        setEditingFund(fund);
+        setNewFund({
+            name: fund.name,
+            description: fund.description || '',
+            websiteUrl: fund.websiteUrl || '',
+            logoUrl: fund.logoUrl || ''
+        });
+        setShowAddModal(true);
+    };
 
     const loadFunds = async () => {
         setLoading(true);
@@ -45,24 +67,54 @@ export default function DonationFundsPage() {
         }
     }, [adminLoading, admin]);
 
-    const handleAdd = async () => {
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingLogo(true);
+        try {
+            const fileName = `donation_funds_logos/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            const storageRef = ref(storage, fileName);
+            await uploadBytes(storageRef, file, { cacheControl: 'public, max-age=31536000' });
+            const downloadUrl = await getDownloadURL(storageRef);
+            setNewFund(prev => ({ ...prev, logoUrl: downloadUrl }));
+        } catch (error) {
+            console.error('Error uploading logo:', error);
+            alert('Logo yüklenirken hata oluştu.');
+        } finally {
+            setUploadingLogo(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const handleSave = async () => {
         if (!newFund.name.trim() || !admin) return;
         setSaving(true);
         try {
-            await addDoc(collection(db, 'donation_funds'), {
-                name: newFund.name.trim(),
-                description: newFund.description.trim() || null,
-                websiteUrl: newFund.websiteUrl.trim() || null,
-                logoUrl: newFund.logoUrl.trim() || null,
-                isActive: true,
-                createdAt: serverTimestamp(),
-                createdBy: admin.id,
-            });
-            setNewFund({ name: '', description: '', websiteUrl: '', logoUrl: '' });
-            setShowAddModal(false);
+            if (editingFund) {
+                await updateDoc(doc(db, 'donation_funds', editingFund.id), {
+                    name: newFund.name.trim(),
+                    description: newFund.description.trim() || null,
+                    websiteUrl: newFund.websiteUrl.trim() || null,
+                    logoUrl: newFund.logoUrl.trim() || null,
+                });
+            } else {
+                await addDoc(collection(db, 'donation_funds'), {
+                    name: newFund.name.trim(),
+                    description: newFund.description.trim() || null,
+                    websiteUrl: newFund.websiteUrl.trim() || null,
+                    logoUrl: newFund.logoUrl.trim() || null,
+                    isActive: true,
+                    createdAt: serverTimestamp(),
+                    createdBy: admin.id,
+                });
+            }
+            handleCloseModal();
             loadFunds();
         } catch (e) {
-            console.error('Error adding fund:', e);
+            console.error('Error saving fund:', e);
             alert('Bir hata olustu.');
         } finally {
             setSaving(false);
@@ -119,7 +171,11 @@ export default function DonationFundsPage() {
                         </p>
                     </div>
                     <button
-                        onClick={() => setShowAddModal(true)}
+                        onClick={() => {
+                            setEditingFund(null);
+                            setNewFund({ name: '', description: '', websiteUrl: '', logoUrl: '' });
+                            setShowAddModal(true);
+                        }}
                         className="px-5 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg text-sm"
                     >
                         + Yeni Fon Ekle
@@ -160,6 +216,12 @@ export default function DonationFundsPage() {
                                         {fund.isActive ? 'Aktif' : 'Pasif'}
                                     </span>
                                     <button
+                                        onClick={() => handleEditClick(fund)}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white transition"
+                                    >
+                                        Düzenle
+                                    </button>
+                                    <button
                                         onClick={() => toggleStatus(fund)}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-medium ${fund.isActive ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-green-700 hover:bg-green-600 text-white'}`}
                                     >
@@ -183,8 +245,8 @@ export default function DonationFundsPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-card rounded-2xl w-full max-w-md p-6">
                         <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-lg font-bold text-foreground">Yeni Bagis Fonu</h2>
-                            <button onClick={() => setShowAddModal(false)} className="text-muted-foreground hover:text-foreground text-xl">×</button>
+                            <h2 className="text-lg font-bold text-foreground">{editingFund ? 'Fonu Duzenle' : 'Yeni Bagis Fonu'}</h2>
+                            <button onClick={handleCloseModal} className="text-muted-foreground hover:text-foreground text-xl">×</button>
                         </div>
                         <div className="space-y-4">
                             <div>
@@ -209,13 +271,30 @@ export default function DonationFundsPage() {
                             </div>
                             <div>
                                 <label className="text-sm text-muted-foreground block mb-1">Logo URL (Opsiyonel)</label>
-                                <input
-                                    type="url"
-                                    value={newFund.logoUrl}
-                                    onChange={(e) => setNewFund(p => ({ ...p, logoUrl: e.target.value }))}
-                                    placeholder="https://domain.com/logo.png"
-                                    className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
-                                />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="url"
+                                        value={newFund.logoUrl}
+                                        onChange={(e) => setNewFund(p => ({ ...p, logoUrl: e.target.value }))}
+                                        placeholder="https://domain.com/logo.png"
+                                        className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+                                    />
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        ref={fileInputRef} 
+                                        onChange={handleLogoUpload} 
+                                    />
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingLogo}
+                                        className="shrink-0 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg text-white font-medium transition disabled:opacity-50"
+                                        title="Cihazdan Yukle"
+                                    >
+                                        {uploadingLogo ? '...' : '📁'}
+                                    </button>
+                                </div>
                                 {newFund.logoUrl && (
                                     <div className="mt-2 flex items-center gap-2">
                                         <img src={newFund.logoUrl} alt="logo preview" className="w-10 h-10 rounded-lg object-contain border border-gray-600 bg-white p-1" />
@@ -235,13 +314,13 @@ export default function DonationFundsPage() {
                             </div>
                         </div>
                         <div className="flex gap-3 mt-5">
-                            <button onClick={() => setShowAddModal(false)} className="flex-1 px-4 py-2.5 bg-gray-700 text-white rounded-lg text-sm">Iptal</button>
+                            <button onClick={handleCloseModal} className="flex-1 px-4 py-2.5 bg-gray-700 text-white rounded-lg text-sm">Iptal</button>
                             <button
-                                onClick={handleAdd}
+                                onClick={handleSave}
                                 disabled={saving || !newFund.name.trim()}
                                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg text-sm disabled:opacity-50"
                             >
-                                {saving ? 'Kaydediliyor...' : 'Olustur'}
+                                {saving ? 'Kaydediliyor...' : (editingFund ? 'Guncelle' : 'Olustur')}
                             </button>
                         </div>
                     </div>

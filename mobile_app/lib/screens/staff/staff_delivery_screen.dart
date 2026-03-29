@@ -656,6 +656,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
 
   // ── Compass state for precise pin navigation ──
   StreamSubscription<Position>? _positionSubscription;
+  double? _driverLat;
+  double? _driverLng;
   double? _distanceToPin; // meters
   double? _bearingToPin; // degrees
   bool _compassActive = false;
