@@ -35,7 +35,7 @@ class InAppNotification {
     dismiss();
 
     final overlay = Overlay.of(context);
-    
+
     _currentEntry = OverlayEntry(
       builder: (context) => _NotificationBanner(
         title: title,
@@ -87,7 +87,7 @@ class _NotificationBannerState extends State<_NotificationBanner>
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
-  
+
   double _dragOffset = 0;
   bool _isDragging = false;
 
@@ -251,7 +251,8 @@ class _NotificationBannerState extends State<_NotificationBanner>
                                   Text(
                                     widget.body!,
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.72),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.72),
                                       fontSize: 12.5,
                                       height: 1.3,
                                     ),

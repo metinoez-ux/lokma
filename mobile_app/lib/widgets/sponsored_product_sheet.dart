@@ -118,7 +118,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                     children: [
                       // Sponsored badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(4),
@@ -144,12 +145,19 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                             imageUrl: widget.ad.bannerImageUrl,
                             fit: BoxFit.cover,
                             placeholder: (_, __) => Container(
-                              color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
-                              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                              color: isDark
+                                  ? const Color(0xFF2C2C2E)
+                                  : Colors.grey.shade100,
+                              child: const Center(
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2)),
                             ),
                             errorWidget: (_, __, ___) => Container(
-                              color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
-                              child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 48),
+                              color: isDark
+                                  ? const Color(0xFF2C2C2E)
+                                  : Colors.grey.shade100,
+                              child: Icon(Icons.image_outlined,
+                                  color: Colors.grey.shade400, size: 48),
                             ),
                           ),
                         ),
@@ -166,7 +174,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                               height: 36,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.shade300, width: 0.5),
+                                border: Border.all(
+                                    color: Colors.grey.shade300, width: 0.5),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(7),
@@ -244,7 +253,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                                 const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
@@ -266,7 +276,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                           child: Center(
                             child: Column(
                               children: [
-                                Icon(Icons.location_off_outlined, color: Colors.grey.shade400, size: 32),
+                                Icon(Icons.location_off_outlined,
+                                    color: Colors.grey.shade400, size: 32),
                                 const SizedBox(height: 8),
                                 Text(
                                   'sponsored_ads.no_nearby_market'.tr(),
@@ -300,7 +311,9 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                     color: bgColor,
                     border: Border(
                       top: BorderSide(
-                        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                        color: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade200,
                         width: 0.5,
                       ),
                     ),
@@ -330,7 +343,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.shopping_cart_outlined, size: 18),
+                                const Icon(Icons.shopping_cart_outlined,
+                                    size: 18),
                                 const SizedBox(width: 8),
                                 Text(
                                   'sponsored_ads.go_to_store'.tr(),
@@ -384,7 +398,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                           fit: BoxFit.cover,
                         ),
                       )
-                    : Icon(Icons.store_outlined, color: Colors.grey.shade400, size: 22),
+                    : Icon(Icons.store_outlined,
+                        color: Colors.grey.shade400, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -404,7 +419,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined, color: Colors.grey.shade500, size: 13),
+                        Icon(Icons.location_on_outlined,
+                            color: Colors.grey.shade500, size: 13),
                         const SizedBox(width: 3),
                         Text(
                           '${market.distanceKm.toStringAsFixed(1)} km',
@@ -421,7 +437,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
               // Price badge
               if (market.price != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -450,7 +467,8 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.inventory_2_outlined, color: Colors.grey.shade500, size: 14),
+                  Icon(Icons.inventory_2_outlined,
+                      color: Colors.grey.shade500, size: 14),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(

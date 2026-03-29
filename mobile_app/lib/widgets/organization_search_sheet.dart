@@ -117,11 +117,12 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1F2937),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -130,7 +131,8 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: Colors.grey[800]!),
+                bottom: BorderSide(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
               ),
             ),
             child: Column(
@@ -138,10 +140,10 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
               children: [
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       '🕌 Dernek Seç',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: isDark ? Colors.white : Colors.black87,
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                       ),
@@ -158,19 +160,26 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
                 TextField(
                   controller: _searchController,
                   onChanged: _filterOrganizations,
-                  style: const TextStyle(color: Colors.white),
+                  style:
+                      TextStyle(color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
                     hintText: 'İsim, şehir veya posta kodu ile ara...',
-                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    hintStyle: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey[600]),
                     filled: true,
-                    fillColor: const Color(0xFF111827),
+                    fillColor:
+                        isDark ? const Color(0xFF111827) : Colors.grey[100],
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[700]!),
+                      borderSide: BorderSide(
+                          color:
+                              isDark ? Colors.grey[700]! : Colors.grey[300]!),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[700]!),
+                      borderSide: BorderSide(
+                          color:
+                              isDark ? Colors.grey[700]! : Colors.grey[300]!),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -234,11 +243,13 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
   }
 
   Widget _buildOrganizationCard(Map<String, dynamic> org) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF111827),
-        border: Border.all(color: Colors.grey[800]!),
+        color: isDark ? const Color(0xFF111827) : Colors.white,
+        border:
+            Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
@@ -262,8 +273,8 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
                       // Name
                       Text(
                         org['name'] ?? '',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),

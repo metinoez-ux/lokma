@@ -11,8 +11,8 @@ import '../../utils/currency_utils.dart';
 /// Sipariş QR Kod Fullscreen Dialog
 /// Tezgahta göstermek için parlak ekran ile QR kodu gösterir
 class OrderQRDialog extends StatefulWidget {
-  final String orderId;       // Firestore doc ID (kermesId_orderNumber)
-  final String orderNumber;   // Kullanıcıya gösterilen (11001)
+  final String orderId; // Firestore doc ID (kermesId_orderNumber)
+  final String orderNumber; // Kullanıcıya gösterilen (11001)
   final String kermesId;
   final String kermesName;
   final double totalAmount;
@@ -70,7 +70,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
   Future<void> _restoreBrightness() async {
     try {
       if (_previousBrightness != null) {
-        await ScreenBrightness().setApplicationScreenBrightness(_previousBrightness!);
+        await ScreenBrightness()
+            .setApplicationScreenBrightness(_previousBrightness!);
       } else {
         await ScreenBrightness().resetApplicationScreenBrightness();
       }
@@ -95,9 +96,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
   /// Kartla ödeme yap
   Future<void> _payWithCard() async {
     if (_isProcessingPayment) return;
-    
+
     setState(() => _isProcessingPayment = true);
-    
+
     try {
       // Stripe ile ödeme al
       final result = await StripePaymentService.processPayment(
@@ -105,7 +106,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
         businessId: widget.kermesId, // Kermes ID'si
         orderId: widget.orderId,
       );
-      
+
       if (result.success && mounted) {
         // Firestore'da ödeme durumunu güncelle
         await FirebaseFirestore.instance
@@ -115,13 +116,13 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
           'isPaid': true,
           'paymentMethod': 'card',
           'paidAt': FieldValue.serverTimestamp(),
-          if (result.paymentIntentId != null) 
+          if (result.paymentIntentId != null)
             'stripePaymentIntentId': result.paymentIntentId,
         });
-        
+
         // UI'ı güncelle
         setState(() => _isPaid = true);
-        
+
         // Başarı mesajı
         HapticFeedback.heavyImpact();
         if (mounted) {
@@ -149,7 +150,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
       if (mounted) setState(() => _isProcessingPayment = false);
     }
   }
-  
+
   /// Başarı dialog'u göster
   void _showPaymentSuccessDialog() {
     showDialog(
@@ -215,7 +216,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
       ),
     );
   }
-  
+
   /// Nakit ödeme bilgi dialog'u göster
   void _showCashPaymentInfo() {
     showDialog(
@@ -233,7 +234,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                 color: Colors.greenAccent.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.payments_outlined, color: Colors.greenAccent, size: 50),
+              child: const Icon(Icons.payments_outlined,
+                  color: Colors.greenAccent, size: 50),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -264,7 +266,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.qr_code, color: Colors.greenAccent, size: 20),
+                  const Icon(Icons.qr_code,
+                      color: Colors.greenAccent, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'Sipariş: ${widget.orderNumber}',
@@ -304,7 +307,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
       ),
     );
   }
-  
+
   /// Siparişi iptal et
   Future<void> _cancelOrder() async {
     // Önce onay al
@@ -358,7 +361,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(tr('Vazgeç'), style: TextStyle(color: Colors.grey[500])),
+            child:
+                Text(tr('Vazgeç'), style: TextStyle(color: Colors.grey[500])),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -371,21 +375,21 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
         ],
       ),
     );
-    
+
     if (confirmed != true) return;
-    
+
     setState(() => _isCancelling = true);
-    
+
     try {
       final orderService = KermesOrderService();
       final result = await orderService.cancelOrder(widget.orderId);
-      
+
       if (result.success) {
         setState(() {
           _isCancelled = true;
           _isCancelling = false;
         });
-        
+
         // Başarı mesajı göster
         if (mounted) {
           _showCancelSuccessDialog(result.refunded, result.message);
@@ -420,7 +424,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
       }
     }
   }
-  
+
   /// İptal başarılı dialog
   void _showCancelSuccessDialog(bool refunded, String? message) {
     showDialog(
@@ -459,7 +463,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -483,7 +488,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                 onPressed: () {
                   Navigator.pop(dialogContext); // Dialog'u kapat
                   // Kermes menü ekranına geri dön (MainScaffold içinde)
-                  Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/kermes');
+                  Navigator.of(context).popUntil((route) =>
+                      route.isFirst || route.settings.name == '/kermes');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,
@@ -504,7 +510,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
       ),
     );
   }
-  
+
   /// Hazırlanıyor, iptal edilemez dialog
   void _showCannotCancelDialog() {
     showDialog(
@@ -537,7 +543,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Text(
               'Siparişiniz hazırlanmaya başladığı için artık iptal edilemiyor. 🍳',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[400], fontSize: 14, height: 1.4),
+              style:
+                  TextStyle(color: Colors.grey[400], fontSize: 14, height: 1.4),
             ),
             const SizedBox(height: 8),
             Text(
@@ -583,7 +590,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 28),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const Spacer(),
@@ -598,7 +606,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                 ],
               ),
             ),
-            
+
             // Content - centered
             Expanded(
               child: Center(
@@ -609,7 +617,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                     children: [
                       // Üst bilgi - kompakt
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
                           color: lokmaPink.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
@@ -624,9 +633,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // QR Kod - kompakt
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -649,9 +658,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Sipariş Numarası başlık + numara
                       Text(
                         'Sipariş Numarası',
@@ -664,7 +673,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                       GestureDetector(
                         onTap: _copyOrderId,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
                             color: cardBg,
                             borderRadius: BorderRadius.circular(12),
@@ -683,19 +693,21 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Icon(Icons.copy_rounded, color: Colors.grey[500], size: 20),
+                              Icon(Icons.copy_rounded,
+                                  color: Colors.grey[500], size: 20),
                             ],
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 10),
-                      
+
                       // Ödeme Durumu - kompakt
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: _isPaid 
+                          color: _isPaid
                               ? Colors.green.withValues(alpha: 0.15)
                               : Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -725,9 +737,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 10),
-                      
+
                       // Ödeme Bekleniyor açıklama metni
                       if (!_isPaid)
                         Padding(
@@ -742,9 +754,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             ),
                           ),
                         ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Toplam Tutar - kompakt
                       Text(
                         'Toplam',
@@ -762,17 +774,18 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      
+
                       // Ödeme butonları - sadece ödeme bekleniyorsa
                       if (!_isPaid) ...[
                         const SizedBox(height: 10),
-                        
+
                         // Online Öde butonu
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: _isProcessingPayment ? null : _payWithCard,
-                            icon: _isProcessingPayment 
+                            onPressed:
+                                _isProcessingPayment ? null : _payWithCard,
+                            icon: _isProcessingPayment
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
@@ -783,7 +796,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                                   )
                                 : const Icon(Icons.credit_card, size: 22),
                             label: Text(
-                              _isProcessingPayment ? 'İşleniyor...' : 'Online Öde',
+                              _isProcessingPayment
+                                  ? 'İşleniyor...'
+                                  : 'Online Öde',
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -799,9 +814,9 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 10),
-                        
+
                         // Nakit Ödeme butonu
                         SizedBox(
                           width: double.infinity,
@@ -817,7 +832,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.greenAccent,
-                              side: const BorderSide(color: Colors.greenAccent, width: 1.5),
+                              side: const BorderSide(
+                                  color: Colors.greenAccent, width: 1.5),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
@@ -825,15 +841,15 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // İptal Et butonu
                         SizedBox(
                           width: double.infinity,
                           child: TextButton.icon(
                             onPressed: _isCancelling ? null : _cancelOrder,
-                            icon: _isCancelling 
+                            icon: _isCancelling
                                 ? const SizedBox(
                                     width: 18,
                                     height: 18,
@@ -842,9 +858,12 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                                       color: Colors.red,
                                     ),
                                   )
-                                : const Icon(Icons.cancel_outlined, size: 20, color: Colors.red),
+                                : const Icon(Icons.cancel_outlined,
+                                    size: 20, color: Colors.red),
                             label: Text(
-                              _isCancelling ? 'İptal ediliyor...' : 'Siparişi İptal Et',
+                              _isCancelling
+                                  ? 'İptal ediliyor...'
+                                  : 'Siparişi İptal Et',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.red.shade400,
@@ -853,7 +872,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           ),
                         ),
                       ],
-                      
+
                       // İptal edilmiş görünümü
                       if (_isCancelled) ...[
                         const SizedBox(height: 16),
@@ -866,7 +885,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.cancel, color: Colors.red, size: 24),
+                              const Icon(Icons.cancel,
+                                  color: Colors.red, size: 24),
                               const SizedBox(width: 8),
                               const Text(
                                 'SİPARİŞ İPTAL EDİLDİ',
@@ -881,7 +901,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           ),
                         ),
                       ],
-                      
+
                       const SizedBox(height: 16),
                     ],
                   ),

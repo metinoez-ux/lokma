@@ -19,8 +19,7 @@ class MarketplaceGroupShareSheet extends StatefulWidget {
       _MarketplaceGroupShareSheetState();
 }
 
-class _MarketplaceGroupShareSheetState
-    extends State<MarketplaceGroupShareSheet>
+class _MarketplaceGroupShareSheetState extends State<MarketplaceGroupShareSheet>
     with SingleTickerProviderStateMixin {
   bool _linkCopied = false;
   late final AnimationController _pulseController;
@@ -104,7 +103,8 @@ class _MarketplaceGroupShareSheetState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                      color:
+                          isDark ? Colors.grey.shade600 : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -115,12 +115,16 @@ class _MarketplaceGroupShareSheetState
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.green.shade900.withValues(alpha: 0.4) : Colors.green.shade50,
+                      color: isDark
+                          ? Colors.green.shade900.withValues(alpha: 0.4)
+                          : Colors.green.shade50,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.check_circle,
-                      color: isDark ? Colors.green.shade400 : Colors.green.shade600,
+                      color: isDark
+                          ? Colors.green.shade400
+                          : Colors.green.shade600,
                       size: 36,
                     ),
                   ),
@@ -179,10 +183,14 @@ class _MarketplaceGroupShareSheetState
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: _linkCopied
-                          ? Icon(Icons.check, key: const ValueKey('check'),
-                              size: 20, color: Colors.green.shade600)
-                          : const Icon(Icons.copy, key: ValueKey('copy'),
-                              size: 20, color: Colors.grey),
+                          ? Icon(Icons.check,
+                              key: const ValueKey('check'),
+                              size: 20,
+                              color: Colors.green.shade600)
+                          : const Icon(Icons.copy,
+                              key: ValueKey('copy'),
+                              size: 20,
+                              color: Colors.grey),
                     ),
                   ],
                 ),
@@ -205,7 +213,9 @@ class _MarketplaceGroupShareSheetState
                           : tr('group_order.copy_link'),
                       color: _linkCopied
                           ? Colors.green.shade600
-                          : (isDark ? Colors.grey.shade700 : Colors.grey.shade200),
+                          : (isDark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade200),
                       textColor: _linkCopied ? Colors.white : null,
                       onTap: () async {
                         HapticFeedback.mediumImpact();
@@ -242,16 +252,23 @@ class _MarketplaceGroupShareSheetState
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.orange.shade900.withValues(alpha: 0.3) : Colors.orange.shade50,
+                    color: isDark
+                        ? Colors.orange.shade900.withValues(alpha: 0.3)
+                        : Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isDark ? Colors.orange.shade700.withValues(alpha: 0.4) : Colors.orange.shade200,
+                      color: isDark
+                          ? Colors.orange.shade700.withValues(alpha: 0.4)
+                          : Colors.orange.shade200,
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.timer, size: 18,
-                        color: isDark ? Colors.orange.shade300 : Colors.orange.shade700),
+                      Icon(Icons.timer,
+                          size: 18,
+                          color: isDark
+                              ? Colors.orange.shade300
+                              : Colors.orange.shade700),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -259,7 +276,9 @@ class _MarketplaceGroupShareSheetState
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                            color: isDark
+                                ? Colors.orange.shade200
+                                : Colors.orange.shade800,
                           ),
                         ),
                       ),
@@ -357,8 +376,7 @@ class _ShareButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fgColor =
-        textColor ?? (isDark ? Colors.grey[300] : Colors.grey[700]);
+    final fgColor = textColor ?? (isDark ? Colors.grey[300] : Colors.grey[700]);
 
     return Material(
       color: color,

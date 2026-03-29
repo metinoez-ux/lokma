@@ -8,7 +8,8 @@ class TabItem {
   final IconData? icon;
   final String? svgAssetPath;
 
-  const TabItem({required this.title, this.subtitle, this.icon, this.svgAssetPath});
+  const TabItem(
+      {required this.title, this.subtitle, this.icon, this.svgAssetPath});
 }
 
 class ThreeDimensionalPillTabBar extends StatefulWidget {
@@ -30,9 +31,9 @@ class ThreeDimensionalPillTabBar extends StatefulWidget {
   });
 
   // 🎨 Koyu gri toggle renkleri (#3E3E40)
-  static const Color pillDark     = Color(0xFF3E3E40);
-  static const Color pillLight    = Color(0xFF5A5A5C); // üst ışık
-  static const Color pillDarker   = Color(0xFF2C2C2E); // alt gölge
+  static const Color pillDark = Color(0xFF3E3E40);
+  static const Color pillLight = Color(0xFF5A5A5C); // üst ışık
+  static const Color pillDarker = Color(0xFF2C2C2E); // alt gölge
 
   @override
   State<ThreeDimensionalPillTabBar> createState() =>
@@ -41,18 +42,16 @@ class ThreeDimensionalPillTabBar extends StatefulWidget {
 
 class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _animation; // 0..1 arasında, tab genişliği birimi
 
-  double _dragStartX  = 0;
-  int    _dragStartIdx = 0;
+  double _dragStartX = 0;
+  int _dragStartIdx = 0;
   double _containerWidth = 0;
 
-  double get _tabWidth =>
-      _containerWidth > 0 && widget.tabs.isNotEmpty
-          ? _containerWidth / widget.tabs.length
-          : 0;
+  double get _tabWidth => _containerWidth > 0 && widget.tabs.isNotEmpty
+      ? _containerWidth / widget.tabs.length
+      : 0;
 
   // Compact vs normal dimensions
   double get _height => widget.compact ? 36 : 42;
@@ -60,9 +59,11 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   double get _pillRadius => (_height - 6) / 2;
   double get _iconSize => widget.compact ? 13 : 15;
   double get _fontSize => widget.compact ? 12 : 13;
-  EdgeInsets get _margin => widget.margin ?? (widget.compact
-      ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
-      : const EdgeInsets.symmetric(horizontal: 16, vertical: 6));
+  EdgeInsets get _margin =>
+      widget.margin ??
+      (widget.compact
+          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 6));
 
   @override
   void initState() {
@@ -110,7 +111,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final trackColor = isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF2EEE9);
+    final trackColor =
+        isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF2EEE9);
     final unselTextColor = isDark ? Colors.grey[300]! : const Color(0xFF3E3E40);
 
     return LayoutBuilder(builder: (ctx, constraints) {
@@ -133,7 +135,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
             ),
           ],
           border: isDark
-              ? Border.all(color: Colors.white.withValues(alpha: 0.06), width: 0.5)
+              ? Border.all(
+                  color: Colors.white.withValues(alpha: 0.06), width: 0.5)
               : null,
         ),
         child: Padding(
@@ -146,7 +149,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onHorizontalDragStart: (d) {
-                  _dragStartX   = d.localPosition.dx;
+                  _dragStartX = d.localPosition.dx;
                   _dragStartIdx = widget.selectedIndex;
                 },
                 onHorizontalDragUpdate: (d) {
@@ -158,8 +161,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                   setState(() {});
                 },
                 onHorizontalDragEnd: (d) {
-                  final nearest = _animation.value.round()
-                      .clamp(0, widget.tabs.length - 1);
+                  final nearest =
+                      _animation.value.round().clamp(0, widget.tabs.length - 1);
                   _snapTo(nearest);
                 },
                 child: Stack(
@@ -183,9 +186,21 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
-                                        HSLColor.fromColor(widget.activeColor!).withLightness((HSLColor.fromColor(widget.activeColor!).lightness + 0.12).clamp(0.0, 1.0)).toColor(),
+                                        HSLColor.fromColor(widget.activeColor!)
+                                            .withLightness((HSLColor.fromColor(
+                                                            widget.activeColor!)
+                                                        .lightness +
+                                                    0.12)
+                                                .clamp(0.0, 1.0))
+                                            .toColor(),
                                         widget.activeColor!,
-                                        HSLColor.fromColor(widget.activeColor!).withLightness((HSLColor.fromColor(widget.activeColor!).lightness - 0.10).clamp(0.0, 1.0)).toColor(),
+                                        HSLColor.fromColor(widget.activeColor!)
+                                            .withLightness((HSLColor.fromColor(
+                                                            widget.activeColor!)
+                                                        .lightness -
+                                                    0.10)
+                                                .clamp(0.0, 1.0))
+                                            .toColor(),
                                       ],
                                     )
                                   : const LinearGradient(
@@ -223,8 +238,9 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                     Row(
                       children: List.generate(widget.tabs.length, (i) {
                         final closeness = (pos - i).abs();
-                        final isActive  = closeness < 0.5;
-                        final textColor = isActive ? Colors.white : unselTextColor;
+                        final isActive = closeness < 0.5;
+                        final textColor =
+                            isActive ? Colors.white : unselTextColor;
 
                         return Expanded(
                           child: GestureDetector(
@@ -248,7 +264,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   Widget _buildLabel(int index, Color textColor, bool isActive) {
     final tab = widget.tabs[index];
     final hasSubtitle = tab.subtitle != null && tab.subtitle!.isNotEmpty;
-    
+
     return Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -277,12 +293,18 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                         tab.title,
                         style: TextStyle(
                           color: textColor,
-                          fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                          fontWeight:
+                              isActive ? FontWeight.w500 : FontWeight.w400,
                           fontSize: widget.compact ? 11 : 12.5,
                           overflow: TextOverflow.ellipsis,
                           height: 1.0,
                           shadows: isActive
-                              ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
+                              ? const [
+                                  Shadow(
+                                      color: Colors.black26,
+                                      offset: Offset(0, 1),
+                                      blurRadius: 2)
+                                ]
                               : null,
                         ),
                         maxLines: 1,
@@ -292,7 +314,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                       Text(
                         tab.subtitle!,
                         style: TextStyle(
-                          color: textColor.withValues(alpha: isActive ? 0.85 : 0.7),
+                          color: textColor.withValues(
+                              alpha: isActive ? 0.85 : 0.7),
                           fontWeight: FontWeight.w400,
                           fontSize: widget.compact ? 9 : 10,
                           overflow: TextOverflow.ellipsis,
@@ -312,7 +335,12 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                       overflow: TextOverflow.ellipsis,
                       height: 1.0,
                       shadows: isActive
-                          ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
+                          ? const [
+                              Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0, 1),
+                                  blurRadius: 2)
+                            ]
                           : null,
                     ),
                     maxLines: 1,

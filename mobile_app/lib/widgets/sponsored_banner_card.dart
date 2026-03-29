@@ -93,7 +93,8 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
           children: [
             // Banner image -- slim, tam genislik
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(14)),
               child: AspectRatio(
                 aspectRatio: 3.5, // Daha ince gorsel -- 3.5:1 oran
                 child: Stack(
@@ -103,7 +104,9 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                       imageUrl: widget.ad.bannerImageUrl,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(
-                        color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
+                        color: isDark
+                            ? const Color(0xFF2C2C2E)
+                            : Colors.grey.shade100,
                         child: const Center(
                           child: SizedBox(
                             width: 20,
@@ -113,8 +116,11 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                         ),
                       ),
                       errorWidget: (_, __, ___) => Container(
-                        color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade100,
-                        child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 32),
+                        color: isDark
+                            ? const Color(0xFF2C2C2E)
+                            : Colors.grey.shade100,
+                        child: Icon(Icons.image_outlined,
+                            color: Colors.grey.shade400, size: 32),
                       ),
                     ),
                     // "Reklam" / "Sponsored" badge - sol ust
@@ -122,7 +128,8 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                       top: 6,
                       left: 6,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(4),
@@ -170,71 +177,76 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
               ),
             ),
             // Alt bilgi satiri -- sadece icerik varsa goster
-            if (widget.ad.title.isNotEmpty || (widget.ad.subtitle != null && widget.ad.subtitle!.isNotEmpty) || widget.ad.productPrice != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.ad.title.isNotEmpty)
-                        Text(
-                          widget.ad.title,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (widget.ad.subtitle != null && widget.ad.subtitle!.isNotEmpty) ...[
-                          const SizedBox(height: 1),
-                          Text(
-                            widget.ad.subtitle!,
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w300,
+            if (widget.ad.title.isNotEmpty ||
+                (widget.ad.subtitle != null &&
+                    widget.ad.subtitle!.isNotEmpty) ||
+                widget.ad.productPrice != null)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (widget.ad.title.isNotEmpty)
+                            Text(
+                              widget.ad.title,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          if (widget.ad.subtitle != null &&
+                              widget.ad.subtitle!.isNotEmpty) ...[
+                            const SizedBox(height: 1),
+                            Text(
+                              widget.ad.subtitle!,
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w300,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  if (widget.ad.productPrice != null) ...[
+                    if (widget.ad.productPrice != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '${widget.ad.productPrice!.toStringAsFixed(2)} \u20AC',
+                        style: TextStyle(
+                          color: const Color(0xFFEA184A),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 8),
-                    Text(
-                      '${widget.ad.productPrice!.toStringAsFixed(2)} \u20AC',
-                      style: TextStyle(
-                        color: const Color(0xFFEA184A),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                    // CTA arrow
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEA184A).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Color(0xFFEA184A),
+                        size: 16,
                       ),
                     ),
                   ],
-                  const SizedBox(width: 8),
-                  // CTA arrow
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEA184A).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Color(0xFFEA184A),
-                      size: 16,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
           ],
         ),
       ),

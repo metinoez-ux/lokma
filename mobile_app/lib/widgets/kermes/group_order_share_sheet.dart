@@ -30,8 +30,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
 
   String get shareLink => 'https://lokma.shop/group/${widget.orderId}';
 
-  String get shareMessage =>
-      '🍽️ Ailecek Sipariş - ${widget.kermesName}\n\n'
+  String get shareMessage => '🍽️ Ailecek Sipariş - ${widget.kermesName}\n\n'
       '${widget.hostName} sizi grup siparişine davet ediyor!\n\n'
       '⏰ Süre: ${widget.expirationMinutes} dakika\n'
       '📱 Katıl: $shareLink';
@@ -52,10 +51,10 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
 
   Future<void> _shareViaWhatsApp() async {
     setState(() => _whatsappOpening = true);
-    
+
     // Önce link'i panoya kopyala (WhatsApp'ta yapıştırabilsin diye)
     await Clipboard.setData(ClipboardData(text: shareLink));
-    
+
     final whatsappUrl = Uri.parse(
       'https://wa.me/?text=${Uri.encodeComponent(shareMessage)}',
     );
@@ -63,12 +62,15 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
     if (await canLaunchUrl(whatsappUrl)) {
       await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
       if (mounted) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         // Bilgilendirme mesajı göster
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.white, size: 20),
+                Icon(Icons.info_outline,
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    size: 20),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -97,7 +99,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
         );
       }
     }
-    
+
     if (mounted) {
       setState(() => _whatsappOpening = false);
     }
@@ -106,12 +108,15 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
   Future<void> _copyLink() async {
     await Clipboard.setData(ClipboardData(text: shareLink));
     if (mounted) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       setState(() => _linkCopied = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white, size: 20),
+              Icon(Icons.check_circle,
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  size: 20),
               SizedBox(width: 8),
               Text(tr('common.link_copied')),
             ],
@@ -128,10 +133,11 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -208,7 +214,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade50,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade200),
             ),
@@ -233,7 +239,8 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                 // Kopyalandı göstergesi veya kopyala butonu
                 if (_linkCopied)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(8),
@@ -241,11 +248,13 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check, color: Colors.green.shade600, size: 16),
+                        Icon(Icons.check,
+                            color: Colors.green.shade600, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           'Kopyalandı',
-                          style: TextStyle(fontSize: 12, color: Colors.green.shade600),
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.green.shade600),
                         ),
                       ],
                     ),
@@ -278,11 +287,13 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
                       : const Icon(Icons.message, size: 20),
-                  label: Text(_whatsappOpening ? 'Açılıyor...' : 'WhatsApp ile Paylaş'),
+                  label: Text(
+                      _whatsappOpening ? 'Açılıyor...' : 'WhatsApp ile Paylaş'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF25D366),
                     foregroundColor: Colors.white,

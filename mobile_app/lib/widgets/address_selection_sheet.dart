@@ -13,13 +13,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 // Constants
-const String googleApiKey = 'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo'; // Ensure this matches everywhere
+const String googleApiKey =
+    'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo'; // Ensure this matches everywhere
 
 class AddressSelectionSheet extends ConsumerStatefulWidget {
   const AddressSelectionSheet({super.key});
 
   @override
-  ConsumerState<AddressSelectionSheet> createState() => _AddressSelectionSheetState();
+  ConsumerState<AddressSelectionSheet> createState() =>
+      _AddressSelectionSheetState();
 }
 
 class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
@@ -44,7 +46,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
       // to keep the provider clean, or add a method to the provider.
       // Easiest is to just call the same logic UserLocationNotifier uses
       // but return it instead of setting state.
-      
+
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
 
@@ -52,7 +54,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.deniedForever || permission == LocationPermission.denied) {
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
         return;
       }
 
@@ -127,7 +130,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
   Future<void> _saveRecentSearch(UserLocation location) async {
     final prefs = await SharedPreferences.getInstance();
     // Remove if already exists
-    _recentSearches.removeWhere((l) => l.latitude == location.latitude && l.longitude == location.longitude);
+    _recentSearches.removeWhere((l) =>
+        l.latitude == location.latitude && l.longitude == location.longitude);
     // Add to top
     _recentSearches.insert(0, location);
     // Keep only top 5
@@ -174,14 +178,15 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SafeArea( 
+      child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min, // Avoid expanding more than needed
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header Row — drag handle + title + close button
             Padding(
-              padding: const EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 8),
+              padding:
+                  const EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 8),
               child: Column(
                 children: [
                   // Drag handle
@@ -242,24 +247,37 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               child: GooglePlaceAutoCompleteTextField(
                 textEditingController: _searchController,
                 googleAPIKey: googleApiKey,
-                boxDecoration: const BoxDecoration(), // Eliminate random borders/shadows from package
+                boxDecoration:
+                    const BoxDecoration(), // Eliminate random borders/shadows from package
                 inputDecoration: InputDecoration(
                   hintText: tr('address.full_address'),
-                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14, fontWeight: FontWeight.w300),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
+                  hintStyle: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w300),
+                  prefixIcon:
+                      Icon(Icons.search, color: Colors.grey[400], size: 20),
                   filled: true,
                   fillColor: bgColor,
-                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!, width: 1),
+                    borderSide: BorderSide(
+                        color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: isDark ? Colors.grey[500]! : Colors.grey[400]!, width: 1.5),
+                    borderSide: BorderSide(
+                        color: isDark ? Colors.grey[500]! : Colors.grey[400]!,
+                        width: 1.5),
                   ),
                 ),
-                textStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w400),
+                textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400),
                 debounceTime: 400,
                 countries: const ['de'],
                 isLatLngRequired: true,
@@ -272,12 +290,12 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                     String street = '';
                     String city = '';
                     if (parts.length >= 2) {
-                       street = parts[0].trim();
-                       city = parts[1].trim(); 
+                      street = parts[0].trim();
+                      city = parts[1].trim();
                     } else {
-                       city = desc;
+                      city = desc;
                     }
-                    
+
                     final newLoc = UserLocation(
                       latitude: lat,
                       longitude: lng,
@@ -303,20 +321,15 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
             // Current Location Indicator (Matches "Aktueller Standort")
             ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-              leading: _isLoading 
-                ? SizedBox(
-                    width: 24, 
-                    height: 24, 
-                    child: CircularProgressIndicator(
-                      color: Theme.of(context).colorScheme.onSurface, 
-                      strokeWidth: 2
-                    )
-                  )
-                : Icon(
-                    Icons.near_me, 
-                    color: Theme.of(context).colorScheme.onSurface, 
-                    size: 22
-                  ),
+              leading: _isLoading
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          strokeWidth: 2))
+                  : Icon(Icons.near_me,
+                      color: Theme.of(context).colorScheme.onSurface, size: 22),
               title: Text(
                 tr('address.current_location'),
                 style: TextStyle(
@@ -325,38 +338,40 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              subtitle: _actualGpsLocation != null 
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      _actualGpsLocation!.address,
-                      style: TextStyle(
-                        color: Colors.grey[600], 
-                        fontSize: 14,
-                        height: 1.4,
+              subtitle: _actualGpsLocation != null
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        _actualGpsLocation!.address,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      tr('address.finding_location'),
-                      style: TextStyle(
-                        color: Colors.grey[500], 
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        tr('address.finding_location'),
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
-                  ),
               onTap: () async {
-                 if (_actualGpsLocation == null) return; // Still fetching
-                 setState(() => _isLoading = true);
-                 HapticFeedback.lightImpact();
-                 // Immediately apply the exact GPS location to the global provider
-                 ref.read(userLocationProvider.notifier).setLocation(_actualGpsLocation!);
-                 if (context.mounted) Navigator.pop(context);
+                if (_actualGpsLocation == null) return; // Still fetching
+                setState(() => _isLoading = true);
+                HapticFeedback.lightImpact();
+                // Immediately apply the exact GPS location to the global provider
+                ref
+                    .read(userLocationProvider.notifier)
+                    .setLocation(_actualGpsLocation!);
+                if (context.mounted) Navigator.pop(context);
               },
             ),
 
@@ -408,18 +423,17 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   itemBuilder: (context, index) {
                     final loc = _recentSearches[index];
                     return ListTile(
-                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-                      leading: Icon(
-                        Icons.location_on, 
-                        color: const Color(0xFFEA184A), // LOKMA brand color
-                         size: 22
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 2),
+                      leading: Icon(Icons.location_on,
+                          color: const Color(0xFFEA184A), // LOKMA brand color
+                          size: 22),
                       title: Padding(
                         padding: const EdgeInsets.only(bottom: 2.0),
                         child: Text(
                           loc.street.isNotEmpty ? loc.street : loc.city,
                           style: TextStyle(
-                             color: Theme.of(context).colorScheme.onSurface,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                           ),
@@ -430,35 +444,38 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                       ),
                       trailing: _isEditing
-                        ? GestureDetector(
-                            onTap: () async {
-                              HapticFeedback.lightImpact();
-                              setState(() {
-                                _recentSearches.removeAt(index);
-                              });
-                              // Persist the change
-                              final prefs = await SharedPreferences.getInstance();
-                              final List<String> recentJson = _recentSearches.map((l) {
-                                return jsonEncode({
-                                  'latitude': l.latitude,
-                                  'longitude': l.longitude,
-                                  'address': l.address,
-                                  'street': l.street,
-                                  'city': l.city,
+                          ? GestureDetector(
+                              onTap: () async {
+                                HapticFeedback.lightImpact();
+                                setState(() {
+                                  _recentSearches.removeAt(index);
                                 });
-                              }).toList();
-                              await prefs.setStringList('recent_addresses', recentJson);
-                              if (_recentSearches.isEmpty) {
-                                setState(() => _isEditing = false);
-                              }
-                            },
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Color(0xFFEA184A),
-                              size: 22,
-                            ),
-                          )
-                        : null,
+                                // Persist the change
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final List<String> recentJson =
+                                    _recentSearches.map((l) {
+                                  return jsonEncode({
+                                    'latitude': l.latitude,
+                                    'longitude': l.longitude,
+                                    'address': l.address,
+                                    'street': l.street,
+                                    'city': l.city,
+                                  });
+                                }).toList();
+                                await prefs.setStringList(
+                                    'recent_addresses', recentJson);
+                                if (_recentSearches.isEmpty) {
+                                  setState(() => _isEditing = false);
+                                }
+                              },
+                              child: const Icon(
+                                Icons.delete_outline,
+                                color: Color(0xFFEA184A),
+                                size: 22,
+                              ),
+                            )
+                          : null,
                       onTap: _isEditing ? null : () => _onAddressSelected(loc),
                     );
                   },
@@ -511,8 +528,11 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               final postalCode = data['postalCode']?.toString() ?? '';
               final city = data['city']?.toString() ?? '';
 
-              final streetFull = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
-              final fullAddress = [streetFull, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+              final streetFull =
+                  houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+              final fullAddress = [streetFull, '$postalCode $city']
+                  .where((s) => s.trim().isNotEmpty)
+                  .join(', ');
 
               IconData labelIcon;
               Color labelColor;
@@ -520,7 +540,9 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               if (lower.contains('ev') || lower.contains('home')) {
                 labelIcon = Icons.home_outlined;
                 labelColor = const Color(0xFF4CAF50);
-              } else if (lower.contains('iş') || lower.contains('is') || lower.contains('work')) {
+              } else if (lower.contains('iş') ||
+                  lower.contains('is') ||
+                  lower.contains('work')) {
                 labelIcon = Icons.work_outline;
                 labelColor = const Color(0xFF2196F3);
               } else {
@@ -529,9 +551,11 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               }
 
               return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
                 leading: Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: labelColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),

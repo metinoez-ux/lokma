@@ -15,17 +15,34 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
-  
+
   const MainScaffold({super.key, required this.child});
 
   static List<NavItemData> get items => [
-    NavItemData(icon: Icons.restaurant_menu, label: 'navigation.food'.tr(), path: '/restoran'),
-    NavItemData(icon: Icons.storefront_rounded, label: 'navigation.market'.tr(), path: '/market'),
-    NavItemData(icon: null, label: 'navigation.kermes'.tr(), path: '/kermesler', isKermes: true),
-    NavItemData(icon: Icons.shopping_bag_rounded, label: 'navigation.cart'.tr(), path: '/cart', isCart: true),
-    NavItemData(icon: Icons.person_rounded, label: 'navigation.profile'.tr(), path: '/profile'),
-  ];
-  
+        NavItemData(
+            icon: Icons.restaurant_menu,
+            label: 'navigation.food'.tr(),
+            path: '/restoran'),
+        NavItemData(
+            icon: Icons.storefront_rounded,
+            label: 'navigation.market'.tr(),
+            path: '/market'),
+        NavItemData(
+            icon: null,
+            label: 'navigation.kermes'.tr(),
+            path: '/kermesler',
+            isKermes: true),
+        NavItemData(
+            icon: Icons.shopping_bag_rounded,
+            label: 'navigation.cart'.tr(),
+            path: '/cart',
+            isCart: true),
+        NavItemData(
+            icon: Icons.person_rounded,
+            label: 'navigation.profile'.tr(),
+            path: '/profile'),
+      ];
+
   @override
   ConsumerState<MainScaffold> createState() => _MainScaffoldState();
 }
@@ -35,7 +52,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   // Animation for hopping motorcycle
   late AnimationController _hopController;
   late Animation<double> _hopAnimation;
-  
+
   // Active delivery stream
   Stream<List<LokmaOrder>>? _activeOrdersStream;
 
@@ -46,18 +63,18 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _hopAnimation = Tween<double>(begin: 0, end: -6).animate(
       CurvedAnimation(parent: _hopController, curve: Curves.easeInOut),
     );
-    
+
     _initActiveOrdersStream();
   }
 
   void _initActiveOrdersStream() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     // Query ALL active deliveries — sort client-side by urgency
     _activeOrdersStream = FirebaseFirestore.instance
         .collection('meat_orders')
@@ -65,31 +82,29 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
         .where('status', isEqualTo: 'onTheWay')
         .snapshots()
         .map((snapshot) {
-          final orders = snapshot.docs
-              .map((doc) => LokmaOrder.fromFirestore(doc))
-              .toList();
-          
-          // Sort by urgency: onTheWay > ready > preparing > pending
-          const priority = {
-            'onTheWay': 0,
-            'ready': 1,
-            'preparing': 2,
-            'pending': 3,
-          };
-          orders.sort((a, b) {
-            final ap = priority[a.status.name] ?? 4;
-            final bp = priority[b.status.name] ?? 4;
-            if (ap != bp) return ap.compareTo(bp);
-            // Same priority → newer first
-            return b.createdAt.compareTo(a.createdAt);
-          });
-          
-          return orders;
-        })
-        .handleError((e) {
-          debugPrint('[MainScaffold] Active orders stream error: $e');
-          return <LokmaOrder>[];
-        });
+      final orders =
+          snapshot.docs.map((doc) => LokmaOrder.fromFirestore(doc)).toList();
+
+      // Sort by urgency: onTheWay > ready > preparing > pending
+      const priority = {
+        'onTheWay': 0,
+        'ready': 1,
+        'preparing': 2,
+        'pending': 3,
+      };
+      orders.sort((a, b) {
+        final ap = priority[a.status.name] ?? 4;
+        final bp = priority[b.status.name] ?? 4;
+        if (ap != bp) return ap.compareTo(bp);
+        // Same priority → newer first
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+      return orders;
+    }).handleError((e) {
+      debugPrint('[MainScaffold] Active orders stream error: $e');
+      return <LokmaOrder>[];
+    });
   }
 
   @override
@@ -121,18 +136,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     final kermesCartState = ref.watch(kermesCartProvider);
     final cartItemCount = cartState.items.length + kermesCartState.items.length;
     final selectedIndex = _getSelectedIndex(context);
-    
+
     final currentPath = GoRouterState.of(context).uri.path;
     final isCartPage = currentPath == '/cart';
     final isBottomNavVisible = ref.watch(bottomNavVisibilityProvider);
-    
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Status Bar: dark mode → white icons, light mode → dark icons
-    SystemChrome.setSystemUIOverlayStyle(isDark 
-      ? SystemUiOverlayStyle.light 
-      : SystemUiOverlayStyle.dark
-    );
+    SystemChrome.setSystemUIOverlayStyle(
+        isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark);
 
     return Scaffold(
       extendBody: true,
@@ -140,31 +153,36 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
         children: [
           widget.child,
           // Floating active delivery button (only when logged in)
-          if (_activeOrdersStream != null && !isCartPage && FirebaseAuth.instance.currentUser != null)
+          if (_activeOrdersStream != null &&
+              !isCartPage &&
+              FirebaseAuth.instance.currentUser != null)
             StreamBuilder<List<LokmaOrder>>(
               stream: _activeOrdersStream,
               builder: (context, snapshot) {
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const SizedBox.shrink();
                 }
-                
+
                 final activeOrder = snapshot.data!.first;
                 return _buildFloatingDeliveryButton(activeOrder);
               },
             ),
         ],
       ),
-      bottomNavigationBar: (isCartPage || !isBottomNavVisible || (currentPath == '/profile' && FirebaseAuth.instance.currentUser == null)) 
-        ? null 
-        : GlassBottomBar(
-            currentIndex: selectedIndex,
-            cartItemCount: cartItemCount,
-            onTap: (index) {
-              HapticFeedback.lightImpact();
-              context.go(MainScaffold.items[index].path);
-            },
-            items: MainScaffold.items,
-          ),
+      bottomNavigationBar: (isCartPage ||
+              !isBottomNavVisible ||
+              (currentPath == '/profile' &&
+                  FirebaseAuth.instance.currentUser == null))
+          ? null
+          : GlassBottomBar(
+              currentIndex: selectedIndex,
+              cartItemCount: cartItemCount,
+              onTap: (index) {
+                HapticFeedback.lightImpact();
+                context.go(MainScaffold.items[index].path);
+              },
+              items: MainScaffold.items,
+            ),
     );
   }
 
@@ -257,34 +275,34 @@ class GlassBottomBar extends StatelessWidget {
     // Apple iOS 26 "Liquid Glass" — frosted translucent floating bar
     // ═══════════════════════════════════════════════════════════════════
     const blurSigma = 28.0;
-    
+
     // Glass fill — truly translucent
-    final glassColor = isDark 
-        ? Colors.black.withValues(alpha: 0.25) 
+    final glassColor = isDark
+        ? Colors.black.withValues(alpha: 0.25)
         : Colors.white.withValues(alpha: 0.35);
 
     // Luminous edge border
-    final borderColor = isDark 
-        ? Colors.white.withValues(alpha: 0.12) 
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
         : Colors.white.withValues(alpha: 0.45);
 
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.only(bottom: 24), 
+      minimum: const EdgeInsets.only(bottom: 24),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(40), 
+          borderRadius: BorderRadius.circular(40),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
             child: Container(
-              height: 70, 
+              height: 70,
               decoration: BoxDecoration(
                 color: glassColor,
                 borderRadius: BorderRadius.circular(40),
                 border: Border.all(
                   color: borderColor,
-                  width: 0.5, 
+                  width: 0.5,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -307,9 +325,15 @@ class GlassBottomBar extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: isDark 
-                            ? [Colors.white.withValues(alpha: 0.06), Colors.transparent]
-                            : [Colors.white.withValues(alpha: 0.50), Colors.white.withValues(alpha: 0.0)],
+                          colors: isDark
+                              ? [
+                                  Colors.white.withValues(alpha: 0.06),
+                                  Colors.transparent
+                                ]
+                              : [
+                                  Colors.white.withValues(alpha: 0.50),
+                                  Colors.white.withValues(alpha: 0.0)
+                                ],
                           stops: const [0.0, 0.6],
                         ),
                       ),
@@ -321,7 +345,7 @@ class GlassBottomBar extends StatelessWidget {
                     children: List.generate(items.length, (index) {
                       final item = items[index];
                       final isActive = index == currentIndex;
-                      
+
                       return InkResponse(
                         onTap: () => onTap(index),
                         radius: 32,
@@ -329,7 +353,8 @@ class GlassBottomBar extends StatelessWidget {
                           width: 60,
                           height: 60,
                           child: Center(
-                            child: _buildItemContent(item, isActive, context, isDark),
+                            child: _buildItemContent(
+                                item, isActive, context, isDark),
                           ),
                         ),
                       );
@@ -344,10 +369,11 @@ class GlassBottomBar extends StatelessWidget {
     );
   }
 
-  Widget _buildItemContent(NavItemData item, bool isActive, BuildContext context, bool isDark) {
+  Widget _buildItemContent(
+      NavItemData item, bool isActive, BuildContext context, bool isDark) {
     const activeColor = Color(0xFFEA184A);
-    final inactiveColor = isDark 
-        ? Colors.white.withValues(alpha: 0.55) 
+    final inactiveColor = isDark
+        ? Colors.white.withValues(alpha: 0.55)
         : Colors.black.withValues(alpha: 0.55);
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0;
@@ -368,7 +394,7 @@ class GlassBottomBar extends StatelessWidget {
               BlendMode.srcIn,
             ),
           ),
-           if (cartItemCount > 0)
+          if (cartItemCount > 0)
             Positioned(
               right: -8,
               top: -8,
@@ -377,7 +403,8 @@ class GlassBottomBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xffFF2D55),
                   shape: BoxShape.circle,
-                  border: Border.all(color: isDark ? Colors.black : Colors.white, width: 1.5),
+                  border: Border.all(
+                      color: isDark ? Colors.black : Colors.white, width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.2),
@@ -401,11 +428,14 @@ class GlassBottomBar extends StatelessWidget {
         ],
       );
     } else if (item.path == '/restoran') {
-      iconWidget = Image.asset('assets/icons/yemek_icon.png', width: iconSize, height: iconSize, color: color);
+      iconWidget = Image.asset('assets/icons/yemek_icon.png',
+          width: iconSize, height: iconSize, color: color);
     } else if (item.isKermes) {
-      iconWidget = Image.asset('assets/icons/kermes_icon.png', width: iconSize, height: iconSize, color: color);
+      iconWidget = Image.asset('assets/icons/kermes_icon.png',
+          width: iconSize, height: iconSize, color: color);
     } else if (item.path == '/market') {
-      iconWidget = Image.asset('assets/icons/market_icon.png', width: iconSize, height: iconSize, color: color);
+      iconWidget = Image.asset('assets/icons/market_icon.png',
+          width: iconSize, height: iconSize, color: color);
     } else {
       iconWidget = Icon(item.icon, size: iconSize + 2, color: color);
     }
@@ -438,10 +468,10 @@ class NavItemData {
   final bool isCart;
 
   const NavItemData({
-    required this.label, 
-    required this.path, 
+    required this.label,
+    required this.path,
     this.icon,
     this.isKermes = false,
     this.isCart = false,
   });
-} 
+}

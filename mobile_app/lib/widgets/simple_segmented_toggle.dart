@@ -20,7 +20,8 @@ class SimpleSegmentedToggle extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
     final activeTextColor = isDark ? Colors.black : Colors.white;
-    final trackColor = isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF0EDE8);
+    final trackColor =
+        isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF0EDE8);
     final unselectedText = isDark ? Colors.grey[400]! : Colors.grey[600]!;
 
     return Container(
@@ -51,7 +52,8 @@ class SimpleSegmentedToggle extends StatelessWidget {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.12),
+                            color: Colors.black
+                                .withValues(alpha: isDark ? 0.3 : 0.12),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),
@@ -76,7 +78,8 @@ class SimpleSegmentedToggle extends StatelessWidget {
                         item.label,
                         style: TextStyle(
                           color: isSelected ? activeTextColor : unselectedText,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w400,
                           fontSize: 13,
                         ),
                         maxLines: 1,

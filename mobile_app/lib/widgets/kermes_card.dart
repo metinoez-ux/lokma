@@ -34,12 +34,14 @@ class KermesCard extends StatefulWidget {
   State<KermesCard> createState() => _KermesCardState();
 }
 
-class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateMixin {
+class _KermesCardState extends State<KermesCard>
+    with SingleTickerProviderStateMixin {
   bool _isFavorite = false;
   List<KermesFeature> _globalFeatures = [];
   List<KermesBadge> _activeBadges = [];
   late AnimationController _expandController;
-  
+  late Animation<double> _expandAnimation;
+
   // Colors from HTML/Tailwind config
   static const Color primaryRose = Color(0xFFEA184A);
   static const Color cardLight = Colors.white;
@@ -52,7 +54,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     _checkFavorite();
     _loadFeatures();
     _loadBadges();
-    
+
     _expandController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -61,12 +63,12 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       parent: _expandController,
       curve: Curves.easeInOut,
     );
-    
+
     if (widget.isExpanded) {
       _expandController.value = 1.0;
     }
   }
-  
+
   @override
   void didUpdateWidget(KermesCard oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -78,7 +80,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       }
     }
   }
-  
+
   @override
   void dispose() {
     _expandController.dispose();
@@ -94,7 +96,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
 
   Future<void> _loadBadges() async {
     if (widget.event.activeBadgeIds.isEmpty) return;
-    
+
     final allBadges = await KermesBadgeService.instance.loadBadges();
     if (mounted) {
       setState(() {
@@ -107,32 +109,35 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   }
 
   Future<void> _checkFavorite() async {
-    final isFav = await KermesFavoriteService.instance.isFavorite(widget.event.id);
+    final isFav =
+        await KermesFavoriteService.instance.isFavorite(widget.event.id);
     if (mounted) {
       setState(() => _isFavorite = isFav);
     }
   }
 
   Future<void> _toggleFavorite() async {
-    final newState = await KermesFavoriteService.instance.toggleFavorite(widget.event);
+    final newState =
+        await KermesFavoriteService.instance.toggleFavorite(widget.event);
     if (mounted) {
       setState(() => _isFavorite = newState);
       HapticFeedback.lightImpact();
       widget.onFavoriteChanged?.call();
     }
   }
-  
-  }
 
   String? _getImagePath() {
-    if (widget.event.headerImage != null && widget.event.headerImage!.isNotEmpty) {
+    if (widget.event.headerImage != null &&
+        widget.event.headerImage!.isNotEmpty) {
       return widget.event.headerImage;
     } else if (widget.event.flyers.isNotEmpty) {
       return widget.event.flyers.first;
-    } else if (widget.event.menu.isNotEmpty && 
-               widget.event.menu.any((m) => m.imageUrl != null || m.imageUrls.isNotEmpty)) {
-        final item = widget.event.menu.firstWhere((m) => m.imageUrl != null || m.imageUrls.isNotEmpty);
-        return item.imageUrls.isNotEmpty ? item.imageUrls.first : item.imageUrl;
+    } else if (widget.event.menu.isNotEmpty &&
+        widget.event.menu
+            .any((m) => m.imageUrl != null || m.imageUrls.isNotEmpty)) {
+      final item = widget.event.menu
+          .firstWhere((m) => m.imageUrl != null || m.imageUrls.isNotEmpty);
+      return item.imageUrls.isNotEmpty ? item.imageUrls.first : item.imageUrl;
     }
     return null;
   }
@@ -141,19 +146,22 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Theme Colors (Marketplace Standards)
-      final Color cardDark = const Color(0xFF1E1E1E); // Refined dark mode card color
+    final Color cardDark =
+        const Color(0xFF1E1E1E); // Refined dark mode card color
     final Color textDark = const Color(0xFF2D3748);
     final Color primaryRose = const Color(0xFFE50914);
 
     final String? imagePath = _getImagePath();
-    final bool isNetworkImage = imagePath != null && imagePath.startsWith('http');
+    final bool isNetworkImage =
+        imagePath != null && imagePath.startsWith('http');
 
     // Date formatting for "01.04 - 07.04.2026"
     final DateFormat formatter = DateFormat('dd.MM.yyyy');
-    final String dateRangeText = '${DateFormat('dd.MM').format(widget.event.startDate)} - ${formatter.format(widget.event.endDate)}';
-    
+    final String dateRangeText =
+        '${DateFormat('dd.MM').format(widget.event.startDate)} - ${formatter.format(widget.event.endDate)}';
+
     // Address format logic
     final parts = <String>[];
     if (widget.event.city.isNotEmpty) {
@@ -163,7 +171,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
         parts.add(widget.event.city);
       }
     }
-    if (widget.event.state != null && widget.event.state!.isNotEmpty && widget.event.country.toLowerCase() == 'almanya') {
+    if (widget.event.state != null &&
+        widget.event.state!.isNotEmpty &&
+        widget.event.country.toLowerCase() == 'almanya') {
       parts.add(widget.event.state!);
     }
     if (widget.event.country.isNotEmpty) {
@@ -173,15 +183,18 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
 
     // Live/Countdown logic
     final now = DateTime.now();
-    final isLive = now.isAfter(widget.event.startDate) && now.isBefore(widget.event.endDate);
+    final isLive = now.isAfter(widget.event.startDate) &&
+        now.isBefore(widget.event.endDate);
     final daysLeft = widget.event.startDate.difference(now).inDays;
-    
+
     // Banner top right status logic
     String bannerRightText = '';
     final DateTime today = DateTime(now.year, now.month, now.day);
-    final DateTime startDateLocal = DateTime(widget.event.startDate.year, widget.event.startDate.month, widget.event.startDate.day);
-    final DateTime endDateLocal = DateTime(widget.event.endDate.year, widget.event.endDate.month, widget.event.endDate.day);
-    
+    final DateTime startDateLocal = DateTime(widget.event.startDate.year,
+        widget.event.startDate.month, widget.event.startDate.day);
+    final DateTime endDateLocal = DateTime(widget.event.endDate.year,
+        widget.event.endDate.month, widget.event.endDate.day);
+
     if (today.isBefore(startDateLocal)) {
       final int daysUntilStart = startDateLocal.difference(today).inDays;
       bannerRightText = '$daysUntilStart gün kaldı';
@@ -193,11 +206,15 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       final currentDay = today.difference(startDateLocal).inDays + 1;
       bannerRightText = '$currentDay. gün';
     }
-    
+
+    String statusText;
+    List<Color> badgeGradient;
+    IconData? badgeIcon;
+
     // Wallet-stack: Blue date card peeks from behind main card
-    const double bannerHeight = 120.0;   // Full blue wallet card height (most hidden behind main card)
+    const double bannerHeight =
+        120.0; // Full blue wallet card height (most hidden behind main card)
     const double bannerPeekHeight = 30.0; // Visible peek strip
-    
 
     if (isLive) {
       statusText = 'ŞU AN AÇIK';
@@ -237,9 +254,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                 height: bannerHeight,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isDark 
-                      ? [const Color(0xFF1E3A8A), const Color(0xFF1E40AF)]
-                      : [const Color(0xFFDBEAFE), const Color(0xFFBFDBFE)],
+                    colors: isDark
+                        ? [const Color(0xFF1E3A8A), const Color(0xFF1E40AF)]
+                        : [const Color(0xFFDBEAFE), const Color(0xFFBFDBFE)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
@@ -254,7 +271,11 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.calendar_month, size: 14, color: isDark ? Colors.white : const Color(0xFF1E3A8A)),
+                            Icon(Icons.calendar_month,
+                                size: 14,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E3A8A)),
                             const SizedBox(width: 6),
                             Text(
                               dateRangeText,
@@ -262,7 +283,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                 fontSize: 13,
                                 fontWeight: FontWeight.w300,
                                 letterSpacing: 0.5,
-                                color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E3A8A),
                               ),
                             ),
                           ],
@@ -274,9 +297,12 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         right: 12,
                         top: 5,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.5),
+                            color: isDark
+                                ? Colors.black26
+                                : Colors.white.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -284,7 +310,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1E3A8A),
                             ),
                           ),
                         ),
@@ -316,15 +344,21 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                 border: Border(
                   top: BorderSide.none,
                   bottom: BorderSide(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
                     width: 0.5,
                   ),
                   left: BorderSide(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
                     width: 0.5,
                   ),
                   right: BorderSide(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.08),
                     width: 0.5,
                   ),
                 ),
@@ -349,10 +383,14 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                     fadeInDuration: Duration.zero,
                                     fadeOutDuration: Duration.zero,
                                     useOldImageOnUrlChange: true,
-                                    placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                    errorWidget: (context, url, error) => Container(
+                                    placeholder: (context, url) =>
+                                        Container(color: Colors.grey[200]),
+                                    errorWidget: (context, url, error) =>
+                                        Container(
                                       color: Colors.grey[200],
-                                      child: const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)),
+                                      child: const Center(
+                                          child: Icon(Icons.image_not_supported,
+                                              color: Colors.grey)),
                                     ),
                                   )
                                 : Image.asset(imagePath, fit: BoxFit.cover))
@@ -373,8 +411,11 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                 padding: const EdgeInsets.all(8),
                                 color: Colors.white.withValues(alpha: 0.2),
                                 child: Icon(
-                                  _isFavorite ? Icons.favorite : Icons.favorite_outline,
-                                  color: _isFavorite ? primaryRose : Colors.white,
+                                  _isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_outline,
+                                  color:
+                                      _isFavorite ? primaryRose : Colors.white,
                                   size: 24,
                                 ),
                               ),
@@ -382,9 +423,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                           ),
                         ),
                       ),
-        
 
-        
                       // Bottom Left: Dynamic Badges (Zertifikate)
                       if (_activeBadges.isNotEmpty)
                         Positioned(
@@ -400,7 +439,8 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.15),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.15),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -417,7 +457,8 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                         height: 34,
                                         width: 34,
                                       ),
-                                      errorWidget: (context, url, error) => const SizedBox.shrink(),
+                                      errorWidget: (context, url, error) =>
+                                          const SizedBox.shrink(),
                                     ),
                                   ),
                                 ),
@@ -434,21 +475,25 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (widget.event.isMenuOnly)
-                              _buildModalityPill(Icons.restaurant_menu, 'Sipariş Yok'),
-                            if (!widget.event.isMenuOnly && widget.event.hasDineIn)
-                              _buildModalityPill(Icons.table_restaurant, 'Masa'),
-                            if (!widget.event.isMenuOnly && widget.event.hasTakeaway)
-                              _buildModalityPill(Icons.shopping_bag_outlined, 'Gel-Al'),
-                            if (!widget.event.isMenuOnly && widget.event.hasDelivery)
+                              _buildModalityPill(
+                                  Icons.restaurant_menu, 'Sipariş Yok'),
+                            if (!widget.event.isMenuOnly &&
+                                widget.event.hasDineIn)
+                              _buildModalityPill(
+                                  Icons.table_restaurant, 'Masa'),
+                            if (!widget.event.isMenuOnly &&
+                                widget.event.hasTakeaway)
+                              _buildModalityPill(
+                                  Icons.shopping_bag_outlined, 'Gel-Al'),
+                            if (!widget.event.isMenuOnly &&
+                                widget.event.hasDelivery)
                               _buildModalityPill(Icons.two_wheeler, 'Kurye'),
                           ],
                         ),
                       ),
-
-
                     ],
                   ),
-        
+
                   // --- BOTTOM SECTION: CONTENT ---
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -478,13 +523,16 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      Icon(Icons.flag, size: 14, color: primaryRose),
+                                      Icon(Icons.flag,
+                                          size: 14, color: primaryRose),
                                       const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           formattedLocation,
                                           style: TextStyle(
-                                            color: isDark ? Colors.grey[400] : Colors.grey[500],
+                                            color: isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[500],
                                             fontSize: 13,
                                           ),
                                           maxLines: 1,
@@ -498,7 +546,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                             ),
                           ],
                         ),
-        
+
                         // EXPANDABLE SECTION
                         AnimatedCrossFade(
                           firstChild: const SizedBox(height: 8),
@@ -513,12 +561,13 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                 children: _buildFeatureTags(isDark),
                               ),
                               const SizedBox(height: 14),
-                              
+
                               if (widget.event.hasParking) ...[
                                 _buildParkingCard(isDark),
                                 const SizedBox(height: 12),
                               ],
-                              if (isLive && widget.event.weatherForecast.isNotEmpty) ...[
+                              if (isLive &&
+                                  widget.event.weatherForecast.isNotEmpty) ...[
                                 _buildWeatherPreview(isDark),
                                 const SizedBox(height: 16),
                               ],
@@ -531,32 +580,44 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                     backgroundColor: primaryRose,
                                     foregroundColor: Colors.white,
                                     elevation: 0,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
                                   ),
                                   onPressed: () {
                                     HapticFeedback.lightImpact();
-                                    Navigator.of(context, rootNavigator: true).push(
+                                    Navigator.of(context, rootNavigator: true)
+                                        .push(
                                       MaterialPageRoute(
-                                        builder: (c) => KermesMenuScreen(event: widget.event),
+                                        builder: (c) => KermesMenuScreen(
+                                            event: widget.event),
                                       ),
                                     );
                                   },
-                                  child: const Text('Menüyü Gör ve Sipariş Ver', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                                  child: const Text('Menüyü Gör ve Sipariş Ver',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15)),
                                 ),
                               ),
                               const SizedBox(height: 6),
                             ],
                           ),
-                          crossFadeState: widget.isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                          crossFadeState: widget.isExpanded
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
                           duration: const Duration(milliseconds: 300),
                         ),
-        
+
                         // Thin Full-width Divider
                         const SizedBox(height: 8),
-                        Divider(color: isDark ? Colors.grey[800] : Colors.grey[200], height: 1),
+                        Divider(
+                            color: isDark ? Colors.grey[800] : Colors.grey[200],
+                            height: 1),
                         const SizedBox(height: 12),
-        
+
                         // Info Row (Distance + Courier)
                         Row(
                           children: [
@@ -566,33 +627,45 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                   HapticFeedback.lightImpact();
                                   final lat = widget.event.latitude;
                                   final lng = widget.event.longitude;
-                                  final label = Uri.encodeComponent(widget.event.title);
+                                  final label =
+                                      Uri.encodeComponent(widget.event.title);
                                   // Apple Maps with driving directions
-                                  final url = Uri.parse('https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
-                                  launchUrl(url, mode: LaunchMode.externalApplication);
+                                  final url = Uri.parse(
+                                      'https://maps.apple.com/?daddr=$lat,$lng&dirflg=d&t=m&q=$label');
+                                  launchUrl(url,
+                                      mode: LaunchMode.externalApplication);
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
+                                    _buildIconText(Icons.near_me,
+                                        '$_distanceKm km', primaryRose, isDark),
                                     const SizedBox(width: 12),
-                                    _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
+                                    _buildIconText(
+                                        Icons.directions_car,
+                                        '~$_travelTime dk',
+                                        primaryRose,
+                                        isDark),
                                   ],
                                 ),
                               ),
-                            
                             const Spacer(),
-
                             if (widget.event.hasDelivery)
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.two_wheeler, size: 16, color: isDark ? Colors.green[400] : const Color(0xFF059669)),
+                                  Icon(Icons.two_wheeler,
+                                      size: 16,
+                                      color: isDark
+                                          ? Colors.green[400]
+                                          : const Color(0xFF059669)),
                                   const SizedBox(width: 5),
                                   Text(
                                     'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
                                     style: TextStyle(
-                                      color: isDark ? Colors.green[400] : const Color(0xFF059669),
+                                      color: isDark
+                                          ? Colors.green[400]
+                                          : const Color(0xFF059669),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -605,21 +678,20 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         ),
                       ],
                     ),
-                  ),                // --- SPONSORED PRODUCTS (Reklam Altyapisi) ---
-                if (widget.event.sponsoredMenuItems.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: _buildSponsoredProductsSection(isDark),
-                  ),
-              ],
+                  ), // --- SPONSORED PRODUCTS (Reklam Altyapisi) ---
+                  if (widget.event.sponsoredMenuItems.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: _buildSponsoredProductsSection(isDark),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   // --- Park İmkanları Card (Tappable) ---
   Widget _buildParkingCard(bool isDark) {
@@ -637,9 +709,11 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
+          color:
+              isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+          border:
+              Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
         ),
         child: Row(
           children: [
@@ -717,13 +791,15 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
 
   Widget _buildWeatherPreview(bool isDark) {
     final forecasts = widget.event.weatherForecast.take(3).toList();
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
+        color:
+            isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
+        border:
+            Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -781,24 +857,26 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   String get _distanceKm {
     if (widget.currentPosition == null) return '';
     final dist = Geolocator.distanceBetween(
-      widget.currentPosition!.latitude,
-      widget.currentPosition!.longitude,
-      widget.event.latitude,
-      widget.event.longitude,
-    ) / 1000;
+          widget.currentPosition!.latitude,
+          widget.currentPosition!.longitude,
+          widget.event.latitude,
+          widget.event.longitude,
+        ) /
+        1000;
     return dist.toStringAsFixed(0);
   }
-  
+
   String get _travelTime {
     if (widget.currentPosition == null) return '';
     final dist = Geolocator.distanceBetween(
-      widget.currentPosition!.latitude,
-      widget.currentPosition!.longitude,
-      widget.event.latitude,
-      widget.event.longitude,
-    ) / 1000;
+          widget.currentPosition!.latitude,
+          widget.currentPosition!.longitude,
+          widget.event.latitude,
+          widget.event.longitude,
+        ) /
+        1000;
     final mins = (dist / 60 * 60).round();
-    return mins.toString(); 
+    return mins.toString();
   }
 
   Widget _buildFallbackGradient() {
@@ -810,14 +888,15 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
           colors: [Color(0xFF2C3E50), Color(0xFF4CA1AF)],
         ),
       ),
-      child: const Center(child: Icon(Icons.storefront, size: 50, color: Colors.white24)),
+      child: const Center(
+          child: Icon(Icons.storefront, size: 50, color: Colors.white24)),
     );
   }
 
   List<Widget> _buildFeatureTags(bool isDark) {
     final tags = <Widget>[];
     final event = widget.event;
-    
+
     final legacyFeatureMap = {
       'family_area': event.hasFamilyArea,
       'outdoor': event.hasOutdoor,
@@ -832,12 +911,12 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       'live_music': event.hasLiveMusic,
       'prayer_room': event.hasPrayerRoom,
     };
-    
+
     for (final feature in _globalFeatures.take(5)) {
       final featureId = feature.id;
-      final isActive = event.features.contains(featureId) || 
-                       (legacyFeatureMap[featureId] ?? false);
-      
+      final isActive = event.features.contains(featureId) ||
+          (legacyFeatureMap[featureId] ?? false);
+
       if (isActive) {
         // Parking tag navigates to parking screen
         if (featureId == 'parking') {
@@ -850,31 +929,38 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
                   barrierColor: Colors.black.withValues(alpha: 0.6),
-                  builder: (context) => KermesParkingScreen(event: widget.event),
+                  builder: (context) =>
+                      KermesParkingScreen(event: widget.event),
                 );
               },
-              child: _buildDynamicColorTag(feature.icon, feature.label, feature.colorValue, isDark),
+              child: _buildDynamicColorTag(
+                  feature.icon, feature.label, feature.colorValue, isDark),
             ),
           );
         } else {
-          tags.add(_buildDynamicColorTag(feature.icon, feature.label, feature.colorValue, isDark));
+          tags.add(_buildDynamicColorTag(
+              feature.icon, feature.label, feature.colorValue, isDark));
         }
       }
     }
-    
+
     for (final customFeature in event.customFeatures.take(3)) {
       if (customFeature.isNotEmpty) {
-        tags.add(_buildDynamicColorTag('✨', customFeature, primaryRose, isDark));
+        tags.add(
+            _buildDynamicColorTag('✨', customFeature, primaryRose, isDark));
       }
     }
-    
+
     return tags;
   }
 
-  Widget _buildDynamicColorTag(String emoji, String text, Color color, bool isDark) {
-    final bg = isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1);
+  Widget _buildDynamicColorTag(
+      String emoji, String text, Color color, bool isDark) {
+    final bg =
+        isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1);
     final textColor = isDark ? color.withValues(alpha: 0.9) : color;
-    final border = isDark ? color.withValues(alpha: 0.3) : color.withValues(alpha: 0.2);
+    final border =
+        isDark ? color.withValues(alpha: 0.3) : color.withValues(alpha: 0.2);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -901,7 +987,8 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildIconText(IconData icon, String text, Color iconColor, bool isDark) {
+  Widget _buildIconText(
+      IconData icon, String text, Color iconColor, bool isDark) {
     return Row(
       children: [
         Icon(icon, size: 16, color: iconColor),
@@ -955,9 +1042,12 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800]!.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.7),
+                    color: isDark
+                        ? Colors.grey[800]!.withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -981,7 +1071,8 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
               itemCount: sponsoredItems.length,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
-                return _buildSponsoredProductCard(sponsoredItems[index], isDark);
+                return _buildSponsoredProductCard(
+                    sponsoredItems[index], isDark);
               },
             ),
           ),
@@ -1019,13 +1110,15 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                       width: 130,
                       height: 85,
                       color: isDark ? Colors.grey[800] : Colors.grey[100],
-                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                      child: Icon(Icons.restaurant,
+                          color: Colors.grey[400], size: 24),
                     ),
                     errorWidget: (_, __, ___) => Container(
                       width: 130,
                       height: 85,
                       color: isDark ? Colors.grey[800] : Colors.grey[100],
-                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                      child: Icon(Icons.restaurant,
+                          color: Colors.grey[400], size: 24),
                     ),
                   )
                 : Container(
@@ -1035,7 +1128,10 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                       gradient: LinearGradient(
                         colors: isDark
                             ? [const Color(0xFF2C3E50), const Color(0xFF34495E)]
-                            : [const Color(0xFFF8F4EF), const Color(0xFFF0E8DD)],
+                            : [
+                                const Color(0xFFF8F4EF),
+                                const Color(0xFFF0E8DD)
+                              ],
                       ),
                     ),
                     child: Icon(

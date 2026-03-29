@@ -37,7 +37,8 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final surfaceBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final surfaceBg =
+        isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
 
     return Container(
       decoration: BoxDecoration(
@@ -58,7 +59,8 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                      color:
+                          isDark ? Colors.grey.shade600 : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -72,7 +74,8 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                           color: _accent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.groups, color: _accent, size: 26),
+                        child:
+                            const Icon(Icons.groups, color: _accent, size: 26),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -91,7 +94,9 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                               widget.businessName,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -221,7 +226,9 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                                 border: Border.all(
                                   color: isSelected
                                       ? _accent
-                                      : (isDark ? Colors.grey.shade600 : Colors.grey.shade300),
+                                      : (isDark
+                                          ? Colors.grey.shade600
+                                          : Colors.grey.shade300),
                                   width: isSelected ? 1.5 : 1,
                                 ),
                               ),
@@ -231,8 +238,9 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                                     : '$mins ${tr('group_order.minutes')}',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight:
-                                      isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
                                   color: isSelected
                                       ? Colors.white
                                       : (isDark
@@ -259,24 +267,33 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.blue.shade900.withValues(alpha: 0.3) : Colors.blue.shade50,
+                  color: isDark
+                      ? Colors.blue.shade900.withValues(alpha: 0.3)
+                      : Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isDark ? Colors.blue.shade700.withValues(alpha: 0.4) : Colors.blue.shade100,
+                    color: isDark
+                        ? Colors.blue.shade700.withValues(alpha: 0.4)
+                        : Colors.blue.shade100,
                   ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, size: 18,
-                      color: isDark ? Colors.blue.shade300 : Colors.blue.shade700),
+                    Icon(Icons.info_outline,
+                        size: 18,
+                        color: isDark
+                            ? Colors.blue.shade300
+                            : Colors.blue.shade700),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         tr('group_order.info_banner'),
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark ? Colors.blue.shade200 : Colors.blue.shade800,
+                          color: isDark
+                              ? Colors.blue.shade200
+                              : Colors.blue.shade800,
                           height: 1.4,
                         ),
                       ),
@@ -354,7 +371,9 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                 : (isDark ? Colors.grey.shade800 : Colors.grey.shade50),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? _accent : (isDark ? Colors.grey.shade600 : Colors.grey.shade300),
+              color: isSelected
+                  ? _accent
+                  : (isDark ? Colors.grey.shade600 : Colors.grey.shade300),
               width: isSelected ? 1.5 : 1,
             ),
           ),

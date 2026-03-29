@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 
 /// Teslimat türü enum
 enum DeliveryType {
-  gelAl,    // Gel Al - Takeaway
-  masada,   // Masada Ye - Dine-in
-  kurye,    // Kurye - Delivery
+  gelAl, // Gel Al - Takeaway
+  masada, // Masada Ye - Dine-in
+  kurye, // Kurye - Delivery
 }
 
 /// Teslimat türü seçim dialog'u

@@ -25,7 +25,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
         color: Color(0xFF1976D2), // Material Blue 700 - clean and professional
       ),
       child: AppBar(
-        title: title is Text 
+        title: title is Text
             ? DefaultTextStyle(
                 style: const TextStyle(
                   color: Colors.white,
@@ -47,5 +47,6 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
 }

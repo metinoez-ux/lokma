@@ -209,7 +209,11 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
             final closeHour = int.tryParse(timeParts[0].trim()) ?? 0;
             final closeMinute = int.tryParse(timeParts[1].trim()) ?? 0;
             final closeDateTime = DateTime(
-              now.year, now.month, now.day, closeHour, closeMinute,
+              now.year,
+              now.month,
+              now.day,
+              closeHour,
+              closeMinute,
             );
             minutesUntilClose = closeDateTime.difference(now).inMinutes;
             if (minutesUntilClose < 0) minutesUntilClose = null;
@@ -406,8 +410,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
               ),
               child: Text(
                 'checkout.go_back'.tr(),
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 15),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
               ),
             ),
           ),
@@ -466,8 +470,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                             final opacity = 0.06 - (i * 0.015);
                             final borderOpacity = 0.35 - (i * 0.08);
                             return CircleMarker(
-                              point: LatLng(
-                                  widget.userLat!, widget.userLng!),
+                              point: LatLng(widget.userLat!, widget.userLng!),
                               radius: _ringRadiiM[i],
                               useRadiusInMeter: true,
                               color: lokmaPink.withValues(
@@ -497,9 +500,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: (isDark
-                                          ? Colors.black
-                                          : Colors.white)
+                                  color: (isDark ? Colors.black : Colors.white)
                                       .withValues(alpha: 0.8),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
@@ -527,8 +528,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                           rotate: true,
                           markers: [
                             Marker(
-                              point:
-                                  LatLng(widget.userLat!, widget.userLng!),
+                              point: LatLng(widget.userLat!, widget.userLng!),
                               width: 20,
                               height: 20,
                               child: Container(
@@ -536,11 +536,13 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                   color: Colors.blue,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: Colors.white, width: 2.5),
+                                      color: isDark
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white,
+                                      width: 2.5),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          Colors.blue.withValues(alpha: 0.3),
+                                      color: Colors.blue.withValues(alpha: 0.3),
                                       blurRadius: 6,
                                       spreadRadius: 2,
                                     ),
@@ -562,9 +564,12 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                   business.minutesUntilClose! <= 30;
 
                           // Scale factor: at zoom 13 = 1.0, at zoom 18 = ~1.8
-                          final scaleFactor = (1.0 + (_currentZoom - 13) * 0.16).clamp(0.8, 2.0);
-                          final markerWidth = (130 * scaleFactor).clamp(100.0, 260.0);
-                          final markerHeight = (72 * scaleFactor).clamp(60.0, 144.0);
+                          final scaleFactor = (1.0 + (_currentZoom - 13) * 0.16)
+                              .clamp(0.8, 2.0);
+                          final markerWidth =
+                              (130 * scaleFactor).clamp(100.0, 260.0);
+                          final markerHeight =
+                              (72 * scaleFactor).clamp(60.0, 144.0);
 
                           return Marker(
                             point: LatLng(business.lat, business.lng),
@@ -588,11 +593,9 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                           builder: (context, child) {
                                             return Container(
                                               width: 24 +
-                                                  (_pulseController.value *
-                                                      12),
+                                                  (_pulseController.value * 12),
                                               height: 24 +
-                                                  (_pulseController.value *
-                                                      12),
+                                                  (_pulseController.value * 12),
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
@@ -613,15 +616,19 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                         ),
                                         // Core dot
                                         Container(
-                                          width: (isSelected ? 26 : 22) * scaleFactor,
-                                          height: (isSelected ? 26 : 22) * scaleFactor,
+                                          width: (isSelected ? 26 : 22) *
+                                              scaleFactor,
+                                          height: (isSelected ? 26 : 22) *
+                                              scaleFactor,
                                           decoration: BoxDecoration(
                                             color: isSelected
                                                 ? lokmaPink
                                                 : openGreen,
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                                color: Colors.white,
+                                                color: isDark
+                                                    ? const Color(0xFF1E293B)
+                                                    : Colors.white,
                                                 width: 2),
                                             boxShadow: [
                                               BoxShadow(
@@ -638,8 +645,11 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                             widget.activeSegment == 'markt'
                                                 ? Icons.shopping_cart
                                                 : Icons.restaurant,
-                                            color: Colors.white,
-                                            size: (isSelected ? 13 : 11) * scaleFactor,
+                                            color: isDark
+                                                ? const Color(0xFF1E293B)
+                                                : Colors.white,
+                                            size: (isSelected ? 13 : 11) *
+                                                scaleFactor,
                                           ),
                                         ),
                                       ],
@@ -657,19 +667,17 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                                   .withValues(alpha: 0.8)
                                               : Colors.white
                                                   .withValues(alpha: 0.95)),
-                                      borderRadius:
-                                          BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: closingSoon
                                             ? Colors.orange
                                                 .withValues(alpha: 0.5)
                                             : (isSelected
-                                                ? lokmaPink
-                                                    .withValues(alpha: 0.5)
+                                                ? lokmaPink.withValues(
+                                                    alpha: 0.5)
                                                 : Colors.transparent),
-                                        width: isSelected || closingSoon
-                                            ? 1
-                                            : 0,
+                                        width:
+                                            isSelected || closingSoon ? 1 : 0,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
@@ -686,13 +694,15 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                         Container(
                                           width: 6 * scaleFactor,
                                           height: 6 * scaleFactor,
-                                          margin: EdgeInsets.only(right: 3 * scaleFactor),
+                                          margin: EdgeInsets.only(
+                                              right: 3 * scaleFactor),
                                           decoration: BoxDecoration(
                                             color: openGreen,
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: openGreen.withValues(alpha: 0.5),
+                                                color: openGreen.withValues(
+                                                    alpha: 0.5),
                                                 blurRadius: 3,
                                                 spreadRadius: 0.5,
                                               ),
@@ -715,18 +725,15 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                                       : Colors.black87),
                                             ),
                                             maxLines: 1,
-                                            overflow:
-                                                TextOverflow.ellipsis,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         // Distance pill
                                         if (business.distanceKm != null) ...[
                                           const SizedBox(width: 4),
                                           Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 2,
-                                                    vertical: 1),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 2, vertical: 1),
                                             child: Text(
                                               '${business.distanceKm!.toStringAsFixed(1)}km',
                                               style: TextStyle(
@@ -902,11 +909,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                         imageUrl: b.logoUrl!,
                         fit: BoxFit.cover,
                         errorWidget: (_, __, ___) => Container(
-                          color: isDark
-                              ? Colors.grey[800]
-                              : Colors.grey[200],
-                          child: Icon(Icons.store,
-                              color: lokmaPink, size: 20),
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          child: Icon(Icons.store, color: lokmaPink, size: 20),
                         ),
                       ),
                     ),
@@ -1019,8 +1023,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                 onPressed: () {
                   HapticFeedback.lightImpact();
                   Navigator.pop(context);
-                  context.push(
-                      '/kasap/${b.id}?mode=${widget.deliveryMode}');
+                  context.push('/kasap/${b.id}?mode=${widget.deliveryMode}');
                 },
                 icon: Icon(
                   widget.activeSegment == 'markt'
@@ -1050,8 +1053,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
     );
   }
 
-  Widget _infoChip(
-      IconData icon, String text, Color color, bool isDark) {
+  Widget _infoChip(IconData icon, String text, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(

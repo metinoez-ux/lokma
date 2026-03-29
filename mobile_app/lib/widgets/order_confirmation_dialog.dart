@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-
 class OrderConfirmationDialog extends StatelessWidget {
   final DateTime pickupDate;
   final String? businessHours;
@@ -16,8 +15,8 @@ class OrderConfirmationDialog extends StatelessWidget {
   final VoidCallback? onClearCart;
 
   const OrderConfirmationDialog({
-    super.key, 
-    required this.pickupDate, 
+    super.key,
+    required this.pickupDate,
     this.businessHours,
     this.businessName,
     this.isPickUp = true,
@@ -59,7 +58,8 @@ class OrderConfirmationDialog extends StatelessWidget {
                   color: Colors.green.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded, color: Colors.green, size: 36),
+                child: const Icon(Icons.check_rounded,
+                    color: Colors.green, size: 36),
               ),
 
               const SizedBox(height: 20),
@@ -76,25 +76,31 @@ class OrderConfirmationDialog extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 isScheduledOrder && scheduledDate != null
-                  ? (businessName != null
-                    ? 'order_confirmation.scheduled_by'.tr(namedArgs: {'businessName': businessName!})
-                    : 'order_confirmation.scheduled_confirmed'.tr())
-                  : (businessName != null
-                    ? 'order_confirmation.preparing_by'.tr(namedArgs: {'businessName': businessName!})
-                    : 'order_confirmation.order_forwarded'.tr()),
+                    ? (businessName != null
+                        ? 'order_confirmation.scheduled_by'
+                            .tr(namedArgs: {'businessName': businessName!})
+                        : 'order_confirmation.scheduled_confirmed'.tr())
+                    : (businessName != null
+                        ? 'order_confirmation.preparing_by'
+                            .tr(namedArgs: {'businessName': businessName!})
+                        : 'order_confirmation.order_forwarded'.tr()),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: subtextColor, fontSize: 14, height: 1.4),
+                style:
+                    TextStyle(color: subtextColor, fontSize: 14, height: 1.4),
               ),
 
               const SizedBox(height: 24),
 
               // Divider
-              Divider(color: isDark ? Colors.white10 : Colors.grey.shade200, height: 1),
+              Divider(
+                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+                  height: 1),
 
               const SizedBox(height: 16),
 
               // Mode info
-              _buildModeInfo(context, textColor, subtextColor, accentColor, isDark),
+              _buildModeInfo(
+                  context, textColor, subtextColor, accentColor, isDark),
 
               const SizedBox(height: 16),
 
@@ -106,7 +112,8 @@ class OrderConfirmationDialog extends StatelessWidget {
                         ? 'order_confirmation.pickup_hint'.tr()
                         : 'order_confirmation.delivery_hint'.tr()),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
+                style:
+                    TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
               ),
 
               const SizedBox(height: 12),
@@ -128,12 +135,16 @@ class OrderConfirmationDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_active_outlined, color: subtextColor, size: 16),
+                  Icon(Icons.notifications_active_outlined,
+                      color: subtextColor, size: 16),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       'order_confirmation.notification_reminder'.tr(),
-                      style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          color: subtextColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -157,7 +168,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                     // then clear cart safely.
                     final rootNav = Navigator.of(context, rootNavigator: true);
                     rootNav.popUntil((route) => route.isFirst);
-                    
+
                     // Clear cart after navigation is complete
                     if (onClearCart != null) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -174,7 +185,9 @@ class OrderConfirmationDialog extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: Text('order_confirmation.ok_button'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                  child: Text('order_confirmation.ok_button'.tr(),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 16)),
                 ),
               ),
             ],
@@ -184,7 +197,8 @@ class OrderConfirmationDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildModeInfo(BuildContext context, Color textColor, Color subtextColor, Color accentColor, bool isDark) {
+  Widget _buildModeInfo(BuildContext context, Color textColor,
+      Color subtextColor, Color accentColor, bool isDark) {
     if (isDineIn) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -193,7 +207,8 @@ class OrderConfirmationDialog extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             'order_confirmation.served_at_table'.tr(),
-            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
           ),
         ],
       );
@@ -205,7 +220,8 @@ class OrderConfirmationDialog extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${_formatPickupDay(context)}, ${_formatPickupClock()}',
-            style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ],
       );
@@ -221,7 +237,10 @@ class OrderConfirmationDialog extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   _formatScheduledDay(context),
-                  style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -233,11 +252,17 @@ class OrderConfirmationDialog extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   _formatScheduledClock(),
-                  style: TextStyle(color: accentColor, fontSize: 22, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      color: accentColor,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700),
                 ),
                 Text(
                   ' ${'order_confirmation.time_suffix'.tr()}',
-                  style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -252,7 +277,8 @@ class OrderConfirmationDialog extends StatelessWidget {
           Flexible(
             child: Text(
               'order_confirmation.estimated_time'.tr(),
-              style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -264,7 +290,8 @@ class OrderConfirmationDialog extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
-    final checkDate = DateTime(pickupDate.year, pickupDate.month, pickupDate.day);
+    final checkDate =
+        DateTime(pickupDate.year, pickupDate.month, pickupDate.day);
 
     if (checkDate == today) {
       return 'order_confirmation.today'.tr();
@@ -308,11 +335,20 @@ class OrderConfirmationDialog extends StatelessWidget {
   /// Segment-aware farewell message
   String _getSegmentMessage() {
     final type = (businessType ?? '').toLowerCase();
-    
+
     // Market segment types
-    const marketTypes = {'kasap', 'market', 'balik', 'sarkuteri', 'kuruyemis',
-      'ciftci', 'petshop', 'kozmetik', 'eticaret'};
-    
+    const marketTypes = {
+      'kasap',
+      'market',
+      'balik',
+      'sarkuteri',
+      'kuruyemis',
+      'ciftci',
+      'petshop',
+      'kozmetik',
+      'eticaret'
+    };
+
     if (type == 'kermes') {
       return 'order_confirmation.thanks_kermes'.tr();
     } else if (marketTypes.contains(type)) {
