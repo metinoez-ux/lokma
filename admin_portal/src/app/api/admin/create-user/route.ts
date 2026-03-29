@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
             gender: gender || null,
             createdAt: new Date().toISOString(),
             location: location || null,
-            phoneNumber: phone || null,
+            phoneNumber: formattedPhone || phone || null,
             dialCode: dialCode || null,
             // Address fields
             address: address || null,
@@ -226,7 +226,8 @@ export async function POST(request: NextRequest) {
                 displayName,
                 firstName,
                 lastName,
-                phoneNumber: phone || null,
+                phoneNumber: formattedPhone || phone || null,
+                dialCode: dialCode || null,
                 role: 'admin',
                 adminType,
                 location: location || null,
@@ -285,7 +286,8 @@ export async function POST(request: NextRequest) {
                 displayName,
                 firstName,
                 lastName,
-                phoneNumber: phone || null,
+                phoneNumber: formattedPhone || phone || null,
+                dialCode: dialCode || null,
                 role: 'admin',
                 isDriver: true,
                 driverType: bodyDriverType || 'business',
@@ -627,7 +629,7 @@ export async function POST(request: NextRequest) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        to: phone,
+                        to: formattedPhone || phone,
                         message: whatsappMessage,
                         templateType: 'custom',
                     }),
@@ -656,7 +658,7 @@ export async function POST(request: NextRequest) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        to: phone,
+                        to: formattedPhone || phone,
                         message: smsMessage,
                     }),
                 });

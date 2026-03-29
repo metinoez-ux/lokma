@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp, where, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp, where, setDoc, documentId } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -233,6 +233,28 @@ export default function KermesDetailPage() {
     const [driverResults, setDriverResults] = useState<any[]>([]);
     const [searchingStaff, setSearchingStaff] = useState(false);
     const [searchingDriver, setSearchingDriver] = useState(false);
+
+    // Edit Person Modal State
+    const [editPersonData, setEditPersonData] = useState<any>(null);
+    const [isSavingPerson, setIsSavingPerson] = useState(false);
+
+    // Otomatik kadro kaydetme fonksiyonu
+    const saveTeamToDb = async (newStaff: string[], newDrivers: string[]) => {
+        if (!kermesId) return;
+        try {
+            await updateDoc(doc(db, 'businesses', kermesId as string), {
+                assignedStaff: newStaff,
+                assignedDrivers: newDrivers
+            });
+            showToast(t('kaydedildi') || 'Kadro güncellendi', 'success');
+        } catch (error) {
+            console.error('Kadro güncellenirken hata:', error);
+            showToast(t('hata_olustu') || 'Kadro kaydedilemedi', 'error');
+        }
+    };
+    
+    const [assignedStaffDetails, setAssignedStaffDetails] = useState<any[]>([]);
+    const [assignedDriverDetails, setAssignedDriverDetails] = useState<any[]>([]);
     
     // Yeni Personel & Sürücü Ekleme
     const [isAddingStaff, setIsAddingStaff] = useState(false);
@@ -431,6 +453,39 @@ export default function KermesDetailPage() {
 
     useEffect(() => { loadKermes(); loadCategories(); }, [loadKermes, loadCategories]);
 
+    useEffect(() => {
+        const fetchTeamData = async () => {
+            const allIds = [...new Set([...assignedStaff, ...assignedDrivers])];
+            if (allIds.length === 0) {
+                setAssignedStaffDetails([]);
+                setAssignedDriverDetails([]);
+                return;
+            }
+            try {
+                const teamData: any[] = [];
+                for (let i = 0; i < allIds.length; i += 10) {
+                    const chunk = allIds.slice(i, i + 10);
+                    const qUsers = query(collection(db, 'users'), where(documentId(), 'in', chunk));
+                    const qAdmins = query(collection(db, 'admins'), where(documentId(), 'in', chunk));
+                    
+                    const [snapUsers, snapAdmins] = await Promise.all([getDocs(qUsers), getDocs(qAdmins)]);
+                    
+                    snapUsers.docs.forEach(d => teamData.push({ id: d.id, ...d.data() }));
+                    snapAdmins.docs.forEach(d => teamData.push({ id: d.id, ...d.data() }));
+                }
+                
+                // Remove duplicates if same ID exists in both (rare)
+                const uniqueTeamData = Array.from(new Map(teamData.map(item => [item.id, item])).values());
+
+                setAssignedStaffDetails(uniqueTeamData.filter(u => assignedStaff.includes(u.id)));
+                setAssignedDriverDetails(uniqueTeamData.filter(u => assignedDrivers.includes(u.id)));
+            } catch (error) {
+                console.error('Error fetching team data:', error);
+            }
+        };
+        fetchTeamData();
+    }, [assignedStaff, assignedDrivers]);
+
     // Kermes özelliklerini ve Rozetleri Firestore'dan yükle
     useEffect(() => {
         const loadFeaturesAndBadges = async () => {
@@ -548,6 +603,77 @@ export default function KermesDetailPage() {
             console.error('Error searching drivers:', error);
         } finally {
             setSearchingDriver(false);
+        }
+    };
+
+    const handleSaveEditPerson = async () => {
+        if (!editPersonData?.id) return;
+        setIsSavingPerson(true);
+        try {
+            // Check if user is in 'admins' or 'users' collection
+            const adminRef = doc(db, 'admins', editPersonData.id);
+            const userRef = doc(db, 'users', editPersonData.id);
+            
+            const adminSnap = await getDoc(adminRef);
+            if (adminSnap.exists()) {
+                await updateDoc(adminRef, {
+                    firstName: editPersonData.firstName || editPersonData.name?.split(' ')[0] || '',
+                    lastName: editPersonData.lastName || editPersonData.name?.split(' ').slice(1).join(' ') || '',
+                    displayName: editPersonData.name,
+                    phone: editPersonData.phone,
+                    email: editPersonData.email,
+                });
+            } else {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    await updateDoc(userRef, {
+                        firstName: editPersonData.firstName || editPersonData.name?.split(' ')[0] || '',
+                        lastName: editPersonData.lastName || editPersonData.name?.split(' ').slice(1).join(' ') || '',
+                        displayName: editPersonData.name,
+                        name: editPersonData.name,
+                        phone: editPersonData.phone,
+                        email: editPersonData.email,
+                    });
+                }
+            }
+
+            // Update local state directly to reflect changes instantly
+            const updateDetails = (list: any[]) => list.map(u => u.id === editPersonData.id ? { ...u, ...editPersonData } : u);
+            setAssignedStaffDetails(prev => updateDetails(prev));
+            setAssignedDriverDetails(prev => updateDetails(prev));
+            
+            showToast(t('kaydedildi') || 'Kullanıcı bilgileri güncellendi', 'success');
+            setEditPersonData(null);
+        } catch (e) {
+            console.error(e);
+            showToast(t('hata_olustu') || 'Kullanıcı güncellenemedi', 'error');
+        } finally {
+            setIsSavingPerson(false);
+        }
+    };
+
+    const handleDeletePersonCompletely = async (personId: string) => {
+        if (!confirm('Bu personeli sistemden tamamen silmek istediğinize emin misiniz?')) return;
+        
+        try {
+            // Remove from assignments first
+            const newStaff = assignedStaff.filter(id => id !== personId);
+            const newDrivers = assignedDrivers.filter(id => id !== personId);
+            setAssignedStaff(newStaff);
+            setAssignedDrivers(newDrivers);
+            
+            // Delete from admins database 
+            await deleteDoc(doc(db, 'admins', personId));
+            
+            // Also attempt to delete from users just in case
+            await deleteDoc(doc(db, 'users', personId));
+            
+            await saveTeamToDb(newStaff, newDrivers);
+            showToast('Personel sistemden tamamen silindi', 'success');
+            setEditPersonData(null);
+        } catch (e) {
+            console.error(e);
+            showToast('Personel silinirken hata', 'error');
         }
     };
 
@@ -811,12 +937,16 @@ export default function KermesDetailPage() {
 
             if (type === 'kermes_staff') {
                 showToast(t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.');
-                setAssignedStaff(prev => [...prev, data.uid]);
+                const newStaff = [...assignedStaff, data.uid];
+                setAssignedStaff(newStaff);
+                saveTeamToDb(newStaff, assignedDrivers);
                 setIsAddingStaff(false);
                 setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
             } else {
                 showToast(t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.');
-                setAssignedDrivers(prev => [...prev, data.uid]);
+                const newDrivers = [...assignedDrivers, data.uid];
+                setAssignedDrivers(newDrivers);
+                saveTeamToDb(assignedStaff, newDrivers);
                 setIsAddingDriver(false);
                 setNewDriverForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
             }
@@ -2004,8 +2134,13 @@ export default function KermesDetailPage() {
                                             <button
                                                 key={user.id}
                                                 type="button"
+                                            <button
+                                                key={user.id}
+                                                type="button"
                                                 onClick={() => {
-                                                    setAssignedStaff([...assignedStaff, user.id]);
+                                                    const newStaff = [...assignedStaff, user.id];
+                                                    setAssignedStaff(newStaff);
+                                                    saveTeamToDb(newStaff, assignedDrivers);
                                                     setStaffSearchQuery('');
                                                     setStaffResults([]);
                                                 }}
@@ -2021,24 +2156,44 @@ export default function KermesDetailPage() {
 
                             {/* Atanmis Personel Listesi */}
                             <div className="space-y-2">
-                                {assignedStaff.map(staffId => (
-                                    <div key={staffId} className="flex items-center justify-between px-4 py-3 bg-cyan-950/10 border border-cyan-700/20 rounded-lg">
+                                {assignedStaffDetails.map(staff => (
+                                    <div key={staff.id} className="flex items-center justify-between px-4 py-3 bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-800 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center text-xs font-bold">
-                                                {staffId.substring(0, 2).toUpperCase()}
+                                            <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-bold">
+                                                {(staff.displayName || staff.firstName || staff.name || staff.email || 'P').substring(0, 2).toUpperCase()}
                                             </div>
                                             <div>
-                                                <span className="text-sm font-medium text-foreground">{staffId.length > 12 ? staffId.substring(0, 12) + '...' : staffId}</span>
-                                                <span className="ml-2 text-xs text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded">Kermes Personel</span>
+                                                <span className="text-sm font-medium text-foreground">{staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name || staff.email}</span>
+                                                <span className="ml-2 text-xs text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">Kermes Personel</span>
                                             </div>
                                         </div>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setAssignedStaff(assignedStaff.filter(id => id !== staffId))}
-                                            className="w-7 h-7 rounded-full bg-red-600/10 hover:bg-red-600/30 text-red-400 flex items-center justify-center text-xs transition-colors"
-                                        >
-                                            x
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setEditPersonData({
+                                                    id: staff.id,
+                                                    name: staff.displayName || (staff.firstName ? `${staff.firstName} ${staff.lastName || ''}`.trim() : '') || staff.name,
+                                                    email: staff.email || '',
+                                                    phone: staff.phone || '',
+                                                })}
+                                                className="w-7 h-7 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center text-xs font-semibold transition-colors"
+                                                title="Düzenle"
+                                            >
+                                                ✎
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    const newStaff = assignedStaff.filter(id => id !== staff.id);
+                                                    setAssignedStaff(newStaff);
+                                                    saveTeamToDb(newStaff, assignedDrivers);
+                                                }}
+                                                className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
+                                                title="Personeli Karmesten Çıkar"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                                 {assignedStaff.length === 0 && (
@@ -2144,8 +2299,13 @@ export default function KermesDetailPage() {
                                             <button
                                                 key={user.id}
                                                 type="button"
+                                            <button
+                                                key={user.id}
+                                                type="button"
                                                 onClick={() => {
-                                                    setAssignedDrivers([...assignedDrivers, user.id]);
+                                                    const newDrivers = [...assignedDrivers, user.id];
+                                                    setAssignedDrivers(newDrivers);
+                                                    saveTeamToDb(assignedStaff, newDrivers);
                                                     setDriverSearchQuery('');
                                                     setDriverResults([]);
                                                 }}
@@ -2161,24 +2321,43 @@ export default function KermesDetailPage() {
 
                             {/* Atanmis Surucu Listesi */}
                             <div className="space-y-2">
-                                {assignedDrivers.map(driverId => (
-                                    <div key={driverId} className="flex items-center justify-between px-4 py-3 bg-amber-950/10 border border-amber-700/20 rounded-lg">
+                                {assignedDriverDetails.map(driver => (
+                                    <div key={driver.id} className="flex items-center justify-between px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">
-                                                {driverId.substring(0, 2).toUpperCase()}
+                                            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold">
+                                                {(driver.displayName || driver.firstName || driver.name || driver.email || 'S').substring(0, 2).toUpperCase()}
                                             </div>
                                             <div>
-                                                <span className="text-sm font-medium text-foreground">{driverId.length > 12 ? driverId.substring(0, 12) + '...' : driverId}</span>
-                                                <span className="ml-2 text-xs text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">Kermes Surucu</span>
+                                                <span className="text-sm font-medium text-foreground">{driver.displayName || (driver.firstName ? `${driver.firstName} ${driver.lastName || ''}`.trim() : '') || driver.name || driver.email}</span>
+                                                <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">Kermes Surucu</span>
                                             </div>
                                         </div>
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setAssignedDrivers(assignedDrivers.filter(id => id !== driverId))}
-                                            className="w-7 h-7 rounded-full bg-red-600/10 hover:bg-red-600/30 text-red-400 flex items-center justify-center text-xs transition-colors"
-                                        >
-                                            x
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setEditPersonData({
+                                                    id: driver.id,
+                                                    name: driver.displayName || (driver.firstName ? `${driver.firstName} ${driver.lastName || ''}`.trim() : '') || driver.name,
+                                                    email: driver.email || '',
+                                                    phone: driver.phone || '',
+                                                })}
+                                                className="w-7 h-7 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center justify-center text-xs font-semibold transition-colors"
+                                                title="Düzenle"
+                                            >
+                                                ✎
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => {
+                                                    const newDrivers = assignedDrivers.filter(id => id !== driver.id);
+                                                    setAssignedDrivers(newDrivers);
+                                                    saveTeamToDb(assignedStaff, newDrivers);
+                                                }}
+                                                className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center text-sm font-bold transition-colors"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                                 {assignedDrivers.length === 0 && (
@@ -2842,5 +3021,95 @@ export default function KermesDetailPage() {
                 }}
             />
         </div>
+
+            {/* Edit Person Modal */}
+            {editPersonData && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[99]">
+                    <div className="bg-card rounded-2xl w-full max-w-md p-6 border border-border">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-foreground">Personeli Düzenle</h2>
+                            <button onClick={() => setEditPersonData(null)} className="text-muted-foreground hover:text-white text-xl">✕</button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm text-muted-foreground block mb-1">Ad Soyad</label>
+                                <input 
+                                    type="text" 
+                                    value={editPersonData.name} 
+                                    onChange={(e) => setEditPersonData({...editPersonData, name: e.target.value})}
+                                    className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:border-cyan-500 focus:outline-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="text-sm text-muted-foreground block mb-1">E-Posta</label>
+                                <input 
+                                    type="email" 
+                                    value={editPersonData.email} 
+                                    onChange={(e) => setEditPersonData({...editPersonData, email: e.target.value})}
+                                    className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:border-cyan-500 focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm text-muted-foreground block mb-1">Telefon</label>
+                                <input 
+                                    type="text" 
+                                    value={editPersonData.phone} 
+                                    onChange={(e) => setEditPersonData({...editPersonData, phone: e.target.value})}
+                                    className="w-full px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:border-cyan-500 focus:outline-none"
+                                />
+                            </div>
+
+                            <div className="pt-4 border-t border-border mt-6">
+                                <label className="text-sm font-semibold text-foreground block mb-3">Hızlı İşlemler</label>
+                                
+                                {!assignedDrivers.includes(editPersonData.id) && assignedStaff.includes(editPersonData.id) && (
+                                    <button
+                                        onClick={() => {
+                                            const newDrivers = [...assignedDrivers, editPersonData.id];
+                                            setAssignedDrivers(newDrivers);
+                                            saveTeamToDb(assignedStaff, newDrivers);
+                                            setEditPersonData(null);
+                                        }}
+                                        className="w-full py-2 mb-3 bg-amber-600/20 text-amber-500 hover:bg-amber-600/30 rounded-lg text-sm font-medium transition"
+                                    >
+                                        + Ayrıca Sürücü Olarak Ata
+                                    </button>
+                                )}
+
+                                {!assignedStaff.includes(editPersonData.id) && assignedDrivers.includes(editPersonData.id) && (
+                                    <button
+                                        onClick={() => {
+                                            const newStaff = [...assignedStaff, editPersonData.id];
+                                            setAssignedStaff(newStaff);
+                                            saveTeamToDb(newStaff, assignedDrivers);
+                                            setEditPersonData(null);
+                                        }}
+                                        className="w-full py-2 mb-3 bg-cyan-600/20 text-cyan-500 hover:bg-cyan-600/30 rounded-lg text-sm font-medium transition"
+                                    >
+                                        + Ayrıca Personel Olarak Ata
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => handleDeletePersonCompletely(editPersonData.id)}
+                                    className="w-full py-2 bg-red-600/10 text-red-500 hover:bg-red-600/20 border border-red-900/30 rounded-lg text-sm font-medium transition"
+                                >
+                                    Sistemden Tamamen Sil
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-8">
+                            <button onClick={() => setEditPersonData(null)} className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition">İptal</button>
+                            <button onClick={handleSaveEditPerson} disabled={isSavingPerson} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium disabled:opacity-50 transition">
+                                {isSavingPerson ? 'Kaydediliyor...' : 'Kaydet'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
     );
 }
