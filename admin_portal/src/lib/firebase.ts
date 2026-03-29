@@ -22,6 +22,12 @@ let _storage: FirebaseStorage | null = null;
 
 function getFirebaseApp(): FirebaseApp {
     if (!_app) {
+        // Fallback for Vercel Next.js 16 build phase when env vars are missing
+        if (!firebaseConfig.apiKey) {
+            console.warn("Firebase apiKey is missing! Using dummy key for static build phase.");
+            firebaseConfig.apiKey = "AIzaSyMockKeyForBuildProcessDoNotUseThisKey";
+        }
+
         if (getApps().length === 0) {
             _app = initializeApp(firebaseConfig);
         } else {
