@@ -242,7 +242,7 @@ export default function KermesDetailPage() {
     const saveTeamToDb = async (newStaff: string[], newDrivers: string[]) => {
         if (!kermesId) return;
         try {
-            await updateDoc(doc(db, 'businesses', kermesId as string), {
+            await updateDoc(doc(db, 'kermes_events', kermesId as string), {
                 assignedStaff: newStaff,
                 assignedDrivers: newDrivers
             });
@@ -651,7 +651,6 @@ export default function KermesDetailPage() {
             setIsSavingPerson(false);
         }
     };
-
     const handleDeletePersonCompletely = async (personId: string) => {
         if (!confirm('Bu personeli sistemden tamamen silmek istediğinize emin misiniz?')) return;
         
@@ -662,13 +661,23 @@ export default function KermesDetailPage() {
             setAssignedStaff(newStaff);
             setAssignedDrivers(newDrivers);
             
+            // First save the team to remove references in Kermes
+            await saveTeamToDb(newStaff, newDrivers);
+            
             // Delete from admins database 
-            await deleteDoc(doc(db, 'admins', personId));
+            try {
+                await deleteDoc(doc(db, 'admins', personId));
+            } catch (adminErr) {
+                console.error('Admins doc deletion error:', adminErr);
+            }
             
             // Also attempt to delete from users just in case
-            await deleteDoc(doc(db, 'users', personId));
+            try {
+                await deleteDoc(doc(db, 'users', personId));
+            } catch (userErr) {
+                console.error('Users doc deletion error (might be restricted):', userErr);
+            }
             
-            await saveTeamToDb(newStaff, newDrivers);
             showToast('Personel sistemden tamamen silindi', 'success');
             setEditPersonData(null);
         } catch (e) {
@@ -2448,7 +2457,7 @@ export default function KermesDetailPage() {
                                                             <span className="text-foreground font-medium">{product.name}</span>
                                                             {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-800 dark:text-purple-400 rounded text-xs">{t('ozel')}</span>}
                                                             {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-800 dark:text-blue-400 rounded text-xs">{t('barcode')}</span>}
-                                                            <span className="text-green-800 dark:text-green-400 font-bold">{product.price.toFixed(2)} €</span>
+                                                            <span className="text-green-800 dark:text-green-400 font-bold">{(Number(product.price) || 0).toFixed(2)} €</span>
                                                             <span className="text-gray-500 text-xs">{t('duzenle')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
