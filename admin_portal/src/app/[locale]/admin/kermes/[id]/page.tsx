@@ -159,7 +159,7 @@ export default function KermesDetailPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    const [activeTab, setActiveTab] = useState<'bilgi' | 'menu'>('bilgi');
+    const [activeTab, setActiveTab] = useState<'bilgi' | 'menu' | 'personel'>('bilgi');
     const [eventFeatures, setEventFeatures] = useState<KermesFeature[]>(DEFAULT_FEATURES);
     const [availableBadges, setAvailableBadges] = useState<any[]>([]);
     const [donationFunds, setDonationFunds] = useState<{ id: string; name: string; description?: string }[]>([]);
@@ -1017,6 +1017,10 @@ export default function KermesDetailPage() {
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
                         {t('menu')}{products.length})
                     </button>
+                    <button onClick={() => setActiveTab('personel')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'personel' ? 'bg-pink-600 text-white' : 'text-muted-foreground hover:text-white'}`}>
+                        👥 Personel {(assignedStaff.length + assignedDrivers.length) > 0 && <span className="ml-1 px-1.5 py-0.5 bg-pink-500/30 text-pink-300 rounded-full text-xs">{assignedStaff.length + assignedDrivers.length}</span>}
+                    </button>
                 </div>
 
                 {/* Tab Content - Bilgi */}
@@ -1359,264 +1363,6 @@ export default function KermesDetailPage() {
                                         </div>
                                     </div>
 
-                                    {/* Personel ve Sürücü Yönetimi */}
-                                    <div className="pt-4 border-t border-border">
-                                        <h4 className="text-foreground font-medium mb-3">👥 {t('personel_ve_suruculer') || 'Personel & Sürücüler'}</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            
-                                            {/* Personel Atama */}
-                                            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-border shadow-sm">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <label className="text-sm font-medium text-foreground block">👔 {t('personel_ata') || 'Personel Ata'}</label>
-                                                    <button 
-                                                        type="button"
-                                                        onClick={() => setIsAddingStaff(!isAddingStaff)}
-                                                        className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
-                                                    >
-                                                        {isAddingStaff ? t('iptal_et') || 'İptal Et' : `+ ${t('yeni_personel_ekle') || 'Yeni Personel Ekle'}`}
-                                                    </button>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground mb-3">
-                                                    {t('kermes_personel_aciklama') || 'Bu Kermes için siparişleri kabul edecek ve hazırlayacak personel.'}
-                                                </p>
-                                                
-                                                {isAddingStaff && (
-                                                    <div className="mb-4 p-4 bg-background rounded-lg border border-border shadow-sm mt-2">
-                                                        <h5 className="text-sm font-semibold text-foreground mb-3">{t('personel_bilgileri') || 'Personel Bilgileri'}</h5>
-                                                        <input 
-                                                            type="text" 
-                                                            placeholder={t('ad_soyad') || 'Ad Soyad'}
-                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
-                                                            value={newStaffForm.name}
-                                                            onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
-                                                        />
-                                                        <div className="flex gap-2 mb-3">
-                                                            <input 
-                                                                type="text" 
-                                                                placeholder="+49"
-                                                                className="w-20 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none text-center"
-                                                                value={newStaffForm.countryCode}
-                                                                onChange={e => setNewStaffForm({...newStaffForm, countryCode: e.target.value})}
-                                                            />
-                                                            <input 
-                                                                type="text" 
-                                                                placeholder={t('telefon_numarasi') || 'Telefon Numarası'}
-                                                                className="flex-1 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
-                                                                value={newStaffForm.phone}
-                                                                onChange={e => setNewStaffForm({...newStaffForm, phone: e.target.value})}
-                                                            />
-                                                        </div>
-                                                        <input 
-                                                            type="email" 
-                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (İsteğe Bağlı)'}`}
-                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
-                                                            value={newStaffForm.email}
-                                                            onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
-                                                        />
-                                                        <select
-                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
-                                                            value={newStaffForm.gender}
-                                                            onChange={e => setNewStaffForm({...newStaffForm, gender: e.target.value})}
-                                                        >
-                                                            <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seçiniz'}</option>
-                                                            <option value="male">{t('erkek') || 'Bay / Herr'}</option>
-                                                            <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
-                                                        </select>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleCreateUser('kermes_staff')}
-                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.gender}
-                                                            className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
-                                                        >
-                                                            {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                <div className="relative mb-4">
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder={t('personel_ara') || 'İsim veya e-posta ile ara...'}
-                                                        value={staffSearchQuery}
-                                                        onChange={(e) => searchStaff(e.target.value)}
-                                                        className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
-                                                    />
-                                                    {searchingStaff && (
-                                                        <div className="absolute right-3 top-2 w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
-                                                    )}
-                                                    
-                                                    {/* Personel Arama Sonuçları */}
-                                                    {staffResults.length > 0 && (
-                                                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
-                                                            {staffResults.map(user => (
-                                                                <button
-                                                                    key={user.id}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setAssignedStaff([...assignedStaff, user.id]);
-                                                                        setStaffSearchQuery('');
-                                                                        setStaffResults([]);
-                                                                    }}
-                                                                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
-                                                                >
-                                                                    <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
-                                                                    <span className="text-xs text-cyan-600 dark:text-cyan-400 capitalize bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">{user.role || 'staff'}</span>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Atanmış Personel Listesi */}
-                                                <div className="flex flex-wrap gap-2">
-                                                    {assignedStaff.map(staffId => (
-                                                        <div key={staffId} className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 rounded-lg flex items-center gap-2 shadow-sm">
-                                                            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-100 flex items-center justify-center text-[10px] font-bold">
-                                                                {staffId.substring(0, 2).toUpperCase()}
-                                                            </div>
-                                                            <span className="text-sm font-medium text-slate-700 dark:text-blue-100">{staffId.length > 8 ? staffId.substring(0, 8) + '...' : staffId}</span>
-                                                            <button 
-                                                                type="button" 
-                                                                onClick={() => setAssignedStaff(assignedStaff.filter(id => id !== staffId))}
-                                                                className="w-5 h-5 ml-1 rounded-full bg-slate-200 dark:bg-blue-800/80 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/80 text-slate-500 dark:text-white flex items-center justify-center text-xs transition-colors"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                    {assignedStaff.length === 0 && (
-                                                        <p className="text-xs text-gray-400 italic py-1">{t('henuz_personel_yok') || 'Henüz personel atanmamış.'}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Sürücü Atama */}
-                                            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-border shadow-sm">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <label className="text-sm font-medium text-foreground block">🚗 {t('surucu_ata') || 'Sürücü Ata'}</label>
-                                                    <button 
-                                                        type="button"
-                                                        onClick={() => setIsAddingDriver(!isAddingDriver)}
-                                                        className="text-xs text-amber-400 hover:text-amber-300 font-medium"
-                                                    >
-                                                        {isAddingDriver ? t('iptal_et') || 'İptal Et' : `+ ${t('yeni_surucu_ekle') || 'Yeni Sürücü Ekle'}`}
-                                                    </button>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground mb-3">
-                                                    {t('kermes_surucu_aciklama') || 'Bu Kermes siparişlerini teslim edecek gönüllü sürücüler.'}
-                                                </p>
-                                                
-                                                {isAddingDriver && (
-                                                    <div className="mb-4 p-4 bg-background rounded-lg border border-border shadow-sm mt-2">
-                                                        <h5 className="text-sm font-semibold text-foreground mb-3">{t('surucu_bilgileri') || 'Sürücü Bilgileri'}</h5>
-                                                        <input 
-                                                            type="text" 
-                                                            placeholder={t('ad_soyad') || 'Ad Soyad'}
-                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
-                                                            value={newDriverForm.name}
-                                                            onChange={e => setNewDriverForm({...newDriverForm, name: e.target.value})}
-                                                        />
-                                                        <div className="flex gap-2 mb-3">
-                                                            <input 
-                                                                type="text" 
-                                                                placeholder="+49"
-                                                                className="w-20 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none text-center"
-                                                                value={newDriverForm.countryCode}
-                                                                onChange={e => setNewDriverForm({...newDriverForm, countryCode: e.target.value})}
-                                                            />
-                                                            <input 
-                                                                type="text" 
-                                                                placeholder={t('telefon_numarasi') || 'Telefon Numarası'}
-                                                                className="flex-1 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
-                                                                value={newDriverForm.phone}
-                                                                onChange={e => setNewDriverForm({...newDriverForm, phone: e.target.value})}
-                                                            />
-                                                        </div>
-                                                        <input 
-                                                            type="email" 
-                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (İsteğe Bağlı)'}`}
-                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
-                                                            value={newDriverForm.email}
-                                                            onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
-                                                        />
-                                                        <select
-                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
-                                                            value={newDriverForm.gender}
-                                                            onChange={e => setNewDriverForm({...newDriverForm, gender: e.target.value})}
-                                                        >
-                                                            <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seçiniz'}</option>
-                                                            <option value="male">{t('erkek') || 'Bay / Herr'}</option>
-                                                            <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
-                                                        </select>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleCreateUser('kermes_driver')}
-                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone || !newDriverForm.gender}
-                                                            className="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
-                                                        >
-                                                            {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                <div className="relative mb-4">
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder={t('surucu_ara') || 'İsim veya e-posta ile ara...'}
-                                                        value={driverSearchQuery}
-                                                        onChange={(e) => searchDriver(e.target.value)}
-                                                        className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
-                                                    />
-                                                    {searchingDriver && (
-                                                        <div className="absolute right-3 top-2 w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
-                                                    )}
-                                                    
-                                                    {/* Sürücü Arama Sonuçları */}
-                                                    {driverResults.length > 0 && (
-                                                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
-                                                            {driverResults.map(user => (
-                                                                <button
-                                                                    key={user.id}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setAssignedDrivers([...assignedDrivers, user.id]);
-                                                                        setDriverSearchQuery('');
-                                                                        setDriverResults([]);
-                                                                    }}
-                                                                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
-                                                                >
-                                                                    <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
-                                                                    <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">{user.driverType === 'lokma_fleet' ? 'Fleet' : 'Gönüllü'}</span>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Atanmış Sürücü Listesi */}
-                                                <div className="flex flex-wrap gap-2">
-                                                    {assignedDrivers.map(driverId => (
-                                                        <div key={driverId} className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 rounded-lg flex items-center gap-2 shadow-sm">
-                                                            <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-100 flex items-center justify-center text-[10px] font-bold">
-                                                                {driverId.substring(0, 2).toUpperCase()}
-                                                            </div>
-                                                            <span className="text-sm font-medium text-slate-700 dark:text-amber-100">{driverId.length > 8 ? driverId.substring(0, 8) + '...' : driverId}</span>
-                                                            <button 
-                                                                type="button" 
-                                                                onClick={() => setAssignedDrivers(assignedDrivers.filter(id => id !== driverId))}
-                                                                className="w-5 h-5 ml-1 rounded-full bg-slate-200 dark:bg-amber-800/80 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/80 text-slate-500 dark:text-white flex items-center justify-center text-xs transition-colors"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                    {assignedDrivers.length === 0 && (
-                                                        <p className="text-xs text-gray-400 italic py-1">{t('henuz_surucu_yok') || 'Henüz sürücü atanmamış.'}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     {/* Kurumsal Ayarlar (Pfand & KDV) */}
                                     <div className="pt-4 border-t border-border">
@@ -2157,6 +1903,291 @@ export default function KermesDetailPage() {
                                     )}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Tab Content - Personel */}
+                {activeTab === 'personel' && (
+                    <div className="space-y-6">
+                        {/* Kermes Personel */}
+                        <div className="bg-card rounded-xl p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 className="text-foreground font-bold flex items-center gap-2">
+                                        <span className="w-8 h-8 rounded-lg bg-cyan-600/20 flex items-center justify-center text-sm">P</span>
+                                        Kermes Personel
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {t('kermes_personel_aciklama') || 'Bu Kermes icin siparisleri kabul edecek ve hazirlayacak personel.'}
+                                    </p>
+                                </div>
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsAddingStaff(!isAddingStaff)}
+                                    className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg transition"
+                                >
+                                    {isAddingStaff ? t('iptal_et') || 'Iptal Et' : `+ ${t('yeni_personel_ekle') || 'Yeni Personel Ekle'}`}
+                                </button>
+                            </div>
+
+                            {isAddingStaff && (
+                                <div className="mb-6 p-4 bg-cyan-950/20 rounded-xl border border-cyan-700/30">
+                                    <h5 className="text-sm font-semibold text-foreground mb-3">{t('personel_bilgileri') || 'Personel Bilgileri'}</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <input 
+                                            type="text" 
+                                            placeholder={t('ad_soyad') || 'Ad Soyad'}
+                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                            value={newStaffForm.name}
+                                            onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
+                                        />
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                placeholder="+49"
+                                                className="w-20 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none text-center"
+                                                value={newStaffForm.countryCode}
+                                                onChange={e => setNewStaffForm({...newStaffForm, countryCode: e.target.value})}
+                                            />
+                                            <input 
+                                                type="text" 
+                                                placeholder={t('telefon_numarasi') || 'Telefon Numarasi'}
+                                                className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                                value={newStaffForm.phone}
+                                                onChange={e => setNewStaffForm({...newStaffForm, phone: e.target.value})}
+                                            />
+                                        </div>
+                                        <input 
+                                            type="email" 
+                                            placeholder={`${t('email_opsiyonel') || 'E-posta (Istege Bagli)'}`}
+                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                            value={newStaffForm.email}
+                                            onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
+                                        />
+                                        <select
+                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                            value={newStaffForm.gender}
+                                            onChange={e => setNewStaffForm({...newStaffForm, gender: e.target.value})}
+                                        >
+                                            <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seciniz'}</option>
+                                            <option value="male">{t('erkek') || 'Bay / Herr'}</option>
+                                            <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCreateUser('kermes_staff')}
+                                        disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.gender}
+                                        className="mt-3 w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
+                                    >
+                                        {isCreatingUser ? t('olusturuluyor') || 'Olusturuluyor...' : t('kaydet') || 'Kaydet'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Personel Arama */}
+                            <div className="relative mb-4">
+                                <input 
+                                    type="text" 
+                                    placeholder={t('personel_ara') || 'Isim veya e-posta ile ara...'}
+                                    value={staffSearchQuery}
+                                    onChange={(e) => searchStaff(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                />
+                                {searchingStaff && (
+                                    <div className="absolute right-3 top-3 w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+                                )}
+                                {staffResults.length > 0 && (
+                                    <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
+                                        {staffResults.map(user => (
+                                            <button
+                                                key={user.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setAssignedStaff([...assignedStaff, user.id]);
+                                                    setStaffSearchQuery('');
+                                                    setStaffResults([]);
+                                                }}
+                                                className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
+                                            >
+                                                <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
+                                                <span className="text-xs text-cyan-600 dark:text-cyan-400 capitalize bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">{user.role || 'staff'}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Atanmis Personel Listesi */}
+                            <div className="space-y-2">
+                                {assignedStaff.map(staffId => (
+                                    <div key={staffId} className="flex items-center justify-between px-4 py-3 bg-cyan-950/10 border border-cyan-700/20 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center text-xs font-bold">
+                                                {staffId.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <span className="text-sm font-medium text-foreground">{staffId.length > 12 ? staffId.substring(0, 12) + '...' : staffId}</span>
+                                                <span className="ml-2 text-xs text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded">Kermes Personel</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setAssignedStaff(assignedStaff.filter(id => id !== staffId))}
+                                            className="w-7 h-7 rounded-full bg-red-600/10 hover:bg-red-600/30 text-red-400 flex items-center justify-center text-xs transition-colors"
+                                        >
+                                            x
+                                        </button>
+                                    </div>
+                                ))}
+                                {assignedStaff.length === 0 && (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <div className="text-3xl mb-2">P</div>
+                                        <p className="text-sm">{t('henuz_personel_yok') || 'Henuz personel atanmamis.'}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Kermes Surucu */}
+                        <div className="bg-card rounded-xl p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 className="text-foreground font-bold flex items-center gap-2">
+                                        <span className="w-8 h-8 rounded-lg bg-amber-600/20 flex items-center justify-center text-sm">S</span>
+                                        Kermes Surucu
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {t('kermes_surucu_aciklama') || 'Bu Kermes siparislerini teslim edecek gonullu suruculer.'}
+                                    </p>
+                                </div>
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsAddingDriver(!isAddingDriver)}
+                                    className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition"
+                                >
+                                    {isAddingDriver ? t('iptal_et') || 'Iptal Et' : `+ ${t('yeni_surucu_ekle') || 'Yeni Surucu Ekle'}`}
+                                </button>
+                            </div>
+
+                            {isAddingDriver && (
+                                <div className="mb-6 p-4 bg-amber-950/20 rounded-xl border border-amber-700/30">
+                                    <h5 className="text-sm font-semibold text-foreground mb-3">{t('surucu_bilgileri') || 'Surucu Bilgileri'}</h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <input 
+                                            type="text" 
+                                            placeholder={t('ad_soyad') || 'Ad Soyad'}
+                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                            value={newDriverForm.name}
+                                            onChange={e => setNewDriverForm({...newDriverForm, name: e.target.value})}
+                                        />
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                placeholder="+49"
+                                                className="w-20 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none text-center"
+                                                value={newDriverForm.countryCode}
+                                                onChange={e => setNewDriverForm({...newDriverForm, countryCode: e.target.value})}
+                                            />
+                                            <input 
+                                                type="text" 
+                                                placeholder={t('telefon_numarasi') || 'Telefon Numarasi'}
+                                                className="flex-1 px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                                value={newDriverForm.phone}
+                                                onChange={e => setNewDriverForm({...newDriverForm, phone: e.target.value})}
+                                            />
+                                        </div>
+                                        <input 
+                                            type="email" 
+                                            placeholder={`${t('email_opsiyonel') || 'E-posta (Istege Bagli)'}`}
+                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                            value={newDriverForm.email}
+                                            onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
+                                        />
+                                        <select
+                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                            value={newDriverForm.gender}
+                                            onChange={e => setNewDriverForm({...newDriverForm, gender: e.target.value})}
+                                        >
+                                            <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seciniz'}</option>
+                                            <option value="male">{t('erkek') || 'Bay / Herr'}</option>
+                                            <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCreateUser('kermes_driver')}
+                                        disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone || !newDriverForm.gender}
+                                        className="mt-3 w-full py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition"
+                                    >
+                                        {isCreatingUser ? t('olusturuluyor') || 'Olusturuluyor...' : t('kaydet') || 'Kaydet'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Surucu Arama */}
+                            <div className="relative mb-4">
+                                <input 
+                                    type="text" 
+                                    placeholder={t('surucu_ara') || 'Isim veya e-posta ile ara...'}
+                                    value={driverSearchQuery}
+                                    onChange={(e) => searchDriver(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                />
+                                {searchingDriver && (
+                                    <div className="absolute right-3 top-3 w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+                                )}
+                                {driverResults.length > 0 && (
+                                    <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
+                                        {driverResults.map(user => (
+                                            <button
+                                                key={user.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setAssignedDrivers([...assignedDrivers, user.id]);
+                                                    setDriverSearchQuery('');
+                                                    setDriverResults([]);
+                                                }}
+                                                className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
+                                            >
+                                                <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
+                                                <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">{user.driverType === 'lokma_fleet' ? 'Fleet' : 'Gonullu'}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Atanmis Surucu Listesi */}
+                            <div className="space-y-2">
+                                {assignedDrivers.map(driverId => (
+                                    <div key={driverId} className="flex items-center justify-between px-4 py-3 bg-amber-950/10 border border-amber-700/20 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center text-xs font-bold">
+                                                {driverId.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <span className="text-sm font-medium text-foreground">{driverId.length > 12 ? driverId.substring(0, 12) + '...' : driverId}</span>
+                                                <span className="ml-2 text-xs text-amber-400 bg-amber-900/30 px-2 py-0.5 rounded">Kermes Surucu</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setAssignedDrivers(assignedDrivers.filter(id => id !== driverId))}
+                                            className="w-7 h-7 rounded-full bg-red-600/10 hover:bg-red-600/30 text-red-400 flex items-center justify-center text-xs transition-colors"
+                                        >
+                                            x
+                                        </button>
+                                    </div>
+                                ))}
+                                {assignedDrivers.length === 0 && (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <div className="text-3xl mb-2">S</div>
+                                        <p className="text-sm">{t('henuz_surucu_yok') || 'Henuz surucu atanmamis.'}</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
