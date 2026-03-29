@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * Consolidation API: Check status of businesses/butcher_partners migration
  * 

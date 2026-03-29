@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmailWithResend } from '@/lib/resend-email';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';

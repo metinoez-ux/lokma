@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import net from 'net';
 import { RECEIPT_LOGO_BASE64 } from './receiptLogo';

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 /**
  * Migration API: Rename butcher_orders → orders, butcher_products → products
  * 

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // Order Notification API - Sends email and push notifications for orders
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmailWithResend, OrderEmailTemplates } from '@/lib/resend-email';

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // API Route for sending emails via Resend
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmailWithResend, DEFAULT_SENDER } from '@/lib/resend-email';

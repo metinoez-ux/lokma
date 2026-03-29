@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, STRIPE_PUBLISHABLE_KEY } from '@/lib/stripe';
 import { db } from '@/lib/firebase';

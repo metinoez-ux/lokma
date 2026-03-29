@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 // API Route for sending push notifications
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseMessaging, NOTIFICATION_TOPICS, NotificationTopic } from '@/lib/firebase-admin';
