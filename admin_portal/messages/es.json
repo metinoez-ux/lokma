@@ -4305,7 +4305,10 @@
     "soy": "Soja",
     "celery": "Apio",
     "mustard": "Mostaza",
-    "sesame": "Sesamo"
+    "sesame": "Sesamo",
+    "yeni_personel_ekle": "Añadir nuevo personal",
+    "yeni_surucu_ekle": "Añadir nuevo conductor",
+    "kurumsal_ayarlar": "Ajustes de empresa"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrador de empresas",
@@ -5299,9 +5302,9 @@
       "copy_count_title": "Copy count title"
     },
     "Reservations": {
-    "tarih_saat": "Tarih & Saat",
-    "saat": "Saat",
-    "iptal_et": "İptal Et",
+      "tarih_saat": "Tarih & Saat",
+      "saat": "Saat",
+      "iptal_et": "Cancelar",
       "rezervasyon_reddet": "Rechazar reserva",
       "rezervasyon_iptal_et": "Cancelar reserva",
       "choose_reject_reason": "Elija la razón de rechazo:",
@@ -5316,8 +5319,7 @@
       "cancel_reason_musteri_iletisim_yok": "Sin contacto de cliente",
       "ek_notlar": "Notas adicionales (Opcional)",
       "musteriye_iletilecek_not": "Escribir nota al cliente...",
-      "reddet": "Rechazar",
-      "iptal_et": "Cancelar"
+      "reddet": "Rechazar"
     }
   },
   "AdminProducts": {

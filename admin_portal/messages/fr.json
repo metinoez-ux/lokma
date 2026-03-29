@@ -4315,7 +4315,10 @@
     "zatenMenude": "Zaten menüde",
     "zaten_menude": "Déjà au menu",
     "ziyaretcilereGosterilecekGenelParkBilgisi": "Ziyaretçilere gösterilecek genel park bilgisi...",
-    "ziyaretcilere_gosterilecek_genel_park_bi": "Informations générales sur le parc à afficher aux visiteurs..."
+    "ziyaretcilere_gosterilecek_genel_park_bi": "Informations générales sur le parc à afficher aux visiteurs...",
+    "yeni_personel_ekle": "Ajouter un nouveau personnel",
+    "yeni_surucu_ekle": "Ajouter un nouveau chauffeur",
+    "kurumsal_ayarlar": "Paramètres d'entreprise"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",

@@ -4282,7 +4282,10 @@
     "soy": "Soia",
     "celery": "Sedano",
     "mustard": "Senape",
-    "sesame": "Sesamo"
+    "sesame": "Sesamo",
+    "yeni_personel_ekle": "Aggiungi nuovo personale",
+    "yeni_surucu_ekle": "Aggiungi nuovo autista",
+    "kurumsal_ayarlar": "Impostazioni aziendali"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪Amministrazione aziendale",
@@ -5278,9 +5281,9 @@
       "copy_count_title": "Copy count title"
     },
     "Reservations": {
-    "tarih_saat": "Tarih & Saat",
-    "saat": "Saat",
-    "iptal_et": "İptal Et",
+      "tarih_saat": "Tarih & Saat",
+      "saat": "Saat",
+      "iptal_et": "Annulla",
       "rezervasyon_reddet": "Rifiuta prenotazione",
       "rezervasyon_iptal_et": "Annulla prenotazione",
       "choose_reject_reason": "Scegli il motivo del rifiuto:",
@@ -5295,8 +5298,7 @@
       "cancel_reason_musteri_iletisim_yok": "Nessun contatto cliente",
       "ek_notlar": "Note aggiuntive (Opzionale)",
       "musteriye_iletilecek_not": "Scrivi nota al cliente...",
-      "reddet": "Rifiuta",
-      "iptal_et": "Annulla"
+      "reddet": "Rifiuta"
     }
   },
   "AdminProducts": {

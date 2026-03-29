@@ -13,15 +13,36 @@ class StaffRoleService {
   
   bool _isStaff = false;
   String? _businessId;
+  String? _businessName;
+  String? _businessType;
   String? _staffName;
   String? _role;
   DateTime? _lastCashSettlement;
+
+  // Overrides for dual-role capability (e.g. Kasap + Kermes volunteer)
+  String? _overrideBusinessId;
+  String? _overrideBusinessName;
+  String? _overrideBusinessType;
   
   bool get isStaff => _isStaff;
-  String? get businessId => _businessId;
+  String? get businessId => _overrideBusinessId ?? _businessId;
+  String? get businessName => _overrideBusinessName ?? _businessName;
+  String? get businessType => _overrideBusinessType ?? _businessType;
   String? get staffName => _staffName;
   String? get role => _role;
   DateTime? get lastCashSettlement => _lastCashSettlement;
+
+  void setOverrideWorkplace(String id, String name, String type) {
+    _overrideBusinessId = id;
+    _overrideBusinessName = name;
+    _overrideBusinessType = type;
+  }
+
+  void clearOverride() {
+    _overrideBusinessId = null;
+    _overrideBusinessName = null;
+    _overrideBusinessType = null;
+  }
 
   /// Check if current user is a staff member
   Future<bool> checkStaffStatus() async {
@@ -39,6 +60,8 @@ class StaffRoleService {
         final data = adminDoc.data()!;
         _isStaff = true;
         _businessId = data['businessId'];
+        _businessName = data['businessName'];
+        _businessType = data['businessType'];
         _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
         _role = data['role'] ?? 'admin';
         _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
@@ -79,9 +102,12 @@ class StaffRoleService {
   void _resetStatus() {
     _isStaff = false;
     _businessId = null;
+    _businessName = null;
+    _businessType = null;
     _staffName = null;
     _role = null;
     _lastCashSettlement = null;
+    clearOverride();
   }
 
   /// Listen to auth changes and update status

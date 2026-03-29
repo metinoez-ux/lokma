@@ -4712,7 +4712,10 @@
     "zatenMenude": "Zaten menüde",
     "zaten_menude": "Already on the menu",
     "ziyaretcilereGosterilecekGenelParkBilgisi": "Ziyaretçilere gösterilecek genel park bilgisi...",
-    "ziyaretcilere_gosterilecek_genel_park_bi": "General park information to be displayed to visitors..."
+    "ziyaretcilere_gosterilecek_genel_park_bi": "General park information to be displayed to visitors...",
+    "yeni_personel_ekle": "Nieuw personeel toevoegen",
+    "yeni_surucu_ekle": "Nieuwe chauffeur toevoegen",
+    "kurumsal_ayarlar": "Bedrijfsinstellingen"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

@@ -3907,6 +3907,24 @@
     "clear_selection_title": "Clear selection title"
   },
   "AdminKermesDetail": {
+    "yeni_personel_ekle": "Yeni Personel Ekle",
+    "yeni_surucu_ekle": "Yeni Sürücü Ekle",
+    "personel_bilgileri": "Personel Bilgileri",
+    "surucu_bilgileri": "Sürücü Bilgileri",
+    "ad_soyad": "Ad Soyad",
+    "telefon_numarasi": "Telefon Numarası",
+    "email_zorunlu": "E-posta (Zorunlu)",
+    "olusturuluyor": "Oluşturuluyor...",
+    "kaydet": "Kaydet",
+    "kdv_gosterimi": "KDV Sistemi",
+    "kdv_orani": "KDV Oranı (%)",
+    "vat_included": "Fiyatlara KDV Dahildir",
+    "isim_telefon_email_zorunlu": "İsim, Telefon ve E-posta zorunludur.",
+    "personel_basariyla_olusturuldu": "Personel başarıyla oluşturuldu.",
+    "surucu_basariyla_olusturuldu": "Sürücü başarıyla oluşturuldu.",
+    "personel_ara": "Personel ara...",
+    "isletme_bilgisi_bulunamadi": "İşletme bilgisi bulunamadı",
+    "iptal_et": "İptal Et",
     "2IsimOpsiyonel": "2. İsim (Opsiyonel)",
     "2SokakAdiOpsiyonel": "📍 2. Sokak Adı (Opsiyonel)",
     "2SokakAdiOpsiyonel1": "2. Sokak Adı (Opsiyonel)",
@@ -4332,7 +4350,10 @@
     "zatenMenude": "Zaten menüde",
     "zaten_menude": "Zaten menüde",
     "ziyaretcilereGosterilecekGenelParkBilgisi": "Ziyaretçilere gösterilecek genel park bilgisi...",
-    "ziyaretcilere_gosterilecek_genel_park_bi": "Ziyaretçilere gösterilecek genel park bilgisi..."
+    "ziyaretcilere_gosterilecek_genel_park_bi": "Ziyaretçilere gösterilecek genel park bilgisi...",
+    "yeni_personel_ekle": "Yeni Personel Ekle",
+    "yeni_surucu_ekle": "Yeni Sürücü Ekle",
+    "kurumsal_ayarlar": "Kurumsal Ayarlar"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 İşletme Admin",

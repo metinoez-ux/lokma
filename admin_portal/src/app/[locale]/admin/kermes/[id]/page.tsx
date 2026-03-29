@@ -754,15 +754,26 @@ export default function KermesDetailPage() {
         }
         
         const form = type === 'kermes_staff' ? newStaffForm : newDriverForm;
-        if (!form.name || !form.phone) {
-            showToast(t('isim_ve_telefon_zorunlu') || 'İsim ve telefon numarası zorunludur.', 'error');
+        if (!form.name || !form.phone || !form.email) {
+            showToast(t('isim_telefon_email_zorunlu') || 'İsim, telefon numarası ve E-posta zorunludur.', 'error');
             return;
         }
 
         setIsCreatingUser(true);
         try {
-            // Şifre boşsa, rastgele bir şifre olarak telefonu verelim. Firebase en az 6 karakter ister.
-            const tempPassword = form.phone.replace(/[^0-9]/g, '').padEnd(6, '0').slice(0, 10);
+            // Otomatik güçlü şifre oluştur
+            const generatePassword = () => {
+                const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%*+';
+                let pass = '';
+                for(let i=0; i<10; i++){
+                    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                // En az bir sayı ve bir büyük harf garantisi
+                pass = pass.replace(/./, chars.charAt(Math.floor(Math.random() * 26) + 26)); // Büyük harf
+                pass = pass.replace(/.$/, chars.charAt(Math.floor(Math.random() * 10) + 52)); // Rakam
+                return pass;
+            };
+            const tempPassword = generatePassword();
             
             const response = await fetch('/api/admin/create-user', {
                 method: 'POST',
@@ -778,7 +789,11 @@ export default function KermesDetailPage() {
                     businessId: kermes.id,
                     businessName: kermes.title,
                     businessType: 'kermes',
-                    createdBy: 'admin_panel'
+                    createdBy: admin?.firebaseUid || 'admin_panel',
+                    locale: params.locale || 'de',
+                    assignerName: admin ? `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.displayName : undefined,
+                    assignerEmail: admin?.email,
+                    assignerRole: admin?.adminType || admin?.role
                 }),
             });
 
@@ -1341,9 +1356,9 @@ export default function KermesDetailPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             
                                             {/* Personel Atama */}
-                                            <div className="bg-gray-700/30 p-4 rounded-xl border border-gray-600">
+                                            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-border shadow-sm">
                                                 <div className="flex justify-between items-center mb-2">
-                                                    <label className="text-sm font-medium text-white block">👔 {t('personel_ata') || 'Personel Ata'}</label>
+                                                    <label className="text-sm font-medium text-foreground block">👔 {t('personel_ata') || 'Personel Ata'}</label>
                                                     <button 
                                                         type="button"
                                                         onClick={() => setIsAddingStaff(!isAddingStaff)}
@@ -1357,42 +1372,42 @@ export default function KermesDetailPage() {
                                                 </p>
                                                 
                                                 {isAddingStaff && (
-                                                    <div className="mb-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
-                                                        <h5 className="text-xs font-semibold text-white mb-2">{t('personel_bilgileri') || 'Personel Bilgileri'}</h5>
+                                                    <div className="mb-4 p-4 bg-background rounded-lg border border-border shadow-sm mt-2">
+                                                        <h5 className="text-sm font-semibold text-foreground mb-3">{t('personel_bilgileri') || 'Personel Bilgileri'}</h5>
                                                         <input 
                                                             type="text" 
                                                             placeholder={t('ad_soyad') || 'Ad Soyad'}
-                                                            className="w-full mb-2 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none"
+                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
                                                             value={newStaffForm.name}
                                                             onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})}
                                                         />
-                                                        <div className="flex gap-2 mb-2">
+                                                        <div className="flex gap-2 mb-3">
                                                             <input 
                                                                 type="text" 
                                                                 placeholder="+49"
-                                                                className="w-16 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none text-center"
+                                                                className="w-20 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none text-center"
                                                                 value={newStaffForm.countryCode}
                                                                 onChange={e => setNewStaffForm({...newStaffForm, countryCode: e.target.value})}
                                                             />
                                                             <input 
                                                                 type="text" 
                                                                 placeholder={t('telefon_numarasi') || 'Telefon Numarası'}
-                                                                className="flex-1 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none"
+                                                                className="flex-1 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
                                                                 value={newStaffForm.phone}
                                                                 onChange={e => setNewStaffForm({...newStaffForm, phone: e.target.value})}
                                                             />
                                                         </div>
                                                         <input 
                                                             type="email" 
-                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (Opsiyonel)'}`}
-                                                            className="w-full mb-3 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-cyan-500 outline-none"
+                                                            placeholder={`${t('email_zorunlu') || 'E-posta (Zorunlu)'}`}
+                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
                                                             value={newStaffForm.email}
                                                             onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
                                                         />
                                                         <button
                                                             type="button"
                                                             onClick={() => handleCreateUser('kermes_staff')}
-                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone}
+                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.email}
                                                             className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
                                                         >
                                                             {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
@@ -1406,7 +1421,7 @@ export default function KermesDetailPage() {
                                                         placeholder={t('personel_ara') || 'İsim veya e-posta ile ara...'}
                                                         value={staffSearchQuery}
                                                         onChange={(e) => searchStaff(e.target.value)}
-                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none"
+                                                        className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
                                                     />
                                                     {searchingStaff && (
                                                         <div className="absolute right-3 top-2 w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
@@ -1414,7 +1429,7 @@ export default function KermesDetailPage() {
                                                     
                                                     {/* Personel Arama Sonuçları */}
                                                     {staffResults.length > 0 && (
-                                                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg overflow-hidden">
+                                                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
                                                             {staffResults.map(user => (
                                                                 <button
                                                                     key={user.id}
@@ -1424,10 +1439,10 @@ export default function KermesDetailPage() {
                                                                         setStaffSearchQuery('');
                                                                         setStaffResults([]);
                                                                     }}
-                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-700 border-b border-gray-700 last:border-0 flex justify-between items-center"
+                                                                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
                                                                 >
-                                                                    <span className="text-sm text-white font-medium">{user.name || user.email}</span>
-                                                                    <span className="text-xs text-cyan-400 capitalize">{user.role || 'staff'}</span>
+                                                                    <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
+                                                                    <span className="text-xs text-cyan-600 dark:text-cyan-400 capitalize bg-cyan-100 dark:bg-cyan-900/30 px-2 py-0.5 rounded">{user.role || 'staff'}</span>
                                                                 </button>
                                                             ))}
                                                         </div>
@@ -1437,15 +1452,15 @@ export default function KermesDetailPage() {
                                                 {/* Atanmış Personel Listesi */}
                                                 <div className="flex flex-wrap gap-2">
                                                     {assignedStaff.map(staffId => (
-                                                        <div key={staffId} className="px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-lg flex items-center gap-2">
-                                                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold">
+                                                        <div key={staffId} className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 rounded-lg flex items-center gap-2 shadow-sm">
+                                                            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-100 flex items-center justify-center text-[10px] font-bold">
                                                                 {staffId.substring(0, 2).toUpperCase()}
                                                             </div>
-                                                            <span className="text-xs text-blue-100">{staffId.length > 8 ? staffId.substring(0, 8) + '...' : staffId}</span>
+                                                            <span className="text-sm font-medium text-slate-700 dark:text-blue-100">{staffId.length > 8 ? staffId.substring(0, 8) + '...' : staffId}</span>
                                                             <button 
                                                                 type="button" 
                                                                 onClick={() => setAssignedStaff(assignedStaff.filter(id => id !== staffId))}
-                                                                className="w-4 h-4 ml-1 rounded-full bg-blue-800/80 hover:bg-red-500 text-white flex items-center justify-center text-[10px]"
+                                                                className="w-5 h-5 ml-1 rounded-full bg-slate-200 dark:bg-blue-800/80 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/80 text-slate-500 dark:text-white flex items-center justify-center text-xs transition-colors"
                                                             >
                                                                 ✕
                                                             </button>
@@ -1458,9 +1473,9 @@ export default function KermesDetailPage() {
                                             </div>
 
                                             {/* Sürücü Atama */}
-                                            <div className="bg-gray-700/30 p-4 rounded-xl border border-gray-600">
+                                            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-border shadow-sm">
                                                 <div className="flex justify-between items-center mb-2">
-                                                    <label className="text-sm font-medium text-white block">🚗 {t('surucu_ata') || 'Sürücü Ata'}</label>
+                                                    <label className="text-sm font-medium text-foreground block">🚗 {t('surucu_ata') || 'Sürücü Ata'}</label>
                                                     <button 
                                                         type="button"
                                                         onClick={() => setIsAddingDriver(!isAddingDriver)}
@@ -1474,42 +1489,42 @@ export default function KermesDetailPage() {
                                                 </p>
                                                 
                                                 {isAddingDriver && (
-                                                    <div className="mb-4 p-3 bg-gray-800 rounded-lg border border-gray-600">
-                                                        <h5 className="text-xs font-semibold text-white mb-2">{t('surucu_bilgileri') || 'Sürücü Bilgileri'}</h5>
+                                                    <div className="mb-4 p-4 bg-background rounded-lg border border-border shadow-sm mt-2">
+                                                        <h5 className="text-sm font-semibold text-foreground mb-3">{t('surucu_bilgileri') || 'Sürücü Bilgileri'}</h5>
                                                         <input 
                                                             type="text" 
                                                             placeholder={t('ad_soyad') || 'Ad Soyad'}
-                                                            className="w-full mb-2 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none"
+                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
                                                             value={newDriverForm.name}
                                                             onChange={e => setNewDriverForm({...newDriverForm, name: e.target.value})}
                                                         />
-                                                        <div className="flex gap-2 mb-2">
+                                                        <div className="flex gap-2 mb-3">
                                                             <input 
                                                                 type="text" 
                                                                 placeholder="+49"
-                                                                className="w-16 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none text-center"
+                                                                className="w-20 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none text-center"
                                                                 value={newDriverForm.countryCode}
                                                                 onChange={e => setNewDriverForm({...newDriverForm, countryCode: e.target.value})}
                                                             />
                                                             <input 
                                                                 type="text" 
                                                                 placeholder={t('telefon_numarasi') || 'Telefon Numarası'}
-                                                                className="flex-1 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none"
+                                                                className="flex-1 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
                                                                 value={newDriverForm.phone}
                                                                 onChange={e => setNewDriverForm({...newDriverForm, phone: e.target.value})}
                                                             />
                                                         </div>
                                                         <input 
                                                             type="email" 
-                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (Opsiyonel)'}`}
-                                                            className="w-full mb-3 px-3 py-1.5 bg-gray-700 text-white rounded text-sm border border-gray-600 focus:border-amber-500 outline-none"
+                                                            placeholder={`${t('email_zorunlu') || 'E-posta (Zorunlu)'}`}
+                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
                                                             value={newDriverForm.email}
                                                             onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
                                                         />
                                                         <button
                                                             type="button"
                                                             onClick={() => handleCreateUser('kermes_driver')}
-                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone}
+                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone || !newDriverForm.email}
                                                             className="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
                                                         >
                                                             {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
@@ -1523,7 +1538,7 @@ export default function KermesDetailPage() {
                                                         placeholder={t('surucu_ara') || 'İsim veya e-posta ile ara...'}
                                                         value={driverSearchQuery}
                                                         onChange={(e) => searchDriver(e.target.value)}
-                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"
+                                                        className="w-full px-4 py-2.5 bg-background text-foreground rounded-lg border border-input shadow-sm text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
                                                     />
                                                     {searchingDriver && (
                                                         <div className="absolute right-3 top-2 w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
@@ -1531,7 +1546,7 @@ export default function KermesDetailPage() {
                                                     
                                                     {/* Sürücü Arama Sonuçları */}
                                                     {driverResults.length > 0 && (
-                                                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg overflow-hidden">
+                                                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
                                                             {driverResults.map(user => (
                                                                 <button
                                                                     key={user.id}
@@ -1541,10 +1556,10 @@ export default function KermesDetailPage() {
                                                                         setDriverSearchQuery('');
                                                                         setDriverResults([]);
                                                                     }}
-                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-700 border-b border-gray-700 last:border-0 flex justify-between items-center"
+                                                                    className="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 border-b border-border last:border-0 flex justify-between items-center transition-colors"
                                                                 >
-                                                                    <span className="text-sm text-white font-medium">{user.name || user.email}</span>
-                                                                    <span className="text-xs text-amber-400">{user.driverType === 'lokma_fleet' ? 'Fleet' : 'Gönüllü'}</span>
+                                                                    <span className="text-sm text-foreground font-medium">{user.name || user.email}</span>
+                                                                    <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded">{user.driverType === 'lokma_fleet' ? 'Fleet' : 'Gönüllü'}</span>
                                                                 </button>
                                                             ))}
                                                         </div>
@@ -1554,15 +1569,15 @@ export default function KermesDetailPage() {
                                                 {/* Atanmış Sürücü Listesi */}
                                                 <div className="flex flex-wrap gap-2">
                                                     {assignedDrivers.map(driverId => (
-                                                        <div key={driverId} className="px-3 py-1.5 bg-amber-900/30 border border-amber-700/50 rounded-lg flex items-center gap-2">
-                                                            <div className="w-5 h-5 rounded-full bg-amber-600 flex items-center justify-center text-[10px] text-white font-bold">
+                                                        <div key={driverId} className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 rounded-lg flex items-center gap-2 shadow-sm">
+                                                            <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-100 flex items-center justify-center text-[10px] font-bold">
                                                                 {driverId.substring(0, 2).toUpperCase()}
                                                             </div>
-                                                            <span className="text-xs text-amber-100">{driverId.length > 8 ? driverId.substring(0, 8) + '...' : driverId}</span>
+                                                            <span className="text-sm font-medium text-slate-700 dark:text-amber-100">{driverId.length > 8 ? driverId.substring(0, 8) + '...' : driverId}</span>
                                                             <button 
                                                                 type="button" 
                                                                 onClick={() => setAssignedDrivers(assignedDrivers.filter(id => id !== driverId))}
-                                                                className="w-4 h-4 ml-1 rounded-full bg-amber-800/80 hover:bg-red-500 text-white flex items-center justify-center text-[10px]"
+                                                                className="w-5 h-5 ml-1 rounded-full bg-slate-200 dark:bg-amber-800/80 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-500/80 text-slate-500 dark:text-white flex items-center justify-center text-xs transition-colors"
                                                             >
                                                                 ✕
                                                             </button>
@@ -1581,43 +1596,43 @@ export default function KermesDetailPage() {
                                         <h4 className="text-foreground font-medium mb-3">🏢 {t('kurumsal_ayarlar') || 'Kurumsal Ayarlar'}</h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Pfand Sistemi */}
-                                            <div className="bg-card p-4 rounded-lg border border-gray-600">
+                                            <div className="bg-card shadow-sm p-4 rounded-xl border border-border">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="text-foreground font-medium">🍶 Pfand (Depozito) Sistemi</span>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input type="checkbox" checked={editForm.hasPfandSystem} onChange={(e) => setEditForm({ ...editForm, hasPfandSystem: e.target.checked })} className="sr-only peer" />
-                                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                                        <div className="w-11 h-6 bg-slate-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-card after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 transition-colors"></div>
                                                     </label>
                                                 </div>
                                                 {editForm.hasPfandSystem && (
-                                                    <div>
-                                                        <label className="text-muted-foreground text-xs block mb-1">{t('pfand_ucreti')}</label>
+                                                    <div className="mt-3">
+                                                        <label className="text-muted-foreground text-xs block mb-1.5">{t('pfand_ucreti')}</label>
                                                         <input type="number" step="0.01" value={editForm.pfandAmount} onChange={(e) => setEditForm({ ...editForm, pfandAmount: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                                            className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow" />
                                                     </div>
                                                 )}
                                             </div>
 
                                             {/* KDV Sistemi */}
-                                            <div className="bg-card p-4 rounded-lg border border-gray-600">
+                                            <div className="bg-card shadow-sm p-4 rounded-xl border border-border">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="text-foreground font-medium">{t('kdv_gosterimi')}</span>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input type="checkbox" checked={editForm.showKdv} onChange={(e) => setEditForm({ ...editForm, showKdv: e.target.checked })} className="sr-only peer" />
-                                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-card dark:bg-slate-800 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                        <div className="w-11 h-6 bg-slate-300 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-card after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 transition-colors"></div>
                                                     </label>
                                                 </div>
                                                 {editForm.showKdv && (
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-3 mt-3">
                                                         <div>
-                                                            <label className="text-muted-foreground text-xs block mb-1">{t('kdv_orani')}</label>
+                                                            <label className="text-muted-foreground text-xs block mb-1.5">{t('kdv_orani')}</label>
                                                             <input type="number" value={editForm.kdvRate} onChange={(e) => setEditForm({ ...editForm, kdvRate: parseFloat(e.target.value) || 0 })}
-                                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                                                className="w-full px-3 py-2 bg-background text-foreground rounded-lg border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-shadow" />
                                                         </div>
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 pt-1">
                                                             <input type="checkbox" checked={editForm.pricesIncludeKdv} onChange={(e) => setEditForm({ ...editForm, pricesIncludeKdv: e.target.checked })}
-                                                                className="w-4 h-4 rounded bg-gray-700 border-gray-600" />
-                                                            <span className="text-foreground text-xs">{t('vat_included')}</span>
+                                                                className="w-4 h-4 rounded bg-background border-input cursor-pointer text-cyan-500 focus:ring-cyan-500" />
+                                                            <span className="text-foreground text-sm font-medium">{t('vat_included')}</span>
                                                         </div>
                                                     </div>
                                                 )}

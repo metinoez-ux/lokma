@@ -10,6 +10,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
+import '../../services/kermes_assignment_service.dart';
+import 'widgets/workplace_selector_sheet.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/referral_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -196,7 +198,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     _buildQuickAccessChip(
                                         Icons.badge,
                                         'profile.staff_login'.tr(),
-                                        () => context.push('/staff-hub'))
+                                        () => _handleStaffLogin(context))
                                   else
                                     const Expanded(child: SizedBox()),
                                 ],
@@ -467,6 +469,68 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
       },
     );
+  }
+
+  Future<void> _handleStaffLogin(BuildContext context) async {
+    // Show a small loading overlay since we are performing network requests
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Refresh staff status to ensure we have the latest base business data
+      final roleService = StaffRoleService();
+      await roleService.checkStaffStatus();
+      
+      // Fetch any active kermes assignments
+      final kermeses = await KermesAssignmentService.getActiveAssignedKermeses();
+      
+      // Remove loading overlay
+      if (context.mounted) Navigator.pop(context);
+
+      final hasBaseBusiness = roleService.businessId != null;
+
+      if (!context.mounted) return;
+
+      if (kermeses.isNotEmpty && hasBaseBusiness) {
+        // User has BOTH a restaurant AND active kermeses
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (ctx) => WorkplaceSelectorSheet(
+            baseBusinessName: roleService.businessName ?? 'İşletme',
+            kermeses: kermeses,
+            onSelected: (id, name, type) {
+              if (id.isEmpty) {
+                // Return to base business
+                roleService.clearOverride();
+              } else {
+                roleService.setOverrideWorkplace(id, name, type);
+              }
+              context.push('/staff-hub');
+            },
+          ),
+        );
+      } else if (kermeses.isNotEmpty) {
+        // User is ONLY assigned to a kermes
+        roleService.setOverrideWorkplace(kermeses.first.id, kermeses.first.title, 'kermes');
+        context.push('/staff-hub');
+      } else {
+        // Default behavior: ONLY a restaurant
+        roleService.clearOverride();
+        context.push('/staff-hub');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Remove loading if error
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Bir hata oluştu: $e')),
+        );
+      }
+    }
   }
 
   // === Quick Access Chip (Yemeksepeti-style) ===
