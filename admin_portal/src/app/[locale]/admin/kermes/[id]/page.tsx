@@ -754,8 +754,8 @@ export default function KermesDetailPage() {
         }
         
         const form = type === 'kermes_staff' ? newStaffForm : newDriverForm;
-        if (!form.name || !form.phone || !form.email) {
-            showToast(t('isim_telefon_email_zorunlu') || 'İsim, telefon numarası ve E-posta zorunludur.', 'error');
+        if (!form.name || !form.phone) {
+            showToast(t('isim_telefon_zorunlu') || 'İsim ve telefon numarası zorunludur.', 'error');
             return;
         }
 
@@ -1399,7 +1399,7 @@ export default function KermesDetailPage() {
                                                         </div>
                                                         <input 
                                                             type="email" 
-                                                            placeholder={`${t('email_zorunlu') || 'E-posta (Zorunlu)'}`}
+                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (İsteğe Bağlı)'}`}
                                                             className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
                                                             value={newStaffForm.email}
                                                             onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
@@ -1407,7 +1407,7 @@ export default function KermesDetailPage() {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleCreateUser('kermes_staff')}
-                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.email}
+                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone}
                                                             className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
                                                         >
                                                             {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
@@ -1516,7 +1516,7 @@ export default function KermesDetailPage() {
                                                         </div>
                                                         <input 
                                                             type="email" 
-                                                            placeholder={`${t('email_zorunlu') || 'E-posta (Zorunlu)'}`}
+                                                            placeholder={`${t('email_opsiyonel') || 'E-posta (İsteğe Bağlı)'}`}
                                                             className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
                                                             value={newDriverForm.email}
                                                             onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
@@ -1524,7 +1524,7 @@ export default function KermesDetailPage() {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleCreateUser('kermes_driver')}
-                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone || !newDriverForm.email}
+                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone}
                                                             className="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
                                                         >
                                                             {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}

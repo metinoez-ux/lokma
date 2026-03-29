@@ -4719,7 +4719,8 @@
     "personel_bilgileri": "Personeelsgegevens",
     "ad_soyad": "Volledige Naam",
     "email_zorunlu": "E-mail (verplicht)",
-    "iptal_et": "Annuleren"
+    "iptal_et": "Annuleren",
+    "email_opsiyonel": "E-mail (Optioneel)"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

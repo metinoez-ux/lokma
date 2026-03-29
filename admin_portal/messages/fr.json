@@ -4322,7 +4322,8 @@
     "personel_bilgileri": "Détails du Personnel",
     "ad_soyad": "Nom Complet",
     "email_zorunlu": "E-mail (obligatoire)",
-    "iptal_et": "Annuler"
+    "iptal_et": "Annuler",
+    "email_opsiyonel": "E-mail (Facultatif)"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",

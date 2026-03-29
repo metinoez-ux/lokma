@@ -659,8 +659,8 @@ export async function POST(request: NextRequest) {
             // 2A. Send WhatsApp Message (Primary)
             try {
                 const whatsappMessage = email
-                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nEmail: ${email}\nŞifre: ${password}\n\nGiriş: ${baseUrl}/login\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
-                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nTelefon ile giriş yapabilirsiniz.\nGiriş: ${baseUrl}/login\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
+                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nE-posta: ${email}\nŞifreniz mail adresinize gönderildi.\n\n(Ayrıca uygulamaya telefon numaranızla giriş yapıp SMS doğrulama kodu alabilirsiniz.)\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
+                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nLOKMA uygulamasına telefon numaranız ile kayıt olup anında giriş yapabilirsiniz. (Giriş yaparken size SMS kodu gelecektir)\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
 
                 const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
                     method: 'POST',
@@ -688,8 +688,8 @@ export async function POST(request: NextRequest) {
             // 2B. Send SMS (Fallback)
             try {
                 const smsMessage = email
-                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} olarak atandiniz. Email: ${email} Sifre: ${password} Giris: ${baseUrl}/login`
-                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} olarak atandiniz. Giris: ${baseUrl}/login`;
+                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} olarak atandiniz. Sifreniz e-postaniza gonderildi. Telefon numaranizla (SMS kodu ile) guvenle uygulamadan giris yapabilirsiniz.`
+                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} olarak atandiniz. Telefon numaranizla (SMS kodu ile) uygulamamiza guvenle giris yapabilirsiniz.`;
 
                 const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
                     method: 'POST',

@@ -4318,7 +4318,8 @@
     "personel_bilgileri": "Personalinformationen",
     "ad_soyad": "Vor- und Nachname",
     "email_zorunlu": "E-Mail (zwingend für den Login)",
-    "iptal_et": "Abbrechen"
+    "iptal_et": "Abbrechen",
+    "email_opsiyonel": "E-Mail (Optional)"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Geschäftsadministrator",

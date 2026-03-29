@@ -4341,7 +4341,8 @@
     "personel_bilgileri": "Personnel Details",
     "ad_soyad": "Full Name",
     "email_zorunlu": "Email (required for login)",
-    "iptal_et": "Cancel"
+    "iptal_et": "Cancel",
+    "email_opsiyonel": "Email (Optional)"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",
