@@ -81,7 +81,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     if (hostName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lutfen isminizi girin'),
+          content: Text(tr('Lutfen isminizi girin')),
           backgroundColor: Colors.amber,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -172,13 +172,113 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   void _nextStep() {
+    // Tarih kontrolu: Sepetten sonra (step 0 -> 1) Kermes aktif mi kontrol et
+    if (_currentStep == 0 && !_isKermesActive) {
+      HapticFeedback.heavyImpact();
+      _showKermesDateBlockDialog();
+      return;
+    }
+    
     if (_currentStep < 4) {
       HapticFeedback.selectionClick();
       setState(() => _currentStep++);
     } else {
-      // Son adım - siparişi tamamla
+      // Son adim - siparisi tamamla
       _submitOrder();
     }
+  }
+  
+  void _showKermesDateBlockDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isFuture = _isKermesFuture;
+    final event = widget.event;
+    
+    // Tarih formatlama
+    final months = ['Oca', 'Sub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Agu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    String formatDate(DateTime d) => '${d.day} ${months[d.month - 1]} ${d.year}';
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: isFuture 
+                      ? Colors.orange.withValues(alpha: 0.15)
+                      : Colors.red.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isFuture ? Icons.schedule_rounded : Icons.event_busy_rounded,
+                  size: 32,
+                  color: isFuture ? Colors.orange : Colors.red,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Baslik
+              Text(
+                isFuture 
+                    ? 'Kermes Henuz Baslamadi'
+                    : 'Kermes Sona Erdi',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              
+              // Aciklama
+              Text(
+                isFuture 
+                    ? 'Bu kermes ${formatDate(event.startDate)} tarihinde basliyor.\n\nKermes zamani geldiginde siparislerinizi bekliyoruz!'
+                    : 'Bu kermes ${formatDate(event.endDate)} tarihinde sona erdi.\n\nBir dahaki sefere insallah gorusmek uzere!',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              
+              // Tamam butonu
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: lokmaPink,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Tamam',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
   
   void _previousStep() {
@@ -1271,7 +1371,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         children: [
                           const Icon(Icons.recycling, color: Colors.green, size: 14),
                           const SizedBox(width: 4),
-                          Text('Depozito ($pfandCount)', style: TextStyle(color: Colors.green[400], fontSize: 13)),
+                          Text('${tr('Depozito')} ($pfandCount)', style: TextStyle(color: Colors.green[400], fontSize: 13)),
                         ],
                       ),
                       Text(
@@ -1288,7 +1388,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Toplam', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
+                    Text(tr('Toplam'), style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
                     Text(
                       '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: TextStyle(

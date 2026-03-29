@@ -886,7 +886,8 @@
     "delete_parking_area": "Supprimer l'aire de stationnement",
     "confirm_delete_parking_area": "Êtes-vous sûr de vouloir supprimer cette aire de stationnement ?",
     "parking_area_deleted": "Aire de stationnement supprimée",
-    "pinch_to_zoom": "Pincez pour zoomer"
+    "pinch_to_zoom": "Pincez pour zoomer",
+    "events_found_count": "{} kermesses trouvées"
   },
   "marketplace": {
     "available_now": "Disponible maintenant",
@@ -1238,7 +1239,9 @@
     "without_mms": "Sans Viande Séparée Mécaniquement",
     "pure_meat": "100% Viande Pure",
     "gluten_free": "Sans Gluten",
-    "no_wheat": "Sans Protéines de Blé"
+    "no_wheat": "Sans Protéines de Blé",
+    "state_only": "État / Province",
+    "all_country": "Tout le Pays"
   },
   "navigation": {
     "food": "Repas",

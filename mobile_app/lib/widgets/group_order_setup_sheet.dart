@@ -181,7 +181,7 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                         Switch.adaptive(
                           value: _hasDeadline,
                           onChanged: (v) => setState(() => _hasDeadline = v),
-                          activeColor: _accent,
+                          activeTrackColor: _accent,
                         ),
                       ],
                     ),

@@ -358,7 +358,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Vazgeç', style: TextStyle(color: Colors.grey[500])),
+            child: Text(tr('Vazgeç'), style: TextStyle(color: Colors.grey[500])),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),

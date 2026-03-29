@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import 'package:lokma_app/screens/kermes/kermes_menu_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
+import 'package:lokma_app/services/kermes_badge_service.dart';
 import 'package:lokma_app/services/kermes_feature_service.dart';
 import 'package:lokma_app/services/weather_service.dart';
 import 'package:share_plus/share_plus.dart';
@@ -78,6 +79,7 @@ class _KermesDetailSheetState extends State<KermesDetailSheet> {
   
   // Global Kermes Features (Firestore'dan)
   List<KermesFeature> _globalFeatures = [];
+  Map<String, KermesBadge> _activeBadges = {};
   
   @override
   void initState() {
@@ -87,6 +89,14 @@ class _KermesDetailSheetState extends State<KermesDetailSheet> {
     _countdownTimer = Timer.periodic(const Duration(minutes: 1), (_) => _updateCountdown());
     _fetchLiveWeather();
     _loadGlobalFeatures();
+    _loadBadges();
+  }
+  
+  Future<void> _loadBadges() async {
+    final badges = await KermesBadgeService.instance.loadBadges();
+    if (mounted) {
+      setState(() => _activeBadges = badges);
+    }
   }
   
   /// Global özellikleri Firestore'dan yükle
@@ -634,13 +644,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
             ),
           ),
           
-          // Divider
-          Container(
-            height: 32,
-            width: 1,
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
-            margin: EdgeInsets.symmetric(horizontal: 8),
-          ),
+          const Spacer(),
           
           // Saat
           Expanded(
@@ -911,6 +915,50 @@ Gel, birlikte güzel vakit geçirelim! 🤝
       'prayer_room': event.hasPrayerRoom,
       'free_entry': event.hasFreeEntry,
     };
+    
+    // 0. Dinamik Badges (Admin Portal'dan atanan)
+    for (final badgeId in event.activeBadgeIds) {
+      final badge = _activeBadges[badgeId];
+      if (badge != null && badge.isActive) {
+        final bgColor = Color(int.parse(badge.colorHex.replaceFirst('#', '0xFF')));
+        final textColor = Color(int.parse(badge.textColorHex.replaceFirst('#', '0xFF')));
+        
+        displayFeatures.add(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: bgColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: bgColor.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (badge.iconUrl.isNotEmpty) ...[
+                  CachedNetworkImage(
+                    imageUrl: badge.iconUrl,
+                    width: 14,
+                    height: 14,
+                    fit: BoxFit.contain,
+                    errorWidget: (context, url, error) => const SizedBox.shrink(),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  badge.label.toUpperCase(),
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          )
+        );
+      }
+    }
     
     // 1. Global özelliklerden aktif olanları göster
     for (final feature in _globalFeatures.take(8)) {

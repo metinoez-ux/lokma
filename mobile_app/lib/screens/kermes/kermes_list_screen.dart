@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:geocoding/geocoding.dart' as geo;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -273,7 +274,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               }
             } else if (data['address'] is String) {
               fullAddress = data['address'] as String;
-              city = data['location']?.toString() ?? 'Bilinmiyor';
+              city = data['city']?.toString() ?? data['location']?.toString() ?? 'Bilinmiyor';
             }
 
             // Parse contact info
@@ -320,6 +321,53 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               sponsor = KermesSponsor.akdenizToros;
             }
 
+            // Koordinat cozumleme: Firestore'da varsa kullan, yoksa adresten geocode yap
+            double eventLat = (data['latitude'] ?? data['lat'])?.toDouble() ?? 0.0;
+            double eventLng = (data['longitude'] ?? data['lng'])?.toDouble() ?? 0.0;
+
+            // Eger koordinatlar (0,0) veya default (51.0, 6.0) ise adresten geocode dene
+            if ((eventLat == 0.0 && eventLng == 0.0) || (eventLat == 51.0 && eventLng == 6.0)) {
+              if (fullAddress.isNotEmpty) {
+                try {
+                  final locations = await geo.locationFromAddress(fullAddress);
+                  if (locations.isNotEmpty) {
+                    eventLat = locations.first.latitude;
+                    eventLng = locations.first.longitude;
+                    debugPrint('Geocoded kermes "${data['name']}" address "$fullAddress" -> ($eventLat, $eventLng)');
+                    // Firestore'a da yazalim ki bir daha geocode etmeyelim
+                    try {
+                      doc.reference.update({'latitude': eventLat, 'longitude': eventLng});
+                    } catch (_) {}
+                  }
+                } catch (geoErr) {
+                  debugPrint('Geocoding failed for "$fullAddress": $geoErr');
+                  // Fallback: en azindan sehir isminden dene
+                  if (city != 'Bilinmiyor') {
+                    try {
+                      final cityLocations = await geo.locationFromAddress('$city, Germany');
+                      if (cityLocations.isNotEmpty) {
+                        eventLat = cityLocations.first.latitude;
+                        eventLng = cityLocations.first.longitude;
+                        debugPrint('Geocoded kermes city "$city" -> ($eventLat, $eventLng)');
+                        try {
+                          doc.reference.update({'latitude': eventLat, 'longitude': eventLng});
+                        } catch (_) {}
+                      }
+                    } catch (_) {
+                      eventLat = 51.0;
+                      eventLng = 6.0;
+                    }
+                  } else {
+                    eventLat = 51.0;
+                    eventLng = 6.0;
+                  }
+                }
+              } else {
+                eventLat = 51.0;
+                eventLng = 6.0;
+              }
+            }
+
             final event = KermesEvent(
               id: doc.id,
               city: city,
@@ -331,8 +379,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               phoneNumber: phoneNumber,
               startDate: startDate,
               endDate: endDate,
-              latitude: (data['latitude'] ?? data['lat'] ?? 51.0)?.toDouble() ?? 51.0,
-              longitude: (data['longitude'] ?? data['lng'] ?? 6.0)?.toDouble() ?? 6.0,
+              latitude: eventLat,
+              longitude: eventLng,
               menu: menuItems,
               parking: parkingInfo,
               weatherForecast: [],
@@ -403,16 +451,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       events = events.where((event) => _favoriteKermesIds.contains(event.id)).toList();
     }
 
-    // Delivery mode filter
-    if (_deliveryMode == 'teslimat') {
-      events = events.where((event) => event.hasDelivery).toList();
-    }
-    if (_deliveryMode == 'gelal') {
-      events = events.where((event) => event.hasTakeaway).toList();
-    }
-    if (_deliveryMode == 'masa') {
-      events = events.where((event) => event.hasDineIn).toList();
-    }
+    // Delivery mode filter kaldirildi - tum kermesler gosterilir
+    // (Toggle switch UI'den cikarildi)
 
     // Smart search with normalization
     if (_searchQuery.isNotEmpty) {
@@ -516,10 +556,16 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     events.sort((a, b) {
       if (_sortBy == 'date_asc' || _sortBy == 'favorites') {
         return a.startDate.compareTo(b.startDate);
+      } else if (_sortBy == 'date_desc') {
+        return b.startDate.compareTo(a.startDate);
       } else if (_sortBy == 'distance_asc' && _currentPosition != null) {
         final distA = _getDistance(a);
         final distB = _getDistance(b);
         return distA.compareTo(distB);
+      } else if (_sortBy == 'distance_desc' && _currentPosition != null) {
+        final distA = _getDistance(a);
+        final distB = _getDistance(b);
+        return distB.compareTo(distA);
       }
       return 0;
     });
@@ -537,7 +583,61 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     ) / 1000;
   }
 
-  /// State adi / kisaltma eslesmesi — alias tablosunu kullanir
+  Widget _buildSortChip({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required bool ascending,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? lokmaPink.withValues(alpha: 0.12)
+              : (isDark ? Colors.grey[800] : Colors.grey[200]),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? lokmaPink : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isActive ? lokmaPink : (isDark ? Colors.grey[400] : Colors.grey[600]),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive ? lokmaPink : (isDark ? Colors.grey[300] : Colors.grey[700]),
+              ),
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 2),
+              Icon(
+                ascending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                size: 12,
+                color: lokmaPink,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// State adi / kisaltma eslesmesi -- alias tablosunu kullanir
   bool _statesMatch(String userState, String eventState) {
     if (userState == eventState) return true;
     if (userState.contains(eventState) || eventState.contains(userState)) return true;
@@ -1206,8 +1306,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // Delivery mode tabs
-                                    _buildDeliveryModeTabs(),
+                                    // Delivery mode tabs kaldirildi - tum kermesler gosterilir
 
                                     // Search bar
                                     _buildSearchBar(),
@@ -1230,19 +1329,59 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               ),
             ),
 
-            // Event Count
+            // Event Count + Sort Shortcuts
             if (!_isLoading && _filteredEvents.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-                  child: Text(
-                    'kermes.events_found_count'.tr(args: [_filteredEvents.length.toString()]),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                      letterSpacing: -0.2,
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'kermes.events_found_count'.tr(args: [_filteredEvents.length.toString()]),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Tarih siralama toggle
+                      _buildSortChip(
+                        icon: Icons.calendar_today_rounded,
+                        label: _sortBy == 'date_asc' ? 'Eski' : _sortBy == 'date_desc' ? 'Yeni' : 'Tarih',
+                        isActive: _sortBy == 'date_asc' || _sortBy == 'date_desc',
+                        ascending: _sortBy == 'date_asc',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            if (_sortBy == 'date_asc') {
+                              _sortBy = 'date_desc';
+                            } else {
+                              _sortBy = 'date_asc';
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      // Mesafe siralama toggle
+                      _buildSortChip(
+                        icon: Icons.near_me_rounded,
+                        label: _sortBy == 'distance_asc' ? 'Yakin' : _sortBy == 'distance_desc' ? 'Uzak' : 'Mesafe',
+                        isActive: _sortBy == 'distance_asc' || _sortBy == 'distance_desc',
+                        ascending: _sortBy == 'distance_asc',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            if (_sortBy == 'distance_asc') {
+                              _sortBy = 'distance_desc';
+                            } else {
+                              _sortBy = 'distance_asc';
+                            }
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

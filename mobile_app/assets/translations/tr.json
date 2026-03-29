@@ -886,7 +886,8 @@
     "delete_parking_area": "Park Alanını Sil",
     "confirm_delete_parking_area": "Bu park alanını silmek istediğinize emin misiniz?",
     "parking_area_deleted": "Park alanı silindi",
-    "pinch_to_zoom": "Yakınlaştırmak için sıkıştırın"
+    "pinch_to_zoom": "Yakınlaştırmak için sıkıştırın",
+    "events_found_count": "{} kermes bulundu"
   },
   "marketplace": {
     "available_now": "Şu an siparişe açık",
@@ -1238,7 +1239,9 @@
     "without_mms": "Mekanik Ayrılmış Et İçermez",
     "pure_meat": "%100 saf et",
     "gluten_free": "Glutensiz",
-    "no_wheat": "Buğday proteini içermez"
+    "no_wheat": "Buğday proteini içermez",
+    "state_only": "Bulunduğun İl / Eyalet",
+    "all_country": "Tümü (Ülke)"
   },
   "navigation": {
     "food": "Yemek",

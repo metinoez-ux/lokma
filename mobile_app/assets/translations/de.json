@@ -887,7 +887,8 @@
     "delete_parking_area": "Parkplatz löschen",
     "confirm_delete_parking_area": "Möchten Sie diesen Parkplatz wirklich löschen?",
     "parking_area_deleted": "Parkplatz gelöscht",
-    "pinch_to_zoom": "Zum Zoomen kneifen"
+    "pinch_to_zoom": "Zum Zoomen kneifen",
+    "events_found_count": "{} Kermes gefunden"
   },
   "marketplace": {
     "available_now": "Jetzt möglich",
@@ -1241,7 +1242,9 @@
     "without_mms": "Ohne Separatorenfleisch",
     "pure_meat": "100% reines Fleisch",
     "gluten_free": "Glutenfrei",
-    "no_wheat": "Ohne Weizenproteine"
+    "no_wheat": "Ohne Weizenproteine",
+    "state_only": "Dein Bundesland",
+    "all_country": "Deutschlandweit"
   },
   "masa": {
     "preorder_title": "Vorbestellung aufgeben?",

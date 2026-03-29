@@ -7,6 +7,7 @@ import 'package:lokma_app/screens/kermes/kermes_menu_screen.dart';
 import 'package:lokma_app/screens/kermes/kermes_parking_screen.dart';
 import 'package:lokma_app/services/kermes_favorite_service.dart';
 import 'package:lokma_app/services/kermes_feature_service.dart';
+import 'package:lokma_app/services/kermes_badge_service.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,13 +37,12 @@ class KermesCard extends StatefulWidget {
 class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateMixin {
   bool _isFavorite = false;
   List<KermesFeature> _globalFeatures = [];
+  List<KermesBadge> _activeBadges = [];
   late AnimationController _expandController;
-  late Animation<double> _expandAnimation;
   
   // Colors from HTML/Tailwind config
   static const Color primaryRose = Color(0xFFEA184A);
   static const Color cardLight = Colors.white;
-  static const Color cardDark = Color(0xFF1F2937);
   static const Color textDark = Color(0xFF111827);
   static const Color surfaceObsidian = Color(0xFF1E293B);
 
@@ -51,6 +51,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     super.initState();
     _checkFavorite();
     _loadFeatures();
+    _loadBadges();
     
     _expandController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -91,6 +92,20 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     }
   }
 
+  Future<void> _loadBadges() async {
+    if (widget.event.activeBadgeIds.isEmpty) return;
+    
+    final allBadges = await KermesBadgeService.instance.loadBadges();
+    if (mounted) {
+      setState(() {
+        _activeBadges = widget.event.activeBadgeIds
+            .where((id) => allBadges.containsKey(id))
+            .map((id) => allBadges[id]!)
+            .toList();
+      });
+    }
+  }
+
   Future<void> _checkFavorite() async {
     final isFav = await KermesFavoriteService.instance.isFavorite(widget.event.id);
     if (mounted) {
@@ -107,13 +122,6 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     }
   }
   
-  void _callPhone() async {
-    final phone = widget.event.phoneNumber.isNotEmpty ? widget.event.phoneNumber : '';
-    if (phone.isEmpty) return;
-    final url = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    }
   }
 
   String? _getImagePath() {
@@ -135,8 +143,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     final isDark = theme.brightness == Brightness.dark;
     
     // Theme Colors (Marketplace Standards)
-    final Color cardLight = Colors.white;
-    final Color cardDark = const Color(0xFF1E1E1E); // Refined dark mode card color
+      final Color cardDark = const Color(0xFF1E1E1E); // Refined dark mode card color
     final Color textDark = const Color(0xFF2D3748);
     final Color primaryRose = const Color(0xFFE50914);
 
@@ -191,9 +198,6 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     const double bannerHeight = 120.0;   // Full blue wallet card height (most hidden behind main card)
     const double bannerPeekHeight = 30.0; // Visible peek strip
     
-    String statusText;
-    List<Color> badgeGradient = [Colors.blue, Colors.indigo];
-    IconData? badgeIcon = Icons.hourglass_top;
 
     if (isLive) {
       statusText = 'ŞU AN AÇIK';
@@ -381,66 +385,67 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
         
 
         
-                      // Bottom Right: Delivery Icon
-                      if (widget.event.hasDelivery)
+                      // Bottom Left: Dynamic Badges (Zertifikate)
+                      if (_activeBadges.isNotEmpty)
                         Positioned(
                           bottom: 12,
-                          right: 12,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                color: Colors.black.withOpacity(0.4),
-                                child: const Icon(
-                                  Icons.two_wheeler,
-                                  color: Colors.white,
-                                  size: 18,
+                          left: 12,
+                          child: Row(
+                            children: _activeBadges.map((badge) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.15),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipOval(
+                                    child: CachedNetworkImage(
+                                      imageUrl: badge.iconUrl,
+                                      height: 34,
+                                      width: 34,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        color: Colors.grey[200],
+                                        height: 34,
+                                        width: 34,
+                                      ),
+                                      errorWidget: (context, url, error) => const SizedBox.shrink(),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
+                              );
+                            }).toList(),
                           ),
                         ),
 
-                      // Sponsor Badge (bottom-left, standardized style)
-                      if (widget.event.sponsor != KermesSponsor.none)
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: widget.event.sponsor == KermesSponsor.tuna
-                                  ? const Color(0xFFA01E22) // TUNA Red
-                                  : const Color(0xFFD97706), // Akdeniz Toros Orange
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.verified, color: Colors.white, size: 13),
-                                const SizedBox(width: 4),
-                                Text(
-                                  widget.event.sponsor == KermesSponsor.tuna ? 'TUNA' : 'AKDENİZ TOROS',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                      // Bottom Right: Modalities
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.event.isMenuOnly)
+                              _buildModalityPill(Icons.restaurant_menu, 'Sipariş Yok'),
+                            if (!widget.event.isMenuOnly && widget.event.hasDineIn)
+                              _buildModalityPill(Icons.table_restaurant, 'Masa'),
+                            if (!widget.event.isMenuOnly && widget.event.hasTakeaway)
+                              _buildModalityPill(Icons.shopping_bag_outlined, 'Gel-Al'),
+                            if (!widget.event.isMenuOnly && widget.event.hasDelivery)
+                              _buildModalityPill(Icons.two_wheeler, 'Kurye'),
+                          ],
                         ),
+                      ),
+
+
                     ],
                   ),
         
@@ -553,10 +558,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         const SizedBox(height: 12),
         
                         // Info Row (Distance + Courier)
-                        Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          runSpacing: 8,
+                        Row(
                           children: [
                             if (widget.currentPosition != null)
                               GestureDetector(
@@ -577,9 +579,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                     _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
                                   ],
                                 ),
-                              )
-                            else 
-                              const SizedBox(width: 1), // Takes min space for WrapAlignment to work if needed
+                              ),
+                            
+                            const Spacer(),
 
                             if (widget.event.hasDelivery)
                               Row(
@@ -587,17 +589,15 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                                 children: [
                                   Icon(Icons.two_wheeler, size: 16, color: isDark ? Colors.green[400] : const Color(0xFF059669)),
                                   const SizedBox(width: 5),
-                                  Flexible(
-                                    child: Text(
-                                      'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.green[400] : const Color(0xFF059669),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                  Text(
+                                    'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
+                                    style: TextStyle(
+                                      color: isDark ? Colors.green[400] : const Color(0xFF059669),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
@@ -776,85 +776,6 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   }
 
   // --- Contact Card ---
-  Widget _buildContactCard(bool isDark) {
-    final contactName = widget.event.contactName?.isNotEmpty == true 
-        ? widget.event.contactName! 
-        : widget.event.title;
-    final phone = widget.event.phoneNumber;
-    
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                'assets/images/admin_icon.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Yetkili Kişi',
-                  style: TextStyle(
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                Text(
-                  contactName,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : textDark,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (phone.isNotEmpty)
-                  Text(
-                    phone,
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[400] : Colors.grey[500],
-                      fontSize: 11,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (phone.isNotEmpty)
-            GestureDetector(
-              onTap: _callPhone,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.call, color: Color(0xFF10B981), size: 20),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   // --- Helpers ---
   String get _distanceKm {
@@ -1166,6 +1087,37 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildModalityPill(IconData icon, String tooltip) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(50),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            color: Colors.black.withValues(alpha: 0.5),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white, size: 12),
+                const SizedBox(width: 4),
+                Text(
+                  tooltip,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

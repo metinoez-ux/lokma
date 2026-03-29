@@ -13,6 +13,7 @@ class DriverInfo {
   final String driverType; // 'lokma_fleet' or 'business'
   final List<String> assignedBusinesses;
   final List<String> assignedBusinessNames;
+  final List<String> assignedKermesIds;
   final bool isActive;
 
   const DriverInfo({
@@ -24,6 +25,7 @@ class DriverInfo {
     required this.driverType,
     required this.assignedBusinesses,
     required this.assignedBusinessNames,
+    this.assignedKermesIds = const [],
     required this.isActive,
   });
 
@@ -38,7 +40,26 @@ class DriverInfo {
       driverType: data['driverType'] ?? 'business',
       assignedBusinesses: List<String>.from(data['assignedBusinesses'] ?? []),
       assignedBusinessNames: List<String>.from(data['assignedBusinessNames'] ?? []),
+      assignedKermesIds: List<String>.from(data['assignedKermesIds'] ?? []), // Note: In case we save directly to user, though we fetch separately most times
       isActive: data['isActive'] ?? true,
+    );
+  }
+
+  /// Create a copy with updated fields
+  DriverInfo copyWith({
+    List<String>? assignedKermesIds,
+  }) {
+    return DriverInfo(
+      id: id,
+      email: email,
+      name: name,
+      phone: phone,
+      role: role,
+      driverType: driverType,
+      assignedBusinesses: assignedBusinesses,
+      assignedBusinessNames: assignedBusinessNames,
+      assignedKermesIds: assignedKermesIds ?? this.assignedKermesIds,
+      isActive: isActive,
     );
   }
 
@@ -121,14 +142,33 @@ class DriverNotifier extends Notifier<DriverState> {
           // 2. OR they have role == 'driver' (dedicated driver)
           final isDriver = data['isDriver'] == true || data['role'] == 'driver';
           
-          if (isDriver && (data['assignedBusinesses'] as List?)?.isNotEmpty == true) {
-            final driverInfo = DriverInfo.fromFirestore(adminDoc);
-            state = DriverState(
-              driverInfo: driverInfo,
-              isLoading: false,
-              isDriver: true,
-            );
-            return;
+          if (isDriver) {
+            DriverInfo driverInfo = DriverInfo.fromFirestore(adminDoc);
+            
+            // Check for Kermes assignments
+            try {
+              final kermesQuery = await FirebaseFirestore.instance
+                  .collection('kermes_events')
+                  .where('assignedDrivers', arrayContains: uid)
+                  .get();
+                  
+              final kermesIds = kermesQuery.docs.map((doc) => doc.id).toList();
+              if (kermesIds.isNotEmpty) {
+                driverInfo = driverInfo.copyWith(assignedKermesIds: kermesIds);
+              }
+            } catch (kermesError) {
+              print('Error fetching Kermes assignments: \$kermesError');
+            }
+
+            // A driver must have either regular businesses OR kermes events assigned
+            if (driverInfo.assignedBusinesses.isNotEmpty || driverInfo.assignedKermesIds.isNotEmpty) {
+              state = DriverState(
+                driverInfo: driverInfo,
+                isLoading: false,
+                isDriver: true,
+              );
+              return;
+            }
           }
         }
       }

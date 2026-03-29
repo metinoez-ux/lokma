@@ -167,7 +167,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6A0DAD)),
-                  child: const Text('Tamam', style: TextStyle(color: Colors.white)),
+                  child: const Text(tr('Tamam'), style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -207,7 +207,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              const Text('Parayı müşteriden tahsil ettiniz mi?', style: TextStyle(fontSize: 16)),
+              const Text(tr('Parayı müşteriden tahsil ettiniz mi?'), style: TextStyle(fontSize: 16)),
             ],
           ),
           actions: [
@@ -629,7 +629,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                   lng: null,
                 ),
                 icon: const Icon(Icons.navigation, color: Colors.white, size: 18),
-                label: const Text('Hassas Konuma Git', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                label: const Text(tr('Hassas Konuma Git'), style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -850,7 +850,7 @@ class _KermesActiveDeliveryScreenState extends State<KermesActiveDeliveryScreen>
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('👤 Müşteri', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                                      Text(tr('👤 Müşteri'), style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
                                       const SizedBox(height: 4),
                                       Text(order.customerPhone, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
                                       const SizedBox(height: 6),

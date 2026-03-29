@@ -52,10 +52,34 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   bool _showSearchBar = false;
   String _menuSearchQuery = '';
 
+  List<({int absoluteIndex, String title, IconData icon, String subtitle})> get _availableModes {
+    if (widget.event.isMenuOnly) return [];
+    final modes = <({int absoluteIndex, String title, IconData icon, String subtitle})>[];
+    if (widget.event.hasDelivery) {
+      modes.add((absoluteIndex: 0, title: 'Evine', icon: Icons.delivery_dining, subtitle: 'gelsin'));
+    }
+    if (widget.event.hasTakeaway) {
+      modes.add((absoluteIndex: 1, title: 'Gel Al', icon: Icons.shopping_bag_outlined, subtitle: 'Sıra bekleme'));
+    }
+    if (widget.event.hasDineIn) {
+      modes.add((absoluteIndex: 2, title: '(Masa)', icon: Icons.restaurant, subtitle: 'Kermeste ye'));
+    }
+    return modes;
+  }
+
   @override
   void initState() {
     super.initState();
-    _deliveryModeIndex = widget.initialDeliveryMode;
+    final modes = _availableModes;
+    if (modes.isNotEmpty) {
+      if (modes.any((m) => m.absoluteIndex == widget.initialDeliveryMode)) {
+        _deliveryModeIndex = widget.initialDeliveryMode;
+      } else {
+        _deliveryModeIndex = modes.first.absoluteIndex;
+      }
+    } else {
+      _deliveryModeIndex = widget.initialDeliveryMode; // Fallback
+    }
     
     _scrollController.addListener(() {
       final shouldShow = _scrollController.offset > 150;
@@ -471,9 +495,12 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     
-    // Grouped items
     final grouped = _groupedMenu;
     final menuKeys = _sectionKeys;
+    
+    final availableModes = _availableModes;
+    final selectedTabIndex = availableModes.indexWhere((m) => m.absoluteIndex == _deliveryModeIndex);
+    final validTabIndex = selectedTabIndex >= 0 ? selectedTabIndex : 0;
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -539,19 +566,40 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       ),
                     ),
                   )
-                : ThreeDimensionalPillTabBar(
-                    margin: EdgeInsets.zero,
-                    activeColor: lokmaPink,
-                    selectedIndex: _deliveryModeIndex,
-                    tabs: [
-                      TabItem(title: 'Kurye', icon: Icons.delivery_dining, subtitle: 'Standart'),
-                      TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined, subtitle: 'Sıra bekleme'),
-                      TabItem(title: '(Masa)', icon: Icons.restaurant, subtitle: 'Kermeste ye'),
-                    ],
-                    onTabSelected: (index) {
-                      setState(() => _deliveryModeIndex = index);
-                    },
-                  ),
+                : (widget.event.isMenuOnly || availableModes.isEmpty)
+                   ? Text(
+                       'Menü',
+                       style: TextStyle(
+                         color: textPrimary,
+                         fontSize: 16,
+                         fontWeight: FontWeight.w600,
+                       ),
+                     )
+                   : (availableModes.length == 1)
+                       ? Row(
+                           mainAxisSize: MainAxisSize.min,
+                           children: [
+                             Icon(availableModes.first.icon, color: lokmaPink, size: 20),
+                             const SizedBox(width: 8),
+                             Text(
+                               availableModes.first.title,
+                               style: TextStyle(
+                                 color: textPrimary,
+                                 fontSize: 16,
+                                 fontWeight: FontWeight.w600,
+                               ),
+                             ),
+                           ],
+                         )
+                       : ThreeDimensionalPillTabBar(
+                           margin: EdgeInsets.zero,
+                           activeColor: lokmaPink,
+                           selectedIndex: validTabIndex,
+                           tabs: availableModes.map((m) => TabItem(title: m.title, icon: m.icon, subtitle: m.subtitle)).toList(),
+                           onTabSelected: (index) {
+                             setState(() => _deliveryModeIndex = availableModes[index].absoluteIndex);
+                           },
+                         ),
             titleSpacing: 0,
             centerTitle: true,
             actions: [
@@ -666,119 +714,125 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 child: Column(
                   children: [
                     Expanded(
-                      child: SingleChildScrollView(
-                        controller: _chipScrollController,
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
-                        child: Stack(
-                          alignment: Alignment.centerLeft,
-                          children: [
-                            // 1. Sliding pill indicator (behind text)
-                            if (_pillInitialized)
-                              AnimatedPositioned(
-                                duration: const Duration(milliseconds: 400),
-                                curve: Curves.easeOutBack,
-                                left: _pillLeft,
-                                top: 0,
-                                bottom: 0,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeOutBack,
-                                  width: _pillWidth,
-                                  decoration: BoxDecoration(
-                                    color: isDark ? Colors.white : const Color(0xFF3E3E3F),
-                                    borderRadius: BorderRadius.circular(50),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            // 2. Chip texts row (on top of pill)
-                            Row(
-                              key: _chipRowKey,
-                              children: _categories.map((category) {
-                                _tabKeys.putIfAbsent(category, () => GlobalKey());
-                                final isSelected = category == _selectedCategory;
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      HapticFeedback.selectionClick();
-                                      _selectCategory(category);
-                                    },
-                                    child: Container(
-                                      key: _tabKeys[category],
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                                      decoration: BoxDecoration(
-                                        color: Colors.transparent,
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          AnimatedDefaultTextStyle(
-                                            duration: const Duration(milliseconds: 300),
-                                            curve: Curves.easeOutCubic,
-                                            style: TextStyle(
-                                              color: isSelected 
-                                                ? (isDark ? Colors.black : Colors.white) 
-                                                : (isDark ? Colors.white70 : Colors.black54),
-                                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                              fontSize: 14,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              controller: _chipScrollController,
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
+                              child: Stack(
+                                alignment: Alignment.centerLeft,
+                                children: [
+                                  // 1. Sliding pill indicator (behind text)
+                                  if (_pillInitialized)
+                                    AnimatedPositioned(
+                                      duration: const Duration(milliseconds: 400),
+                                      curve: Curves.easeOutBack,
+                                      left: _pillLeft,
+                                      top: 0,
+                                      bottom: 0,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 400),
+                                        curve: Curves.easeOutBack,
+                                        width: _pillWidth,
+                                        decoration: BoxDecoration(
+                                          color: isDark ? Colors.white : const Color(0xFF3E3E3F),
+                                          borderRadius: BorderRadius.circular(50),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
                                             ),
-                                            child: Text(category),
-                                          ),
-                                          // Cart count badge per category (business_detail_screen pattern)
-                                          Builder(builder: (context) {
-                                            final kermesCart = ref.watch(kermesCartProvider);
-                                            final catCartCount = category == 'Alle'
-                                                ? kermesCart.totalItems
-                                                : kermesCart.items
-                                                    .where((ci) => ci.menuItem.category == category)
-                                                    .fold<int>(0, (sum, ci) => sum + ci.quantity);
-                                            if (catCartCount <= 0) return const SizedBox.shrink();
-                                            return Padding(
-                                              padding: const EdgeInsets.only(left: 6),
-                                              child: AnimatedContainer(
-                                                duration: const Duration(milliseconds: 300),
-                                                curve: Curves.easeOutBack,
-                                                width: 20,
-                                                height: 20,
-                                                decoration: BoxDecoration(
-                                                  color: isSelected
-                                                      ? (isDark ? Colors.black87 : Colors.white)
-                                                      : Colors.red,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                alignment: Alignment.center,
-                                                child: Text(
-                                                  '$catCartCount',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: isSelected
-                                                        ? (isDark ? Colors.white : Colors.black87)
-                                                        : Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          }),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
+                                  // 2. Chip texts row (on top of pill)
+                                  Row(
+                                    key: _chipRowKey,
+                                    children: _categories.map((category) {
+                                      _tabKeys.putIfAbsent(category, () => GlobalKey());
+                                      final isSelected = category == _selectedCategory;
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 6),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            HapticFeedback.selectionClick();
+                                            _selectCategory(category);
+                                          },
+                                          child: Container(
+                                            key: _tabKeys[category],
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                                            decoration: BoxDecoration(
+                                              color: Colors.transparent,
+                                              borderRadius: BorderRadius.circular(50),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                AnimatedDefaultTextStyle(
+                                                  duration: const Duration(milliseconds: 300),
+                                                  curve: Curves.easeOutCubic,
+                                                  style: TextStyle(
+                                                    color: isSelected 
+                                                      ? (isDark ? Colors.black : Colors.white) 
+                                                      : (isDark ? Colors.white70 : Colors.black54),
+                                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                    fontSize: 14,
+                                                  ),
+                                                  child: Text(category),
+                                                ),
+                                                // Cart count badge per category (business_detail_screen pattern)
+                                                Builder(builder: (context) {
+                                                  final kermesCart = ref.watch(kermesCartProvider);
+                                                  final catCartCount = category == 'Alle'
+                                                      ? kermesCart.totalItems
+                                                      : kermesCart.items
+                                                          .where((ci) => ci.menuItem.category == category)
+                                                          .fold<int>(0, (sum, ci) => sum + ci.quantity);
+                                                  if (catCartCount <= 0) return const SizedBox.shrink();
+                                                  return Padding(
+                                                    padding: const EdgeInsets.only(left: 6),
+                                                    child: AnimatedContainer(
+                                                      duration: const Duration(milliseconds: 300),
+                                                      curve: Curves.easeOutBack,
+                                                      width: 20,
+                                                      height: 20,
+                                                      decoration: BoxDecoration(
+                                                        color: isSelected
+                                                            ? (isDark ? Colors.black87 : Colors.white)
+                                                            : Colors.red,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      alignment: Alignment.center,
+                                                      child: Text(
+                                                        '$catCartCount',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: isSelected
+                                                              ? (isDark ? Colors.white : Colors.black87)
+                                                              : Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                   ),
-                                );
-                              }).toList(),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                     const Divider(height: 1, thickness: 1),
@@ -881,7 +935,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             ),
         ],
       ),
-      bottomNavigationBar: _totalItems > 0 ? _buildCartBar() : null,
+      bottomNavigationBar: (_totalItems > 0 && !widget.event.isMenuOnly) ? _buildCartBar() : null,
     );
   }
 
@@ -984,6 +1038,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     
     // + button with image overlay (36px) or standalone (44px)
     Widget buildAddButton({required double size}) {
+      if (widget.event.isMenuOnly) return const SizedBox.shrink();
       return GestureDetector(
         onTap: isAvailable ? () {
           HapticFeedback.mediumImpact();

@@ -299,7 +299,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         title: const Column(
           children: [
             Text('HADEF', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w300, letterSpacing: 2)),
-            Text('Yeni Kermes Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(tr('Yeni Kermes Ekle'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -671,7 +671,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                         children: [
                           Icon(Icons.save),
                           SizedBox(width: 8),
-                          Text('KERMESİ KAYDET', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          Text(tr('KERMESİ KAYDET'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ],
                       ),
               ),

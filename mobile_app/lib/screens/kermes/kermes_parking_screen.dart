@@ -3,6 +3,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as Math;
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -42,6 +45,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   
   // Admin/Personel kontrolü
   bool _isAdmin = false;
+  bool _adminModeActive = false;
   String? _userRole; // ignore: unused_field
   
   // Realtime parking data
@@ -162,7 +166,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
             Expanded(
               child: Text(
                 'Acil Park Anonsu',
-                style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
               ),
             ),
           ],
@@ -178,7 +182,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
             TextField(
               controller: controller,
               maxLines: 3,
-              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Örn: AB-123 plakalı araç acil çekilmeli!',
                 hintStyle: TextStyle(color: Colors.grey[600]),
@@ -195,7 +199,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('İptal', style: TextStyle(color: Colors.grey[400])),
+            child: Text(tr('İptal'), style: TextStyle(color: Colors.grey[400])),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -237,7 +241,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface),
+                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.onSurface),
                 const SizedBox(width: 12),
                 Text(tr('kermes.emergency_announcement_sent')),
               ],
@@ -286,7 +290,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               SizedBox(height: 20),
               Text(
                 'Haritayı Seç',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
               ),
               const SizedBox(height: 20),
               
@@ -341,7 +345,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         decoration: BoxDecoration(
           color: _cardBg(isDark),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -359,7 +363,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface)),
+                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
                   Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                 ],
               ),
@@ -371,7 +375,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                   color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text('Varsayılan', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
+                child: const Text(tr('Varsayılan'), style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
               ),
             const SizedBox(width: 8),
             Icon(Icons.arrow_forward_ios, color: Colors.grey[600], size: 16),
@@ -405,6 +409,32 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     }
   }
 
+  // Koordinat cozumleme: varsa direkt kullan, yoksa geocode et
+  Future<List<double>?> _resolveCoordinates(KermesParkingInfo info, String address) async {
+    if (info.lat != null && info.lng != null) {
+      return [info.lat!, info.lng!];
+    }
+    try {
+      final locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        return [locations.first.latitude, locations.first.longitude];
+      }
+    } catch (e) {
+      debugPrint('Geocoding hatasi: $e');
+    }
+    return null;
+  }
+
+  Future<void> _launchStreetView(double lat, double lng) async {
+    // Google Street View -- harici Safari'de acar (guvenilir, login sorunu yok)
+    final String streetViewUrl = 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$lat,$lng';
+    final url = Uri.parse(streetViewUrl);
+    
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -416,8 +446,10 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         color: _darkBg(isDark),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
+      child: Stack(
         children: [
+          Column(
+            children: [
           // Handle
           const SizedBox(height: 12),
           Center(
@@ -470,44 +502,51 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Park İmkanları',
+                        '${widget.event.title} - ${widget.event.city}',
                         style: TextStyle(
-                          fontSize: 18, 
-                          fontWeight: FontWeight.w600, 
-                          color: Theme.of(context).colorScheme.surface
+                          fontSize: 16, 
+                          fontWeight: FontWeight.w700, 
+                          color: Theme.of(context).colorScheme.onSurface,
+                          height: 1.2,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        '${_parkingList.length} park alanı',
-                        style: TextStyle(fontSize: 13, color: subtleTextColor),
-                      ),
-                    ],
-                  ),
-                ),
-                // City / Location tag 
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.location_on, color: subtleTextColor, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        widget.event.city,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: subtleTextColor,
-                        ),
+                        '${DateFormat('dd.MM.').format(widget.event.startDate)} - ${DateFormat('dd.MM.yyyy').format(widget.event.endDate)}',
+                        style: TextStyle(fontSize: 13, color: subtleTextColor, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
+                // Admin toggle button (sadece admin ise gorunur)
+                if (_isAdmin)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() => _adminModeActive = !_adminModeActive);
+                      HapticFeedback.mediumImpact();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _adminModeActive
+                          ? const Color(0xFF2563EB).withValues(alpha: 0.15)
+                          : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+                        shape: BoxShape.circle,
+                        border: _adminModeActive
+                          ? Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.4))
+                          : null,
+                      ),
+                      child: Icon(
+                        Icons.admin_panel_settings,
+                        size: 20,
+                        color: _adminModeActive ? const Color(0xFF2563EB) : Colors.grey[500],
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 4),
                 // Close button
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
@@ -517,7 +556,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.close, size: 20, color: Theme.of(context).colorScheme.surface),
+                    child: Icon(Icons.close, size: 20, color: Theme.of(context).colorScheme.onSurface),
                   ),
                 ),
               ],
@@ -528,7 +567,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           Divider(color: isDark ? Colors.grey[800] : Colors.grey[200], height: 1),
           
           // Admin Actions Header (if admin)
-          if (_isAdmin)
+          if (_adminModeActive)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
@@ -547,7 +586,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         children: [
                           Icon(Icons.add_location_alt, color: const Color(0xFF2563EB), size: 16),
                           const SizedBox(width: 6),
-                          const Text('Park Ekle', style: TextStyle(color: Color(0xFF2563EB), fontSize: 13, fontWeight: FontWeight.w600)),
+                          const Text(tr('Park Ekle'), style: TextStyle(color: Color(0xFF2563EB), fontSize: 13, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -566,7 +605,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         children: [
                           const Icon(Icons.campaign, color: Colors.red, size: 16),
                           const SizedBox(width: 6),
-                          const Text('Acil Anons', style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w600)),
+                          const Text(tr('Acil Anons'), style: TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -601,7 +640,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     Expanded(
                       child: Text(
                         _generalParkingNote,
-                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 14, height: 1.4),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, height: 1.4),
                       ),
                     ),
                   ],
@@ -637,7 +676,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       'Park bilgisi bulunamadı',
                       style: TextStyle(color: Colors.grey[500], fontSize: 16),
                     ),
-                    if (_isAdmin) ...[
+                    if (_adminModeActive) ...[
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
                         onPressed: _showAddParkingDialog,
@@ -654,22 +693,31 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
             ),
           
           SliverToBoxAdapter(child: SizedBox(height: 100)), // FAB için boşluk
-        ],
-      ),
+              ], // Closes slivers
+            ), // Closes CustomScrollView
+          ), // Closes Expanded
+        ], // Closes Column children
+      ), // Closes Column
+      
       // Admin için Floating Action Button
-      floatingActionButton: _isAdmin ? Container(
-        margin: EdgeInsets.only(bottom: 16),
-        child: FloatingActionButton.extended(
-          onPressed: _showAddParkingDialogFull,
-          backgroundColor: Color(0xFF2563EB),
-          icon: Icon(Icons.add_location_alt, color: Theme.of(context).colorScheme.surface),
-          label: Text('Park Ekle', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600)),
+      if (_adminModeActive)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 16,
+          child: Center(
+            child: FloatingActionButton.extended(
+              onPressed: _showAddParkingDialogFull,
+              backgroundColor: const Color(0xFF2563EB),
+              icon: Icon(Icons.add_location_alt, color: Colors.white),
+              label: Text(tr('Park Ekle'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ),
         ),
-      ) : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
-  
+      ], // Closes Stack children
+    ), // Closes Stack
+  ); // Closes Container
+}
   /// Collapsible park kartı
   Widget _buildCollapsibleParkCard(KermesParkingInfo info, int index, bool isExpanded) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -718,7 +766,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     child: Center(
                       child: Text(
                         'P${index + 1}',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.surface),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white),
                       ),
                     ),
                   ),
@@ -730,7 +778,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       children: [
                         Text(
                           info.street.isNotEmpty ? info.street : 'Park Alanı ${index + 1}',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface),
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -780,71 +828,232 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           const Divider(color: Colors.white10),
           const SizedBox(height: 8),
           
-          // Not varsa göster
+          // Not varsa goster, admin modunda duzenlenebilir
           if (info.note != null && info.note!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.amber, size: 18),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      info.note!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13),
+            GestureDetector(
+              onTap: _adminModeActive ? () => _editParkingNote(index, info.note ?? '') : null,
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
+                  ],
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
                   ),
-                ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      // Sol Vurgu Cizgisi
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: 4,
+                        child: Container(color: Colors.amber),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Ikon Containeri
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.info_rounded, color: Colors.amber, size: 20),
+                            ),
+                            const SizedBox(width: 14),
+                            // Yazi Kismi
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Park Notu',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    info.note!,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (_adminModeActive)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.edit_rounded,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else if (_adminModeActive)
+            GestureDetector(
+              onTap: () => _editParkingNote(index, ''),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.6),
+                    style: BorderStyle.solid,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.primary, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Park notu ekle...',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           
-          // Resimler (blob URL'leri filtrele)
-          Builder(builder: (context) {
-            final validImages = info.images.where((url) => 
-              url.startsWith('http://') || url.startsWith('https://')
-            ).where((url) => !url.contains('blob:')).toList();
-            
-            if (validImages.isEmpty) return const SizedBox.shrink();
-            
-            return Column(
-              children: [
-                SizedBox(
-                  height: 100,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: validImages.length,
-                    itemBuilder: (context, imgIndex) {
-                      return GestureDetector(
-                        onTap: () => _showFullScreenImage(context, validImages[imgIndex]),
+          // Harita Onizlemesi + Look Around / Street View
+          // Geocoding ile koordinat cozup OSM tile gosterir (API key gerektirmez)
+          FutureBuilder<List<double>?>(
+            future: _resolveCoordinates(info, address),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data == null) {
+                // Yukleniyor veya hata -- placeholder goster
+                return Container(
+                  height: 140,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _cardBg(isDark),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.map, color: Colors.white54, size: 36),
+                        SizedBox(height: 6),
+                        Text(tr('Harita yukleniyor...'), style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final lat = snapshot.data![0];
+              final lng = snapshot.data![1];
+              // Google Street View Static API -- gercek sokak goruntusu
+              final streetViewUrl = 'https://maps.googleapis.com/maps/api/streetview?size=600x300&location=$lat,$lng&key=AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
+
+              return GestureDetector(
+                onTap: () => _launchStreetView(lat, lng),
+                child: Container(
+                  height: 140,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: _cardBg(isDark),
+                    image: DecorationImage(
+                      image: NetworkImage(streetViewUrl),
+                      fit: BoxFit.cover,
+                      onError: (exception, stackTrace) {},
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Karartma efekti
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.black.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      // 3D Gezinme Rozeti
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
                         child: Container(
-                          width: 100,
-                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: _cardBg(isDark),
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                           ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Image.network(
-                            validImages[imgIndex],
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => 
-                              const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.streetview, color: Colors.white, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Street View',
+                                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-              ],
-            );
-          }),
+              );
+            },
+          ),
           
           // Aksiyon butonları
           Row(
@@ -880,7 +1089,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 icon: const Icon(Icons.copy, color: Colors.grey),
               ),
               // Admin için düzenle/sil
-              if (_isAdmin) ...[
+              if (_adminModeActive) ...[
                 IconButton(
                   onPressed: () => _showEditParkingDialog(index),
                   icon: const Icon(Icons.edit, color: Colors.blue),
@@ -909,14 +1118,14 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: _surfaceDark(isDark),
-        title: Text('Yeni Park Alanı', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+        title: Text(tr('Yeni Park Alanı'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: streetController,
-                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Sokak/Cadde',
                   labelStyle: TextStyle(color: Colors.grey[400]),
@@ -931,7 +1140,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                   Expanded(
                     child: TextField(
                       controller: postalCodeController,
-                      style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: 'Posta Kodu',
                         labelStyle: TextStyle(color: Colors.grey[400]),
@@ -946,7 +1155,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     flex: 2,
                     child: TextField(
                       controller: cityController,
-                      style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: 'Şehir',
                         labelStyle: TextStyle(color: Colors.grey[400]),
@@ -961,7 +1170,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               SizedBox(height: 12),
               TextField(
                 controller: noteController,
-                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 maxLines: 2,
                 decoration: InputDecoration(
                   labelText: 'Not (opsiyonel)',
@@ -977,7 +1186,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('İptal', style: TextStyle(color: Colors.grey[400])),
+            child: Text(tr('İptal'), style: TextStyle(color: Colors.grey[400])),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1079,12 +1288,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     // Geri butonu
                     IconButton(
                       onPressed: () => Navigator.pop(context, false),
-                      icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface, size: 22),
+                      icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.onSurface, size: 22),
                     ),
                     Expanded(
                       child: Text(
                         'Yeni Park Alanı',
-                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -1101,7 +1310,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // === HIZLI EKLEME BUTONLARI ===
-                      Text('🚀 Hızlı Ekle', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(tr('🚀 Hızlı Ekle'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -1165,12 +1374,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                 child: Column(
                                   children: [
                                     isGettingLocation
-                                        ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2))
-                                        : Icon(Icons.my_location, color: Theme.of(context).colorScheme.surface, size: 24),
+                                        ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onSurface, strokeWidth: 2))
+                                        : Icon(Icons.my_location, color: Theme.of(context).colorScheme.onSurface, size: 24),
                                     SizedBox(height: 8),
                                     Text(
                                       isGettingLocation ? 'Alınıyor...' : 'GPS ile Ekle',
-                                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.w500),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                 ),
@@ -1229,11 +1438,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                 ),
                                 child: Column(
                                   children: [
-                                    Icon(Icons.business, color: Theme.of(context).colorScheme.surface, size: 24),
+                                    Icon(Icons.business, color: Theme.of(context).colorScheme.onSurface, size: 24),
                                     SizedBox(height: 8),
                                     Text(
                                       'Kermes Adresi',
-                                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.w500),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                 ),
@@ -1246,7 +1455,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       SizedBox(height: 24),
                       
                       // === GOOGLE PLACES ARAMA ===
-                      Text('🔍 Adres Ara (Google)', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(tr('🔍 Adres Ara (Google)'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 12),
                       GooglePlaceAutoCompleteTextField(
                         textEditingController: addressSearchController,
@@ -1260,7 +1469,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                           prefixIcon: Icon(Icons.search, color: Colors.grey),
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
-                        textStyle: TextStyle(color: Theme.of(context).colorScheme.surface),
+                        textStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         debounceTime: 400,
                         countries: const ['de'],
                         isLatLngRequired: false,
@@ -1305,7 +1514,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                 Expanded(
                                   child: Text(
                                     prediction.description ?? '',
-                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 14),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                                   ),
                                 ),
                               ],
@@ -1320,11 +1529,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       SizedBox(height: 24),
                       
                       // === ADRES BİLGİLERİ ===
-                      Text('📍 Adres Bilgileri', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(tr('📍 Adres Bilgileri'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                       SizedBox(height: 12),
                       TextField(
                         controller: streetController,
-                        style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         decoration: InputDecoration(
                           labelText: 'Sokak / Cadde',
                           hintText: 'Örn: Hauptstraße 15',
@@ -1342,7 +1551,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                           Expanded(
                             child: TextField(
                               controller: postalCodeController,
-                              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'Posta Kodu',
@@ -1360,7 +1569,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             flex: 2,
                             child: TextField(
                               controller: cityController,
-                              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                               decoration: InputDecoration(
                                 labelText: 'Şehir',
                                 hintText: 'Hückelhoven',
@@ -1378,11 +1587,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       SizedBox(height: 24),
                       
                       // === NOT ===
-                      Text('📝 Açıklama', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(tr('📝 Açıklama'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                       SizedBox(height: 12),
                       TextField(
                         controller: noteController,
-                        style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         maxLines: 3,
                         decoration: InputDecoration(
                           hintText: 'Park hakkında bilgi ekleyin...\nÖrn: Cadde boyu sağlı sollu park edilebilir.',
@@ -1396,7 +1605,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       SizedBox(height: 24),
                       
                       // === RESİMLER ===
-                      Text('📷 Resimler (Max 3)', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(tr('📷 Resimler (Max 3)'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 12,
@@ -1430,7 +1639,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                       color: Colors.red,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(Icons.close, color: Theme.of(context).colorScheme.surface, size: 16),
+                                    child: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface, size: 16),
                                   ),
                                 ),
                               ),
@@ -1459,7 +1668,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                   children: [
                                     Icon(Icons.add_photo_alternate, color: Colors.grey[400], size: 28),
                                     const SizedBox(height: 4),
-                                    Text('Ekle', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                                    Text(tr('Ekle'), style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                                   ],
                                 ),
                               ),
@@ -1540,12 +1749,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2)),
+                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onSurface, strokeWidth: 2)),
                                 SizedBox(width: 12),
-                                Text('Yükleniyor...', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16)),
+                                Text(tr('Yükleniyor...'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
                               ],
                             )
-                          : Text('Park Alanı Ekle', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                          : Text(tr('Park Alanı Ekle'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ),
@@ -1569,7 +1778,78 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     }
   }
   
-  /// Park alanı düzenle dialog - resim ekleme/silme özelliği ile
+  /// Park notu duzenleme dialog'u
+  Future<void> _editParkingNote(int index, String currentNote) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controller = TextEditingController(text: currentNote);
+    
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _surfaceDark(isDark),
+        title: Text(tr('Park Notu'), style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface, fontSize: 16)),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface),
+          decoration: InputDecoration(
+            hintText: 'ornek: Burasi artik doldu',
+            hintStyle: TextStyle(color: Colors.grey[600]),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(tr('Iptal'), style: TextStyle(color: Colors.grey)),
+          ),
+          if (currentNote.isNotEmpty)
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, ''),
+              child: Text(tr('Notu Sil'), style: TextStyle(color: Colors.red)),
+            ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB)),
+            child: Text(tr('Kaydet'), style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    
+    if (result == null) return; // iptal edildi
+    
+    try {
+      final parkingData = _parkingList.map((p) => p.toJson()).toList();
+      parkingData[index]['note'] = result;
+      
+      await FirebaseFirestore.instance
+          .collection('kermes_events')
+          .doc(widget.event.id)
+          .update({'parking': parkingData});
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.isEmpty ? 'Not silindi' : 'Not guncellendi'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Hata: $e')), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+  
+  /// Park alani duzenle dialog - resim ekleme/silme ozelligi ile
   Future<void> _showEditParkingDialog(int index) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final info = _parkingList[index];
@@ -1619,12 +1899,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pop(context, false),
-                        icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface, size: 22),
+                        icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.onSurface, size: 22),
                       ),
                       Expanded(
                         child: Text(
                           'Park Alanı ${index + 1} Düzenle',
-                          style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -1640,11 +1920,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Adres Bilgileri
-                        Text('📍 Adres Bilgileri', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                        Text(tr('📍 Adres Bilgileri'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                         SizedBox(height: 12),
                         TextField(
                           controller: streetController,
-                          style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                           decoration: InputDecoration(
                             labelText: 'Sokak / Cadde',
                             labelStyle: TextStyle(color: Colors.grey[400]),
@@ -1660,7 +1940,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             Expanded(
                               child: TextField(
                                 controller: postalCodeController,
-                                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: 'Posta Kodu',
@@ -1676,7 +1956,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                               flex: 2,
                               child: TextField(
                                 controller: cityController,
-                                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                                 decoration: InputDecoration(
                                   labelText: 'Şehir',
                                   labelStyle: TextStyle(color: Colors.grey[400]),
@@ -1692,11 +1972,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         SizedBox(height: 24),
                         
                         // Not
-                        Text('📝 Açıklama', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                        Text(tr('📝 Açıklama'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                         SizedBox(height: 12),
                         TextField(
                           controller: noteController,
-                          style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                           maxLines: 3,
                           decoration: InputDecoration(
                             hintText: 'Park hakkında bilgi...',
@@ -1710,7 +1990,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         SizedBox(height: 24),
                         
                         // Resimler
-                        Text('📷 Resimler', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                        Text(tr('📷 Resimler'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 12,
@@ -1744,7 +2024,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                         color: Colors.red,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Icon(Icons.close, color: Theme.of(context).colorScheme.surface, size: 16),
+                                      child: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface, size: 16),
                                     ),
                                   ),
                                 ),
@@ -1778,7 +2058,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                         color: Colors.red,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Icon(Icons.close, color: Theme.of(context).colorScheme.surface, size: 16),
+                                      child: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface, size: 16),
                                     ),
                                   ),
                                 ),
@@ -1807,7 +2087,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                     children: [
                                       Icon(Icons.add_photo_alternate, color: Colors.grey[400], size: 28),
                                       const SizedBox(height: 4),
-                                      Text('Ekle', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                                      Text(tr('Ekle'), style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                                     ],
                                   ),
                                 ),
@@ -1890,12 +2170,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             ? Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2)),
+                                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onSurface, strokeWidth: 2)),
                                   SizedBox(width: 12),
-                                  Text('Kaydediliyor...', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16)),
+                                  Text(tr('Kaydediliyor...'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
                                 ],
                               )
-                            : Text('Değişiklikleri Kaydet', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                            : Text(tr('Değişiklikleri Kaydet'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ),
@@ -1926,12 +2206,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: _surfaceDark(isDark),
-        title: Text('Park Alanını Sil', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
-        content: const Text('Bu park alanını silmek istediğinize emin misiniz?', style: TextStyle(color: Colors.grey)),
+        title: Text(tr('Park Alanını Sil'), style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: const Text(tr('Bu park alanını silmek istediğinize emin misiniz?'), style: TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('İptal', style: TextStyle(color: Colors.grey[400])),
+            child: Text(tr('İptal'), style: TextStyle(color: Colors.grey[400])),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1982,7 +2262,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.surface),
+              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -1996,3 +2276,4 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     );
   }
 }
+

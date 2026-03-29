@@ -886,7 +886,8 @@
     "delete_parking_area": "Eliminar zona de aparcamiento",
     "confirm_delete_parking_area": "¿Está seguro de que desea eliminar esta zona de aparcamiento?",
     "parking_area_deleted": "Zona de aparcamiento eliminada",
-    "pinch_to_zoom": "Pellizcar para acercar"
+    "pinch_to_zoom": "Pellizcar para acercar",
+    "events_found_count": "{} kermeses encontrados"
   },
   "marketplace": {
     "available_now": "Disponible ahora",
@@ -1238,7 +1239,9 @@
     "without_mms": "Sin Carne Separada Mecánicamente",
     "pure_meat": "100% Carne Pura",
     "gluten_free": "Sin Gluten",
-    "no_wheat": "Sin Proteínas de Trigo"
+    "no_wheat": "Sin Proteínas de Trigo",
+    "state_only": "Estado / Provincia",
+    "all_country": "Todo el País"
   },
   "navigation": {
     "food": "Comida",

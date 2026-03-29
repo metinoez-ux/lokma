@@ -1990,7 +1990,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   }
 
   Widget _buildMolaButton() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+
 
     // Update countdown
     if (_courierOnBreak && _courierBreakUntil != null) {
