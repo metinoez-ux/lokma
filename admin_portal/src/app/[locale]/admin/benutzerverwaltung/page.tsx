@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, limit, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 export interface UnifiedUser {
@@ -46,71 +46,84 @@ export default function BenutzerverwaltungPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            let fetchedUsers: UnifiedUser[] = [];
+            const uniqueUsersMap = new Map<string, UnifiedUser>();
 
-            // 1. Fetch Admins Collection (Drivers, Staff, Super Admins, Lokma Admins, Kermes Admins)
+            // 1. Fetch Admins Collection
             let adminsQuery = query(collection(db, 'admins'));
             if (!isSuperAdmin) {
-                // If normal admin, only fetch their own business/kermes staff
                 if (admin?.businessId) {
                     adminsQuery = query(collection(db, 'admins'), where('businessId', '==', admin.businessId));
                 } else if (admin?.kermesId) {
                     adminsQuery = query(collection(db, 'admins'), where('kermesId', '==', admin.kermesId));
                 } else {
-                    // Fallback if they don't have businessId/kermesId, fetch nothing to be safe
                     adminsQuery = query(collection(db, 'admins'), where('businessId', '==', 'NONE')); 
                 }
             }
             
             const adminsSnap = await getDocs(adminsQuery);
-            const adminsData: UnifiedUser[] = adminsSnap.docs.map(doc => {
+            adminsSnap.docs.forEach(doc => {
                 const data = doc.data();
+                const email = data.email || '';
                 
-                // Determine normalized role
                 let normalizedRole = 'staff';
                 if (data.adminType === 'super') normalizedRole = 'super';
                 else if (data.adminType === 'admin' || data.adminType === 'lokma_admin') normalizedRole = 'lokma_admin';
                 else if (data.adminType === 'kermes_admin') normalizedRole = 'kermes_admin';
                 else if (data.adminType === 'driver' || (data.roles && data.roles.includes('driver'))) normalizedRole = 'driver';
 
-                return {
-                    id: doc.id,
-                    source: 'admins',
-                    email: data.email || '',
-                    displayName: data.displayName || data.name || data.email?.split('@')[0] || 'Bilinmiyor',
-                    phone: data.phone || data.phoneNumber || '',
-                    photoURL: data.photoURL || '',
-                    role: normalizedRole,
-                    businessId: data.businessId,
-                    kermesId: data.kermesId,
-                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
-                    isActive: data.isActive !== false,
-                };
-            });
-
-            fetchedUsers = [...fetchedUsers, ...adminsData];
-
-            // 2. Fetch Users Collection (Customers) - ONLY for Super Admin
-            if (isSuperAdmin) {
-                // For performance, limit to recent 500 customers initially
-                const usersQ = query(collection(db, 'users'), limit(500));
-                const usersSnap = await getDocs(usersQ);
-                const customersData: UnifiedUser[] = usersSnap.docs.map(doc => {
-                    const data = doc.data();
-                    return {
+                // We prioritize deduping by email if available, otherwise by doc ID
+                const uniqueKey = email.toLowerCase() || doc.id;
+                
+                if (uniqueUsersMap.has(uniqueKey)) {
+                    const existing = uniqueUsersMap.get(uniqueKey)!;
+                    // Upgrade role if duplicate exists with a lower priority role
+                    if (normalizedRole === 'super' && existing.role !== 'super') {
+                        existing.role = 'super';
+                    }
+                } else {
+                    uniqueUsersMap.set(uniqueKey, {
                         id: doc.id,
-                        source: 'users',
-                        email: data.email || '',
-                        displayName: data.displayName || data.name || data.firstName || 'Müşteri',
+                        source: 'admins',
+                        email: email,
+                        displayName: data.displayName || data.name || email?.split('@')[0] || 'Bilinmiyor',
                         phone: data.phone || data.phoneNumber || '',
                         photoURL: data.photoURL || '',
-                        role: 'customer',
+                        role: normalizedRole,
+                        businessId: data.businessId,
+                        kermesId: data.kermesId,
                         createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
-                        isActive: true,
-                    };
+                        isActive: data.isActive !== false,
+                    });
+                }
+            });
+
+            // 2. Fetch Users Collection (ONLY for Super Admin)
+            if (isSuperAdmin) {
+                const usersQ = query(collection(db, 'users'), limit(500));
+                const usersSnap = await getDocs(usersQ);
+                usersSnap.docs.forEach(doc => {
+                    const data = doc.data();
+                    const email = data.email || '';
+                    const uniqueKey = email.toLowerCase() || doc.id;
+                    
+                    // Do not overwrite an existing admin/staff record with a basic user record
+                    if (!uniqueUsersMap.has(uniqueKey)) {
+                        uniqueUsersMap.set(uniqueKey, {
+                            id: doc.id,
+                            source: 'users',
+                            email: email,
+                            displayName: data.displayName || data.name || data.firstName || 'Müşteri',
+                            phone: data.phone || data.phoneNumber || '',
+                            photoURL: data.photoURL || '',
+                            role: 'customer',
+                            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+                            isActive: true,
+                        });
+                    }
                 });
-                fetchedUsers = [...fetchedUsers, ...customersData];
             }
+
+            const fetchedUsers = Array.from(uniqueUsersMap.values());
 
             // Sort by recent by default
             fetchedUsers.sort((a, b) => {
@@ -149,35 +162,25 @@ export default function BenutzerverwaltungPage() {
 
     // Handlers
     const handleEditUser = (user: UnifiedUser) => {
-        // Route to the appropriate management page based on role/source
-        if (user.role === 'customer') {
-            router.push(`/admin/customers`); 
-            // In a real app we might push to an exact ID, but sending them to the list is fine for now
-        } else if (user.role === 'driver') {
-            router.push(`/admin/drivers`);
-        } else if (user.role === 'super') {
-            router.push(`/admin/superadmins`);
-        } else if (user.role === 'lokma_admin') {
-            router.push(`/admin/partners`);
-        } else if (user.role === 'kermes_admin') {
-            router.push(`/admin/volunteers`);
-        } else {
-            router.push(`/admin/staff-shifts`);
-        }
+        if (user.role === 'customer') router.push(`/admin/customers`); 
+        else if (user.role === 'driver') router.push(`/admin/drivers`);
+        else if (user.role === 'super') router.push(`/admin/superadmins`);
+        else if (user.role === 'lokma_admin') router.push(`/admin/partners`);
+        else if (user.role === 'kermes_admin') router.push(`/admin/volunteers`);
+        else router.push(`/admin/staff-shifts`);
     };
 
     const getRoleBadgeInfo = (role: string) => {
         switch (role) {
-            case 'super': return { bg: 'bg-red-600/20 text-red-500', label: 'Super Admin' };
-            case 'lokma_admin': return { bg: 'bg-purple-600/20 text-purple-500', label: 'Lokma Partner' };
-            case 'kermes_admin': return { bg: 'bg-orange-600/20 text-orange-500', label: 'Kermes Admin' };
-            case 'driver': return { bg: 'bg-blue-600/20 text-blue-500', label: 'Sürücü (Fahrer)' };
-            case 'staff': return { bg: 'bg-gray-600/20 text-gray-400', label: 'Personel (Staff)' };
-            case 'customer': return { bg: 'bg-green-600/20 text-green-500', label: 'Müşteri (Kunde)' };
-            default: return { bg: 'bg-gray-800 text-gray-400', label: 'Bilinmiyor' };
+            case 'super': return { bg: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', label: 'Super Admin' };
+            case 'lokma_admin': return { bg: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400', label: 'Lokma Partner' };
+            case 'kermes_admin': return { bg: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400', label: 'Kermes Admin' };
+            case 'driver': return { bg: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', label: 'Sürücü (Fahrer)' };
+            case 'staff': return { bg: 'bg-gray-100 text-gray-700 dark:bg-gray-500/30 dark:text-gray-300', label: 'Personel (Staff)' };
+            case 'customer': return { bg: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', label: 'Müşteri (Kunde)' };
+            default: return { bg: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400', label: 'Bilinmiyor' };
         }
     };
-
 
     if (adminLoading) {
         return (
@@ -196,7 +199,7 @@ export default function BenutzerverwaltungPage() {
                 {/* Header & Quick Actions */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Benutzerverwaltung</h1>
                         <p className="text-muted-foreground mt-1">
                             {isSuperAdmin 
                                 ? 'Tüm kullanıcıları, personeli ve iş ortaklarını "C-Level" RBAC görünümü ile yönetin.'
@@ -217,13 +220,13 @@ export default function BenutzerverwaltungPage() {
                             <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50">
                                 {isSuperAdmin && (
                                     <>
-                                        <button onClick={() => router.push('/admin/superadmins')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 transition">👑 Super Admin Ekle</button>
-                                        <button onClick={() => router.push('/admin/partners')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 transition">🏪 Lokma Partner Ekle</button>
-                                        <button onClick={() => router.push('/admin/volunteers')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 transition">🎪 Kermes Partner Ekle</button>
+                                        <button onClick={() => router.push('/admin/superadmins')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👑 Super Admin Ekle</button>
+                                        <button onClick={() => router.push('/admin/partners')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🏪 Lokma Partner Ekle</button>
+                                        <button onClick={() => router.push('/admin/volunteers')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🎪 Kermes Partner Ekle</button>
                                     </>
                                 )}
-                                <button onClick={() => router.push('/admin/drivers')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 transition">🚗 Sürücü (Fahrer) Ekle</button>
-                                <button onClick={() => router.push('/admin/staff-shifts')} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-800 transition">👥 Personel Ekle</button>
+                                <button onClick={() => router.push('/admin/drivers')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🚗 Sürücü (Fahrer) Ekle</button>
+                                <button onClick={() => router.push('/admin/staff-shifts')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👥 Personel Ekle</button>
                             </div>
                         )}
                     </div>
@@ -232,13 +235,13 @@ export default function BenutzerverwaltungPage() {
                 {/* Filters & Search Bar */}
                 <div className="bg-card border border-border rounded-2xl p-4 mb-6 shadow-sm flex flex-col xl:flex-row gap-4">
                     <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
                         <input 
                             type="text" 
                             placeholder="Name, E-Mail oder Telefon suchen..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all"
+                            className="w-full bg-background text-foreground border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all"
                         />
                     </div>
 
@@ -267,20 +270,20 @@ export default function BenutzerverwaltungPage() {
                 {/* Data Table */}
                 <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left border-collapse min-w-max">
                             <thead>
-                                <tr className="bg-gray-800/50 border-b border-border">
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Benutzer</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Kontakt</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Rolle (RBAC)</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Aktionen</th>
+                                <tr className="bg-muted/50 border-b border-border">
+                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Benutzer</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kontakt</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rolle (RBAC)</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Aktionen</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                                             <div className="flex flex-col items-center justify-center gap-3">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-500"></div>
                                                 <p>Kullanıcılar yükleniyor...</p>
@@ -289,7 +292,7 @@ export default function BenutzerverwaltungPage() {
                                     </tr>
                                 ) : filteredUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                                             <div className="text-4xl mb-3">👻</div>
                                             <p>Suche ergab keine Treffer.</p>
                                         </td>
@@ -298,15 +301,15 @@ export default function BenutzerverwaltungPage() {
                                     filteredUsers.map(user => {
                                         const roleInfo = getRoleBadgeInfo(user.role);
                                         return (
-                                            <tr key={user.id} className="hover:bg-gray-800/30 transition-colors group">
+                                            <tr key={user.id} className="hover:bg-muted/30 transition-colors group">
                                                 {/* User Identity Column */}
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center border border-gray-600">
+                                                        <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
                                                             {user.photoURL ? (
                                                                 <img src={user.photoURL} alt={user.displayName} className="h-full w-full object-cover" />
                                                             ) : (
-                                                                <span className="text-gray-300 font-medium text-sm">
+                                                                <span className="text-muted-foreground font-medium text-sm">
                                                                     {user.displayName?.charAt(0)?.toUpperCase() || '?'}
                                                                 </span>
                                                             )}
@@ -320,8 +323,8 @@ export default function BenutzerverwaltungPage() {
 
                                                 {/* Contact Details */}
                                                 <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-300">{user.email || '—'}</div>
-                                                    <div className="text-xs text-gray-500 mt-0.5">{user.phone || '—'}</div>
+                                                    <div className="text-sm text-foreground/80">{user.email || '—'}</div>
+                                                    <div className="text-xs text-muted-foreground mt-0.5">{user.phone || '—'}</div>
                                                 </td>
 
                                                 {/* RBAC Role Tag */}
@@ -331,12 +334,12 @@ export default function BenutzerverwaltungPage() {
                                                             {roleInfo.label}
                                                         </span>
                                                         {user.businessId && user.businessId !== 'NONE' && (
-                                                            <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                                 🏪 Lokma #{user.businessId.slice(0,4)}
                                                             </span>
                                                         )}
                                                         {user.kermesId && user.kermesId !== 'NONE' && (
-                                                            <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                                 🎪 Kermes #{user.kermesId.slice(0,4)}
                                                             </span>
                                                         )}
@@ -345,7 +348,7 @@ export default function BenutzerverwaltungPage() {
 
                                                 {/* Status Tag */}
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${user.isActive ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${user.isActive ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-500 dark:border-green-500/20' : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'}`}>
                                                         <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
                                                         {user.isActive ? 'Aktiv' : 'Inaktiv'}
                                                     </span>
@@ -355,7 +358,7 @@ export default function BenutzerverwaltungPage() {
                                                 <td className="px-6 py-4 text-right">
                                                     <button 
                                                         onClick={() => handleEditUser(user)}
-                                                        className="inline-flex items-center justify-center px-3 py-1.5 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-sm font-medium rounded-lg transition-colors text-white"
+                                                        className="inline-flex items-center justify-center px-3 py-1.5 bg-background hover:bg-muted border border-border text-sm font-medium rounded-lg transition-colors text-foreground"
                                                     >
                                                         Details ➔
                                                     </button>
@@ -369,10 +372,10 @@ export default function BenutzerverwaltungPage() {
                     </div>
                     
                     {!loading && filteredUsers.length > 0 && (
-                        <div className="border-t border-border px-6 py-4 flex items-center justify-between text-sm text-muted-foreground bg-gray-800/30">
+                        <div className="border-t border-border px-6 py-4 flex items-center justify-between text-sm text-muted-foreground bg-muted/20">
                             <div>Toplam <b>{filteredUsers.length}</b> kullanıcı listelendi (Filtre: {roleFilter.toUpperCase()})</div>
                             {isSuperAdmin && roleFilter === 'customer' && (
-                                <div className="text-xs text-yellow-500/80">
+                                <div className="text-xs text-yellow-600 dark:text-yellow-500/80">
                                     💡 Performans için son 500 müşteri gösterilmektedir.
                                 </div>
                             )}
@@ -394,11 +397,11 @@ function FilterPill({ active, label, count, onClick }: { active: boolean; label:
                 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border flex items-center gap-1.5
                 ${active 
                     ? 'bg-pink-600 border-pink-500 text-white shadow-lg shadow-pink-600/20' 
-                    : 'bg-card border-border text-gray-400 hover:text-gray-200 hover:bg-gray-800 hover:border-gray-600'}
+                    : 'bg-background border-border text-foreground hover:bg-muted'}
             `}
         >
             <span>{label}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-gray-800 text-gray-500'}`}>
+            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
                 {count}
             </span>
         </button>
