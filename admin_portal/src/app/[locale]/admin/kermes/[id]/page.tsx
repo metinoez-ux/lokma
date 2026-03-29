@@ -2134,9 +2134,6 @@ export default function KermesDetailPage() {
                                             <button
                                                 key={user.id}
                                                 type="button"
-                                            <button
-                                                key={user.id}
-                                                type="button"
                                                 onClick={() => {
                                                     const newStaff = [...assignedStaff, user.id];
                                                     setAssignedStaff(newStaff);
@@ -2296,9 +2293,6 @@ export default function KermesDetailPage() {
                                 {driverResults.length > 0 && (
                                     <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
                                         {driverResults.map(user => (
-                                            <button
-                                                key={user.id}
-                                                type="button"
                                             <button
                                                 key={user.id}
                                                 type="button"
@@ -3020,7 +3014,6 @@ export default function KermesDetailPage() {
                     });
                 }}
             />
-        </div>
 
             {/* Edit Person Modal */}
             {editPersonData && (
@@ -3111,5 +3104,6 @@ export default function KermesDetailPage() {
                     </div>
                 </div>
             )}
+        </div>
     );
 }
