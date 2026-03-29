@@ -158,10 +158,20 @@ export async function POST(request: NextRequest) {
         // Prepare phone number in E.164 format if provided
         let formattedPhone: string | undefined = undefined;
         if (phone) {
-            // Clean and format phone number
+            // Clean phone number (remove non-digits)
             const cleanedPhone = phone.replace(/\D/g, '');
-            if (cleanedPhone.length >= 10) {
-                formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
+            // Remove leading zero from local number (e.g. 01775710057 -> 1775710057)
+            const localNumber = cleanedPhone.replace(/^0+/, '');
+            
+            if (localNumber.length >= 7) {
+                if (dialCode) {
+                    // Combine dialCode with local number: +49 + 1775710057 = +491775710057
+                    const cleanDialCode = dialCode.startsWith('+') ? dialCode : `+${dialCode}`;
+                    formattedPhone = `${cleanDialCode}${localNumber}`;
+                } else {
+                    // No dialCode provided, assume the number already includes country code
+                    formattedPhone = `+${localNumber}`;
+                }
             }
         }
 
