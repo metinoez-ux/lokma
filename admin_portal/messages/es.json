@@ -4308,7 +4308,11 @@
     "sesame": "Sesamo",
     "yeni_personel_ekle": "Añadir nuevo personal",
     "yeni_surucu_ekle": "Añadir nuevo conductor",
-    "kurumsal_ayarlar": "Ajustes de empresa"
+    "kurumsal_ayarlar": "Ajustes de empresa",
+    "personel_bilgileri": "Detalles del Personal",
+    "ad_soyad": "Nombre Completo",
+    "email_zorunlu": "Correo Electrónico (obligatorio)",
+    "iptal_et": "Cancelar"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrador de empresas",

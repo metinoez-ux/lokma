@@ -4337,7 +4337,11 @@
     "ziyaretcilere_gosterilecek_genel_park_bi": "General park information to be displayed to visitors...",
     "yeni_personel_ekle": "Add New Staff",
     "yeni_surucu_ekle": "Add New Driver",
-    "kurumsal_ayarlar": "Corporate Settings"
+    "kurumsal_ayarlar": "Corporate Settings",
+    "personel_bilgileri": "Personnel Details",
+    "ad_soyad": "Full Name",
+    "email_zorunlu": "Email (required for login)",
+    "iptal_et": "Cancel"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

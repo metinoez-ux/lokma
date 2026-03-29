@@ -4285,7 +4285,11 @@
     "sesame": "Sesamo",
     "yeni_personel_ekle": "Aggiungi nuovo personale",
     "yeni_surucu_ekle": "Aggiungi nuovo autista",
-    "kurumsal_ayarlar": "Impostazioni aziendali"
+    "kurumsal_ayarlar": "Impostazioni aziendali",
+    "personel_bilgileri": "Dettagli Personale",
+    "ad_soyad": "Nome Completo",
+    "email_zorunlu": "Email (obbligatorio)",
+    "iptal_et": "Annulla"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪Amministrazione aziendale",

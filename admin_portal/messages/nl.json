@@ -4715,7 +4715,11 @@
     "ziyaretcilere_gosterilecek_genel_park_bi": "General park information to be displayed to visitors...",
     "yeni_personel_ekle": "Nieuw personeel toevoegen",
     "yeni_surucu_ekle": "Nieuwe chauffeur toevoegen",
-    "kurumsal_ayarlar": "Bedrijfsinstellingen"
+    "kurumsal_ayarlar": "Bedrijfsinstellingen",
+    "personel_bilgileri": "Personeelsgegevens",
+    "ad_soyad": "Volledige Naam",
+    "email_zorunlu": "E-mail (verplicht)",
+    "iptal_et": "Annuleren"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Business Admin",

@@ -4318,7 +4318,11 @@
     "ziyaretcilere_gosterilecek_genel_park_bi": "Informations générales sur le parc à afficher aux visiteurs...",
     "yeni_personel_ekle": "Ajouter un nouveau personnel",
     "yeni_surucu_ekle": "Ajouter un nouveau chauffeur",
-    "kurumsal_ayarlar": "Paramètres d'entreprise"
+    "kurumsal_ayarlar": "Paramètres d'entreprise",
+    "personel_bilgileri": "Détails du Personnel",
+    "ad_soyad": "Nom Complet",
+    "email_zorunlu": "E-mail (obligatoire)",
+    "iptal_et": "Annuler"
   },
   "AdminLibadminroletypes": {
     "i_sletme_admin": "🏪 Administrateur d'entreprise",
