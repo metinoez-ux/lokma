@@ -98,7 +98,9 @@
     "verifying_code": "Code wird überprüft...",
     "please_wait": "Bitte warten...",
     "phone_check_failed": "Nummer konnte nicht überprüft werden. Bitte überprüfe deine Internetverbindung.",
-    "orn_abc123": "Örn: ABC123"
+    "orn_abc123": "Örn: ABC123",
+    "email_veya_telefon": "E-Mail oder Telefon",
+    "sms_ile_sifresiz_giris": "Kein Passwort? Mit SMS-Code einloggen"
   },
   "business_details": {
     "about_us": "Über uns",

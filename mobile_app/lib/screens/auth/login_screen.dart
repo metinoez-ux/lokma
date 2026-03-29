@@ -296,11 +296,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     
-    // If authenticated, go home
+    // If authenticated, go home or set password
     if (authState.isAuthenticated && !authState.isGuest) {
       if (!widget.embedded) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/');
+          final user = FirebaseAuth.instance.currentUser;
+          bool needsPassword = false;
+          if (user != null) {
+            final hasPassword = user.providerData.any((p) => p.providerId == 'password');
+            needsPassword = !hasPassword;
+          }
+          
+          if (needsPassword) {
+            context.go('/set-password');
+          } else {
+            context.go('/');
+          }
         });
       }
     }
@@ -707,8 +718,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         
         _buildTextField(
           controller: _emailController,
-          label: tr('auth.e_posta'),
-          icon: Icons.email_outlined,
+          label: tr('auth.email_veya_telefon'),
+          icon: Icons.person_outline,
           keyboardType: TextInputType.emailAddress,
         ),
         
@@ -756,14 +767,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onTap: _handleEmailSubmit,
         ),
         
-        if (_authMode == 0)
+        if (_authMode == 0) ...[
+          const SizedBox(height: 12),
+          OutlinedButton(
+             onPressed: () => setState(() {
+               _loginMode = 'phone';
+               _authMode = 0;
+             }),
+             style: OutlinedButton.styleFrom(
+               side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+               minimumSize: const Size(double.infinity, 56),
+             ),
+             child: Text(
+               tr('auth.sms_ile_sifresiz_giris'), 
+               style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)
+             ),
+          ),
+          const SizedBox(height: 12),
           TextButton(
             onPressed: _handleForgotPassword,
             child: Text(
               tr('auth.sifremi_unuttum'),
-              style: TextStyle(color: Colors.white70),
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
+        ],
       ],
     );
   }
@@ -1262,10 +1291,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleEmailSubmit() async {
-    final email = _emailController.text.trim();
+    final inputStr = _emailController.text.trim();
     final password = _passwordController.text;
     
-    if (email.isEmpty || password.isEmpty) {
+    if (inputStr.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr('auth.email_pass_required')), backgroundColor: Colors.red),
       );
@@ -1275,6 +1304,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     
     try {
+      String emailToLogin = inputStr;
+      
+      // If the input is primarily digits (with optional + sign), treat it as a phone number
+      final isPhone = RegExp(r'^[\+]?[0-9\s\-\(\)]+$').hasMatch(inputStr) && inputStr.replaceAll(RegExp(r'\D'), '').length >= 7;
+
+      if (isPhone && _authMode == 0) {
+        // Clean phone number for lookup
+        String lookupPhone = inputStr.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+        if (!lookupPhone.startsWith('+')) {
+          // If no country code provided, prepend the current dropdown selection
+          lookupPhone = '$_countryCode${lookupPhone.startsWith('0') ? lookupPhone.substring(1) : lookupPhone}';
+        }
+        
+        // Find user by phone number in Firestore
+        final snapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('phoneNumber', isEqualTo: lookupPhone)
+            .limit(1)
+            .get();
+            
+        if (snapshot.docs.isNotEmpty) {
+          final data = snapshot.docs.first.data();
+          if (data['email'] != null && data['email'].toString().isNotEmpty) {
+             emailToLogin = data['email'].toString();
+          } else {
+             // Fallback to pseudo-email if they have no email set securely
+             emailToLogin = '${lookupPhone.replaceAll('+', '')}@lokma.shop';
+          }
+        } else {
+          // Fallback if not mapped directly
+          emailToLogin = '${lookupPhone.replaceAll('+', '')}@lokma.shop';
+        }
+      }
+
       if (_authMode == 1) {
         // Register
         if (password != _confirmPasswordController.text) {
@@ -1285,7 +1348,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           return;
         }
         
-        await ref.read(authProvider.notifier).registerWithEmail(email, password);
+        await ref.read(authProvider.notifier).registerWithEmail(emailToLogin, password);
         
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
@@ -1310,7 +1373,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         }
       } else {
-        await ref.read(authProvider.notifier).loginWithEmail(email, password);
+        await ref.read(authProvider.notifier).loginWithEmail(emailToLogin, password);
       }
     } catch (e) {
       debugPrint('Email auth error: $e');

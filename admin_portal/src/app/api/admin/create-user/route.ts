@@ -1,61 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmailWithResend } from '@/lib/resend-email';
-async function getFirebaseAdmin() {
-    try {
-        const { getApps, cert, initializeApp, applicationDefault } = await import('firebase-admin/app');
-        const { getAuth } = await import('firebase-admin/auth');
-        const { getFirestore } = await import('firebase-admin/firestore');
-
-        let app;
-        const apps = getApps();
-
-        if (apps.length === 0) {
-            const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-            let initialized = false;
-
-            // 1. Try explicit service account key
-            if (serviceAccount) {
-                try {
-                    const account = JSON.parse(serviceAccount);
-                    if (account.private_key) {
-                        account.private_key = account.private_key.replace(/\\n/g, '\n');
-                    }
-                    app = initializeApp({
-                        credential: cert(account),
-                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                    });
-                    initialized = true;
-                    console.log('✅ Firebase Admin initialized with EXPLICIT key (New App)');
-                } catch (parseError) {
-                    console.warn('⚠️ Explicit key parsing failed, falling back to ADC:', parseError);
-                }
-            }
-
-            // 2. Fallback to ADC
-            if (!initialized) {
-                console.log('🔄 Attempting ADC (Application Default Credentials)...');
-                app = initializeApp({
-                    credential: applicationDefault(),
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'aylar-a45af',
-                });
-                console.log('✅ Firebase Admin initialized with ADC (New App)');
-            }
-        } else {
-            app = apps[0];
-            console.log('♻️ Reusing existing Firebase Admin app. Total apps:', apps.length);
-        }
-
-        if (!app) {
-            throw new Error('Firebase Admin app could not be initialized.');
-        }
-
-        // Pass the explicit app instance to getters - CRITICAL FIX
-        return { auth: getAuth(app), db: getFirestore(app) };
-    } catch (error) {
-        console.error('🚨 Firebase Admin import/init failed:', error);
-        throw error;
-    }
-}
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
 
@@ -88,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const {
-            email, password, displayName, phone, dialCode,
+            email, password, displayName, phone, dialCode, gender,
             firstName: bodyFirstName, lastName: bodyLastName,
             address, houseNumber, addressLine2, city, country, postalCode,
             role, adminType, location, createdBy, isPrimaryAdmin,
@@ -215,14 +160,18 @@ export async function POST(request: NextRequest) {
             // Clean and format phone number
             const cleanedPhone = phone.replace(/\D/g, '');
             if (cleanedPhone.length >= 10) {
-                formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+ ${cleanedPhone} `;
+                formattedPhone = cleanedPhone.startsWith('+') ? cleanedPhone : `+${cleanedPhone}`;
             }
         }
+
+        // If no email is provided, generate a pseudo-email based on the phone number
+        // This ensures the user can always log in via Email/Password provider
+        const finalEmail = email || (formattedPhone ? `${formattedPhone.replace('+', '')}@lokma.shop` : undefined);
 
         // Create user in Firebase Auth
         // Email OR phone is required, but both are optional individually
         const userRecord = await auth.createUser({
-            email: email || undefined,
+            email: finalEmail,
             password,
             displayName,
             emailVerified: false,
@@ -236,10 +185,11 @@ export async function POST(request: NextRequest) {
 
         // Create user document in Firestore
         await db.collection('users').doc(userRecord.uid).set({
-            email,
+            email: finalEmail || null,
             displayName,
             firstName,
             lastName,
+            gender: gender || null,
             createdAt: new Date().toISOString(),
             location: location || null,
             phoneNumber: phone || null,
@@ -261,7 +211,7 @@ export async function POST(request: NextRequest) {
         // If admin role is assigned, create admin document
         if (role === 'admin' && adminType) {
             const adminData: Record<string, unknown> = {
-                email,
+                email: finalEmail || null,
                 displayName,
                 firstName,
                 lastName,
@@ -320,7 +270,7 @@ export async function POST(request: NextRequest) {
         // 🚗 If driver role is assigned (without admin role), create admin doc with driver fields
         if (bodyIsDriver && !(role === 'admin' && adminType)) {
             const driverAdminData: Record<string, unknown> = {
-                email,
+                email: finalEmail || null,
                 displayName,
                 firstName,
                 lastName,
@@ -659,8 +609,8 @@ export async function POST(request: NextRequest) {
             // 2A. Send WhatsApp Message (Primary)
             try {
                 const whatsappMessage = email
-                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nE-posta: ${email}\nŞifreniz mail adresinize gönderildi.\n\n(Ayrıca uygulamaya telefon numaranızla giriş yapıp SMS doğrulama kodu alabilirsiniz.)\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
-                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nLOKMA uygulamasına telefon numaranız ile kayıt olup anında giriş yapabilirsiniz. (Giriş yaparken size SMS kodu gelecektir)\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
+                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nE-posta: ${email}\nŞifreniz: ${password}\n\nUygulamaya e-posta adresiniz veya telefon numaranızla giriş yapabilirsiniz. İlk girişinizden sonra şifrenizi değiştirmeniz tavsiye edilir.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
+                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nTelefon Numaranız: ${phone}\nŞifreniz: ${password}\n\nLOKMA uygulamasına giriş yaparken LÜTFEN bu şifreyi kullanın. "E-Posta VEYA Telefon" bölümüne numaranızı yazabilirsiniz.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
 
                 const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
                     method: 'POST',
@@ -688,8 +638,8 @@ export async function POST(request: NextRequest) {
             // 2B. Send SMS (Fallback)
             try {
                 const smsMessage = email
-                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} olarak atandiniz. Sifreniz e-postaniza gonderildi. Telefon numaranizla (SMS kodu ile) guvenle uygulamadan giris yapabilirsiniz.`
-                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} olarak atandiniz. Telefon numaranizla (SMS kodu ile) uygulamamiza guvenle giris yapabilirsiniz.`;
+                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} eklendiniz. Sifreniz: ${password} (Mail veya telefonla guvenle girebilirsiniz).`
+                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} atandiniz. Telefon: ${phone} Sifre: ${password} (Giris yaparken bunu kullanabilirsiniz).`;
 
                 const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
                     method: 'POST',

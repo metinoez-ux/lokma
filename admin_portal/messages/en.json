@@ -3909,6 +3909,10 @@
     "clear_selection_title": "Clear selection title"
   },
   "AdminKermesDetail": {
+    "cinsiyet_seciniz": "Select Gender",
+    "erkek": "Male",
+    "kadin": "Female",
+    "isim_telefon_cinsiyet_zorunlu": "Name, phone number and gender are required.",
     "2IsimOpsiyonel": "2. İsim (Opsiyonel)",
     "2SokakAdiOpsiyonel": "📍 2. Sokak Adı (Opsiyonel)",
     "2SokakAdiOpsiyonel1": "2. Sokak Adı (Opsiyonel)",

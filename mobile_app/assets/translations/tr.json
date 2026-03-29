@@ -98,7 +98,9 @@
     "verifying_code": "Kod doğrulanıyor...",
     "please_wait": "Lütfen bekleyin...",
     "phone_check_failed": "Numara kontrol edilemedi. Lütfen internet bağlantınızı kontrol edin.",
-    "orn_abc123": "Örn: ABC123"
+    "orn_abc123": "Örn: ABC123",
+    "email_veya_telefon": "E-Posta veya Telefon",
+    "sms_ile_sifresiz_giris": "Şifreniz yok mu? SMS Kodu ile Giriş"
   },
   "business_details": {
     "about_us": "Hakkımızda",

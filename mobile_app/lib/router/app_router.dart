@@ -20,6 +20,7 @@ import '../screens/settings/notification_settings_screen.dart';
 import '../screens/profile/notification_history_screen.dart';
 import '../screens/feedback/feedback_form_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/auth/set_password_screen.dart';
 import '../screens/search/smart_search_screen.dart';
 import '../screens/marketplace/kasap/cart_screen.dart';
 import '../screens/driver/driver_delivery_screen.dart';
@@ -134,6 +135,11 @@ class AppRouter {
             },
           ),
         ],
+      ),
+      // Set Password setup route for Phone-Auth users
+      GoRoute(
+        path: '/set-password',
+        builder: (context, state) => const SetPasswordScreen(),
       ),
       // DETAIL PAGES: Outside ShellRoute = No bottom nav bar (like Lieferando)
       // PRIMARY ROUTE: Turkish naming for user-facing URLs

@@ -3886,6 +3886,10 @@
     "clear_selection_title": "Clear selection title"
   },
   "AdminKermesDetail": {
+    "cinsiyet_seciniz": "Geschlecht wählen",
+    "erkek": "Mann",
+    "kadin": "Frau",
+    "isim_telefon_cinsiyet_zorunlu": "Name, Telefonnummer und Geschlecht sind erforderlich.",
     "2IsimOpsiyonel": "2. İsim (Opsiyonel)",
     "2SokakAdiOpsiyonel": "📍 2. Sokak Adı (Opsiyonel)",
     "2SokakAdiOpsiyonel1": "2. Sokak Adı (Opsiyonel)",

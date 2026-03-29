@@ -98,7 +98,9 @@
     "registering_with_number": "Creating your account with {phone}...",
     "sms_code_sent_to": "SMS code sent to {phone}",
     "verifying_code": "Verifying code...",
-    "orn_abc123": "Örn: ABC123"
+    "orn_abc123": "Örn: ABC123",
+    "email_veya_telefon": "Email or Phone",
+    "sms_ile_sifresiz_giris": "No password? Login with SMS Code"
   },
   "business_details": {
     "about_us": "About us",

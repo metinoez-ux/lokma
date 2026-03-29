@@ -231,8 +231,8 @@ export default function KermesDetailPage() {
     // Yeni Personel & Sürücü Ekleme
     const [isAddingStaff, setIsAddingStaff] = useState(false);
     const [isAddingDriver, setIsAddingDriver] = useState(false);
-    const [newStaffForm, setNewStaffForm] = useState({ name: '', phone: '', email: '', countryCode: '+49' });
-    const [newDriverForm, setNewDriverForm] = useState({ name: '', phone: '', email: '', countryCode: '+49' });
+    const [newStaffForm, setNewStaffForm] = useState({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
+    const [newDriverForm, setNewDriverForm] = useState({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
     const [isCreatingUser, setIsCreatingUser] = useState(false);
 
 
@@ -754,8 +754,8 @@ export default function KermesDetailPage() {
         }
         
         const form = type === 'kermes_staff' ? newStaffForm : newDriverForm;
-        if (!form.name || !form.phone) {
-            showToast(t('isim_telefon_zorunlu') || 'İsim ve telefon numarası zorunludur.', 'error');
+        if (!form.name || !form.phone || !form.gender) {
+            showToast(t('isim_telefon_cinsiyet_zorunlu') || 'İsim, telefon ve cinsiyet zorunludur.', 'error');
             return;
         }
 
@@ -784,6 +784,7 @@ export default function KermesDetailPage() {
                     displayName: form.name.trim(),
                     phone: form.phone.replace(/[^0-9+]/g, ''),
                     dialCode: form.countryCode,
+                    gender: form.gender, // 👈 Eklenen Alan
                     role: 'admin',
                     adminType: type,
                     businessId: kermes.id,
@@ -806,12 +807,12 @@ export default function KermesDetailPage() {
                 showToast(t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.');
                 setAssignedStaff(prev => [...prev, data.uid]);
                 setIsAddingStaff(false);
-                setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49' });
+                setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
             } else {
                 showToast(t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.');
                 setAssignedDrivers(prev => [...prev, data.uid]);
                 setIsAddingDriver(false);
-                setNewDriverForm({ name: '', phone: '', email: '', countryCode: '+49' });
+                setNewDriverForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
             }
         } catch (error: any) {
             console.error('Create user error:', error);
@@ -1400,14 +1401,23 @@ export default function KermesDetailPage() {
                                                         <input 
                                                             type="email" 
                                                             placeholder={`${t('email_opsiyonel') || 'E-posta (İsteğe Bağlı)'}`}
-                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
                                                             value={newStaffForm.email}
                                                             onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})}
                                                         />
+                                                        <select
+                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-shadow outline-none"
+                                                            value={newStaffForm.gender}
+                                                            onChange={e => setNewStaffForm({...newStaffForm, gender: e.target.value})}
+                                                        >
+                                                            <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seçiniz'}</option>
+                                                            <option value="male">{t('erkek') || 'Bay / Herr'}</option>
+                                                            <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
+                                                        </select>
                                                         <button
                                                             type="button"
                                                             onClick={() => handleCreateUser('kermes_staff')}
-                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone}
+                                                            disabled={isCreatingUser || !newStaffForm.name || !newStaffForm.phone || !newStaffForm.gender}
                                                             className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
                                                         >
                                                             {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
@@ -1517,14 +1527,23 @@ export default function KermesDetailPage() {
                                                         <input 
                                                             type="email" 
                                                             placeholder={`${t('email_opsiyonel') || 'E-posta (İsteğe Bağlı)'}`}
-                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                                            className="w-full mb-3 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
                                                             value={newDriverForm.email}
                                                             onChange={e => setNewDriverForm({...newDriverForm, email: e.target.value})}
                                                         />
+                                                        <select
+                                                            className="w-full mb-4 px-3 py-2 bg-background text-foreground rounded-md text-sm border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-shadow outline-none"
+                                                            value={newDriverForm.gender}
+                                                            onChange={e => setNewDriverForm({...newDriverForm, gender: e.target.value})}
+                                                        >
+                                                            <option value="" disabled>{t('cinsiyet_seciniz') || 'Cinsiyet Seçiniz'}</option>
+                                                            <option value="male">{t('erkek') || 'Bay / Herr'}</option>
+                                                            <option value="female">{t('kadin') || 'Bayan / Frau'}</option>
+                                                        </select>
                                                         <button
                                                             type="button"
                                                             onClick={() => handleCreateUser('kermes_driver')}
-                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone}
+                                                            disabled={isCreatingUser || !newDriverForm.name || !newDriverForm.phone || !newDriverForm.gender}
                                                             className="w-full py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold rounded"
                                                         >
                                                             {isCreatingUser ? t('olusturuluyor') || 'Oluşturuluyor...' : t('kaydet') || 'Kaydet'}
