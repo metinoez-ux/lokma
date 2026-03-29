@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
