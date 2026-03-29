@@ -7,6 +7,7 @@ enum KermesOrderStatus {
   pending,      // Beklemede
   preparing,    // Hazırlanıyor
   ready,        // Hazır
+  onTheWay,     // Yolda
   delivered,    // Teslim Edildi
   cancelled,    // İptal
 }
@@ -63,6 +64,7 @@ class KermesOrder {
   final DateTime createdAt;
   final DateTime? completedAt;
   final String? notes;
+  final String? courierId;
 
   KermesOrder({
     required this.id,
@@ -84,6 +86,7 @@ class KermesOrder {
     required this.createdAt,
     this.completedAt,
     this.notes,
+    this.courierId,
   });
 
   /// Firestore'a kaydetmek için Map
@@ -108,6 +111,7 @@ class KermesOrder {
       'createdAt': Timestamp.fromDate(createdAt),
       'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
       'notes': notes,
+      'courierId': courierId,
     };
   }
 
@@ -145,12 +149,15 @@ class KermesOrder {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       completedAt: (map['completedAt'] as Timestamp?)?.toDate(),
       notes: map['notes'],
+      courierId: map['courierId'],
     );
   }
 
   /// Firestore document'ından oluştur
   factory KermesOrder.fromDocument(DocumentSnapshot doc) {
-    return KermesOrder.fromMap(doc.data() as Map<String, dynamic>);
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    data['id'] = doc.id;
+    return KermesOrder.fromMap(data);
   }
 
   /// Teslimat türü Türkçe label
@@ -186,6 +193,8 @@ class KermesOrder {
         return 'Hazırlanıyor';
       case KermesOrderStatus.ready:
         return 'Hazır';
+      case KermesOrderStatus.onTheWay:
+        return 'Yolda';
       case KermesOrderStatus.delivered:
         return 'Teslim Edildi';
       case KermesOrderStatus.cancelled:

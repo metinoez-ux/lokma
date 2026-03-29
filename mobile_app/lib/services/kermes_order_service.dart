@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
@@ -201,6 +203,375 @@ class KermesOrderService {
     final number = 90000 + (now.microsecondsSinceEpoch % 10000);
     return number.toString();
   }
+
+  // ==========================================================
+  // COURIER / DELIVERY WORKFLOW
+  // Extends identical functionality from OrderService
+  // ==========================================================
+
+  /// Get ready deliveries for a kermes event (staff view)
+  /// Shows ready, preparing, and pending delivery orders - ready first
+  Stream<List<KermesOrder>> getReadyDeliveriesStream(String kermesId) {
+    return _ordersCollection
+        .where('kermesId', isEqualTo: kermesId)
+        .snapshots()
+        .map((snapshot) {
+          final validStatuses = ['ready', 'preparing', 'pending'];
+          
+          final orders = snapshot.docs
+              .where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final status = data['status']?.toString() ?? '';
+                final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+                final courierId = data['courierId'];
+                
+                final isValidStatus = validStatuses.contains(status);
+                final isDelivery = deliveryMethod == 'delivery';
+                final isUnclaimed = courierId == null || courierId.toString().isEmpty;
+                
+                return isValidStatus && isDelivery && isUnclaimed;
+              })
+              .map((doc) => KermesOrder.fromDocument(doc))
+              .toList();
+          
+          orders.sort((a, b) {
+            const priority = {'ready': 0, 'preparing': 1, 'pending': 2};
+            final aPriority = priority[a.status.name] ?? 3;
+            final bPriority = priority[b.status.name] ?? 3;
+            return aPriority.compareTo(bPriority);
+          });
+          
+          return orders;
+        });
+  }
+
+  /// Get ready deliveries for a DRIVER assigned to multiple Kermes events
+  Stream<List<KermesOrder>> getDriverDeliveriesStream(List<String> kermesIds, {String? courierId}) {
+    if (kermesIds.isEmpty) {
+      return Stream.value([]);
+    }
+
+    return _ordersCollection
+        .snapshots()
+        .map((snapshot) {
+          final validStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
+          
+          final orders = snapshot.docs
+              .where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final eventId = data['kermesId']?.toString() ?? '';
+                final status = data['status']?.toString() ?? '';
+                final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+                final orderCourierId = data['courierId']?.toString() ?? '';
+                
+                final isAssignedEvent = kermesIds.contains(eventId);
+                final isValidStatus = validStatuses.contains(status);
+                final isDelivery = deliveryMethod == 'delivery';
+                final isUnclaimed = orderCourierId.isEmpty;
+                final isClaimedByMe = courierId != null && orderCourierId == courierId;
+                
+                return isValidStatus && isDelivery && (
+                  (isAssignedEvent && isUnclaimed) || isClaimedByMe
+                );
+              })
+              .map((doc) => KermesOrder.fromDocument(doc))
+              .toList();
+          
+          orders.sort((a, b) {
+            final aIsMyOrder = courierId != null && a.courierId == courierId;
+            final bIsMyOrder = courierId != null && b.courierId == courierId;
+            if (aIsMyOrder && !bIsMyOrder) return -1;
+            if (!aIsMyOrder && bIsMyOrder) return 1;
+            
+            const priority = {'onTheWay': 0, 'accepted': 0, 'ready': 1, 'preparing': 2, 'pending': 3};
+            final aPriority = priority[a.status.name] ?? 4;
+            final bPriority = priority[b.status.name] ?? 4;
+            return aPriority.compareTo(bPriority);
+          });
+          
+          return orders;
+        });
+  }
+
+  /// Get ALL orders from assigned Kermes events for driver planning view
+  Stream<List<KermesOrder>> getAllKermesOrdersStream(List<String> kermesIds) {
+    if (kermesIds.isEmpty) {
+      return Stream.value([]);
+    }
+
+    return _ordersCollection
+        .snapshots()
+        .map((snapshot) {
+          final validStatuses = ['pending', 'preparing', 'ready', 'accepted', 'onTheWay'];
+
+          final orders = snapshot.docs
+              .where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final eventId = data['kermesId']?.toString() ?? '';
+                final status = data['status']?.toString() ?? '';
+                final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+
+                return kermesIds.contains(eventId) &&
+                       validStatuses.contains(status) &&
+                       deliveryMethod == 'delivery';
+              })
+              .map((doc) => KermesOrder.fromDocument(doc))
+              .toList();
+
+          orders.sort((a, b) {
+            const priority = {'pending': 0, 'preparing': 1, 'ready': 2, 'accepted': 3, 'onTheWay': 4};
+            final aPriority = priority[a.status.name] ?? 5;
+            final bPriority = priority[b.status.name] ?? 5;
+            return aPriority.compareTo(bPriority);
+          });
+
+          return orders;
+        });
+  }
+
+  /// Claim a delivery (staff/driver takes responsibility)
+  Future<bool> claimDelivery({
+    required String orderId,
+    required String courierId,
+    required String courierName,
+    required String courierPhone,
+  }) async {
+    final doc = await _ordersCollection.doc(orderId).get();
+    if (!doc.exists) return false;
+    
+    final data = doc.data() as Map<String, dynamic>;
+    final currentStatus = data['status'] as String?;
+    
+    if (data['courierId'] != null) {
+      return false;
+    }
+
+    // Capture GPS
+    Map<String, dynamic>? claimLocation;
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
+      );
+      claimLocation = {'lat': position.latitude, 'lng': position.longitude, 'timestamp': DateTime.now().toIso8601String()};
+    } catch (e) {
+      try {
+        final lastPos = await Geolocator.getLastKnownPosition();
+        if (lastPos != null) {
+          claimLocation = {'lat': lastPos.latitude, 'lng': lastPos.longitude, 'isApproximate': true, 'timestamp': DateTime.now().toIso8601String()};
+        }
+      } catch (_) {}
+    }
+    
+    final updateData = <String, dynamic>{
+      'courierId': courierId,
+      'courierName': courierName,
+      'courierPhone': courierPhone,
+      'claimedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (claimLocation != null) updateData['claimLocation'] = claimLocation;
+    if (currentStatus == KermesOrderStatus.ready.name) updateData['status'] = KermesOrderStatus.onTheWay.name;
+
+    await _ordersCollection.doc(orderId).update(updateData);
+    return true;
+  }
+
+  /// Cancel delivery claim
+  Future<bool> cancelClaim(String orderId, {String? reason}) async {
+    await _ordersCollection.doc(orderId).update({
+      'courierId': FieldValue.delete(),
+      'courierName': FieldValue.delete(),
+      'courierPhone': FieldValue.delete(),
+      'courierLocation': FieldValue.delete(),
+      'claimedAt': FieldValue.delete(),
+      'startedAt': FieldValue.delete(),
+      'etaMinutes': FieldValue.delete(),
+      'status': KermesOrderStatus.ready.name,
+      'updatedAt': FieldValue.serverTimestamp(),
+      if (reason != null) 'lastCancellationReason': reason,
+      if (reason != null) 'lastCancellationAt': FieldValue.serverTimestamp(),
+    });
+    return true;
+  }
+
+  /// Start delivery
+  Future<bool> startDelivery(String orderId) async {
+    await _ordersCollection.doc(orderId).update({
+      'status': KermesOrderStatus.onTheWay.name,
+      'startedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return true;
+  }
+
+  /// Complete delivery
+  Future<bool> completeDelivery(String orderId) async {
+    await _ordersCollection.doc(orderId).update({
+      'status': KermesOrderStatus.delivered.name,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return true;
+  }
+
+  /// Complete delivery with proof
+  Future<bool> completeDeliveryWithProof(
+    String orderId, {
+    required String deliveryType,
+    String? proofPhotoUrl,
+  }) async {
+    final orderDoc = await _ordersCollection.doc(orderId).get();
+    final orderData = orderDoc.data() as Map<String, dynamic>?;
+    final claimLocation = orderData?['claimLocation'] as Map<String, dynamic>?;
+
+    Map<String, dynamic>? gpsData;
+    double? deliveryLat;
+    double? deliveryLng;
+    
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 10)),
+      );
+      deliveryLat = position.latitude;
+      deliveryLng = position.longitude;
+      gpsData = {
+        'latitude': position.latitude, 'longitude': position.longitude,
+        'accuracy': position.accuracy, 'isLive': true, 'timestamp': position.timestamp.toIso8601String(),
+      };
+    } catch (e) {
+      try {
+        final lastPosition = await Geolocator.getLastKnownPosition();
+        if (lastPosition != null) {
+          deliveryLat = lastPosition.latitude; deliveryLng = lastPosition.longitude;
+          gpsData = {
+            'latitude': lastPosition.latitude, 'longitude': lastPosition.longitude,
+            'accuracy': lastPosition.accuracy, 'isLive': false, 'isApproximate': true,
+            'timestamp': lastPosition.timestamp.toIso8601String(), 'note': 'Son bilinen konum',
+          };
+        }
+      } catch (_) {}
+    }
+
+    double? distanceKm;
+    if (claimLocation != null && deliveryLat != null && deliveryLng != null) {
+      final claimLat = (claimLocation['lat'] as num?)?.toDouble();
+      final claimLng = (claimLocation['lng'] as num?)?.toDouble();
+      if (claimLat != null && claimLng != null) {
+        distanceKm = _calculateHaversineDistance(claimLat, claimLng, deliveryLat, deliveryLng);
+      }
+    }
+    
+    final deliveryProof = <String, dynamic>{
+      'type': deliveryType,
+      'completedAt': FieldValue.serverTimestamp(),
+      'localTimestamp': DateTime.now().toIso8601String(),
+    };
+    
+    if (gpsData != null) deliveryProof['gps'] = gpsData;
+    if (distanceKm != null) deliveryProof['distanceKm'] = double.parse(distanceKm.toStringAsFixed(2));
+    if (proofPhotoUrl != null) deliveryProof['photoUrl'] = proofPhotoUrl;
+    
+    await _ordersCollection.doc(orderId).update({
+      'status': KermesOrderStatus.delivered.name,
+      'deliveryProof': deliveryProof,
+      'deliveredAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    
+    return true;
+  }
+
+  /// Update courier location
+  Future<void> updateCourierLocation({
+    required String orderId,
+    required double lat,
+    required double lng,
+    int? etaMinutes,
+  }) async {
+    await _ordersCollection.doc(orderId).update({
+      'courierLocation': {'lat': lat, 'lng': lng},
+      'lastLocationUpdate': FieldValue.serverTimestamp(),
+      if (etaMinutes != null) 'etaMinutes': etaMinutes,
+    });
+  }
+
+  /// Courier tracking & active logic
+  Stream<KermesOrder?> getOrderStream(String orderId) {
+    return _ordersCollection.doc(orderId).snapshots().map(
+      (doc) => doc.exists ? (KermesOrder.fromDocument(doc)) : null,
+    );
+  }
+
+  Stream<KermesOrder?> getMyActiveDeliveryStream(String courierId) {
+    final activeStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
+    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots().map((snapshot) {
+      final activeDocs = snapshot.docs.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final status = data['status']?.toString() ?? '';
+        final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+        return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+      }).toList();
+      
+      if (activeDocs.isEmpty) return null;
+      activeDocs.sort((a, b) {
+        final aTime = (a.data() as Map<String, dynamic>)['claimedAt'] as Timestamp?;
+        final bTime = (b.data() as Map<String, dynamic>)['claimedAt'] as Timestamp?;
+        if (aTime == null) return 1; if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
+      return KermesOrder.fromDocument(activeDocs.first);
+    });
+  }
+
+  Stream<List<KermesOrder>> getMyActiveDeliveriesStream(String courierId) {
+    final activeStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
+    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots().map((snapshot) {
+      final activeDocs = snapshot.docs.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final status = data['status']?.toString() ?? '';
+        final deliveryMethod = data['deliveryMethod']?.toString() ?? '';
+        return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+      }).toList();
+      
+      activeDocs.sort((a, b) {
+        final aTime = (a.data() as Map<String, dynamic>)['claimedAt'] as Timestamp?;
+        final bTime = (b.data() as Map<String, dynamic>)['claimedAt'] as Timestamp?;
+        if (aTime == null) return 1; if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
+      return activeDocs.map((doc) => KermesOrder.fromDocument(doc)).toList();
+    });
+  }
+
+  Stream<List<KermesOrder>> getMyCompletedDeliveriesToday(String courierId) {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final visibilityStart = now.subtract(const Duration(hours: 3));
+    final cutoffTime = todayStart.isBefore(visibilityStart) ? visibilityStart : todayStart;
+    
+    return _ordersCollection.where('courierId', isEqualTo: courierId).snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => KermesOrder.fromDocument(doc))
+          .where((order) {
+            final statusStr = order.status.toString().split('.').last;
+            if (statusStr != 'delivered') return false;
+            // Uses createdAt as fallback if deliveredAt missing
+            return order.createdAt.isAfter(cutoffTime);
+          })
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    });
+  }
+
+  double _calculateHaversineDistance(double lat1, double lng1, double lat2, double lng2) {
+    const R = 6371.0;
+    final dLat = _toRadians(lat2 - lat1);
+    final dLng = _toRadians(lng2 - lng1);
+    final a = sin(dLat / 2) * sin(dLat / 2) + cos(_toRadians(lat1)) * cos(_toRadians(lat2)) * sin(dLng / 2) * sin(dLng / 2);
+    return R * 2 * atan2(sqrt(a), sqrt(1 - a));
+  }
+
+  double _toRadians(double degrees) => degrees * pi / 180;
 }
 
 /// Sipariş iptal sonucu

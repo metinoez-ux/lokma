@@ -1,12 +1,16 @@
+import '../../services/shift_service.dart';
+import '../../services/order_service.dart';
 import 'package:flutter/material.dart';
+import 'kermes_active_delivery_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/driver_provider.dart';
-import '../../services/order_service.dart';
-import '../../services/shift_service.dart';
+import 'package:lokma_app/models/kermes_order_model.dart';
+import '../../services/kermes_order_service.dart';
+import 'package:rxdart/rxdart.dart';
 import '../staff/staff_delivery_screen.dart';
 import '../../utils/currency_utils.dart';
 import '../shared/tap_to_pay_sheet.dart';
@@ -25,10 +29,98 @@ class DriverDeliveryScreen extends ConsumerStatefulWidget {
 
 class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   final OrderService _orderService = OrderService();
+  final KermesOrderService _kermesOrderService = KermesOrderService();
   String? _driverName;
   String? _driverPhone;
   bool _isLoading = false;
   bool _showAllOrders = false;
+
+  /// Helper to combine meat and kermes orders
+  Stream<List<dynamic>> _getCombinedDeliveriesStream(List<String> businessIds, List<String> kermesIds, String? courierId) {
+    if (businessIds.isEmpty && kermesIds.isEmpty) return Stream.value([]);
+    
+    final meatStream = businessIds.isEmpty ? Stream.value(<LokmaOrder>[]) : _orderService.getDriverDeliveriesStream(businessIds, courierId: courierId);
+    final kermesStream = kermesIds.isEmpty ? Stream.value(<KermesOrder>[]) : _kermesOrderService.getDriverDeliveriesStream(kermesIds, courierId: courierId);
+    
+    return Rx.combineLatest2(
+      meatStream,
+      kermesStream,
+      (List<LokmaOrder> meat, List<KermesOrder> kermes) {
+        final combined = [...meat, ...kermes];
+        combined.sort((x, y) {
+          final dynamic dx = x;
+          final dynamic dy = y;
+          
+          final xStatus = (x is LokmaOrder) ? x.status.name : (x as KermesOrder).status.name;
+          final yStatus = (y is LokmaOrder) ? y.status.name : (y as KermesOrder).status.name;
+          
+          final xCourierId = dx.courierId;
+          final yCourierId = dy.courierId;
+          
+          final xIsMyOrder = courierId != null && xCourierId == courierId;
+          final yIsMyOrder = courierId != null && yCourierId == courierId;
+          
+          if (xIsMyOrder && !yIsMyOrder) return -1;
+          if (!xIsMyOrder && yIsMyOrder) return 1;
+          
+          const priority = {'onTheWay': 0, 'accepted': 0, 'ready': 1, 'preparing': 2, 'pending': 3};
+          final xPriority = priority[xStatus] ?? 4;
+          final yPriority = priority[yStatus] ?? 4;
+          return xPriority.compareTo(yPriority);
+        });
+        return combined;
+      }
+    );
+  }
+
+  /// Helper to combine all orders
+  Stream<List<dynamic>> _getAllCombinedOrdersStream(List<String> businessIds, List<String> kermesIds) {
+    if (businessIds.isEmpty && kermesIds.isEmpty) return Stream.value([]);
+    
+    final meatStream = businessIds.isEmpty ? Stream.value(<LokmaOrder>[]) : _orderService.getAllBusinessOrdersStream(businessIds);
+    final kermesStream = kermesIds.isEmpty ? Stream.value(<KermesOrder>[]) : _kermesOrderService.getAllKermesOrdersStream(kermesIds);
+    
+    return Rx.combineLatest2(
+      meatStream,
+      kermesStream,
+      (List<LokmaOrder> meat, List<KermesOrder> kermes) {
+        final combined = [...meat, ...kermes];
+        combined.sort((x, y) {
+          final xStatus = (x is LokmaOrder) ? x.status.name : (x as KermesOrder).status.name;
+          final yStatus = (y is LokmaOrder) ? y.status.name : (y as KermesOrder).status.name;
+          const priority = {'pending': 0, 'preparing': 1, 'ready': 2, 'accepted': 3, 'onTheWay': 4};
+          final xPriority = priority[xStatus] ?? 5;
+          final yPriority = priority[yStatus] ?? 5;
+          return xPriority.compareTo(yPriority);
+        });
+        return combined;
+      }
+    );
+  }
+
+  /// Helper to combine completed deliveries for today
+  Stream<List<dynamic>> _getCombinedCompletedDeliveriesTodayStream(String courierId) {
+    if (courierId.isEmpty) return Stream.value([]);
+    
+    final meatStream = _orderService.getMyCompletedDeliveriesToday(courierId);
+    final kermesStream = _kermesOrderService.getMyCompletedDeliveriesToday(courierId);
+    
+    return Rx.combineLatest2(
+      meatStream,
+      kermesStream,
+      (List<LokmaOrder> meat, List<KermesOrder> kermes) {
+        final combined = [...meat, ...kermes];
+        combined.sort((a, b) {
+          final dynamic da = a;
+          final dynamic db = b;
+          final aDate = (a is LokmaOrder) ? (da.deliveredAt ?? DateTime.now()) : (da.completedAt ?? DateTime.now());
+          final bDate = (b is LokmaOrder) ? (db.deliveredAt ?? DateTime.now()) : (db.completedAt ?? DateTime.now());
+          return bDate.compareTo(aDate); // descending
+        });
+        return combined;
+      }
+    );
+  }
 
   @override
   void initState() {
@@ -60,7 +152,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     }
   }
 
-  Future<void> _claimDelivery(LokmaOrder order) async {
+  Future<void> _claimDelivery(dynamic order) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || _driverName == null) return;
 
@@ -104,6 +196,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       }
     }
 
+    if (!mounted) return;
+
     // Confirm dialog
     final confirm = await showDialog<bool>(
       context: context,
@@ -133,12 +227,22 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await _orderService.claimDelivery(
-      orderId: order.id,
-      courierId: user.uid,
-      courierName: _driverName!,
-      courierPhone: _driverPhone ?? '',
-    );
+    bool success = false;
+    if (order is LokmaOrder) {
+      success = await _orderService.claimDelivery(
+        orderId: order.id,
+        courierId: user.uid,
+        courierName: _driverName!,
+        courierPhone: _driverPhone ?? '',
+      );
+    } else if (order is KermesOrder) {
+      success = await _kermesOrderService.claimDelivery(
+        orderId: order.id,
+        courierId: user.uid,
+        courierName: _driverName!,
+        courierPhone: _driverPhone ?? '',
+      );
+    }
 
     setState(() => _isLoading = false);
 
@@ -192,6 +296,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   Widget build(BuildContext context) {
     final driverState = ref.watch(driverProvider);
     final businessIds = driverState.driverInfo?.assignedBusinesses ?? [];
+    final kermesIds = driverState.driverInfo?.assignedKermesIds ?? [];
+    final assignedCount = businessIds.length + kermesIds.length;
 
     const brandBottom = Color(0xFFFE0032);
     const brandTop = Color(0xFFFA4C71);
@@ -284,7 +390,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${businessIds.length}',
+                      '$assignedCount',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(width: 2),
@@ -317,7 +423,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     ],
                   ),
                 )
-              : businessIds.isEmpty
+              : (businessIds.isEmpty && kermesIds.isEmpty)
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -339,18 +445,15 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   : _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _showAllOrders
-                          ? _buildAllOrdersView(businessIds)
-                          : _buildMyDeliveriesView(businessIds),
+                          ? _buildAllOrdersView(businessIds, kermesIds)
+                          : _buildMyDeliveriesView(businessIds, kermesIds),
     );
   }
 
   /// Build the "Teslimatlarım" view — only claimable (ready) + claimed-by-me orders
-  Widget _buildMyDeliveriesView(List<String> businessIds) {
-    return StreamBuilder<List<LokmaOrder>>(
-      stream: _orderService.getDriverDeliveriesStream(
-        businessIds,
-        courierId: FirebaseAuth.instance.currentUser?.uid,
-      ),
+  Widget _buildMyDeliveriesView(List<String> businessIds, List<String> kermesIds) {
+    return StreamBuilder<List<dynamic>>(
+      stream: _getCombinedDeliveriesStream(businessIds, kermesIds, FirebaseAuth.instance.currentUser?.uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -377,7 +480,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${businessIds.length} işletme izleniyor',
+                        '${businessIds.length + kermesIds.length} merkez izleniyor',
                         style: TextStyle(color: Colors.grey[500]),
                       ),
                     ],
@@ -408,9 +511,9 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   }
 
   /// Build the tr('driver.tum_siparisler') view — all orders from assigned businesses
-  Widget _buildAllOrdersView(List<String> businessIds) {
-    return StreamBuilder<List<LokmaOrder>>(
-      stream: _orderService.getAllBusinessOrdersStream(businessIds),
+  Widget _buildAllOrdersView(List<String> businessIds, List<String> kermesIds) {
+    return StreamBuilder<List<dynamic>>(
+      stream: _getAllCombinedOrdersStream(businessIds, kermesIds),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -429,7 +532,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${businessIds.length} işletme izleniyor',
+                  '${businessIds.length + kermesIds.length} merkez izleniyor',
                   style: TextStyle(color: Colors.grey[500]),
                 ),
               ],
@@ -439,9 +542,9 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
         final orders = snapshot.data!;
         // Group by status
-        final statusGroups = <String, List<LokmaOrder>>{};
+        final statusGroups = <String, List<dynamic>>{};
         for (final order in orders) {
-          final key = order.status.name;
+          final key = (order is LokmaOrder) ? order.status.name : (order as KermesOrder).status.name;
           statusGroups.putIfAbsent(key, () => []).add(order);
         }
 
@@ -478,7 +581,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     );
   }
 
-  List<Widget> _buildStatusSummaryChips(Map<String, List<LokmaOrder>> groups) {
+  List<Widget> _buildStatusSummaryChips(Map<String, List<dynamic>> groups) {
     final chips = <Widget>[];
     final statusConfig = {
       'pending': ('⏳', Colors.grey),
@@ -509,12 +612,14 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   }
 
   /// Read-only order card for the all-orders view
-  Widget _buildAllOrderCard(LokmaOrder order) {
-    final statusConfig = _getStatusConfig(order.status.name);
-    final businessName = order.butcherName;
-    final courierId = order.courierId ?? '';
+  Widget _buildAllOrderCard(dynamic order) {
+    final statusName = (order is LokmaOrder) ? order.status.name : (order as KermesOrder).status.name;
+    final statusConfig = _getStatusConfig(statusName);
+    final businessName = (order is LokmaOrder) ? order.butcherName : '🏢 ${(order as KermesOrder).kermesId.split('_').first.toUpperCase()} Kermesi';
+    final courierId = (order as dynamic).courierId ?? '';
     final isClaimed = courierId.isNotEmpty;
     final isMyOrder = courierId == FirebaseAuth.instance.currentUser?.uid;
+    final orderIdTrimmed = (order.orderNumber != null) ? order.orderNumber.toString() : order.id.substring(0, 6).toUpperCase();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -565,7 +670,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                  '#$orderIdTrimmed',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -597,12 +702,12 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               Icon(Icons.shopping_bag_outlined, size: 15, color: Colors.grey[500]),
               const SizedBox(width: 4),
               Text(
-                '${order.items.length} ürün',
+                '${(order.items as List).length} ürün',
                 style: TextStyle(color: Colors.grey[600], fontSize: 13),
               ),
               const SizedBox(width: 16),
               Text(
-                '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                '${(order.totalAmount as double).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.green),
               ),
               const Spacer(),
@@ -652,8 +757,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const SizedBox.shrink();
 
-    return StreamBuilder<List<LokmaOrder>>(
-      stream: _orderService.getMyCompletedDeliveriesToday(user.uid),
+    return StreamBuilder<List<dynamic>>(
+      stream: _getCombinedCompletedDeliveriesTodayStream(user.uid),
       builder: (context, snapshot) {
         // Always show the section, even if empty for today
         final completedOrders = snapshot.data ?? [];
@@ -663,7 +768,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           o.paymentMethod == 'cash' || o.paymentMethod == 'nakit'
         ).toList();
         final cashTotal = cashOrders.fold<double>(
-          0, (sum, o) => sum + o.totalAmount
+          0, (acc, o) => acc + o.totalAmount
         );
 
         // Calculate NFC card total
@@ -677,23 +782,23 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           o.paymentMethod == 'card' || o.paymentMethod == 'kart' || o.paymentMethod == 'online'
         ).toList();
         final cardTotal = cardOrders.fold<double>(
-          0, (sum, o) => sum + o.totalAmount
+          0, (acc, o) => acc + o.totalAmount
         );
 
         // Calculate total km from deliveryProof
         final totalKm = completedOrders.fold<double>(
-          0, (sum, o) {
+          0, (acc, o) {
             final proof = o.deliveryProof;
             if (proof != null && proof['distanceKm'] != null) {
-              return sum + (proof['distanceKm'] as num).toDouble();
+              return acc + (proof['distanceKm'] as num).toDouble();
             }
-            return sum;
+            return acc;
           }
         );
 
         // Calculate total tips earned today
         final totalTips = completedOrders.fold<double>(
-          0, (sum, o) => sum + o.tipAmount,
+          0, (acc, o) => acc + o.tipAmount,
         );
         final tippedCount = completedOrders.where((o) => o.tipAmount > 0).length;
 
@@ -822,7 +927,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   }
 
   /// Build a single completed delivery item
-  Widget _buildCompletedDeliveryItem(LokmaOrder order) {
+  Widget _buildCompletedDeliveryItem(dynamic order) {
     final proof = order.deliveryProof;
     final distanceKm = proof?['distanceKm'] as num?;
     final isCash = order.paymentMethod == 'cash' || order.paymentMethod == 'nakit';
@@ -844,6 +949,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     // Order number (first 6 chars)
     final orderNumber = order.orderNumber ?? order.id.substring(0, 6).toUpperCase();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final businessName = (order is LokmaOrder) ? order.butcherName : '🏢 ${(order as KermesOrder).kermesId.split('_').first.toUpperCase()} Kermesi';
+    final deliveredAt = (order is LokmaOrder) ? (order as dynamic).deliveredAt : (order as KermesOrder).completedAt;
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -888,7 +995,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        order.butcherName,
+                        businessName,
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -913,7 +1020,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 const SizedBox(height: 2),
                 // Time + km
                 Text(
-                  '${order.deliveredAt?.hour.toString().padLeft(2, '0')}:${order.deliveredAt?.minute.toString().padLeft(2, '0')}${distanceKm != null ? ' • ${distanceKm.toStringAsFixed(1)} km' : ''}',
+                  '${deliveredAt?.hour.toString().padLeft(2, '0')}:${deliveredAt?.minute.toString().padLeft(2, '0')}${distanceKm != null ? ' • ${distanceKm.toStringAsFixed(1)} km' : ''}',
                   style: TextStyle(fontSize: 10, color: Colors.grey[500]),
                 ),
               ],
@@ -956,16 +1063,16 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     );
   }
 
-  Widget _buildDeliveryCard(LokmaOrder order) {
+  Widget _buildDeliveryCard(dynamic order) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final isClaimedByMe = order.courierId != null && 
-                          order.courierId == currentUserId;
+    final isClaimedByMe = (order as dynamic).courierId != null && 
+                          (order as dynamic).courierId == currentUserId;
     
     // Status determination
-    final isOnTheWay = order.status == OrderStatus.onTheWay || 
-                       order.status == OrderStatus.accepted;
-    final isReady = order.status == OrderStatus.ready;
-    final isPreparing = order.status == OrderStatus.preparing;
+    final orderStatus = (order is LokmaOrder) ? order.status.name : (order as KermesOrder).status.name;
+    final isOnTheWay = orderStatus == 'onTheWay' || orderStatus == 'accepted';
+    final isReady = orderStatus == 'ready';
+    final isPreparing = orderStatus == 'preparing';
     
     // Colors and text based on claim status
     // Colors match admin panel: pending=amber, preparing=orange, ready=purple
@@ -1003,12 +1110,21 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     return GestureDetector(
       onTap: isClaimedByMe ? () {
         // Navigate to active delivery screen for claimed orders
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ActiveDeliveryScreen(orderId: order.id),
-          ),
-        );
+        if (order is KermesOrder) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => KermesActiveDeliveryScreen(orderId: order.id),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ActiveDeliveryScreen(orderId: order.id),
+            ),
+          );
+        }
       } : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -1077,7 +1193,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 children: [
                   // Business name
                   Text(
-                    order.butcherName,
+                    (order is LokmaOrder) ? order.butcherName : '🏢 ${(order as KermesOrder).kermesId.split('_').first.toUpperCase()} Kermesi',
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -1183,25 +1299,26 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             onPressed: () async {
-                              final result = await TapToPaySheet.show(
-                                context: context,
-                                amount: order.totalAmount,
-                                businessId: order.butcherId,
-                                orderId: order.id,
-                                courierId: FirebaseAuth.instance.currentUser?.uid,
-                                label: tr('driver.kapida_kart_odemesi'),
-                              );
+                                final result = await TapToPaySheet.show(
+                                  context: context,
+                                  amount: (order.totalAmount as num).toDouble(),
+                                  businessId: (order is LokmaOrder) ? order.butcherId : (order as KermesOrder).kermesId,
+                                  orderId: order.id,
+                                  courierId: FirebaseAuth.instance.currentUser?.uid,
+                                  label: tr('driver.kapida_kart_odemesi'),
+                                );
                               if (result != null && result.success && mounted) {
-                                // Firestore'da ödeme durumunu güncelle
-                                await FirebaseFirestore.instance
-                                    .collection('orders')
-                                    .doc(order.id)
-                                    .update({
-                                  'paymentStatus': 'collected',
-                                  'paymentMethod': 'card_nfc',
-                                  'terminalPaymentIntentId': result.paymentIntentId,
-                                  'tapToPayAt': FieldValue.serverTimestamp(),
-                                });
+                                  // Firestore'da ödeme durumunu güncelle
+                                  final collectionPath = (order is LokmaOrder) ? 'orders' : 'kermes_orders';
+                                  await FirebaseFirestore.instance
+                                      .collection(collectionPath)
+                                      .doc(order.id)
+                                      .update({
+                                    'paymentStatus': 'collected',
+                                    'paymentMethod': 'card_nfc',
+                                    'terminalPaymentIntentId': result.paymentIntentId,
+                                    'tapToPayAt': FieldValue.serverTimestamp(),
+                                  });
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -1220,12 +1337,23 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: isClaimedByMe 
-                              ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ActiveDeliveryScreen(orderId: order.id),
-                                  ),
-                                )
+                              ? () {
+                                  if (order is KermesOrder) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => KermesActiveDeliveryScreen(orderId: order.id),
+                                      ),
+                                    );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ActiveDeliveryScreen(orderId: order.id),
+                                      ),
+                                    );
+                                  }
+                                }
                               : isReady 
                                   ? () => _claimDelivery(order) 
                                   : null,
