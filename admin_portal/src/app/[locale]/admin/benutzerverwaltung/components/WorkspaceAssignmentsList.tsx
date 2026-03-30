@@ -216,7 +216,6 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
                 <option value="lokma_admin">{t('rolLokmaAdmin', { defaultValue: 'Lokma Admin (Yönetim)' })}</option>
                 <option value="kermes_admin">{t('rolKermesAdmin', { defaultValue: 'Kermes Admin (Yönetim)' })}</option>
                 <option value="mutfak">{t('rolMutfak', { defaultValue: 'Mutfak Personeli' })}</option>
-                <option value="driver">{t('rolSurucu', { defaultValue: 'Sürücü' })}</option>
                 <option value="staff">{t('rolStaff', { defaultValue: 'Personel (Standart)' })}</option>
               </select>
             </div>
