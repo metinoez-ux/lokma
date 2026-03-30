@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, getDoc, updateDoc, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { Admin } from '@/types';
 import { getRoleLabel } from '@/lib/business-types';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -56,8 +56,8 @@ export default function VolunteersPage() {
                 
                 // Sort by creation date descending
                 staffData.sort((a, b) => {
-                    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-                    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    const timeA = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : 0;
+                    const timeB = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : 0;
                     return timeB - timeA;
                 });
                 
@@ -250,7 +250,7 @@ export default function VolunteersPage() {
                                         } else if (volunteer.adminType === 'kermes_staff') {
                                             roleColor = 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300';
                                             roleLabel = 'Kermes Personeli';
-                                        } else if (volunteer.adminType === 'kermes_driver') {
+                                        } else if ((volunteer.adminType as string) === 'kermes_driver') {
                                             roleColor = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
                                             roleLabel = 'Kermes Sürücüsü';
                                         }
@@ -285,7 +285,7 @@ export default function VolunteersPage() {
                                                     <button
                                                         onClick={() => setEditPersonData({
                                                             id: volunteer.id,
-                                                            name: volunteer.displayName || (volunteer.firstName ? `${volunteer.firstName} ${volunteer.lastName || ''}`.trim() : '') || volunteer.name,
+                                                            name: volunteer.displayName || (volunteer.firstName ? `${volunteer.firstName} ${volunteer.lastName || ''}`.trim() : '') || (volunteer as any).name,
                                                             email: volunteer.email || '',
                                                             phone: volunteer.phone || '',
                                                         })}

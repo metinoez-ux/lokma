@@ -214,6 +214,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
                 const baseAdmin = { ...adminData, id: snapshot.id } as Admin;
                 const updatedAdmin = await enrichAdminData(baseAdmin);
 
+                // 🔒 Security Check: Force Password Reset
+                if ((updatedAdmin as any).requirePasswordChange === true) {
+                    if (typeof window !== 'undefined' && !window.location.pathname.includes('/force-password-reset')) {
+                        console.log('🚨 User requires password reset. Redirecting...');
+                        router.push('/force-password-reset');
+                    }
+                }
+
                 setAdmin(updatedAdmin);
 
                 // Update cache
@@ -294,8 +302,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
                         // Setup real-time listener for future changes
                         setupRealtimeListener(adminDoc.id, promotedAdmin);
 
-                        // Redirect to admin dashboard
-                        router.push('/admin/dashboard');
+                        // Redirect to admin dashboard or password reset
+                        if ((promotedAdmin as any).requirePasswordChange === true) {
+                            if (typeof window !== 'undefined' && !window.location.pathname.includes('/force-password-reset')) {
+                                router.push('/force-password-reset');
+                            }
+                        } else {
+                            router.push('/admin/dashboard');
+                        }
                     }
                 }
             }, (error: any) => {
@@ -418,6 +432,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             if (adminProfile) {
                 // Enrich and set
                 const enrichedAdmin = await enrichAdminData(adminProfile);
+
+                // 🔒 Security Check: Force Password Reset
+                if ((enrichedAdmin as any).requirePasswordChange === true) {
+                    if (typeof window !== 'undefined' && !window.location.pathname.includes('/force-password-reset')) {
+                        console.log('🚨 Profile loaded, user requires password reset. Redirecting...');
+                        router.push('/force-password-reset');
+                    }
+                }
 
                 setAdmin(enrichedAdmin);
                 // Cache the profile

@@ -85,6 +85,10 @@ export default function BenutzerverwaltungPage() {
         address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
         country: 'Almanya', role: 'staff', sector: '', password: '', businessId: ''
     });
+    const [newUserIsDriver, setNewUserIsDriver] = useState(false);
+    const [newUserDriverType, setNewUserDriverType] = useState<string>('platform');
+    const [newUserSelectedBusinessIds, setNewUserSelectedBusinessIds] = useState<string[]>([]);
+    const [newUserSelectedKermesIds, setNewUserSelectedKermesIds] = useState<string[]>([]);
 
     // Edit Modal State
     const [editName, setEditName] = useState('');
@@ -405,8 +409,11 @@ export default function BenutzerverwaltungPage() {
     }
 
     const handleCreateUser = async () => {
-        if (!newUserData.firstName || !newUserData.lastName || !newUserData.email || !newUserData.password || !newUserData.role) {
-            alert(t('zorunlu_alanlari_doldurun') || "Lütfen tüm zorunlu alanları doldurun (Ad, Soyad, E-Posta, Şifre, Rol)");
+        const hasEmail = Boolean(newUserData.email?.trim());
+        const hasPhone = Boolean(newUserData.phone?.trim());
+
+        if (!newUserData.firstName || !newUserData.lastName || (!hasEmail && !hasPhone) || !newUserData.password || !newUserData.role) {
+            alert(t('zorunlu_alanlari_doldurun') || "Lütfen tüm zorunlu alanları doldurun (Ad, Soyad, E-Posta veya Telefon, Şifre, Rol)");
             return;
         }
 
@@ -452,7 +459,11 @@ export default function BenutzerverwaltungPage() {
                     if (b) return (b as any).type || '';
                     if (k) return 'kermes';
                     return '';
-                })()
+                })(),
+                isDriver: newUserIsDriver,
+                driverType: newUserDriverType,
+                assignedBusinesses: newUserSelectedBusinessIds,
+                assignedKermesEvents: newUserSelectedKermesIds,
             };
 
             const response = await fetch('/api/admin/create-user', {
@@ -475,6 +486,10 @@ export default function BenutzerverwaltungPage() {
                 address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
                 country: 'Almanya', role: 'staff', sector: '', password: '', businessId: ''
             });
+            setNewUserIsDriver(false);
+            setNewUserDriverType('platform');
+            setNewUserSelectedBusinessIds([]);
+            setNewUserSelectedKermesIds([]);
             fetchData();
         } catch (err) {
             console.error(err);
@@ -972,10 +987,10 @@ export default function BenutzerverwaltungPage() {
                                                 </div>
                                                 <div className="max-h-60 overflow-y-auto">
                                                     {[...businesses, ...kermesEvents]
-                                                        .filter(b => {
+                                                        .filter((b: any) => {
                                                             const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
                                                             if (searchTerms.length === 0) return true;
-                                                            const fullText = `${b.name || ''} ${$(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
+                                                            const fullText = `${b.name || ''} ${b.dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
                                                             return searchTerms.every(term => fullText.includes(term));
                                                         })
                                                         .map(b => (
@@ -993,9 +1008,9 @@ export default function BenutzerverwaltungPage() {
                                                             </div>
                                                         ))
                                                     }
-                                                    {[...businesses, ...kermesEvents].filter(b => { const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
+                                                    {[...businesses, ...kermesEvents].filter((b: any) => { const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
                                                             if (searchTerms.length === 0) return true;
-                                                            const fullText = `${b.name || ''} ${$(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
+                                                            const fullText = `${b.name || ''} ${b.dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
                                                             return searchTerms.every(term => fullText.includes(term)); }).length === 0 && (
                                                         <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
                                                     )}
@@ -1430,6 +1445,140 @@ export default function BenutzerverwaltungPage() {
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {/* Driver Assignment Block for Add User */}
+                                <div className="pt-2">
+                                    <label className="flex items-center gap-3 cursor-pointer mt-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <div className="relative">
+                                            <input 
+                                                type="checkbox" 
+                                                className="sr-only peer"
+                                                checked={newUserIsDriver}
+                                                onChange={(e) => setNewUserIsDriver(e.target.checked)}
+                                            />
+                                            <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                                        </div>
+                                        <span className="text-sm font-semibold text-foreground">Sürücü Yetkisine Sahip (Aktif Sürücü)</span>
+                                    </label>
+                                </div>
+
+                                {/* Businesses Assignment Block if newUserIsDriver is true */}
+                                {newUserIsDriver && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-top-2 mt-2">
+                                        {/* Atanan İşletmeler */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-semibold text-sm text-foreground">Atanan İşletmeler (Zugeordnete Betriebe)</h4>
+                                                <span className="text-xs text-muted-foreground">{newUserSelectedBusinessIds.length} Seçili</span>
+                                            </div>
+                                            <input 
+                                                type="text"
+                                                placeholder="İşletme ara (İsim, Şehir, Posta Kodu)..."
+                                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 transition outline-none"
+                                                value={businessSearch}
+                                                onChange={(e) => setBusinessSearch(e.target.value)}
+                                            />
+                                            
+                                            <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
+                                                {businesses
+                                                    .filter(biz => {
+                                                        const searchTerms = businessSearch.toLowerCase().split(' ').filter(Boolean);
+                                                        if (searchTerms.length === 0) return true;
+                                                        const fullText = `${biz.name || ''} ${biz.plz || ''} ${biz.city || ''} ${biz.address || ''} ${biz.street || ''}`.toLowerCase();
+                                                        return searchTerms.every(term => fullText.includes(term));
+                                                    })
+                                                    .map(b => (
+                                                    <label key={b.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
+                                                        <input 
+                                                            type="checkbox"
+                                                            className="w-4 h-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500"
+                                                            checked={newUserSelectedBusinessIds.includes(b.id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) setNewUserSelectedBusinessIds(prev => [...prev, b.id]);
+                                                                else setNewUserSelectedBusinessIds(prev => prev.filter(id => id !== b.id));
+                                                            }}
+                                                        />
+                                                        <div>
+                                                            <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                                                                {b.name}
+                                                                {b.type === 'lokma' && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 rounded">Lokma</span>}
+                                                                {b.type === 'kermes' && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 rounded">Kermes</span>}
+                                                            </div>
+                                                            {(b.plz || b.city) && <div className="text-[11px] text-muted-foreground mt-0.5">{b.plz} {b.city}</div>}
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                                {businesses.length > 0 && businesses.filter(biz => {
+                                                        const searchTerms = businessSearch.toLowerCase().split(' ').filter(Boolean);
+                                                        if (searchTerms.length === 0) return true;
+                                                        const fullText = `${biz.name || ''} ${biz.plz || ''} ${biz.city || ''} ${biz.address || ''} ${biz.street || ''}`.toLowerCase();
+                                                        return searchTerms.every(term => fullText.includes(term));
+                                                }).length === 0 && (
+                                                    <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
+                                                )}
+                                            </div>
+                                            {newUserSelectedBusinessIds.length === 0 && (
+                                                <p className="text-xs text-amber-600 dark:text-amber-500">⚠️ İşletme seçilmezse sürücü hiçbir siparişi göremeyecek.</p>
+                                            )}
+                                        </div>
+
+                                        {/* Atanan Kermesler */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-semibold text-sm text-foreground">Atanan Kermesler</h4>
+                                                <span className="text-xs text-muted-foreground">{newUserSelectedKermesIds.length} Seçili</span>
+                                            </div>
+                                            <input 
+                                                type="text"
+                                                placeholder="Kermes ara (İsim, Dernek, Şehir, Posta Kodu)..."
+                                                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 transition outline-none"
+                                                value={kermesSearch}
+                                                onChange={(e) => setKermesSearch(e.target.value)}
+                                            />
+                                            
+                                            <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
+                                                {kermesEvents
+                                                    .filter(k => {
+                                                        const searchTerms = kermesSearch.toLowerCase().split(' ').filter(Boolean);
+                                                        if (searchTerms.length === 0) return true;
+                                                        const fullText = `${k.name || ''} ${(k as any).dernekIsmi || ''} ${k.plz || ''} ${k.city || ''} ${k.address || ''} ${k.street || ''}`.toLowerCase();
+                                                        return searchTerms.every(term => fullText.includes(term));
+                                                    })
+                                                    .map(k => (
+                                                    <label key={k.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
+                                                        <input 
+                                                            type="checkbox"
+                                                            className="w-4 h-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500"
+                                                            checked={newUserSelectedKermesIds.includes(k.id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) setNewUserSelectedKermesIds(prev => [...prev, k.id]);
+                                                                else setNewUserSelectedKermesIds(prev => prev.filter(id => id !== k.id));
+                                                            }}
+                                                        />
+                                                        <div>
+                                                            <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                                                                {k.name}
+                                                            </div>
+                                                            {(k.plz || k.city || (k as any).dernekIsmi) && (
+                                                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                                    {[k.name !== (k as any).dernekIsmi ? (k as any).dernekIsmi : null, k.plz, k.city].filter(Boolean).join(' • ')}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                                {kermesEvents.length > 0 && kermesEvents.filter(k => {
+                                                        const searchTerms = kermesSearch.toLowerCase().split(' ').filter(Boolean);
+                                                        if (searchTerms.length === 0) return true;
+                                                        const fullText = `${k.name || ''} ${(k as any).dernekIsmi || ''} ${k.plz || ''} ${k.city || ''} ${k.address || ''} ${k.street || ''}`.toLowerCase();
+                                                        return searchTerms.every(term => fullText.includes(term));
+                                                }).length === 0 && (
+                                                    <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>

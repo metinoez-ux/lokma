@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
             businessId: bodyBusinessId, businessName: bodyBusinessName, businessType: bodyBusinessType,
             butcherId: legacyButcherId, butcherName: legacyButcherName, // Legacy support
             // 🚗 Driver fields
-            isDriver: bodyIsDriver, driverType: bodyDriverType,
+            isDriver: bodyIsDriver, driverType: bodyDriverType, assignedBusinesses, assignedKermesEvents,
             // Assigner details for welcome email
             assignerName, assignerEmail, assignerPhone, assignerRole,
             // Locale for email content
@@ -217,6 +217,7 @@ export async function POST(request: NextRequest) {
             createdBy: createdBy || 'system',
             createdBySource: body.createdBySource || 'super_admin',
             isActive: true,
+            requirePasswordChange: true, // 🔒 Force password reset on first login
         });
 
         // If admin role is assigned, create admin document
@@ -236,6 +237,7 @@ export async function POST(request: NextRequest) {
                 createdAt: new Date().toISOString(),
                 createdBy: createdBy || 'system',
                 firebaseUid: userRecord.uid,  // Link to Firebase Auth user
+                requirePasswordChange: true, // 🔒 Shared flag in admin doc
             };
 
             // 🔑 UNIVERSAL BUSINESS ASSIGNMENT (Sector-agnostic)
@@ -271,9 +273,13 @@ export async function POST(request: NextRequest) {
             if (DRIVER_ADMIN_TYPES.includes(adminType || '')) {
                 adminData.isDriver = true;
                 adminData.driverType = bodyDriverType || 'business';
+                if (assignedBusinesses !== undefined) adminData.assignedBusinesses = assignedBusinesses;
+                if (assignedKermesEvents !== undefined) adminData.assignedKermesEvents = assignedKermesEvents;
             } else if (bodyIsDriver) {
                 adminData.isDriver = true;
                 adminData.driverType = bodyDriverType || 'business';
+                if (assignedBusinesses !== undefined) adminData.assignedBusinesses = assignedBusinesses;
+                if (assignedKermesEvents !== undefined) adminData.assignedKermesEvents = assignedKermesEvents;
             }
 
             await db.collection('admins').doc(userRecord.uid).set(adminData);
@@ -295,6 +301,7 @@ export async function POST(request: NextRequest) {
                 createdAt: new Date().toISOString(),
                 createdBy: createdBy || 'system',
                 firebaseUid: userRecord.uid,
+                requirePasswordChange: true, // 🔒 Shared flag in admin doc
             };
 
             if (businessId) {
@@ -312,15 +319,22 @@ export async function POST(request: NextRequest) {
                 };
             }
 
+            if (assignedBusinesses !== undefined) driverAdminData.assignedBusinesses = assignedBusinesses;
+            if (assignedKermesEvents !== undefined) driverAdminData.assignedKermesEvents = assignedKermesEvents;
+
             await db.collection('admins').doc(userRecord.uid).set(driverAdminData);
         }
 
         // If admin role WITH driver flag, add driver fields to existing admin record
         if (bodyIsDriver && role === 'admin' && adminType) {
-            await db.collection('admins').doc(userRecord.uid).update({
+            const updateProps: Record<string, any> = {
                 isDriver: true,
                 driverType: bodyDriverType || 'business',
-            });
+            };
+            if (assignedBusinesses !== undefined) updateProps.assignedBusinesses = assignedBusinesses;
+            if (assignedKermesEvents !== undefined) updateProps.assignedKermesEvents = assignedKermesEvents;
+            
+            await db.collection('admins').doc(userRecord.uid).update(updateProps);
         }
 
         // ═══════════════════════════════════════════════════════════════════════
@@ -494,6 +508,7 @@ export async function POST(request: NextRequest) {
         <td style="padding:0;color:#6b7280;font-size:13px;">${s.passLabel}</td>
         <td style="padding:0;">
           <span style="background-color:#f3f4f6;color:#111827;padding:4px 8px;border-radius:4px;font-size:15px;font-family:monospace;letter-spacing:1px;font-weight:600;">${password}</span>
+          <div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600;">(Geçici Şifre)</div>
         </td>
       </tr>
     </table>
@@ -559,6 +574,7 @@ export async function POST(request: NextRequest) {
         <td style="padding:6px 0;color:#9ca3af;font-size:13px;">${s.passLabel}</td>
         <td style="padding:6px 0;">
           <code style="background:rgba(239,68,68,0.15);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:700;letter-spacing:1px;">${password}</code>
+          <div style="font-size:11px;color:#fca5a5;margin-top:4px;font-weight:700;">(Geçici Şifre)</div>
         </td>
       </tr>
     </table>
@@ -622,8 +638,8 @@ export async function POST(request: NextRequest) {
             // 2A. Send WhatsApp Message (Primary)
             try {
                 const whatsappMessage = email
-                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nE-posta: ${email}\nŞifreniz: ${password}\n\nUygulamaya e-posta adresiniz veya telefon numaranızla giriş yapabilirsiniz. İlk girişinizden sonra şifrenizi değiştirmeniz tavsiye edilir.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
-                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nTelefon Numaranız: ${phone}\nŞifreniz: ${password}\n\nLOKMA uygulamasına giriş yaparken LÜTFEN bu şifreyi kullanın. "E-Posta VEYA Telefon" bölümüne numaranızı yazabilirsiniz.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
+                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nE-posta: ${email}\nGeçici Şifreniz: ${password}\n\nUygulamaya yeni şifrenizle giriş yaptığınızda Kendi Şifrenizi Belirlemeniz (Güvenlik) zorunludur.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
+                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nTelefon Numaranız: ${phone}\nGeçici Şifreniz: ${password}\n\nLOKMA uygulamasına giriş yaparken lütfen bu "Geçici Şifreyi" kullanın. Girişten hemen sonra kalıcı şifrenizi belirlemeniz istenecektir.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
 
                 const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
                     method: 'POST',
@@ -651,8 +667,8 @@ export async function POST(request: NextRequest) {
             // 2B. Send SMS (Fallback)
             try {
                 const smsMessage = email
-                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} eklendiniz. Sifreniz: ${password} (Mail veya telefonla guvenle girebilirsiniz).`
-                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} atandiniz. Telefon: ${phone} Sifre: ${password} (Giris yaparken bunu kullanabilirsiniz).`;
+                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} hesabınız açıldı. Geçici Şifreniz: ${password}. (Giriş yaptığınızda yeni şifrenizi belirlemeniz istenecektir).`
+                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} hesabınız açıldı. Geçici Sifreniz: ${password}. (Uygulamaya girip kendi şifrenizi belirleyin).`;
 
                 const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
                     method: 'POST',
