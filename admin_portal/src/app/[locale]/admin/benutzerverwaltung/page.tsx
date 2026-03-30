@@ -965,11 +965,10 @@ export default function BenutzerverwaltungPage() {
                                                 <div className="max-h-60 overflow-y-auto">
                                                     {[...businesses, ...kermesEvents]
                                                         .filter(b => {
-                                                            const search = String(addBusinessSearch).toLowerCase();
-                                                            return String(b.name || '').toLowerCase().includes(search) || 
-                                                                   String(b.plz || '').toLowerCase().includes(search) || 
-                                                                   String(b.city || '').toLowerCase().includes(search) || 
-                                                                   ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search));
+                                                            const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
+                                                            if (searchTerms.length === 0) return true;
+                                                            const fullText = `${b.name || ''} ${$(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
+                                                            return searchTerms.every(term => fullText.includes(term));
                                                         })
                                                         .map(b => (
                                                             <div 
@@ -986,7 +985,10 @@ export default function BenutzerverwaltungPage() {
                                                             </div>
                                                         ))
                                                     }
-                                                    {[...businesses, ...kermesEvents].filter(b => { const search = String(addBusinessSearch).toLowerCase(); return String(b.name || '').toLowerCase().includes(search) || String(b.plz || '').toLowerCase().includes(search) || String(b.city || '').toLowerCase().includes(search) || ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search)); }).length === 0 && (
+                                                    {[...businesses, ...kermesEvents].filter(b => { const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
+                                                            if (searchTerms.length === 0) return true;
+                                                            const fullText = `${b.name || ''} ${$(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
+                                                            return searchTerms.every(term => fullText.includes(term)); }).length === 0 && (
                                                         <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
                                                     )}
                                                 </div>
@@ -1057,11 +1059,10 @@ export default function BenutzerverwaltungPage() {
                                         <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
                                             {businesses
                                                 .filter(biz => {
-                                                    const search = businessSearch.toLowerCase();
-                                                                                                        const s = String(search).toLowerCase();
-                                                    return String(biz.name || '').toLowerCase().includes(s) || 
-                                                           String(biz.plz || '').includes(s) || 
-                                                           String(biz.city || '').toLowerCase().includes(s);
+                                                    const searchTerms = businessSearch.toLowerCase().split(' ').filter(Boolean);
+                                                    if (searchTerms.length === 0) return true;
+                                                    const fullText = `${biz.name || ''} ${biz.plz || ''} ${biz.city || ''} ${biz.address || ''} ${biz.street || ''}`.toLowerCase();
+                                                    return searchTerms.every(term => fullText.includes(term));
                                                 })
                                                 .map(b => (
                                                 <label key={b.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
@@ -1085,11 +1086,10 @@ export default function BenutzerverwaltungPage() {
                                                 </label>
                                             ))}
                                             {businesses.length > 0 && businesses.filter(biz => {
-                                                    const search = businessSearch.toLowerCase();
-                                                                                                        const s = String(search).toLowerCase();
-                                                    return String(biz.name || '').toLowerCase().includes(s) || 
-                                                           String(biz.plz || '').includes(s) || 
-                                                           String(biz.city || '').toLowerCase().includes(s);
+                                                    const searchTerms = businessSearch.toLowerCase().split(' ').filter(Boolean);
+                                                    if (searchTerms.length === 0) return true;
+                                                    const fullText = `${biz.name || ''} ${biz.plz || ''} ${biz.city || ''} ${biz.address || ''} ${biz.street || ''}`.toLowerCase();
+                                                    return searchTerms.every(term => fullText.includes(term));
                                             }).length === 0 && (
                                                 <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
                                             )}
@@ -1116,12 +1116,10 @@ export default function BenutzerverwaltungPage() {
                                         <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
                                             {kermesEvents
                                                 .filter(k => {
-                                                    const search = kermesSearch.toLowerCase();
-                                                                                                        const s = String(search).toLowerCase();
-                                                    return String(k.name || '').toLowerCase().includes(s) || 
-                                                           String(k.plz || '').includes(s) || 
-                                                           String(k.city || '').toLowerCase().includes(s) ||
-                                                           String(k.dernekIsmi || '').toLowerCase().includes(s);
+                                                    const searchTerms = kermesSearch.toLowerCase().split(' ').filter(Boolean);
+                                                    if (searchTerms.length === 0) return true;
+                                                    const fullText = `${k.name || ''} ${k.dernekIsmi || ''} ${k.plz || ''} ${k.city || ''} ${k.address || ''} ${k.street || ''}`.toLowerCase();
+                                                    return searchTerms.every(term => fullText.includes(term));
                                                 })
                                                 .map(k => (
                                                 <label key={k.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
@@ -1141,12 +1139,10 @@ export default function BenutzerverwaltungPage() {
                                                 </label>
                                             ))}
                                             {kermesEvents.length > 0 && kermesEvents.filter(k => {
-                                                    const search = kermesSearch.toLowerCase();
-                                                                                                        const s = String(search).toLowerCase();
-                                                    return String(k.name || '').toLowerCase().includes(s) || 
-                                                           String(k.plz || '').includes(s) || 
-                                                           String(k.city || '').toLowerCase().includes(s) ||
-                                                           String(k.dernekIsmi || '').toLowerCase().includes(s);
+                                                    const searchTerms = kermesSearch.toLowerCase().split(' ').filter(Boolean);
+                                                    if (searchTerms.length === 0) return true;
+                                                    const fullText = `${k.name || ''} ${k.dernekIsmi || ''} ${k.plz || ''} ${k.city || ''} ${k.address || ''} ${k.street || ''}`.toLowerCase();
+                                                    return searchTerms.every(term => fullText.includes(term));
                                             }).length === 0 && (
                                                 <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
                                             )}
@@ -1395,11 +1391,10 @@ export default function BenutzerverwaltungPage() {
                                                 <div className="max-h-60 overflow-y-auto">
                                                     {[...businesses, ...kermesEvents]
                                                         .filter(b => {
-                                                            const search = String(addBusinessSearch).toLowerCase();
-                                                            return String(b.name || '').toLowerCase().includes(search) || 
-                                                                   String(b.plz || '').toLowerCase().includes(search) || 
-                                                                   String(b.city || '').toLowerCase().includes(search) || 
-                                                                   ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search));
+                                                            const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
+                                                            if (searchTerms.length === 0) return true;
+                                                            const fullText = `${b.name || ''} ${(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''}`.toLowerCase();
+                                                            return searchTerms.every(term => fullText.includes(term));
                                                         })
                                                         .map(b => (
                                                             <div 
@@ -1416,7 +1411,12 @@ export default function BenutzerverwaltungPage() {
                                                             </div>
                                                         ))
                                                     }
-                                                    {[...businesses, ...kermesEvents].filter(b => { const search = String(addBusinessSearch).toLowerCase(); return String(b.name || '').toLowerCase().includes(search) || String(b.plz || '').toLowerCase().includes(search) || String(b.city || '').toLowerCase().includes(search) || ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search)); }).length === 0 && (
+                                                    {[...businesses, ...kermesEvents].filter(b => {
+                                                        const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
+                                                        if (searchTerms.length === 0) return true;
+                                                        const fullText = `${b.name || ''} ${(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''}`.toLowerCase();
+                                                        return searchTerms.every(term => fullText.includes(term));
+                                                    }).length === 0 && (
                                                         <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
                                                     )}
                                                 </div>
