@@ -121,8 +121,8 @@ export default function BenutzerverwaltungPage() {
                     id: docSnap.id,
                     name: data.companyName || data.name || t('businessLabel'),
                     type: data.businessType || 'business',
-                    plz: data.plz || data.postalCode || data.zipCode || '',
-                    city: data.city || ''
+                    plz: data.plz || data.postalCode || data.zipCode || data.address?.postalCode || data.address?.plz || data.address?.zipCode || '',
+                    city: data.city || data.address?.city || ''
                 });
             });
             allBusinesses.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
@@ -136,7 +136,7 @@ export default function BenutzerverwaltungPage() {
                 allKermes.push({
                     id: docSnap.id,
                     name: data.name || data.dernekIsmi || data.associationName || data.title || t('kermesLabel') || 'Kermes',
-                    plz: data.address?.plz || data.location?.zipCode || data.plz || '',
+                    plz: data.address?.plz || data.location?.zipCode || data.address?.postalCode || data.plz || data.postalCode || '',
                     city: data.address?.city || data.location?.city || data.city || '',
                     dernekIsmi: data.dernekIsmi || data.associationName || ''
                 });
