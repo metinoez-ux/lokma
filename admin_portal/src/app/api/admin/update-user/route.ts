@@ -208,13 +208,44 @@ export async function POST(request: NextRequest) {
         } else if (!isAdmin) {
              const adminRef = db.collection('admins').doc(userId);
              const adminDoc = await adminRef.get();
-             if (adminDoc.exists) {
-                 await adminRef.update({
-                     isActive: false,
+             
+             if (isDriver) {
+                 // Sadece sürücü olan kullanıcı (geleneksel admin değil)
+                 const driverUpdateData: any = {
+                     isDriver: true,
+                     driverType: driverType !== undefined ? driverType : 'business',
+                     isActive: true,
                      updatedAt,
-                     updatedBy: updatedBy || 'system',
-                     deactivationReason: 'Admin role removed'
-                 });
+                     updatedBy: updatedBy || 'system'
+                 };
+                 
+                 if (assignedBusinesses !== undefined) driverUpdateData.assignedBusinesses = assignedBusinesses;
+                 if (assignedKermesEvents !== undefined) driverUpdateData.assignedKermesEvents = assignedKermesEvents;
+                 if (assignments !== undefined) driverUpdateData.assignments = assignments;
+                 
+                 if (adminDoc.exists) {
+                     await adminRef.update(driverUpdateData);
+                 } else {
+                     driverUpdateData.createdAt = updatedAt;
+                     driverUpdateData.createdBy = updatedBy || 'system';
+                     driverUpdateData.firebaseUid = userId;
+                     driverUpdateData.role = 'admin';
+                     driverUpdateData.email = email || null;
+                     driverUpdateData.displayName = displayName || null;
+                     driverUpdateData.firstName = firstName || null;
+                     driverUpdateData.lastName = lastName || null;
+                     await adminRef.set(driverUpdateData);
+                 }
+             } else {
+                 if (adminDoc.exists) {
+                     await adminRef.update({
+                         isActive: false,
+                         isDriver: false,
+                         updatedAt,
+                         updatedBy: updatedBy || 'system',
+                         deactivationReason: 'Admin role removed'
+                     });
+                 }
              }
         }
 

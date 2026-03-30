@@ -363,7 +363,7 @@ export default function BenutzerverwaltungPage() {
                 setIsDriver(data.isDriver === true || (data.roles && data.roles.includes('driver')) || false);
                 setDriverType(data.driverType || 'platform');
                 setSelectedBusinessIds(data.assignedBusinesses || []);
-                setSelectedKermesIds(data.assignedKermes || []);
+                setSelectedKermesIds(data.assignedKermesEvents || []);
                 setEditSector(data.sector || data.businessType || '');
                 setEditBusinessId(data.businessId || data.butcherId || '');
                 setEditAssignments(data.assignments || []);
