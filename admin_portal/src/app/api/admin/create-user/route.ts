@@ -215,6 +215,8 @@ export async function POST(request: NextRequest) {
             country: country || null,
             postalCode: postalCode || null,
             photoURL: null,
+            // Assignments
+            assignments: assignments || [],
             // Audit tracking
             createdBy: createdBy || 'system',
             createdBySource: body.createdBySource || 'super_admin',

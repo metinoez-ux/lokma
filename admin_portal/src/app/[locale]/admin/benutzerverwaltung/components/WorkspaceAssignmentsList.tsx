@@ -99,9 +99,16 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
           {assignments.map((a, idx) => (
             <div key={`${a.id}-${a.role}-${idx}`} className="flex justify-between items-center bg-card border border-border p-3 rounded-lg">
               <div>
-                <div className="font-semibold text-sm text-foreground">{a.entityName}</div>
-                <div className="text-xs text-muted-foreground uppercase mt-1">
-                  {a.role.replace('_', ' ')} • {a.entityType === 'kermes' ? t('kermes', { defaultValue: 'Kermes' }) : t('isletme', { defaultValue: 'İşletme' })}
+                <div className="font-medium text-sm text-foreground flex items-center gap-2 flex-wrap">
+                  <span className="font-bold">{a.entityName}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold tracking-wide ${a.entityType === 'kermes' ? 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-800' : 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800'}`}>
+                    {a.entityType === 'kermes' ? t('kermes', { defaultValue: 'Kermes' }) : t('isletme', { defaultValue: 'İşletme' })}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  <span className="text-[11px] font-semibold bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 px-2 py-0.5 rounded shadow-sm">
+                    {a.role.replace('_', ' ').toUpperCase()}
+                  </span>
                 </div>
               </div>
               {isSuperAdmin && (

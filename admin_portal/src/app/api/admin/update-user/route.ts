@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
             businessName: finalBusinessName !== undefined ? finalBusinessName : null,
             isAdmin: isAdmin !== undefined ? isAdmin : false,
             adminType: isAdmin ? (adminType !== undefined ? adminType : null) : null,
+            assignments: assignments !== undefined ? assignments : [],
             isActive: isActive !== false, // default true
             updatedAt,
             updatedBy: updatedBy || 'system'
