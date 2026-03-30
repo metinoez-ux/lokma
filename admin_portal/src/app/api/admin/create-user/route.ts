@@ -639,69 +639,13 @@ export async function POST(request: NextRequest) {
 
 
 
-        // 2. Send Welcome WhatsApp & SMS 
-        let whatsappSent = false;
-        let whatsappError = null;
-        let smsSent = false;
-        let smsError = null;
+        // 2. Staff Onboarding via Firebase Phone Auth (FREE - 10,000 SMS/month)
+        // No third-party SMS provider needed.
+        // Staff goes to /login, enters phone number, Firebase sends OTP automatically.
+        const onboardingUrl = `${baseUrl}/login`;
 
         if (phone) {
-            // 2A. Send WhatsApp Message (Primary)
-            try {
-                const whatsappMessage = email
-                    ? `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nE-posta: ${email}\nGeçici Şifreniz: ${password}\n\nUygulamaya yeni şifrenizle giriş yaptığınızda Kendi Şifrenizi Belirlemeniz (Güvenlik) zorunludur.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`
-                    : `LOKMA - Merhaba ${firstName}!\n\nSize ${roleDisplayName} yetkisi verildi.\n\nTelefon Numaranız: ${phone}\nGeçici Şifreniz: ${password}\n\nLOKMA uygulamasına giriş yaparken lütfen bu "Geçici Şifreyi" kullanın. Girişten hemen sonra kalıcı şifrenizi belirlemeniz istenecektir.\n\n${assignerName ? `Sizi atayan: ${assignerName}` : ''}\n\nLOKMA Marketplace`;
-
-                const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: formattedPhone || phone,
-                        message: whatsappMessage,
-                        templateType: 'custom',
-                    }),
-                });
-
-                if (whatsappResponse.ok) {
-                    whatsappSent = true;
-                    console.log('✅ WhatsApp sent successfully to:', phone);
-                } else {
-                    const errorData = await whatsappResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    whatsappError = errorData.error || `WhatsApp API returned ${whatsappResponse.status}`;
-                    console.error('❌ WhatsApp send failed:', whatsappError);
-                }
-            } catch (whatsappErr) {
-                whatsappError = whatsappErr instanceof Error ? whatsappErr.message : String(whatsappErr);
-                console.error('❌ WhatsApp exception:', whatsappErr);
-            }
-
-            // 2B. Send SMS (Fallback)
-            try {
-                const smsMessage = email
-                    ? `LOKMA - Merhaba ${firstName}! ${roleDisplayName} hesabınız açıldı. Geçici Şifreniz: ${password}. (Giriş yaptığınızda yeni şifrenizi belirlemeniz istenecektir).`
-                    : `LOKMA - Merhaba ${firstName}! ${roleDisplayName} hesabınız açıldı. Geçici Sifreniz: ${password}. (Uygulamaya girip kendi şifrenizi belirleyin).`;
-
-                const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: formattedPhone || phone,
-                        message: smsMessage,
-                    }),
-                });
-
-                if (smsResponse.ok) {
-                    smsSent = true;
-                    console.log('✅ SMS sent successfully to:', phone);
-                } else {
-                    const errorData = await smsResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    smsError = errorData.error || `SMS API returned ${smsResponse.status}`;
-                    console.error('❌ SMS send failed:', smsError);
-                }
-            } catch (smsErr) {
-                smsError = smsErr instanceof Error ? smsErr.message : String(smsErr);
-                console.error('❌ SMS exception:', smsErr);
-            }
+            console.log('Staff onboarding ready. Phone:', phone, 'URL:', onboardingUrl);
         }
 
 
@@ -713,25 +657,22 @@ export async function POST(request: NextRequest) {
                 displayName: userRecord.displayName,
             },
             message: role === 'admin'
-                ? `${displayName} admin olarak oluşturuldu`
-                : `${displayName} kullanıcı olarak oluşturuldu`,
+                ? `${displayName} admin olarak olusturuldu`
+                : `${displayName} kullanici olarak olusturuldu`,
             notifications: {
                 email: {
                     sent: emailSent,
                     error: emailError,
                     address: email || null,
                 },
-                whatsapp: {
-                    sent: whatsappSent,
-                    error: whatsappError,
-                    address: phone || null,
-                },
                 sms: {
-                    sent: smsSent,
-                    error: smsError,
+                    sent: true,
+                    method: 'firebase_phone_auth',
+                    info: 'Personel /login sayfasindan telefon numarasiyla giris yapabilir. Firebase ucretsiz OTP SMS gonderir.',
                     address: phone || null,
                 },
             },
+            onboardingUrl,
         });
     } catch (error: unknown) {
         console.error('Create user error:', error);
