@@ -456,7 +456,12 @@ export default function BusinessDetailsPage() {
 
     setGoogleSearchLoading(true);
     try {
-      const res = await fetch(`/api/admin/google-place?action=search&query=${encodeURIComponent(queryToSearch)}`);
+      const token = await auth.currentUser?.getIdToken()
+      const res = await fetch(`/api/admin/google-place?action=search&query=${encodeURIComponent(queryToSearch)}`, {
+          headers: {
+              'Authorization': `Bearer ${token}`
+          }
+      });
       const data = await res.json();
       if (data.candidates && data.candidates.length > 0) {
         setGoogleSearchResults(data.candidates);
@@ -501,7 +506,12 @@ export default function BusinessDetailsPage() {
 
     // Fetch full details
     try {
-      const res = await fetch(`/api/admin/google-place?placeId=${place.place_id}`);
+      const token = await auth.currentUser?.getIdToken()
+      const res = await fetch(`/api/admin/google-place?placeId=${place.place_id}`, {
+          headers: {
+              'Authorization': `Bearer ${token}`
+          }
+      });
       const data = await res.json();
 
       if (!data.error) {
@@ -2465,9 +2475,13 @@ export default function BusinessDetailsPage() {
         : 'isletme_staff';
 
       // Use the proper create-user API (Firebase Auth + users + admins + notifications)
+      const token = await auth.currentUser?.getIdToken();
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify({
           email: inviteEmail || undefined,
           password: tempPassword,

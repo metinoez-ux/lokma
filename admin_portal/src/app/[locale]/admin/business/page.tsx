@@ -580,7 +580,12 @@ export default function BusinessesPage() {
         setIsSearching(true);
         setSearchResults([]);
         try {
-            const res = await fetch(`/api/admin/google-place?action=search&query=${encodeURIComponent(searchQuery2)}`);
+            const token = await auth.currentUser?.getIdToken()
+            const res = await fetch(`/api/admin/google-place?action=search&query=${encodeURIComponent(searchQuery2)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (data.candidates && data.candidates.length > 0) {
                 setSearchResults(data.candidates);
@@ -600,7 +605,12 @@ export default function BusinessesPage() {
         setIsImporting(true);
         setSearchResults([]);
         try {
-            const res = await fetch(`/api/admin/google-place?placeId=${selectedPlaceId}`);
+            const token = await auth.currentUser?.getIdToken()
+            const res = await fetch(`/api/admin/google-place?placeId=${selectedPlaceId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
 
             if (data.error) throw new Error(data.error);
@@ -647,7 +657,12 @@ export default function BusinessesPage() {
 
         setIsRefreshingHours(true);
         try {
-            const res = await fetch(`/api/admin/google-place?placeId=${formData.googlePlaceId}`);
+            const token = await auth.currentUser?.getIdToken()
+            const res = await fetch(`/api/admin/google-place?placeId=${formData.googlePlaceId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
 
             if (data.error) throw new Error(data.error);

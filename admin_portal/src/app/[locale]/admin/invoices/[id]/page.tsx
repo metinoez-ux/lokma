@@ -247,9 +247,13 @@ export default function InvoiceDetailPage() {
 
         setLexwareSending(true);
         try {
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch('/api/admin/lexware/send-invoice', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     invoiceId: invoice.id,
                     sentBy: currentUser.email || currentUser.uid,
@@ -541,7 +545,7 @@ export default function InvoiceDetailPage() {
                                 {(invoice as any).lexwareInvoiceId && (
                                     <>
                                         <div className="pt-3 border-t border-border">
-                                            <span className="text-gray-500 text-xs">Lexware Invoice ID</span>
+                                            <span className="text-gray-500 text-xs">{t('lexwareInvoiceId', { defaultValue: 'Lexware Invoice ID' })}</span>
                                             <p className="text-orange-800 dark:text-orange-400 font-mono text-xs break-all">{(invoice as any).lexwareInvoiceId}</p>
                                         </div>
                                         {(invoice as any).lexwareVoucherNumber && (
@@ -575,13 +579,13 @@ export default function InvoiceDetailPage() {
                                 )}
                                 {invoice.stripePaymentIntentId && (
                                     <div>
-                                        <span className="text-gray-500 text-xs">Stripe Payment Intent</span>
+                                        <span className="text-gray-500 text-xs">{t('stripePaymentIntent', { defaultValue: 'Stripe Payment Intent' })}</span>
                                         <p className="text-blue-800 dark:text-blue-400 font-mono text-xs break-all">{invoice.stripePaymentIntentId}</p>
                                     </div>
                                 )}
                                 {invoice.stripeInvoiceId && (
                                     <div>
-                                        <span className="text-gray-500 text-xs">Stripe Invoice</span>
+                                        <span className="text-gray-500 text-xs">{t('stripeInvoice', { defaultValue: 'Stripe Invoice' })}</span>
                                         <p className="text-blue-800 dark:text-blue-400 font-mono text-xs break-all">{invoice.stripeInvoiceId}</p>
                                     </div>
                                 )}

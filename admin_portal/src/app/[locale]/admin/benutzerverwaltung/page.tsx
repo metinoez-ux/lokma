@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { collection, getDocs, query, where, limit, getDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { getModuleBusinessTypes } from '@/lib/business-types';
@@ -64,7 +64,6 @@ export default function BenutzerverwaltungPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
-    const [showAddMenu, setShowAddMenu] = useState(false);
 
     // Business & Modal State
     const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -96,6 +95,7 @@ export default function BenutzerverwaltungPage() {
     // Edit Modal State
     const [editName, setEditName] = useState('');
     const [editPhone, setEditPhone] = useState('');
+    const [editEmail, setEditEmail] = useState('');
     const [editRoles, setEditRoles] = useState<string[]>([]);
     
     // Additional Detailed Edit State
@@ -321,6 +321,7 @@ export default function BenutzerverwaltungPage() {
         
         setEditName(namePart);
         setEditPhone(user.phone || '');
+        setEditEmail(user.email || '');
         setEditRoles([...user.roles]);
 
         let pr = 'staff';
@@ -388,9 +389,13 @@ export default function BenutzerverwaltungPage() {
         setSavingModal(true);
         try {
             // 1. Firebase Auth ve Firestore üzerinden sil (Backend API - Admin SDK)
+            const token = await auth.currentUser?.getIdToken();
             const resp = await fetch('/api/admin/delete-user', {
                  method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
+                 headers: { 
+                     'Content-Type': 'application/json',
+                     'Authorization': `Bearer ${token}` 
+                 },
                  body: JSON.stringify({ userId: selectedUser.id })
             });
             
@@ -403,6 +408,7 @@ export default function BenutzerverwaltungPage() {
             await deleteDoc(doc(db, 'users', selectedUser.id)).catch(()=>null);
             await deleteDoc(doc(db, 'admins', selectedUser.id)).catch(()=>null);
             await deleteDoc(doc(db, 'user_profiles', selectedUser.id)).catch(()=>null);
+            await deleteDoc(doc(db, 'admin_invitations', selectedUser.id)).catch(()=>null);
             
             setShowUserModal(false);
             fetchData();
@@ -481,12 +487,15 @@ export default function BenutzerverwaltungPage() {
                 assignedKermesEvents: newUserSelectedKermesIds,
                 assignments: newUserAssignments,
                 businessId: newUserData.businessId || undefined,
-                butcherId: newUserData.businessId || undefined,
             };
 
+            const token = await auth.currentUser?.getIdToken();
             const response = await fetch('/api/admin/create-user', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify(payload)
             });
 
@@ -553,7 +562,7 @@ export default function BenutzerverwaltungPage() {
             
             const updatePayload = {
                 userId: selectedUser.id,
-                email: selectedUser.email,
+                email: editEmail,
                 firstName: editFirstName,
                 lastName: editLastName,
                 displayName: `${editFirstName} ${editLastName}`.trim() || editName,
@@ -587,9 +596,13 @@ export default function BenutzerverwaltungPage() {
                 else if (k) updatePayload.butcherName = k.name;
             }
 
+            const token = await auth.currentUser?.getIdToken();
             const response = await fetch('/api/admin/update-user', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify({ updateData: updatePayload })
             });
 
@@ -649,25 +662,11 @@ export default function BenutzerverwaltungPage() {
 
                     <div className="relative">
                         <button 
-                            onClick={() => setShowAddMenu(!showAddMenu)}
+                            onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'staff'})); }}
                             className="bg-pink-600 hover:bg-pink-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-pink-600/20 transition-all flex items-center gap-2"
                         >
                             <span>+ Benutzer hinzufügen</span>
-                            <span className="text-xs">▼</span>
                         </button>
-
-                        {showAddMenu && (
-                            <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50">
-                                {isSuperAdmin && (
-                                    <>
-                                        <button onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'super'})); setShowAddMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👑 Super Admin Ekle</button>
-                                        <button onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'business_admin'})); setShowAddMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🏪 İşletme / Kermes Partneri Ekle</button>
-                                    </>
-                                )}
-                                <button onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'staff'})); setShowAddMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👥 Personel / Sürücü Ekle</button>
-
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -889,12 +888,12 @@ export default function BenutzerverwaltungPage() {
                                     <label className="block text-sm font-medium text-foreground mb-1">{t('e_posta') || 'E-Posta'}</label>
                                     <input
                                         type="email"
-                                        readOnly
-                                        disabled
-                                        value={selectedUser.email}
-                                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-muted-foreground opacity-70"
+                                        value={editEmail}
+                                        onChange={(e) => setEditEmail(e.target.value)}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                                        placeholder="E-Posta"
+                                        title="E-Posta"
                                     />
-                                    <p className="text-[10px] text-muted-foreground mt-1">E-posta adresi güvenlik nedeniyle değiştirilemez.</p>
                                 </div>
 
                                 <div>

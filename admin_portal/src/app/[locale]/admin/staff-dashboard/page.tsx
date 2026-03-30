@@ -5,7 +5,7 @@ import { useLocale } from 'next-intl';
 import {
     collection, getDocs, query, where, orderBy, Timestamp, onSnapshot, limit as fbLimit
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import Link from 'next/link';
@@ -245,9 +245,13 @@ const { admin, loading: adminLoading } = useAdmin();
         setCreateError('');
 
         try {
+            const token = await auth.currentUser?.getIdToken();
             const response = await fetch('/api/admin/create-user', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify({
                     email: createEmail || undefined,
                     password: createPassword,

@@ -2,8 +2,16 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
+import { verifyApiAuth } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
+    // AUTHENTICATION CHECK
+    const authResult = await verifyApiAuth(request);
+    if (authResult instanceof NextResponse) {
+        return authResult; // Unauthorized
+    }
+    const verifiedAdmin = authResult;
+
     let body: any;
     try {
         body = await request.json();
@@ -93,6 +101,33 @@ export async function POST(request: NextRequest) {
                     finalBusinessId = firstKermes.id;
                     finalBusinessName = firstKermes.name;
                 }
+            }
+        }
+
+        // 🛡️ AUTHORIZATION ENFORCEMENT FOR UPDATE
+        const targetUserDoc = await db.collection('users').doc(userId).get();
+        const targetUserData = targetUserDoc.exists ? targetUserDoc.data() : null;
+
+        if (!verifiedAdmin.isSuperAdmin) {
+            // Cannot modify super admins
+            if (targetUserData?.isAdmin && targetUserData?.adminType === 'super') {
+                return NextResponse.json({ error: 'Yetkisiz islem: Super Admin hesaplarini guncelleyemezsiniz' }, { status: 403 });
+            }
+
+            // Cannot promote someone to super admin
+            if (isAdmin && adminType === 'super') {
+                return NextResponse.json({ error: 'Yetkisiz islem: Sadece Super Adminler yetki yukseltebilir' }, { status: 403 });
+            }
+
+            // Must only update users in their own business
+            const targetBusinessId = targetUserData?.businessId || targetUserData?.butcherId;
+            if (targetBusinessId && targetBusinessId !== verifiedAdmin.businessId) {
+                return NextResponse.json({ error: 'Yetkisiz islem: Sadece kendi isletmenize ait kullanicilari guncelleyebilirsiniz' }, { status: 403 });
+            }
+
+            // Cannot re-assign a user to another business
+            if (finalBusinessId && finalBusinessId !== verifiedAdmin.businessId) {
+                return NextResponse.json({ error: 'Yetkisiz islem: Kullaniciyi baska bir isletmeye tasiyamazsiniz' }, { status: 403 });
             }
         }
 

@@ -2,25 +2,32 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmailWithResend } from '@/lib/resend-email';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
+import { verifyApiAuth } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
 
-    // 🔍 DEBUG: Early error catching
     let body: any;
     try {
         body = await request.json();
     } catch (parseError) {
         console.error('🚨 CRITICAL: Failed to parse request body:', parseError);
         return NextResponse.json(
-            { error: 'Geçersiz istek gövdesi', debug: String(parseError) },
+            { error: 'Gecersiz istek govdesi', debug: String(parseError) },
             { status: 400 }
         );
     }
 
+    // AUTHENTICATION CHECK
+    const authResult = await verifyApiAuth(request);
+    if (authResult instanceof NextResponse) {
+        return authResult; // Unauthorized
+    }
+    const verifiedAdmin = authResult;
+
     // 🔍 DEBUG: Check Firebase Admin init
     let auth: any, db: any;
     try {
-        const admin = await getFirebaseAdmin();
+        const admin = getFirebaseAdmin(); // Removed await as it is sync
         auth = admin.auth;
         db = admin.db;
     } catch (initError: any) {
@@ -73,6 +80,16 @@ export async function POST(request: NextRequest) {
         });
 
         // Validate required fields
+        // 🛡️ ROLE-BASED AUTHORIZATION ENFORCEMENT
+        if (adminType === 'super' && !verifiedAdmin.isSuperAdmin) {
+            return NextResponse.json({ error: 'Yetkisiz islem: Sadece Super Adminler yeni bir Super Admin olusturabilir' }, { status: 403 });
+        }
+        if (!verifiedAdmin.isSuperAdmin && verifiedAdmin.businessId) {
+            if (businessId && businessId !== verifiedAdmin.businessId) {
+                return NextResponse.json({ error: 'Yetkisiz islem: Sadece kendi isletmenize personel ekleyebilirsiniz' }, { status: 403 });
+            }
+        }
+
         // Email OR Phone must be provided (at least one contact method)
         if (!email && !phone) {
             return NextResponse.json(
@@ -99,7 +116,9 @@ export async function POST(request: NextRequest) {
         // For ALL business admin roles, businessId is required
         // Only super admin and regular 'user' roles don't need a business assignment
         const needsBusinessAssignment = role === 'admin' && adminType && adminType !== 'super';
-        if (needsBusinessAssignment && !businessId && (!assignments || assignments.length === 0)) {
+        const hasNoBusinessAssignment = !businessId && (!assignments || assignments.length === 0) && (!assignedBusinesses || assignedBusinesses.length === 0);
+        
+        if (needsBusinessAssignment && hasNoBusinessAssignment) {
             return NextResponse.json(
                 {
                     error: `İşletme rolleri için işletme seçimi zorunludur. [DEBUG: role = ${role}, adminType = ${adminType}, businessId = ${businessId || 'MISSING'}]`,
@@ -358,6 +377,7 @@ export async function POST(request: NextRequest) {
 
         // Determine email type and content based on role
         const isAdminOrStaff = role === 'admin' && adminType;
+        const onboardingUrl = isAdminOrStaff ? 'https://lokma.shop/download' : `${baseUrl}/login`;
         const businessDisplayName = businessName || 'LOKMA'; // Business name or LOKMA for super admin
 
         // Get assigner role display name
@@ -378,8 +398,9 @@ export async function POST(request: NextRequest) {
                                 adminType === 'market_staff' ? 'Market Personel' :
                                     adminType === 'cicekci' ? 'Cicekci Admin' :
                                         adminType === 'super' ? 'Super Admin' :
-                                            adminType?.includes('_staff') ? 'Personel' :
-                                                adminType || 'Personel';
+                                            adminType === 'staff' ? 'Personel' :
+                                                adminType?.includes('_staff') ? 'Personel' :
+                                                    adminType || 'Personel';
 
         // 1. Send Welcome Email via API
         let emailSent = false;
@@ -408,7 +429,7 @@ export async function POST(request: NextRequest) {
                         passLabel: 'Passwort',
                         tempPasswordLabel: 'Temporaeres Passwort',
                         passWarning: 'Bitte aendern Sie Ihr Passwort umgehend nach dem ersten Login!',
-                        loginBtn: 'Zum Portal',
+                        loginBtn: 'Zur Lokma App',
                         footer1: 'Diese E-Mail wurde automatisch ueber die LOKMA-Plattform gesendet.',
                         footer2: 'Alle Rechte vorbehalten.',
                         customerSubject: 'Willkommen bei LOKMA!',
@@ -432,7 +453,7 @@ export async function POST(request: NextRequest) {
                         passLabel: 'Password',
                         tempPasswordLabel: 'Temporary Password',
                         passWarning: 'Please change your password immediately after your first login!',
-                        loginBtn: 'Go to Portal',
+                        loginBtn: 'Open Lokma App',
                         footer1: 'This email was sent automatically via the LOKMA platform.',
                         footer2: 'All rights reserved.',
                         customerSubject: 'Welcome to LOKMA!',
@@ -456,7 +477,7 @@ export async function POST(request: NextRequest) {
                         passLabel: 'Sifre',
                         tempPasswordLabel: 'Gecici Sifre',
                         passWarning: 'Lutfen ilk girisinizde sifrenizi hemen degistirin!',
-                        loginBtn: 'Panele Giris Yap',
+                        loginBtn: 'Uygulamayi Ac',
                         footer1: 'Bu e-posta LOKMA platformu uzerinden otomatik olarak gonderilmistir.',
                         footer2: 'Tum haklari saklidir.',
                         customerSubject: 'LOKMA Ailesine Hos Geldiniz!',
@@ -536,7 +557,7 @@ export async function POST(request: NextRequest) {
 
   <!-- CTA Button -->
   <div style="text-align:center;">
-    <a href="${baseUrl}/login" style="display:inline-block;background-color:#dc2626;color:#ffffff;padding:14px 40px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">${s.loginBtn}</a>
+    <a href="${onboardingUrl}" style="display:inline-block;background-color:#dc2626;color:#ffffff;padding:14px 40px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;letter-spacing:0.3px;">${s.loginBtn}</a>
   </div>
 </div>
 
@@ -605,7 +626,7 @@ export async function POST(request: NextRequest) {
 
   <!-- CTA Button -->
   <div style="text-align:center;">
-    <a href="${baseUrl}/login" style="display:inline-block;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;padding:14px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">${s.loginBtn}</a>
+    <a href="${onboardingUrl}" style="display:inline-block;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#ffffff;padding:14px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">${s.loginBtn}</a>
   </div>
 </div>
 
@@ -644,79 +665,9 @@ export async function POST(request: NextRequest) {
 
 
 
-        // 2. Staff Onboarding via Firebase Phone Auth & Notifications
-        const onboardingUrl = `${baseUrl}/login`;
-
-        let whatsappSent = false;
-        let whatsappError = null;
-        let smsSent = false;
-        let smsError = null;
-
-        if (phone) {
-            // Updated messages explaining Phone Auth logic based on user's feedback
-            const businessNameText = businessName ? `${businessName} işletmesinde ` : '';
-            const assignerText = assignerName ? `Sizi atayan: ${assignerName}\n\n` : '';
-            
-            // 2A. Send WhatsApp Message (Primary)
-            try {
-                const whatsappMessage = 
-                    `LOKMA - Merhaba ${firstName}!\n\n` +
-                    `Size ${businessNameText}${roleDisplayName} yetkisi verildi.\n\n` +
-                    `Uygulamaya telefon numaranızla giriş yaparak SMS doğrulama kodu alabilir ve kendi şifrenizi belirleyebilirsiniz.\n\n` +
-                    `Giriş Yap: ${onboardingUrl}\n\n` +
-                    assignerText + 
-                    `LOKMA Marketplace`;
-
-                const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: formattedPhone || phone,
-                        message: whatsappMessage,
-                        templateType: 'custom',
-                    }),
-                });
-
-                if (whatsappResponse.ok) {
-                    whatsappSent = true;
-                    console.log('✅ WhatsApp onboarding sent successfully to:', phone);
-                } else {
-                    const errorData = await whatsappResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    whatsappError = errorData.error || `WhatsApp API returned ${whatsappResponse.status}`;
-                    console.error('❌ WhatsApp send failed:', whatsappError);
-                }
-            } catch (whatsappErr) {
-                whatsappError = whatsappErr instanceof Error ? whatsappErr.message : String(whatsappErr);
-                console.error('❌ WhatsApp exception:', whatsappErr);
-            }
-
-            // 2B. Send SMS (Fallback or Secondary)
-            try {
-                const smsMessage = `LOKMA: Merhaba ${firstName}! ${businessNameText}${roleDisplayName} olarak atandiniz. Telefon numaranizla giris yapip sifrenizi belirlemek icin tiklayin: ${onboardingUrl}`;
-
-                const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: formattedPhone || phone,
-                        message: smsMessage,
-                    }),
-                });
-
-                if (smsResponse.ok) {
-                    smsSent = true;
-                    console.log('✅ SMS onboarding sent successfully to:', phone);
-                } else {
-                    const errorData = await smsResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    smsError = errorData.error || `SMS API returned ${smsResponse.status}`;
-                    console.error('❌ SMS send failed:', smsError);
-                }
-            } catch (smsErr) {
-                smsError = smsErr instanceof Error ? smsErr.message : String(smsErr);
-                console.error('❌ SMS exception:', smsErr);
-            }
-        }
-
+        // 2. Staff Onboarding via Firebase Phone Auth
+        // Firebase handles the OTP verification SMS automatically when the user logs into the Lokma App.
+        // Third-party welcome SMS (Seven API) has been removed per user instruction to use the 10,000 free Firebase OTP quota.
 
         return NextResponse.json({
             success: true,
@@ -733,17 +684,7 @@ export async function POST(request: NextRequest) {
                     sent: emailSent,
                     error: emailError,
                     address: email || null,
-                },
-                whatsapp: {
-                    sent: whatsappSent,
-                    error: whatsappError,
-                    address: phone || null,
-                },
-                sms: {
-                    sent: smsSent,
-                    error: smsError,
-                    address: phone || null,
-                },
+                }
             },
             onboardingUrl,
         });

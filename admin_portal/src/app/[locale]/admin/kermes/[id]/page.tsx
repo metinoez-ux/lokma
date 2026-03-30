@@ -916,9 +916,13 @@ export default function KermesDetailPage() {
             };
             const tempPassword = generatePassword();
             
+            const token = await auth.currentUser?.getIdToken();
             const response = await fetch('/api/admin/create-user', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify({
                     email: form.email || undefined,
                     password: tempPassword,

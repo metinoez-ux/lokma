@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
+import { auth } from '@/lib/firebase';
 
 interface Sector {
     id: string;
@@ -61,7 +62,10 @@ const [sectors, setSectors] = useState<Sector[]>([]);
 
     const fetchSectors = async () => {
         try {
-            const res = await fetch('/api/admin/sectors');
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch('/api/admin/sectors', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             setSectors(data.sectors || []);
         } catch (error) {
@@ -75,9 +79,13 @@ const [sectors, setSectors] = useState<Sector[]>([]);
     const seedSectors = async () => {
         try {
             setSaving(true);
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch('/api/admin/sectors', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ action: 'seed' }),
             });
             const data = await res.json();
@@ -114,9 +122,13 @@ const [sectors, setSectors] = useState<Sector[]>([]);
 
         try {
             setSaving(true);
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch('/api/admin/sectors', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     action: 'create',
                     sector: { ...editingSector, id: sectorId }
@@ -143,9 +155,13 @@ const [sectors, setSectors] = useState<Sector[]>([]);
 
         try {
             setSaving(true);
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch('/api/admin/sectors', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ id: editingSector.id, ...updates }),
             });
             const data = await res.json();
@@ -166,9 +182,13 @@ const [sectors, setSectors] = useState<Sector[]>([]);
     const deleteSector = async (id: string) => {
         try {
             setSaving(true);
+            const token = await auth.currentUser?.getIdToken();
             const res = await fetch('/api/admin/sectors', {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ id }),
             });
             const data = await res.json();

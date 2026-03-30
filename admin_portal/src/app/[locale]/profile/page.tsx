@@ -268,9 +268,13 @@ export default function ProfilePage() {
 
             // STRATEGY 1: Try Admin API first (bypasses reauthentication requirement)
             try {
+                const token = await auth.currentUser?.getIdToken();
                 const response = await fetch('/api/admin/delete-user', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
                     body: JSON.stringify({
                         userId: userId,
                         email: userEmail,

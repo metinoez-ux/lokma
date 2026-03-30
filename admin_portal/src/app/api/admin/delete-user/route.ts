@@ -1,8 +1,15 @@
-export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
+import { verifyApiAuth } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
+    // AUTHENTICATION CHECK
+    const authResult = await verifyApiAuth(request);
+    if (authResult instanceof NextResponse) {
+        return authResult; // Unauthorized
+    }
+    const verifiedAdmin = authResult;
+
     let auth, db;
 
     // Step 1: Initialize Firebase Admin
@@ -23,6 +30,29 @@ export async function POST(request: NextRequest) {
 
         if (!userId && !email && !phoneNumber) {
             return NextResponse.json({ error: 'userId, email veya phoneNumber gereklidir' }, { status: 400 });
+        }
+
+        // 🛡️ AUTHORIZATION ENFORCEMENT FOR DELETION
+        if (!verifiedAdmin.isSuperAdmin) {
+             if (!userId) {
+                  return NextResponse.json({ error: 'Yetkisiz islem: Isletme adminleri kullanicilari sadece ID ile silebilir' }, { status: 403 });
+             }
+
+             // Check if the target user actually belongs to this admin's business
+             const targetUserDoc = await db.collection('users').doc(userId).get();
+             if (targetUserDoc.exists) {
+                 const targetUserData = targetUserDoc.data();
+                 const targetBusinessId = targetUserData?.businessId || targetUserData?.butcherId;
+                 
+                 if (targetBusinessId !== verifiedAdmin.businessId) {
+                     return NextResponse.json({ error: 'Yetkisiz islem: Sadece kendi isletmenize ait kullanicilari silebilirsiniz' }, { status: 403 });
+                 }
+
+                 // Prevent business admins from deleting Super Admins
+                 if (targetUserData?.isAdmin && targetUserData?.adminType === 'super') {
+                     return NextResponse.json({ error: 'Yetkisiz islem: Super Admin hesaplarini silemezsiniz' }, { status: 403 });
+                 }
+             }
         }
 
         let authUid: string | null = null;
@@ -60,6 +90,7 @@ export async function POST(request: NextRequest) {
             firestoreUsersDeleted: false,
             firestoreAdminsDeleted: false,
             firestoreUserProfilesDeleted: false,
+            firestoreAdminInvitationsDeleted: false,
         };
 
         // Delete from Firebase Auth (if user exists there)
@@ -121,6 +152,20 @@ export async function POST(request: NextRequest) {
                 }
             } catch (e) {
                 console.log('User profile doc deletion error:', e);
+            }
+
+            // Delete from admin_invitations collection
+            try {
+                const invDoc = await db.collection('admin_invitations').doc(docId).get();
+                if (invDoc.exists) {
+                    await db.collection('admin_invitations').doc(docId).delete();
+                    results.firestoreAdminInvitationsDeleted = true;
+                    console.log('✅ Deleted from admin_invitations collection:', docId);
+                } else {
+                    console.log('Invitation doc not found in Firestore:', docId);
+                }
+            } catch (e) {
+                console.log('Invitation doc deletion error:', e);
             }
         } else {
             console.log('❌ No docId available for Firestore deletion');

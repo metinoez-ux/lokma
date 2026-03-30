@@ -76,7 +76,12 @@ export default function CustomerServicePage() {
         setLoading(true)
         setError('')
         try {
-            const res = await fetch(`/api/admin/customer-service?q=${encodeURIComponent(query)}&dateFilter=${dateFilter}`)
+            const token = await auth.currentUser?.getIdToken()
+            const res = await fetch(`/api/admin/customer-service?q=${encodeURIComponent(query)}&dateFilter=${dateFilter}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
             if (!res.ok) throw new Error('Search failed')
             const data = await res.json()
             setResults(data)
