@@ -1,5 +1,7 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -19,13 +21,24 @@ interface SuperAdminProfile {
     createdAt?: Date;
 }
 
+interface AdminInvitation {
+    id: string;
+    email: string;
+    role: string;
+    adminType: string;
+    status: string;
+    createdAt?: Date;
+}
+
 /* ── Component ── */
 export default function SuperAdminsPage() {
+    const searchParams = useSearchParams();
     const t = useTranslations('SuperAdmins');
     const { admin, loading } = useAdmin();
 
     /* Super admin list */
     const [superAdmins, setSuperAdmins] = useState<SuperAdminProfile[]>([]);
+    const [pendingInvitations, setPendingInvitations] = useState<AdminInvitation[]>([]);
     const [loadingAdmins, setLoadingAdmins] = useState(true);
 
     /* Profile edit */
@@ -62,6 +75,18 @@ export default function SuperAdminsPage() {
                 createdAt: d.data().createdAt?.toDate?.(),
             }));
             setSuperAdmins(list);
+
+            const invQ = query(collection(db, 'admin_invitations'), where('adminType', '==', 'super'), where('status', '==', 'pending'));
+            const invSnap = await getDocs(invQ);
+            const invList: AdminInvitation[] = invSnap.docs.map(d => ({
+                id: d.id,
+                email: d.data().email || '',
+                role: d.data().role || '',
+                adminType: d.data().adminType || '',
+                status: d.data().status || '',
+                createdAt: d.data().createdAt?.toDate?.(),
+            }));
+            setPendingInvitations(invList);
         } catch (e) {
             console.error(e);
         }
@@ -82,6 +107,22 @@ export default function SuperAdminsPage() {
         setPhotoFile(file);
         setPhotoPreview(URL.createObjectURL(file));
     };
+
+    // Deep-link edit modal
+    useEffect(() => {
+        if (!loadingAdmins && superAdmins.length > 0 && searchParams) {
+            const editId = searchParams.get('edit');
+            if (editId) {
+                const targetAdmin = superAdmins.find(a => a.uid === editId);
+                if (targetAdmin) {
+                    openEdit(targetAdmin);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('edit');
+                    window.history.replaceState(null, '', url.pathname + url.search);
+                }
+            }
+        }
+    }, [loadingAdmins, superAdmins, searchParams]);
 
     const handleSaveProfile = async () => {
         if (!editingUid || !auth.currentUser) return;
@@ -218,6 +259,31 @@ export default function SuperAdminsPage() {
                         </div>
                     )}
                 </section>
+
+                {/* ── Pending Invitations ── */}
+                {pendingInvitations.length > 0 && (
+                    <section>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Bekleyen Davetler (Pending)</h2>
+                        <div className="space-y-3">
+                            {pendingInvitations.map(inv => (
+                                <div key={inv.id} className="bg-card border border-red-500/30 rounded-xl p-4 flex items-center gap-4">
+                                    <div className="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-red-500/10 flex items-center justify-center text-red-500 font-bold">
+                                        ✉️
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-semibold text-foreground">{inv.email}</div>
+                                        <div className="text-xs text-red-500 mt-0.5">Davet Gönderildi (Kayıt Bekleniyor)</div>
+                                        {inv.createdAt && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                {inv.createdAt.toLocaleDateString('tr-TR')}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* ── Edit Profile Modal ── */}
                 {editingUid && (

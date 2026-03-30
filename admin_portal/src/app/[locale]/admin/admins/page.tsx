@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -33,7 +34,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function AdminManagementPage() {
-    
+    const searchParams = useSearchParams();
   const t = useTranslations('AdminAdmins');
 
     const ROLE_LABELS: Record<string, string> = {
@@ -216,6 +217,22 @@ const [admins, setAdmins] = useState<Admin[]>([]);
             permissions: ['orders', 'products'],
         });
     };
+
+    // Deep-link edit modal
+    useEffect(() => {
+        if (!loading && admins.length > 0 && searchParams) {
+            const editId = searchParams.get('edit');
+            if (editId) {
+                const targetAdmin = admins.find(a => a.id === editId);
+                if (targetAdmin) {
+                    openEditModal(targetAdmin);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('edit');
+                    window.history.replaceState(null, '', url.pathname + url.search);
+                }
+            }
+        }
+    }, [loading, admins, searchParams]);
 
     // Filtered admins
     const filteredAdmins = admins.filter(admin => {

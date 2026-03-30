@@ -95,7 +95,7 @@ export default function CustomersPage() {
                         </div>
                     </div>
                     <Link
-                        href="/admin/dashboard"
+                        href="/admin/benutzerverwaltung"
                         className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition-colors"
                     >
                         ← {t('allUsers')}

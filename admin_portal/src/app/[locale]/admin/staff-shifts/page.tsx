@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { collection, query, where, getDocs, orderBy, Timestamp, collectionGroup } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -24,10 +24,19 @@ interface ShiftRecord {
 }
 
 export default function StaffShiftsPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Yükleniyor...</div>}>
+            <StaffShiftsContent />
+        </Suspense>
+    );
+}
+
+function StaffShiftsContent() {
     
   const t = useTranslations('AdminStaffshifts');
 const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const [shifts, setShifts] = useState<ShiftRecord[]>([]);
     const [loading, setLoading] = useState(true);
@@ -35,6 +44,18 @@ const { admin, loading: adminLoading } = useAdmin();
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     });
+    
+    // Add staff filter state
+    const [staffFilter, setStaffFilter] = useState<string>('all');
+    
+    // Initialize staff filter from URL if present
+    useEffect(() => {
+        const staffIdParam = searchParams.get('staffId');
+        if (staffIdParam) {
+            setStaffFilter(staffIdParam);
+        }
+    }, [searchParams]);
+
     const [exporting, setExporting] = useState(false);
 
     const businessId = admin?.butcherId;
@@ -118,6 +139,16 @@ const { admin, loading: adminLoading } = useAdmin();
         return Array.from(map.entries()).map(([id, data]) => ({ staffId: id, ...data }));
     }, [shifts]);
 
+    const filteredShifts = useMemo(() => {
+        if (!staffFilter || staffFilter === 'all') return shifts;
+        return shifts.filter(s => s.staffId === staffFilter);
+    }, [shifts, staffFilter]);
+
+    const filteredStaffSummary = useMemo(() => {
+        if (!staffFilter || staffFilter === 'all') return staffSummary;
+        return staffSummary.filter(s => s.staffId === staffFilter);
+    }, [staffSummary, staffFilter]);
+
     const formatMinutes = (m: number) => {
         const h = Math.floor(m / 60);
         const min = m % 60;
@@ -140,7 +171,7 @@ const { admin, loading: adminLoading } = useAdmin();
         setExporting(true);
         try {
             const headers = [t('staff'), t('tarih'), t('baslangic'), t('bitis'), t('toplam_dk'), t('break_col') + ' (min)', 'Net (min)', t('tables'), t('courier'), t('durum')];
-            const rows = shifts.map(s => [
+            const rows = filteredShifts.map(s => [
                 s.staffName,
                 s.date,
                 s.startedAt ? s.startedAt.toLocaleString('de-DE') : '-',
@@ -157,7 +188,7 @@ const { admin, loading: adminLoading } = useAdmin();
             rows.push([]);
             rows.push([t('ozet')]);
             rows.push([t('staff'), t('toplam_vardiya'), t('toplam_sure'), t('toplam_mola'), t('net_calisma'), t('kurye_vardiya')]);
-            staffSummary.forEach(s => {
+            filteredStaffSummary.forEach(s => {
                 rows.push([
                     s.name,
                     String(s.shiftCount),
@@ -218,13 +249,13 @@ const { admin, loading: adminLoading } = useAdmin();
 </head>
 <body>
     <h1>${t('shift_report')}</h1>
-    <p class="subtitle">${monthLabel} — ${shifts.length} ${t('vardiya_kaydi')}</p>
+    <p class="subtitle">${monthLabel} — ${filteredShifts.length} ${t('vardiya_kaydi')}</p>
 
     <div class="section-title">${t('staff_summary')}</div>
     <table class="summary-table">
         <thead><tr><th>${t('staff')}</th><th>${t('shift')}</th><th>${t('total')}</th><th>${t('break_col')}</th><th>${t('net_work')}</th><th>${t('courier')}</th></tr></thead>
         <tbody>
-            ${staffSummary.map(s => `<tr>
+            ${filteredStaffSummary.map(s => `<tr>
                 <td>${s.name}</td>
                 <td>${s.shiftCount}</td>
                 <td>${formatMinutes(s.totalMinutes)}</td>
@@ -239,7 +270,7 @@ const { admin, loading: adminLoading } = useAdmin();
     <table>
         <thead><tr><th>${t('staff')}</th><th>${t('date')}</th><th>${t('start')}</th><th>${t('end')}</th><th>${t('total')}</th><th>${t('break_col')}</th><th>${t('net')}</th><th>${t('tables')}</th><th>${t('courier')}</th><th>${t('status')}</th></tr></thead>
         <tbody>
-            ${shifts.map(s => `<tr>
+            ${filteredShifts.map(s => `<tr>
                 <td>${s.staffName}</td>
                 <td>${s.date}</td>
                 <td>${formatDate(s.startedAt)}</td>
@@ -299,7 +330,18 @@ const { admin, loading: adminLoading } = useAdmin();
                         </h1>
                         <p className="text-muted-foreground mt-1">{t('personel_vardiya_takibi_ve_raporlama')}</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Staff Filter */}
+                        <select
+                            value={staffFilter}
+                            onChange={e => setStaffFilter(e.target.value)}
+                            className="bg-card border border-gray-600 rounded-xl px-4 py-2.5 text-foreground text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none min-w-[150px]"
+                        >
+                            <option value="all">Tüm Personeller</option>
+                            {staffSummary.map(s => (
+                                <option key={s.staffId} value={s.staffId}>{s.name}</option>
+                            ))}
+                        </select>
                         {/* Month Selector */}
                         <input
                             type="month"
@@ -310,14 +352,14 @@ const { admin, loading: adminLoading } = useAdmin();
                         {/* Export Buttons */}
                         <button
                             onClick={exportCSV}
-                            disabled={exporting || shifts.length === 0}
+                            disabled={exporting || filteredShifts.length === 0}
                             className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition-all shadow-lg shadow-green-500/10"
                         >
                             📊 Excel (CSV)
                         </button>
                         <button
                             onClick={exportPDF}
-                            disabled={exporting || shifts.length === 0}
+                            disabled={exporting || filteredShifts.length === 0}
                             className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 transition-all shadow-lg shadow-red-500/10"
                         >
                             📄 PDF
@@ -329,28 +371,28 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_vardiya')}</p>
-                        <p className="text-3xl font-black text-foreground mt-1">{shifts.length}</p>
+                        <p className="text-3xl font-black text-foreground mt-1">{filteredShifts.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('personel_sayisi')}</p>
-                        <p className="text-3xl font-black text-cyan-800 dark:text-cyan-400 mt-1">{staffSummary.length}</p>
+                        <p className="text-3xl font-black text-cyan-800 dark:text-cyan-400 mt-1">{filteredStaffSummary.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_calisma')}</p>
                         <p className="text-3xl font-black text-green-800 dark:text-green-400 mt-1">
-                            {formatMinutes(staffSummary.reduce((t, s) => t + s.totalMinutes, 0))}
+                            {formatMinutes(filteredStaffSummary.reduce((t, s) => t + s.totalMinutes, 0))}
                         </p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-border rounded-2xl p-5">
                         <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_mola')}</p>
                         <p className="text-3xl font-black text-amber-800 dark:text-amber-400 mt-1">
-                            {formatMinutes(staffSummary.reduce((t, s) => t + s.pauseMinutes, 0))}
+                            {formatMinutes(filteredStaffSummary.reduce((t, s) => t + s.pauseMinutes, 0))}
                         </p>
                     </div>
                 </div>
 
                 {/* Staff Summary Table */}
-                {staffSummary.length > 0 && (
+                {filteredStaffSummary.length > 0 && (
                     <div className="mb-8">
                         <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                             <span className="w-1 h-5 bg-cyan-500 rounded-full"></span>
@@ -369,7 +411,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {staffSummary.map((s, i) => (
+                                    {filteredStaffSummary.map((s, i) => (
                                         <tr key={s.staffId} className={`border-b border-border/50 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-card/50'}`}>
                                             <td className="px-5 py-3 font-medium text-foreground">{s.name}</td>
                                             <td className="px-4 py-3 text-center text-sm text-foreground">{s.shiftCount}</td>
@@ -404,7 +446,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <div className="animate-spin w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
                             <p className="text-muted-foreground">{t('yukleniyor')}</p>
                         </div>
-                    ) : shifts.length === 0 ? (
+                    ) : filteredShifts.length === 0 ? (
                         <div className="bg-card rounded-xl border border-border p-12 text-center">
                             <p className="text-4xl mb-3">📭</p>
                             <p className="text-muted-foreground text-lg font-medium">{monthLabel} {t('icin_kayit_bulunamadi')}</p>
@@ -428,7 +470,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {shifts.map((s, i) => (
+                                    {filteredShifts.map((s, i) => (
                                         <tr key={s.id} className={`border-b border-border/30 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-card/50'}`}>
                                             <td className="px-4 py-2.5 font-medium text-foreground text-sm">{s.staffName}</td>
                                             <td className="px-3 py-2.5 text-center text-xs text-foreground font-mono">{s.date}</td>

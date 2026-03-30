@@ -1,11 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, getDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { getModuleBusinessTypes } from '@/lib/business-types';
+
+const COUNTRY_CODES = [
+    { code: 'DE', dial: '+49', flag: '🇩🇪' },
+    { code: 'AT', dial: '+43', flag: '🇦🇹' },
+    { code: 'CH', dial: '+41', flag: '🇨🇭' },
+    { code: 'TR', dial: '+90', flag: '🇹🇷' },
+];
 
 export interface UnifiedUser {
     id: string;
@@ -14,11 +23,28 @@ export interface UnifiedUser {
     displayName: string;
     phone: string;
     photoURL?: string;
-    role: string;
+    roles: string[];
+    primaryRole: string;
     businessId?: string;
     kermesId?: string;
     createdAt?: Date;
     isActive?: boolean;
+}
+
+export interface Business {
+    id: string;
+    name: string;
+    type: string;
+    plz: string;
+    city: string;
+}
+
+export interface KermesEvent {
+    id: string;
+    name: string;
+    plz: string;
+    city: string;
+    dernekIsmi?: string;
 }
 
 type RoleFilter = 'all' | 'customer' | 'super' | 'lokma_admin' | 'kermes_admin' | 'driver' | 'staff';
@@ -34,6 +60,48 @@ export default function BenutzerverwaltungPage() {
     const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
     const [showAddMenu, setShowAddMenu] = useState(false);
 
+    // Business & Modal State
+    const [businesses, setBusinesses] = useState<Business[]>([]);
+    const [kermesEvents, setKermesEvents] = useState<KermesEvent[]>([]);
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UnifiedUser | null>(null);
+    const [isDriver, setIsDriver] = useState(false);
+    const [driverType, setDriverType] = useState<string>('platform');
+    const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
+    const [selectedKermesIds, setSelectedKermesIds] = useState<string[]>([]);
+    const [businessSearch, setBusinessSearch] = useState('');
+    const [kermesSearch, setKermesSearch] = useState('');
+    const [savingModal, setSavingModal] = useState(false);
+    
+    // Add User / Partner Modal State
+    const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [addingUser, setAddingUser] = useState(false);
+    const [newUserData, setNewUserData] = useState({
+        firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
+        address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
+        country: 'Almanya', role: 'staff', sector: '', password: '', businessId: ''
+    });
+
+    // Edit Modal State
+    const [editName, setEditName] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editRoles, setEditRoles] = useState<string[]>([]);
+    
+    // Additional Detailed Edit State
+    const [editFirstName, setEditFirstName] = useState('');
+    const [editLastName, setEditLastName] = useState('');
+    const [editAddress, setEditAddress] = useState('');
+    const [editHouseNumber, setEditHouseNumber] = useState('');
+    const [editAddressLine2, setEditAddressLine2] = useState('');
+    const [editCity, setEditCity] = useState('');
+    const [editPostalCode, setEditPostalCode] = useState('');
+    const [editCountry, setEditCountry] = useState('Almanya');
+    const [editRole, setEditRole] = useState('staff');
+    const [editSector, setEditSector] = useState('');
+    const [editBusinessId, setEditBusinessId] = useState('');
+    const [addBusinessSearch, setAddBusinessSearch] = useState('');
+    const [showAddBusinessDropdown, setShowAddBusinessDropdown] = useState(false);
+
     // Permission check
     const isSuperAdmin = admin?.adminType === 'super';
 
@@ -42,6 +110,44 @@ export default function BenutzerverwaltungPage() {
             fetchData();
         }
     }, [adminLoading, admin]);
+
+    useEffect(() => {
+        const loadBusinessesAndKermes = async () => {
+            const allBusinesses: Business[] = [];
+            const businessesSnap = await getDocs(collection(db, 'businesses'));
+            businessesSnap.docs.forEach(docSnap => {
+                const data = docSnap.data();
+                allBusinesses.push({
+                    id: docSnap.id,
+                    name: data.companyName || data.name || t('businessLabel'),
+                    type: data.businessType || 'business',
+                    plz: data.plz || data.postalCode || data.zipCode || '',
+                    city: data.city || ''
+                });
+            });
+            allBusinesses.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+            setBusinesses(allBusinesses);
+
+            const allKermes: KermesEvent[] = [];
+            const kQ = query(collection(db, 'kermes_events'), where('status', 'in', ['draft', 'active', 'published']));
+            const kermesSnap = await getDocs(kQ).catch(() => ({ docs: [] }));
+            kermesSnap.docs.forEach(docSnap => {
+                const data = docSnap.data();
+                allKermes.push({
+                    id: docSnap.id,
+                    name: data.name || data.dernekIsmi || data.associationName || data.title || t('kermesLabel') || 'Kermes',
+                    plz: data.address?.plz || data.location?.zipCode || data.plz || '',
+                    city: data.address?.city || data.location?.city || data.city || '',
+                    dernekIsmi: data.dernekIsmi || data.associationName || ''
+                });
+            });
+            allKermes.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+            setKermesEvents(allKermes);
+        };
+        if (isSuperAdmin) {
+            loadBusinessesAndKermes();
+        }
+    }, [isSuperAdmin]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -65,21 +171,23 @@ export default function BenutzerverwaltungPage() {
                 const data = doc.data();
                 const email = data.email || '';
                 
-                let normalizedRole = 'staff';
-                if (data.adminType === 'super') normalizedRole = 'super';
-                else if (data.adminType === 'admin' || data.adminType === 'lokma_admin') normalizedRole = 'lokma_admin';
-                else if (data.adminType === 'kermes_admin') normalizedRole = 'kermes_admin';
-                else if (data.adminType === 'driver' || (data.roles && data.roles.includes('driver'))) normalizedRole = 'driver';
+                let rolesList: string[] = [];
+                if (data.adminType === 'super') rolesList.push('super');
+                if (data.adminType === 'admin' || data.adminType === 'lokma_admin') rolesList.push('lokma_admin');
+                if (data.adminType === 'kermes_admin') rolesList.push('kermes_admin');
+                if (data.adminType === 'driver' || (data.roles && data.roles.includes('driver')) || data.isDriver) rolesList.push('driver');
+                if (data.roles && data.roles.includes('staff')) rolesList.push('staff');
+                // fallback
+                if (rolesList.length === 0) rolesList.push('staff');
 
                 // We prioritize deduping by email if available, otherwise by doc ID
                 const uniqueKey = email.toLowerCase() || doc.id;
                 
                 if (uniqueUsersMap.has(uniqueKey)) {
                     const existing = uniqueUsersMap.get(uniqueKey)!;
-                    // Upgrade role if duplicate exists with a lower priority role
-                    if (normalizedRole === 'super' && existing.role !== 'super') {
-                        existing.role = 'super';
-                    }
+                    // Merge roles if duplicate exists
+                    existing.roles = Array.from(new Set([...existing.roles, ...rolesList]));
+                    if (rolesList.includes('super')) existing.primaryRole = 'super';
                 } else {
                     uniqueUsersMap.set(uniqueKey, {
                         id: doc.id,
@@ -88,7 +196,8 @@ export default function BenutzerverwaltungPage() {
                         displayName: data.displayName || data.name || email?.split('@')[0] || 'Bilinmiyor',
                         phone: data.phone || data.phoneNumber || '',
                         photoURL: data.photoURL || '',
-                        role: normalizedRole,
+                        roles: rolesList,
+                        primaryRole: rolesList.includes('super') ? 'super' : rolesList[0],
                         businessId: data.businessId,
                         kermesId: data.kermesId,
                         createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
@@ -115,9 +224,37 @@ export default function BenutzerverwaltungPage() {
                             displayName: data.displayName || data.name || data.firstName || 'Müşteri',
                             phone: data.phone || data.phoneNumber || '',
                             photoURL: data.photoURL || '',
-                            role: 'customer',
+                            roles: ['customer'],
+                            primaryRole: 'customer',
                             createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
                             isActive: true,
+                        });
+                    }
+                });
+            }
+
+            // 3. Fetch Invitations 
+            if (isSuperAdmin) {
+                const invQ = query(collection(db, 'admin_invitations'), where('status', '==', 'pending'));
+                const invSnap = await getDocs(invQ);
+                invSnap.docs.forEach(doc => {
+                    const data = doc.data();
+                    const email = data.email || '';
+                    const uniqueKey = email.toLowerCase() || doc.id;
+
+                    if (!uniqueUsersMap.has(uniqueKey)) {
+                        let invRole = data.adminType === 'super' ? 'super' : (data.role || 'staff');
+                        uniqueUsersMap.set(uniqueKey, {
+                            id: doc.id,
+                            source: 'admins',
+                            email: email,
+                            displayName: '📧 ' + (email?.split('@')[0] || 'Davet'),
+                            phone: '',
+                            photoURL: '',
+                            roles: [invRole],
+                            primaryRole: invRole,
+                            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+                            isActive: false, // Mark as inactive/pending
                         });
                     }
                 });
@@ -144,7 +281,7 @@ export default function BenutzerverwaltungPage() {
     const filteredUsers = useMemo(() => {
         return users.filter(user => {
             // Role Filter
-            if (roleFilter !== 'all' && user.role !== roleFilter) return false;
+            if (roleFilter !== 'all' && !user.roles.includes(roleFilter)) return false;
 
             // Search Term
             if (searchQuery.trim()) {
@@ -161,13 +298,253 @@ export default function BenutzerverwaltungPage() {
 
 
     // Handlers
-    const handleEditUser = (user: UnifiedUser) => {
-        if (user.role === 'customer') router.push(`/admin/customers`); 
-        else if (user.role === 'driver') router.push(`/admin/drivers`);
-        else if (user.role === 'super') router.push(`/admin/superadmins`);
-        else if (user.role === 'lokma_admin') router.push(`/admin/partners`);
-        else if (user.role === 'kermes_admin') router.push(`/admin/volunteers`);
-        else router.push(`/admin/staff-shifts`);
+    const handleEditUser = async (user: UnifiedUser) => {
+        // Prepare local stats
+        const namePart = user.displayName || '';
+        const nameChunks = namePart.split(' ');
+        
+        setEditName(namePart);
+        setEditPhone(user.phone || '');
+        setEditRoles([...user.roles]);
+
+        let pr = 'staff';
+        if (user.roles.includes('super')) pr = 'super';
+        else if (user.roles.includes('lokma_admin')) pr = 'lokma_admin';
+        else if (user.roles.includes('business_admin')) pr = 'business_admin';
+        else if (user.roles.includes('driver_business')) pr = 'staff';
+        else if (user.roles.includes('driver_lokma')) pr = 'staff';
+        
+        setEditRole(pr);
+        setSelectedUser(user);
+        
+        try {
+            // First try fetching base user to extract address
+            const userDoc = await getDoc(doc(db, 'users', user.id));
+            if (userDoc.exists()) {
+                const ud = userDoc.data();
+                setEditFirstName(ud.firstName || nameChunks[0] || '');
+                setEditLastName(ud.lastName || nameChunks.slice(1).join(' ') || '');
+                setEditAddress(ud.addressDetails?.address || ud.address || '');
+                setEditHouseNumber(ud.addressDetails?.houseNumber || ud.houseNumber || '');
+                setEditAddressLine2(ud.addressDetails?.addressLine2 || ud.addressLine2 || '');
+                setEditCity(ud.addressDetails?.city || ud.city || '');
+                setEditPostalCode(ud.addressDetails?.postalCode || ud.postalCode || '');
+                setEditCountry(ud.addressDetails?.country || ud.country || 'Almanya');
+            } else {
+                setEditFirstName(nameChunks[0] || '');
+                setEditLastName(nameChunks.slice(1).join(' ') || '');
+                setEditAddress('');
+                setEditHouseNumber('');
+                setEditAddressLine2('');
+                setEditCity('');
+                setEditPostalCode('');
+                setEditCountry('Almanya');
+            }
+
+            const adminDoc = await getDoc(doc(db, 'admins', user.id));
+            if (adminDoc.exists()) {
+                const data = adminDoc.data();
+                setIsDriver(data.isDriver === true || (data.roles && data.roles.includes('driver')) || false);
+                setDriverType(data.driverType || 'platform');
+                setSelectedBusinessIds(data.assignedBusinesses || []);
+                setSelectedKermesIds(data.assignedKermes || []);
+                setEditSector(data.sector || data.businessType || '');
+                setEditBusinessId(data.businessId || data.butcherId || '');
+            } else {
+                setIsDriver(user.roles.includes('driver'));
+                setDriverType('platform');
+                setSelectedBusinessIds([]);
+                setSelectedKermesIds([]);
+                setEditSector('');
+                setEditBusinessId('');
+            }
+        } catch (e) {
+            console.error("Error fetching user details", e);
+        }
+        setShowUserModal(true);
+    };
+
+    const handleDeleteUser = async () => {
+        if (!selectedUser) return;
+        if (!confirm('🛑 DİKKAT: Bu kullanıcıyı (Auth, DB Profil vb. dahil) KALICI olarak silmek istediğinize emin misiniz?')) return;
+        setSavingModal(true);
+        try {
+            // 1. Firebase Auth ve Firestore üzerinden sil (Backend API - Admin SDK)
+            const resp = await fetch('/api/admin/delete-user', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ userId: selectedUser.id })
+            });
+            
+            if (!resp.ok) {
+                const errText = await resp.text();
+                throw new Error("API Silme Hatası: " + errText);
+            }
+            
+            // 2. Tedbiren Local Firestore Silme İşlemleri (Admin panelinde olduğumuz için client kuralları müsaade etmeyebilir ama API zaten siliyor)
+            await deleteDoc(doc(db, 'users', selectedUser.id)).catch(()=>null);
+            await deleteDoc(doc(db, 'admins', selectedUser.id)).catch(()=>null);
+            await deleteDoc(doc(db, 'user_profiles', selectedUser.id)).catch(()=>null);
+            
+            setShowUserModal(false);
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            alert("Silme hatası: " + err);
+        } finally {
+            setSavingModal(false);
+        }
+    }
+
+    const handleCreateUser = async () => {
+        if (!newUserData.firstName || !newUserData.lastName || !newUserData.email || !newUserData.password || !newUserData.role) {
+            alert(t('zorunlu_alanlari_doldurun') || "Lütfen tüm zorunlu alanları doldurun (Ad, Soyad, E-Posta, Şifre, Rol)");
+            return;
+        }
+
+        setAddingUser(true);
+        try {
+            let assignedBusinessName;
+            if (newUserData.businessId) {
+                const b = businesses.find(bz => bz.id === newUserData.businessId);
+                const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
+                if (b) assignedBusinessName = b.name;
+                else if (k) assignedBusinessName = k.name;
+            }
+
+            const payload = {
+                email: newUserData.email,
+                password: newUserData.password,
+                displayName: `${newUserData.firstName} ${newUserData.lastName}`,
+                phone: `${newUserData.dialCode}${newUserData.phone}`,
+                role: newUserData.role !== 'user' ? 'admin' : 'user',
+                adminType: newUserData.role !== 'user' ? newUserData.role : undefined,
+                location: `${newUserData.address || ''} ${newUserData.houseNumber || ''}, ${newUserData.city || ''}, ${newUserData.country || ''}`.trim(),
+                butcherId: newUserData.businessId || undefined,
+                butcherName: assignedBusinessName || undefined,
+                createdBy: admin?.email || admin?.id,
+                createdBySource: admin?.adminType === 'super' ? 'super_admin' : 'business_admin',
+                assignerName: admin?.displayName || admin?.firstName ? `${admin?.firstName || ''} ${admin?.lastName || ''}`.trim() : 'Admin',
+                assignerEmail: admin?.email || '',
+                assignerPhone: admin?.phone || '',
+                assignerRole: admin?.adminType || 'admin',
+                firstName: newUserData.firstName,
+                lastName: newUserData.lastName,
+                addressDetails: {
+                    address: newUserData.address,
+                    houseNumber: newUserData.houseNumber,
+                    addressLine2: newUserData.addressLine2,
+                    city: newUserData.city,
+                    postalCode: newUserData.postalCode,
+                    country: newUserData.country,
+                },
+                sector: (() => {
+                    const b = businesses.find(bz => bz.id === newUserData.businessId);
+                    const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
+                    if (b) return (b as any).type || '';
+                    if (k) return 'kermes';
+                    return '';
+                })()
+            };
+
+            const response = await fetch('/api/admin/create-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                alert(`Hata: ${data.error || 'Bilinmeyen hata'}`);
+                setAddingUser(false);
+                return;
+            }
+
+            alert("✅ Kullanıcı başarıyla oluşturuldu.");
+            setShowAddUserModal(false);
+            setNewUserData({
+                firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
+                address: '', houseNumber: '', addressLine2: '', city: '', postalCode: '',
+                country: 'Almanya', role: 'staff', sector: '', password: '', businessId: ''
+            });
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            alert("Kullanıcı eklenirken sistemsel bir hata oluştu.");
+        } finally {
+            setAddingUser(false);
+        }
+    };
+
+    const handleSaveUser = async () => {
+        if (!selectedUser) return;
+        setSavingModal(true);
+        try {
+            let finalRoles = [...editRoles];
+            if (isDriver && !finalRoles.includes('driver')) finalRoles.push('driver');
+            if (!isDriver) finalRoles = finalRoles.filter(r => r !== 'driver');
+            
+            const assignedBusinessNames = businesses.filter(b => selectedBusinessIds.includes(b.id)).map(b => b.name);
+            const assignedKermesNames = kermesEvents.filter(k => selectedKermesIds.includes(k.id)).map(k => k.name);
+            
+            let currentAdminType = editRole !== 'customer' && editRole !== 'user' ? editRole : null;
+            
+            const updatePayload = {
+                userId: selectedUser.id,
+                email: selectedUser.email,
+                firstName: editFirstName,
+                lastName: editLastName,
+                displayName: `${editFirstName} ${editLastName}`.trim() || editName,
+                phoneNumber: editPhone,
+                address: editAddress,
+                houseNumber: editHouseNumber,
+                addressLine2: editAddressLine2,
+                postalCode: editPostalCode,
+                city: editCity,
+                country: editCountry,
+                roles: finalRoles,
+                isAdmin: currentAdminType !== null,
+                adminType: currentAdminType,
+                sector: editSector,
+                butcherId: editBusinessId || undefined,
+                butcherName: undefined as string | undefined, // Fixed by logic below
+                isDriver: isDriver,
+                driverType: isDriver ? (selectedBusinessIds.length > 0 ? 'business' : 'platform') : null,
+                assignedBusinesses: isDriver ? selectedBusinessIds : [],
+                assignedBusinessNames: isDriver ? assignedBusinessNames : [],
+                assignedKermes: isDriver ? selectedKermesIds : [],
+                assignedKermesNames: isDriver ? assignedKermesNames : [],
+                adminEmail: admin?.email
+            };
+
+            if (editBusinessId) {
+                const b = businesses.find(bz => bz.id === editBusinessId);
+                const k = kermesEvents.find(ke => ke.id === editBusinessId);
+                if (b) updatePayload.butcherName = b.name;
+                else if (k) updatePayload.butcherName = k.name;
+            }
+
+            const response = await fetch('/api/admin/update-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updateData: updatePayload })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                alert(`Hata: ${data.error || 'Bilinmeyen Hata'}`);
+                setSavingModal(false);
+                return;
+            }
+
+            setShowUserModal(false);
+            fetchData(); // reload
+        } catch (error) {
+            console.error('Error updating user', error);
+            alert("Fehler beim Speichern: " + String(error));
+        } finally {
+            setSavingModal(false);
+        }
     };
 
     const getRoleBadgeInfo = (role: string) => {
@@ -220,13 +597,12 @@ export default function BenutzerverwaltungPage() {
                             <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl py-2 z-50">
                                 {isSuperAdmin && (
                                     <>
-                                        <button onClick={() => router.push('/admin/superadmins')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👑 Super Admin Ekle</button>
-                                        <button onClick={() => router.push('/admin/partners')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🏪 Lokma Partner Ekle</button>
-                                        <button onClick={() => router.push('/admin/volunteers')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🎪 Kermes Partner Ekle</button>
+                                        <button onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'super'})); setShowAddMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👑 Super Admin Ekle</button>
+                                        <button onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'business_admin'})); setShowAddMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🏪 İşletme / Kermes Partneri Ekle</button>
                                     </>
                                 )}
-                                <button onClick={() => router.push('/admin/drivers')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">🚗 Sürücü (Fahrer) Ekle</button>
-                                <button onClick={() => router.push('/admin/staff-shifts')} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👥 Personel Ekle</button>
+                                <button onClick={() => { setShowAddUserModal(true); setNewUserData(prev => ({...prev, role: 'staff'})); setShowAddMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition">👥 Personel / Sürücü Ekle</button>
+
                             </div>
                         )}
                     </div>
@@ -249,20 +625,20 @@ export default function BenutzerverwaltungPage() {
                         <FilterPill active={roleFilter === 'all'} label="Tümü" count={users.length} onClick={() => setRoleFilter('all')} />
                         
                         {isSuperAdmin && (
-                            <FilterPill active={roleFilter === 'customer'} label="Kunden" count={users.filter(u => u.role === 'customer').length} onClick={() => setRoleFilter('customer')} />
+                            <FilterPill active={roleFilter === 'customer'} label="Kunden" count={users.filter(u => u.roles.includes('customer')).length} onClick={() => setRoleFilter('customer')} />
                         )}
                         {isSuperAdmin && (
-                            <FilterPill active={roleFilter === 'lokma_admin'} label="Partner" count={users.filter(u => u.role === 'lokma_admin').length} onClick={() => setRoleFilter('lokma_admin')} />
+                            <FilterPill active={roleFilter === 'lokma_admin'} label="Partner" count={users.filter(u => u.roles.includes('lokma_admin')).length} onClick={() => setRoleFilter('lokma_admin')} />
                         )}
                         {isSuperAdmin && (
-                            <FilterPill active={roleFilter === 'kermes_admin'} label="Kermes" count={users.filter(u => u.role === 'kermes_admin').length} onClick={() => setRoleFilter('kermes_admin')} />
+                            <FilterPill active={roleFilter === 'kermes_admin'} label="Kermes" count={users.filter(u => u.roles.includes('kermes_admin')).length} onClick={() => setRoleFilter('kermes_admin')} />
                         )}
 
-                        <FilterPill active={roleFilter === 'driver'} label="Fahrer" count={users.filter(u => u.role === 'driver').length} onClick={() => setRoleFilter('driver')} />
-                        <FilterPill active={roleFilter === 'staff'} label="Personal" count={users.filter(u => u.role === 'staff').length} onClick={() => setRoleFilter('staff')} />
+                        <FilterPill active={roleFilter === 'driver'} label="Fahrer" count={users.filter(u => u.roles.includes('driver')).length} onClick={() => setRoleFilter('driver')} />
+                        <FilterPill active={roleFilter === 'staff'} label="Personal" count={users.filter(u => u.roles.includes('staff')).length} onClick={() => setRoleFilter('staff')} />
                         
                         {isSuperAdmin && (
-                            <FilterPill active={roleFilter === 'super'} label="Super Admins" count={users.filter(u => u.role === 'super').length} onClick={() => setRoleFilter('super')} />
+                            <FilterPill active={roleFilter === 'super'} label="Super Admins" count={users.filter(u => u.roles.includes('super')).length} onClick={() => setRoleFilter('super')} />
                         )}
                     </div>
                 </div>
@@ -299,7 +675,6 @@ export default function BenutzerverwaltungPage() {
                                     </tr>
                                 ) : (
                                     filteredUsers.map(user => {
-                                        const roleInfo = getRoleBadgeInfo(user.role);
                                         return (
                                             <tr key={user.id} className="hover:bg-muted/30 transition-colors group">
                                                 {/* User Identity Column */}
@@ -329,12 +704,17 @@ export default function BenutzerverwaltungPage() {
 
                                                 {/* RBAC Role Tag */}
                                                 <td className="px-6 py-4">
-                                                    <div className="flex flex-col gap-1 items-start">
-                                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${roleInfo.bg} border border-current/20`}>
-                                                            {roleInfo.label}
-                                                        </span>
+                                                    <div className="flex flex-wrap gap-1.5 items-start max-w-[200px]">
+                                                        {user.roles.map(r => {
+                                                            const roleInfo = getRoleBadgeInfo(r);
+                                                            return (
+                                                                <span key={r} className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${roleInfo.bg} border border-current/20`}>
+                                                                    {roleInfo.label}
+                                                                </span>
+                                                            );
+                                                        })}
                                                         {user.businessId && user.businessId !== 'NONE' && (
-                                                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                            <span className="text-[10px] w-full text-muted-foreground flex items-center gap-1 mt-1">
                                                                 🏪 Lokma #{user.businessId.slice(0,4)}
                                                             </span>
                                                         )}
@@ -348,10 +728,17 @@ export default function BenutzerverwaltungPage() {
 
                                                 {/* Status Tag */}
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${user.isActive ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-500 dark:border-green-500/20' : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'}`}>
-                                                        <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                                        {user.isActive ? 'Aktiv' : 'Inaktiv'}
-                                                    </span>
+                                                    {user.displayName.startsWith('📧') ? (
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-500 dark:border-orange-500/20">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                                                            Davet Bekleniyor
+                                                        </span>
+                                                    ) : (
+                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${user.isActive ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-500 dark:border-green-500/20' : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'}`}>
+                                                            <span className={`h-1.5 w-1.5 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                            {user.isActive ? 'Aktiv' : 'Inaktiv'}
+                                                        </span>
+                                                    )}
                                                 </td>
 
                                                 {/* Actions */}
@@ -384,6 +771,717 @@ export default function BenutzerverwaltungPage() {
                 </div>
 
             </div>
+
+            {/* Modal for Edit Actions */}
+            {showUserModal && selectedUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm" onClick={() => setShowUserModal(false)}>
+                    <div className="bg-card w-full max-w-md h-full flex flex-col border-l border-border animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
+                        
+                        <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                            <div className="flex items-center gap-3">
+                                <div className="h-12 w-12 rounded-full overflow-hidden bg-muted border border-border">
+                                    {selectedUser.photoURL ? (
+                                        <img src={selectedUser.photoURL} alt={selectedUser.displayName} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <div className="h-full w-full flex items-center justify-center font-bold text-xl text-muted-foreground">
+                                            {selectedUser.displayName.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-foreground">{selectedUser.displayName}</h2>
+                                    <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowUserModal(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none">&times;</button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            
+                            {/* Personal Info */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">Kişisel Bilgiler</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-1">{t('adi') || 'Adı'} *</label>
+                                        <input
+                                            type="text"
+                                            value={editFirstName}
+                                            onChange={(e) => setEditFirstName(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-1">{t('soyadi') || 'Soyadı'} *</label>
+                                        <input
+                                            type="text"
+                                            value={editLastName}
+                                            onChange={(e) => setEditLastName(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('e_posta') || 'E-Posta'}</label>
+                                    <input
+                                        type="email"
+                                        readOnly
+                                        disabled
+                                        value={selectedUser.email}
+                                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-muted-foreground opacity-70"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground mt-1">E-posta adresi güvenlik nedeniyle değiştirilemez.</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('telefon') || 'Telefon'}</label>
+                                    <input
+                                        type="tel"
+                                        value={editPhone}
+                                        onChange={(e) => setEditPhone(e.target.value)}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        placeholder="+49 177 1234567"
+                                    />
+                                </div>
+                            </div>
+
+                            <hr className="border-border" />
+
+                            {/* Address Info */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">{t('adres_bilgileri') || 'Adres Bilgileri'}</h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('sokak') || 'Sokak'}</label>
+                                        <input
+                                            type="text"
+                                            value={editAddress}
+                                            onChange={(e) => setEditAddress(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('bina_no') || 'Bina No'}</label>
+                                        <input
+                                            type="text"
+                                            value={editHouseNumber}
+                                            onChange={(e) => setEditHouseNumber(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-foreground mb-1">{t('adres_satiri_2_daire_kat_vb') || 'Adres Satırı 2 (Daire, Kat vb.)'}</label>
+                                    <input
+                                        type="text"
+                                        value={editAddressLine2}
+                                        onChange={(e) => setEditAddressLine2(e.target.value)}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('posta_kodu') || 'Posta Kodu'}</label>
+                                        <input
+                                            type="text"
+                                            value={editPostalCode}
+                                            onChange={(e) => setEditPostalCode(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('sehir') || 'Şehir'}</label>
+                                        <input
+                                            type="text"
+                                            value={editCity}
+                                            onChange={(e) => setEditCity(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('ulke') || 'Ülke'}</label>
+                                        <input
+                                            type="text"
+                                            value={editCountry}
+                                            onChange={(e) => setEditCountry(e.target.value)}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr className="border-border" />
+
+                            {/* Job Info */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">{t('rol') || 'Yetki ve Bağlantılar'}</h3>
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('rol') || 'Rol'} *</label>
+                                    <select
+                                        value={editRole}
+                                        onChange={(e) => { setEditRole(e.target.value); setEditBusinessId(''); }}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        disabled={!isSuperAdmin && editRole === 'super'}
+                                    >
+                                        {isSuperAdmin && <option value="super">{t('super_admin') || 'Super Admin'}</option>}
+                                        <option value="staff">{t('personel') || 'Personel'}</option>
+                                        <option value="business_admin">{t('i_sletme_admin') || 'İşletme Admin (Lokma/Kermes vb.)'}</option>
+                                    </select>
+                                </div>
+
+                                {(editRole === 'staff' || editRole === 'business_admin') && isSuperAdmin && (
+                                    <div className="relative">
+                                        <label className="block text-sm font-medium text-foreground mb-1">{t('i_sletme_secin') || 'İşletme / Kermes Seçin'}</label>
+                                        
+                                        {!showAddBusinessDropdown ? (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowAddBusinessDropdown(true)}
+                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-left flex justify-between items-center focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                            >
+                                                <span className={editBusinessId ? "text-foreground" : "text-muted-foreground truncate"}>
+                                                    {editBusinessId 
+                                                        ? [...businesses, ...kermesEvents].find(b => b.id === editBusinessId)?.name || 'İşletme / Kermes Seçin...'
+                                                        : 'İşletme / Kermes Seçin...'
+                                                    }
+                                                </span>
+                                                <span className="text-xs">▼</span>
+                                            </button>
+                                        ) : (
+                                            <div className="absolute top-full left-0 mt-1 w-full bg-background border border-border rounded-lg shadow-xl z-50">
+                                                <div className="p-2 border-b border-border flex items-center gap-2">
+                                                    <span className="text-muted-foreground ml-1">🔍</span>
+                                                    <input 
+                                                        type="text" 
+                                                        autoFocus
+                                                        placeholder="kermes/işletme ara..." 
+                                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-foreground"
+                                                        value={addBusinessSearch}
+                                                        onChange={(e) => setAddBusinessSearch(e.target.value)}
+                                                    />
+                                                    <button type="button" onClick={() => setShowAddBusinessDropdown(false)} className="text-muted-foreground hover:text-foreground mr-1 text-lg leading-none">&times;</button>
+                                                </div>
+                                                <div className="max-h-60 overflow-y-auto">
+                                                    {[...businesses, ...kermesEvents]
+                                                        .filter(b => {
+                                                            const search = String(addBusinessSearch).toLowerCase();
+                                                            return String(b.name || '').toLowerCase().includes(search) || 
+                                                                   String(b.plz || '').toLowerCase().includes(search) || 
+                                                                   String(b.city || '').toLowerCase().includes(search) || 
+                                                                   ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search));
+                                                        })
+                                                        .map(b => (
+                                                            <div 
+                                                                key={b.id} 
+                                                                onClick={() => { setEditBusinessId(b.id); setShowAddBusinessDropdown(false); setAddBusinessSearch(''); }}
+                                                                className={`p-3 text-sm cursor-pointer hover:bg-muted/50 border-b border-border last:border-0 ${editBusinessId === b.id ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300' : ''}`}
+                                                            >
+                                                                <div className="font-medium text-foreground">{b.name}</div>
+                                                                {(b.plz || b.city || (b as any).dernekIsmi) && (
+                                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                                        {[b.name !== (b as any).dernekIsmi ? (b as any).dernekIsmi : null, b.plz, b.city].filter(Boolean).join(' • ')}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    }
+                                                    {[...businesses, ...kermesEvents].filter(b => { const search = String(addBusinessSearch).toLowerCase(); return String(b.name || '').toLowerCase().includes(search) || String(b.plz || '').toLowerCase().includes(search) || String(b.city || '').toLowerCase().includes(search) || ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search)); }).length === 0 && (
+                                                        <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {selectedUser.roles?.includes('staff') && (
+                                <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-800/30 rounded-xl p-4 mt-6 mb-6">
+                                    <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2 truncate">
+                                        💼 Personel Vardiya Bilgileri
+                                    </h3>
+                                    <p className="text-xs text-blue-600/80 dark:text-blue-400/80 mb-4 leading-relaxed">
+                                        Bu personel için sisteme kayıtlı tüm mesai (vardiya) kayıtlarını ve detaylı çalışma saatlerini "Personel Vardiya Takibi" ekranından görüntüleyebilirsiniz.
+                                    </p>
+                                    <Link 
+                                        href={`/admin/staff-shifts?staffId=${selectedUser.id}`}
+                                        className="inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl px-4 py-3 transition shadow-sm"
+                                        onClick={() => setShowUserModal(false)}
+                                    >
+                                        Çalışma Saatleri & Vardiyaları Gör ➔
+                                    </Link>
+                                </div>
+                            )}
+
+                            <hr className="border-border" />
+
+                            {/* Driver Privileges Toggle Block */}
+                            <div>
+                                <h3 className="text-lg font-bold text-foreground mb-2">🚗 Sürücü Yönetimi (Fahrerverwaltung)</h3>
+                                <p className="text-sm text-muted-foreground mb-4">Bu kullanıcının sistemde "Sürücü" (Driver) olarak görev yapıp yapamayacağını belirleyin.</p>
+                                
+                                <label className="flex items-center gap-3 p-4 bg-muted/30 border border-border rounded-xl cursor-pointer hover:bg-muted/50 transition">
+                                    <div className="relative">
+                                        <input 
+                                            type="checkbox" 
+                                            className="sr-only peer"
+                                            checked={isDriver}
+                                            onChange={(e) => setIsDriver(e.target.checked)}
+                                        />
+                                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                                    </div>
+                                    <span className="text-sm font-semibold text-foreground">Sürücü Yetkisine Sahip (Aktif Sürücü)</span>
+                                </label>
+                            </div>
+
+                            {/* Businesses Assignment Block if isDriver is true */}
+                            {isDriver && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-top-2 mt-2">
+                                    {/* Sürücü tipi artık Atanan İşletmelerin varlığına göre kaydedilir. (İşletme varsa İşletme Sürücüsü, yoksa LOKMA Sürücüsü) */}
+
+                                    {/* Atanan İşletmeler */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold text-sm text-foreground">Atanan İşletmeler (Zugeordnete Betriebe)</h4>
+                                            <span className="text-xs text-muted-foreground">{selectedBusinessIds.length} Seçili</span>
+                                        </div>
+                                        <input 
+                                            type="text"
+                                            placeholder="İşletme ara (İsim, Şehir, Posta Kodu)..."
+                                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 transition outline-none"
+                                            value={businessSearch}
+                                            onChange={(e) => setBusinessSearch(e.target.value)}
+                                        />
+                                        
+                                        <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
+                                            {businesses
+                                                .filter(biz => {
+                                                    const search = businessSearch.toLowerCase();
+                                                                                                        const s = String(search).toLowerCase();
+                                                    return String(biz.name || '').toLowerCase().includes(s) || 
+                                                           String(biz.plz || '').includes(s) || 
+                                                           String(biz.city || '').toLowerCase().includes(s);
+                                                })
+                                                .map(b => (
+                                                <label key={b.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox"
+                                                        className="w-4 h-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500"
+                                                        checked={selectedBusinessIds.includes(b.id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) setSelectedBusinessIds(prev => [...prev, b.id]);
+                                                            else setSelectedBusinessIds(prev => prev.filter(id => id !== b.id));
+                                                        }}
+                                                    />
+                                                    <div>
+                                                        <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                                                            {b.name}
+                                                            {b.type === 'lokma' && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 rounded">Lokma</span>}
+                                                            {b.type === 'kermes' && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 rounded">Kermes</span>}
+                                                        </div>
+                                                        {(b.plz || b.city) && <div className="text-[11px] text-muted-foreground mt-0.5">{b.plz} {b.city}</div>}
+                                                    </div>
+                                                </label>
+                                            ))}
+                                            {businesses.length > 0 && businesses.filter(biz => {
+                                                    const search = businessSearch.toLowerCase();
+                                                                                                        const s = String(search).toLowerCase();
+                                                    return String(biz.name || '').toLowerCase().includes(s) || 
+                                                           String(biz.plz || '').includes(s) || 
+                                                           String(biz.city || '').toLowerCase().includes(s);
+                                            }).length === 0 && (
+                                                <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
+                                            )}
+                                        </div>
+                                        {selectedBusinessIds.length === 0 && (
+                                            <p className="text-xs text-amber-600 dark:text-amber-500">⚠️ İşletme seçilmezse sürücü hiçbir siparişi göremeyecek.</p>
+                                        )}
+                                    </div>
+
+                                    {/* Atanan Kermesler */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold text-sm text-foreground">Atanan Kermesler</h4>
+                                            <span className="text-xs text-muted-foreground">{selectedKermesIds.length} Seçili</span>
+                                        </div>
+                                        <input 
+                                            type="text"
+                                            placeholder="Kermes ara (İsim, Dernek, Şehir, Posta Kodu)..."
+                                            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-500 transition outline-none"
+                                            value={kermesSearch}
+                                            onChange={(e) => setKermesSearch(e.target.value)}
+                                        />
+                                        
+                                        <div className="border border-border rounded-xl max-h-48 overflow-y-auto bg-background">
+                                            {kermesEvents
+                                                .filter(k => {
+                                                    const search = kermesSearch.toLowerCase();
+                                                                                                        const s = String(search).toLowerCase();
+                                                    return String(k.name || '').toLowerCase().includes(s) || 
+                                                           String(k.plz || '').includes(s) || 
+                                                           String(k.city || '').toLowerCase().includes(s) ||
+                                                           String(k.dernekIsmi || '').toLowerCase().includes(s);
+                                                })
+                                                .map(k => (
+                                                <label key={k.id} className="flex items-center gap-3 p-3 hover:bg-muted/30 border-b border-border last:border-0 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox"
+                                                        className="w-4 h-4 text-pink-600 rounded border-gray-300 focus:ring-pink-500"
+                                                        checked={selectedKermesIds.includes(k.id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) setSelectedKermesIds(prev => [...prev, k.id]);
+                                                            else setSelectedKermesIds(prev => prev.filter(id => id !== k.id));
+                                                        }}
+                                                    />
+                                                    <div>
+                                                        <div className="text-sm font-medium text-foreground">{k.name}</div>
+                                                        {(k.plz || k.city) && <div className="text-[11px] text-muted-foreground mt-0.5">{k.plz} {k.city}</div>}
+                                                    </div>
+                                                </label>
+                                            ))}
+                                            {kermesEvents.length > 0 && kermesEvents.filter(k => {
+                                                    const search = kermesSearch.toLowerCase();
+                                                                                                        const s = String(search).toLowerCase();
+                                                    return String(k.name || '').toLowerCase().includes(s) || 
+                                                           String(k.plz || '').includes(s) || 
+                                                           String(k.city || '').toLowerCase().includes(s) ||
+                                                           String(k.dernekIsmi || '').toLowerCase().includes(s);
+                                            }).length === 0 && (
+                                                <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-border bg-muted/20 flex flex-col gap-3">
+                            {isSuperAdmin && (
+                                <button 
+                                    onClick={handleDeleteUser}
+                                    className="w-full py-2 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 font-medium rounded-xl transition text-sm flex justify-center items-center"
+                                    disabled={savingModal}
+                                >
+                                    🗑️ Bu Kullanıcıyı Kalıcı Olarak Sil
+                                </button>
+                            )}
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={() => setShowUserModal(false)}
+                                    className="flex-1 py-2.5 bg-background border border-border text-foreground hover:bg-muted font-medium rounded-xl transition"
+                                    disabled={savingModal}
+                                >
+                                    İptal
+                                </button>
+                                <button 
+                                    onClick={handleSaveUser}
+                                    className="flex-[2] py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-xl transition flex justify-center items-center"
+                                    disabled={savingModal}
+                                >
+                                    {savingModal ? (
+                                        <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    ) : (
+                                        "Tüm Değişiklikleri Kaydet"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Detailed Modal for Add User Actions */}
+            {showAddUserModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm" onClick={() => setShowAddUserModal(false)}>
+                    <div className="bg-card w-full max-w-lg h-full flex flex-col border-l border-border animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
+                        
+                        <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                            <div className="flex flex-col">
+                                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                                    {t('yeni_kullanici_ekle') || "Yeni Kullanıcı Ekle"}
+                                </h2>
+                                <p className="text-sm text-muted-foreground">Platforma anında yetkili hesabı oluşturun</p>
+                            </div>
+                            <button onClick={() => setShowAddUserModal(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none">&times;</button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            
+                            {/* Personal Info */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">Kişisel Bilgiler</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-1">{t('adi') || 'Adı'} *</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.firstName}
+                                            onChange={(e) => setNewUserData({ ...newUserData, firstName: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                            placeholder="John"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-1">{t('soyadi') || 'Soyadı'} *</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.lastName}
+                                            onChange={(e) => setNewUserData({ ...newUserData, lastName: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                            placeholder="Doe"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('e_posta') || 'E-Posta'} *</label>
+                                    <input
+                                        type="email"
+                                        value={newUserData.email}
+                                        onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        placeholder="ornek@email.com"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('telefon') || 'Telefon'}</label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={newUserData.dialCode}
+                                            onChange={(e) => setNewUserData({ ...newUserData, dialCode: e.target.value })}
+                                            className="w-24 px-2 py-2 bg-background border border-border rounded-lg text-sm focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        >
+                                            {COUNTRY_CODES.map((cc) => (
+                                                <option key={cc.code} value={cc.dial}>{cc.flag} {cc.dial}</option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="tel"
+                                            value={newUserData.phone}
+                                            onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value.replace(/[^0-9]/g, '') })}
+                                            className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                            placeholder="1771234567"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr className="border-border" />
+
+                            {/* Address Info */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">{t('adres_bilgileri') || 'Adres Bilgileri'}</h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('sokak') || 'Sokak'}</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.address}
+                                            onChange={(e) => setNewUserData({ ...newUserData, address: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                            placeholder="Ana Sokak"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('bina_no') || 'Bina No'}</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.houseNumber}
+                                            onChange={(e) => setNewUserData({ ...newUserData, houseNumber: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                            placeholder="12a"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-foreground mb-1">{t('adres_satiri_2_daire_kat_vb') || 'Adres Satırı 2 (Daire, Kat vb.)'}</label>
+                                    <input
+                                        type="text"
+                                        value={newUserData.addressLine2}
+                                        onChange={(e) => setNewUserData({ ...newUserData, addressLine2: e.target.value })}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                        placeholder="2. Kat, Daire 5"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('posta_kodu') || 'Posta Kodu'}</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.postalCode}
+                                            onChange={(e) => setNewUserData({ ...newUserData, postalCode: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                            placeholder="12345"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('sehir') || 'Şehir'}</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.city}
+                                            onChange={(e) => setNewUserData({ ...newUserData, city: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                            placeholder="Berlin"
+                                        />
+                                    </div>
+                                    <div className="col-span-1">
+                                        <label className="block text-xs font-medium text-foreground mb-1">{t('ulke') || 'Ülke'}</label>
+                                        <input
+                                            type="text"
+                                            value={newUserData.country}
+                                            onChange={(e) => setNewUserData({ ...newUserData, country: e.target.value })}
+                                            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm"
+                                            placeholder="Almanya"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr className="border-border" />
+
+                            {/* Job Info */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">{t('rol') || 'Yetki ve Bağlantılar'}</h3>
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('rol') || 'Rol'} *</label>
+                                    <select
+                                        value={newUserData.role}
+                                        onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value, businessId: '' })}
+                                        className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                        disabled={!isSuperAdmin && newUserData.role === 'super'}
+                                    >
+                                        {isSuperAdmin && <option value="super">{t('super_admin') || 'Super Admin'}</option>}
+                                        <option value="staff">{t('personel') || 'Personel'}</option>
+                                        <option value="business_admin">{t('i_sletme_admin') || 'İşletme Admin (Lokma/Kermes vb.)'}</option>
+                                    </select>
+                                </div>
+
+                                {(newUserData.role === 'staff' || newUserData.role === 'business_admin') && isSuperAdmin && (
+                                    <div className="relative">
+                                        <label className="block text-sm font-medium text-foreground mb-1">{t('i_sletme_secin') || 'İşletme / Kermes Seçin'}</label>
+                                        
+                                        {!showAddBusinessDropdown ? (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowAddBusinessDropdown(true)}
+                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-left flex justify-between items-center focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                            >
+                                                <span className={newUserData.businessId ? "text-foreground" : "text-muted-foreground truncate"}>
+                                                    {newUserData.businessId 
+                                                        ? [...businesses, ...kermesEvents].find(b => b.id === newUserData.businessId)?.name || 'İşletme / Kermes Seçin...'
+                                                        : 'İşletme / Kermes Seçin...'
+                                                    }
+                                                </span>
+                                                <span className="text-xs">▼</span>
+                                            </button>
+                                        ) : (
+                                            <div className="absolute top-full left-0 mt-1 w-full bg-background border border-border rounded-lg shadow-xl z-50">
+                                                <div className="p-2 border-b border-border flex items-center gap-2">
+                                                    <span className="text-muted-foreground ml-1">🔍</span>
+                                                    <input 
+                                                        type="text" 
+                                                        autoFocus
+                                                        placeholder="kermes/işletme ara..." 
+                                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-foreground"
+                                                        value={addBusinessSearch}
+                                                        onChange={(e) => setAddBusinessSearch(e.target.value)}
+                                                    />
+                                                    <button type="button" onClick={() => setShowAddBusinessDropdown(false)} className="text-muted-foreground hover:text-foreground mr-1 text-lg leading-none">&times;</button>
+                                                </div>
+                                                <div className="max-h-60 overflow-y-auto">
+                                                    {[...businesses, ...kermesEvents]
+                                                        .filter(b => {
+                                                            const search = String(addBusinessSearch).toLowerCase();
+                                                            return String(b.name || '').toLowerCase().includes(search) || 
+                                                                   String(b.plz || '').toLowerCase().includes(search) || 
+                                                                   String(b.city || '').toLowerCase().includes(search) || 
+                                                                   ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search));
+                                                        })
+                                                        .map(b => (
+                                                            <div 
+                                                                key={b.id} 
+                                                                onClick={() => { setNewUserData({ ...newUserData, businessId: b.id }); setShowAddBusinessDropdown(false); setAddBusinessSearch(''); }}
+                                                                className={`p-3 text-sm cursor-pointer hover:bg-muted/50 border-b border-border last:border-0 ${newUserData.businessId === b.id ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300' : ''}`}
+                                                            >
+                                                                <div className="font-medium text-foreground">{b.name}</div>
+                                                                {(b.plz || b.city || (b as any).dernekIsmi) && (
+                                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                                        {[b.name !== (b as any).dernekIsmi ? (b as any).dernekIsmi : null, b.plz, b.city].filter(Boolean).join(' • ')}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    }
+                                                    {[...businesses, ...kermesEvents].filter(b => { const search = String(addBusinessSearch).toLowerCase(); return String(b.name || '').toLowerCase().includes(search) || String(b.plz || '').toLowerCase().includes(search) || String(b.city || '').toLowerCase().includes(search) || ((b as any).dernekIsmi && String((b as any).dernekIsmi).toLowerCase().includes(search)); }).length === 0 && (
+                                                        <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <hr className="border-border" />
+
+                            {/* Password Setup */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground mb-1">{t('gecici_sifre') || 'Geçici Şifre'} *</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newUserData.password}
+                                            onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                                            className="flex-1 px-3 py-2 bg-background border border-border rounded-lg focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                                            placeholder="En az 6 karakter"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+                                                let pw = '';
+                                                for (let i = 0; i < 12; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+                                                setNewUserData({ ...newUserData, password: pw });
+                                            }}
+                                            className="px-4 py-2 bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-400 font-medium rounded-lg whitespace-nowrap hover:bg-pink-200 dark:hover:bg-pink-500/30 transition shadow-sm"
+                                        >
+                                            ✨ {t('guclu_sifre_olustur') || 'Güçlü Şifre Oluştur'}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2">{t('kullanici_ilk_giriste_sifresini_degistir') || 'Kullanıcı ilk girişte şifresini değiştirmelidir.'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-border bg-muted/20 flex gap-3">
+                            <button 
+                                onClick={() => setShowAddUserModal(false)}
+                                className="flex-1 py-2.5 bg-background border border-border text-foreground hover:bg-muted font-medium rounded-xl transition"
+                                disabled={addingUser}
+                            >
+                                {t('iptal') || 'İptal'}
+                            </button>
+                            <button 
+                                onClick={handleCreateUser}
+                                className="flex-[2] py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-xl transition flex justify-center items-center shadow-lg shadow-pink-600/20"
+                                disabled={addingUser}
+                            >
+                                {addingUser ? (
+                                    <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    "Kullanıcı Oluştur"
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

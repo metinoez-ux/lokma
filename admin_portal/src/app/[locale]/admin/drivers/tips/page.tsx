@@ -233,10 +233,10 @@ export default function DriverTipsOverviewPage() {
                     </div>
                     <div className="flex gap-3">
                         <Link
-                            href="/admin/drivers"
+                            href="/admin/benutzerverwaltung"
                             className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center gap-2 text-sm"
                         >
-                            {t('back_to_drivers')}
+                            Ana Ekran (Benutzer)
                         </Link>
                         <Link
                             href="/admin/drivers/performance"

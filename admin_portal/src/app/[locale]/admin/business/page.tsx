@@ -5,7 +5,7 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, query, orderBy,
 import { db } from '@/lib/firebase';
 import { normalizeTurkish } from '@/lib/utils';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -126,6 +126,7 @@ export default function BusinessesPage() {
     const t = useTranslations('AdminBusiness');
     const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { getActiveSectors, getBusinessTypesList: getDynamicTypesList, loading: sectorsLoading } = useSectors();
 
     // RBAC Guard: Only super admins can access the platform-level business management page
@@ -225,15 +226,14 @@ export default function BusinessesPage() {
 
     // Read type from URL query param on mount (e.g., ?type=restoran)
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const urlParams = new URLSearchParams(window.location.search);
-            const typeFromUrl = urlParams.get('type');
+        if (searchParams) {
+            const typeFromUrl = searchParams.get('type');
             // Check if type is valid in dynamic sectors (kermes excluded - it's a separate module)
             if (typeFromUrl && businessTypes.some(t => t.value === typeFromUrl)) {
                 setTypeFilter(typeFromUrl);
             }
         }
-    }, [businessTypes]);
+    }, [businessTypes, searchParams]);
 
     // Google Places Import States
     const [activeTab, setActiveTab] = useState<'manual' | 'google'>('manual');

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import { sendEmailWithResend } from '@/lib/resend-email';
 
 export async function POST(req: NextRequest) {
     const { auth: adminAuth, db: adminDb } = getFirebaseAdmin();
@@ -68,6 +69,38 @@ export async function POST(req: NextRequest) {
                 createdAt: Timestamp.now(),
             });
             const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://lokma.web.app'}/register?token=${token}`;
+
+            // E-mail send
+            await sendEmailWithResend({
+                to: email.toLowerCase(),
+                subject: 'LOKMA Super Admin Daveti',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="background: linear-gradient(135deg, #111827, #374151); padding: 30px; border-radius: 12px; text-align: center;">
+                            <h1 style="color: white; margin: 0; font-size: 24px;">LOKMA Admin Panel</h1>
+                        </div>
+                        <div style="padding: 30px; background: #f9fafb; border-radius: 12px; margin-top: 20px;">
+                            <h2 style="color: #333; margin-top: 0;">Süper Admin Daveti</h2>
+                            <p style="color: #333; line-height: 1.6;">
+                                LOKMA Süper Admin paneline (C-Level) katılmanız için bir davet aldınız.
+                            </p>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="${inviteLink}" style="background: #ef4444; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                                    Daveti Kabul Et ve Kayıt Ol
+                                </a>
+                            </div>
+                            <p style="color: #666; font-size: 13px;">
+                                Bu davet linki 72 saat süreyle geçerlidir.<br>
+                                Linke tıklayarak kayıt işleminizi tamamlayabilir ve şifrenizi belirleyebilirsiniz.
+                            </p>
+                            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #888; font-size: 11px;">
+                                <p>© LOKMA Marketplace - lokma.shop</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            });
+
             return NextResponse.json({ success: true, mode: 'invited', inviteLink });
         }
     } catch (error: any) {
