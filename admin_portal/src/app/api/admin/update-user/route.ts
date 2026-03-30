@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
             isDriver,
             driverType,
             assignedBusinesses,
+            assignedBusinessNames,
             assignedKermesEvents,
+            assignedKermesNames,
             assignments
         } = source;
 
@@ -74,6 +76,24 @@ export async function POST(request: NextRequest) {
                 { error: 'User ID is required' },
                 { status: 400 }
             );
+        }
+
+        // Calculate final business ID from assignments if empty
+        let finalBusinessId = butcherId;
+        let finalBusinessName = butcherName;
+        
+        if (!finalBusinessId && assignments && Array.isArray(assignments) && assignments.length > 0) {
+            const firstBusiness = assignments.find((a: any) => a.type === 'business');
+            if (firstBusiness) {
+                finalBusinessId = firstBusiness.id;
+                finalBusinessName = firstBusiness.name;
+            } else {
+                const firstKermes = assignments.find((a: any) => a.type === 'kermes');
+                if (firstKermes) {
+                    finalBusinessId = firstKermes.id;
+                    finalBusinessName = firstKermes.name;
+                }
+            }
         }
 
         // 1. Update Firebase Auth User
@@ -117,6 +137,10 @@ export async function POST(request: NextRequest) {
             latitude: latitude !== undefined ? latitude : null,
             longitude: longitude !== undefined ? longitude : null,
             photoURL: photoURL !== undefined ? photoURL : null,
+            butcherId: finalBusinessId !== undefined ? finalBusinessId : null,
+            butcherName: finalBusinessName !== undefined ? finalBusinessName : null,
+            businessId: finalBusinessId !== undefined ? finalBusinessId : null,
+            businessName: finalBusinessName !== undefined ? finalBusinessName : null,
             isAdmin: isAdmin !== undefined ? isAdmin : false,
             adminType: isAdmin ? (adminType !== undefined ? adminType : null) : null,
             isActive: isActive !== false, // default true
@@ -151,8 +175,10 @@ export async function POST(request: NextRequest) {
                 lastName: lastName !== undefined ? lastName : null,
                 email: email !== undefined ? email : null,
                 phoneNumber: phoneNumber !== undefined ? phoneNumber : null,
-                butcherId: butcherId !== undefined ? butcherId : null,
-                butcherName: butcherName !== undefined ? butcherName : null,
+                butcherId: finalBusinessId !== undefined ? finalBusinessId : null,
+                butcherName: finalBusinessName !== undefined ? finalBusinessName : null,
+                businessId: finalBusinessId !== undefined ? finalBusinessId : null,
+                businessName: finalBusinessName !== undefined ? finalBusinessName : null,
                 organizationId: organizationId !== undefined ? organizationId : null,
                 organizationName: organizationName !== undefined ? organizationName : null,
                 photoURL: photoURL !== undefined ? photoURL : null,
@@ -180,9 +206,15 @@ export async function POST(request: NextRequest) {
             if (assignedBusinesses !== undefined) {
                 adminUpdateData.assignedBusinesses = assignedBusinesses;
             }
+            if (assignedBusinessNames !== undefined) {
+                adminUpdateData.assignedBusinessNames = assignedBusinessNames;
+            }
 
             if (assignedKermesEvents !== undefined) {
                 adminUpdateData.assignedKermesEvents = assignedKermesEvents;
+            }
+            if (assignedKermesNames !== undefined) {
+                adminUpdateData.assignedKermesNames = assignedKermesNames;
             }
 
             if (assignments !== undefined) {
@@ -234,6 +266,11 @@ export async function POST(request: NextRequest) {
                      driverUpdateData.displayName = displayName || null;
                      driverUpdateData.firstName = firstName || null;
                      driverUpdateData.lastName = lastName || null;
+                     driverUpdateData.businessId = butcherId || null;
+                     driverUpdateData.businessName = butcherName || null;
+                     driverUpdateData.butcherId = butcherId || null;
+                     driverUpdateData.butcherName = butcherName || null;
+                     driverUpdateData.roles = roles || ['driver'];
                      await adminRef.set(driverUpdateData);
                  }
              } else {

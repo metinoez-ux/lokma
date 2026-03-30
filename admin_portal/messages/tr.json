@@ -4978,7 +4978,8 @@
     "sponsoredAds": "SponsoredAds",
     "iotSettings": "IotSettings",
     "ameise": "Ameise",
-    "teslimat_ayarlari": "Teslimat ayarlari"
+    "teslimat_ayarlari": "Teslimat ayarlari",
+    "zorunlu_alanlari_doldurun": "Lütfen tüm zorunlu alanları doldurun"
   },
   "AdminOrdersCreate": {
     "adim": "Adım",
@@ -6246,7 +6247,13 @@
     "sifre_gonderilecek": "Bu sifre yeni personele e-posta ile gonderilecektir.",
     "surucu_otomatik": "Bu rol otomatik olarak surucu olarak tanimlanir.",
     "evet": "Evet",
-    "hayir": "Hayir"
+    "hayir": "Hayir",
+    "kullanici_olusturuldu": "Kullanici basariyla olusturuldu.",
+    "email_gonderildi": "E-posta gonderildi",
+    "sms_gonderildi": "SMS gonderildi",
+    "zorunlu_alanlari_doldurun": "Lütfen tüm zorunlu alanları doldurun",
+    "email_gonderilemedi": "E-posta gönderilemedi",
+    "sms_gonderilemedi": "SMS gönderilemedi"
   },
   "AdminStaffshifts": {
     "agustos": "Ağustos",
@@ -6319,7 +6326,9 @@
     "dezember": "Dezember",
     "servis": "Servis",
     "csv_raporu_indirildi": "Csv raporu indirildi",
-    "vardiya_kaydi": "Vardiya kaydi"
+    "vardiya_kaydi": "Vardiya kaydi",
+    "tum_personeller": "Tum Personeller",
+    "firestore_index_gerekli": "Firestore index gerekli - Console loglarını kontrol edin"
   },
   "AdminStatistics": {
     "adet": "adet",

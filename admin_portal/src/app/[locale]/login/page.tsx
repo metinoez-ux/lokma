@@ -834,7 +834,14 @@ export default function LoginPage() {
                     {/* Auth Method Toggle (Email/Phone) */}
                     <div className="flex bg-[#0d0d14] border border-white/5 rounded-xl p-1 mb-6">
                         <button
-                            onClick={() => { setAuthMethod('phone'); setError(''); setShowOtpInput(false); }}
+                            onClick={() => { 
+                                setAuthMethod('phone'); 
+                                setError(''); 
+                                setLoading(false);
+                                setShowOtpInput(false);
+                                setConfirmationResult(null);
+                                setOtpCode('');
+                            }}
                             className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2 ${authMethod === 'phone'
                                 ? 'bg-white/10 text-white shadow-sm'
                                 : 'text-white/60 hover:text-white'
@@ -843,7 +850,18 @@ export default function LoginPage() {
                             SMS
                         </button>
                         <button
-                            onClick={() => { setAuthMethod('email'); setError(''); }}
+                            onClick={() => { 
+                                setAuthMethod('email'); 
+                                setError(''); 
+                                setLoading(false);
+                                setShowOtpInput(false);
+                                setConfirmationResult(null);
+                                setOtpCode('');
+                                if (recaptchaVerifierRef.current) {
+                                    try { recaptchaVerifierRef.current.clear(); } catch(e){}
+                                    recaptchaVerifierRef.current = null;
+                                }
+                            }}
                             className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2 ${authMethod === 'email'
                                 ? 'bg-white/10 text-white shadow-sm'
                                 : 'text-white/60 hover:text-white'

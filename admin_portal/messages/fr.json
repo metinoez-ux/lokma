@@ -4952,7 +4952,8 @@
     "sponsoredAds": "SponsoredAds",
     "iotSettings": "IotSettings",
     "ameise": "Ameise",
-    "teslimat_ayarlari": "Teslimat ayarlari"
+    "teslimat_ayarlari": "Teslimat ayarlari",
+    "zorunlu_alanlari_doldurun": "Veuillez remplir tous les champs obligatoires"
   },
   "AdminOrdersCreate": {
     "adim": "étape",
@@ -6189,7 +6190,13 @@
     "sifre_gonderilecek": "Ce mot de passe sera envoye au nouveau membre du personnel par e-mail.",
     "surucu_otomatik": "Ce role est automatiquement reconnu comme chauffeur.",
     "evet": "Oui",
-    "hayir": "Non"
+    "hayir": "Non",
+    "kullanici_olusturuldu": "Utilisateur cree avec succes.",
+    "email_gonderildi": "E-mail envoye",
+    "sms_gonderildi": "SMS envoye",
+    "zorunlu_alanlari_doldurun": "Veuillez remplir tous les champs obligatoires",
+    "email_gonderilemedi": "L'e-mail n'a pas pu être envoyé",
+    "sms_gonderilemedi": "Le SMS n'a pas pu être envoyé"
   },
   "AdminStaffshifts": {
     "agustos": "août",
@@ -6262,7 +6269,9 @@
     "dezember": "Dezember",
     "servis": "Servis",
     "csv_raporu_indirildi": "Csv raporu indirildi",
-    "vardiya_kaydi": "Vardiya kaydi"
+    "vardiya_kaydi": "Vardiya kaydi",
+    "tum_personeller": "Tout le Personnel",
+    "firestore_index_gerekli": "Index Firestore requis - Vérifiez les journaux de la console"
   },
   "AdminStatistics": {
     "adet": "quantité",

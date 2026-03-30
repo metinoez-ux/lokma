@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         // For ALL business admin roles, businessId is required
         // Only super admin and regular 'user' roles don't need a business assignment
         const needsBusinessAssignment = role === 'admin' && adminType && adminType !== 'super';
-        if (needsBusinessAssignment && !businessId) {
+        if (needsBusinessAssignment && !businessId && (!assignments || assignments.length === 0)) {
             return NextResponse.json(
                 {
                     error: `İşletme rolleri için işletme seçimi zorunludur. [DEBUG: role = ${role}, adminType = ${adminType}, businessId = ${businessId || 'MISSING'}]`,
@@ -404,6 +404,7 @@ export async function POST(request: NextRequest) {
                         credTitle: 'Ihre Zugangsdaten',
                         emailLabel: 'E-Mail',
                         passLabel: 'Passwort',
+                        tempPasswordLabel: 'Temporaeres Passwort',
                         passWarning: 'Bitte aendern Sie Ihr Passwort umgehend nach dem ersten Login!',
                         loginBtn: 'Zum Portal',
                         footer1: 'Diese E-Mail wurde automatisch ueber die LOKMA-Plattform gesendet.',
@@ -427,6 +428,7 @@ export async function POST(request: NextRequest) {
                         credTitle: 'Your Login Credentials',
                         emailLabel: 'Email',
                         passLabel: 'Password',
+                        tempPasswordLabel: 'Temporary Password',
                         passWarning: 'Please change your password immediately after your first login!',
                         loginBtn: 'Go to Portal',
                         footer1: 'This email was sent automatically via the LOKMA platform.',
@@ -450,6 +452,7 @@ export async function POST(request: NextRequest) {
                         credTitle: 'Giris Bilgileriniz',
                         emailLabel: 'E-posta',
                         passLabel: 'Sifre',
+                        tempPasswordLabel: 'Gecici Sifre',
                         passWarning: 'Lutfen ilk girisinizde sifrenizi hemen degistirin!',
                         loginBtn: 'Panele Giris Yap',
                         footer1: 'Bu e-posta LOKMA platformu uzerinden otomatik olarak gonderilmistir.',
@@ -519,7 +522,7 @@ export async function POST(request: NextRequest) {
         <td style="padding:0;color:#6b7280;font-size:13px;">${s.passLabel}</td>
         <td style="padding:0;">
           <span style="background-color:#f3f4f6;color:#111827;padding:4px 8px;border-radius:4px;font-size:15px;font-family:monospace;letter-spacing:1px;font-weight:600;">${password}</span>
-          <div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600;">(Geçici Şifre)</div>
+          <div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600;">(${s.tempPasswordLabel})</div>
         </td>
       </tr>
     </table>
@@ -585,7 +588,7 @@ export async function POST(request: NextRequest) {
         <td style="padding:6px 0;color:#9ca3af;font-size:13px;">${s.passLabel}</td>
         <td style="padding:6px 0;">
           <code style="background:rgba(239,68,68,0.15);color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:14px;font-weight:700;letter-spacing:1px;">${password}</code>
-          <div style="font-size:11px;color:#fca5a5;margin-top:4px;font-weight:700;">(Geçici Şifre)</div>
+          <div style="font-size:11px;color:#fca5a5;margin-top:4px;font-weight:700;">(${s.tempPasswordLabel})</div>
         </td>
       </tr>
     </table>
@@ -639,13 +642,77 @@ export async function POST(request: NextRequest) {
 
 
 
-        // 2. Staff Onboarding via Firebase Phone Auth (FREE - 10,000 SMS/month)
-        // No third-party SMS provider needed.
-        // Staff goes to /login, enters phone number, Firebase sends OTP automatically.
+        // 2. Staff Onboarding via Firebase Phone Auth & Notifications
         const onboardingUrl = `${baseUrl}/login`;
 
+        let whatsappSent = false;
+        let whatsappError = null;
+        let smsSent = false;
+        let smsError = null;
+
         if (phone) {
-            console.log('Staff onboarding ready. Phone:', phone, 'URL:', onboardingUrl);
+            // Updated messages explaining Phone Auth logic based on user's feedback
+            const businessNameText = businessName ? `${businessName} işletmesinde ` : '';
+            const assignerText = assignerName ? `Sizi atayan: ${assignerName}\n\n` : '';
+            
+            // 2A. Send WhatsApp Message (Primary)
+            try {
+                const whatsappMessage = 
+                    `LOKMA - Merhaba ${firstName}!\n\n` +
+                    `Size ${businessNameText}${roleDisplayName} yetkisi verildi.\n\n` +
+                    `Uygulamaya telefon numaranızla giriş yaparak SMS doğrulama kodu alabilir ve kendi şifrenizi belirleyebilirsiniz.\n\n` +
+                    `Giriş Yap: ${onboardingUrl}\n\n` +
+                    assignerText + 
+                    `LOKMA Marketplace`;
+
+                const whatsappResponse = await fetch(`${baseUrl}/api/whatsapp/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: formattedPhone || phone,
+                        message: whatsappMessage,
+                        templateType: 'custom',
+                    }),
+                });
+
+                if (whatsappResponse.ok) {
+                    whatsappSent = true;
+                    console.log('✅ WhatsApp onboarding sent successfully to:', phone);
+                } else {
+                    const errorData = await whatsappResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    whatsappError = errorData.error || `WhatsApp API returned ${whatsappResponse.status}`;
+                    console.error('❌ WhatsApp send failed:', whatsappError);
+                }
+            } catch (whatsappErr) {
+                whatsappError = whatsappErr instanceof Error ? whatsappErr.message : String(whatsappErr);
+                console.error('❌ WhatsApp exception:', whatsappErr);
+            }
+
+            // 2B. Send SMS (Fallback or Secondary)
+            try {
+                const smsMessage = `LOKMA: Merhaba ${firstName}! ${businessNameText}${roleDisplayName} olarak atandiniz. Telefon numaranizla giris yapip sifrenizi belirlemek icin tiklayin: ${onboardingUrl}`;
+
+                const smsResponse = await fetch(`${baseUrl}/api/sms/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: formattedPhone || phone,
+                        message: smsMessage,
+                    }),
+                });
+
+                if (smsResponse.ok) {
+                    smsSent = true;
+                    console.log('✅ SMS onboarding sent successfully to:', phone);
+                } else {
+                    const errorData = await smsResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    smsError = errorData.error || `SMS API returned ${smsResponse.status}`;
+                    console.error('❌ SMS send failed:', smsError);
+                }
+            } catch (smsErr) {
+                smsError = smsErr instanceof Error ? smsErr.message : String(smsErr);
+                console.error('❌ SMS exception:', smsErr);
+            }
         }
 
 
@@ -665,10 +732,14 @@ export async function POST(request: NextRequest) {
                     error: emailError,
                     address: email || null,
                 },
+                whatsapp: {
+                    sent: whatsappSent,
+                    error: whatsappError,
+                    address: phone || null,
+                },
                 sms: {
-                    sent: true,
-                    method: 'firebase_phone_auth',
-                    info: 'Personel /login sayfasindan telefon numarasiyla giris yapabilir. Firebase ucretsiz OTP SMS gonderir.',
+                    sent: smsSent,
+                    error: smsError,
                     address: phone || null,
                 },
             },

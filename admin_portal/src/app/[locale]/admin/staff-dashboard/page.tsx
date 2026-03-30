@@ -257,7 +257,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     adminType: createRole,
                     isDriver: createRole === 'teslimat',
                     driverType: createRole === 'teslimat' ? 'business' : undefined,
-                    butcherId: businessId,
+                    businessId: businessId,
                     butcherName: admin?.butcherName || admin?.businessName || '',
                     isPrimaryAdmin: false,
                     createdBy: admin?.email || admin?.id,
@@ -277,17 +277,25 @@ const { admin, loading: adminLoading } = useAdmin();
                 return;
             }
 
-            let successMsg = t('kullanici_olusturuldu') || "Kullanıcı başarıyla oluşturuldu.";
+            let successMsg = t('kullanici_olusturuldu');
             if (data.notifications) {
-                const { email, whatsapp, sms } = data.notifications;
-                if (!email?.sent && email?.address) {
-                    successMsg += `\n⚠️ E-posta GÖNDERİLEMEDİ: ${email.error || 'Bilinmeyen hata'}`;
+                const { email, sms } = data.notifications;
+                const parts: string[] = [];
+
+                if (email?.sent) {
+                    parts.push(t('email_gonderildi'));
+                } else if (email?.address && !email?.sent) {
+                    parts.push(`${t('email_gonderilemedi')}: ${email.error || '?'}`);
                 }
-                if (!whatsapp?.sent && whatsapp?.address) {
-                    successMsg += `\n⚠️ WhatsApp GÖNDERİLEMEDİ: ${whatsapp.error || 'Bilinmeyen hata'}`;
+
+                if (sms?.sent) {
+                    parts.push(t('sms_gonderildi'));
+                } else if (sms?.address && !sms?.sent) {
+                    parts.push(`${t('sms_gonderilemedi')}: ${sms.error || '?'}`);
                 }
-                if (!sms?.sent && sms?.address) {
-                    successMsg += `\n⚠️ SMS GÖNDERİLEMEDİ: ${sms.error || 'Bilinmeyen hata'}`;
+
+                if (parts.length > 0) {
+                    successMsg += '\n\n' + parts.join('\n');
                 }
             }
             alert(successMsg);

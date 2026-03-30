@@ -40,7 +40,6 @@
     "react-hot-toast": "^2.6.0",
     "resend": "^6.9.4",
     "stripe": "^20.1.0",
-    "twilio": "^5.11.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

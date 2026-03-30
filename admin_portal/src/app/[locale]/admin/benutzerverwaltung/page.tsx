@@ -471,6 +471,8 @@ export default function BenutzerverwaltungPage() {
                 assignedBusinesses: newUserSelectedBusinessIds,
                 assignedKermesEvents: newUserSelectedKermesIds,
                 assignments: newUserAssignments,
+                businessId: newUserData.businessId || undefined,
+                butcherId: newUserData.businessId || undefined,
             };
 
             const response = await fetch('/api/admin/create-user', {
@@ -1345,72 +1347,13 @@ export default function BenutzerverwaltungPage() {
                                 </div>
 
                                 {(newUserData.role === 'staff' || newUserData.role === 'business_admin') && isSuperAdmin && (
-                                    <div className="relative">
-                                        <label className="block text-sm font-medium text-foreground mb-1">{t('i_sletme_secin') || 'İşletme / Kermes Seçin'}</label>
-                                        
-                                        {!showAddBusinessDropdown ? (
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setShowAddBusinessDropdown(true)}
-                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-left flex justify-between items-center focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
-                                            >
-                                                <span className={newUserData.businessId ? "text-foreground" : "text-muted-foreground truncate"}>
-                                                    {newUserData.businessId 
-                                                        ? [...businesses, ...kermesEvents].find(b => b.id === newUserData.businessId)?.name || 'İşletme / Kermes Seçin...'
-                                                        : 'İşletme / Kermes Seçin...'
-                                                    }
-                                                </span>
-                                                <span className="text-xs">▼</span>
-                                            </button>
-                                        ) : (
-                                            <div className="absolute top-full left-0 mt-1 w-full bg-background border border-border rounded-lg shadow-xl z-50">
-                                                <div className="p-2 border-b border-border flex items-center gap-2">
-                                                    <span className="text-muted-foreground ml-1">🔍</span>
-                                                    <input 
-                                                        type="text" 
-                                                        autoFocus
-                                                        placeholder="kermes/işletme ara..." 
-                                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-foreground"
-                                                        value={addBusinessSearch}
-                                                        onChange={(e) => setAddBusinessSearch(e.target.value)}
-                                                    />
-                                                    <button type="button" onClick={() => setShowAddBusinessDropdown(false)} className="text-muted-foreground hover:text-foreground mr-1 text-lg leading-none">&times;</button>
-                                                </div>
-                                                <div className="max-h-60 overflow-y-auto">
-                                                    {[...businesses, ...kermesEvents]
-                                                        .filter(b => {
-                                                            const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
-                                                            if (searchTerms.length === 0) return true;
-                                                            const fullText = `${b.name || ''} ${(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''}`.toLowerCase();
-                                                            return searchTerms.every(term => fullText.includes(term));
-                                                        })
-                                                        .map(b => (
-                                                            <div 
-                                                                key={b.id} 
-                                                                onClick={() => { setNewUserData({ ...newUserData, businessId: b.id }); setShowAddBusinessDropdown(false); setAddBusinessSearch(''); }}
-                                                                className={`p-3 text-sm cursor-pointer hover:bg-muted/50 border-b border-border last:border-0 ${newUserData.businessId === b.id ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300' : ''}`}
-                                                            >
-                                                                <div className="font-medium text-foreground">{b.name}</div>
-                                                                {(b.plz || b.city || (b as any).dernekIsmi) && (
-                                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                                                                        {[b.name !== (b as any).dernekIsmi ? (b as any).dernekIsmi : null, b.plz, b.city].filter(Boolean).join(' • ')}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))
-                                                    }
-                                                    {[...businesses, ...kermesEvents].filter(b => {
-                                                        const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
-                                                        if (searchTerms.length === 0) return true;
-                                                        const fullText = `${b.name || ''} ${(b as any).dernekIsmi || ''} ${b.plz || ''} ${b.city || ''}`.toLowerCase();
-                                                        return searchTerms.every(term => fullText.includes(term));
-                                                    }).length === 0 && (
-                                                        <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <WorkspaceAssignmentsList
+                                        assignments={newUserAssignments}
+                                        onChange={setNewUserAssignments}
+                                        businesses={businesses}
+                                        kermesEvents={kermesEvents}
+                                        isSuperAdmin={isSuperAdmin}
+                                    />
                                 )}
 
                                 {/* Driver Assignment Block for Add User */}

@@ -1596,7 +1596,8 @@
     "sponsoredAds": "SponsoredAds",
     "iotSettings": "IotSettings",
     "ameise": "Ameise",
-    "teslimat_ayarlari": "Teslimat ayarlari"
+    "teslimat_ayarlari": "Teslimat ayarlari",
+    "zorunlu_alanlari_doldurun": "Vul alstublieft alle verplichte velden in"
   },
   "AdminProducts": {
     "evet_sil": "Evet, Sil",
@@ -2483,7 +2484,13 @@
     "sifre_gonderilecek": "Dit wachtwoord wordt per e-mail naar het nieuwe personeelslid gestuurd.",
     "surucu_otomatik": "Deze rol wordt automatisch herkend als chauffeur.",
     "evet": "Ja",
-    "hayir": "Nee"
+    "hayir": "Nee",
+    "kullanici_olusturuldu": "Gebruiker succesvol aangemaakt.",
+    "email_gonderildi": "E-mail verzonden",
+    "sms_gonderildi": "SMS verzonden",
+    "zorunlu_alanlari_doldurun": "Vul alstublieft alle verplichte velden in",
+    "email_gonderilemedi": "E-mail kon niet worden verzonden",
+    "sms_gonderilemedi": "SMS kon niet worden verzonden"
   },
   "AdminReservations": {
     "title": "Reservations",
@@ -5423,7 +5430,9 @@
     "dezember": "Dezember",
     "servis": "Servis",
     "csv_raporu_indirildi": "Csv raporu indirildi",
-    "vardiya_kaydi": "Vardiya kaydi"
+    "vardiya_kaydi": "Vardiya kaydi",
+    "tum_personeller": "Alle Medewerkers",
+    "firestore_index_gerekli": "Firestore-index vereist - Controleer consolelogboeken"
   },
   "AdminSubscription": {
     "01_subat_2026": "01 February 2026",

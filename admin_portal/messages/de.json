@@ -4952,7 +4952,8 @@
     "isletmeAdminleri": "Geschäftsadmin (Chef)",
     "accessDenied": "Zugriff verweigert",
     "tebrikler": "Tebrikler",
-    "teslimat_ayarlari": "Teslimat ayarlari"
+    "teslimat_ayarlari": "Teslimat ayarlari",
+    "zorunlu_alanlari_doldurun": "Bitte füllen Sie alle Pflichtfelder aus"
   },
   "AdminOrdersCreate": {
     "adim": "Schritt",
@@ -6220,7 +6221,13 @@
     "sifre_gonderilecek": "Dieses Passwort wird per E-Mail an den neuen Mitarbeiter gesendet.",
     "surucu_otomatik": "Diese Rolle wird automatisch als Fahrer erkannt.",
     "evet": "Ja",
-    "hayir": "Nein"
+    "hayir": "Nein",
+    "kullanici_olusturuldu": "Benutzer erfolgreich erstellt.",
+    "email_gonderildi": "E-Mail wurde gesendet",
+    "sms_gonderildi": "SMS wurde gesendet",
+    "zorunlu_alanlari_doldurun": "Bitte füllen Sie alle Pflichtfelder aus",
+    "email_gonderilemedi": "E-Mail konnte nicht gesendet werden",
+    "sms_gonderilemedi": "SMS konnte nicht gesendet werden"
   },
   "AdminStaffshifts": {
     "agustos": "August",
@@ -6293,7 +6300,9 @@
     "september": "September",
     "oktober": "Oktober",
     "november": "November",
-    "dezember": "Dezember"
+    "dezember": "Dezember",
+    "tum_personeller": "Alle Mitarbeiter",
+    "firestore_index_gerekli": "Firestore-Index erforderlich - Überprüfen Sie die Konsolenprotokolle"
   },
   "AdminStatistics": {
     "adet": "Menge",

@@ -25,7 +25,7 @@ interface ShiftRecord {
 
 export default function StaffShiftsPage() {
     return (
-        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Yükleniyor...</div>}>
+        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">...</div>}>
             <StaffShiftsContent />
         </Suspense>
     );
@@ -58,7 +58,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     const [exporting, setExporting] = useState(false);
 
-    const businessId = admin?.butcherId;
+    const businessId = admin?.businessId || admin?.butcherId;
     const isSuperAdminUser = admin?.adminType === 'super';
 
     useEffect(() => {
@@ -117,9 +117,15 @@ const { admin, loading: adminLoading } = useAdmin();
             });
 
             setShifts(records);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Shift loading error:', error);
-            toast.error(t('vardiya_verileri_yuklenirken_hata_olustu'));
+            const errMsg = error?.message || '';
+            if (errMsg.includes('index')) {
+                toast.error(t('firestore_index_gerekli'));
+                console.error('INDEX REQUIRED - Follow this link to create it:', errMsg);
+            } else {
+                toast.error(t('vardiya_verileri_yuklenirken_hata_olustu'));
+            }
         } finally {
             setLoading(false);
         }
@@ -261,7 +267,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 <td>${formatMinutes(s.totalMinutes)}</td>
                 <td>${formatMinutes(s.pauseMinutes)}</td>
                 <td>${formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
-                <td>${s.driverShifts > 0 ? `<span class="badge badge-driver">${s.driverShifts} kurye</span>` : '-'}</td>
+                <td>${s.driverShifts > 0 ? `<span class="badge badge-driver">${s.driverShifts} ${t('kurye')}</span>` : '-'}</td>
             </tr>`).join('')}
         </tbody>
     </table>
@@ -308,7 +314,7 @@ const { admin, loading: adminLoading } = useAdmin();
     };
 
     if (adminLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
-    if (!admin?.butcherId && admin?.adminType !== 'super') return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
+    if (!(admin?.businessId || admin?.butcherId) && admin?.adminType !== 'super') return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
 
     return (
         <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -337,7 +343,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             onChange={e => setStaffFilter(e.target.value)}
                             className="bg-card border border-gray-600 rounded-xl px-4 py-2.5 text-foreground text-sm focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none min-w-[150px]"
                         >
-                            <option value="all">Tüm Personeller</option>
+                            <option value="all">{t('tum_personeller')}</option>
                             {staffSummary.map(s => (
                                 <option key={s.staffId} value={s.staffId}>{s.name}</option>
                             ))}

@@ -4940,7 +4940,8 @@
     "sponsoredAds": "SponsoredAds",
     "iotSettings": "IotSettings",
     "ameise": "Ameise",
-    "teslimat_ayarlari": "Teslimat ayarlari"
+    "teslimat_ayarlari": "Teslimat ayarlari",
+    "zorunlu_alanlari_doldurun": "Por favor complete todos los campos obligatorios"
   },
   "AdminOrdersCreate": {
     "adim": "paso",
@@ -6177,7 +6178,13 @@
     "sifre_gonderilecek": "Esta contrasena sera enviada al nuevo empleado por correo electronico.",
     "surucu_otomatik": "Este rol se reconoce automaticamente como conductor.",
     "evet": "Si",
-    "hayir": "No"
+    "hayir": "No",
+    "kullanici_olusturuldu": "Usuario creado exitosamente.",
+    "email_gonderildi": "Correo enviado",
+    "sms_gonderildi": "SMS enviado",
+    "zorunlu_alanlari_doldurun": "Por favor complete todos los campos obligatorios",
+    "email_gonderilemedi": "No se pudo enviar el correo",
+    "sms_gonderilemedi": "No se pudo enviar el SMS"
   },
   "AdminStaffshifts": {
     "agustos": "agosto",
@@ -6250,7 +6257,9 @@
     "dezember": "Dezember",
     "servis": "Servis",
     "csv_raporu_indirildi": "Csv raporu indirildi",
-    "vardiya_kaydi": "Vardiya kaydi"
+    "vardiya_kaydi": "Vardiya kaydi",
+    "tum_personeller": "Todo el Personal",
+    "firestore_index_gerekli": "Se requiere índice de Firestore - Verifique los registros de la consola"
   },
   "AdminStatistics": {
     "adet": "cantidad",
