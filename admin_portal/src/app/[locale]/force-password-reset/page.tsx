@@ -6,9 +6,6 @@ import { auth } from '@/lib/firebase';
 import { updatePassword } from 'firebase/auth';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 export default function ForcePasswordResetPage() {
     const router = useRouter();
@@ -125,13 +122,13 @@ export default function ForcePasswordResetPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
-                        <Label className="text-neutral-300">Yeni Şifreniz</Label>
+                        <label className="block text-sm font-medium text-neutral-300 mb-1">Yeni Şifreniz</label>
                         <div className="relative">
-                            <Input
+                            <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="bg-neutral-900 border-neutral-700 text-white pl-4 pr-10"
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
+                                className="w-full rounded-md border py-3 px-4 bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 pr-10 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
                                 placeholder="En az 6 karakter"
                                 required
                             />
@@ -146,24 +143,24 @@ export default function ForcePasswordResetPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-neutral-300">Yeni Şifre (Tekrar)</Label>
-                        <Input
+                        <label className="block text-sm font-medium text-neutral-300 mb-1">Yeni Şifre (Tekrar)</label>
+                        <input
                             type={showPassword ? 'text' : 'password'}
                             value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="bg-neutral-900 border-neutral-700 text-white pl-4"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                            className="w-full rounded-md border py-3 px-4 bg-neutral-900 border-neutral-700 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
                             placeholder="Şifrenizi doğrulayın"
                             required
                         />
                     </div>
 
-                    <Button
+                    <button
                         type="submit"
                         disabled={loading || !newPassword || !confirmPassword}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-6"
+                        className="w-full rounded-md border border-transparent bg-red-600 hover:bg-red-700 px-4 py-3 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {loading ? 'Güncelleniyor...' : 'Şifremi Kaydet & Giriş Yap'}
-                    </Button>
+                    </button>
                 </form>
             </div>
         </div>
