@@ -11,7 +11,7 @@ async function getFirebaseAdmin() {
         const apps = getApps();
 
         if (apps.length === 0) {
-            const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+            const serviceAccount = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
             let initialized = false;
 
             if (serviceAccount) {
