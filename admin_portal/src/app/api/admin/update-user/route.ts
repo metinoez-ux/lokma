@@ -1,55 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 
-async function getFirebaseAdmin() {
-    try {
-        const { getApps, cert, initializeApp, applicationDefault } = await import('firebase-admin/app');
-        const { getAuth } = await import('firebase-admin/auth');
-        const { getFirestore } = await import('firebase-admin/firestore');
-
-        let app;
-        const apps = getApps();
-
-        if (apps.length === 0) {
-            const serviceAccount = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-            let initialized = false;
-
-            if (serviceAccount) {
-                try {
-                    const account = JSON.parse(serviceAccount);
-                    if (account.private_key) {
-                        account.private_key = account.private_key.replace(/\\n/g, '\n');
-                    }
-                    app = initializeApp({
-                        credential: cert(account),
-                        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                    });
-                    initialized = true;
-                } catch (parseError) {
-                    console.warn('Explicit key parsing failed, falling back to ADC', parseError);
-                }
-            }
-
-            if (!initialized) {
-                app = initializeApp({
-                    credential: applicationDefault(),
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'aylar-a45af',
-                });
-            }
-        } else {
-            app = apps[0];
-        }
-
-        if (!app) {
-            throw new Error('Firebase Admin app could not be initialized.');
-        }
-
-        return { auth: getAuth(app), db: getFirestore(app) };
-    } catch (error) {
-        console.error('Firebase Admin import/init failed:', error);
-        throw error;
-    }
-}
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
     let body: any;
@@ -106,7 +58,10 @@ export async function POST(request: NextRequest) {
             butcherName,
             isPrimaryAdmin,
             isDriver,
-            driverType
+            driverType,
+            assignedBusinesses,
+            assignedKermesEvents,
+            assignments
         } = source;
 
         const updatedBy = body.adminEmail || source.updatedBy || 'system';
@@ -220,6 +175,18 @@ export async function POST(request: NextRequest) {
 
             if (driverType !== undefined) {
                 adminUpdateData.driverType = driverType;
+            }
+
+            if (assignedBusinesses !== undefined) {
+                adminUpdateData.assignedBusinesses = assignedBusinesses;
+            }
+
+            if (assignedKermesEvents !== undefined) {
+                adminUpdateData.assignedKermesEvents = assignedKermesEvents;
+            }
+
+            if (assignments !== undefined) {
+                adminUpdateData.assignments = assignments;
             }
 
             if (adminDoc.exists) {

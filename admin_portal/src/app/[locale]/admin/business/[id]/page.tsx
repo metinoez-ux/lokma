@@ -6578,16 +6578,21 @@ export default function BusinessDetailsPage() {
                             <p className="text-foreground font-mono text-lg">{inviteResult.tempPassword}</p>
                           </div>
                           {inviteResult.notifications && (
-                            <div className="flex flex-wrap gap-2 text-xs">
-                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
-                                {inviteResult.notifications.email?.sent ? '✓' : '✗'} Email
-                              </span>
-                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
-                                {inviteResult.notifications.whatsapp?.sent ? '✓' : '✗'} WhatsApp
-                              </span>
-                              <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-muted border border-border text-foreground'}`}>
-                                {inviteResult.notifications.sms?.sent ? '✓' : '✗'} SMS
-                              </span>
+                            <div className="flex flex-col gap-2 text-xs">
+                              <div className="flex flex-wrap gap-2">
+                                <span title={(inviteResult.notifications.email as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
+                                  {inviteResult.notifications.email?.sent ? '✓' : '✗'} Email
+                                </span>
+                                <span title={(inviteResult.notifications.whatsapp as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
+                                  {inviteResult.notifications.whatsapp?.sent ? '✓' : '✗'} WhatsApp
+                                </span>
+                                <span title={(inviteResult.notifications.sms as any)?.error} className={`px-2 py-1 rounded cursor-help ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-red-900/50 border border-red-700 text-red-200'}`}>
+                                  {inviteResult.notifications.sms?.sent ? '✓' : '✗'} SMS
+                                </span>
+                              </div>
+                              {(!inviteResult.notifications.email?.sent || !inviteResult.notifications.whatsapp?.sent || !inviteResult.notifications.sms?.sent) && (
+                                <p className="text-red-400 mt-1">⚠️ Bazı bildirimler gönderilemedi. Hata detayını görmek için üzerlerine gelin.</p>
+                              )}
                             </div>
                           )}
                           <button

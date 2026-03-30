@@ -70,10 +70,66 @@ const resolvePermissions = (admin: Admin): Admin => {
     };
 };
 
+// 🪄 Virtual Active Context Injection
+// This intercepts the Admin object and overrides its legacy fields (businessId, adminType)
+// to match the currently selected Assignment. This ensures ALL existing code works un-modified!
+const applyVirtualContext = (admin: Admin): Admin => {
+    // Super admins have global scope, no virtual context needed
+    if (admin.role === 'super_admin') return admin;
+    
+    let clonedAdmin = { ...admin };
+
+    // Auto-migrate in memory if zero assignments but legacy field exists
+    if (!clonedAdmin.assignments || clonedAdmin.assignments.length === 0) {
+        if (clonedAdmin.businessId || clonedAdmin.kermesId) {
+            clonedAdmin.assignments = [{
+                id: clonedAdmin.businessId || clonedAdmin.kermesId || 'legacy_id',
+                entityId: clonedAdmin.businessId || clonedAdmin.kermesId || 'legacy_id',
+                entityType: clonedAdmin.kermesId ? 'kermes' : 'business',
+                entityName: clonedAdmin.businessName || 'Legacy Entity',
+                role: clonedAdmin.adminType
+            }];
+        } else {
+            return clonedAdmin; // No assignments and no legacy logic
+        }
+    }
+
+    let activeAssignmentId: string | null = null;
+    if (typeof window !== 'undefined') {
+        activeAssignmentId = localStorage.getItem('mira_active_assignment_id');
+    }
+
+    let activeAssignment = clonedAdmin.assignments?.find(a => a.id === activeAssignmentId);
+    
+    // If not found or empty, default to the very first assignment
+    if (!activeAssignment && clonedAdmin.assignments && clonedAdmin.assignments.length > 0) {
+        activeAssignment = clonedAdmin.assignments[0];
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('mira_active_assignment_id', activeAssignment.id);
+        }
+    }
+
+    if (activeAssignment) {
+        // Override fields so the rest of the application perceives the user as only having this specific role
+        return {
+            ...clonedAdmin,
+            adminType: activeAssignment.role,
+            businessId: activeAssignment.entityType === 'business' ? activeAssignment.entityId : undefined,
+            kermesId: activeAssignment.entityType === 'kermes' ? activeAssignment.entityId : undefined,
+            businessName: activeAssignment.entityType === 'business' ? activeAssignment.entityName : clonedAdmin.businessName,
+        };
+    }
+    
+    return clonedAdmin;
+};
+
 // 📸 Helper to always ensure we have a photoURL if possible
 const enrichAdminData = async (baseAdmin: Admin): Promise<Admin> => {
-    // Resolve permissions first
-    const permissionedAdmin = resolvePermissions(baseAdmin);
+    // 1. Inject Virtual Context
+    const contextAdmin = applyVirtualContext(baseAdmin);
+
+    // 2. Resolve permissions first
+    const permissionedAdmin = resolvePermissions(contextAdmin);
 
     const adminAny = permissionedAdmin as any;
     if (adminAny.photoURL) return permissionedAdmin;

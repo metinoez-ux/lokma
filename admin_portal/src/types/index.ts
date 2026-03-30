@@ -786,6 +786,9 @@ export interface Admin {
     businessName?: string;   // Universal field - linked business name
     businessType?: string;   // Universal field - business type (kasap, market, etc.)
 
+    // M:N Role Assignments
+    assignments?: AdminAssignment[];
+
     // Legacy fields (kept for backward compatibility)
     butcherId?: string;      // @deprecated - use businessId instead
     butcherName?: string;    // @deprecated - use businessName instead
@@ -800,7 +803,7 @@ export interface Admin {
     createdBy: string;
     isActive: boolean;
 
-    // ═══ RBAC 2.0 — Module-Based Permission System ═══
+// ═══ RBAC 2.0 — Module-Based Permission System ═══
     /** Reference to a permission group template (e.g. 'owner', 'manager', 'cashier') */
     permissionGroupId?: string;
     /** Effective permission map — resolved from group + overrides. { "orders.view": true, ... } */
@@ -831,6 +834,15 @@ export interface Admin {
         autoPrint?: boolean;
         printCopies?: number;
     };
+}
+
+export interface AdminAssignment {
+    id: string; // Unique assignment ID (e.g. UUID)
+    entityId: string; // businessId or kermesId
+    entityType: 'business' | 'kermes';
+    entityName: string; // For display purposes (e.g. 'A&P Pizzeria')
+    role: AdminType; // e.g. 'isletme_staff', 'kermes_admin', 'teslimat'
+    assignedAt?: string | Date;
 }
 
 // Kermes Types

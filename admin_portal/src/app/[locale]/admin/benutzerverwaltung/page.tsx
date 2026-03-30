@@ -8,6 +8,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, limit, getDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { getModuleBusinessTypes } from '@/lib/business-types';
+import { WorkspaceAssignmentsList, Assignment } from './components/WorkspaceAssignmentsList';
 
 const COUNTRY_CODES = [
     { code: 'DE', dial: '+49', flag: '🇩🇪' },
@@ -29,6 +30,7 @@ export interface UnifiedUser {
     kermesId?: string;
     createdAt?: Date;
     isActive?: boolean;
+    assignments?: Assignment[];
 }
 
 export interface Business {
@@ -89,6 +91,7 @@ export default function BenutzerverwaltungPage() {
     const [newUserDriverType, setNewUserDriverType] = useState<string>('platform');
     const [newUserSelectedBusinessIds, setNewUserSelectedBusinessIds] = useState<string[]>([]);
     const [newUserSelectedKermesIds, setNewUserSelectedKermesIds] = useState<string[]>([]);
+    const [newUserAssignments, setNewUserAssignments] = useState<Assignment[]>([]);
 
     // Edit Modal State
     const [editName, setEditName] = useState('');
@@ -109,6 +112,7 @@ export default function BenutzerverwaltungPage() {
     const [editBusinessId, setEditBusinessId] = useState('');
     const [addBusinessSearch, setAddBusinessSearch] = useState('');
     const [showAddBusinessDropdown, setShowAddBusinessDropdown] = useState(false);
+    const [editAssignments, setEditAssignments] = useState<Assignment[]>([]);
 
     // Permission check
     const isSuperAdmin = admin?.adminType === 'super';
@@ -212,8 +216,8 @@ export default function BenutzerverwaltungPage() {
                         primaryRole: rolesList.includes('super') ? 'super' : rolesList[0],
                         businessId: data.businessId,
                         kermesId: data.kermesId,
-                        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
-                        isActive: data.isActive !== false,
+                        isActive: data.isActive,
+                        assignments: data.assignments || [],
                     });
                 }
             });
@@ -362,6 +366,7 @@ export default function BenutzerverwaltungPage() {
                 setSelectedKermesIds(data.assignedKermes || []);
                 setEditSector(data.sector || data.businessType || '');
                 setEditBusinessId(data.businessId || data.butcherId || '');
+                setEditAssignments(data.assignments || []);
             } else {
                 setIsDriver(user.roles.includes('driver'));
                 setDriverType('platform');
@@ -369,6 +374,7 @@ export default function BenutzerverwaltungPage() {
                 setSelectedKermesIds([]);
                 setEditSector('');
                 setEditBusinessId('');
+                setEditAssignments([]);
             }
         } catch (e) {
             console.error("Error fetching user details", e);
@@ -378,7 +384,7 @@ export default function BenutzerverwaltungPage() {
 
     const handleDeleteUser = async () => {
         if (!selectedUser) return;
-        if (!confirm('🛑 DİKKAT: Bu kullanıcıyı (Auth, DB Profil vb. dahil) KALICI olarak silmek istediğinize emin misiniz?')) return;
+        if (!confirm(t('eminMisinizKullaniciSil', { defaultValue: '🛑 DİKKAT: Bu kullanıcıyı (Auth, DB Profil vb. dahil) KALICI olarak silmek istediğinize emin misiniz?' }))) return;
         setSavingModal(true);
         try {
             // 1. Firebase Auth ve Firestore üzerinden sil (Backend API - Admin SDK)
@@ -402,7 +408,7 @@ export default function BenutzerverwaltungPage() {
             fetchData();
         } catch (err) {
             console.error(err);
-            alert("Silme hatası: " + err);
+            alert(t('silmeHatasi', { defaultValue: 'Silme hatası: ' }) + err);
         } finally {
             setSavingModal(false);
         }
@@ -464,6 +470,7 @@ export default function BenutzerverwaltungPage() {
                 driverType: newUserDriverType,
                 assignedBusinesses: newUserSelectedBusinessIds,
                 assignedKermesEvents: newUserSelectedKermesIds,
+                assignments: newUserAssignments,
             };
 
             const response = await fetch('/api/admin/create-user', {
@@ -474,12 +481,25 @@ export default function BenutzerverwaltungPage() {
 
             const data = await response.json();
             if (!response.ok) {
-                alert(`Hata: ${data.error || 'Bilinmeyen hata'}`);
+                alert(`${t('hata', { defaultValue: 'Hata' })}: ${data.error || t('bilinmeyenHata', { defaultValue: 'Bilinmeyen hata' })}`);
                 setAddingUser(false);
                 return;
             }
 
-            alert("✅ Kullanıcı başarıyla oluşturuldu.");
+            let successMsg = "✅ Kullanıcı başarıyla oluşturuldu.";
+            if (data.notifications) {
+                const { email, whatsapp, sms } = data.notifications;
+                if (!email?.sent && email?.address) {
+                    successMsg += `\n⚠️ E-posta GÖNDERİLEMEDİ: ${email.error || 'Bilinmeyen hata'}`;
+                }
+                if (!whatsapp?.sent && whatsapp?.address) {
+                    successMsg += `\n⚠️ WhatsApp GÖNDERİLEMEDİ: ${whatsapp.error || 'Bilinmeyen hata'}`;
+                }
+                if (!sms?.sent && sms?.address) {
+                    successMsg += `\n⚠️ SMS GÖNDERİLEMEDİ: ${sms.error || 'Bilinmeyen hata'}`;
+                }
+            }
+            alert(successMsg);
             setShowAddUserModal(false);
             setNewUserData({
                 firstName: '', lastName: '', email: '', phone: '', dialCode: '+49',
@@ -490,6 +510,7 @@ export default function BenutzerverwaltungPage() {
             setNewUserDriverType('platform');
             setNewUserSelectedBusinessIds([]);
             setNewUserSelectedKermesIds([]);
+            setNewUserAssignments([]);
             fetchData();
         } catch (err) {
             console.error(err);
@@ -535,9 +556,10 @@ export default function BenutzerverwaltungPage() {
                 driverType: isDriver ? (selectedBusinessIds.length > 0 ? 'business' : 'platform') : null,
                 assignedBusinesses: isDriver ? selectedBusinessIds : [],
                 assignedBusinessNames: isDriver ? assignedBusinessNames : [],
-                assignedKermes: isDriver ? selectedKermesIds : [],
+                assignedKermesEvents: isDriver ? selectedKermesIds : [],
                 assignedKermesNames: isDriver ? assignedKermesNames : [],
-                adminEmail: admin?.email
+                adminEmail: admin?.email,
+                assignments: editAssignments,
             };
 
             if (editBusinessId) {
@@ -954,70 +976,13 @@ export default function BenutzerverwaltungPage() {
                                 </div>
 
                                 {(editRole === 'staff' || editRole === 'business_admin') && isSuperAdmin && (
-                                    <div className="relative">
-                                        <label className="block text-sm font-medium text-foreground mb-1">{t('i_sletme_secin') || 'İşletme / Kermes Seçin'}</label>
-                                        
-                                        {!showAddBusinessDropdown ? (
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setShowAddBusinessDropdown(true)}
-                                                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-left flex justify-between items-center focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
-                                            >
-                                                <span className={editBusinessId ? "text-foreground" : "text-muted-foreground truncate"}>
-                                                    {editBusinessId 
-                                                        ? [...businesses, ...kermesEvents].find(b => b.id === editBusinessId)?.name || 'İşletme / Kermes Seçin...'
-                                                        : 'İşletme / Kermes Seçin...'
-                                                    }
-                                                </span>
-                                                <span className="text-xs">▼</span>
-                                            </button>
-                                        ) : (
-                                            <div className="absolute top-full left-0 mt-1 w-full bg-background border border-border rounded-lg shadow-xl z-50">
-                                                <div className="p-2 border-b border-border flex items-center gap-2">
-                                                    <span className="text-muted-foreground ml-1">🔍</span>
-                                                    <input 
-                                                        type="text" 
-                                                        autoFocus
-                                                        placeholder="kermes/işletme ara..." 
-                                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-foreground"
-                                                        value={addBusinessSearch}
-                                                        onChange={(e) => setAddBusinessSearch(e.target.value)}
-                                                    />
-                                                    <button type="button" onClick={() => setShowAddBusinessDropdown(false)} className="text-muted-foreground hover:text-foreground mr-1 text-lg leading-none">&times;</button>
-                                                </div>
-                                                <div className="max-h-60 overflow-y-auto">
-                                                    {[...businesses, ...kermesEvents]
-                                                        .filter((b: any) => {
-                                                            const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
-                                                            if (searchTerms.length === 0) return true;
-                                                            const fullText = `${b.name || ''} ${b.dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
-                                                            return searchTerms.every(term => fullText.includes(term));
-                                                        })
-                                                        .map(b => (
-                                                            <div 
-                                                                key={b.id} 
-                                                                onClick={() => { setEditBusinessId(b.id); setShowAddBusinessDropdown(false); setAddBusinessSearch(''); }}
-                                                                className={`p-3 text-sm cursor-pointer hover:bg-muted/50 border-b border-border last:border-0 ${editBusinessId === b.id ? 'bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-300' : ''}`}
-                                                            >
-                                                                <div className="font-medium text-foreground">{b.name}</div>
-                                                                {(b.plz || b.city || (b as any).dernekIsmi) && (
-                                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                                                                        {[b.name !== (b as any).dernekIsmi ? (b as any).dernekIsmi : null, b.plz, b.city].filter(Boolean).join(' • ')}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ))
-                                                    }
-                                                    {[...businesses, ...kermesEvents].filter((b: any) => { const searchTerms = String(addBusinessSearch).toLowerCase().split(' ').filter(Boolean);
-                                                            if (searchTerms.length === 0) return true;
-                                                            const fullText = `${b.name || ''} ${b.dernekIsmi || ''} ${b.plz || ''} ${b.city || ''} ${b.address || ''} ${b.street || ''}`.toLowerCase();
-                                                            return searchTerms.every(term => fullText.includes(term)); }).length === 0 && (
-                                                        <div className="p-4 text-center text-xs text-muted-foreground">Sonuç bulunamadı.</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <WorkspaceAssignmentsList
+                                        assignments={editAssignments}
+                                        onChange={setEditAssignments}
+                                        businesses={businesses}
+                                        kermesEvents={kermesEvents}
+                                        isSuperAdmin={isSuperAdmin}
+                                    />
                                 )}
                             </div>
 

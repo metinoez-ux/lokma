@@ -432,6 +432,35 @@ export default function AdminHeader() {
                                     <p className="text-foreground text-sm font-medium truncate">{admin.displayName || 'Super Admin'}</p>
                                     <p className="text-muted-foreground text-xs truncate">{admin.email || ''}</p>
                                 </Link>
+                                {/* Workspace Switcher */}
+                                {admin.assignments && admin.assignments.length > 1 && (
+                                    <div className="py-2 border-b border-border max-h-[240px] overflow-y-auto">
+                                        <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">ÇALIŞMA ALANLARI</p>
+                                        <div className="flex flex-col gap-1 px-2">
+                                            {admin.assignments.map((assignment) => {
+                                                const isActive = (typeof window !== 'undefined' ? localStorage.getItem('mira_active_assignment_id') : null) === assignment.id || (!localStorage.getItem('mira_active_assignment_id') && admin.assignments![0].id === assignment.id);
+                                                return (
+                                                    <button
+                                                        key={assignment.id}
+                                                        onClick={() => {
+                                                            if (typeof window !== 'undefined') {
+                                                                localStorage.setItem('mira_active_assignment_id', assignment.id);
+                                                                window.location.reload();
+                                                            }
+                                                        }}
+                                                        className={`flex items-center justify-between px-3 py-2 rounded-md text-xs transition ${isActive ? 'bg-amber-600/20 text-amber-500 font-medium border border-amber-500/30' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                                    >
+                                                        <div className="flex flex-col items-start truncate max-w-[140px]">
+                                                            <span className="truncate w-full text-left font-bold">{assignment.entityName}</span>
+                                                            <span className="text-[9px] opacity-70 uppercase tracking-widest">{assignment.role.replace('_', ' ')}</span>
+                                                        </div>
+                                                        {isActive && <span className="text-amber-500">✓</span>}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="py-2 border-b border-border">
                                     <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">{t('language')}</p>
                                     <div className="flex flex-wrap gap-1 px-3 py-1">
@@ -1164,6 +1193,35 @@ export default function AdminHeader() {
                                                 {admin.email || admin.phone || ''}
                                             </p>
                                         </Link>
+                                        {/* Workspace Switcher */}
+                                        {admin.assignments && admin.assignments.length > 1 && (
+                                            <div className="py-2 border-b border-border max-h-[240px] overflow-y-auto">
+                                                <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">ÇALIŞMA ALANLARI</p>
+                                                <div className="flex flex-col gap-1 px-2">
+                                                    {admin.assignments.map((assignment) => {
+                                                        const isActive = (typeof window !== 'undefined' ? localStorage.getItem('mira_active_assignment_id') : null) === assignment.id || (!localStorage.getItem('mira_active_assignment_id') && admin.assignments![0].id === assignment.id);
+                                                        return (
+                                                            <button
+                                                                key={assignment.id}
+                                                                onClick={() => {
+                                                                    if (typeof window !== 'undefined') {
+                                                                        localStorage.setItem('mira_active_assignment_id', assignment.id);
+                                                                        window.location.reload();
+                                                                    }
+                                                                }}
+                                                                className={`flex items-center justify-between px-3 py-2 rounded-md text-xs transition ${isActive ? 'bg-blue-600/20 text-blue-400 font-medium border border-blue-500/30' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                                            >
+                                                                <div className="flex flex-col items-start truncate max-w-[140px]">
+                                                                    <span className="truncate w-full text-left font-bold">{assignment.entityName}</span>
+                                                                    <span className="text-[9px] opacity-70 uppercase tracking-widest">{assignment.role.replace('_', ' ')}</span>
+                                                                </div>
+                                                                {isActive && <span className="text-blue-400">✓</span>}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                         {/* Language Selection */}
                                         <div className="py-2 border-b border-border">
                                             <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">{t('language')}</p>

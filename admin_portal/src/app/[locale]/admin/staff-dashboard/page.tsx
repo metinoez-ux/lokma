@@ -277,6 +277,21 @@ const { admin, loading: adminLoading } = useAdmin();
                 return;
             }
 
+            let successMsg = t('kullanici_olusturuldu') || "Kullanıcı başarıyla oluşturuldu.";
+            if (data.notifications) {
+                const { email, whatsapp, sms } = data.notifications;
+                if (!email?.sent && email?.address) {
+                    successMsg += `\n⚠️ E-posta GÖNDERİLEMEDİ: ${email.error || 'Bilinmeyen hata'}`;
+                }
+                if (!whatsapp?.sent && whatsapp?.address) {
+                    successMsg += `\n⚠️ WhatsApp GÖNDERİLEMEDİ: ${whatsapp.error || 'Bilinmeyen hata'}`;
+                }
+                if (!sms?.sent && sms?.address) {
+                    successMsg += `\n⚠️ SMS GÖNDERİLEMEDİ: ${sms.error || 'Bilinmeyen hata'}`;
+                }
+            }
+            alert(successMsg);
+
             // Success - reset and close
             setShowCreateModal(false);
             setCreateName('');

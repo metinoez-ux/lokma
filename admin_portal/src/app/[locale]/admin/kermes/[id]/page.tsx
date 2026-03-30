@@ -944,15 +944,32 @@ export default function KermesDetailPage() {
                 throw new Error(data.error || t('bir_hata_olustu'));
             }
 
+            let successMsg = type === 'kermes_staff' ? 
+                (t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.') : 
+                (t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.');
+                
+            if (data.notifications) {
+                const { email, whatsapp, sms } = data.notifications;
+                if (!email?.sent && email?.address) {
+                    successMsg += `\n⚠️ E-posta GÖNDERİLEMEDİ: ${email.error || 'Bilinmeyen hata'}`;
+                }
+                if (!whatsapp?.sent && whatsapp?.address) {
+                    successMsg += `\n⚠️ WhatsApp GÖNDERİLEMEDİ: ${whatsapp.error || 'Bilinmeyen hata'}`;
+                }
+                if (!sms?.sent && sms?.address) {
+                    successMsg += `\n⚠️ SMS GÖNDERİLEMEDİ: ${sms.error || 'Bilinmeyen hata'}`;
+                }
+            }
+            
+            showToast(successMsg, data.notifications && (!data.notifications.email?.sent || !data.notifications.whatsapp?.sent) ? 'error' : 'success');
+
             if (type === 'kermes_staff') {
-                showToast(t('personel_basariyla_olusturuldu') || 'Personel oluşturuldu.');
                 const newStaff = [...assignedStaff, data.uid];
                 setAssignedStaff(newStaff);
                 saveTeamToDb(newStaff, assignedDrivers);
                 setIsAddingStaff(false);
                 setNewStaffForm({ name: '', phone: '', email: '', countryCode: '+49', gender: '' });
             } else {
-                showToast(t('surucu_basariyla_olusturuldu') || 'Sürücü oluşturuldu.');
                 const newDrivers = [...assignedDrivers, data.uid];
                 setAssignedDrivers(newDrivers);
                 saveTeamToDb(assignedStaff, newDrivers);

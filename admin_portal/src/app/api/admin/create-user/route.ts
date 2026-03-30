@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
             assignerName, assignerEmail, assignerPhone, assignerRole,
             // Locale for email content
             locale: requestLocale,
+            // Array of workspace assignments (M:N)
+            assignments,
         } = body;
 
         // Resolve locale (default German for DACH market)
@@ -282,6 +284,10 @@ export async function POST(request: NextRequest) {
                 if (assignedKermesEvents !== undefined) adminData.assignedKermesEvents = assignedKermesEvents;
             }
 
+            if (assignments !== undefined) {
+                adminData.assignments = assignments;
+            }
+
             await db.collection('admins').doc(userRecord.uid).set(adminData);
         }
 
@@ -308,6 +314,10 @@ export async function POST(request: NextRequest) {
                 driverAdminData.businessId = businessId;
                 driverAdminData.businessName = businessName || null;
                 driverAdminData.businessType = businessType || null;
+            }
+
+            if (assignments !== undefined) {
+                driverAdminData.assignments = assignments;
             }
 
             if (assignerName) {
@@ -341,7 +351,8 @@ export async function POST(request: NextRequest) {
         // SEND WELCOME NOTIFICATIONS (Email + SMS)
         // ═══════════════════════════════════════════════════════════════════════
 
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lokma.shop';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
         // Determine email type and content based on role
         const isAdminOrStaff = role === 'admin' && adminType;
