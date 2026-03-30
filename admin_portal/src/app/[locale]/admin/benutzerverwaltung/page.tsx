@@ -37,6 +37,8 @@ export interface Business {
     type: string;
     plz: string;
     city: string;
+    street?: string;
+    address?: string;
 }
 
 export interface KermesEvent {
@@ -45,6 +47,8 @@ export interface KermesEvent {
     plz: string;
     city: string;
     dernekIsmi?: string;
+    street?: string;
+    address?: string;
 }
 
 type RoleFilter = 'all' | 'customer' | 'super' | 'lokma_admin' | 'kermes_admin' | 'driver' | 'staff';
@@ -122,7 +126,9 @@ export default function BenutzerverwaltungPage() {
                     name: data.companyName || data.name || t('businessLabel'),
                     type: data.businessType || 'business',
                     plz: data.plz || data.postalCode || data.zipCode || data.address?.postalCode || data.address?.plz || data.address?.zipCode || '',
-                    city: data.city || data.address?.city || ''
+                    city: data.city || data.address?.city || '',
+                    street: data.street || data.streetAddress || data.address?.street || data.address?.streetAddress || '',
+                    address: data.address ? (typeof data.address === 'string' ? data.address : JSON.stringify(data.address)) : ''
                 });
             });
             allBusinesses.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
@@ -138,7 +144,9 @@ export default function BenutzerverwaltungPage() {
                     name: data.name || data.dernekIsmi || data.associationName || data.title || t('kermesLabel') || 'Kermes',
                     plz: data.address?.plz || data.location?.zipCode || data.address?.postalCode || data.plz || data.postalCode || '',
                     city: data.address?.city || data.location?.city || data.city || '',
-                    dernekIsmi: data.dernekIsmi || data.associationName || ''
+                    dernekIsmi: data.dernekIsmi || data.associationName || '',
+                    street: data.street || data.address?.street || data.location?.street || data.address?.streetName || '',
+                    address: data.address ? (typeof data.address === 'string' ? data.address : JSON.stringify(data.address)) : (data.location ? JSON.stringify(data.location) : '')
                 });
             });
             allKermes.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
