@@ -4971,7 +4971,9 @@
     "listeyeEkle": "Zur Liste hinzufügen",
     "rolZatenEklendi": "Diese Rolle und dieser Betrieb/Kermes wurden bereits hinzugefügt.",
     "kapat": "Schließen",
-    "isletme": "Betrieb"
+    "isletme": "Betrieb",
+    "rolYonetici": "Manager (Admin)",
+    "rolPersonel": "Mitarbeiter (Standard)"
   },
   "AdminOrdersCreate": {
     "adim": "Schritt",

@@ -4959,7 +4959,9 @@
     "listeyeEkle": "Añadir a la lista",
     "rolZatenEklendi": "Este rol y negocio/kermes ya han sido agregados.",
     "kapat": "Cerrar",
-    "isletme": "Negocio"
+    "isletme": "Negocio",
+    "rolYonetici": "Gerente (Admin)",
+    "rolPersonel": "Personal (Estándar)"
   },
   "AdminOrdersCreate": {
     "adim": "paso",

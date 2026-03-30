@@ -4994,7 +4994,9 @@
     "listeyeEkle": "Add to List",
     "rolZatenEklendi": "This role and business/kermes have already been added.",
     "kapat": "Close",
-    "isletme": "Business"
+    "isletme": "Business",
+    "rolYonetici": "Manager (Admin)",
+    "rolPersonel": "Staff (Standard)"
   },
   "AdminOrdersCreate": {
     "adim": "step",

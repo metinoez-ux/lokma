@@ -4997,7 +4997,9 @@
     "listeyeEkle": "Listeye Ekle",
     "rolZatenEklendi": "Bu rol ve işletme/kermes daha önce eklenmiş.",
     "kapat": "Kapat",
-    "isletme": "İşletme"
+    "isletme": "İşletme",
+    "rolYonetici": "Yönetici (Admin)",
+    "rolPersonel": "Personel (Standart)"
   },
   "AdminOrdersCreate": {
     "adim": "Adım",

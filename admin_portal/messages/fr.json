@@ -4971,7 +4971,9 @@
     "listeyeEkle": "Ajouter à la liste",
     "rolZatenEklendi": "Ce rôle et entreprise/kermes ont déjà été ajoutés.",
     "kapat": "Fermer",
-    "isletme": "Entreprise"
+    "isletme": "Entreprise",
+    "rolYonetici": "Directeur (Admin)",
+    "rolPersonel": "Personnel (Standard)"
   },
   "AdminOrdersCreate": {
     "adim": "étape",

@@ -1617,7 +1617,9 @@
     "kapat": "Sluiten",
     "isletme": "Bedrijf",
     "kermes": "Kermes",
-    "sil": "Verwijderen"
+    "sil": "Verwijderen",
+    "rolYonetici": "Manager (Admin)",
+    "rolPersonel": "Personeel (Standaard)"
   },
   "AdminProducts": {
     "evet_sil": "Evet, Sil",
