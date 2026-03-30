@@ -774,10 +774,10 @@ export default function BenutzerverwaltungPage() {
 
             {/* Modal for Edit Actions */}
             {showUserModal && selectedUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm" onClick={() => setShowUserModal(false)}>
-                    <div className="bg-card w-full max-w-md h-full flex flex-col border-l border-border animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 md:p-12" onClick={() => setShowUserModal(false)}>
+                    <div className="bg-card w-full max-w-2xl max-h-[95vh] flex flex-col rounded-2xl overflow-hidden border border-border shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
                         
-                        <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                        <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20 rounded-t-2xl">
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-full overflow-hidden bg-muted border border-border">
                                     {selectedUser.photoURL ? (
@@ -1195,10 +1195,10 @@ export default function BenutzerverwaltungPage() {
 
             {/* Detailed Modal for Add User Actions */}
             {showAddUserModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm" onClick={() => setShowAddUserModal(false)}>
-                    <div className="bg-card w-full max-w-lg h-full flex flex-col border-l border-border animate-in slide-in-from-right" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 md:p-12" onClick={() => setShowAddUserModal(false)}>
+                    <div className="bg-card w-full max-w-2xl max-h-[95vh] flex flex-col rounded-2xl overflow-hidden border border-border shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
                         
-                        <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                        <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20 rounded-t-2xl">
                             <div className="flex flex-col">
                                 <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                                     {t('yeni_kullanici_ekle') || "Yeni Kullanıcı Ekle"}
