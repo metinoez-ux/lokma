@@ -449,7 +449,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     ) : filteredShifts.length === 0 ? (
                         <div className="bg-card rounded-xl border border-border p-12 text-center">
                             <p className="text-4xl mb-3">📭</p>
-                            <p className="text-muted-foreground text-lg font-medium">{monthLabel} {t('icin_kayit_bulunamadi')}</p>
+                            <p className="text-muted-foreground text-lg font-medium">{monthLabel} {t('icin_kayit_bulunamadi').replace(' für .', '')}</p>
                             <p className="text-gray-500 text-sm mt-1">{t('farkli_bir_ay_secmeyi_deneyin')}</p>
                         </div>
                     ) : (
