@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         }
 
         const adminData = adminDoc.data();
-        if (adminData?.role !== 'admin' && adminData?.role !== 'lokma_admin') {
+        if (adminData?.role !== 'admin' && adminData?.role !== 'lokma_admin' && adminData?.adminType !== 'lokma_admin' && adminData?.adminType !== 'kermes_admin' && adminData?.adminType !== 'business_admin') {
             return NextResponse.json({ error: 'Admins only (Insufficient role)' }, { status: 403 });
         }
 

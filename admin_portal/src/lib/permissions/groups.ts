@@ -329,16 +329,21 @@ export function getAvailableGroups(isSuperAdmin: boolean): PermissionGroup[] {
   );
 }
 
-/** Resolve the default group for a legacy adminType.
- *  IMPORTANT: Every AdminType from types/index.ts must be mapped here.
+/** Resolve the default group for a legacy or new adminType.
  *  Unmapped types fall back to 'intern' (minimal read-only). */
 export function getDefaultGroupForAdminType(adminType: string): string {
   const mapping: Record<string, string> = {
     // ═══ Platform-Level ═══
     'super':           'ceo',
 
-    // ═══ Business Owners ═══
-    'isletme_admin':   'owner',    // Universal business admin
+    // ═══ Business Owners / Admins ═══
+    'admin':           'owner',    // 🆕 Consolidated Admin
+
+    // ═══ Staff / Personel ═══
+    'staff':           'cashier',  // 🆕 Consolidated Staff
+
+    // ═══ Legacy Mappings (For Backwards Compatibility until DB migration) ═══
+    'isletme_admin':   'owner',
     'kasap':           'owner',
     'restoran':        'owner',
     'market':          'owner',
@@ -346,20 +351,14 @@ export function getDefaultGroupForAdminType(adminType: string): string {
     'kermes':          'owner',
     'cenaze_fonu':     'owner',
     'hali_yikama':     'owner',
-
-    // ═══ Staff / Personel ═══
-    'isletme_staff':   'cashier',  // Universal business staff
+    'isletme_staff':   'cashier',
     'kasap_staff':     'cashier',
     'restoran_staff':  'cashier',
     'market_staff':    'cashier',
     'kermes_staff':    'cashier',
-    'garson':          'cashier',    // Waiter → cashier level
-    'tur_rehberi':     'cashier',    // Tour guide → cashier level
-
-    // ═══ Kitchen ═══
+    'garson':          'cashier',
+    'tur_rehberi':     'cashier',
     'mutfak':          'kitchen',
-
-    // ═══ Drivers ═══
     'teslimat':        'driver',
     'hali_surucu':     'driver',
     'transfer_surucu': 'driver',

@@ -439,7 +439,16 @@ export default function BenutzerverwaltungPage() {
                 displayName: `${newUserData.firstName} ${newUserData.lastName}`,
                 phone: `${newUserData.dialCode}${newUserData.phone}`,
                 role: newUserData.role !== 'user' ? 'admin' : 'user',
-                adminType: newUserData.role !== 'user' ? newUserData.role : undefined,
+                adminType: newUserData.role !== 'user' 
+                    ? (newUserData.role === 'business_admin' 
+                        ? (() => {
+                            const b = businesses.find(bz => bz.id === newUserData.businessId);
+                            const k = kermesEvents.find(ke => ke.id === newUserData.businessId);
+                            if (k) return 'kermes_admin';
+                            return 'lokma_admin';
+                        })()
+                        : newUserData.role) 
+                    : undefined,
                 location: `${newUserData.address || ''} ${newUserData.houseNumber || ''}, ${newUserData.city || ''}, ${newUserData.country || ''}`.trim(),
                 butcherId: newUserData.businessId || undefined,
                 butcherName: assignedBusinessName || undefined,
@@ -533,7 +542,14 @@ export default function BenutzerverwaltungPage() {
             const assignedBusinessNames = businesses.filter(b => selectedBusinessIds.includes(b.id)).map(b => b.name);
             const assignedKermesNames = kermesEvents.filter(k => selectedKermesIds.includes(k.id)).map(k => k.name);
             
-            let currentAdminType = editRole !== 'customer' && editRole !== 'user' ? editRole : null;
+            let currentAdminType = editRole !== 'customer' && editRole !== 'user' 
+                ? (editRole === 'business_admin' ? (() => {
+                    const b = businesses.find(bz => bz.id === editBusinessId);
+                    const k = kermesEvents.find(ke => ke.id === editBusinessId);
+                    if (k) return 'kermes_admin';
+                    return 'lokma_admin';
+                })() : editRole) 
+                : null;
             
             const updatePayload = {
                 userId: selectedUser.id,

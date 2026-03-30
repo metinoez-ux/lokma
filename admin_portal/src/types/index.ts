@@ -748,23 +748,8 @@ export type AdminRole = 'super_admin' | 'admin' | 'sub_admin' | 'hotline';
 
 export type AdminType =
     | 'super'
-    | 'kermes'
-    | 'kermes_staff'    // 🆕 Kermes Personeli
-    | 'cenaze_fonu'
-    | 'restoran'
-    | 'restoran_staff'
-    | 'mutfak'
-    | 'garson'
-    | 'teslimat'
-    | 'kasap'
-    | 'kasap_staff'
-    | 'bakkal'
-    | 'market'          // 🆕 Market Admin
-    | 'market_staff'    // 🆕 Market Personeli
-    | 'hali_yikama'
-    | 'hali_surucu'
-    | 'transfer_surucu'
-    | 'tur_rehberi';
+    | 'admin'
+    | 'staff';
 
 export interface Admin {
     id: string;

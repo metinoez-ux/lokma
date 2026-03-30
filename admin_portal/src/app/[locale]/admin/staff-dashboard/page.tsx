@@ -148,7 +148,7 @@ const { admin, loading: adminLoading } = useAdmin();
     const [createPhone, setCreatePhone] = useState('');
     const [createPassword, setCreatePassword] = useState('');
     const [createPasswordConfirm, setCreatePasswordConfirm] = useState('');
-    const [createRole, setCreateRole] = useState('kasap_staff');
+    const [createRole, setCreateRole] = useState('staff');
 
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
@@ -254,9 +254,9 @@ const { admin, loading: adminLoading } = useAdmin();
                     displayName: createName,
                     phone: createPhone || undefined,
                     role: 'admin',
-                    adminType: createRole,
-                    isDriver: createRole === 'teslimat',
-                    driverType: createRole === 'teslimat' ? 'business' : undefined,
+                    adminType: createRole === 'driver' ? 'teslimat' : createRole, // Keep 'teslimat' in DB during transition, or 'driver' when migration happens. Actually, since UI can just use 'driver', let's stick to the new types if possible. But better support both for DB compatibility. Let's send createRole directly but map driver:
+                    isDriver: createRole === 'teslimat' || createRole === 'driver',
+                    driverType: (createRole === 'teslimat' || createRole === 'driver') ? 'business' : undefined,
                     businessId: businessId,
                     butcherName: admin?.butcherName || admin?.businessName || '',
                     isPrimaryAdmin: false,
@@ -307,7 +307,7 @@ const { admin, loading: adminLoading } = useAdmin();
             setCreatePhone('');
             setCreatePassword('');
             setCreatePasswordConfirm('');
-            setCreateRole('kasap_staff');
+            setCreateRole('staff');
 
             setCreateError('');
 
@@ -352,27 +352,11 @@ const { admin, loading: adminLoading } = useAdmin();
 
     // ─── Available Roles for Staff Creation ────────────────────────────────
     const availableRoles = useMemo(() => {
-        const adminType = admin?.adminType || '';
-        if (adminType.includes('kasap')) return [
-            { value: 'kasap_staff', label: t('kasap_personeli') },
-            { value: 'garson', label: t('garson_rolu') },
-            { value: 'teslimat', label: t('teslimat_rolu') },
-        ];
-        if (adminType.includes('restoran')) return [
-            { value: 'restoran_staff', label: t('restoran_personeli') },
-            { value: 'garson', label: t('garson_rolu') },
-            { value: 'teslimat', label: t('teslimat_rolu') },
-        ];
-        if (adminType.includes('market')) return [
-            { value: 'market_staff', label: t('market_personeli') },
-            { value: 'teslimat', label: t('teslimat_rolu') },
-        ];
         return [
-            { value: 'kasap_staff', label: t('isletme_personeli') },
-            { value: 'garson', label: t('garson_rolu') },
-            { value: 'teslimat', label: t('teslimat_rolu') },
+            { value: 'staff', label: t('isletme_personeli', { defaultValue: 'İşletme Personeli' }) },
+            { value: 'driver', label: t('teslimat_rolu', { defaultValue: 'Kurye / Sürücü' }) },
         ];
-    }, [admin, t]);
+    }, [t]);
 
     // ─── Real-time shift listener ────────────────────────────────────────
     useEffect(() => {
@@ -1241,7 +1225,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
 
                             {/* Driver info - auto-detected from role */}
-                            {createRole === 'teslimat' && (
+                            {(createRole === 'teslimat' || createRole === 'driver') && (
                                 <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/30 rounded-lg px-4 py-3">
                                     <span className="text-emerald-800 dark:text-emerald-400 text-sm">{t('surucu_otomatik')}</span>
                                 </div>

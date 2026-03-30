@@ -207,23 +207,22 @@ export interface RoleConfig {
     businessType?: string;
 }
 
-/** Belirli bir işletme türü için roller oluştur (Geriye uyumluluk) */
+/** Belirli bir işletme türü için roller oluştur */
 export const generateRolesForBusinessType = (businessType: string): RoleConfig[] => {
     const config = getBusinessType(businessType);
     if (!config) return [];
 
-    // Artık tüm işletme türleri için genel roller kullanılır
     return [
         {
-            value: 'isletme_admin',
-            label: 'İşletme Admin',
+            value: 'admin',
+            label: 'Yönetici (Admin)',
             icon: `👑`,
             isAdmin: true,
             businessType,
         },
         {
-            value: 'isletme_staff',
-            label: 'İşletme Personel',
+            value: 'staff',
+            label: 'Personel',
             icon: `👤`,
             isAdmin: false,
             businessType,
@@ -231,23 +230,14 @@ export const generateRolesForBusinessType = (businessType: string): RoleConfig[]
     ];
 };
 
-/** Tum rolleri al - KONSOLiDE: Genel + Surucü + Garson roller */
+/** Tum rolleri al - KONSOLiDE */
 export const getAllRoles = (): RoleConfig[] => {
     return [
-        // Normal kullanici - admin rolunu kaldirmak icin
-        { value: 'user', label: 'Kullanici (Admin Degil)', icon: '👤', isAdmin: false },
+        { value: 'user', label: 'Müşteri (Admin Degil)', icon: '👤', isAdmin: false },
         { value: 'super', label: 'Super Admin', icon: '🌟', isAdmin: true },
-        // Genel isletme rolleri
-        { value: 'isletme_admin', label: 'Isletme Admin', icon: '🏪', isAdmin: true },
-        { value: 'isletme_staff', label: 'Isletme Personel', icon: '🏪', isAdmin: false },
-        // Garson rolu
-        { value: 'garson', label: 'Garson', icon: '🍽️', isAdmin: false },
-        // Surucü rolleri
-        { value: 'driver_business', label: 'Isletme Kuryesi', icon: '🛵', isAdmin: false },
-        { value: 'driver_lokma', label: 'LOKMA Kuryesi', icon: '🔵', isAdmin: false },
-        // Organizasyon rolleri
-        { value: 'kermes', label: 'Kermes Admin', icon: '🎪', isAdmin: true },
-        { value: 'kermes_staff', label: 'Kermes Personel', icon: '🎪', isAdmin: false },
+        // Genel isletme & kermes rolleri
+        { value: 'admin', label: 'Yönetici (Admin)', icon: '🏪', isAdmin: true },
+        { value: 'staff', label: 'Personel', icon: '👤', isAdmin: false },
     ];
 };
 
@@ -269,19 +259,15 @@ export const getRoleConfig = (roleValue: string): RoleConfig | undefined => {
 
 /** Rol degerinden label getir - eski ve yeni rolleri destekler */
 export const getRoleLabel = (roleValue: string | undefined | null): string => {
-    if (!roleValue || typeof roleValue !== 'string') return String(roleValue || 'Admin');
+    if (!roleValue || typeof roleValue !== 'string') return String(roleValue || 'Bilinmiyor');
 
-    // Once genel rollerde ara (getAllRoles icindekiler)
     const config = getRoleConfig(roleValue);
     if (config) return config.label;
 
     // Eski isletme rolleri icin geriye uyumluluk
-    // kasap, restoran, market, pastane, vb. = Isletme Admin
-    // kasap_staff, restoran_staff, vb. = Isletme Personel
-    // teslimat = Isletme Kuryesi
-    if (roleValue === 'teslimat') return 'Isletme Kuryesi';
-    if (typeof roleValue === 'string' && roleValue?.endsWith?.('_staff')) return 'Isletme Personel';
-    if (Object.keys(BUSINESS_TYPES).includes(roleValue as string)) return 'Isletme Admin';
+    if (roleValue === 'teslimat' || roleValue.startsWith('driver_')) return 'Kurye';
+    if (roleValue.endsWith('_staff') || roleValue === 'mutfak' || roleValue === 'garson') return 'Personel';
+    if (Object.keys(BUSINESS_TYPES).includes(roleValue) || roleValue.endsWith('_admin')) return 'Yönetici';
 
     return String(roleValue);
 };
@@ -296,18 +282,8 @@ export const getRoleIcon = (roleValue: string | undefined | null): string => {
 export const isAdminRole = (roleValue: string | undefined | null): boolean => {
     if (!roleValue || typeof roleValue !== 'string') return false;
 
-    // Super admin
-    if (roleValue === 'super') return true;
-    // Yeni genel admin
-    if (roleValue === 'isletme_admin') return true;
-    // Kermes admin
-    if (roleValue === 'kermes') return true;
-    // Surucü rolleri admin degil
-    if (roleValue.startsWith('driver_')) return false;
-    // Garson admin degil
-    if (roleValue === 'garson' || roleValue === 'teslimat') return false;
-    // Staff roller admin degil
-    if (typeof roleValue === 'string' && roleValue?.endsWith?.('_staff')) return false;
+    if (roleValue === 'super' || roleValue === 'admin' || roleValue === 'isletme_admin' || roleValue === 'kermes' || roleValue === 'lokma_admin' || roleValue === 'kermes_admin') return true;
+    
     // Eski sektor admin'leri (kasap, market, restoran vb.)
-    return Object.keys(BUSINESS_TYPES).includes(roleValue as string);
+    return Object.keys(BUSINESS_TYPES).includes(roleValue);
 };
