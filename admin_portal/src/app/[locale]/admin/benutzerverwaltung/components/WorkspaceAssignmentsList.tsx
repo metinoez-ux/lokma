@@ -213,10 +213,8 @@ export function WorkspaceAssignmentsList({ assignments, onChange, businesses, ke
                 onChange={e => setSelectedRole(e.target.value)}
                 className="w-full px-3 py-2 bg-background border border-input rounded-lg text-sm"
               >
-                <option value="lokma_admin">{t('rolLokmaAdmin', { defaultValue: 'Lokma Admin (Yönetim)' })}</option>
-                <option value="kermes_admin">{t('rolKermesAdmin', { defaultValue: 'Kermes Admin (Yönetim)' })}</option>
-                <option value="mutfak">{t('rolMutfak', { defaultValue: 'Mutfak Personeli' })}</option>
-                <option value="staff">{t('rolStaff', { defaultValue: 'Personel (Standart)' })}</option>
+                <option value="admin">{t('rolYonetici', { defaultValue: 'Yönetici (Admin)' })}</option>
+                <option value="staff">{t('rolPersonel', { defaultValue: 'Personel (Standart)' })}</option>
               </select>
             </div>
 
