@@ -1,63 +1,71 @@
 {
-    "hosting": {
-        "site": "lokma",
-        "source": ".",
-        "frameworksBackend": {
-            "region": "europe-west1"
-        },
-        "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
-        ],
+  "hosting": {
+    "site": "lokma",
+    "source": ".",
+    "frameworksBackend": {
+      "region": "europe-west1"
+    },
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "/zohoverify/**",
         "headers": [
-            {
-                "source": "/zohoverify/**",
-                "headers": [
-                    {
-                        "key": "Content-Type",
-                        "value": "text/html"
-                    }
-                ]
-            },
-            {
-                "source": "/.well-known/apple-app-site-association",
-                "headers": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ]
-            },
-            {
-                "source": "/.well-known/assetlinks.json",
-                "headers": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ]
-            }
-        ],
-        "rewrites": [
-            {
-                "source": "**",
-                "run": {
-                    "serviceId": "ssrlokma",
-                    "region": "europe-west1"
-                }
-            }
+          {
+            "key": "Content-Type",
+            "value": "text/html"
+          }
         ]
-    },
-    "functions": {
-        "source": "functions",
-        "codebase": "lokma-notifications",
-        "runtime": "nodejs20"
-    },
-    "storage": {
-        "rules": "storage.rules"
-    },
-    "firestore": {
-        "rules": "firestore.rules"
+      },
+      {
+        "source": "/.well-known/apple-app-site-association",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "ssrlokma",
+          "region": "europe-west1"
+        }
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions",
+    "codebase": "lokma-notifications",
+    "runtime": "nodejs20"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "LOKMA",
+        "supportEmail": "metin.oez@gmail.com"
+      }
     }
+  }
 }

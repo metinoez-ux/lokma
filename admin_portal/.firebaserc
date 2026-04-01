@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "aylar-a45af"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -318,7 +318,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
               border: isDark ? null : Border.all(color: borderSubtle),
               boxShadow: isDark ? null : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
+                  color: Colors.black.withOpacity(0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -426,9 +426,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: status == 'delivered' ? Colors.green.withValues(alpha: 0.15) :
-                                         status == 'cancelled' ? Colors.red.withValues(alpha: 0.15) :
-                                         Colors.orange.withValues(alpha: 0.15),
+                                  color: status == 'delivered' ? Colors.green.withOpacity(0.15) :
+                                         status == 'cancelled' ? Colors.red.withOpacity(0.15) :
+                                         Colors.orange.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(

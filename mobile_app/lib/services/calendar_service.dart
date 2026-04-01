@@ -1,6 +1,7 @@
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 /// Native device calendar integration for scheduled orders & table reservations.
 /// Provides calendar picker bottom sheet and event creation with 1-hour reminder.
@@ -100,12 +101,15 @@ class CalendarService {
     String? location,
   }) async {
     try {
+      final tzStart = tz.TZDateTime.from(startTime, tz.local);
+      final tzEnd = tz.TZDateTime.from(startTime.add(duration), tz.local);
+
       final event = Event(
         calendarId,
         title: title,
         description: description,
-        start: startTime,
-        end: startTime.add(duration),
+        start: tzStart,
+        end: tzEnd,
         reminders: [Reminder(minutes: 60)], // 1 hour before
       );
       event.location = location;

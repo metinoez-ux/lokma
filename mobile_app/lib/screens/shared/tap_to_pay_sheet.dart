@@ -265,7 +265,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFEA184A).withValues(alpha: 0.15),
+                color: const Color(0xFFEA184A).withOpacity(0.15),
                 border: Border.all(color: const Color(0xFFEA184A), width: 2),
               ),
               child: const Icon(Icons.contactless, color: Color(0xFFEA184A), size: 36),
@@ -297,7 +297,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
       height: 100,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.red.withValues(alpha: 0.15),
+        color: Colors.red.withOpacity(0.15),
         border: Border.all(color: Colors.red, width: 2),
       ),
       child: const Icon(Icons.error_outline, color: Colors.red, size: 48),

@@ -560,7 +560,7 @@ class _PromotionCenterModalContent extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Colors.black.withOpacity(0.4),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -724,7 +724,7 @@ class _PromotionTopBannerContentState extends State<_PromotionTopBannerContent>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: Colors.black.withOpacity(0.3),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),

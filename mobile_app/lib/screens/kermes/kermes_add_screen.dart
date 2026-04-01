@@ -296,10 +296,10 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: GradientAppBar(
-        title: const Column(
+        title: Column(
           children: [
-            Text('HADEF', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w300, letterSpacing: 2)),
-            Text(tr('Yeni Kermes Ekle'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('HADEF', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w300, letterSpacing: 2)),
+            Text(tr('Yeni Kermes Ekle'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -666,12 +666,12 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.save),
-                          SizedBox(width: 8),
-                          Text(tr('KERMESİ KAYDET'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const Icon(Icons.save),
+                          const SizedBox(width: 8),
+                          Text(tr('KERMESİ KAYDET'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ],
                       ),
               ),
@@ -690,7 +690,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1976D2).withValues(alpha: 0.1),
+            color: const Color(0xFF1976D2).withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: const Color(0xFF1976D2), size: 20),

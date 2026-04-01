@@ -620,7 +620,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(12), // Reduced
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.1),
+                      color: accent.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.storefront_outlined, size: 28, color: accent), // Reduced
@@ -648,18 +648,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                        color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withOpacity(0.35),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                          color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.5),
                         ),
                       ),
                       child: Column(
                         children: [
                           if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
-                          if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
                           if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
-                          if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
                           if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
                         ],
                       ),
@@ -678,7 +678,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w200,
                       letterSpacing: 0.5,
-                      color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.9),
+                      color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
                       height: 1.3, // Reduced
                     ),
                   ),
@@ -703,7 +703,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           fontSize: 14, // Reduced
                           fontWeight: FontWeight.w200,
                           letterSpacing: 0.5,
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ),
@@ -722,7 +722,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       },
                       style: TextButton.styleFrom(
 
-                        foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
+                        foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.7),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Text(
@@ -1045,7 +1045,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                                    decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
                                     child: Row(
                                       children: [
                                         Text('${review['rating']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.w600, fontSize: 12)),
@@ -1318,9 +1318,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+            border: Border.all(color: color.withOpacity(0.3), width: 2),
           ),
           child: Icon(icon, color: color, size: 28),
         ),
@@ -1475,7 +1475,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
+                                        color: Colors.black.withOpacity(0.2),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -1576,7 +1576,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withValues(alpha: 0.9),
+                                                color: Colors.white.withOpacity(0.9),
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Row(
@@ -1675,7 +1675,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   Container(
                                     width: 40, height: 40,
                                     decoration: BoxDecoration(
-                                      color: Colors.blue.withValues(alpha: 0.12),
+                                      color: Colors.blue.withOpacity(0.12),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(Icons.phone, color: Colors.blue, size: 20),
@@ -1732,7 +1732,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.12),
+                                color: Colors.orange.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -1920,11 +1920,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         
         // Professional tagline
         const SizedBox(height: 14),
-        Divider(color: subtitleColor.withValues(alpha: 0.2), height: 1),
+        Divider(color: subtitleColor.withOpacity(0.2), height: 1),
         const SizedBox(height: 10),
         Text(
           _getImpressumTagline(),
-          style: GoogleFonts.inter(color: subtitleColor.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.w300, height: 1.5),
+          style: GoogleFonts.inter(color: subtitleColor.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.w300, height: 1.5),
         ),
       ],
     );
@@ -2303,7 +2303,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 2),
       decoration: isToday ? BoxDecoration(
-        color: todayColor.withValues(alpha: 0.05),
+        color: todayColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(6),
       ) : null,
       child: Row(
@@ -2541,7 +2541,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         selectedIndex: _deliveryModeIndex,
                         tabs: [
                           TabItem(
-                            title: tr('delivery_modes.delivery'),
+                            title: parseSafelyDouble(data?['deliveryFee']) > 0
+                                ? '${tr('delivery_modes.delivery')} (${parseSafelyDouble(data?['deliveryFee']).toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()})'
+                                : '${tr('delivery_modes.delivery')} (${tr('kermes.free_delivery')})',
                             subtitle: _getEstimatedDeliveryTime(),
                             icon: Icons.delivery_dining,
                           ),
@@ -2600,10 +2602,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [const Color(0xFFEA184A).withValues(alpha: 0.08), const Color(0xFFFF6B6B).withValues(alpha: 0.04)],
+                                  colors: [const Color(0xFFEA184A).withOpacity(0.08), const Color(0xFFFF6B6B).withOpacity(0.04)],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFEA184A).withValues(alpha: 0.25)),
+                                border: Border.all(color: const Color(0xFFEA184A).withOpacity(0.25)),
                               ),
                               child: Row(
                                 children: [
@@ -2658,7 +2660,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), blurRadius: 8)],
+                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), blurRadius: 8)],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
@@ -2683,7 +2685,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
+                                        color: Colors.black.withOpacity(0.3),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -2718,8 +2720,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             top: 12,
                             child: Material(
                               color: isFavorite 
-                                  ? accent.withValues(alpha: 0.9) 
-                                  : Colors.black.withValues(alpha: 0.4),
+                                  ? accent.withOpacity(0.9) 
+                                  : Colors.black.withOpacity(0.4),
                               borderRadius: BorderRadius.circular(20),
                               child: InkWell(
                                 onTap: () {
@@ -2776,7 +2778,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                      child: Text(
                                        '(${tr('delivery_modes.dine_in')} ${widget.initialTableNumber}${_isGroupMode ? ' / ${tr('orders.label_group_order')}' : ' / ${tr('cart.single_person_order')}'})',
                                        style: TextStyle(
-                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                          fontSize: 14,
                                          fontWeight: FontWeight.w400,
                                        ),
@@ -2800,14 +2802,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    children: [
                                      Icon(
                                        Icons.info_outline,
-                                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                        size: 16,
                                      ),
                                      const SizedBox(width: 4),
                                      Text(
                                        'business_details.about_us'.tr(),
                                        style: TextStyle(
-                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                          fontSize: 13,
                                          fontWeight: FontWeight.w600,
                                        ),
@@ -2843,7 +2845,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                      Text(
                                        '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
                                        style: TextStyle(
-                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                                          fontSize: 13,
                                          fontWeight: FontWeight.w500,
                                        ),
@@ -2862,7 +2864,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       Text(
                                         '${parseSafelyDouble(data?['rating']).toStringAsFixed(1).replaceAll('.', ',')}${parseSafelyInt(data?['reviewCount']) > 0 ? ' (${parseSafelyInt(data?['reviewCount'])})' : ''}',
                                         style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -2898,7 +2900,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                      width: 16,
                                      height: 16,
                                      colorFilter: ColorFilter.mode(
-                                       Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                       Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                        BlendMode.srcIn,
                                      ),
                                    ),
@@ -2908,7 +2910,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                      style: TextStyle(
                                        fontSize: 13,
                                        fontWeight: FontWeight.w500,
-                                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                      ),
                                    ),
                                  ],
@@ -2922,7 +2924,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              Text(
                                data!['cuisineType'].toString(),
                                style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                  fontSize: 13,
                                ),
                              ),
@@ -2932,7 +2934,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              Text(
                                'marketplace.business_type_${data!['type'].toString().toLowerCase()}'.tr(),
                                style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                  fontSize: 13,
                                ),
                              ),
@@ -2990,7 +2992,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              Row(
                                mainAxisSize: MainAxisSize.min,
                                children: [
-                                 Icon(Icons.delivery_dining, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+                                 Icon(Icons.delivery_dining, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                                  const SizedBox(width: 3),
                                  Text(
                                    parseSafelyDouble(data?['deliveryFee']) == 0
@@ -2999,7 +3001,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    style: TextStyle(
                                      color: parseSafelyDouble(data?['deliveryFee']) == 0
                                          ? const Color(0xFF4CAF50)
-                                         : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                         : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                      fontSize: 13,
                                      fontWeight: parseSafelyDouble(data?['deliveryFee']) == 0 ? FontWeight.w600 : FontWeight.w400,
                                    ),
@@ -3014,7 +3016,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              Text(
                                'Min. ${parseSafelyDouble(data?['minDeliveryOrder']).toStringAsFixed(2).replaceAll('.00', '')}${CurrencyUtils.getCurrencySymbol()}',
                                style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                  fontSize: 13,
                                ),
                              ),
@@ -3078,7 +3080,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                   borderRadius: BorderRadius.circular(50),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                                                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
                                                       blurRadius: 8,
                                                       offset: const Offset(0, 2),
                                                     ),
@@ -3269,7 +3271,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
                             return Container(
                               width: double.infinity,
-                              color: isDark ? const Color(0xFF2C2C2C).withValues(alpha: 0.6) : const Color(0xFFF2EEE9),
+                              color: isDark ? const Color(0xFF2C2C2C).withOpacity(0.6) : const Color(0xFFF2EEE9),
                               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                               child: Row(
                                 children: [
@@ -3450,7 +3452,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
        color: accent,
        borderRadius: BorderRadius.circular(28),
        elevation: 4,
-       shadowColor: accent.withValues(alpha: 0.4),
+       shadowColor: accent.withOpacity(0.4),
        child: InkWell(
          borderRadius: BorderRadius.circular(28),
          onTap: () {
@@ -3681,7 +3683,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEA184A).withValues(alpha: 0.12),
+                    color: const Color(0xFFEA184A).withOpacity(0.12),
                     borderRadius: BorderRadius.circular(36),
                   ),
                   child: const Icon(
@@ -3940,7 +3942,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: product.outOfStock
-                                  ? Colors.orange.withValues(alpha: 0.15)
+                                  ? Colors.orange.withOpacity(0.15)
                                   : (isDark ? Colors.white10 : Colors.grey[200]!),
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -4009,16 +4011,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF5F0E8),
+                                      color: isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF5F0E8),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200]!,
+                                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
                                         width: 0.5,
                                       ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.edit_outlined, size: 12, color: textSecondary.withValues(alpha: 0.5)),
+                                        Icon(Icons.edit_outlined, size: 12, color: textSecondary.withOpacity(0.5)),
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
@@ -4135,7 +4137,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.15),
+                                              color: Colors.black.withOpacity(0.15),
                                               blurRadius: 4,
                                               offset: const Offset(0, 2),
                                             ),
@@ -4163,7 +4165,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.1),
+                                              color: Colors.black.withOpacity(0.1),
                                               blurRadius: 6,
                                               offset: const Offset(0, 2),
                                             ),
@@ -4232,7 +4234,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withOpacity(0.05),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     )
@@ -4256,7 +4258,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         Divider(
           height: 1,
           thickness: 0.5,
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.2),
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.2),
         ),
       ],
     );
@@ -4382,8 +4384,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: product.outOfStock
-                                  ? Colors.orange.withValues(alpha: 0.85)
-                                  : Colors.red.withValues(alpha: 0.85),
+                                  ? Colors.orange.withOpacity(0.85)
+                                  : Colors.red.withOpacity(0.85),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -4405,7 +4407,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: accent.withValues(alpha: 0.4),
+                                  color: accent.withOpacity(0.4),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -4530,7 +4532,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey.shade300,
+                                  color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
                                   width: 1,
                                 ),
                               ),
@@ -4538,7 +4540,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Text(
                                 '—',
                                 style: TextStyle(
-                                  color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withValues(alpha: 0.3),
+                                  color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withOpacity(0.3),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -4601,7 +4603,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey.shade300,
+                                  color: isDark ? Colors.white.withOpacity(0.15) : Colors.grey.shade300,
                                   width: 1,
                                 ),
                               ),
@@ -4655,7 +4657,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: (inCart ? Colors.green : accent).withValues(alpha: 0.3),
+                                color: (inCart ? Colors.green : accent).withOpacity(0.3),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -4974,7 +4976,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                                 margin: const EdgeInsets.only(top: 12, bottom: 4),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF2EEE9),
+                                  color: isDark ? Colors.white.withOpacity(0.04) : const Color(0xFFF2EEE9),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -5028,7 +5030,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final hasImage = product.imageUrl?.isNotEmpty == true;
     final isAvailable = product.inStock || product.allowBackorder;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.withValues(alpha: 0.15);
+    final dividerColor = isDark ? Colors.white.withOpacity(0.06) : Colors.grey.withOpacity(0.15);
 
     return Opacity(
       opacity: isAvailable ? 1.0 : 0.5,
@@ -5129,7 +5131,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -5152,7 +5154,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: accent.withValues(alpha: 0.3),
+                                color: accent.withOpacity(0.3),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -5237,7 +5239,7 @@ class _FavoriteHeartAnimationState extends State<_FavoriteHeartAnimation>
                     size: 100,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withOpacity(0.5),
                         blurRadius: 24,
                       ),
                     ],

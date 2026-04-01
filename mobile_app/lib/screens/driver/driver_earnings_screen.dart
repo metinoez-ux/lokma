@@ -172,9 +172,9 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.06),
+                        color: Colors.blue.withOpacity(0.06),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.withValues(alpha: 0.15)),
+                        border: Border.all(color: Colors.blue.withOpacity(0.15)),
                       ),
                       child: Row(
                         children: [
@@ -308,7 +308,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withOpacity(0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -348,13 +348,13 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: hasBankAccount
-            ? Colors.green.withValues(alpha: 0.06)
-            : Colors.orange.withValues(alpha: 0.08),
+            ? Colors.green.withOpacity(0.06)
+            : Colors.orange.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: hasBankAccount
-              ? Colors.green.withValues(alpha: 0.2)
-              : Colors.orange.withValues(alpha: 0.3),
+              ? Colors.green.withOpacity(0.2)
+              : Colors.orange.withOpacity(0.3),
         ),
       ),
       child: Row(
@@ -419,13 +419,13 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: hasTip
-              ? Colors.amber.withValues(alpha: 0.3)
+              ? Colors.amber.withOpacity(0.3)
               : (isDark ? Colors.grey.shade700 : Colors.grey.shade200),
         ),
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withOpacity(0.03),
               blurRadius: 4,
               offset: const Offset(0, 1),
             ),
@@ -437,7 +437,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isCash ? Colors.green.withValues(alpha: 0.1) : Colors.purple.withValues(alpha: 0.1),
+              color: isCash ? Colors.green.withOpacity(0.1) : Colors.purple.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -494,7 +494,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
+                    color: Colors.amber.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -752,9 +752,9 @@ class _BankAccountSetupPageState extends State<_BankAccountSetupPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.06),
+                color: Colors.blue.withOpacity(0.06),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.15)),
+                border: Border.all(color: Colors.blue.withOpacity(0.15)),
               ),
               child: Text(
                 'driver.earnings_legal_info'.tr(),
@@ -882,7 +882,7 @@ class _BankAccountSetupPageState extends State<_BankAccountSetupPage> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFE0032).withValues(alpha: 0.06)
+              ? const Color(0xFFFE0032).withOpacity(0.06)
               : isDark ? Colors.grey.shade900 : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -1090,7 +1090,7 @@ class _PayoutSettingsPageState extends State<_PayoutSettingsPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFE0032).withValues(alpha: 0.06)
+              ? const Color(0xFFFE0032).withOpacity(0.06)
               : isDark ? Colors.grey.shade900 : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(

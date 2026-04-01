@@ -269,7 +269,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
+                  color: Colors.black.withOpacity(0.4),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -295,7 +295,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.4),
+                            color: Colors.black.withOpacity(0.4),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.shopping_cart, color: Colors.white, size: 20),
@@ -352,8 +352,8 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          darkBg.withValues(alpha: 0.2),
-                          darkBg.withValues(alpha: 0.8),
+                          darkBg.withOpacity(0.2),
+                          darkBg.withOpacity(0.8),
                           darkBg,
                         ],
                         stops: const [0.0, 0.4, 0.7, 1.0],
@@ -413,16 +413,16 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             ],
                           ),
                           borderRadius: BorderRadius.circular(40),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.5),
+                          border: Border.all(color: Colors.white.withOpacity(0.08), width: 0.5),
                           boxShadow: [
                             // Outer glow
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.6), // Removed accent glow
+                              color: Colors.black.withOpacity(0.6), // Removed accent glow
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
+                              color: Colors.black.withOpacity(0.5),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             )
@@ -438,9 +438,9 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.black.withValues(alpha: 0.3),
+                                    Colors.black.withOpacity(0.3),
                                     Colors.transparent,
-                                    Colors.white.withValues(alpha: 0.03),
+                                    Colors.white.withOpacity(0.03),
                                   ],
                                 ),
                               ),
@@ -459,12 +459,12 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                   borderRadius: BorderRadius.circular(36),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.3),
+                                      color: Colors.black.withOpacity(0.3),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
                                     BoxShadow(
-                                        color: accent.withValues(alpha: 0.4),
+                                        color: accent.withOpacity(0.4),
                                         blurRadius: 8,
                                         offset: const Offset(0, 0),
                                     )
@@ -473,7 +473,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
-                                      accent.withValues(alpha: 0.9),
+                                      accent.withOpacity(0.9),
                                       accent,
                                     ],
                                   ),
@@ -557,7 +557,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF2A2A28),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        border: Border.all(color: Colors.white.withOpacity(0.05)),
                       ),
                       child: Column(
                         children: [
@@ -851,7 +851,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                   const SizedBox(width: 8),
                                   Text(item['text'], style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
                                   const SizedBox(width: 8),
-                                  Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                                  Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
                                 ],
                               ),
                             );
@@ -949,11 +949,11 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
           color: const Color(0xFF2A2A28), // Darker card bg
           borderRadius: BorderRadius.circular(20),
           border: isFavoriteSection 
-            ? Border.all(color: accent.withValues(alpha: 0.3), width: 1)
-            : Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ? Border.all(color: accent.withOpacity(0.3), width: 1)
+            : Border.all(color: Colors.white.withOpacity(0.08)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: Colors.black.withOpacity(0.25),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -1006,7 +1006,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.5), // Dark overlay
+                              color: Colors.black.withOpacity(0.5), // Dark overlay
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
@@ -1248,7 +1248,7 @@ class _PulsingCartFabState extends State<_PulsingCartFab> with SingleTickerProvi
         color: accent,
         borderRadius: BorderRadius.circular(28),
         elevation: 6,
-        shadowColor: accent.withValues(alpha: 0.5),
+        shadowColor: accent.withOpacity(0.5),
         child: InkWell(
           borderRadius: BorderRadius.circular(28),
           onTap: widget.onTap,
@@ -1328,7 +1328,7 @@ class _ButcherBannerCarouselState extends State<_ButcherBannerCarousel> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -1355,7 +1355,7 @@ class _ButcherBannerCarouselState extends State<_ButcherBannerCarousel> {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.1),
+                      color: accent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(Icons.restaurant, color: accent, size: 28),
@@ -1491,7 +1491,7 @@ class ApiDot extends StatelessWidget {
       height: 8,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(4),
-        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.4),
+        color: isActive ? Colors.white : Colors.white.withOpacity(0.4),
       ),
     );
   }

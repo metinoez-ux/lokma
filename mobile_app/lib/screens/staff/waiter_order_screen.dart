@@ -342,9 +342,9 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: allPaid ? Colors.green.shade50 : brandColor.withValues(alpha: 0.08),
+                                color: allPaid ? Colors.green.shade50 : brandColor.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: allPaid ? Colors.green.shade200 : brandColor.withValues(alpha: 0.2)),
+                                border: Border.all(color: allPaid ? Colors.green.shade200 : brandColor.withOpacity(0.2)),
                               ),
                               child: Row(
                                 children: [
@@ -539,7 +539,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                               label: Text(tr('staff.bill')),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: brandColor,
-                                side: BorderSide(color: brandColor.withValues(alpha: 0.5)),
+                                side: BorderSide(color: brandColor.withOpacity(0.5)),
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                               ),
@@ -596,9 +596,9 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFEA184A).withValues(alpha: 0.08),
+                color: const Color(0xFFEA184A).withOpacity(0.08),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFEA184A).withValues(alpha: 0.3)),
+                border: Border.all(color: const Color(0xFFEA184A).withOpacity(0.3)),
               ),
               child: Text(
                 pin,
@@ -1002,12 +1002,12 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     Color iconColor;
     
     if (isSelected) {
-      bgColor = brandColor.withValues(alpha: 0.2);
+      bgColor = brandColor.withOpacity(0.2);
       borderColor = brandColor;
       textColor = brandColor;
       iconColor = brandColor;
     } else if (hasOrders) {
-      bgColor = brandColor.withValues(alpha: 0.1);
+      bgColor = brandColor.withOpacity(0.1);
       borderColor = brandColor;
       textColor = brandColor;
       iconColor = brandColor;
@@ -1018,7 +1018,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       iconColor = Colors.amber.shade700;
     } else {
       bgColor = cardBg;
-      borderColor = Colors.grey.withValues(alpha: 0.2);
+      borderColor = Colors.grey.withOpacity(0.2);
       textColor = Colors.grey.shade600;
       iconColor = Colors.grey.shade400;
     }
@@ -1291,7 +1291,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         borderRadius: BorderRadius.circular(14),
         border: inCart
             ? Border.all(color: Colors.amber.shade300, width: 1.5)
-            : Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+            : Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
       child: Row(
         children: [
@@ -1785,9 +1785,9 @@ class _TableBillView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         label,

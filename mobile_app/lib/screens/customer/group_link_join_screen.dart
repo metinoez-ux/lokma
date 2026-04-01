@@ -187,7 +187,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: _accent.withValues(alpha: 0.1),
+            color: _accent.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: const Center(
@@ -231,7 +231,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: _accent.withValues(alpha: 0.1),
+                color: _accent.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -279,7 +279,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: _accent.withValues(alpha: 0.1),
+                      color: _accent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.restaurant, color: _accent, size: 24),
@@ -459,7 +459,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.1),
+              color: _accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: _accent, size: 20),
@@ -493,7 +493,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen>
           height: 80,
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.red.shade900.withValues(alpha: 0.4)
+                ? Colors.red.shade900.withOpacity(0.4)
                 : Colors.red.shade50,
             shape: BoxShape.circle,
           ),

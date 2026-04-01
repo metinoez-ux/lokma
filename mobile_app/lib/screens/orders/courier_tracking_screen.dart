@@ -360,7 +360,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -371,7 +371,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
               // Courier avatar
               CircleAvatar(
                 radius: 28,
-                backgroundColor: _brandColor.withValues(alpha: 0.15),
+                backgroundColor: _brandColor.withOpacity(0.15),
                 child: const Icon(Icons.person, color: _brandColor, size: 32),
               ),
               const SizedBox(width: 16),
@@ -558,7 +558,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                     border: Border.all(color: Colors.white, width: 2),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
+                                        color: Colors.black.withOpacity(0.3),
                                         blurRadius: 6,
                                         offset: const Offset(0, 2),
                                       ),
@@ -579,7 +579,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                       borderRadius: BorderRadius.circular(8),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.2),
+                                          color: Colors.black.withOpacity(0.2),
                                           blurRadius: 4,
                                         ),
                                       ],
@@ -611,7 +611,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                 border: Border.all(color: Colors.white, width: 2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
+                                    color: Colors.black.withOpacity(0.3),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -647,7 +647,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                                       border: Border.all(color: Colors.white, width: 2),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.3),
+                                          color: Colors.black.withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -682,7 +682,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withOpacity(0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -722,7 +722,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 6,
             offset: const Offset(0, -2),
           ),
@@ -802,7 +802,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: _brandColor.withValues(alpha: 0.1),
+                            color: _brandColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Center(

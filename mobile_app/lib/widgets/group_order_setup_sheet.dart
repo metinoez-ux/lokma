@@ -71,7 +71,7 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: _accent.withValues(alpha: 0.12),
+                          color: _accent.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child:
@@ -268,12 +268,12 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.blue.shade900.withValues(alpha: 0.3)
+                      ? Colors.blue.shade900.withOpacity(0.3)
                       : Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isDark
-                        ? Colors.blue.shade700.withValues(alpha: 0.4)
+                        ? Colors.blue.shade700.withOpacity(0.4)
                         : Colors.blue.shade100,
                   ),
                 ),
@@ -367,7 +367,7 @@ class _GroupOrderSetupSheetState extends ConsumerState<GroupOrderSetupSheet> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? _accent.withValues(alpha: 0.12)
+                ? _accent.withOpacity(0.12)
                 : (isDark ? Colors.grey.shade800 : Colors.grey.shade50),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(

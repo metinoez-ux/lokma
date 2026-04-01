@@ -281,6 +281,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  Future<bool> _promptAccountCreation(String accountDescription) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: lokmaDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Hesap Bulunamadı', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Bu $accountDescription ile LOKMA sisteminde bir kaydınız bulunmamaktadır.\n\nBu $accountDescription kullanarak yeni bir Müşteri profili oluşturmak ister misiniz?',
+          style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Başka Hesap Deneyeceğim', style: TextStyle(color: Colors.white54, fontWeight: FontWeight.w500)),
+            onPressed: () => Navigator.of(ctx).pop(false),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: lokmaRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Evet, Profil Oluştur', style: TextStyle(fontWeight: FontWeight.w600)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -304,7 +335,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           bool needsPassword = false;
           if (user != null) {
             final hasPassword = user.providerData.any((p) => p.providerId == 'password');
-            needsPassword = !hasPassword;
+            final isPhoneUser = user.providerData.any((p) => p.providerId == 'phone');
+            // Sadece telefon ile giriş yapan kullanıcılardan SMS atlamak için şifre iste
+            needsPassword = isPhoneUser && !hasPassword;
           }
           
           if (needsPassword) {
@@ -336,17 +369,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: widget.embedded ? 40 : 60),
-                  
-                  // LOKMA Logo - Prominent
-                  _buildLogoSection(),
-                  
-                  SizedBox(height: 48),
-                  
-                  // Auth Content
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: widget.embedded ? 40 : 60),
+                    
+                    // LOKMA Logo - Prominent
+                    _buildLogoSection(),
+                    
+                    SizedBox(height: 48),
+                    
+                    // Auth Content
                   if (authState.isLoading || _isLoading)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 40),
@@ -371,6 +406,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     
                   const SizedBox(height: 40),
                 ],
+              ),
               ),
             ),
           ),
@@ -443,7 +479,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             height: 42,
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(21),
             ),
             child: Row(
@@ -476,9 +512,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _buildAuthButton(
           icon: Icons.email_outlined,
           label: _authMode == 0 ? tr('auth.e_posta_ile_giris_yap') : tr('auth.e_posta_ile_kayit_ol'),
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withOpacity(0.15),
           textColor: Colors.white,
-          borderColor: Colors.white.withValues(alpha: 0.3),
+          borderColor: Colors.white.withOpacity(0.3),
           onTap: () => setState(() => _loginMode = 'email'),
         ),
         
@@ -487,15 +523,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Divider
         Row(
           children: [
-            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.3))),
+            Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 tr('auth.veya'),
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14),
+                style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
               ),
             ),
-            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.3))),
+            Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
           ],
         ),
         
@@ -505,11 +541,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildSocialCircle(
-              icon: Icons.apple,
-              onTap: () => _showComingSoon('Apple Sign-In'),
-            ),
-            const SizedBox(width: 24),
+            if (Theme.of(context).platform == TargetPlatform.iOS || Theme.of(context).platform == TargetPlatform.macOS) ...[
+              _buildSocialCircle(
+                icon: Icons.apple,
+                onTap: () => _showComingSoon('Apple Sign-In'),
+              ),
+              const SizedBox(width: 24),
+            ],
             _buildGoogleButton(
               onTap: _signInWithGoogle,
             ),
@@ -524,10 +562,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Text(
             tr('auth.misafir_olarak_devam'),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: Colors.white.withOpacity(0.7),
               fontSize: 14,
               decoration: TextDecoration.underline,
-              decorationColor: Colors.white.withValues(alpha: 0.5),
+              decorationColor: Colors.white.withOpacity(0.5),
             ),
           ),
         ),
@@ -550,7 +588,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             borderRadius: BorderRadius.circular(18),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -628,7 +666,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -658,7 +696,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -775,7 +813,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                _authMode = 0;
              }),
              style: OutlinedButton.styleFrom(
-               side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+               side: BorderSide(color: Colors.white.withOpacity(0.5)),
                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                minimumSize: const Size(double.infinity, 56),
              ),
@@ -838,9 +876,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Phone input with country code prefix
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
             ),
             child: Row(
               children: [
@@ -850,7 +888,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.1),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
@@ -888,7 +926,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: _exampleNumber,
-                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
@@ -928,7 +966,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _authMode == 0
                   ? tr('auth.sms_ile_dogrulama_kodu_gonderi')
                   : tr('auth.yeni_hesap_icin_sms_kodu_gonderilecek'),
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
             ),
             const SizedBox(height: 24),
           ],
@@ -946,7 +984,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 14),
+              style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 14),
               children: [
                 TextSpan(text: tr('auth.6_haneli_dogrulama_kodunu_giri')),
                 const TextSpan(text: '\n'),
@@ -1028,9 +1066,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+        border: Border.all(color: Colors.white.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1042,7 +1080,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 6),
           Text(
             suggestion,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13),
+            style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 13),
           ),
           const SizedBox(height: 14),
           GestureDetector(
@@ -1087,7 +1125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: _passwordStrength / 5.0,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  backgroundColor: Colors.white.withOpacity(0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(_passwordStrengthColor),
                   minHeight: 6,
                 ),
@@ -1109,7 +1147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (_passwordStrength < 3) ...[
           Text(
             tr('auth.guclu_sifre_icin'),
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11),
+            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11),
           ),
           const SizedBox(height: 4),
           _buildRequirementRow('En az 6 karakter', _passwordController.text.length >= 6),
@@ -1169,12 +1207,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         labelText: label.isNotEmpty ? label : null,
         hintText: hint,
         labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+        hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
         prefixIcon: Icon(icon, color: iconColor ?? Colors.white70),
         suffixIcon: suffixIcon,
         counterText: '',
         filled: true,
-        fillColor: fillColor ?? Colors.white.withValues(alpha: 0.1),
+        fillColor: fillColor ?? Colors.white.withOpacity(0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -1204,7 +1242,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -1253,12 +1291,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authProvider.notifier).signInWithGoogle();
-      // Apply referral code for new Google sign-in users
+      
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null && _authMode == 1) {
-        final referralCode = _referralCodeController.text.trim();
-        if (referralCode.isNotEmpty) {
-          await ReferralService.applyReferralCode(user.uid, referralCode);
+      if (user != null) {
+        if (_authMode == 0) {
+          // Giriş Yap (Anmelden) Modu: Eğer kullanıcı şu an ilk defa yaratıldıysa reddet!
+          final creationTime = user.metadata.creationTime;
+          final lastSignInTime = user.metadata.lastSignInTime;
+          if (creationTime != null && lastSignInTime != null) {
+            final diff = lastSignInTime.difference(creationTime).inSeconds.abs();
+            if (diff < 5) {
+              if (!mounted) return;
+              final createAccount = await _promptAccountCreation('Google hesabı');
+
+              if (createAccount == true) {
+                return;
+              } else {
+                final uid = user.uid;
+                try {
+                  await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+                } catch (_) {}
+                await user.delete();
+                await FirebaseAuth.instance.signOut();
+                return;
+              }
+            }
+          }
+        } else if (_authMode == 1) {
+          // Kayıt Ol (Registrieren) Modu
+          final referralCode = _referralCodeController.text.trim();
+          if (referralCode.isNotEmpty) {
+            await ReferralService.applyReferralCode(user.uid, referralCode);
+          }
         }
       }
     } catch (e) {
@@ -1373,6 +1437,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         }
       } else {
+        // Login
+        bool userExists = false;
+        
+        if (isPhone) {
+           String lookupPhone = inputStr.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+           if (!lookupPhone.startsWith('+')) {
+             lookupPhone = '$_countryCode${lookupPhone.startsWith('0') ? lookupPhone.substring(1) : lookupPhone}';
+           }
+           final snap = await FirebaseFirestore.instance.collection('users').where('phoneNumber', isEqualTo: lookupPhone).limit(1).get();
+           userExists = snap.docs.isNotEmpty;
+        } else {
+           final snap = await FirebaseFirestore.instance.collection('users').where('email', isEqualTo: emailToLogin).limit(1).get();
+           userExists = snap.docs.isNotEmpty;
+        }
+
+        if (!userExists) {
+            if (mounted) {
+              setState(() => _isLoading = false);
+              final create = await _promptAccountCreation(isPhone ? 'telefon numarası' : 'E-posta adresi');
+              if (create && mounted) {
+                  setState(() => _authMode = 1);
+              }
+            }
+            return;
+        }
+
         await ref.read(authProvider.notifier).loginWithEmail(emailToLogin, password);
       }
     } catch (e) {
@@ -1444,10 +1534,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // LOGIN mode — number not in our system
         debugPrint('Phone lookup: $formattedPhone NOT found (login mode)');
         if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _phoneStatus = _PhoneStatus.notRegistered;
-          });
+          setState(() => _isLoading = false);
+          final create = await _promptAccountCreation('telefon numarası');
+          if (create && mounted) {
+             setState(() {
+               _authMode = 1;
+               _phoneStatus = _PhoneStatus.idle;
+             });
+             _handleSendSmsCode();
+          }
         }
         return;
       }

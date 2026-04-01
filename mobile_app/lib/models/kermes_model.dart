@@ -250,6 +250,11 @@ class KermesMenuItem {
     if (data == null) return [];
     if (data is List) return data.map((e) => e.toString()).toList();
     if (data is String) return data.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    if (data is Map) {
+      final val = data['tr'] ?? (data.values.isNotEmpty ? data.values.first : '');
+      if (val is String) return val.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      if (val is List) return val.map((e) => e.toString()).toList();
+    }
     return [];
   }
 

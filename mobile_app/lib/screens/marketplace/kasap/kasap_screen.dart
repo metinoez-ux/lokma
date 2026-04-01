@@ -193,8 +193,8 @@ class _KasapScreenState extends State<KasapScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? Color(sector['color'] as int).withValues(alpha: 0.2)
-                                  : Colors.white.withValues(alpha: 0.05),
+                                  ? Color(sector['color'] as int).withOpacity(0.2)
+                                  : Colors.white.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: isSelected 
                                   ? Border.all(color: Color(sector['color'] as int), width: 2)
@@ -479,7 +479,7 @@ class _BusinessCard extends StatelessWidget {
               ? const Color(0xFF2A2A28)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,7 +514,7 @@ class _BusinessCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: sectorColor.withValues(alpha: 0.9),
+                        color: sectorColor.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -558,7 +558,7 @@ class _BusinessCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF00C853).withValues(alpha: 0.4),
+                                  color: const Color(0xFF00C853).withOpacity(0.4),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -598,7 +598,7 @@ class _BusinessCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withOpacity(0.2),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -631,7 +631,7 @@ class _BusinessCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
+                                  color: Colors.black.withOpacity(0.2),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -684,7 +684,7 @@ class _BusinessCard extends StatelessWidget {
               child: Builder(
                 builder: (context) {
                   final isDark = Theme.of(context).brightness == Brightness.dark;
-                  final textColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87;
+                  final textColor = isDark ? Colors.white.withOpacity(0.9) : Colors.black87;
                   final starColor = isDark ? Color(0xFFFF9529) : Color(0xFFFF9529);
                   
                   return Column(
@@ -708,8 +708,8 @@ class _BusinessCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: pauseText != null
-                                  ? Colors.orange.withValues(alpha: 0.1)
-                                  : (isOpen ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1)),
+                                  ? Colors.orange.withOpacity(0.1)
+                                  : (isOpen ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

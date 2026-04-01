@@ -148,7 +148,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white70 : Colors.black54;
     final surfaceColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final chipBg = isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF5F5F5);
+    final chipBg = isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF5F5F5);
 
     if (_sent) return _buildSuccess(textPrimary, textSecondary);
 
@@ -167,7 +167,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: textSecondary.withValues(alpha: 0.3),
+                color: textSecondary.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -366,7 +366,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
                   // Privacy notice
                   Text(
                     'marketplace.legal_report_privacy'.tr(),
-                    style: TextStyle(fontSize: 11, color: textSecondary.withValues(alpha: 0.7), height: 1.4),
+                    style: TextStyle(fontSize: 11, color: textSecondary.withOpacity(0.7), height: 1.4),
                   ),
 
                   const SizedBox(height: 16),
@@ -386,7 +386,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
                   onPressed: _canSubmit ? _submit : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _brandColor,
-                    disabledBackgroundColor: _brandColor.withValues(alpha: 0.3),
+                    disabledBackgroundColor: _brandColor.withOpacity(0.3),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     elevation: 0,
@@ -495,7 +495,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
                     margin: const EdgeInsets.only(top: 12, bottom: 16),
                     width: 36, height: 4,
                     decoration: BoxDecoration(
-                      color: textPrimary.withValues(alpha: 0.2),
+                      color: textPrimary.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -540,11 +540,11 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
                 value ?? hint,
                 style: TextStyle(
                   fontSize: 14,
-                  color: value != null ? textPrimary : textPrimary.withValues(alpha: 0.5),
+                  color: value != null ? textPrimary : textPrimary.withOpacity(0.5),
                 ),
               ),
             ),
-            Icon(Icons.keyboard_arrow_down, color: textPrimary.withValues(alpha: 0.5)),
+            Icon(Icons.keyboard_arrow_down, color: textPrimary.withOpacity(0.5)),
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 import '../../providers/kermes_cart_provider.dart';
 import '../../utils/currency_utils.dart';
@@ -408,11 +409,11 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                       child: SizedBox(
                         width: double.infinity,
                         height: 180,
-                        child: Image.network(
-                          item.imageUrl!,
+                        child: CachedNetworkImage(
+                          imageUrl: item.imageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: _lokmaPink.withValues(alpha: 0.1),
+                          errorWidget: (_, __, ___) => Container(
+                            color: _lokmaPink.withOpacity(0.1),
                             child: const Center(
                               child: Icon(Icons.restaurant, size: 48, color: _lokmaPink),
                             ),
@@ -489,9 +490,9 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                       children: item.allergens.map((allergen) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.15),
+                          color: Colors.amber.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                          border: Border.all(color: Colors.amber.withOpacity(0.3)),
                         ),
                         child: Text(
                           allergen,
@@ -547,7 +548,7 @@ class _KermesProductSheetState extends ConsumerState<_KermesProductSheet> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

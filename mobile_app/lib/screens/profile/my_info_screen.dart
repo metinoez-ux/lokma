@@ -378,7 +378,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
         filled: true,
         fillColor: cardBg,
-        labelStyle: TextStyle(color: isOptional ? hintColor.withValues(alpha: 0.5) : hintColor, fontSize: 13),
+        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         isDense: true,
       );
@@ -477,7 +477,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     icon: const Icon(Icons.my_location, color: Color(0xFFE30A17)),
                     label: const Text('Konum Bul', style: TextStyle(color: Color(0xFFE30A17))),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFE30A17).withValues(alpha: 0.1),
+                      backgroundColor: const Color(0xFFE30A17).withOpacity(0.1),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
@@ -610,7 +610,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     icon: const Icon(Icons.add_circle_outline, color: Color(0xFFEA184A), size: 18),
                     label: const Text('Yeni Ekle', style: TextStyle(color: Color(0xFFEA184A), fontWeight: FontWeight.w600, fontSize: 13)),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFEA184A).withValues(alpha: 0.08),
+                      backgroundColor: const Color(0xFFEA184A).withOpacity(0.08),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
@@ -717,7 +717,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
                 boxShadow: [
                   if (!isDark) BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: Colors.black.withOpacity(0.03),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -729,7 +729,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                   Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: _getLabelColor(label).withValues(alpha: 0.1),
+                      color: _getLabelColor(label).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(_getLabelIcon(label), color: _getLabelColor(label), size: 20),
@@ -1039,7 +1039,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade400,

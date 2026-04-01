@@ -291,11 +291,11 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                       radius: widget.deliveryRadiusKm * 1000, // meters
                       useRadiusInMeter: true,
                       color: _isSatellite
-                          ? brandOrange.withValues(alpha: 0.08)
-                          : brandOrange.withValues(alpha: 0.06),
+                          ? brandOrange.withOpacity(0.08)
+                          : brandOrange.withOpacity(0.06),
                       borderColor: _isSatellite
-                          ? brandOrange.withValues(alpha: 0.70)
-                          : brandOrange.withValues(alpha: 0.55),
+                          ? brandOrange.withOpacity(0.70)
+                          : brandOrange.withOpacity(0.55),
                       borderStrokeWidth: 2.5,
                     ),
                   ],
@@ -317,7 +317,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: Colors.black.withOpacity(0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -347,7 +347,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                       border: Border.all(color: Colors.white, width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.35),
+                          color: Colors.black.withOpacity(0.35),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -369,7 +369,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                     width: 10,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
@@ -395,11 +395,11 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
+                      color: (isDark ? Colors.black : Colors.white).withOpacity(0.85),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: Colors.black.withOpacity(0.15),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -443,11 +443,11 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.9),
+                  color: (isDark ? Colors.black : Colors.white).withOpacity(0.9),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
+                      color: Colors.black.withOpacity(0.12),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -502,7 +502,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                   border: Border.all(color: isDark ? const Color(0xFF6D4C41) : const Color(0xFFFFCC80)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -540,7 +540,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: Colors.black.withOpacity(0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -578,7 +578,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
+                    color: Colors.black.withOpacity(0.12),
                     blurRadius: 16,
                     offset: const Offset(0, -4),
                   ),

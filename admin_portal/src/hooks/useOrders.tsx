@@ -299,7 +299,7 @@ export function OrdersProvider({
       setMeatOrders(mapped);
       setLoading(false);
     }, (error) => {
-      console.error('[useOrders] Error loading orders:', error);
+      console.warn('[useOrders] Warning loading orders:', error.message);
       setLoading(false);
     });
 
@@ -354,7 +354,7 @@ export function OrdersProvider({
       }
       setResOrders(mapped);
     }, (error) => {
-      console.error('[useOrders] Error loading reservations:', error);
+      console.warn('[useOrders] Warning loading reservations: You may be missing a Firestore index.', error.message);
     });
 
     return () => {
@@ -470,7 +470,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
       setMeatOrders(mapped);
       setLoading(false);
     }, (error) => {
-      console.error('[useOrdersStandalone] Error:', error);
+      console.warn('[useOrdersStandalone] Warning:', error.message);
       setLoading(false);
     });
 
@@ -509,7 +509,7 @@ export function useOrdersStandalone(options: UseOrdersStandaloneOptions = {}) {
       }
       setResOrders(mapped);
     }, (error) => {
-      console.error('[useOrdersStandalone] Error loading reservations:', error);
+      console.warn('[useOrdersStandalone] Warning loading reservations: You may be missing a Firestore index.', error.message);
     });
 
     return () => {

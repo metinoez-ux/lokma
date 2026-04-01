@@ -64,16 +64,23 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
       final phoneString = user.phoneNumber!.replaceAll('+', '');
       final pseudoEmail = '$phoneString@lokma.shop';
 
-      // Link by updating email then password
-      // Since they are fully authenticated via phone just now, this shouldn't require re-auth
+      // Link email+password credential to existing phone-auth user
+      // This allows future login via pseudo-email + password
       try {
-        await user.updateEmail(pseudoEmail);
+        final credential = EmailAuthProvider.credential(
+          email: pseudoEmail,
+          password: password,
+        );
+        await user.linkWithCredential(credential);
       } catch (e) {
-        debugPrint('Email set error (might already exist): $e');
-        // It's possible the pseudo-email already exists for this uid or another. Continue anyway.
+        debugPrint('linkWithCredential error: $e');
+        // If already linked, try updating the password directly
+        try {
+          await user.updatePassword(password);
+        } catch (e2) {
+          debugPrint('updatePassword fallback error: $e2');
+        }
       }
-
-      await user.updatePassword(password);
 
       // Now save to firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({

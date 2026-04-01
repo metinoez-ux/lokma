@@ -473,10 +473,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                               point: LatLng(widget.userLat!, widget.userLng!),
                               radius: _ringRadiiM[i],
                               useRadiusInMeter: true,
-                              color: lokmaPink.withValues(
-                                  alpha: opacity.clamp(0.01, 0.1)),
-                              borderColor: lokmaPink.withValues(
-                                  alpha: borderOpacity.clamp(0.1, 0.5)),
+                              color: lokmaPink.withOpacity(opacity.clamp(0.01, 0.1)),
+                              borderColor: lokmaPink.withOpacity(borderOpacity.clamp(0.1, 0.5)),
                               borderStrokeWidth: 1.5,
                             );
                           }),
@@ -501,10 +499,10 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: (isDark ? Colors.black : Colors.white)
-                                      .withValues(alpha: 0.8),
+                                      .withOpacity(0.8),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: lokmaPink.withValues(alpha: 0.3),
+                                    color: lokmaPink.withOpacity(0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -542,7 +540,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                       width: 2.5),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.blue.withValues(alpha: 0.3),
+                                      color: Colors.blue.withOpacity(0.3),
                                       blurRadius: 6,
                                       spreadRadius: 2,
                                     ),
@@ -602,8 +600,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                                   color: (isSelected
                                                           ? lokmaPink
                                                           : openGreen)
-                                                      .withValues(
-                                                    alpha: 0.5 *
+                                                      .withOpacity(
+                                                    0.5 *
                                                         (1 -
                                                             _pulseController
                                                                 .value),
@@ -635,7 +633,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                                 color: (isSelected
                                                         ? lokmaPink
                                                         : openGreen)
-                                                    .withValues(alpha: 0.4),
+                                                    .withOpacity(0.4),
                                                 blurRadius: 6,
                                                 spreadRadius: 1,
                                               ),
@@ -664,17 +662,17 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                           ? const Color(0xFFFFF3E0)
                                           : (isDark
                                               ? Colors.black
-                                                  .withValues(alpha: 0.8)
+                                                  .withOpacity(0.8)
                                               : Colors.white
-                                                  .withValues(alpha: 0.95)),
+                                                  .withOpacity(0.95)),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: closingSoon
                                             ? Colors.orange
-                                                .withValues(alpha: 0.5)
+                                                .withOpacity(0.5)
                                             : (isSelected
-                                                ? lokmaPink.withValues(
-                                                    alpha: 0.5)
+                                                ? lokmaPink.withOpacity(
+                                                    0.5)
                                                 : Colors.transparent),
                                         width:
                                             isSelected || closingSoon ? 1 : 0,
@@ -682,7 +680,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black
-                                              .withValues(alpha: 0.15),
+                                              .withOpacity(0.15),
                                           blurRadius: 4,
                                         ),
                                       ],
@@ -701,8 +699,8 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: openGreen.withValues(
-                                                    alpha: 0.5),
+                                                color: openGreen.withOpacity(
+                                                    0.5),
                                                 blurRadius: 3,
                                                 spreadRadius: 0.5,
                                               ),
@@ -826,7 +824,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: openGreen.withValues(alpha: 0.12),
+                  color: openGreen.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -845,7 +843,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: 0.08),
+                        .withOpacity(0.08),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.close,
@@ -898,7 +896,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withOpacity(0.1),
                           blurRadius: 4,
                         ),
                       ],
@@ -1057,7 +1055,7 @@ class _OpenPartnersMapSheetState extends State<OpenPartnersMapSheet>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+        color: color.withOpacity(isDark ? 0.15 : 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

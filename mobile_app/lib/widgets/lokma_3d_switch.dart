@@ -45,7 +45,7 @@ class Lokma3DSwitch extends StatelessWidget {
                           Color.lerp(activeColor, Colors.black, 0.6)!,
                           Color.lerp(activeColor, Colors.black, 0.4)!,
                           Color.lerp(activeColor, Colors.black, 0.3)!,
-                          activeColor.withValues(alpha: 0.9),
+                          activeColor.withOpacity(0.9),
                         ]
                       : [
                           // Inactive state: pure black/gray matte recessed
@@ -59,7 +59,7 @@ class Lokma3DSwitch extends StatelessWidget {
                 boxShadow: value
                     ? [
                         BoxShadow(
-                          color: activeColor.withValues(alpha: 0.2),
+                          color: activeColor.withOpacity(0.2),
                           blurRadius: 6,
                           spreadRadius: 0,
                         ),
@@ -74,10 +74,10 @@ class Lokma3DSwitch extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.4),
-                      Colors.black.withValues(alpha: 0.15),
+                      Colors.black.withOpacity(0.4),
+                      Colors.black.withOpacity(0.15),
                       Colors.transparent,
-                      Colors.white.withValues(alpha: 0.08),
+                      Colors.white.withOpacity(0.08),
                     ],
                     stops: const [0.0, 0.25, 0.6, 1.0],
                   ),
@@ -111,8 +111,8 @@ class Lokma3DSwitch extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                       color: value
-                          ? activeColor.withValues(alpha: 0.4)
-                          : Colors.black.withValues(alpha: 0.5),
+                          ? activeColor.withOpacity(0.4)
+                          : Colors.black.withOpacity(0.5),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

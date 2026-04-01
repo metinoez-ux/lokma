@@ -623,7 +623,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: _accent.withValues(alpha: 0.3),
+                                          color: _accent.withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         )
@@ -711,7 +711,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: _accent.withValues(alpha: 0.3),
+                                          color: _accent.withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         )
@@ -859,7 +859,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
                               color: isFull
-                                  ? (isDark ? Colors.red[900]!.withValues(alpha: 0.3) : Colors.red[50])
+                                  ? (isDark ? Colors.red[900]!.withOpacity(0.3) : Colors.red[50])
                                   : isPast
                                       ? (isDark ? Colors.grey[800] : Colors.grey[300])
                                       : isSelected
@@ -867,7 +867,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                                           : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]),
                               borderRadius: BorderRadius.circular(10),
                               border: isFull
-                                  ? Border.all(color: Colors.red.withValues(alpha: 0.3))
+                                  ? Border.all(color: Colors.red.withOpacity(0.3))
                                   : isSelected || isPast
                                       ? null
                                       : Border.all(
@@ -876,7 +876,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
                               boxShadow: isSelected && !isDisabled
                                   ? [
                                       BoxShadow(
-                                        color: _accent.withValues(alpha: 0.3),
+                                        color: _accent.withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       )
@@ -1082,7 +1082,7 @@ class _ReservationBookingScreenState extends ConsumerState<ReservationBookingScr
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

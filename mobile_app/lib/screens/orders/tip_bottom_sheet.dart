@@ -206,7 +206,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             color: isActive
-                                ? accent.withValues(alpha: 0.1)
+                                ? accent.withOpacity(0.1)
                                 : (isDark ? Colors.grey[850] : Colors.grey[100]),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -259,7 +259,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                   decoration: BoxDecoration(
                     color: _isCustom
-                        ? accent.withValues(alpha: 0.1)
+                        ? accent.withOpacity(0.1)
                         : (isDark ? Colors.grey[850] : Colors.grey[100]),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(

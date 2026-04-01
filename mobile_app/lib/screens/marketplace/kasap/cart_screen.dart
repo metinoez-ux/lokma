@@ -1000,7 +1000,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.1),
+                color: accent.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.calendar_month, color: accent, size: 28),
@@ -1114,7 +1114,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.dark ? Colors.grey[800] : const Color(0xFFF5F5F5),
                   shape: BoxShape.circle,
-                  boxShadow: theme.brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
+                  boxShadow: theme.brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 1))],
                 ),
                 child: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface, size: 18),
               ),
@@ -1206,7 +1206,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             fontWeight: FontWeight.w500,
                             color: isDark
                                 ? Colors.white
-                                : (isActive ? accent : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                : (isActive ? accent : Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                           ),
                         ),
                 ),
@@ -1219,7 +1219,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   fontWeight: isActive || isCompleted ? FontWeight.w500 : FontWeight.w400,
                   color: isActive || isCompleted
                       ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                 ),
               ),
             ],
@@ -1388,7 +1388,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 color: isDark ? Colors.grey[900] : Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -1490,7 +1490,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: Colors.green.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.money, color: Colors.green),
@@ -1510,7 +1510,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _accentColor.withValues(alpha: 0.1),
+                    color: _accentColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.credit_card, color: _accentColor),
@@ -1771,7 +1771,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           border: Border.all(color: isDark ? Colors.grey.shade600 : Colors.grey.shade300, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: isDark ? 0.2 : 0.04),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(isDark ? 0.2 : 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1890,7 +1890,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         Text(
                           'orders.order_number_label'.tr(namedArgs: {'orderNo': order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}),
                           style: TextStyle(
-                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: colorScheme.onSurface.withOpacity(0.5),
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             letterSpacing: 0.5,
@@ -1910,7 +1910,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         // Status and date
                         Text(
                           '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
-                          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
+                          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                         ),
                         SizedBox(height: 4),
                         // "Siparişi Görüntüle" link
@@ -1927,7 +1927,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         // Items and price
                         Text(
                           '${order.items.length} ${'cart.items'.tr()} • ${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
-                          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
+                          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                         ),
                       ],
                     ),
@@ -1936,7 +1936,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(order.status).withValues(alpha: 0.15),
+                      color: _getStatusColor(order.status).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -2071,7 +2071,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         // Order date and time header
                         Text(
                           '${'cart.order_date'.tr()} ${_formatDateFull(order.createdAt)}',
-                          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+                          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
                         ),
                         SizedBox(height: 4),
                         Text(
@@ -2173,7 +2173,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             Expanded(
                               child: Text(
                                 order.deliveryAddress ?? order.butcherName,
-                                style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 14),
+                                style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 14),
                               ),
                             ),
                           ],
@@ -2190,10 +2190,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           ),
                           child: TextButton.icon(
                             onPressed: () => _openMapsForBusiness(order.butcherId, order.butcherName),
-                            icon: Icon(Icons.navigation_outlined, color: colorScheme.onSurface.withValues(alpha: 0.7), size: 18),
+                            icon: Icon(Icons.navigation_outlined, color: colorScheme.onSurface.withOpacity(0.7), size: 18),
                             label: Text(
                               'cart.show_on_map'.tr(),
-                              style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 14, fontWeight: FontWeight.w500),
+                              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ),
@@ -2222,7 +2222,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   SizedBox(height: 4),
                                   Text(
                                     '${'orders.order_no'.tr()}: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                                    style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
+                                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                                   ),
                                 ],
                               ),
@@ -2336,7 +2336,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   SizedBox(height: 4),
                                   Text(
                                     'cart.helper_can_assist'.tr(),
-                                    style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
+                                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                                   ),
                                   SizedBox(height: 12),
                                   GestureDetector(
@@ -2361,10 +2361,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: brandColor.withValues(alpha: 0.1),
+                                color: brandColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(40),
                               ),
-                              child: Icon(Icons.support_agent, color: brandColor.withValues(alpha: 0.5), size: 40),
+                              child: Icon(Icons.support_agent, color: brandColor.withOpacity(0.5), size: 40),
                             ),
                           ],
                         ),
@@ -2998,7 +2998,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     child: Text(
                       _butcherData!['companyName'] ?? 'Kasap',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
                       ),
@@ -3073,7 +3073,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00C853).withValues(alpha: 0.3),
+                        color: const Color(0xFF00C853).withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -3178,20 +3178,20 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 end: Alignment.bottomCenter,
                 colors: Theme.of(context).brightness == Brightness.dark
                     ? [
-                        const Color(0xFF1C1C1E).withValues(alpha: 0.0),
-                        const Color(0xFF1C1C1E).withValues(alpha: 0.95),
+                        const Color(0xFF1C1C1E).withOpacity(0.0),
+                        const Color(0xFF1C1C1E).withOpacity(0.95),
                         const Color(0xFF1C1C1E),
                       ]
                     : [
-                        Colors.white.withValues(alpha: 0.0),
-                        Colors.white.withValues(alpha: 0.95),
+                        Colors.white.withOpacity(0.0),
+                        Colors.white.withOpacity(0.95),
                         Colors.white,
                       ],
                 stops: const [0.0, 0.25, 0.5],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                   blurRadius: 12,
                   offset: const Offset(0, -4),
                 ),
@@ -3510,7 +3510,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             color: isDark ? const Color(0xFF1A2332) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF4FC3F7).withValues(alpha: 0.4),
+              color: const Color(0xFF4FC3F7).withOpacity(0.4),
             ),
           ),
           child: Column(
@@ -3522,8 +3522,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF4FC3F7).withValues(alpha: 0.2),
-                      const Color(0xFF0288D1).withValues(alpha: 0.1),
+                      const Color(0xFF4FC3F7).withOpacity(0.2),
+                      const Color(0xFF0288D1).withOpacity(0.1),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -3639,7 +3639,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Center(child: Text('\u2744\uFE0F', style: TextStyle(fontSize: 16))),
@@ -3661,7 +3661,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Text(
                     'marketplace.cold_chain_short_desc'.tr(),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: Colors.white.withOpacity(0.85),
                       fontSize: 11.5,
                       height: 1.35,
                     ),
@@ -3676,7 +3676,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 padding: const EdgeInsets.all(2),
                 child: Icon(
                   Icons.close_rounded,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                   size: 16,
                 ),
               ),
@@ -3692,8 +3692,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF0D3B66).withValues(alpha: 0.6)
-            : const Color(0xFF4FC3F7).withValues(alpha: 0.15),
+            ? const Color(0xFF0D3B66).withOpacity(0.6)
+            : const Color(0xFF4FC3F7).withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -3770,7 +3770,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     child: Text(
                       subtitle,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
                       ),
@@ -3896,7 +3896,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                                      color: const Color(0xFF4CAF50).withOpacity(0.15),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Row(
@@ -3993,10 +3993,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         // 🔢 Quantity Pill — Lieferando style: single beige pill with flat text
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFFEA184A).withValues(alpha: 0.15) : const Color(0xFFF5F0E8),
+                            color: isDark ? const Color(0xFFEA184A).withOpacity(0.15) : const Color(0xFFF5F0E8),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: isDark ? const Color(0xFFEA184A).withValues(alpha: 0.4) : const Color(0xFFE8E0D0),
+                              color: isDark ? const Color(0xFFEA184A).withOpacity(0.4) : const Color(0xFFE8E0D0),
                               width: 0.5,
                             ),
                           ),
@@ -4464,7 +4464,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
+                                      color: Colors.black.withOpacity(0.2),
                                       blurRadius: 4,
                                       offset: Offset(0, 2),
                                     ),
@@ -4617,7 +4617,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: nearThreshold
-              ? const Color(0xFF10B981).withValues(alpha: 0.8)
+              ? const Color(0xFF10B981).withOpacity(0.8)
               : const Color(0xFF374151),
           width: nearThreshold ? 1.5 : 1.0,
         ),
@@ -4726,13 +4726,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF065F46).withValues(alpha: isDark ? 0.6 : 0.15),
-            Color(0xFF0D9488).withValues(alpha: isDark ? 0.4 : 0.10),
+            Color(0xFF065F46).withOpacity(isDark ? 0.6 : 0.15),
+            Color(0xFF0D9488).withOpacity(isDark ? 0.4 : 0.10),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Color(0xFF10B981).withValues(alpha: isDark ? 0.4 : 0.3),
+          color: Color(0xFF10B981).withOpacity(isDark ? 0.4 : 0.3),
           width: 1.5,
         ),
       ),
@@ -4754,7 +4754,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF10B981).withValues(alpha: 0.3),
+                      color: Color(0xFF10B981).withOpacity(0.3),
                       blurRadius: 12,
                       offset: Offset(0, 4),
                     ),
@@ -4802,7 +4802,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF10B981).withValues(alpha: 0.3),
+                      color: Color(0xFF10B981).withOpacity(0.3),
                       blurRadius: 8,
                     ),
                   ],
@@ -4849,7 +4849,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     width: 120,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Color(0xFF10B981).withValues(alpha: isDark ? 0.25 : 0.15)
+                          ? Color(0xFF10B981).withOpacity(isDark ? 0.25 : 0.15)
                           : (isDark ? Color(0xFF1A2E28) : Colors.white),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
@@ -4859,7 +4859,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         width: isSelected ? 2 : 1,
                       ),
                       boxShadow: isSelected
-                          ? [BoxShadow(color: Color(0xFF10B981).withValues(alpha: 0.2), blurRadius: 8)]
+                          ? [BoxShadow(color: Color(0xFF10B981).withOpacity(0.2), blurRadius: 8)]
                           : null,
                     ),
                     child: Stack(
@@ -4990,7 +4990,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
-                  color: isDark ? Colors.white38 : Color(0xFF065F46).withValues(alpha: 0.6),
+                  color: isDark ? Colors.white38 : Color(0xFF065F46).withOpacity(0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -5084,11 +5084,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               Text(
                 'cart.delivery_fee'.tr(),
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
               ),
               Text(
                 '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
               ),
             ],
           ),
@@ -5214,7 +5214,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           borderRadius: BorderRadius.circular(28),
           boxShadow: isUnderMin ? null : [
             BoxShadow(
-              color: _accentColor.withValues(alpha: 0.3),
+              color: _accentColor.withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -5270,7 +5270,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                 blurRadius: 30,
                 offset: const Offset(0, -10),
               ),
@@ -5284,7 +5284,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
+                  color: Colors.grey.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -5319,10 +5319,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   margin: const EdgeInsets.symmetric(horizontal: 32),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: accent.withValues(alpha: 0.4), width: 2),
+                    border: Border.all(color: accent.withOpacity(0.4), width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: accent.withValues(alpha: 0.1),
+                        color: accent.withOpacity(0.1),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -5426,7 +5426,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             hintText: 'cart.example_hint'.tr(),
             hintStyle: TextStyle(color: Colors.grey[500]),
             filled: true,
-            fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+            fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,
@@ -5563,7 +5563,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 hintText: '• • • •',
                 counterText: '',
                 filled: true,
-                fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -5808,19 +5808,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.green.withValues(alpha: isDark ? 0.2 : 0.1),
-            Colors.green.withValues(alpha: isDark ? 0.1 : 0.05),
+            Colors.green.withOpacity(isDark ? 0.2 : 0.1),
+            Colors.green.withOpacity(isDark ? 0.1 : 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.15),
+              color: Colors.green.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.restaurant, color: Colors.green, size: 22),
@@ -5857,7 +5857,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[100],
+                color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[100],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -7269,7 +7269,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? _accentColor.withValues(alpha: 0.2) : _accentColor.withValues(alpha: 0.1))
+              ? (isDark ? _accentColor.withOpacity(0.2) : _accentColor.withOpacity(0.1))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -7311,7 +7311,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
+          color: Colors.orange.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Row(
@@ -7401,7 +7401,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (isDark ? Colors.white : const Color(0xFF1A1A1A)).withValues(alpha: 0.12),
+                      color: (isDark ? Colors.white : const Color(0xFF1A1A1A)).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -7433,8 +7433,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       margin: const EdgeInsets.symmetric(horizontal: 8),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.grey[800]!.withValues(alpha: 0.8)
-                            : Colors.grey[300]!.withValues(alpha: 0.5),
+                            ? Colors.grey[800]!.withOpacity(0.8)
+                            : Colors.grey[300]!.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -7478,7 +7478,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                                 ),
                               ),
                             );
@@ -7526,7 +7526,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
-                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                                 ),
                               ),
                             );
@@ -7685,7 +7685,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: (isDark ? Colors.white : const Color(0xFF1A1A1A)).withValues(alpha: 0.12),
+                        color: (isDark ? Colors.white : const Color(0xFF1A1A1A)).withOpacity(0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -7718,8 +7718,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         margin: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.grey[800]!.withValues(alpha: 0.8)
-                              : Colors.grey[300]!.withValues(alpha: 0.5),
+                              ? Colors.grey[800]!.withOpacity(0.8)
+                              : Colors.grey[300]!.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
@@ -7759,7 +7759,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                     color: isSelected
                                         ? Theme.of(context).colorScheme.onSurface
-                                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                                   ),
                                 ),
                               );
@@ -7805,7 +7805,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                     color: isSelected
                                         ? Theme.of(context).colorScheme.onSurface
-                                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                                   ),
                                 ),
                               );
@@ -7956,7 +7956,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -8002,7 +8002,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? Colors.grey[800]!.withValues(alpha: 0.6) : Colors.grey[100])
+                                  ? (isDark ? Colors.grey[800]!.withOpacity(0.6) : Colors.grey[100])
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
@@ -8078,7 +8078,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isDark
-                          ? Colors.grey[700]!.withValues(alpha: 0.5)
+                          ? Colors.grey[700]!.withOpacity(0.5)
                           : Colors.grey[300]!,
                     ),
                   ),
@@ -8157,7 +8157,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? Colors.grey[700]!.withValues(alpha: 0.3)
+                                  ? Colors.grey[700]!.withOpacity(0.3)
                                   : Colors.grey[200],
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -8541,7 +8541,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                 decoration: BoxDecoration(
                   color: isDark ? Colors.grey[800] : const Color(0xFFF5F5F5),
                   shape: BoxShape.circle,
-                  boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
+                  boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 1))],
                 ),
                 child: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface, size: 18),
               ),
@@ -8894,7 +8894,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                                             border: Border.all(color: Colors.white, width: 2),
                                                             boxShadow: [
                                                               BoxShadow(
-                                                                color: Colors.black.withValues(alpha: 0.3),
+                                                                color: Colors.black.withOpacity(0.3),
                                                                 blurRadius: 6,
                                                                 offset: const Offset(0, 2),
                                                               ),
@@ -8915,7 +8915,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                               child: Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.black.withValues(alpha: 0.6),
+                                                  color: Colors.black.withOpacity(0.6),
                                                   borderRadius: BorderRadius.circular(8),
                                                 ),
                                                 child: Row(
@@ -9024,7 +9024,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 margin: const EdgeInsets.only(left: 6),
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.2),
+                                  color: Colors.amber.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text('checkout.required'.tr(),
@@ -10015,7 +10015,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                         color: isSelected
                                             ? Theme.of(context).colorScheme.onSurface
-                                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                       ),
                                     ),
                                   ],
@@ -10152,7 +10152,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 : accentColor),
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: parent._paymentMethod != null && (parent._isPickUp || parent._isDineIn || parent._deliveryTimeExplicitlyChosen)
-                            ? [BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                            ? [BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
                             : null,
                       ),
                       child: Center(

@@ -217,12 +217,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: statusColor.withValues(alpha: 0.4),
+                  color: statusColor.withOpacity(0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -278,13 +278,13 @@ class GlassBottomBar extends StatelessWidget {
 
     // Glass fill — truly translucent
     final glassColor = isDark
-        ? Colors.black.withValues(alpha: 0.25)
-        : Colors.white.withValues(alpha: 0.35);
+        ? Colors.black.withOpacity(0.25)
+        : Colors.white.withOpacity(0.35);
 
     // Luminous edge border
     final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.45);
+        ? Colors.white.withOpacity(0.12)
+        : Colors.white.withOpacity(0.45);
 
     return SafeArea(
       top: false,
@@ -306,7 +306,7 @@ class GlassBottomBar extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                    color: Colors.black.withOpacity(isDark ? 0.25 : 0.06),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                     spreadRadius: -4,
@@ -327,12 +327,12 @@ class GlassBottomBar extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: isDark
                               ? [
-                                  Colors.white.withValues(alpha: 0.06),
+                                  Colors.white.withOpacity(0.06),
                                   Colors.transparent
                                 ]
                               : [
-                                  Colors.white.withValues(alpha: 0.50),
-                                  Colors.white.withValues(alpha: 0.0)
+                                  Colors.white.withOpacity(0.50),
+                                  Colors.white.withOpacity(0.0)
                                 ],
                           stops: const [0.0, 0.6],
                         ),
@@ -373,8 +373,8 @@ class GlassBottomBar extends StatelessWidget {
       NavItemData item, bool isActive, BuildContext context, bool isDark) {
     const activeColor = Color(0xFFEA184A);
     final inactiveColor = isDark
-        ? Colors.white.withValues(alpha: 0.55)
-        : Colors.black.withValues(alpha: 0.55);
+        ? Colors.white.withOpacity(0.55)
+        : Colors.black.withOpacity(0.55);
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0;
 
@@ -407,7 +407,7 @@ class GlassBottomBar extends StatelessWidget {
                       color: isDark ? Colors.black : Colors.white, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 4,
                     )
                   ],

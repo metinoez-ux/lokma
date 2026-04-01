@@ -39,7 +39,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   Set<String> _favoriteKermesIds = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
-  String? _expandedCardId;
+
 
   // Delivery mode: 'teslimat', 'gelal', 'masa'
   String _deliveryMode = 'gelal'; // Kermes default: Gel Al
@@ -211,6 +211,24 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
 
             // Parse menu items
             List<KermesMenuItem> menuItems = [];
+            
+            // 1. Fallback to old 'menu' array if exists
+            if (data['menu'] != null) {
+              try {
+                final menuList = data['menu'] as List<dynamic>;
+                for (final item in menuList) {
+                  try {
+                    menuItems.add(KermesMenuItem.fromJson(item as Map<String, dynamic>));
+                  } catch (e) {
+                    debugPrint('Error parsing legacy menu item: $e');
+                  }
+                }
+              } catch (e) {
+                debugPrint('Error parsing legacy menu array: $e');
+              }
+            }
+
+            // 2. Fetch from 'products' subcollection
             try {
               final productsSnapshot = await FirebaseFirestore.instance
                   .collection('kermes_events')
@@ -221,8 +239,15 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               if (productsSnapshot.docs.isNotEmpty) {
                 for (final productDoc in productsSnapshot.docs) {
                   final productData = productDoc.data();
-
-                  menuItems.add(KermesMenuItem.fromJson(productData));
+                  try {
+                    // Prevent duplicates if already added from 'menu' array
+                    final parsedProduct = KermesMenuItem.fromJson(productData);
+                    if (!menuItems.any((m) => m.name == parsedProduct.name)) {
+                      menuItems.add(parsedProduct);
+                    }
+                  } catch (e) {
+                    debugPrint('Error parsing product ${productDoc.id}: $e');
+                  }
                 }
               }
             } catch (e) {
@@ -598,7 +623,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
-              ? lokmaPink.withValues(alpha: 0.12)
+              ? lokmaPink.withOpacity(0.12)
               : (isDark ? Colors.grey[800] : Colors.grey[200]),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -719,7 +744,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
                               ),
                             ),
                             child: Text(
@@ -772,7 +797,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
                               ),
                             ),
                             child: Text(
@@ -820,7 +845,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                         boxShadow: _filterTuna
                                             ? [
                                                 BoxShadow(
-                                                  color: const Color(0xFFA01E22).withValues(alpha: 0.4),
+                                                  color: const Color(0xFFA01E22).withOpacity(0.4),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 2),
                                                 ),
@@ -849,7 +874,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                       child: Text(
                                         'Sadece Tuna onaylu kermesler',
                                         style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                           height: 1.3,
@@ -897,7 +922,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                         boxShadow: _filterAkdenizToros
                                             ? [
                                                 BoxShadow(
-                                                  color: const Color(0xFFD97706).withValues(alpha: 0.4),
+                                                  color: const Color(0xFFD97706).withOpacity(0.4),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 2),
                                                 ),
@@ -926,7 +951,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                       child: Text(
                                         'Sadece Akdeniz Toros onaylı kermesler',
                                         style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                           height: 1.3,
@@ -955,11 +980,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           ],
 
                           // Siralama Section
-                          _buildSectionHeader('SIRALAMA'),
+                          _buildSectionHeader('kermes.sort_section_title'.tr()),
 
                           _buildFilterListItem(
-                            title: 'En Yakin Tarih',
-                            subtitle: 'Tarihe gore sirala',
+                            title: 'kermes.sort_nearest_date'.tr(),
+                            subtitle: 'kermes.sort_by_date'.tr(),
                             isSelected: _sortBy == 'date_asc',
                             useRadio: true,
                             onTap: () {
@@ -968,8 +993,8 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'En Yakin Mesafe',
-                            subtitle: 'Mesafeye gore sirala',
+                            title: 'kermes.sort_nearest_distance'.tr(),
+                            subtitle: 'kermes.sort_by_distance'.tr(),
                             isSelected: _sortBy == 'distance_asc',
                             useRadio: true,
                             onTap: () {
@@ -1089,7 +1114,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       color: cardBg,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, -2),
                         ),
@@ -1135,7 +1160,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
           fontSize: 13,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
@@ -1154,7 +1179,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
     return Builder(
       builder: (context) {
         final textColor = Theme.of(context).colorScheme.onSurface;
-        final subtitleColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+        final subtitleColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
 
         return InkWell(
           onTap: () {
@@ -1341,7 +1366,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                           letterSpacing: -0.2,
                         ),
                       ),
@@ -1349,7 +1374,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       // Tarih siralama toggle
                       _buildSortChip(
                         icon: Icons.calendar_today_rounded,
-                        label: _sortBy == 'date_asc' ? 'Eski' : _sortBy == 'date_desc' ? 'Yeni' : 'Tarih',
+                        label: _sortBy == 'date_asc' ? 'kermes.sort_date_old'.tr() : _sortBy == 'date_desc' ? 'kermes.sort_date_new'.tr() : 'kermes.sort_date_default'.tr(),
                         isActive: _sortBy == 'date_asc' || _sortBy == 'date_desc',
                         ascending: _sortBy == 'date_asc',
                         onTap: () {
@@ -1367,7 +1392,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                       // Mesafe siralama toggle
                       _buildSortChip(
                         icon: Icons.near_me_rounded,
-                        label: _sortBy == 'distance_asc' ? 'Yakin' : _sortBy == 'distance_desc' ? 'Uzak' : 'Mesafe',
+                        label: _sortBy == 'distance_asc' ? 'kermes.sort_distance_near'.tr() : _sortBy == 'distance_desc' ? 'kermes.sort_distance_far'.tr() : 'kermes.sort_distance_default'.tr(),
                         isActive: _sortBy == 'distance_asc' || _sortBy == 'distance_desc',
                         ascending: _sortBy == 'distance_asc',
                         onTap: () {
@@ -1399,12 +1424,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                             children: [
                               Icon(Icons.celebration_outlined,
                                   size: 64,
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                               const SizedBox(height: 16),
                               Text(
                                 'kermes.no_events_found'.tr(),
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                   fontSize: 16,
                                 ),
                               ),
@@ -1413,7 +1438,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 Text(
                                   'marketplace.no_results_for_query'.tr(args: [_searchQuery]),
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -1432,16 +1457,6 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                                 event: event,
                                 currentPosition: _currentPosition,
                                 onFavoriteChanged: _loadFavorites,
-                                isExpanded: _expandedCardId == event.id,
-                                onExpandToggle: () {
-                                  setState(() {
-                                    if (_expandedCardId == event.id) {
-                                      _expandedCardId = null;
-                                    } else {
-                                      _expandedCardId = event.id;
-                                    }
-                                  });
-                                },
                               );
                             },
                             childCount: _filteredEvents.length,
@@ -1523,7 +1538,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           Text(
                             streetInfo,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               fontSize: 10,
                               fontWeight: FontWeight.w400,
                             ),
@@ -1535,7 +1550,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                   ),
                   const SizedBox(width: 2),
                   Icon(Icons.keyboard_arrow_down,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                       size: 14),
                 ],
               ),
@@ -1573,7 +1588,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
+                              ? Colors.white.withOpacity(0.08)
                               : Colors.grey.shade100,
                           shape: BoxShape.circle,
                         ),
@@ -1644,7 +1659,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
+                              ? Colors.white.withOpacity(0.08)
                               : Colors.grey.shade100,
                           shape: BoxShape.circle,
                         ),
@@ -1738,7 +1753,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -1866,11 +1881,11 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                           color: isSelected
                               ? lokmaPink
                               : (isSpecial && !isSelected
-                                  ? lokmaPink.withValues(alpha: 0.08)
+                                  ? lokmaPink.withOpacity(0.08)
                                   : (isDark ? Colors.grey[800] : Colors.grey[100])),
                           borderRadius: BorderRadius.circular(20),
                           border: isSpecial && !isSelected
-                              ? Border.all(color: lokmaPink.withValues(alpha: 0.35), width: 1)
+                              ? Border.all(color: lokmaPink.withOpacity(0.35), width: 1)
                               : null,
                         ),
                         child: Text(

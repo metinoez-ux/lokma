@@ -154,6 +154,8 @@ const { admin } = useAdmin();
                     triggerAlert({ id: change.doc.id, ...change.doc.data() });
                 }
             });
+        }, (error) => {
+            console.warn('OrderListener warning (orders):', error.message);
         });
 
         // 2. Listen for reservation check-ins (tabStatus === 'seated')
@@ -205,6 +207,8 @@ const { admin } = useAdmin();
                     delete tabItemCounts.current[change.doc.id];
                 }
             });
+        }, (error) => {
+            console.warn('OrderListener warning (reservations): You may be missing a Firestore index.', error.message);
         });
 
         return () => {
@@ -240,6 +244,8 @@ const { admin } = useAdmin();
                     triggerAlert({ id: change.doc.id, ...change.doc.data() });
                 }
             });
+        }, (error) => {
+            console.warn('OrderListener warning (superadmin orders):', error.message);
         });
 
         // 2. All seated reservations
@@ -289,6 +295,8 @@ const { admin } = useAdmin();
                     delete tabItemCounts.current[change.doc.id];
                 }
             });
+        }, (error) => {
+            console.warn('OrderListener warning (superadmin reservations): You may be missing a Firestore index.', error.message);
         });
 
         return () => {

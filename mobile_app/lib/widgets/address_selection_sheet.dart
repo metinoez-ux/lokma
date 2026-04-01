@@ -557,7 +557,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: labelColor.withValues(alpha: 0.1),
+                    color: labelColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(labelIcon, color: labelColor, size: 20),

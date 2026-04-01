@@ -223,7 +223,7 @@ class _ProductCustomizationSheetState
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -411,7 +411,7 @@ class _ProductCustomizationSheetState
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[100],
+                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[100],
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

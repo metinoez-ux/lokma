@@ -166,7 +166,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.2),
+                color: Colors.green.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check, color: Colors.green, size: 60),
@@ -231,7 +231,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.greenAccent.withValues(alpha: 0.15),
+                color: Colors.greenAccent.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.payments_outlined,
@@ -260,7 +260,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.greenAccent.withValues(alpha: 0.1),
+                color: Colors.greenAccent.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -339,7 +339,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(
@@ -440,7 +440,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.2),
+                color: Colors.amber.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check, color: Colors.amber, size: 50),
@@ -466,7 +466,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: Colors.blue.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
@@ -525,7 +525,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.2),
+                color: Colors.red.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.restaurant, color: Colors.red, size: 50),
@@ -620,7 +620,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
-                          color: lokmaPink.withValues(alpha: 0.15),
+                          color: lokmaPink.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
@@ -708,8 +708,8 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: _isPaid
-                              ? Colors.green.withValues(alpha: 0.15)
-                              : Colors.amber.withValues(alpha: 0.15),
+                              ? Colors.green.withOpacity(0.15)
+                              : Colors.amber.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _isPaid ? Colors.green : Colors.amber,
@@ -879,7 +879,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.15),
+                            color: Colors.red.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(

@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: isDark ? cardBg : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.person_rounded, color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black87, size: 22),
+                      child: Icon(Icons.person_rounded, color: isDark ? Colors.white.withOpacity(0.7) : Colors.black87, size: 22),
                     ),
                   ),
                 ],
@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: isDark ? [
                       BoxShadow(
-                        color: accent.withValues(alpha: 0.3),
+                        color: accent.withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         'home.categories'.tr(),
                         style: TextStyle(
-                          color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
+                          color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -173,14 +173,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: BoxDecoration(
                           color: isDark ? cardBg : Colors.grey[100],
                           borderRadius: BorderRadius.circular(14),
-                          border: isDark ? Border.all(color: Colors.white.withValues(alpha: 0.05)) : null,
+                          border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: accent.withValues(alpha: isDark ? 0.15 : 0.1),
+                                color: accent.withOpacity(isDark ? 0.15 : 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(Icons.receipt_long_rounded, color: accent, size: 22),
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios_rounded, color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.grey[400], size: 16),
+                            Icon(Icons.arrow_forward_ios_rounded, color: isDark ? Colors.white.withOpacity(0.3) : Colors.grey[400], size: 16),
                           ],
                         ),
                       ),
@@ -229,14 +229,14 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isSelected ? accent : (isDark ? const Color(0xFF1A1A1A) : Colors.grey[100]),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? accent : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.transparent),
+              color: isSelected ? accent : (isDark ? Colors.white.withOpacity(0.08) : Colors.transparent),
             ),
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : (isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black87),
+                color: isSelected ? Colors.white : (isDark ? Colors.white.withOpacity(0.6) : Colors.black87),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -258,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
-          border: isDark ? Border.all(color: Colors.white.withValues(alpha: 0.05)) : null,
+          border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -374,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withValues(alpha: 0.2)),
+          border: Border.all(color: accent.withOpacity(0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       date,
                       style: TextStyle(
-                        color: isDark ? Colors.white.withValues(alpha: 0.4) : Colors.grey[600],
+                        color: isDark ? Colors.white.withOpacity(0.4) : Colors.grey[600],
                         fontSize: 11,
                       ),
                     ),
@@ -410,7 +410,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   items,
                   style: TextStyle(
-                    color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.grey[700],
+                    color: isDark ? Colors.white.withOpacity(0.6) : Colors.grey[700],
                     fontSize: 12,
                   ),
                   maxLines: 2,

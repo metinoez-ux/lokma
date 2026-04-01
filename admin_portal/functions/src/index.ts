@@ -3700,3 +3700,6 @@ export const onNewChatMessage = onDocumentCreated(
         }
     }
 );
+
+// GDPR Compliance: User Account Deletion Trigger
+export { onUserAccountDeleted } from "./accountDeletion";

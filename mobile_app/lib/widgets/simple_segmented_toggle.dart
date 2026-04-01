@@ -53,7 +53,7 @@ class SimpleSegmentedToggle extends StatelessWidget {
                       ? [
                           BoxShadow(
                             color: Colors.black
-                                .withValues(alpha: isDark ? 0.3 : 0.12),
+                                .withOpacity(isDark ? 0.3 : 0.12),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),

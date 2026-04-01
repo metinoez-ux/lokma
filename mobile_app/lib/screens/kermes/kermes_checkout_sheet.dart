@@ -214,8 +214,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 height: 64,
                 decoration: BoxDecoration(
                   color: isFuture 
-                      ? Colors.orange.withValues(alpha: 0.15)
-                      : Colors.red.withValues(alpha: 0.15),
+                      ? Colors.orange.withOpacity(0.15)
+                      : Colors.red.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -520,7 +520,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: _cardBg(isDark).withValues(alpha: 0.5),
+              color: _cardBg(isDark).withOpacity(0.5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -645,7 +645,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withOpacity(0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -705,7 +705,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Container(
                         height: 1,
-                        color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1),
+                        color: isDark ? Colors.white.withOpacity(0.2) : Colors.black.withOpacity(0.1),
                       ),
                     ),
                     
@@ -782,7 +782,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -938,9 +938,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.green.withOpacity(0.3)),
                 ),
                 child: Column(
                   children: [
@@ -978,7 +978,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         label: const Text('Linki Tekrar Paylas'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.green[400],
-                          side: BorderSide(color: Colors.green.withValues(alpha: 0.4)),
+                          side: BorderSide(color: Colors.green.withOpacity(0.4)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
@@ -1135,8 +1135,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isFuture 
-                    ? [Colors.amber.withValues(alpha: 0.2), Colors.amber.withValues(alpha: 0.1)]
-                    : [Colors.grey.withValues(alpha: 0.2), Colors.grey.withValues(alpha: 0.1)],
+                    ? [Colors.amber.withOpacity(0.2), Colors.amber.withOpacity(0.1)]
+                    : [Colors.grey.withOpacity(0.2), Colors.grey.withOpacity(0.1)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1173,7 +1173,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               color: _cardBg(isDark),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isFuture ? Colors.amber.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3),
+                color: isFuture ? Colors.amber.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -1246,8 +1246,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isFuture 
-                    ? [Colors.amber.withValues(alpha: 0.1), Colors.transparent]
-                    : [Colors.grey.withValues(alpha: 0.1), Colors.transparent],
+                    ? [Colors.amber.withOpacity(0.1), Colors.transparent]
+                    : [Colors.grey.withOpacity(0.1), Colors.transparent],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -1278,9 +1278,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                       decoration: BoxDecoration(
-                        color: lokmaPink.withValues(alpha: 0.15),
+                        color: lokmaPink.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: lokmaPink.withValues(alpha: 0.3)),
+                        border: Border.all(color: lokmaPink.withOpacity(0.3)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1341,7 +1341,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: Colors.black.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -1513,7 +1513,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         color: _cardBg(isDark),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.green.withValues(alpha: 0.3) : Colors.green.withValues(alpha: 0.2),
+          color: isDark ? Colors.green.withOpacity(0.3) : Colors.green.withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -1685,7 +1685,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? lokmaPink.withValues(alpha: 0.05) : _cardBg(isDark),
+          color: isSelected ? lokmaPink.withOpacity(0.05) : _cardBg(isDark),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? lokmaPink : (isDark ? Colors.grey[800]! : Colors.grey[200]!),
@@ -1700,7 +1700,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
+                  color: iconColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: iconColor, size: 24),
@@ -1951,7 +1951,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _donationTarget != 'none'
-              ? Colors.green.withValues(alpha: 0.5)
+              ? Colors.green.withOpacity(0.5)
               : isDark ? Colors.white12 : Colors.grey.shade300,
           width: 1.5,
         ),
@@ -1977,7 +1977,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.15),
+                    color: Colors.green.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -2047,7 +2047,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.green.withValues(alpha: 0.2)
+              ? Colors.green.withOpacity(0.2)
               : isDark ? const Color(0xFF2A2A2A) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(

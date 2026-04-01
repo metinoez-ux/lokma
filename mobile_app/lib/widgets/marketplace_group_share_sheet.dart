@@ -116,7 +116,7 @@ class _MarketplaceGroupShareSheetState extends State<MarketplaceGroupShareSheet>
                     height: 64,
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.green.shade900.withValues(alpha: 0.4)
+                          ? Colors.green.shade900.withOpacity(0.4)
                           : Colors.green.shade50,
                       shape: BoxShape.circle,
                     ),
@@ -253,12 +253,12 @@ class _MarketplaceGroupShareSheetState extends State<MarketplaceGroupShareSheet>
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.orange.shade900.withValues(alpha: 0.3)
+                        ? Colors.orange.shade900.withOpacity(0.3)
                         : Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isDark
-                          ? Colors.orange.shade700.withValues(alpha: 0.4)
+                          ? Colors.orange.shade700.withOpacity(0.4)
                           : Colors.orange.shade200,
                     ),
                   ),

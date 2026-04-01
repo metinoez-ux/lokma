@@ -134,7 +134,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? const Color(0xFF2C2C2E)
-                                  : Colors.white.withValues(alpha: 0.1),
+                                  : Colors.white.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.notifications_outlined,
@@ -268,7 +268,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEA184A).withValues(alpha: 0.3),
+                          color: const Color(0xFFEA184A).withOpacity(0.3),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -280,7 +280,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
@@ -304,7 +304,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               Text(
                                 'profile.invite_reward'.tr(),
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.85),
+                                  color: Colors.white.withOpacity(0.85),
                                   fontSize: 12,
                                 ),
                               ),
@@ -312,7 +312,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         Icon(Icons.share_rounded,
-                            color: Colors.white.withValues(alpha: 0.9), size: 22),
+                            color: Colors.white.withOpacity(0.9), size: 22),
                       ],
                     ),
                   ),
@@ -359,7 +359,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         HapticFeedback.mediumImpact();
                         await _googleSignIn.signOut();
                         await _auth.signOut();
-                        setState(() {});
+                        if (context.mounted) {
+                          context.go('/login');
+                        }
                       },
                       child: Container(
                         width: double.infinity,
@@ -440,7 +442,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               fontWeight: FontWeight.w200,
                               letterSpacing: 0.5,
                               color: isDark
-                                  ? Colors.white.withValues(alpha: 0.35)
+                                  ? Colors.white.withOpacity(0.35)
                                   : Colors.grey[500],
                             ),
                           ),
@@ -450,7 +452,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             height: 20,
                             colorFilter: ColorFilter.mode(
                               isDark
-                                  ? Colors.white.withValues(alpha: 0.45)
+                                  ? Colors.white.withOpacity(0.45)
                                   : Colors.grey.shade500,
                               BlendMode.srcIn,
                             ),
@@ -897,13 +899,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Navigator.pop(ctx);
               try {
                 await _auth.currentUser?.delete();
-                setState(() {});
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('profile.account_deleted'.tr()),
                           backgroundColor: Colors.green,
                   ));
+                  context.go('/login');
                 }
               } catch (e) {
                 if (mounted) {

@@ -192,18 +192,18 @@ class _NotificationBannerState extends State<_NotificationBanner>
                       ),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : Colors.black.withValues(alpha: 0.75),
+                            ? Colors.white.withOpacity(0.12)
+                            : Colors.black.withOpacity(0.75),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isDark
-                              ? Colors.white.withValues(alpha: 0.15)
-                              : Colors.white.withValues(alpha: 0.10),
+                              ? Colors.white.withOpacity(0.15)
+                              : Colors.white.withOpacity(0.10),
                           width: 0.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
+                            color: Colors.black.withOpacity(0.25),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -252,7 +252,7 @@ class _NotificationBannerState extends State<_NotificationBanner>
                                     widget.body!,
                                     style: TextStyle(
                                       color:
-                                          Colors.white.withValues(alpha: 0.72),
+                                          Colors.white.withOpacity(0.72),
                                       fontSize: 12.5,
                                       height: 1.3,
                                     ),
@@ -268,7 +268,7 @@ class _NotificationBannerState extends State<_NotificationBanner>
                             const SizedBox(width: 8),
                             Icon(
                               Icons.chevron_right_rounded,
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: Colors.white.withOpacity(0.5),
                               size: 20,
                             ),
                           ],

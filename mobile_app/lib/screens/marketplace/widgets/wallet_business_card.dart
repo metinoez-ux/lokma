@@ -90,7 +90,7 @@ class WalletBusinessCard extends ConsumerWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -101,7 +101,7 @@ class WalletBusinessCard extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.info_outline,
-                          color: Colors.white.withValues(alpha: 0.9), size: 14),
+                          color: Colors.white.withOpacity(0.9), size: 14),
                       const SizedBox(width: 6),
                       Text(
                         unavailableReason,
@@ -109,7 +109,7 @@ class WalletBusinessCard extends ConsumerWidget {
                           fontSize: 13,
                           fontWeight: FontWeight.w200,
                           letterSpacing: 0.5,
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ],
@@ -128,30 +128,30 @@ class WalletBusinessCard extends ConsumerWidget {
                       ? BorderSide.none
                       : BorderSide(
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.08),
+                              ? Colors.white.withOpacity(0.08)
+                              : Colors.black.withOpacity(0.08),
                         ),
                   bottom: BorderSide(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.08),
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.black.withOpacity(0.08),
                   ),
                   left: BorderSide(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.08),
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.black.withOpacity(0.08),
                   ),
                   right: BorderSide(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.08),
+                        ? Colors.white.withOpacity(0.08)
+                        : Colors.black.withOpacity(0.08),
                   ),
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.black.withValues(alpha: 0.5)
-                        : Colors.black.withValues(alpha: 0.1),
+                        ? Colors.black.withOpacity(0.5)
+                        : Colors.black.withOpacity(0.1),
                     blurRadius: 12,
                     spreadRadius: 0,
                     offset: const Offset(0, 3),
@@ -210,7 +210,7 @@ class WalletBusinessCard extends ConsumerWidget {
                         if (!isAvailable)
                           Positioned.fill(
                             child: Container(
-                              color: Colors.black.withValues(alpha: 0.4),
+                              color: Colors.black.withOpacity(0.4),
                             ),
                           ),
 
@@ -224,7 +224,7 @@ class WalletBusinessCard extends ConsumerWidget {
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 4, horizontal: 8),
-                              color: Colors.black.withValues(alpha: 0.65),
+                              color: Colors.black.withOpacity(0.65),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -268,12 +268,12 @@ class WalletBusinessCard extends ConsumerWidget {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                      color: lokmaPink.withValues(alpha: 0.9),
+                                      color: lokmaPink.withOpacity(0.9),
                                       borderRadius: BorderRadius.circular(14),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black
-                                              .withValues(alpha: 0.3),
+                                              .withOpacity(0.3),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
@@ -366,12 +366,12 @@ class WalletBusinessCard extends ConsumerWidget {
                                           horizontal: 10, vertical: 5),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF2E7D32)
-                                            .withValues(alpha: 0.9),
+                                            .withOpacity(0.9),
                                         borderRadius: BorderRadius.circular(14),
                                         boxShadow: [
                                           BoxShadow(
                                             color: Colors.black
-                                                .withValues(alpha: 0.3),
+                                                .withOpacity(0.3),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
@@ -420,7 +420,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withValues(alpha: 0.2),
+                                          .withOpacity(0.2),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -477,7 +477,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withValues(alpha: 0.9),
+                                          .withOpacity(0.9),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w300,
                                     ),
@@ -490,7 +490,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withValues(alpha: 0.7),
+                                            .withOpacity(0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w300,
                                       ),
@@ -502,7 +502,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withValues(alpha: 0.7),
+                                          .withOpacity(0.7),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -516,7 +516,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withValues(alpha: 0.7),
+                                            .withOpacity(0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w300,
                                       ),
@@ -548,7 +548,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withValues(alpha: 0.7),
+                                                .withOpacity(0.7),
                                             size: 16),
                                         const SizedBox(width: 6),
                                         if (deliveryFee == 0)
@@ -566,7 +566,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.7),
+                                                  .withOpacity(0.7),
                                               fontSize: 13,
                                               fontWeight: FontWeight.w300,
                                             ),
@@ -577,13 +577,13 @@ class WalletBusinessCard extends ConsumerWidget {
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .onSurface
-                                                      .withValues(alpha: 0.7),
+                                                      .withOpacity(0.7),
                                                   fontSize: 13)),
                                           Icon(Icons.shopping_basket_outlined,
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.7),
+                                                  .withOpacity(0.7),
                                               size: 14),
                                           const SizedBox(width: 6),
                                           Text(
@@ -592,7 +592,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.7),
+                                                  .withOpacity(0.7),
                                               fontSize: 13,
                                               fontWeight: FontWeight.w300,
                                             ),
@@ -610,7 +610,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withValues(alpha: 0.7),
+                                                .withOpacity(0.7),
                                             size: 14),
                                         const SizedBox(width: 4),
                                         Text(
@@ -619,7 +619,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withValues(alpha: 0.8),
+                                                .withOpacity(0.8),
                                             fontSize: 13,
                                             fontWeight: FontWeight.w300,
                                           ),
@@ -631,7 +631,7 @@ class WalletBusinessCard extends ConsumerWidget {
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .onSurface
-                                                      .withValues(alpha: 0.7),
+                                                      .withOpacity(0.7),
                                                   fontSize: 13)),
                                           SvgPicture.asset(
                                             'assets/images/icon_masa_rezervasyon.svg',
@@ -688,7 +688,7 @@ class WalletBusinessCard extends ConsumerWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withValues(alpha: 0.3),
+                                .withOpacity(0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -738,7 +738,7 @@ class WalletBusinessCard extends ConsumerWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withValues(alpha: 0.5),
+                            .withOpacity(0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

@@ -8,6 +8,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
+import { getLocalizedText } from '@/lib/utils';
 
 interface Business {
     id: string;
@@ -69,8 +70,8 @@ function CategoriesPageContent() {
                 const snapshot = await getDocs(collection(db, 'businesses'));
                 const biz = snapshot.docs.map(doc => ({
                     id: doc.id,
-                    name: doc.data().name || doc.data().businessName || t('unnamed'),
-                    city: doc.data().city,
+                    name: getLocalizedText(doc.data().name) || getLocalizedText(doc.data().businessName) || t('unnamed'),
+                    city: getLocalizedText(doc.data().city),
                     plz: doc.data().plz,
                 })) as Business[];
                 setBusinesses(biz.sort((a, b) => a.name.localeCompare(b.name)));
@@ -96,6 +97,7 @@ function CategoriesPageContent() {
                 const cats = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
+                    name: getLocalizedText(doc.data().name) || '',
                 })) as Category[];
 
                 setCategories(cats);

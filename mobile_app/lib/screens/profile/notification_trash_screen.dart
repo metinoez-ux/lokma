@@ -255,7 +255,7 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.only(left: 24),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                        color: const Color(0xFF4CAF50).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(
@@ -274,7 +274,7 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 24),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEA184A).withValues(alpha: 0.15),
+                        color: const Color(0xFFEA184A).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(
@@ -327,7 +327,7 @@ class _NotificationTrashScreenState extends State<NotificationTrashScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.15),
+                            color: Colors.black.withOpacity(isDark ? 0.4 : 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -468,7 +468,7 @@ class _TrashNotificationCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
+              color: iconColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 18, color: iconColor),
@@ -481,7 +481,7 @@ class _TrashNotificationCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),

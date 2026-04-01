@@ -128,15 +128,15 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
           boxShadow: [
             BoxShadow(
               color: isDark
-                  ? Colors.black.withValues(alpha: 0.4)
-                  : Colors.black.withValues(alpha: 0.10),
+                  ? Colors.black.withOpacity(0.4)
+                  : Colors.black.withOpacity(0.10),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
           border: isDark
               ? Border.all(
-                  color: Colors.white.withValues(alpha: 0.06), width: 0.5)
+                  color: Colors.white.withOpacity(0.06), width: 0.5)
               : null,
         ),
         child: Padding(
@@ -216,14 +216,14 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                               boxShadow: [
                                 BoxShadow(
                                   color: isDark
-                                      ? Colors.black.withValues(alpha: 0.55)
-                                      : Colors.black.withValues(alpha: 0.22),
+                                      ? Colors.black.withOpacity(0.55)
+                                      : Colors.black.withOpacity(0.22),
                                   blurRadius: 8,
                                   offset: const Offset(0, 3),
                                 ),
                                 BoxShadow(
                                   color: ThreeDimensionalPillTabBar.pillDark
-                                      .withValues(alpha: isDark ? 0.35 : 0.20),
+                                      .withOpacity(isDark ? 0.35 : 0.20),
                                   blurRadius: 10,
                                   spreadRadius: -2,
                                 ),
@@ -314,8 +314,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                       Text(
                         tab.subtitle!,
                         style: TextStyle(
-                          color: textColor.withValues(
-                              alpha: isActive ? 0.85 : 0.7),
+                          color: textColor.withOpacity(
+                              isActive ? 0.85 : 0.7),
                           fontWeight: FontWeight.w400,
                           fontSize: widget.compact ? 9 : 10,
                           overflow: TextOverflow.ellipsis,

@@ -9,19 +9,27 @@ import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/data/kermes_menu_templates.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
 import '../../utils/currency_utils.dart';
 
 const Color lokmaPink = Color(0xFFEA184A);
 
-Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+Color _darkBg(bool isDark) =>
+    isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
 Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
 class KermesMenuScreen extends ConsumerStatefulWidget {
   final KermesEvent event;
   final int initialDeliveryMode;
+  final Position? currentPosition;
 
-  const KermesMenuScreen({super.key, required this.event, this.initialDeliveryMode = 0});
+  const KermesMenuScreen({
+    super.key,
+    required this.event,
+    this.initialDeliveryMode = 0,
+    this.currentPosition,
+  });
 
   @override
   ConsumerState<KermesMenuScreen> createState() => _KermesMenuScreenState();
@@ -29,16 +37,16 @@ class KermesMenuScreen extends ConsumerStatefulWidget {
 
 class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   String _selectedCategory = 'marketplace.category_all'.tr();
-  
+
   // Scroll spy controller and keys
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _sectionKeys = {};
   final Map<String, GlobalKey> _tabKeys = {};
   bool _isUserScrolling = true;
-  
+
   // Chip ScrollController
   final ScrollController _chipScrollController = ScrollController();
-  
+
   // Sliding pill indicator state
   double _pillLeft = 0;
   double _pillWidth = 60;
@@ -52,17 +60,34 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   bool _showSearchBar = false;
   String _menuSearchQuery = '';
 
-  List<({int absoluteIndex, String title, IconData icon, String subtitle})> get _availableModes {
+  List<({int absoluteIndex, String title, IconData icon, String subtitle})>
+      get _availableModes {
     if (widget.event.isMenuOnly) return [];
-    final modes = <({int absoluteIndex, String title, IconData icon, String subtitle})>[];
+    final modes =
+        <({int absoluteIndex, String title, IconData icon, String subtitle})>[];
     if (widget.event.hasDelivery) {
-      modes.add((absoluteIndex: 0, title: 'Evine', icon: Icons.delivery_dining, subtitle: 'gelsin'));
+      modes.add((
+        absoluteIndex: 0,
+        title: 'Evine',
+        icon: Icons.delivery_dining,
+        subtitle: 'gelsin'
+      ));
     }
     if (widget.event.hasTakeaway) {
-      modes.add((absoluteIndex: 1, title: 'Gel Al', icon: Icons.shopping_bag_outlined, subtitle: 'Sıra bekleme'));
+      modes.add((
+        absoluteIndex: 1,
+        title: 'Gel Al',
+        icon: Icons.shopping_bag_outlined,
+        subtitle: 'Sıra bekleme'
+      ));
     }
     if (widget.event.hasDineIn) {
-      modes.add((absoluteIndex: 2, title: '(Masa)', icon: Icons.restaurant, subtitle: 'Kermeste ye'));
+      modes.add((
+        absoluteIndex: 2,
+        title: '(Masa)',
+        icon: Icons.restaurant,
+        subtitle: 'Kermeste ye'
+      ));
     }
     return modes;
   }
@@ -80,7 +105,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     } else {
       _deliveryModeIndex = widget.initialDeliveryMode; // Fallback
     }
-    
+
     _scrollController.addListener(() {
       final shouldShow = _scrollController.offset > 150;
       if (shouldShow != _showSearchBar) {
@@ -122,12 +147,14 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     for (var entry in _sectionKeys.entries) {
       final key = entry.value;
       if (key.currentContext != null) {
-        final RenderBox? box = key.currentContext!.findRenderObject() as RenderBox?;
+        final RenderBox? box =
+            key.currentContext!.findRenderObject() as RenderBox?;
         if (box != null) {
-          final position = box.localToGlobal(Offset.zero, ancestor: context.findRenderObject());
+          final position = box.localToGlobal(Offset.zero,
+              ancestor: context.findRenderObject());
           if (position.dy > 150 && position.dy < 400) {
-             visibleCategory = entry.key;
-             break;
+            visibleCategory = entry.key;
+            break;
           }
         }
       }
@@ -151,23 +178,24 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     if (!_chipScrollController.hasClients) return;
     final tabKey = _tabKeys[category];
     if (tabKey == null || tabKey.currentContext == null) return;
-    
-    final RenderBox? chipBox = tabKey.currentContext!.findRenderObject() as RenderBox?;
+
+    final RenderBox? chipBox =
+        tabKey.currentContext!.findRenderObject() as RenderBox?;
     if (chipBox == null) return;
-    
+
     final chipPosition = chipBox.localToGlobal(Offset.zero);
     final chipWidth = chipBox.size.width;
     final viewportWidth = _chipScrollController.position.viewportDimension;
-    
+
     final chipCenter = chipPosition.dx + chipWidth / 2;
     final viewportCenter = viewportWidth / 2;
     final scrollDelta = chipCenter - viewportCenter;
-    
+
     final targetOffset = (_chipScrollController.offset + scrollDelta).clamp(
       0.0,
       _chipScrollController.position.maxScrollExtent,
     );
-    
+
     _chipScrollController.animateTo(
       targetOffset,
       duration: const Duration(milliseconds: 400),
@@ -178,14 +206,17 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   void _updatePillPosition([String? cat]) {
     final category = cat ?? _selectedCategory;
     final tabKey = _tabKeys[category];
-    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
-    
-    final RenderBox? chipBox = tabKey?.currentContext?.findRenderObject() as RenderBox?;
-    final RenderBox? rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null)
+      return;
+
+    final RenderBox? chipBox =
+        tabKey?.currentContext?.findRenderObject() as RenderBox?;
+    final RenderBox? rowBox =
+        _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
     if (chipBox == null || rowBox == null) return;
-    
+
     final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
-    
+
     if (mounted) {
       setState(() {
         _pillLeft = chipPos.dx;
@@ -199,26 +230,34 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     if (_selectedCategory == category) return;
     setState(() => _selectedCategory = category);
     _isUserScrolling = false;
-    
+
     _scrollChipBarToSelected(category);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _updatePillPosition(category);
     });
-    
+
     if (category == 'marketplace.category_all'.tr()) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        _scrollController.animateTo(0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut);
       }
     } else {
       final key = _sectionKeys[category];
-      if (key != null && key.currentContext != null && _scrollController.hasClients) {
-        final RenderBox? targetBox = key.currentContext!.findRenderObject() as RenderBox?;
-        final RenderBox? scrollableBox = context.findRenderObject() as RenderBox?;
-        
+      if (key != null &&
+          key.currentContext != null &&
+          _scrollController.hasClients) {
+        final RenderBox? targetBox =
+            key.currentContext!.findRenderObject() as RenderBox?;
+        final RenderBox? scrollableBox =
+            context.findRenderObject() as RenderBox?;
+
         if (targetBox != null && scrollableBox != null) {
-          final targetPosition = targetBox.localToGlobal(Offset.zero, ancestor: scrollableBox);
-          final scrollTarget = _scrollController.offset + targetPosition.dy - 190;
+          final targetPosition =
+              targetBox.localToGlobal(Offset.zero, ancestor: scrollableBox);
+          final scrollTarget =
+              _scrollController.offset + targetPosition.dy - 190;
           _scrollController.animateTo(
             scrollTarget.clamp(0.0, _scrollController.position.maxScrollExtent),
             duration: const Duration(milliseconds: 300),
@@ -227,21 +266,44 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         }
       }
     }
-    
+
     Future.delayed(const Duration(milliseconds: 350), () {
       if (mounted) _isUserScrolling = true;
     });
   }
 
+  List<KermesMenuItem> get _eventMenu {
+    if (widget.event.menu.isNotEmpty) return widget.event.menu;
+    // Dummy veriler (Eger veritabaninda veya test event'inde hic menu yoksa bos gozukmemesi icin)
+    return [
+      KermesMenuItem(name: 'Adana Kebap', price: 15.0, category: 'Ana Yemek', description: 'Acili Adana', imageUrl: 'https://lh3.googleusercontent.com/abZf2O0-R43Xo_nE3iJ8P-1H0nZ8qfX8j_A1E0r2ZJzH5yY1p1K6c1Xk0dIeX3cTqW1eY8pD0c9bN3A8xK7yL5M2Z1P4X7A9C5k=w600'),
+      KermesMenuItem(name: 'Urfa Kebap', price: 14.5, category: 'Ana Yemek', description: 'Acisiz Urfa'),
+      KermesMenuItem(name: 'Karisik Izgara', price: 22.0, category: 'Grill', description: 'Ozel LOKMA karisik'),
+      KermesMenuItem(name: 'Ezogelin Corba', price: 6.0, category: 'Çorba'),
+      KermesMenuItem(name: 'Kunefe', price: 9.0, category: 'Tatlı', description: 'Hatay usulu kunefe'),
+      KermesMenuItem(name: 'Sutlac', price: 5.5, category: 'Tatlı'),
+      KermesMenuItem(name: 'Ayran', price: 2.5, category: 'İçecek', description: 'Yayik ayran'),
+      KermesMenuItem(name: 'Cizre Cola', price: 2.0, category: 'İçecek'),
+    ];
+  }
+
   List<String> get _categoriesWithoutAll {
     final uniqueCategories = <String>{};
-    for (final item in widget.event.menu) {
+    for (final item in _eventMenu) {
       final category = _getCategoryForItem(item);
       if (category.isNotEmpty) {
         uniqueCategories.add(category);
       }
     }
-    final sortOrder = ['Ana Yemek', 'Çorba', 'Tatlı', 'İçecek', 'Aperatif', 'Grill', 'Diğer'];
+    final sortOrder = [
+      'Ana Yemek',
+      'Çorba',
+      'Tatlı',
+      'İçecek',
+      'Aperatif',
+      'Grill',
+      'Diğer'
+    ];
     final sorted = uniqueCategories.toList();
     sorted.sort((a, b) {
       final indexA = sortOrder.indexOf(a);
@@ -268,16 +330,27 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
       return item.category!;
     }
     final name = item.name.toLowerCase();
-    if (name.contains('cay') || name.contains('ayran') || name.contains('kahve') || 
-        name.contains('su') || name.contains('kola') ||
-        name.contains('fanta') || name.contains('sprite')) {
+    if (name.contains('cay') ||
+        name.contains('ayran') ||
+        name.contains('kahve') ||
+        name.contains('su') ||
+        name.contains('kola') ||
+        name.contains('fanta') ||
+        name.contains('sprite')) {
       return 'Icecekler';
-    } else if (name.contains('baklava') || name.contains('kunefe') || name.contains('lokum') || 
-               name.contains('dondurma') || name.contains('kadayif') ||
-               name.contains('sutlac') || name.contains('lokma') ||
-               name.contains('tulumba') || name.contains('revani')) {
+    } else if (name.contains('baklava') ||
+        name.contains('kunefe') ||
+        name.contains('lokum') ||
+        name.contains('dondurma') ||
+        name.contains('kadayif') ||
+        name.contains('sutlac') ||
+        name.contains('lokma') ||
+        name.contains('tulumba') ||
+        name.contains('revani')) {
       return 'Tatlilar';
-    } else if (name.contains('corba') || name.contains('mercimek') || name.contains('ezogelin')) {
+    } else if (name.contains('corba') ||
+        name.contains('mercimek') ||
+        name.contains('ezogelin')) {
       return 'Corba';
     } else {
       return 'Ana Yemek';
@@ -289,7 +362,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     for (final category in _categoriesWithoutAll) {
       grouped[category] = [];
     }
-    for (final item in widget.event.menu) {
+    for (final item in _eventMenu) {
       final category = _getCategoryForItem(item);
       grouped[category]?.add(item);
     }
@@ -303,16 +376,20 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   void _addToCart(KermesMenuItem item) {
     HapticFeedback.lightImpact();
     final cartNotifier = ref.read(kermesCartProvider.notifier);
-    final added = cartNotifier.addToCart(item, widget.event.id, widget.event.city);
+    final added =
+        cartNotifier.addToCart(item, widget.event.id, widget.event.city);
     if (!added) _showDifferentKermesWarning(item);
   }
 
   void _showDifferentKermesWarning(KermesMenuItem item) {
-    final currentKermesName = ref.read(kermesCartProvider.notifier).currentKermesName;
+    final currentKermesName =
+        ref.read(kermesCartProvider.notifier).currentKermesName;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
+        backgroundColor: Theme.of(dialogContext).brightness == Brightness.dark
+            ? const Color(0xFF1E1E1E)
+            : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -322,7 +399,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               child: Text(
                 'Farklı Kermes Siparişi',
                 style: TextStyle(
-                  color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                  color: Theme.of(dialogContext).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -334,20 +413,45 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('marketplace.clear_cart_warning'.tr(args: [currentKermesName ?? '']), style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 15)),
+            Text(
+                'marketplace.clear_cart_warning'
+                    .tr(args: [currentKermesName ?? '']),
+                style: TextStyle(
+                    color: Theme.of(dialogContext).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black87,
+                    fontSize: 15)),
             const SizedBox(height: 12),
-            Text('${widget.event.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.', style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white54 : Colors.black54, fontSize: 14)),
+            Text(
+                '${widget.event.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.',
+                style: TextStyle(
+                    color: Theme.of(dialogContext).brightness == Brightness.dark
+                        ? Colors.white54
+                        : Colors.black54,
+                    fontSize: 14)),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text('common.cancel'.tr(), style: const TextStyle(color: Colors.grey, fontSize: 15))),
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('common.cancel'.tr(),
+                  style: const TextStyle(color: Colors.grey, fontSize: 15))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              ref.read(kermesCartProvider.notifier).clearAndAddFromNewKermes(item, widget.event.id, widget.event.city);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('marketplace.cart_updated_for_city'.tr(args: [widget.event.city])), backgroundColor: Theme.of(context).colorScheme.primary, behavior: SnackBarBehavior.floating));
+              ref.read(kermesCartProvider.notifier).clearAndAddFromNewKermes(
+                  item, widget.event.id, widget.event.city);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('marketplace.cart_updated_for_city'
+                      .tr(args: [widget.event.city])),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  behavior: SnackBarBehavior.floating));
             },
-            style: ElevatedButton.styleFrom(backgroundColor: lokmaPink, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: lokmaPink,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
             child: Text(tr('cart.change_cart')),
           ),
         ],
@@ -370,7 +474,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     final cardColor = _cardBg(isDark);
     final textColor = isDark ? Colors.white : Colors.black87;
     final hintColor = isDark ? Colors.grey[500] : Colors.grey[400];
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -380,25 +484,32 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final query = _menuSearchQuery.toLowerCase();
-            final searchResults = widget.event.menu.where((p) => 
-              p.name.toLowerCase().contains(query) || (p.description?.toLowerCase().contains(query) ?? false)
-            ).toList();
+            final searchResults = _eventMenu
+                .where((p) =>
+                    p.name.toLowerCase().contains(query) ||
+                    (p.description?.toLowerCase().contains(query) ?? false))
+                .toList();
 
             return Container(
               height: MediaQuery.of(context).size.height * 0.9,
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 children: [
                   Container(
                     margin: const EdgeInsets.only(top: 12, bottom: 8),
-                    width: 40, height: 4,
-                    decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2)),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       children: [
                         Expanded(
@@ -407,7 +518,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                             decoration: BoxDecoration(
                               color: cardColor,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.transparent, width: 2),
+                              border: Border.all(
+                                  color: Colors.transparent, width: 2),
                             ),
                             child: TextField(
                               autofocus: true,
@@ -415,17 +527,24 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                               style: TextStyle(color: textColor, fontSize: 16),
                               decoration: InputDecoration(
                                 hintText: 'marketplace.search_in_menu'.tr(),
-                                hintStyle: TextStyle(color: hintColor, fontSize: 15),
-                                prefixIcon: Icon(Icons.search, color: hintColor, size: 22),
+                                hintStyle:
+                                    TextStyle(color: hintColor, fontSize: 15),
+                                prefixIcon: Icon(Icons.search,
+                                    color: hintColor, size: 22),
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                                suffixIcon: _menuSearchQuery.isNotEmpty ? IconButton(
-                                  icon: Icon(Icons.close, color: textColor, size: 20),
-                                  onPressed: () {
-                                    setModalState(() => _menuSearchQuery = '');
-                                    setState(() => _menuSearchQuery = '');
-                                  },
-                                ) : null,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                suffixIcon: _menuSearchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.close,
+                                            color: textColor, size: 20),
+                                        onPressed: () {
+                                          setModalState(
+                                              () => _menuSearchQuery = '');
+                                          setState(() => _menuSearchQuery = '');
+                                        },
+                                      )
+                                    : null,
                               ),
                               onChanged: (val) {
                                 setModalState(() => _menuSearchQuery = val);
@@ -442,7 +561,11 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                             }
                             Navigator.pop(context);
                           },
-                          child: Text('common.cancel'.tr(), style: TextStyle(color: lokmaPink, fontSize: 15, fontWeight: FontWeight.w600)),
+                          child: Text('common.cancel'.tr(),
+                              style: TextStyle(
+                                  color: lokmaPink,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -450,23 +573,32 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   const Divider(height: 1, thickness: 1),
                   Expanded(
                     child: _menuSearchQuery.isEmpty
-                        ? Center(child: Column(
+                        ? Center(
+                            child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.search, size: 60, color: hintColor?.withValues(alpha: 0.5)),
+                              Icon(Icons.search,
+                                  size: 60,
+                                  color: hintColor?.withOpacity(0.5)),
                               const SizedBox(height: 16),
-                              Text('marketplace.search_for_products'.tr(), style: TextStyle(color: hintColor, fontSize: 16)),
+                              Text('marketplace.search_for_products'.tr(),
+                                  style: TextStyle(
+                                      color: hintColor, fontSize: 16)),
                             ],
                           ))
                         : searchResults.isEmpty
-                            ? Center(child: Text('marketplace.no_results'.tr(), style: TextStyle(color: hintColor, fontSize: 16)))
+                            ? Center(
+                                child: Text('marketplace.no_results'.tr(),
+                                    style: TextStyle(
+                                        color: hintColor, fontSize: 16)))
                             : ListView.builder(
                                 padding: const EdgeInsets.all(16),
                                 itemCount: searchResults.length,
                                 itemBuilder: (context, index) {
                                   final item = searchResults[index];
                                   final cartQuantity = _getCartQuantity(item);
-                                  return _buildMenuItem(item, cartQuantity, isDark: isDark);
+                                  return _buildMenuItem(item, cartQuantity,
+                                      isDark: isDark);
                                 },
                               ),
                   ),
@@ -491,15 +623,16 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     });
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBg = _darkBg(isDark);
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-    
+
     final grouped = _groupedMenu;
     final menuKeys = _sectionKeys;
-    
+
     final availableModes = _availableModes;
-    final selectedTabIndex = availableModes.indexWhere((m) => m.absoluteIndex == _deliveryModeIndex);
+    final selectedTabIndex =
+        availableModes.indexWhere((m) => m.absoluteIndex == _deliveryModeIndex);
     final validTabIndex = selectedTabIndex >= 0 ? selectedTabIndex : 0;
 
     return Scaffold(
@@ -507,224 +640,210 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          // 1. SliverAppBar
+          // 1. Top Bar: Back Button & Search Bar
           SliverAppBar(
             floating: false,
             pinned: true,
             backgroundColor: scaffoldBg,
             surfaceTintColor: scaffoldBg,
             elevation: 0,
-            toolbarHeight: 56,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Material(
-                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                shape: const CircleBorder(),
-                elevation: 2,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/kermes');
-                    }
-                  },
-                  child: SizedBox(
-                    width: 40, height: 40,
-                    child: Icon(Icons.arrow_back_ios_new, color: textPrimary, size: 18),
+            toolbarHeight: 60,
+            automaticallyImplyLeading: false,
+            flexibleSpace: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  height: 60,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      children: [
+                        // Back Button
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/kermes');
+                            }
+                          },
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1C1C1E) : Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(Icons.arrow_back_ios_new, size: 18, color: textPrimary),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Search Bar
+                        Expanded(
+                          child: Container(
+                            height: 44,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1C1C1E) : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.search, size: 20, color: textSecondary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    style: TextStyle(color: textPrimary, fontSize: 14),
+                                    decoration: InputDecoration(
+                                      hintText: 'Im Menü suchen...',
+                                      hintStyle: TextStyle(color: textSecondary, fontSize: 14),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 2. HERO IMAGE CARD (BusinessDetailScreen style)
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.only(top: 8, bottom: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(
+                            'https://lh3.googleusercontent.com/aida-public/AB6AXuBJbRi7Loz4DMKqPn8OxdwybssRuCj0euEnxEc2C3sIHp6PFPWFIxOz6Cl1hciT95IosE2iL3AOdQZla7X1RwTK4ZloveV5PhHcDz2MIcFPkRk1fYTc6j15pKLPVi4nGg1p2FgfsHwmyUCs8CHb-DA_fXZbgYlwwXOLlYtl3y2Zsk3SbNm8_lHiurj651KmrmAse3uiJELB_Abh3LbqDqyDFQdnjAdhne_sjvjeNEnJDhq6P7tR33_Z97ZDVPbNUCIT78xhXY9zlnQM'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.9),
+                            Colors.black.withOpacity(0.4),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 24,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD32F2F).withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: const [
+                                  Icon(Icons.star, color: Colors.white, size: 12),
+                                  SizedBox(width: 4),
+                                  Text('Popüler',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: const BoxDecoration(
+                                                color: Color(0xFFD32F2F),
+                                                shape: BoxShape.circle)),
+                                        const SizedBox(width: 8),
+                                        const Text('LEZZET ŞÖLENİ',
+                                            style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 2)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text('Menü ve
+Sipariş',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1.1)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-            title: (_showSearchBar)
-                ? GestureDetector(
-                    onTap: () => _showMenuSearchOverlay(),
-                    child: Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'marketplace.search_in_menu'.tr(),
-                              style: TextStyle(
-                                fontSize: 13, 
-                                color: _menuSearchQuery.isNotEmpty ? textPrimary : Colors.grey[500],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                      ),
-                    ),
-                  )
-                : (widget.event.isMenuOnly || availableModes.isEmpty)
-                   ? Text(
-                       'Menü',
-                       style: TextStyle(
-                         color: textPrimary,
-                         fontSize: 16,
-                         fontWeight: FontWeight.w600,
-                       ),
-                     )
-                   : (availableModes.length == 1)
-                       ? Row(
-                           mainAxisSize: MainAxisSize.min,
-                           children: [
-                             Icon(availableModes.first.icon, color: lokmaPink, size: 20),
-                             const SizedBox(width: 8),
-                             Text(
-                               availableModes.first.title,
-                               style: TextStyle(
-                                 color: textPrimary,
-                                 fontSize: 16,
-                                 fontWeight: FontWeight.w600,
-                               ),
-                             ),
-                           ],
-                         )
-                       : ThreeDimensionalPillTabBar(
-                           margin: EdgeInsets.zero,
-                           activeColor: lokmaPink,
-                           selectedIndex: validTabIndex,
-                           tabs: availableModes.map((m) => TabItem(title: m.title, icon: m.icon, subtitle: m.subtitle)).toList(),
-                           onTabSelected: (index) {
-                             setState(() => _deliveryModeIndex = availableModes[index].absoluteIndex);
-                           },
-                         ),
-            titleSpacing: 0,
-            centerTitle: true,
-            actions: [
-              if (!_showSearchBar)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: GestureDetector(
-                    onTap: () => _showMenuSearchOverlay(),
-                    child: SizedBox(
-                      width: 40, height: 40,
-                      child: Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
-                    ),
-                  ),
-                )
-              else
-                const SizedBox(width: 48),
-            ],
-          ),
-          
-          // HERO IMAGE (kermes flyer/header)
-          SliverToBoxAdapter(
-            child: Builder(
-              builder: (context) {
-                final heroImage = widget.event.headerImage 
-                    ?? (widget.event.flyers.isNotEmpty ? widget.event.flyers.first : null);
-                if (heroImage == null) return const SizedBox.shrink();
-
-                final isAsset = heroImage.startsWith('assets/');
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 200,
-                      child: isAsset
-                          ? Image.asset(heroImage, fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const SizedBox.shrink())
-                          : Image.network(heroImage, fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const SizedBox.shrink()),
-                    ),
-                  ),
-                );
-              },
-            ),
           ),
 
-          // 2. Info Section (Extremely clean & simple)
-          SliverToBoxAdapter(
-             child: Container(
-               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   Text(
-                     widget.event.title,
-                     style: TextStyle(
-                       color: Theme.of(context).colorScheme.onSurface,
-                       fontSize: 24,
-                       fontWeight: FontWeight.w600,
-                       letterSpacing: -0.5,
-                     ),
-                     maxLines: 2,
-                     overflow: TextOverflow.ellipsis,
-                   ),
-                   const SizedBox(height: 8),
-                   Wrap(
-                     spacing: 12,
-                     runSpacing: 8,
-                     crossAxisAlignment: WrapCrossAlignment.center,
-                     children: [
-                       Row(
-                         mainAxisSize: MainAxisSize.min,
-                         children: [
-                           const Icon(Icons.location_on, color: lokmaPink, size: 16),
-                           const SizedBox(width: 4),
-                           Text(
-                             widget.event.city,
-                             style: TextStyle(
-                               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                               fontSize: 13,
-                               fontWeight: FontWeight.w500,
-                             ),
-                           ),
-                         ],
-                       ),
-                       Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                       Text(
-                         'Kermes Menüsü',
-                         style: TextStyle(
-                           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                           fontSize: 13,
-                         ),
-                       ),
-                     ],
-                   ),
-                 ],
-               ),
-             ),
-          ),
-          
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // 3. Category Tabs (Sticky Header) - Business Detail Screen pattern
+          // 3. Category Chip Tabs
           SliverPersistentHeader(
             pinned: true,
-            delegate: _StickyTabDelegate(
-              minHeight: 52,
-              maxHeight: 52,
+            delegate: _KermesCategoryHeaderDelegate(
               child: Container(
                 color: scaffoldBg,
+                height: 52,
                 child: Column(
                   children: [
-                    Expanded(
                       child: Row(
                         children: [
                           Expanded(
                             child: SingleChildScrollView(
                               controller: _chipScrollController,
                               scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
+                              padding: const EdgeInsets.only(
+                                  left: 16, right: 4, top: 4, bottom: 8),
                               child: Stack(
                                 alignment: Alignment.centerLeft,
                                 children: [
-                                  // 1. Sliding pill indicator (behind text)
+                                  // 1. Sliding pill indicator
                                   if (_pillInitialized)
                                     AnimatedPositioned(
                                       duration: const Duration(milliseconds: 400),
@@ -737,11 +856,16 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                         curve: Curves.easeOutBack,
                                         width: _pillWidth,
                                         decoration: BoxDecoration(
-                                          color: isDark ? Colors.white : const Color(0xFF3E3E3F),
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF3E3E3F),
                                           borderRadius: BorderRadius.circular(50),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                                              color: (isDark
+                                                      ? Colors.white
+                                                      : Colors.black)
+                                                  .withOpacity(0.12),
                                               blurRadius: 8,
                                               offset: const Offset(0, 2),
                                             ),
@@ -749,7 +873,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                         ),
                                       ),
                                     ),
-                                  // 2. Chip texts row (on top of pill)
+                                  // 2. Chip texts row
                                   Row(
                                     key: _chipRowKey,
                                     children: _categories.map((category) {
@@ -765,7 +889,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                           },
                                           child: Container(
                                             key: _tabKeys[category],
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 7),
                                             decoration: BoxDecoration(
                                               color: Colors.transparent,
                                               borderRadius: BorderRadius.circular(50),
@@ -777,15 +902,15 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                                   duration: const Duration(milliseconds: 300),
                                                   curve: Curves.easeOutCubic,
                                                   style: TextStyle(
-                                                    color: isSelected 
-                                                      ? (isDark ? Colors.black : Colors.white) 
-                                                      : (isDark ? Colors.white70 : Colors.black54),
+                                                    color: isSelected
+                                                        ? (isDark ? Colors.black : Colors.white)
+                                                        : (isDark ? Colors.white70 : Colors.black54),
                                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                                     fontSize: 14,
                                                   ),
                                                   child: Text(category),
                                                 ),
-                                                // Cart count badge per category (business_detail_screen pattern)
+                                                // Cart count badge
                                                 Builder(builder: (context) {
                                                   final kermesCart = ref.watch(kermesCartProvider);
                                                   final catCartCount = category == 'Alle'
@@ -850,7 +975,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.restaurant_menu, size: 64, color: isDark ? Colors.grey[700] : Colors.grey[400]),
+                    Icon(Icons.restaurant_menu,
+                        size: 64,
+                        color: isDark ? Colors.grey[700] : Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
                       'Menüde ürün bulunmuyor',
@@ -865,10 +992,11 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final category = _categoriesWithoutAll[index];
-                  if (!grouped.containsKey(category)) return const SizedBox.shrink();
+                  if (!grouped.containsKey(category))
+                    return const SizedBox.shrink();
                   final categoryItems = grouped[category]!;
                   if (categoryItems.isEmpty) return const SizedBox.shrink();
-                  
+
                   return Container(
                     key: menuKeys[category],
                     child: Column(
@@ -877,7 +1005,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         // Category Header (business_detail_screen pattern)
                         Container(
                           width: double.infinity,
-                          color: isDark ? const Color(0xFF2C2C2C).withValues(alpha: 0.6) : const Color(0xFFF2EEE9),
+                          color: isDark
+                              ? const Color(0xFF2C2C2C).withOpacity(0.6)
+                              : const Color(0xFFF2EEE9),
                           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                           child: Row(
                             children: [
@@ -893,13 +1023,19 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                 ),
                               ),
                               Builder(builder: (context) {
-                                final catCartCount = grouped[category]!.fold<int>(0, (sum, item) => sum + _getCartQuantity(item));
-                                if (catCartCount <= 0) return const SizedBox.shrink();
+                                final catCartCount = grouped[category]!
+                                    .fold<int>(
+                                        0,
+                                        (sum, item) =>
+                                            sum + _getCartQuantity(item));
+                                if (catCartCount <= 0)
+                                  return const SizedBox.shrink();
                                 return Container(
                                   width: 24,
                                   height: 24,
                                   decoration: BoxDecoration(
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
                                     shape: BoxShape.circle,
                                   ),
                                   alignment: Alignment.center,
@@ -908,7 +1044,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark ? Colors.black : Colors.white,
+                                      color:
+                                          isDark ? Colors.black : Colors.white,
                                     ),
                                   ),
                                 );
@@ -919,7 +1056,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         // Items
                         ...categoryItems.map((item) {
                           final cartQuantity = _getCartQuantity(item);
-                          return _buildMenuItem(item, cartQuantity, isDark: isDark);
+                          return _buildMenuItem(item, cartQuantity,
+                              isDark: isDark);
                         }),
                         // Extra bottom padding for last item
                         if (index == _categoriesWithoutAll.length - 1)
@@ -935,18 +1073,20 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             ),
         ],
       ),
-      bottomNavigationBar: (_totalItems > 0 && !widget.event.isMenuOnly) ? _buildCartBar() : null,
+      bottomNavigationBar: (_totalItems > 0 && !widget.event.isMenuOnly)
+          ? _buildCartBar()
+          : null,
     );
   }
 
   Widget _buildCartBar() {
     final cartTotal = _totalPrice;
     final itemCount = _totalItems;
-    
+
     if (itemCount == 0) {
       return const SizedBox.shrink();
     }
-    
+
     final accent = lokmaPink;
     final currency = CurrencyUtils.getCurrencySymbol();
     final bottomPadding = MediaQuery.of(context).padding.bottom;
@@ -955,7 +1095,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
       color: accent,
       borderRadius: BorderRadius.circular(28),
       elevation: 4,
-      shadowColor: accent.withValues(alpha: 0.4),
+      shadowColor: accent.withOpacity(0.4),
       child: InkWell(
         borderRadius: BorderRadius.circular(28),
         onTap: () {
@@ -970,7 +1110,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
+                  const Icon(Icons.shopping_basket,
+                      color: Colors.white, size: 24),
                   Positioned(
                     top: -6,
                     right: -8,
@@ -996,7 +1137,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               // Center text
               Expanded(
                 child: Text(
-                  _deliveryModeIndex == 1 ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(), // Masa vs Stand
+                  _deliveryModeIndex == 1
+                      ? 'cart.send_order'.tr()
+                      : 'cart.view_cart'.tr(), // Masa vs Stand
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -1025,74 +1168,78 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     );
   }
 
-  Widget _buildMenuItem(KermesMenuItem item, int cartQuantity, {bool isDark = true}) {
+  Widget _buildMenuItem(KermesMenuItem item, int cartQuantity,
+      {bool isDark = true}) {
     final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
     final isAvailable = item.isAvailable;
     final isSoldOut = !isAvailable;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     final accent = lokmaPink;
-    
+
     // The ADD button or count badge (business_detail_screen pattern)
     final bool inCart = cartQuantity > 0;
-    
+
     // + button with image overlay (36px) or standalone (44px)
     Widget buildAddButton({required double size}) {
       if (widget.event.isMenuOnly) return const SizedBox.shrink();
       return GestureDetector(
-        onTap: isAvailable ? () {
-          HapticFeedback.mediumImpact();
-          _addToCart(item);
-        } : null,
+        onTap: isAvailable
+            ? () {
+                HapticFeedback.mediumImpact();
+                _addToCart(item);
+              }
+            : null,
         child: inCart
-          ? Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white : Colors.black87,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+            ? Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white : Colors.black87,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$cartQuantity',
+                  style: TextStyle(
+                    color: isDark ? Colors.black : Colors.white,
+                    fontSize: size == 36 ? 14 : 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '$cartQuantity',
-                style: TextStyle(
-                  color: isDark ? Colors.black : Colors.white,
-                  fontSize: size == 36 ? 14 : 16,
-                  fontWeight: FontWeight.w600,
+                ),
+              )
+            : Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black
+                          .withOpacity(size == 36 ? 0.1 : 0.05),
+                      blurRadius: size == 36 ? 6 : 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.add,
+                  color: accent,
+                  size: size == 36 ? 20 : 24,
                 ),
               ),
-            )
-          : Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: size == 36 ? 0.1 : 0.05),
-                    blurRadius: size == 36 ? 6 : 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.add,
-                color: accent,
-                size: size == 36 ? 20 : 24,
-              ),
-            ),
       );
     }
 
@@ -1136,7 +1283,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             height: 1.2,
-                            letterSpacing: -0.2, // Small touch from kermes original
+                            letterSpacing:
+                                -0.2, // Small touch from kermes original
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1144,9 +1292,10 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         if (isSoldOut) ...[
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.15),
+                              color: Colors.orange.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1161,7 +1310,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         ],
                         const SizedBox(height: 6),
                         // Description
-                        if (item.description != null && item.description!.isNotEmpty)
+                        if (item.description != null &&
+                            item.description!.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Text(
@@ -1182,14 +1332,14 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           style: TextStyle(
                             color: isAvailable ? textColor : subtleTextColor,
                             fontSize: 16,
-                            fontWeight: FontWeight.w300, 
+                            fontWeight: FontWeight.w300,
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Image & Add Button (Right) - business_detail_screen pattern
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -1204,14 +1354,17 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                               child: Container(
                                 width: 100,
                                 height: 100,
-                                color: isDark ? Colors.white10 : Colors.grey[100],
-                                child: Image.network(
-                                  item.imageUrl!,
+                                color:
+                                    isDark ? Colors.white10 : Colors.grey[100],
+                                child: CachedNetworkImage(
+                                  imageUrl: item.imageUrl!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Icon(
+                                  errorWidget: (_, __, ___) => Icon(
                                     _getIconForItem(item.name),
                                     size: 40,
-                                    color: isDark ? Colors.white24 : Colors.grey[400],
+                                    color: isDark
+                                        ? Colors.white24
+                                        : Colors.grey[400],
                                   ),
                                 ),
                               ),
@@ -1238,7 +1391,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         Divider(
           height: 1,
           thickness: 0.5,
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.2),
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.grey.withOpacity(0.2),
         ),
       ],
     );
@@ -1246,53 +1401,33 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
 
   IconData _getIconForItem(String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('kebap') || lower.contains('adana') || lower.contains('döner')) {
+    if (lower.contains('kebap') ||
+        lower.contains('adana') ||
+        lower.contains('döner')) {
       return Icons.kebab_dining;
     } else if (lower.contains('çorba')) {
       return Icons.soup_kitchen;
-    } else if (lower.contains('pide') || lower.contains('lahmacun') || lower.contains('gözleme')) {
+    } else if (lower.contains('pide') ||
+        lower.contains('lahmacun') ||
+        lower.contains('gözleme')) {
       return Icons.local_pizza;
-    } else if (lower.contains('baklava') || lower.contains('künefe') || lower.contains('lokum') || lower.contains('kadayıf')) {
+    } else if (lower.contains('baklava') ||
+        lower.contains('künefe') ||
+        lower.contains('lokum') ||
+        lower.contains('kadayıf')) {
       return Icons.cake;
-    } else if (lower.contains('çay') || lower.contains('kahve') || lower.contains('salep')) {
+    } else if (lower.contains('çay') ||
+        lower.contains('kahve') ||
+        lower.contains('salep')) {
       return Icons.coffee;
-    } else if (lower.contains('ayran') || lower.contains('limon') || lower.contains('şıra')) {
+    } else if (lower.contains('ayran') ||
+        lower.contains('limon') ||
+        lower.contains('şıra')) {
       return Icons.local_drink;
     } else if (lower.contains('dondurma')) {
       return Icons.icecream;
     } else {
       return Icons.restaurant;
     }
-  }
-}
-
-// Sticky Header Delegate
-class _StickyTabDelegate extends SliverPersistentHeaderDelegate {
-  final double minHeight;
-  final double maxHeight;
-  final Widget child;
-
-  _StickyTabDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.child,
-  });
-
-  @override
-  double get minExtent => minHeight;
-
-  @override
-  double get maxExtent => math.max(maxHeight, minHeight);
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  bool shouldRebuild(_StickyTabDelegate oldDelegate) {
-    return maxHeight != oldDelegate.maxHeight ||
-        minHeight != oldDelegate.minHeight ||
-        child != oldDelegate.child;
   }
 }

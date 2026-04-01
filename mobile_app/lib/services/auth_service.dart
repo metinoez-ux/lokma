@@ -3,10 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // iOS requires explicit clientId - matches GIDClientID in Info.plist
-    clientId: '259070566992-5oqs2q5tgkrg6rfbddot5fgj08nec03u.apps.googleusercontent.com',
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // Stream of auth changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -33,6 +30,8 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      // Force account selection dialog by signing out first
+      await _googleSignIn.signOut();
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // User canceled
 

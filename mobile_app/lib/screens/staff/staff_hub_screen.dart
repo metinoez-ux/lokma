@@ -337,7 +337,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]),
                                               borderRadius: BorderRadius.circular(12),
                                               border: Border.all(
-                                                color: isSelected ? Colors.teal : Colors.grey.withValues(alpha: 0.3),
+                                                color: isSelected ? Colors.teal : Colors.grey.withOpacity(0.3),
                                                 width: isSelected ? 2 : 1,
                                               ),
                                             ),
@@ -456,11 +456,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isEnabled
-            ? color.withValues(alpha: 0.08)
+            ? color.withOpacity(0.08)
             : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isEnabled ? color.withValues(alpha: 0.4) : Colors.grey.withValues(alpha: 0.2),
+          color: isEnabled ? color.withOpacity(0.4) : Colors.grey.withOpacity(0.2),
         ),
       ),
       child: Row(
@@ -468,7 +468,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isEnabled ? color.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
+              color: isEnabled ? color.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: isEnabled ? color : Colors.grey, size: 22),
@@ -658,7 +658,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       _handleServicePause(type, d['minutes'] as int?);
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: color.withValues(alpha: 0.15),
+                      backgroundColor: color.withOpacity(0.15),
                       foregroundColor: color,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -703,7 +703,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 borderRadius: BorderRadius.circular(50),
                 boxShadow: [
                   BoxShadow(
-                    color: (_deliveryPaused ? Colors.amber : Colors.blue).withValues(alpha: 0.3),
+                    color: (_deliveryPaused ? Colors.amber : Colors.blue).withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -723,7 +723,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -769,7 +769,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 borderRadius: BorderRadius.circular(50),
                 boxShadow: [
                   BoxShadow(
-                    color: (_pickupPaused ? Colors.red : Colors.green).withValues(alpha: 0.3),
+                    color: (_pickupPaused ? Colors.red : Colors.green).withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -789,7 +789,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -976,7 +976,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 border: Border.all(
                                   color: isSelected
                                       ? const Color(0xFFEA184A)
-                                      : Colors.grey.withValues(alpha: 0.3),
+                                      : Colors.grey.withOpacity(0.3),
                                   width: isSelected ? 2 : 1,
                                 ),
                               ),
@@ -1063,7 +1063,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: Colors.green.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check_circle, color: Colors.green, size: 24),
@@ -1100,9 +1100,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           children: tables.map((t) => Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.teal.withValues(alpha: 0.1),
+                              color: Colors.teal.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.teal.withValues(alpha: 0.3)),
+                              border: Border.all(color: Colors.teal.withOpacity(0.3)),
                             ),
                             child: Text(
                               '$t',
@@ -1121,9 +1121,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.1),
+                  color: Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -1400,7 +1400,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: hasActiveShift
-                        ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
+                        ? const Color(0xFF4CAF50).withOpacity(0.4)
                         : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
                   ),
                 ),
@@ -1890,7 +1890,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       _handleCourierMola(15);
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange.withValues(alpha: 0.15),
+                      backgroundColor: Colors.orange.withOpacity(0.15),
                       foregroundColor: Colors.orange[800],
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1906,7 +1906,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       _handleCourierMola(30);
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange.withValues(alpha: 0.15),
+                      backgroundColor: Colors.orange.withOpacity(0.15),
                       foregroundColor: Colors.orange[800],
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -2025,7 +2025,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           borderRadius: BorderRadius.circular(50),
           boxShadow: [
             BoxShadow(
-              color: (_courierOnBreak ? Colors.orange : Colors.teal).withValues(alpha: 0.3),
+              color: (_courierOnBreak ? Colors.orange : Colors.teal).withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -2048,7 +2048,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -2114,13 +2114,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               decoration: BoxDecoration(
                 color: _shiftService.shiftStatus == 'paused'
-                    ? Colors.amber.withValues(alpha: 0.15)
-                    : const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                    ? Colors.amber.withOpacity(0.15)
+                    : const Color(0xFF4CAF50).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _shiftService.shiftStatus == 'paused'
-                      ? Colors.amber.withValues(alpha: 0.4)
-                      : const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                      ? Colors.amber.withOpacity(0.4)
+                      : const Color(0xFF4CAF50).withOpacity(0.4),
                 ),
               ),
               child: Row(
@@ -2198,7 +2198,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, -2),
           ),
@@ -2242,13 +2242,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       height: 42,
                       decoration: BoxDecoration(
                         color: isOnShift
-                            ? shiftColor.withValues(alpha: 0.15)
-                            : const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                            ? shiftColor.withOpacity(0.15)
+                            : const Color(0xFF4CAF50).withOpacity(0.15),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: isOnShift
-                              ? shiftColor.withValues(alpha: 0.4)
-                              : const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                              ? shiftColor.withOpacity(0.4)
+                              : const Color(0xFF4CAF50).withOpacity(0.4),
                           width: 1.5,
                         ),
                       ),
@@ -2406,9 +2406,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.06),
+                            color: Colors.green.withOpacity(0.06),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.green.withValues(alpha: 0.25)),
+                            border: Border.all(color: Colors.green.withOpacity(0.25)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2522,9 +2522,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.08),
+                  color: const Color(0xFF4CAF50).withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.2)),
+                  border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
@@ -2550,9 +2550,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.08),
+                  color: Colors.amber.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+                  border: Border.all(color: Colors.amber.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
@@ -2578,13 +2578,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               decoration: BoxDecoration(
                 color: isPaused
-                    ? Colors.amber.withValues(alpha: 0.12)
-                    : const Color(0xFF4CAF50).withValues(alpha: 0.12),
+                    ? Colors.amber.withOpacity(0.12)
+                    : const Color(0xFF4CAF50).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isPaused
-                      ? Colors.amber.withValues(alpha: 0.3)
-                      : const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                      ? Colors.amber.withOpacity(0.3)
+                      : const Color(0xFF4CAF50).withOpacity(0.3),
                 ),
               ),
               child: Column(
@@ -2618,10 +2618,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       child: Container(
         padding: EdgeInsets.symmetric(vertical: dominant ? 14 : 10, horizontal: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: dominant ? 0.12 : 0.06),
+          color: color.withOpacity(dominant ? 0.12 : 0.06),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: color.withValues(alpha: dominant ? 0.4 : 0.15),
+            color: color.withOpacity(dominant ? 0.4 : 0.15),
             width: dominant ? 1.5 : 1,
           ),
         ),
@@ -2702,7 +2702,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+            border: Border.all(color: Colors.green.withOpacity(0.2)),
           ),
           child: Row(
             children: [
@@ -2811,7 +2811,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.green.withValues(alpha: 0.3),
+                    color: Colors.green.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -3110,7 +3110,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: typeColor.withValues(alpha: 0.1),
+                                color: typeColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Column(
@@ -3134,7 +3134,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                         decoration: BoxDecoration(
-                                          color: isCash ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                                          color: isCash ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
@@ -3229,7 +3229,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive ? color.withValues(alpha: 0.15) : Colors.transparent,
+          color: isActive ? color.withOpacity(0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: isActive ? color : Colors.grey[300]!),
         ),
@@ -3249,9 +3249,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -3381,9 +3381,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.08),
+        color: accentColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+        border: Border.all(color: accentColor.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3410,7 +3410,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
+                    color: Colors.amber.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
@@ -3511,9 +3511,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -3577,12 +3577,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: brandColor.withValues(alpha: 0.3),
+            color: brandColor.withOpacity(0.3),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: brandColor.withValues(alpha: 0.1),
+              color: brandColor.withOpacity(0.1),
               blurRadius: 15,
               offset: Offset(0, 4),
             ),
@@ -3680,10 +3680,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: active
-            ? color.withValues(alpha: 0.15)
-            : Colors.grey.withValues(alpha: 0.08),
+            ? color.withOpacity(0.15)
+            : Colors.grey.withOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
-        border: active ? null : Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+        border: active ? null : Border.all(color: Colors.grey.withOpacity(0.15)),
       ),
       child: Text(
         label,
@@ -3719,13 +3719,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: disabled ? Colors.grey.withValues(alpha: 0.2) : color.withValues(alpha: 0.3),
+              color: disabled ? Colors.grey.withOpacity(0.2) : color.withOpacity(0.3),
               width: 1.5,
             ),
             boxShadow: [
               if (!disabled)
                 BoxShadow(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 3),
                 ),
@@ -3940,7 +3940,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.2),
+                            color: Colors.amber.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -3988,7 +3988,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.grey.withValues(alpha: 0.15),
+                              color: Colors.grey.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -4223,7 +4223,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         Container(
                           width: 40, height: 40,
                           decoration: BoxDecoration(
-                            color: brandColor.withValues(alpha: 0.1),
+                            color: brandColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.table_restaurant, color: brandColor, size: 22),
@@ -4344,7 +4344,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               decoration: BoxDecoration(
                                 color: cardBg,
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                                border: Border.all(color: statusColor.withOpacity(0.3)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -4363,7 +4363,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: statusColor.withValues(alpha: 0.15),
+                                          color: statusColor.withOpacity(0.15),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
@@ -4551,9 +4551,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withValues(alpha: 0.15),
+                                        color: Colors.green.withOpacity(0.15),
                                         borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                                        border: Border.all(color: Colors.green.withOpacity(0.4)),
                                       ),
                                       child: Row(
                                         children: [
@@ -4587,7 +4587,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                 return '';
                                               })(),
                                               style: TextStyle(
-                                                color: Colors.green.withValues(alpha: 0.7),
+                                                color: Colors.green.withOpacity(0.7),
                                                 fontSize: 11,
                                               ),
                                             ),
@@ -4646,7 +4646,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: Colors.grey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(Icons.table_restaurant, color: Colors.grey[600], size: 24),
@@ -4760,21 +4760,21 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
           if (effectiveHasOrders) {
             if (allPaid) {
-              bgColor = isDark ? Colors.green.shade900.withValues(alpha: 0.3) : Colors.green.shade50;
+              bgColor = isDark ? Colors.green.shade900.withOpacity(0.3) : Colors.green.shade50;
               borderColor = Colors.green.shade400;
               textColor = isDark ? Colors.green.shade300 : Colors.green.shade800;
             } else if (hasUnpaidServed) {
               // Blue for served-but-unpaid tables
-              bgColor = isDark ? Colors.blue.shade900.withValues(alpha: 0.35) : Colors.blue.shade50;
+              bgColor = isDark ? Colors.blue.shade900.withOpacity(0.35) : Colors.blue.shade50;
               borderColor = brandColor;
               textColor = isDark ? Colors.blue.shade300 : Colors.blue.shade800;
             } else {
-              bgColor = brandColor.withValues(alpha: 0.1);
+              bgColor = brandColor.withOpacity(0.1);
               borderColor = brandColor;
-              textColor = isDark ? brandColor.withValues(alpha: 0.8) : brandColor;
+              textColor = isDark ? brandColor.withOpacity(0.8) : brandColor;
             }
           } else if (hasReservation) {
-            bgColor = isDark ? Colors.amber.shade900.withValues(alpha: 0.3) : Colors.amber.shade50;
+            bgColor = isDark ? Colors.amber.shade900.withOpacity(0.3) : Colors.amber.shade50;
             borderColor = Colors.amber.shade400;
             textColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
           } else {
@@ -4965,20 +4965,20 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
         if (hasDirectOrders) {
           if (allPaid) {
-            bgColor = isDark ? Colors.green.shade900.withValues(alpha: 0.3) : Colors.green.shade50;
+            bgColor = isDark ? Colors.green.shade900.withOpacity(0.3) : Colors.green.shade50;
             borderColor = Colors.green.shade400;
             textColor = isDark ? Colors.green.shade300 : Colors.green.shade800;
           } else if (hasUnpaidServed) {
-            bgColor = isDark ? Colors.blue.shade900.withValues(alpha: 0.35) : Colors.blue.shade50;
+            bgColor = isDark ? Colors.blue.shade900.withOpacity(0.35) : Colors.blue.shade50;
             borderColor = Colors.blue.shade400;
             textColor = isDark ? Colors.blue.shade300 : Colors.blue.shade800;
           } else {
-            bgColor = brandColor.withValues(alpha: 0.1);
+            bgColor = brandColor.withOpacity(0.1);
             borderColor = brandColor;
             textColor = brandColor;
           }
         } else if (hasReservation) {
-          bgColor = isDark ? Colors.amber.shade900.withValues(alpha: 0.3) : Colors.amber.shade50;
+          bgColor = isDark ? Colors.amber.shade900.withOpacity(0.3) : Colors.amber.shade50;
           borderColor = Colors.amber.shade400;
           textColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
         } else {
@@ -5081,7 +5081,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     Color borderColor;
     Color textColor;
     if (hasReservation) {
-      bgColor = isDark ? Colors.amber.shade900.withValues(alpha: 0.3) : Colors.amber.shade50;
+      bgColor = isDark ? Colors.amber.shade900.withOpacity(0.3) : Colors.amber.shade50;
       borderColor = Colors.amber.shade400;
       textColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
     } else {
@@ -5193,7 +5193,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   ),
                                   Text(
                                     '${unpaidOrders.length} açık sipariş',
-                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)),
+                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.surface.withOpacity(0.85)),
                                   ),
                                 ],
                               ),
@@ -5201,7 +5201,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.2),
+                                color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -5265,10 +5265,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: order.status == OrderStatus.served
-                                              ? Colors.teal.withValues(alpha: 0.2)
+                                              ? Colors.teal.withOpacity(0.2)
                                               : order.status == OrderStatus.delivered
-                                                  ? Colors.blue.withValues(alpha: 0.2)
-                                                  : Colors.green.withValues(alpha: 0.2),
+                                                  ? Colors.blue.withOpacity(0.2)
+                                                  : Colors.green.withOpacity(0.2),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
@@ -5292,7 +5292,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: Colors.purple.withValues(alpha: 0.15),
+                                            color: Colors.purple.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
@@ -5700,9 +5700,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: allPaid ? Colors.green.shade50 : brandColor.withValues(alpha: 0.08),
+                                color: allPaid ? Colors.green.shade50 : brandColor.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: allPaid ? Colors.green.shade200 : brandColor.withValues(alpha: 0.2)),
+                                border: Border.all(color: allPaid ? Colors.green.shade200 : brandColor.withOpacity(0.2)),
                               ),
                               child: Row(
                                 children: [
@@ -5762,7 +5762,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
-                                      BoxShadow(color: Colors.amber.withValues(alpha: 0.3), blurRadius: 12, offset: Offset(0, 4)),
+                                      BoxShadow(color: Colors.amber.withOpacity(0.3), blurRadius: 12, offset: Offset(0, 4)),
                                     ],
                                   ),
                                   child: Material(
@@ -5795,7 +5795,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   ),
                                                   Text(
                                                     '${unpaidOrders.length} açık sipariş',
-                                                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8)),
+                                                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.surface.withOpacity(0.8)),
                                                   ),
                                                 ],
                                               ),
@@ -5803,7 +5803,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                             Container(
                                               padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                               decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.2),
+                                                color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: Text(
@@ -6048,9 +6048,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                           decoration: BoxDecoration(
-                                            color: Colors.green.withValues(alpha: 0.15),
+                                            color: Colors.green.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                                            border: Border.all(color: Colors.green.withOpacity(0.4)),
                                           ),
                                           child: Row(
                                             children: [
@@ -6073,7 +6073,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                               Text(
                                                 '${order.updatedAt.toLocal().hour.toString().padLeft(2, '0')}:${order.updatedAt.toLocal().minute.toString().padLeft(2, '0')}',
                                                 style: TextStyle(
-                                                  color: Colors.green.withValues(alpha: 0.7),
+                                                  color: Colors.green.withOpacity(0.7),
                                                   fontSize: 11,
                                                 ),
                                               ),

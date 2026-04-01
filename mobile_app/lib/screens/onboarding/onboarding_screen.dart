@@ -138,7 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: slide.gradient[0].withValues(alpha: 0.3),
+                                  color: slide.gradient[0].withOpacity(0.3),
                                   blurRadius: 30,
                                   offset: const Offset(0, 10),
                                 ),
@@ -230,7 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 4,
-                        shadowColor: _slides[_currentPage].gradient[0].withValues(alpha: 0.4),
+                        shadowColor: _slides[_currentPage].gradient[0].withOpacity(0.4),
                       ),
                       child: Text(
                         _currentPage == _slides.length - 1 ? 'Başlayalım! 🎉' : 'Devam',

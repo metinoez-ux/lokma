@@ -82,7 +82,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
               ? null
               : [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: Colors.black.withOpacity(0.04),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -131,7 +131,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.55),
+                          color: Colors.black.withOpacity(0.55),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -158,7 +158,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
+                                color: Colors.black.withOpacity(0.15),
                                 blurRadius: 4,
                               ),
                             ],
@@ -235,7 +235,7 @@ class _SponsoredBannerCardState extends State<SponsoredBannerCard> {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEA184A).withValues(alpha: 0.1),
+                        color: const Color(0xFFEA184A).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(

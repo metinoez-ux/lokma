@@ -127,7 +127,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
             Text(
               'orders.order_number'.tr(args: [widget.orderNumber]),
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Colors.white.withOpacity(0.6),
                 fontSize: 12,
               ),
             ),
@@ -161,13 +161,13 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                         Icon(
                           Icons.chat_bubble_outline,
                           size: 64,
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: Colors.white.withOpacity(0.2),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           tr('common.no_messages'),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: Colors.white.withOpacity(0.5),
                             fontSize: 16,
                           ),
                         ),
@@ -175,7 +175,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                         Text(
                           tr('common.send_first_message'),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: Colors.white.withOpacity(0.3),
                             fontSize: 14,
                           ),
                         ),
@@ -306,7 +306,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                         Text(
                           '${message.createdAt.hour.toString().padLeft(2, '0')}:${message.createdAt.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: Colors.white.withOpacity(0.5),
                             fontSize: 11,
                           ),
                         ),
@@ -317,7 +317,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                             size: 14,
                             color: message.read
                                 ? const Color(0xFF42A5F5)
-                                : Colors.white.withValues(alpha: 0.5),
+                                : Colors.white.withOpacity(0.5),
                           ),
                         ],
                       ],
@@ -380,7 +380,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                 decoration: InputDecoration(
                   hintText: tr('common.write_message'),
                   hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Colors.white.withOpacity(0.3),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,

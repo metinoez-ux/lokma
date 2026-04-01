@@ -1069,7 +1069,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.15),
+                            color: Colors.black.withOpacity(isDark ? 0.4 : 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -1398,7 +1398,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFFEA184A).withValues(alpha: 0.15),
+        color: const Color(0xFFEA184A).withOpacity(0.15),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -1419,7 +1419,7 @@ class _NotificationHistoryScreenState extends ConsumerState<NotificationHistoryS
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: 24),
       decoration: BoxDecoration(
-        color: const Color(0xFFEA184A).withValues(alpha: 0.12),
+        color: const Color(0xFFEA184A).withOpacity(0.12),
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Column(
@@ -1875,23 +1875,23 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
     final cardBg = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2EEE9);
     final cardTextColor = isDark ? Colors.white : const Color(0xFF4A4A4C);
     final cardSubtleColor = isDark
-        ? Colors.white.withValues(alpha: 0.55)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.8);
+        ? Colors.white.withOpacity(0.55)
+        : const Color(0xFF3A3A3C).withOpacity(0.8);
     final dividerColor = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.08);
+        ? Colors.white.withOpacity(0.1)
+        : const Color(0xFF3A3A3C).withOpacity(0.08);
     final inactiveDotColor = isDark
-        ? Colors.white.withValues(alpha: 0.2)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.18);
+        ? Colors.white.withOpacity(0.2)
+        : const Color(0xFF3A3A3C).withOpacity(0.18);
     final inactiveTextColor = isDark
-        ? Colors.white.withValues(alpha: 0.3)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.35);
+        ? Colors.white.withOpacity(0.3)
+        : const Color(0xFF3A3A3C).withOpacity(0.35);
     final timelineLineColor = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.08);
+        ? Colors.white.withOpacity(0.1)
+        : const Color(0xFF3A3A3C).withOpacity(0.08);
     final timestampColor = isDark
-        ? Colors.white.withValues(alpha: 0.55)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.8);
+        ? Colors.white.withOpacity(0.55)
+        : const Color(0xFF3A3A3C).withOpacity(0.8);
 
     // ── Format order date for header ──
     String headerDateStr = '';
@@ -1907,11 +1907,11 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
         border: isDark ? null : Border.all(
-          color: const Color(0xFF3A3A3C).withValues(alpha: 0.08),
+          color: const Color(0xFF3A3A3C).withOpacity(0.08),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
             blurRadius: isDark ? 8 : 12,
             offset: const Offset(0, 2),
           ),
@@ -2025,7 +2025,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.15),
+                          color: statusColor.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -2074,8 +2074,8 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                             decoration: BoxDecoration(
                               color: allDone
-                                  ? const Color(0xFF22C55E).withValues(alpha: 0.15)
-                                  : cardSubtleColor.withValues(alpha: 0.1),
+                                  ? const Color(0xFF22C55E).withOpacity(0.15)
+                                  : cardSubtleColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -2106,7 +2106,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEA184A).withValues(alpha: 0.12),
+                            color: const Color(0xFFEA184A).withOpacity(0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -2192,7 +2192,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                         width: isCompleted ? 0 : 2,
                                       ),
                                       boxShadow: isCurrentStep
-                                          ? [BoxShadow(color: const Color(0xFF4CAF50).withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 1)]
+                                          ? [BoxShadow(color: const Color(0xFF4CAF50).withOpacity(0.5), blurRadius: 8, spreadRadius: 1)]
                                           : null,
                                     ),
                                     child: isCompleted
@@ -2328,7 +2328,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                                     width: 2,
                                     height: showScheduled ? 16 : 20,
                                     color: isCompleted && (i + 1 < stepsToShow.length && completedStatuses.contains(stepsToShow[i + 1]))
-                                        ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
+                                        ? const Color(0xFF4CAF50).withOpacity(0.4)
                                         : timelineLineColor,
                                   ),
                                 ),
@@ -2421,7 +2421,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: isDark
-                            ? const Color(0xFFEA184A).withValues(alpha: 0.85)
+                            ? const Color(0xFFEA184A).withOpacity(0.85)
                             : const Color(0xFF3A3A3C),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         shape: RoundedRectangleBorder(
@@ -2474,10 +2474,10 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                             style: TextButton.styleFrom(
                               foregroundColor: unread > 0
                                   ? const Color(0xFF4CAF50)
-                                  : isDark ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF3A3A3C),
+                                  : isDark ? Colors.white.withOpacity(0.7) : const Color(0xFF3A3A3C),
                               backgroundColor: unread > 0
-                                  ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
-                                  : isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFF3A3A3C).withValues(alpha: 0.08),
+                                  ? const Color(0xFF4CAF50).withOpacity(0.15)
+                                  : isDark ? Colors.white.withOpacity(0.08) : const Color(0xFF3A3A3C).withOpacity(0.08),
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -2513,7 +2513,7 @@ class _OrderTimelineCardState extends ConsumerState<_OrderTimelineCard> {
                         ),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFF00BCD4),
-                          backgroundColor: const Color(0xFF00BCD4).withValues(alpha: 0.12),
+                          backgroundColor: const Color(0xFF00BCD4).withOpacity(0.12),
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -2615,7 +2615,7 @@ void showChatBottomSheetGlobal(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withValues(alpha: 0.12),
+                color: const Color(0xFF4CAF50).withOpacity(0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -2802,7 +2802,7 @@ void showChatBottomSheetGlobal(
                             color: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFF3E0),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isDark ? const Color(0xFFFFB74D).withValues(alpha: 0.3) : const Color(0xFFFFE0B2),
+                              color: isDark ? const Color(0xFFFFB74D).withOpacity(0.3) : const Color(0xFFFFE0B2),
                             ),
                           ),
                           child: Row(
@@ -3147,9 +3147,9 @@ void showChatBottomSheetGlobal(
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+        color: color.withOpacity(isDark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 0.5),
+        border: Border.all(color: color.withOpacity(0.4), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -3493,7 +3493,7 @@ class _OrderStatusRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.12),
+        color: statusColor.withOpacity(0.12),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -3540,7 +3540,7 @@ class _GenericNotificationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isRead
-              ? (isDark ? Colors.grey[800]!.withValues(alpha: 0.5) : Colors.grey[200]!)
+              ? (isDark ? Colors.grey[800]!.withOpacity(0.5) : Colors.grey[200]!)
               : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
           width: isRead ? 1 : 1.5,
         ),
@@ -3716,7 +3716,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Colors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -3729,7 +3729,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                    color: const Color(0xFF4CAF50).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.chat_bubble, color: Color(0xFF4CAF50), size: 20),
@@ -3750,7 +3750,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                       Text(
                         widget.businessName,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withOpacity(0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -3759,13 +3759,13 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(Icons.close, color: Colors.white.withValues(alpha: 0.5), size: 22),
+                  icon: Icon(Icons.close, color: Colors.white.withOpacity(0.5), size: 22),
                 ),
               ],
             ),
           ),
 
-          Divider(height: 1, color: Colors.white.withValues(alpha: 0.1)),
+          Divider(height: 1, color: Colors.white.withOpacity(0.1)),
 
           // ── Messages ──
           Expanded(
@@ -3788,13 +3788,13 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                         Icon(
                           Icons.chat_bubble_outline,
                           size: 48,
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: Colors.white.withOpacity(0.15),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'Henüz mesaj yok',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: Colors.white.withOpacity(0.4),
                             fontSize: 15,
                           ),
                         ),
@@ -3802,7 +3802,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                         Text(
                           'Kuryenize mesaj gönderin',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: Colors.white.withOpacity(0.25),
                             fontSize: 13,
                           ),
                         ),
@@ -3843,14 +3843,14 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
             ),
             decoration: BoxDecoration(
               color: const Color(0xFF12122A),
-              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: Colors.white.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: TextField(
@@ -3863,7 +3863,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                       onSubmitted: (_) => _send(),
                       decoration: InputDecoration(
                         hintText: 'Mesaj yazın...',
-                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.25)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         border: InputBorder.none,
                       ),
@@ -3967,14 +3967,14 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                   children: [
                     Text(
                       '${msg.createdAt.hour.toString().padLeft(2, '0')}:${msg.createdAt.minute.toString().padLeft(2, '0')}',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
+                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
                     ),
                     if (isMe) ...[
                       const SizedBox(width: 3),
                       Icon(
                         msg.read ? Icons.done_all : Icons.done,
                         size: 13,
-                        color: msg.read ? const Color(0xFF42A5F5) : Colors.white.withValues(alpha: 0.4),
+                        color: msg.read ? const Color(0xFF42A5F5) : Colors.white.withOpacity(0.4),
                       ),
                     ],
                   ],
@@ -4044,11 +4044,11 @@ class _ReservationCard extends StatelessWidget {
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
         border: latestStatus == 'pending'
-            ? Border.all(color: statusColor.withValues(alpha: 0.4), width: 1.5)
+            ? Border.all(color: statusColor.withOpacity(0.4), width: 1.5)
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -4066,7 +4066,7 @@ class _ReservationCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
+                    color: statusColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.table_restaurant_rounded, color: statusColor, size: 20),
@@ -4144,7 +4144,7 @@ class _ReservationCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
+                    color: statusColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -4199,7 +4199,7 @@ class _ReservationCard extends StatelessWidget {
   Widget _infoRow(IconData icon, String text, Color textColor) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: textColor.withValues(alpha: 0.5)),
+        Icon(icon, size: 14, color: textColor.withOpacity(0.5)),
         const SizedBox(width: 8),
         Text(
           text,

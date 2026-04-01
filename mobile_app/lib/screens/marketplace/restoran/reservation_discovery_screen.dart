@@ -304,7 +304,7 @@ class _ReservationDiscoveryScreenState
                                       height: 48,
                                       decoration: BoxDecoration(
                                         color: isDark
-                                            ? Colors.white.withValues(alpha: 0.08)
+                                            ? Colors.white.withOpacity(0.08)
                                             : Colors.grey[100],
                                         borderRadius: BorderRadius.circular(24),
                                       ),
@@ -374,7 +374,7 @@ class _ReservationDiscoveryScreenState
                                 height: 48,
                                 decoration: BoxDecoration(
                                   color: isDark
-                                      ? Colors.white.withValues(alpha: 0.08)
+                                      ? Colors.white.withOpacity(0.08)
                                       : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(24),
                                 ),
@@ -449,7 +449,7 @@ class _ReservationDiscoveryScreenState
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                   letterSpacing: -0.2,
                 ),
               ),
@@ -520,7 +520,7 @@ class _ReservationDiscoveryScreenState
                 trackHeight: 3,
                 activeTrackColor: _lokmaPink,
                 inactiveTrackColor: isDark
-                    ? Colors.white.withValues(alpha: 0.1)
+                    ? Colors.white.withOpacity(0.1)
                     : Colors.grey[200],
                 thumbColor: _lokmaPink,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
@@ -544,7 +544,7 @@ class _ReservationDiscoveryScreenState
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
+                  ? Colors.white.withOpacity(0.08)
                   : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
@@ -587,10 +587,10 @@ class _ReservationDiscoveryScreenState
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: isDark ? null : Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: isDark ? null : Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -840,7 +840,7 @@ class _ReservationDiscoveryScreenState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.3),
+                      color: Colors.grey.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -889,7 +889,7 @@ class _ReservationDiscoveryScreenState
                           Text(
                             tr('marketplace.sort_section'),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -923,7 +923,7 @@ class _ReservationDiscoveryScreenState
                           Text(
                             tr('marketplace.business_type_section'),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -957,7 +957,7 @@ class _ReservationDiscoveryScreenState
                           Text(
                             tr('marketplace.quick_filters_section'),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1005,7 +1005,7 @@ class _ReservationDiscoveryScreenState
                       color: cardBg,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                           blurRadius: 10,
                           offset: const Offset(0, -2),
                         ),

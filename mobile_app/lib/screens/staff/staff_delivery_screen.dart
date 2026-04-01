@@ -504,7 +504,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEA184A).withValues(alpha: 0.1),
+                    color: const Color(0xFFEA184A).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -519,7 +519,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
+                    color: statusColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -758,7 +758,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6A0DAD).withValues(alpha: 0.1),
+                      color: const Color(0xFF6A0DAD).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: const Color(0xFF6A0DAD), width: 2),
                     ),
@@ -809,7 +809,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEA184A).withValues(alpha: 0.15),
+                  color: const Color(0xFFEA184A).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFEA184A), width: 2),
                 ),
@@ -1181,7 +1181,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.15),
+                  color: Colors.blue.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.pin, color: Colors.blue, size: 24),
@@ -1501,8 +1501,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: isPreparing 
-                              ? Colors.amber.withValues(alpha: isDark ? 0.3 : 0.1) 
-                              : Colors.grey.withValues(alpha: isDark ? 0.3 : 0.1),
+                              ? Colors.amber.withOpacity(isDark ? 0.3 : 0.1) 
+                              : Colors.grey.withOpacity(isDark ? 0.3 : 0.1),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: isPreparing ? Colors.amber : Colors.grey,
@@ -1557,7 +1557,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                       order.butcherName,
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
                                       ),
                                     ),
                                   ],
@@ -1586,7 +1586,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('👤 Müşteri', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                                      Text('👤 Müşteri', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.6))),
                                       const SizedBox(height: 4),
                                       Text(order.userPhone, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
                                       const SizedBox(height: 6),
@@ -1622,7 +1622,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('📍 Adres', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                                      Text('📍 Adres', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.6))),
                                       const SizedBox(height: 4),
                                       Text(
                                         order.deliveryAddress ?? 'Adres yok',
@@ -1700,7 +1700,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                           : isCardOnDelivery ? 'NFC ile tahsil edilecek'
                                           : isPaid ? 'Online ödeme yapıldı' 
                                           : 'Müşteriden nakit tahsil edilecek',
-                                      style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                                      style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withOpacity(0.6)),
                                     ),
                                   ],
                                 ),
@@ -1726,7 +1726,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Card(
-                            color: Colors.amber.withValues(alpha: isDark ? 0.2 : 0.1),
+                            color: Colors.amber.withOpacity(isDark ? 0.2 : 0.1),
                             margin: EdgeInsets.zero,
                             child: Padding(
                               padding: const EdgeInsets.all(10),
@@ -1755,7 +1755,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                           title: Text(
                             '🛒 Sipariş İçeriği (${order.items.length} ürün)',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withValues(alpha: 0.8)),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface.withOpacity(0.8)),
                           ),
                           children: order.items.map((item) => Padding(
                             padding: const EdgeInsets.only(bottom: 4),
@@ -1764,7 +1764,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(item.name, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface))),
-                                Text('${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
+                                Text('${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.7))),
                               ],
                             ),
                           )).toList(),
@@ -1815,7 +1815,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 height: 180,
                                 width: double.infinity,
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5), width: 2),
+                                  border: Border.all(color: Colors.amber.withOpacity(0.5), width: 2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Stack(
@@ -1837,7 +1837,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                           gradient: LinearGradient(
                                             begin: Alignment.bottomCenter,
                                             end: Alignment.topCenter,
-                                            colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
+                                            colors: [Colors.black.withOpacity(0.8), Colors.transparent],
                                           ),
                                         ),
                                         child: const Row(
@@ -2075,16 +2075,16 @@ class _DeliveryTypeSheet extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
+            border: Border.all(color: color.withOpacity(0.5), width: 2),
             borderRadius: BorderRadius.circular(12),
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
+                  color: color.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 28),

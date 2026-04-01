@@ -440,7 +440,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                    color: const Color(0xFF4CAF50).withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -474,7 +474,7 @@ class _SponsoredProductSheetState extends State<SponsoredProductSheet> {
                     child: Text(
                       market.productName!,
                       style: TextStyle(
-                        color: onSurface.withValues(alpha: 0.8),
+                        color: onSurface.withOpacity(0.8),
                         fontSize: 13,
                       ),
                       maxLines: 1,

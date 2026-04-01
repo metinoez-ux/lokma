@@ -148,7 +148,26 @@ interface MasterProduct {
 
 export default function KermesDetailPage() {
 
+    const normalizeString = (val: any) => {
+        if (!val) return '';
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.tr || val.de || val.en || Object.values(val)[0] || '';
+        return String(val);
+    };
+
+    const normalizeArray = (val: any): string[] => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val.map(v => typeof v === 'string' ? v : (v?.tr || v?.de || String(v)));
+        if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+        if (typeof val === 'object') {
+            const str = val.tr || val.de || val.en || Object.values(val)[0] || '';
+            if (typeof str === 'string') return str.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return [];
+    };
+
     const t = useTranslations('AdminKermesDetail');
+
     const params = useParams();
     const router = useRouter();
     const { admin, loading: adminLoading } = useAdmin();
@@ -397,7 +416,20 @@ export default function KermesDetailPage() {
 
             const productsQuery = query(collection(db, 'kermes_events', kermesId, 'products'), orderBy('name'));
             const productsSnapshot = await getDocs(productsQuery);
-            setProducts(productsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as KermesProduct)));
+            setProducts(productsSnapshot.docs.map(d => {
+                const data = d.data();
+                return { 
+                    id: d.id, 
+                    ...data,
+                    name: normalizeString(data.name),
+                    secondaryName: normalizeString(data.secondaryName),
+                    category: normalizeString(data.category),
+                    description: normalizeString(data.description),
+                    detailedDescription: normalizeString(data.detailedDescription),
+                    allergens: normalizeArray(data.allergens),
+                    ingredients: normalizeArray(data.ingredients),
+                } as KermesProduct;
+            }));
         } catch (error) {
             console.error('Error loading kermes:', error);
             showToast(t('yukleme_hatasi'), 'error');
@@ -412,7 +444,17 @@ export default function KermesDetailPage() {
         try {
             const q = query(collection(db, 'products'), orderBy('name'));
             const snapshot = await getDocs(q);
-            setMasterProducts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MasterProduct)));
+            setMasterProducts(snapshot.docs.map(d => {
+                const data = d.data();
+                return {
+                    id: d.id,
+                    ...data,
+                    name: normalizeString(data.name),
+                    category: normalizeString(data.category),
+                    secondaryName: normalizeString(data.secondaryName),
+                    description: normalizeString(data.description),
+                } as MasterProduct;
+            }));
         } catch (error) {
             console.error('Error loading master products:', error);
         } finally {
@@ -425,7 +467,7 @@ export default function KermesDetailPage() {
         try {
             const q = query(collection(db, 'kermes_categories'), orderBy('order'));
             const snapshot = await getDocs(q);
-            const firebaseCats = snapshot.docs.map(d => d.data().name as string);
+            const firebaseCats = snapshot.docs.map(d => normalizeString(d.data().name));
 
             // Default kategorileri Firebase'dekilerle birleştir
             const allCats = [...DEFAULT_CATEGORIES];
@@ -2420,7 +2462,7 @@ export default function KermesDetailPage() {
                                     ? 'bg-pink-600 text-white'
                                     : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
                                     }`}>
-                                {t('tumu')}{products.length})
+                                {t('tumu')} ({products.length})
                             </button>
                             {categories.map(category => {
                                 const count = productsByCategory[category]?.length || 0;
@@ -2749,7 +2791,7 @@ export default function KermesDetailPage() {
                                     <label className="text-muted-foreground text-xs block mb-1">{t('unit_label')}</label>
                                     <select value={editProduct.unit} onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
                                         className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600">
-                                        <option value={t('adet')}>{t(t('adet'))}</option>
+                                        <option value={t('adet')}>{t('adet')}</option>
                                         <option value="porsiyon">Porsiyon</option>
                                         <option value="bardak">Bardak</option>
                                         <option value="kase">Kase</option>
@@ -2791,10 +2833,10 @@ export default function KermesDetailPage() {
                             <div className="bg-amber-900/20 rounded-xl p-4 border border-amber-800/30">
                                 <label className="text-amber-800 dark:text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
                                 <div className="flex flex-wrap gap-2 mb-2">
-                                    {editProduct.allergens.map((allergen, idx) => (
+                                    {(Array.isArray(editProduct.allergens) ? editProduct.allergens : (editProduct.allergens ? [editProduct.allergens] : [])).map((allergen, idx) => (
                                         <span key={idx} className="px-3 py-1 bg-amber-600/30 text-amber-300 rounded-full text-xs flex items-center gap-1">
                                             {allergen}
-                                            <button onClick={() => setEditProduct({ ...editProduct, allergens: editProduct.allergens.filter((_, i) => i !== idx) })}
+                                            <button onClick={() => setEditProduct({ ...editProduct, allergens: (Array.isArray(editProduct.allergens) ? editProduct.allergens : (editProduct.allergens ? [editProduct.allergens] : [])).filter((_, i) => i !== idx) })}
                                                 className="w-4 h-4 rounded-full bg-amber-700 hover:bg-amber-600 flex items-center justify-center">×</button>
                                         </span>
                                     ))}
@@ -2804,8 +2846,9 @@ export default function KermesDetailPage() {
                                         value={editProduct.newAllergen}
                                         onChange={(e) => {
                                             const val = e.target.value;
-                                            if (val && !editProduct.allergens.includes(val)) {
-                                                setEditProduct({ ...editProduct, allergens: [...editProduct.allergens, val], newAllergen: '' });
+                                            const currentAllergens = Array.isArray(editProduct.allergens) ? editProduct.allergens : (editProduct.allergens ? [editProduct.allergens] : []);
+                                            if (val && !currentAllergens.includes(val)) {
+                                                setEditProduct({ ...editProduct, allergens: [...currentAllergens, val], newAllergen: '' });
                                             }
                                         }}
                                         className="flex-1 px-2 py-1 bg-gray-700 text-white rounded-lg border border-gray-600 text-xs">
@@ -2828,8 +2871,9 @@ export default function KermesDetailPage() {
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && editProduct.newAllergen?.trim()) {
                                                 e.preventDefault();
-                                                if (!editProduct.allergens.includes(editProduct.newAllergen.trim())) {
-                                                    setEditProduct({ ...editProduct, allergens: [...editProduct.allergens, editProduct.newAllergen.trim()], newAllergen: '' });
+                                                const currentAllergens = Array.isArray(editProduct.allergens) ? editProduct.allergens : (editProduct.allergens ? [editProduct.allergens] : []);
+                                                if (!currentAllergens.includes(editProduct.newAllergen.trim())) {
+                                                    setEditProduct({ ...editProduct, allergens: [...currentAllergens, editProduct.newAllergen.trim()], newAllergen: '' });
                                                 }
                                             }
                                         }}
@@ -2842,10 +2886,10 @@ export default function KermesDetailPage() {
                             <div className="bg-gray-700/30 rounded-xl p-4">
                                 <label className="text-foreground text-sm font-medium block mb-2">{t('i_cerikler_zutaten')}</label>
                                 <div className="flex flex-wrap gap-2 mb-2">
-                                    {editProduct.ingredients.map((ingredient, idx) => (
+                                    {(Array.isArray(editProduct.ingredients) ? editProduct.ingredients : (editProduct.ingredients ? [editProduct.ingredients] : [])).map((ingredient, idx) => (
                                         <span key={idx} className="px-3 py-1 bg-gray-600 text-gray-200 rounded-full text-xs flex items-center gap-1">
                                             {ingredient}
-                                            <button onClick={() => setEditProduct({ ...editProduct, ingredients: editProduct.ingredients.filter((_, i) => i !== idx) })}
+                                            <button onClick={() => setEditProduct({ ...editProduct, ingredients: (Array.isArray(editProduct.ingredients) ? editProduct.ingredients : (editProduct.ingredients ? [editProduct.ingredients] : [])).filter((_, i) => i !== idx) })}
                                                 className="w-4 h-4 rounded-full bg-gray-500 hover:bg-gray-400 flex items-center justify-center">×</button>
                                         </span>
                                     ))}
@@ -2856,8 +2900,9 @@ export default function KermesDetailPage() {
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && editProduct.newIngredient?.trim()) {
                                                 e.preventDefault();
-                                                if (!editProduct.ingredients.includes(editProduct.newIngredient.trim())) {
-                                                    setEditProduct({ ...editProduct, ingredients: [...editProduct.ingredients, editProduct.newIngredient.trim()], newIngredient: '' });
+                                                const currentIngredients = Array.isArray(editProduct.ingredients) ? editProduct.ingredients : (editProduct.ingredients ? [editProduct.ingredients] : []);
+                                                if (!currentIngredients.includes(editProduct.newIngredient.trim())) {
+                                                    setEditProduct({ ...editProduct, ingredients: [...currentIngredients, editProduct.newIngredient.trim()], newIngredient: '' });
                                                 }
                                             }
                                         }}
@@ -2866,8 +2911,9 @@ export default function KermesDetailPage() {
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            if (editProduct.newIngredient?.trim() && !editProduct.ingredients.includes(editProduct.newIngredient.trim())) {
-                                                setEditProduct({ ...editProduct, ingredients: [...editProduct.ingredients, editProduct.newIngredient.trim()], newIngredient: '' });
+                                            const currentIngredients = Array.isArray(editProduct.ingredients) ? editProduct.ingredients : (editProduct.ingredients ? [editProduct.ingredients] : []);
+                                            if (editProduct.newIngredient?.trim() && !currentIngredients.includes(editProduct.newIngredient.trim())) {
+                                                setEditProduct({ ...editProduct, ingredients: [...currentIngredients, editProduct.newIngredient.trim()], newIngredient: '' });
                                             }
                                         }}
                                         className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-xs">{t('ekle')}</button>

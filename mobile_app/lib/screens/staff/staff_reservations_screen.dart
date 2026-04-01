@@ -286,7 +286,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: Colors.green.withValues(alpha: 0.3),
+                                    color: Colors.green.withOpacity(0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   )
@@ -570,7 +570,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
             if (_businessName != null)
               Text(
                 _businessName!,
-                style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w400),
+                style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w400),
               ),
           ],
         ),
@@ -616,7 +616,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
 
   Widget _buildFilters(bool isDark) {
     final surfaceBg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
-    final divider = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06);
+    final divider = isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -819,8 +819,8 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white54 : Colors.grey.shade600;
     final borderColor = (status == 'pending' || status == 'pre_ordered')
-        ? (isDark ? const Color(0xFFFF9500).withValues(alpha: 0.4) : const Color(0xFFFF9500).withValues(alpha: 0.3))
-        : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade200);
+        ? (isDark ? const Color(0xFFFF9500).withOpacity(0.4) : const Color(0xFFFF9500).withOpacity(0.3))
+        : (isDark ? Colors.white.withOpacity(0.08) : Colors.grey.shade200);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -934,7 +934,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                         onPressed: () => _updateStatus(id, 'rejected'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFFFF3B30),
-                          side: BorderSide(color: const Color(0xFFFF3B30).withValues(alpha: 0.4)),
+                          side: BorderSide(color: const Color(0xFFFF3B30).withOpacity(0.4)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         child: Text('staff.reject'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),

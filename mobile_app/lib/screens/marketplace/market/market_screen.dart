@@ -204,7 +204,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withOpacity(0.15),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -651,7 +651,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.1),
+                    color: accent.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.storefront_outlined, size: 28, color: accent),
@@ -679,18 +679,18 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                      color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest.withOpacity(0.35),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.5),
                       ),
                     ),
                     child: Column(
                       children: [
                         if (shopText != null) _buildTimeRow(Icons.storefront, 'common.dine_in'.tr(), shopText, dialogCtx),
-                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                        if (shopText != null && (deliveryText != null || pickupText != null)) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
                         if (deliveryText != null) _buildTimeRow(Icons.delivery_dining, 'common.delivery'.tr(), deliveryText, dialogCtx),
-                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                        if (deliveryText != null && pickupText != null) Divider(height: 8, thickness: 0.5, color: Theme.of(dialogCtx).colorScheme.outlineVariant.withOpacity(0.4)),
                         if (pickupText != null) _buildTimeRow(Icons.shopping_bag_outlined, 'common.pickup'.tr(), pickupText, dialogCtx),
                       ],
                     ),
@@ -709,7 +709,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     fontSize: 13,
                     fontWeight: FontWeight.w200,
                     letterSpacing: 0.5,
-                    color: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.9),
+                    color: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.9),
                     height: 1.3,
                   ),
                 ),
@@ -744,7 +744,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w300,
                         letterSpacing: 0.5,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -774,7 +774,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       );
                     },
                     style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withValues(alpha: 0.7),
+                      foregroundColor: Theme.of(dialogCtx).colorScheme.onSurface.withOpacity(0.7),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Text(
@@ -1155,7 +1155,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                       letterSpacing: -0.2,
                     ),
                   ),
@@ -1258,7 +1258,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           Text(
                             streetInfo,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                               fontSize: 10,
                               fontWeight: FontWeight.w400,
                             ),
@@ -1270,7 +1270,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   ),
                   const SizedBox(width: 2),
                   Icon(Icons.keyboard_arrow_down,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), size: 14),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3), size: 14),
                 ],
               ),
             ),
@@ -1306,7 +1306,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
+                              ? Colors.white.withOpacity(0.08)
                               : Colors.grey.shade100,
                           shape: BoxShape.circle,
                         ),
@@ -1338,7 +1338,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
+                                  color: const Color(0xFFFF3B30).withOpacity(0.4),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1401,7 +1401,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
+                                  color: const Color(0xFFFF3B30).withOpacity(0.4),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1446,7 +1446,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -1656,7 +1656,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 activeTrackColor: lokmaPink,
                 inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[400],
                 thumbColor: lokmaPink,
-                overlayColor: lokmaPink.withValues(alpha: 0.2),
+                overlayColor: lokmaPink.withOpacity(0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 0),
@@ -1973,13 +1973,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
                               ),
                             ),
                             child: Text(
                               tr('marketplace.filter_cancel'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -2025,13 +2025,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.15),
                               ),
                             ),
                             child: Text(
                               tr('marketplace.filter_reset'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -2072,7 +2072,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: _onlyTuna ? [
                                         BoxShadow(
-                                          color: const Color(0xFFA01E22).withValues(alpha: 0.4),
+                                          color: const Color(0xFFA01E22).withOpacity(0.4),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -2101,7 +2101,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     child: Text(
                                       tr('marketplace.filter_tuna_description'),
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         height: 1.3,
@@ -2136,7 +2136,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Text(
                               tr('marketplace.sort_section'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2185,7 +2185,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Text(
                               tr('marketplace.business_type_section'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2231,7 +2231,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             child: Text(
                               tr('marketplace.quick_filters_section'),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2335,7 +2335,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       color: cardBg,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, -2),
                         ),
@@ -2387,7 +2387,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       builder: (context) {
         final textColor = Theme.of(context).colorScheme.onSurface;
         final subtitleColor =
-            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+            Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
 
         return InkWell(
           onTap: () {
@@ -2418,7 +2418,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: tunaGreen.withValues(alpha: 0.2),
+                                color: tunaGreen.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
