@@ -18,6 +18,7 @@ class StaffCapabilities {
   final bool hasCourierRole;
   final bool hasTablesRole;
   final bool hasFinanceRole;
+  final bool isBusinessAdmin;
 
   StaffCapabilities({
     this.isLoading = true,
@@ -74,9 +75,14 @@ class StaffCapabilities {
   }
 }
 
-class StaffCapabilitiesNotifier extends StateNotifier<StaffCapabilities> {
-  StaffCapabilitiesNotifier() : super(StaffCapabilities()) {
-    _loadCapabilities();
+class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
+  @override
+  StaffCapabilities build() {
+    // Return initial state synchronously first
+    final initialState = StaffCapabilities();
+    // Then kick off async load
+    Future.microtask(_loadCapabilities);
+    return initialState;
   }
 
   Future<void> _loadCapabilities() async {
@@ -195,6 +201,6 @@ class StaffCapabilitiesNotifier extends StateNotifier<StaffCapabilities> {
   }
 }
 
-final staffCapabilitiesProvider = StateNotifierProvider<StaffCapabilitiesNotifier, StaffCapabilities>((ref) {
+final staffCapabilitiesProvider = NotifierProvider<StaffCapabilitiesNotifier, StaffCapabilities>(() {
   return StaffCapabilitiesNotifier();
 });

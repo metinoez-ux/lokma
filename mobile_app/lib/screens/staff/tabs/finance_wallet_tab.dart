@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../models/driver_model.dart';
-import '../../../services/driver_service.dart';
+import '../../../providers/driver_provider.dart';
 
 class FinanceWalletTab extends ConsumerWidget {
   final String userId;
@@ -118,7 +117,7 @@ class FinanceWalletTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${driverState.driverInfo?.unsettledCash.toStringAsFixed(2) ?? "0.00"} €',
+                    '0.00 €',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

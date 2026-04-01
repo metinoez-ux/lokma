@@ -7,6 +7,7 @@ import 'tabs/shift_dashboard_tab.dart';
 import 'tabs/courier_tab.dart';
 import 'tabs/waiter_tables_tab.dart';
 import 'tabs/finance_wallet_tab.dart';
+import '../staff_reservations_screen.dart';
 
 class StaffHubScreen extends ConsumerStatefulWidget {
   const StaffHubScreen({super.key});
@@ -53,12 +54,35 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       tabs.add(WaiterTablesTab(
         businessId: capabilities.businessId!,
         isDark: isDark,
-        onTableSelected: (session, num) {},
-        onEmptyTableSelected: (num) {},
+        onTableSelected: (session, num) {
+          final query = Uri(path: '/waiter-order', queryParameters: {
+            'businessId': capabilities.businessId,
+            'businessName': capabilities.businessName,
+            'tableNumber': num.toString(),
+          }).toString();
+          context.push(query);
+        },
+        onEmptyTableSelected: (num) {
+          final query = Uri(path: '/waiter-order', queryParameters: {
+            'businessId': capabilities.businessId,
+            'businessName': capabilities.businessName,
+            'tableNumber': num.toString(),
+          }).toString();
+          context.push(query);
+        },
       ));
       navItems.add(const BottomNavigationBarItem(
         icon: Icon(Icons.table_restaurant),
         label: 'Masalar',
+      ));
+    }
+
+    // 4. Reservations Tab
+    if (capabilities.hasReservation && capabilities.businessId != null) {
+      tabs.add(const StaffReservationsScreen(hideAppBar: true));
+      navItems.add(const BottomNavigationBarItem(
+        icon: Icon(Icons.book_online),
+        label: 'Rezervasyon',
       ));
     }
 

@@ -7,7 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Staff Reservations Screen - Business staff can view and manage reservations
 class StaffReservationsScreen extends StatefulWidget {
-  const StaffReservationsScreen({super.key});
+  final bool hideAppBar;
+
+  const StaffReservationsScreen({super.key, this.hideAppBar = false});
 
   @override
   State<StaffReservationsScreen> createState() => _StaffReservationsScreenState();
@@ -402,7 +404,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
           HapticFeedback.mediumImpact();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('✅ Müşteri masaya oturdu olarak işaretlendi'),
+              content: Text('✅ Müşteri masaya oturdu olarak işaretlendi'), // TODO: move to tr() in future pass if possible, actually let's just replace it now
               backgroundColor: Colors.green,
             ),
           );
@@ -562,7 +564,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
 
     return Scaffold(
       backgroundColor: scaffoldBg,
-      appBar: AppBar(
+      appBar: widget.hideAppBar ? null : AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -711,12 +713,12 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 Icon(Icons.calendar_today_outlined, size: 56, color: isDark ? Colors.white24 : Colors.grey.shade300),
                 const SizedBox(height: 16),
                 Text(
-                  'Rezervasyon bulunamadı',
+                  'staff.no_reservation_found'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : Colors.black54),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _dateFilter == 'today' ? 'Bugün için rezervasyon yok' : 'Seçili tarih aralığında rezervasyon yok',
+                  _dateFilter == 'today' ? 'staff.no_reservation_today'.tr() : 'staff.no_reservation_timerange'.tr(),
                   style: TextStyle(fontSize: 13, color: isDark ? Colors.white30 : Colors.grey.shade500),
                 ),
               ],
@@ -922,7 +924,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: const Text('Onayla', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        child: Text('staff.approve'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                       ),
                     ),
                   ),
@@ -957,7 +959,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                         child: ElevatedButton.icon(
                           onPressed: () => _updateStatus(id, 'seated'),
                           icon: const Icon(Icons.chair_alt, size: 18),
-                          label: const Text('Müşteri Geldi (Masaya Oturt)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                          label: Text('staff.customer_arrived_seat'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF5856D6), // Deep purple / Indigo for Action
                             foregroundColor: Colors.white,
@@ -972,10 +974,10 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 const SizedBox(height: 6),
               ] else if (tabStatus == 'seated') ...[
                 const SizedBox(height: 12),
-                const Center(
+                Center(
                    child: Text(
-                     '✅ Müşteri Masada', 
-                     style: TextStyle(color: Color(0xFF34C759), fontWeight: FontWeight.w600, fontSize: 13)
+                     'staff.customer_at_table'.tr(), 
+                     style: const TextStyle(color: Color(0xFF34C759), fontWeight: FontWeight.w600, fontSize: 13)
                    )
                 ),
                 const SizedBox(height: 4),

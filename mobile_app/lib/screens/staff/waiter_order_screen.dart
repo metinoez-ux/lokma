@@ -108,7 +108,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         if (mounted) {
           setState(() {
             _businessId = bizId;
-            _businessName = bizDoc.data()?['companyName'] ?? bizDoc.data()?['name'] ?? 'İşletme';
+            _businessName = bizDoc.data()?['companyName'] ?? bizDoc.data()?['name'] ?? tr('staff.business');
           });
         }
       }
@@ -181,7 +181,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           .collection('admins')
           .doc(user.uid)
           .get();
-      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? 'Garson';
+      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? tr('staff.waiter');
       
       final session = await _sessionService.createSession(
         businessId: _businessId!,
@@ -222,7 +222,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           .collection('admins')
           .doc(user.uid)
           .get();
-      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? 'Garson';
+      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? tr('staff.waiter');
 
       final session = await _sessionService.createSession(
         businessId: _businessId!,
@@ -301,7 +301,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                'Garson: ${session.waiterName} • PIN: ${session.pin}',
+                                tr('staff.waiter_and_pin', namedArgs: {'waiter': session.waiterName, 'pin': session.pin}),
                                 style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                               ),
                             ],
@@ -367,7 +367,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '${orders.length} sipariş • $paidOrders/${ orders.length} ödendi',
+                                          tr('staff.orders_paid_count', namedArgs: {'total': orders.length.toString(), 'paid': paidOrders.toString()}),
                                           style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                         ),
                                       ],
@@ -474,7 +474,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                                 await _orderService.markAsServed(
                                                   orderId: order.id,
                                                   waiterId: user.uid,
-                                                  waiterName: user.displayName ?? 'Garson',
+                                                  waiterName: user.displayName ?? tr('staff.waiter'),
                                                 );
                                                 if (mounted) {
                                                   HapticFeedback.mediumImpact();
@@ -683,7 +683,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           .collection('admins')
           .doc(user.uid)
           .get();
-      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? 'Garson';
+      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? tr('staff.waiter');
       
       final items = _cart.values.map((ci) => OrderItem(
         sku: ci.product.sku,
@@ -807,13 +807,13 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             Icon(Icons.store, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'İşletme bulunamadı',
+              tr('staff.business_not_found'),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Sipariş almak için bir işletmeye atanmış olmanız gerekir.',
+              tr('staff.business_assignment_required'),
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
@@ -835,12 +835,12 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         children: [
           // Business name header
           Text(
-            _businessName ?? 'İşletme',
+            _businessName ?? tr('staff.business'),
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
-            'Sipariş alacağınız masayı seçin',
+            tr('staff.select_table_for_order'),
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 12),
@@ -848,13 +848,13 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           // Legend
           Row(
             children: [
-              _legendDot(brandColor, 'Siparişli'),
+              _legendDot(brandColor, tr('staff.has_orders')),
               const SizedBox(width: 12),
-              _legendDot(Colors.green, 'Ödendi'),
+              _legendDot(Colors.green, tr('staff.paid')),
               const SizedBox(width: 12),
-              _legendDot(Colors.amber, 'Rezerveli'),
+              _legendDot(Colors.amber, tr('staff.reserved')),
               const SizedBox(width: 12),
-              _legendDot(Colors.grey.shade300, 'Boş'),
+              _legendDot(Colors.grey.shade300, tr('staff.empty')),
             ],
           ),
           const SizedBox(height: 16),
@@ -946,7 +946,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: Text(
-                    '${_selectedTables.length} Masa ile Devam Et',
+                    tr('staff.continue_with_tables', namedArgs: {'count': _selectedTables.length.toString()}),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -1146,7 +1146,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                     ),
                     if (hasOrders)
                       Text(
-                        'Açık',
+                        tr('staff.open'),
                         style: TextStyle(
                           fontSize: 10,
                           color: brandColor,
@@ -1195,10 +1195,10 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         }
 
         // Category extraction
-        final categories = ['Tümü', ...{...products.map((p) => p.category)}];
+        final categories = [tr('staff.filter_all'), ...{...products.map((p) => p.category)}];
         
         // Filter
-        var filteredProducts = _selectedCategory == 'Tümü'
+        var filteredProducts = _selectedCategory == tr('staff.filter_all')
             ? products
             : products.where((p) => p.category == _selectedCategory).toList();
         
@@ -1217,7 +1217,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               child: TextField(
                 onChanged: (v) => setState(() => _menuSearchQuery = v),
                 decoration: InputDecoration(
-                  hintText: 'Menüde ara...',
+                  hintText: tr('staff.search_in_menu'),
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -1259,8 +1259,8 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   ? Center(
                       child: Text(
                         snapshot.connectionState == ConnectionState.waiting
-                            ? 'Menü yükleniyor...'
-                            : 'Ürün bulunamadı',
+                            ? tr('staff.loading_menu')
+                            : tr('staff.item_not_found'),
                         style: TextStyle(color: Colors.grey[500]),
                       ),
                     )
@@ -1412,8 +1412,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             children: [
               const Icon(Icons.send, size: 20),
               const SizedBox(width: 8),
-              Text(
-                'Mutfağa Gönder • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
+                tr('staff.send_to_kitchen_count', namedArgs: {'count': _cartItemCount.toString()}) + '${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ],
@@ -1518,7 +1517,7 @@ class _TableBillView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Masa ${session.tableNumber} • ${session.waiterName}',
+                            tr('staff.table_and_waiter', namedArgs: {'table': session.tableNumber.toString(), 'waiter': session.waiterName}),
                             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: allPaid ? Colors.green.shade900 : Colors.amber.shade900),
                           ),
                           Text(
@@ -1537,7 +1536,7 @@ class _TableBillView extends StatelessWidget {
                           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: allPaid ? Colors.green.shade800 : Colors.amber.shade800),
                         ),
                         Text(
-                          allPaid ? 'Ödendi' : 'Toplam',
+                          allPaid ? tr('staff.paid') : tr('staff.total'),
                           style: TextStyle(fontSize: 11, color: allPaid ? Colors.green.shade600 : Colors.amber.shade600),
                         ),
                       ],

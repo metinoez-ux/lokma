@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../services/order_service.dart';
-import '../../../models/order_model.dart';
 
 class CourierTab extends ConsumerWidget {
   final List<String> businessIds;
@@ -115,7 +114,7 @@ class CourierTab extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Text('#${o.id.substring(0, 5)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                   const Spacer(),
-                  Text('${o.total.toStringAsFixed(2)} €'),
+                  Text('${o.totalAmount.toStringAsFixed(2)} €'),
                 ],
               ),
             )),

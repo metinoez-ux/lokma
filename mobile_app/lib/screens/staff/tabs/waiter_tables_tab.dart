@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../models/table_model.dart';
-import '../../../services/table_service.dart';
+import '../../../services/table_session_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class WaiterTablesTab extends ConsumerWidget {
   final String businessId;
@@ -20,65 +20,66 @@ class WaiterTablesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (businessId.isEmpty) {
-      return const Center(child: Text('Aktif masa yetkiniz yok.'));
+      return Center(child: Text('staff.no_active_table_permission'.tr()));
     }
 
     // Modern Table Grid Implementation
     return StreamBuilder<List<TableSession>>(
-      stream: TableService().getActiveTableSessionsStream(businessId),
+      stream: TableSessionService().getActiveSessionsStream(businessId),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
         
         final sessions = snapshot.data ?? [];
         
-        return CustomScrollView(
+        return Padding(
           padding: const EdgeInsets.all(20),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Text(
-                  'Aktif Masalar (${sessions.length})',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    'staff.active_tables_count'.tr(namedArgs: {'count': sessions.length.toString()}),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-            ),
-            SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final tableNum = index + 1;
-                  final session = sessions.cast<TableSession?>().firstWhere(
-                    (s) => s?.tableNumber == tableNum,
-                    orElse: () => null,
-                  );
+              SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final tableNum = index + 1;
+                    final session = sessions.cast<TableSession?>().firstWhere(
+                      (s) => s?.tableNumber == tableNum,
+                      orElse: () => null,
+                    );
 
-                  return _buildTableItem(context, tableNum, session);
-                },
-                childCount: 20, // Max 20 tables as per Lokma config
+                    return _buildTableItem(context, tableNum, session);
+                  },
+                  childCount: 20, // Max 20 tables as per Lokma config
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _buildTableItem(BuildContext context, int tableNum, TableSession? session) {
-    final bool isActive = session != null && session.status != TableStatus.completed;
-    final bool isReadyForPayment = isActive && session!.status == TableStatus.readyForPayment;
+    final bool isActive = session != null && session.isActive;
     
     final Color bgColor = isActive 
-        ? (isReadyForPayment ? Colors.orange.withOpacity(0.15) : Colors.blue.withOpacity(0.15))
+        ? Colors.blue.withOpacity(0.15)
         : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02));
         
     final Color borderColor = isActive
-        ? (isReadyForPayment ? Colors.orange.withOpacity(0.5) : Colors.blue.withOpacity(0.5))
+        ? Colors.blue.withOpacity(0.5)
         : (isDark ? Colors.white10 : Colors.black12);
 
     return GestureDetector(
@@ -102,47 +103,38 @@ class WaiterTablesTab extends ConsumerWidget {
             )
           ] : null,
         ),
-        child: Stack(
-          children: [
-            // Internal Content
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Masa',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                  Text(
-                    '$tableNum',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: isActive ? (isReadyForPayment ? Colors.orange : Colors.blue) : (isDark ? Colors.white : Colors.black),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isActive) 
-              Positioned(
-                bottom: 12,
-                left: 0,
-                right: 0,
-                child: Text(
-                  '${session!.totalAmount.toStringAsFixed(2)} €',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: isReadyForPayment ? Colors.orange : Colors.blue,
-                  ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'staff.table'.tr(),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white70 : Colors.black54,
                 ),
               ),
-          ],
+              Text(
+                '$tableNum',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: isActive ? Colors.blue : (isDark ? Colors.white : Colors.black),
+                ),
+              ),
+              if (isActive) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'staff.busy'.tr(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
