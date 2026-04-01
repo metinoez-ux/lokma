@@ -470,6 +470,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _handleStaffLogin(BuildContext context) async {
+    // Prevent multiple fast taps overlapping route pushes
+    bool isDialogVisible = true;
+    
     // Show a small loading overlay since we are performing network requests
     showDialog(
       context: context,
@@ -485,8 +488,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // Fetch any active kermes assignments
       final kermeses = await KermesAssignmentService.getActiveAssignedKermeses();
       
-      // Remove loading overlay
-      if (context.mounted) Navigator.pop(context);
+      // Remove loading overlay properly
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        isDialogVisible = false;
+        
+        // Wait briefly for the pop transition to clear avoiding (!_debugLocked) exceptions
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
 
       final hasBaseBusiness = roleService.businessId != null;
 
@@ -508,7 +517,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               } else {
                 roleService.setOverrideWorkplace(id, name, type);
               }
-              context.push('/staff-hub');
+              // Add delay inside the bottom sheet callback as well
+              Future.delayed(const Duration(milliseconds: 100), () {
+                if (context.mounted) context.push('/staff-hub');
+              });
             },
           ),
         );
@@ -523,7 +535,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        Navigator.pop(context); // Remove loading if error
+        if (isDialogVisible) {
+          Navigator.of(context, rootNavigator: true).pop(); // Clean up overlay
+        }
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text('Bir hata oluştu: $e')),
         );
