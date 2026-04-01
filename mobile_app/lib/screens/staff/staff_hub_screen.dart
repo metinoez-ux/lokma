@@ -2154,18 +2154,66 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : (!_isDriver && !_hasReservation)
-              ? _buildNoAccess()
-              : IndexedStack(
-                  index: _selectedNavIndex > 3 ? 0 : _selectedNavIndex,
-                  children: [
-                    _buildSaatlerimTab(isDark, driverState),
-                    _buildKuryeTab(isDark, driverState),
-                    _buildWalletTab(isDark),
-                    _buildMasaTab(isDark),
-                  ],
-                ),
-      bottomNavigationBar: (!_isLoading && (_isDriver || _hasReservation))
+          : (_businessId == null)
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.business_center, size: 64, color: Colors.grey[600]),
+                      const SizedBox(height: 16),
+                      Text(
+                        'İşletme Seçilmedi',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.grey[300] : Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Text(
+                          'Profil ekranından (Personel Paneli) çalışmak istediğiniz işletmeyi veya kermesi seçin.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.grey[500] : Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/profile');
+                          }
+                        },
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Geri Dön'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[800],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : (!_isDriver && !_hasReservation)
+                  ? _buildNoAccess()
+                  : IndexedStack(
+                      index: _selectedNavIndex > 3 ? 0 : _selectedNavIndex,
+                      children: [
+                        _buildSaatlerimTab(isDark, driverState),
+                        _buildKuryeTab(isDark, driverState),
+                        _buildWalletTab(isDark),
+                        _buildMasaTab(isDark),
+                      ],
+                    ),
+      bottomNavigationBar: (!_isLoading && (_isDriver || _hasReservation) && _businessId != null)
           ? _buildStaffBottomNav(isDark)
           : null,
     );

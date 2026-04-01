@@ -756,13 +756,36 @@
     "kapida_kart_odemesi": "Kapıda Kart Ödemesi"
   },
   "feedback": {
-    "send_feedback": "Invia Feedback",
+    "send_feedback": "Invia feedback",
     "rate_experience": "Valuta la tua esperienza",
     "feedback_placeholder": "Scrivi i tuoi pensieri...",
     "thank_you": "Grazie!",
     "rate_delivery": "Valuta la consegna",
     "rate_food": "Valuta il cibo",
-    "rate_service": "Valuta il servizio"
+    "rate_service": "Valuta il servizio",
+    "title": "Feedback",
+    "already_rated_this_month": "Hai già valutato questo mese",
+    "once_a_month_msg": "Puoi fornire un feedback una volta al mese.\nPotrai valutarci di nuovo il prossimo mese!",
+    "your_opinions_valuable": "Le tue opinioni sono preziose",
+    "last_order_business": "Il tuo ultimo ordine: {}",
+    "rate_our_services": "Valuta i nostri servizi",
+    "processed_anonymously": "Il tuo feedback viene elaborato in modo anonimo.",
+    "product_portfolio": "Varietà dei prodotti",
+    "product_portfolio_sub": "Portafoglio e scelta dei prodotti",
+    "app_usability": "Usabilità dell'app",
+    "app_usability_sub": "Facilità d'uso dell'app",
+    "delivery_speed": "Velocità di consegna",
+    "delivery_speed_sub": "Tempo impiegato per ricevere l'ordine",
+    "overall_experience": "Esperienza generale",
+    "overall_experience_sub": "Soddisfazione totale",
+    "courier_evaluation": "Valutazione del corriere",
+    "food_quality": "Qualità del cibo",
+    "food_quality_sub": "Il tuo ordine è arrivato caldo/fresco?",
+    "courier_service": "Servizio del corriere",
+    "courier_service_sub": "Il corriere è stato cordiale e professionale",
+    "note_to_add": "Nota da aggiungere",
+    "note_placeholder": "Puoi scrivere i tuoi pensieri qui... (Opzionale)",
+    "send": "Invia"
   },
   "group_order": {
     "start_group_order": "Avvia ordine di gruppo",
@@ -1692,7 +1715,13 @@
     "faq_what_is_lokma_answer": "LOKMA è una piattaforma dove puoi ordinare online da macellerie, ristoranti e mercati locali. Consegniamo carne fresca, piatti fatti in casa e prodotti del mercato alla tua porta.",
     "delete_address": "Elimina indirizzo",
     "street_city_required": "Via e città sono obbligatorie",
-    "favorilerim": "I miei preferiti"
+    "favorilerim": "I miei preferiti",
+    "guest_title": "Daha fazla avantaj için giriş yapın",
+    "guest_benefit_1": "Teklifler ve indirimler alın",
+    "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
+    "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
+    "have_questions": "Sorularınız mı var?",
+    "we_are_here": "Sizin için buradayız"
   },
   "reservation": {
     "title": "Prenotazione",
@@ -2011,6 +2040,30 @@
     },
     "staff": {
       "authorized_person": "Persona autorizzata"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "LOKMA'ya Hoşgeldiniz",
+      "subtitle": "LOKMA'yı kullanarak, Genel Şartlar ve Koşullarımızı kabul etmiş olursunuz. Verilerinizi nasıl işlediğimizi Gizlilik Politikamızdan öğrenebilirsiniz."
+    },
+    "cookies": {
+      "title": "Çerez Ayarları",
+      "subtitle": "Sana en iyi deneyimi sunmak, uygulamayı geliştirmek ve içerikleri kişiselleştirmek için çerez (cookie) ve benzeri teknolojiler kullanıyoruz.",
+      "accept_all": "Tümünü Kabul Et",
+      "accept_required": "Sadece Gerekli Olanlar"
+    },
+    "notifications": {
+      "title": "Bildirimlere İzin Ver",
+      "subtitle": "Siparişinizin durumu hakkındaki güncellemeler, size özel fırsatlar, bildirimleri istediğiniz zaman uygulama ayarlarından yönetme imkanı.",
+      "allow": "Bildirimlere İzin Ver",
+      "later": "Belki Daha Sonra"
+    },
+    "location": {
+      "title": "Tam olarak neredesin?",
+      "subtitle": "Bölgende teslimat yapan partnerleri bulmamız için, sana teslimat sürelerini ve teslimat ücretlerini daha net gösterebilmemiz için, güncel adresini sipariş adımında doğrulamak için.",
+      "share": "Konumu Paylaş",
+      "manual": "Manuel Adres Ekle"
     }
   }
 }

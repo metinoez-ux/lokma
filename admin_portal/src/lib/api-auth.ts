@@ -43,7 +43,7 @@ export async function verifyApiAuth(req: NextRequest): Promise<VerifiedAdmin | N
             role: adminData?.role || 'admin',
             adminType: adminData?.adminType || null,
             businessId: adminData?.businessId || adminData?.butcherId || null,
-            isSuperAdmin: adminData?.adminType === 'super' || adminData?.roles?.includes('super') || false
+            isSuperAdmin: adminData?.adminType === 'super' || adminData?.role === 'super' || adminData?.role === 'superAdmin' || adminData?.roles?.includes('super') || false
         };
     } catch (error) {
         console.error('API Verification error:', error);

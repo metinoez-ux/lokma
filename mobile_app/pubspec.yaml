@@ -89,3 +89,9 @@ flutter:
     - assets/translations/
     - assets/sounds/
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon_new.png"
+  adaptive_icon_background: "#ea184a"
+  adaptive_icon_foreground: "assets/images/app_icon_new.png"

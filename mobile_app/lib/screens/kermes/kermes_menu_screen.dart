@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/models/kermes_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
@@ -802,8 +803,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    const Text('Menü ve
-Sipariş',
+                                    const Text('Menü ve Sipariş',
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 28,
@@ -832,7 +832,7 @@ Sipariş',
                 height: 52,
                 child: Column(
                   children: [
-                      child: Row(
+                      Row(
                         children: [
                           Expanded(
                             child: SingleChildScrollView(
@@ -959,7 +959,6 @@ Sipariş',
                           ),
                         ],
                       ),
-                    ),
                     const Divider(height: 1, thickness: 1),
                   ],
                 ),
@@ -1429,5 +1428,28 @@ Sipariş',
     } else {
       return Icons.restaurant;
     }
+  }
+}
+
+class _KermesCategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _KermesCategoryHeaderDelegate({required this.child});
+
+  @override
+  double get minExtent => 52.0;
+
+  @override
+  double get maxExtent => 52.0;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_KermesCategoryHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }

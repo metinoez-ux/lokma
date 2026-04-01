@@ -81,6 +81,7 @@ void main() async {
           Locale('it'),
           Locale('fr'),
           Locale('es'),
+          Locale('nl'),
         ],
           path: 'assets/translations',
           assetLoader: const FirestoreAssetLoader(), // Live translations

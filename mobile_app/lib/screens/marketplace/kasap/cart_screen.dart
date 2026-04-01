@@ -24,6 +24,7 @@ import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'reservation_booking_screen.dart';
+import '../../auth/login_bottom_sheet.dart';
 
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
@@ -554,8 +555,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final firebaseUser = FirebaseAuth.instance.currentUser;
     
     if (currentUser == null && firebaseUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('cart.login_required'.tr())),
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => const LoginBottomSheet(),
       );
       return;
     }

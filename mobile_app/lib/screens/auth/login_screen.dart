@@ -16,7 +16,14 @@ enum _PhoneStatus { idle, notRegistered, alreadyRegistered }
 
 class LoginScreen extends ConsumerStatefulWidget {
   final bool embedded;
-  const LoginScreen({super.key, this.embedded = false});
+  final bool initRegister;
+  final bool initPhone;
+  const LoginScreen({
+    super.key, 
+    this.embedded = false,
+    this.initRegister = false,
+    this.initPhone = false,
+  });
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -28,12 +35,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   static const Color lokmaDark = Color(0xFF1A1A1A);
   
   bool _isLoading = false;
+  bool _isHandlingOAuthConsent = false;
   
   // Auth mode: 0 = Giriş, 1 = Kayıt
-  int _authMode = 0;
+  late int _authMode;
   
   // Login mode: 'main', 'email', 'phone'
-  String _loginMode = 'main';
+  late String _loginMode;
   
   // Email controllers
   final _emailController = TextEditingController();
@@ -62,6 +70,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _authMode = widget.initRegister ? 1 : 0;
+    _loginMode = widget.initPhone ? 'phone' : 'main';
     _restoreSmsVerificationState();  // Restore state after reCAPTCHA redirect
     _detectCountryFromGPS();
     
@@ -328,7 +338,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authProvider);
     
     // If authenticated, go home or set password
-    if (authState.isAuthenticated && !authState.isGuest) {
+    if (authState.isAuthenticated && !authState.isGuest && !_isHandlingOAuthConsent) {
       if (!widget.embedded) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final user = FirebaseAuth.instance.currentUser;
@@ -1288,7 +1298,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _isHandlingOAuthConsent = true;
+    });
     try {
       await ref.read(authProvider.notifier).signInWithGoogle();
       
@@ -1305,6 +1318,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               final createAccount = await _promptAccountCreation('Google hesabı');
 
               if (createAccount == true) {
+                if (mounted) setState(() => _isHandlingOAuthConsent = false);
                 return;
               } else {
                 final uid = user.uid;
@@ -1313,6 +1327,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 } catch (_) {}
                 await user.delete();
                 await FirebaseAuth.instance.signOut();
+                if (mounted) setState(() => _isHandlingOAuthConsent = false);
                 return;
               }
             }
@@ -1325,6 +1340,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         }
       }
+      if (mounted) setState(() => _isHandlingOAuthConsent = false);
     } catch (e) {
       debugPrint('Google sign-in error: $e');
       if (mounted) {
@@ -1333,7 +1349,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isHandlingOAuthConsent = false;
+        });
+      }
     }
   }
 

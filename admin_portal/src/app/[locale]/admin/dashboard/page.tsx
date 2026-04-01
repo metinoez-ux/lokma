@@ -8,6 +8,7 @@ import { useAdminBusinessId } from '@/hooks/useAdminBusinessId';
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 import { useOrdersStandalone, Order } from '@/hooks/useOrders';
+import { useFeedbacks } from '@/hooks/useFeedbacks';
 
 // Order type is now imported from @/hooks/useOrders (canonical)
 
@@ -36,6 +37,7 @@ export default function StatisticsPage() {
     const adminBusinessId = useAdminBusinessId();
     // Orders from unified hook (single Firestore listener)
     const { orders, loading: ordersLoading } = useOrdersStandalone({ initialDateFilter: 'all' });
+    const { feedbacks, loading: feedbacksLoading } = useFeedbacks({ initialDateFilter: 'all' });
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState<string>('all');
@@ -147,10 +149,10 @@ export default function StatisticsPage() {
     // Orders are now provided by useOrdersStandalone hook (canonical field mapping)
     // Update loading based on hook state
     useEffect(() => {
-        if (!ordersLoading) {
+        if (!ordersLoading && !feedbacksLoading) {
             setLoading(false);
         }
-    }, [ordersLoading]);
+    }, [ordersLoading, feedbacksLoading]);
 
     // Staff admin: Load delivery pause logs & order performance stats
     const staffBusinessId = admin?.adminType !== 'super'
@@ -244,6 +246,47 @@ export default function StatisticsPage() {
         }
         return filtered;
     }, [orders, currentStart, currentEnd, businessFilter]);
+
+    // Filter feedbacks by date range and business
+    const filteredFeedbacks = useMemo(() => {
+        let filtered = feedbacks.filter(f => {
+            if (!f.createdAt) return false;
+            const feedbackDate = f.createdAt.toDate();
+            return feedbackDate >= currentStart && feedbackDate <= currentEnd;
+        });
+        if (businessFilter !== 'all') {
+            filtered = filtered.filter(f => f.businessId === businessFilter);
+        }
+        return filtered;
+    }, [feedbacks, currentStart, currentEnd, businessFilter]);
+
+    const feedbackAnalytics = useMemo(() => {
+        const total = filteredFeedbacks.length;
+        let sums = { averageRating: 0, productPortfolio: 0, appUsability: 0, deliverySpeed: 0, overallExperience: 0, foodFreshness: 0, courierProfessionalism: 0 };
+        let counts = { ...sums };
+
+        filteredFeedbacks.forEach(f => {
+            if (f.averageRating) { sums.averageRating += f.averageRating; counts.averageRating++; }
+            if (f.ratings?.productPortfolio) { sums.productPortfolio += f.ratings.productPortfolio; counts.productPortfolio++; }
+            if (f.ratings?.appUsability) { sums.appUsability += f.ratings.appUsability; counts.appUsability++; }
+            if (f.ratings?.deliverySpeed) { sums.deliverySpeed += f.ratings.deliverySpeed; counts.deliverySpeed++; }
+            if (f.ratings?.overallExperience) { sums.overallExperience += f.ratings.overallExperience; counts.overallExperience++; }
+            if (f.ratings?.foodFreshness) { sums.foodFreshness += f.ratings.foodFreshness; counts.foodFreshness++; }
+            if (f.ratings?.courierProfessionalism) { sums.courierProfessionalism += f.ratings.courierProfessionalism; counts.courierProfessionalism++; }
+        });
+
+        const averages = {
+            averageRating: counts.averageRating > 0 ? (sums.averageRating / counts.averageRating) : 0,
+            productPortfolio: counts.productPortfolio > 0 ? (sums.productPortfolio / counts.productPortfolio) : 0,
+            appUsability: counts.appUsability > 0 ? (sums.appUsability / counts.appUsability) : 0,
+            deliverySpeed: counts.deliverySpeed > 0 ? (sums.deliverySpeed / counts.deliverySpeed) : 0,
+            overallExperience: counts.overallExperience > 0 ? (sums.overallExperience / counts.overallExperience) : 0,
+            foodFreshness: counts.foodFreshness > 0 ? (sums.foodFreshness / counts.foodFreshness) : 0,
+            courierProfessionalism: counts.courierProfessionalism > 0 ? (sums.courierProfessionalism / counts.courierProfessionalism) : 0,
+        };
+
+        return { total, averages };
+    }, [filteredFeedbacks]);
 
     // Comparison orders
     const comparisonRange = getComparisonDateRange(dateFilter, compareMode, customStartDate, customEndDate);
@@ -610,6 +653,59 @@ export default function StatisticsPage() {
                             )}
                         </div>
                     </div>
+
+                    {/* Müşteri Memnuniyeti (Feedback) Row */}
+                    {feedbackAnalytics.total > 0 && (
+                        <div className="bg-card rounded-xl p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-foreground font-bold text-lg">Müşteri Memnuniyeti</h3>
+                                <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-semibold">
+                                    {feedbackAnalytics.total} Değerlendirme
+                                </div>
+                            </div>
+                            
+                            <div className="grid md:grid-cols-4 gap-6">
+                                {/* Ana Puan */}
+                                <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-b from-amber-50 to-white dark:from-amber-900/10 dark:to-card border border-amber-100 dark:border-amber-800/30 rounded-2xl">
+                                    <span className="text-5xl font-extrabold text-amber-500 mb-2">
+                                        {feedbackAnalytics.averages.averageRating.toFixed(1)}
+                                    </span>
+                                    <div className="flex text-amber-400 text-xl mb-2">
+                                        {"★".repeat(Math.round(feedbackAnalytics.averages.averageRating))}
+                                        {"☆".repeat(5 - Math.round(feedbackAnalytics.averages.averageRating))}
+                                    </div>
+                                    <span className="text-sm font-medium text-foreground">Genel Ort.</span>
+                                </div>
+
+                                {/* Sub Ratings */}
+                                <div className="md:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6">
+                                    {[
+                                        { label: 'Ürün Çeşitliliği', val: feedbackAnalytics.averages.productPortfolio },
+                                        { label: 'Uygulama Kullanımı', val: feedbackAnalytics.averages.appUsability },
+                                        { label: 'Teslimat Hızı', val: feedbackAnalytics.averages.deliverySpeed },
+                                        { label: 'Genel Deneyim', val: feedbackAnalytics.averages.overallExperience },
+                                        { label: 'Yemek Tazeliği', val: feedbackAnalytics.averages.foodFreshness },
+                                        { label: 'Kurye Profesyonelliği', val: feedbackAnalytics.averages.courierProfessionalism },
+                                    ].map(item => (
+                                        item.val > 0 && (
+                                        <div key={item.label} className="flex flex-col justify-center">
+                                            <div className="flex justify-between text-sm mb-1">
+                                                <span className="text-foreground">{item.label}</span>
+                                                <span className="font-semibold text-foreground">{item.val.toFixed(1)}</span>
+                                            </div>
+                                            <div className="w-full bg-secondary rounded-full h-2">
+                                                <div 
+                                                    className="bg-amber-400 h-2 rounded-full" 
+                                                    style={{ width: `${(item.val / 5) * 100}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                        )
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Charts Row */}
                     <div className="grid md:grid-cols-2 gap-6">

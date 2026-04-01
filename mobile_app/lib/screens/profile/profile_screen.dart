@@ -17,6 +17,7 @@ import '../../services/referral_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/login_screen.dart';
+import 'widgets/guest_profile_view.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -41,39 +42,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     context.locale;
     final user = _auth.currentUser;
 
-    // Kullanici giris yapmamissa tam ekran LoginScreen goster (embedded degil)
-    // Bu sayede ic ice Scaffold sorunu ve layout bozulmasi engellenir
-    if (user == null) {
-      return const LoginScreen();
-    }
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? Theme.of(context).scaffoldBackgroundColor
-            : Colors.white,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        title: Text('profile.my_account'.tr(),
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.w600)),
-        centerTitle: true,
+      body: SafeArea(
+        child: _buildProfile(user),
       ),
-      body: _buildProfile(user),
     );
   }
 
+  Widget _buildProfile(User? user) {
+    final isGuest = user == null || user.isAnonymous;
 
-
-  Widget _buildProfile(User user) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .snapshots(),
+      stream: isGuest 
+          ? const Stream.empty() 
+          : FirebaseFirestore.instance
+              .collection('users')
+              .doc(user!.uid)
+              .snapshots(),
       builder: (context, snapshot) {
         final userData = snapshot.data?.data() as Map<String, dynamic>?;
 
@@ -88,8 +74,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           }
         }
         if (displayName == 'profile.default_user'.tr() &&
-            user.displayName != null &&
-            user.displayName!.isNotEmpty) {
+            user?.displayName != null &&
+            user!.displayName!.isNotEmpty) {
           displayName = user.displayName!;
           firstName = displayName.split(' ').first;
         }
@@ -244,6 +230,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         );
                       },
                     ),
+
+                    // === GUEST PROMO BOX (LIEFERANDO STYLE) ===
+                    if (isGuest) ...[
+                      const SizedBox(height: 24),
+                      _buildGuestPromoBox(context),
+                      const SizedBox(height: 16),
+                      _buildGuestHelpBox(context),
+                    ],
+
                   ],
                 ),
               ),
@@ -331,7 +326,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               }),
               _buildSectionItem(Icons.rate_review_outlined, 'profile.feedback'.tr(),
                   () {
-                context.push('/help');
+                context.push('/feedback');
               }),
 
               const SizedBox(height: 24),
@@ -349,59 +344,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 24),
 
               // === ACCOUNT ACTIONS ===
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    // Logout
-                    GestureDetector(
-                      onTap: () async {
-                        HapticFeedback.mediumImpact();
-                        await _googleSignIn.signOut();
-                        await _auth.signOut();
-                        if (context.mounted) {
-                          context.go('/login');
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Row(
-                          children: [
-                            Icon(Icons.logout,
-                                color: Colors.grey[600], size: 22),
-                            const SizedBox(width: 16),
-                            Text('profile.logout'.tr(),
-                                style: TextStyle(
-                                    color: Colors.grey[800], fontSize: 15)),
-                          ],
+              if (!isGuest)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      // Logout
+                      GestureDetector(
+                        onTap: () async {
+                          HapticFeedback.mediumImpact();
+                          await _googleSignIn.signOut();
+                          await _auth.signOut();
+                          if (context.mounted) {
+                            context.go('/login');
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout,
+                                  color: Colors.grey[600], size: 22),
+                              const SizedBox(width: 16),
+                              Text('profile.logout'.tr(),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 15)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Delete Account
-                    GestureDetector(
-                      onTap: () {
-                        _showDeleteAccountDialog();
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline,
-                                color: Colors.red[400], size: 22),
-                            const SizedBox(width: 16),
-                            Text('profile.delete_account'.tr(),
-                                style: TextStyle(
-                                    color: Colors.grey[800], fontSize: 15)),
-                          ],
+                      // Delete Account
+                      GestureDetector(
+                        onTap: () {
+                          _showDeleteAccountDialog();
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline,
+                                  color: Colors.red[400], size: 22),
+                              const SizedBox(width: 16),
+                              Text('profile.delete_account'.tr(),
+                                  style: TextStyle(
+                                      color: Colors.grey[800], fontSize: 15)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
               const SizedBox(height: 24),
 
@@ -594,6 +590,139 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<String> _getVersionString() async {
     final info = await PackageInfo.fromPlatform();
     return '${'profile.version'.tr()} ${info.version} (${info.buildNumber})';
+  }
+
+  // === Guest Promo Banner (Lieferando-style) ===
+  Widget _buildGuestPromoBox(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2C3232) : const Color(0xFFE4EFEF),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Melde dich an für mehr Vorteile',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF1E2424),
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildBullet('Erhalte Angebote und Rabatte', isDark),
+          const SizedBox(height: 6),
+          _buildBullet('Bestelle schneller mit gespeicherten Infos', isDark),
+          const SizedBox(height: 6),
+          _buildBullet('Bestelle bequem erneut und verfolge deine Bestellung', isDark),
+          
+          const SizedBox(height: 24),
+          
+          // Konto erstellen (White Button)
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () => context.push('/simple-auth?register=true'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Text('Konto erstellen', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black87)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Anmelden (Brand Color Button)
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () => context.push('/simple-auth'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Text('Anmelden', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // === Guest Help Banner ===
+  Widget _buildGuestHelpBox(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () => context.push('/help'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF3B332E) : const Color(0xFFF7F1E9),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Du hast Fragen?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF1E2424),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Wir sind für dich da',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[300] : const Color(0xFF4A4A4A),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Text('❓', style: TextStyle(fontSize: 32)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBullet(String text, bool isDark) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('•  ', style: TextStyle(fontSize: 16, color: isDark ? Colors.grey[300] : const Color(0xFF1E2424), fontWeight: FontWeight.bold)),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.grey[300] : const Color(0xFF1E2424),
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   /// Check if current user is staff for a business with reservation support
@@ -822,6 +951,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _buildLangSegment('FR', 'fr', currentLocale,
                       Theme.of(context).primaryColor, isDark, context),
                   _buildLangSegment('ES', 'es', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                  _buildLangSegment('NL', 'nl', currentLocale,
                       Theme.of(context).primaryColor, isDark, context),
                 ],
               ),

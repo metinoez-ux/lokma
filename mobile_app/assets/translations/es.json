@@ -756,13 +756,36 @@
     "kapida_kart_odemesi": "Kapıda Kart Ödemesi"
   },
   "feedback": {
-    "send_feedback": "Enviar Comentario",
-    "rate_experience": "Califique su experiencia",
-    "feedback_placeholder": "Escriba sus pensamientos...",
+    "send_feedback": "Enviar comentarios",
+    "rate_experience": "Evalúa tu experiencia",
+    "feedback_placeholder": "Escribe tus pensamientos...",
     "thank_you": "¡Gracias!",
-    "rate_delivery": "Calificar entrega",
-    "rate_food": "Calificar comida",
-    "rate_service": "Calificar servicio"
+    "rate_delivery": "Evalúa la entrega",
+    "rate_food": "Evalúa la comida",
+    "rate_service": "Evalúa el servicio",
+    "title": "Comentarios",
+    "already_rated_this_month": "Ya has valorado este mes",
+    "once_a_month_msg": "Puedes proporcionar comentarios una vez al mes.\n¡Puedes valorarnos de nuevo el próximo mes!",
+    "your_opinions_valuable": "Tus opiniones son valiosas",
+    "last_order_business": "Tu último pedido: {}",
+    "rate_our_services": "Evaluar nuestros servicios",
+    "processed_anonymously": "Tus comentarios se procesan de forma anónima.",
+    "product_portfolio": "Variedad de productos",
+    "product_portfolio_sub": "Portafolio y opciones de productos",
+    "app_usability": "Usabilidad de la app",
+    "app_usability_sub": "Facilidad de uso de la aplicación",
+    "delivery_speed": "Velocidad de entrega",
+    "delivery_speed_sub": "Tiempo que tardó el pedido en llegarte",
+    "overall_experience": "Experiencia general",
+    "overall_experience_sub": "Satisfacción total",
+    "courier_evaluation": "Evaluación del mensajero",
+    "food_quality": "Calidad de la comida",
+    "food_quality_sub": "¿Llegó tu pedido caliente/fresco?",
+    "courier_service": "Servicio de mensajería",
+    "courier_service_sub": "El mensajero fue amable y profesional",
+    "note_to_add": "Nota para añadir",
+    "note_placeholder": "Puedes escribir tus pensamientos aquí... (Opcional)",
+    "send": "Enviar"
   },
   "group_order": {
     "start_group_order": "Iniciar pedido grupal",
@@ -1692,7 +1715,13 @@
     "faq_what_is_lokma_answer": "LOKMA es una plataforma donde puede pedir en línea a carnicerías, restaurantes y mercados locales. Le entregamos carne fresca, comida casera y productos del mercado en su puerta.",
     "delete_address": "Eliminar dirección",
     "street_city_required": "Calle y ciudad son obligatorios",
-    "favorilerim": "Mis favoritos"
+    "favorilerim": "Mis favoritos",
+    "guest_title": "Daha fazla avantaj için giriş yapın",
+    "guest_benefit_1": "Teklifler ve indirimler alın",
+    "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
+    "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
+    "have_questions": "Sorularınız mı var?",
+    "we_are_here": "Sizin için buradayız"
   },
   "reservation": {
     "title": "Reserva",
@@ -2011,6 +2040,30 @@
     },
     "staff": {
       "authorized_person": "Persona autorizada"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "LOKMA'ya Hoşgeldiniz",
+      "subtitle": "LOKMA'yı kullanarak, Genel Şartlar ve Koşullarımızı kabul etmiş olursunuz. Verilerinizi nasıl işlediğimizi Gizlilik Politikamızdan öğrenebilirsiniz."
+    },
+    "cookies": {
+      "title": "Çerez Ayarları",
+      "subtitle": "Sana en iyi deneyimi sunmak, uygulamayı geliştirmek ve içerikleri kişiselleştirmek için çerez (cookie) ve benzeri teknolojiler kullanıyoruz.",
+      "accept_all": "Tümünü Kabul Et",
+      "accept_required": "Sadece Gerekli Olanlar"
+    },
+    "notifications": {
+      "title": "Bildirimlere İzin Ver",
+      "subtitle": "Siparişinizin durumu hakkındaki güncellemeler, size özel fırsatlar, bildirimleri istediğiniz zaman uygulama ayarlarından yönetme imkanı.",
+      "allow": "Bildirimlere İzin Ver",
+      "later": "Belki Daha Sonra"
+    },
+    "location": {
+      "title": "Tam olarak neredesin?",
+      "subtitle": "Bölgende teslimat yapan partnerleri bulmamız için, sana teslimat sürelerini ve teslimat ücretlerini daha net gösterebilmemiz için, güncel adresini sipariş adımında doğrulamak için.",
+      "share": "Konumu Paylaş",
+      "manual": "Manuel Adres Ekle"
     }
   }
 }

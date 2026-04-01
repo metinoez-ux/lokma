@@ -20,6 +20,7 @@ import '../screens/settings/notification_settings_screen.dart';
 import '../screens/profile/notification_history_screen.dart';
 import '../screens/feedback/feedback_form_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/auth/simple_auth_screen.dart';
 import '../screens/auth/set_password_screen.dart';
 import '../screens/search/smart_search_screen.dart';
 import '../screens/marketplace/kasap/cart_screen.dart';
@@ -214,7 +215,17 @@ class AppRouter {
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) {
+          final isRegister = state.uri.queryParameters['register'] == 'true';
+          return SimpleAuthScreen(initRegister: isRegister);
+        },
+      ),
+      GoRoute(
+        path: '/phone-login',
+        builder: (context, state) {
+          final isRegister = state.uri.queryParameters['register'] == 'true';
+          return LoginScreen(initRegister: isRegister, initPhone: true);
+        },
       ),
       GoRoute(
         path: '/favorites',

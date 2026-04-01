@@ -756,13 +756,36 @@
     "kapida_kart_odemesi": "Kapıda Kart Ödemesi"
   },
   "feedback": {
-    "send_feedback": "Envoyer un Avis",
+    "send_feedback": "Envoyer des commentaires",
     "rate_experience": "Évaluez votre expérience",
     "feedback_placeholder": "Écrivez vos pensées...",
     "thank_you": "Merci !",
-    "rate_delivery": "Évaluer la livraison",
-    "rate_food": "Évaluer la nourriture",
-    "rate_service": "Évaluer le service"
+    "rate_delivery": "Évaluez la livraison",
+    "rate_food": "Évaluez la nourriture",
+    "rate_service": "Évaluez le service",
+    "title": "Commentaires",
+    "already_rated_this_month": "Déjà évalué ce mois-ci",
+    "once_a_month_msg": "Vous pouvez donner votre avis une fois par mois.\nVous pourrez de nouveau nous évaluer le mois prochain !",
+    "your_opinions_valuable": "Vos opinions comptent",
+    "last_order_business": "Votre dernière commande : {}",
+    "rate_our_services": "Évaluez nos services",
+    "processed_anonymously": "Vos commentaires sont traités anonymement.",
+    "product_portfolio": "Variété de produits",
+    "product_portfolio_sub": "Portefeuille de produits et options",
+    "app_usability": "Facilité d'utilisation",
+    "app_usability_sub": "Convivialité de l'application",
+    "delivery_speed": "Vitesse de livraison",
+    "delivery_speed_sub": "Délai d'acheminement de la commande",
+    "overall_experience": "Expérience globale",
+    "overall_experience_sub": "Satisfaction totale",
+    "courier_evaluation": "Évaluation du livreur",
+    "food_quality": "Qualité de la nourriture",
+    "food_quality_sub": "Votre commande est-elle arrivée chaude/fraîche ?",
+    "courier_service": "Service de livraison",
+    "courier_service_sub": "Le livreur était courtois et professionnel",
+    "note_to_add": "Ajouter une note",
+    "note_placeholder": "Vous pouvez écrire vos réflexions ici... (Optionnel)",
+    "send": "Envoyer"
   },
   "group_order": {
     "start_group_order": "Lancer une commande groupée",
@@ -1692,7 +1715,13 @@
     "faq_what_is_lokma_answer": "LOKMA est une plateforme où vous pouvez commander en ligne auprès de boucheries, restaurants et marchés locaux. Nous livrons de la viande fraîche, des plats faits maison et des produits du marché à votre porte.",
     "delete_address": "Supprimer l'adresse",
     "street_city_required": "Rue et ville sont obligatoires",
-    "favorilerim": "Mes favoris"
+    "favorilerim": "Mes favoris",
+    "guest_title": "Daha fazla avantaj için giriş yapın",
+    "guest_benefit_1": "Teklifler ve indirimler alın",
+    "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
+    "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
+    "have_questions": "Sorularınız mı var?",
+    "we_are_here": "Sizin için buradayız"
   },
   "reservation": {
     "title": "Reservation",
@@ -2011,6 +2040,30 @@
     },
     "staff": {
       "authorized_person": "Personne autorisée"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "LOKMA'ya Hoşgeldiniz",
+      "subtitle": "LOKMA'yı kullanarak, Genel Şartlar ve Koşullarımızı kabul etmiş olursunuz. Verilerinizi nasıl işlediğimizi Gizlilik Politikamızdan öğrenebilirsiniz."
+    },
+    "cookies": {
+      "title": "Çerez Ayarları",
+      "subtitle": "Sana en iyi deneyimi sunmak, uygulamayı geliştirmek ve içerikleri kişiselleştirmek için çerez (cookie) ve benzeri teknolojiler kullanıyoruz.",
+      "accept_all": "Tümünü Kabul Et",
+      "accept_required": "Sadece Gerekli Olanlar"
+    },
+    "notifications": {
+      "title": "Bildirimlere İzin Ver",
+      "subtitle": "Siparişinizin durumu hakkındaki güncellemeler, size özel fırsatlar, bildirimleri istediğiniz zaman uygulama ayarlarından yönetme imkanı.",
+      "allow": "Bildirimlere İzin Ver",
+      "later": "Belki Daha Sonra"
+    },
+    "location": {
+      "title": "Tam olarak neredesin?",
+      "subtitle": "Bölgende teslimat yapan partnerleri bulmamız için, sana teslimat sürelerini ve teslimat ücretlerini daha net gösterebilmemiz için, güncel adresini sipariş adımında doğrulamak için.",
+      "share": "Konumu Paylaş",
+      "manual": "Manuel Adres Ekle"
     }
   }
 }

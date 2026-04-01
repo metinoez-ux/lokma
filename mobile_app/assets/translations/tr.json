@@ -762,7 +762,30 @@
     "thank_you": "Teşekkür ederiz!",
     "rate_delivery": "Teslimatı değerlendirin",
     "rate_food": "Yemeği değerlendirin",
-    "rate_service": "Hizmeti değerlendirin"
+    "rate_service": "Hizmeti değerlendirin",
+    "title": "Geri Bildirim",
+    "already_rated_this_month": "Bu Ay Zaten Değerlendirdiniz",
+    "once_a_month_msg": "Her ay bir kez geri bildirim verebilirsiniz.\nGelecek ay tekrar değerlendirebilirsiniz!",
+    "your_opinions_valuable": "Görüşleriniz Bizim İçin Değerli",
+    "last_order_business": "Son siparişiniz: {}",
+    "rate_our_services": "Hizmetlerimizi değerlendirin",
+    "processed_anonymously": "Geri bildiriminiz anonim olarak işlenir.",
+    "product_portfolio": "Ürün Çeşitliliği",
+    "product_portfolio_sub": "Ürün portföyü ve seçenekler",
+    "app_usability": "Uygulama Kullanımı",
+    "app_usability_sub": "Uygulamanın kullanım kolaylığı",
+    "delivery_speed": "Teslimat Hızı",
+    "delivery_speed_sub": "Siparişin size ulaşma süresi",
+    "overall_experience": "Genel Deneyim",
+    "overall_experience_sub": "Toplam memnuniyet",
+    "courier_evaluation": "Kurye Değerlendirmesi",
+    "food_quality": "Ürün Kalitesi",
+    "food_quality_sub": "Siparişiniz sıcak/taze geldi mi?",
+    "courier_service": "Kurye Hizmeti",
+    "courier_service_sub": "Kurye güler yüzlü ve profesyoneldi",
+    "note_to_add": "Eklemek İstediğiniz Not",
+    "note_placeholder": "Görüşlerinizi buraya yazabilirsiniz... (Opsiyonel)",
+    "send": "Gönder"
   },
   "group_order": {
     "start_group_order": "Grup Siparişi Başlat",
@@ -1692,7 +1715,13 @@
     "theme_light": "Gün",
     "theme_dark": "Gece",
     "delete_address": "Adresi Sil",
-    "street_city_required": "Sokak ve şehir zorunlu"
+    "street_city_required": "Sokak ve şehir zorunlu",
+    "guest_title": "Daha fazla avantaj için giriş yapın",
+    "guest_benefit_1": "Teklifler ve indirimler alın",
+    "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
+    "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
+    "have_questions": "Sorularınız mı var?",
+    "we_are_here": "Sizin için buradayız"
   },
   "reservation": {
     "title": "Rezervasyon",
@@ -2011,6 +2040,30 @@
     },
     "staff": {
       "authorized_person": "Yetkili Kişi"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "LOKMA'ya Hoşgeldiniz",
+      "subtitle": "LOKMA'yı kullanarak, Genel Şartlar ve Koşullarımızı kabul etmiş olursunuz. Verilerinizi nasıl işlediğimizi Gizlilik Politikamızdan öğrenebilirsiniz."
+    },
+    "cookies": {
+      "title": "Çerez Ayarları",
+      "subtitle": "Sana en iyi deneyimi sunmak, uygulamayı geliştirmek ve içerikleri kişiselleştirmek için çerez (cookie) ve benzeri teknolojiler kullanıyoruz.",
+      "accept_all": "Tümünü Kabul Et",
+      "accept_required": "Sadece Gerekli Olanlar"
+    },
+    "notifications": {
+      "title": "Bildirimlere İzin Ver",
+      "subtitle": "Siparişinizin durumu hakkındaki güncellemeler, size özel fırsatlar, bildirimleri istediğiniz zaman uygulama ayarlarından yönetme imkanı.",
+      "allow": "Bildirimlere İzin Ver",
+      "later": "Belki Daha Sonra"
+    },
+    "location": {
+      "title": "Tam olarak neredesin?",
+      "subtitle": "Bölgende teslimat yapan partnerleri bulmamız için, sana teslimat sürelerini ve teslimat ücretlerini daha net gösterebilmemiz için, güncel adresini sipariş adımında doğrulamak için.",
+      "share": "Konumu Paylaş",
+      "manual": "Manuel Adres Ekle"
     }
   }
 }

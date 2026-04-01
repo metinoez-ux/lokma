@@ -761,9 +761,32 @@
     "rate_experience": "Bewerten Sie Ihre Erfahrung",
     "feedback_placeholder": "Schreiben Sie Ihre Gedanken...",
     "thank_you": "Vielen Dank!",
-    "rate_delivery": "Lieferung bewerten",
-    "rate_food": "Essen bewerten",
-    "rate_service": "Service bewerten"
+    "rate_delivery": "Bewerten Sie die Lieferung",
+    "rate_food": "Bewerten Sie das Essen",
+    "rate_service": "Bewerten Sie den Service",
+    "title": "Feedback",
+    "already_rated_this_month": "Bereits Diesen Monat Bewertet",
+    "once_a_month_msg": "Sie können einmal im Monat Feedback geben.\nSie können uns nächsten Monat wieder bewerten!",
+    "your_opinions_valuable": "Ihre Meinung ist wertvoll",
+    "last_order_business": "Ihre letzte Bestellung: {}",
+    "rate_our_services": "Bewerten Sie unsere Dienste",
+    "processed_anonymously": "Ihr Feedback wird anonym verarbeitet.",
+    "product_portfolio": "Produktvielfalt",
+    "product_portfolio_sub": "Produktportfolio und Auswahl",
+    "app_usability": "App-Nutzbarkeit",
+    "app_usability_sub": "Benutzerfreundlichkeit der App",
+    "delivery_speed": "Liefergeschwindigkeit",
+    "delivery_speed_sub": "Zeit, bis die Bestellung bei Ihnen eintrifft",
+    "overall_experience": "Gesamterlebnis",
+    "overall_experience_sub": "Gesamtzufriedenheit",
+    "courier_evaluation": "Kurierbewertung",
+    "food_quality": "Lebensmittelqualität",
+    "food_quality_sub": "Kam Ihre Bestellung warm/frisch an?",
+    "courier_service": "Kurierdienst",
+    "courier_service_sub": "Der Kurier war freundlich und professionell",
+    "note_to_add": "Hinweis hinzufügen",
+    "note_placeholder": "Sie können Ihre Gedanken hier schreiben... (Optional)",
+    "send": "Senden"
   },
   "group_order": {
     "start_group_order": "Gruppenbestellung starten",
@@ -1701,7 +1724,13 @@
     "theme_dark": "Nacht",
     "delete_address": "Adresse löschen",
     "street_city_required": "Straße und Stadt sind erforderlich",
-    "favorilerim": "Meine Favoriten"
+    "favorilerim": "Meine Favoriten",
+    "guest_title": "Melde dich an für mehr Vorteile",
+    "guest_benefit_1": "Erhalte Angebote und Rabatte",
+    "guest_benefit_2": "Bestelle schneller mit gespeicherten Infos",
+    "guest_benefit_3": "Bestelle bequem erneut und verfolge deine Bestellung",
+    "have_questions": "Du hast Fragen?",
+    "we_are_here": "Wir sind für dich da"
   },
   "reservation": {
     "title": "Reservierung",
@@ -2020,6 +2049,30 @@
     },
     "staff": {
       "authorized_person": "Befugte Person"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Willkommen",
+      "subtitle": "Durch die Nutzung von LOKMA erklärst du dich mit unseren Allgemeinen Geschäftsbedingungen einverstanden. Wie wir deine Daten verarbeiten, erfährst du in unserer Datenschutzerklärung."
+    },
+    "cookies": {
+      "title": "Cookie-Einstellungen",
+      "subtitle": "Wir verwenden Cookies, um dir das beste Erlebnis zu bieten, die App zu verbessern und Inhalte zu personalisieren.",
+      "accept_all": "Alle Cookies akzeptieren",
+      "accept_required": "Nur erforderliche Cookies akzeptieren"
+    },
+    "notifications": {
+      "title": "Erlaube Benachrichtigungen",
+      "subtitle": "Updates über den Status deiner Bestellung, Exklusive Angebote nur für dich, Du hast jederzeit die Kontrolle darüber in den App-Einstellungen.",
+      "allow": "Benachrichtigungen erlauben",
+      "later": "Vielleicht später"
+    },
+    "location": {
+      "title": "Wo genau befindest du dich?",
+      "subtitle": "Damit wir Partner finden, die in deinem Gebiet liefern, um dir klare Lieferzeiten und -kosten anzuzeigen, um deine aktuelle Adresse beim Bestellen zu bestätigen.",
+      "share": "Standort teilen",
+      "manual": "Manuelle Adresseingabe"
     }
   }
 }

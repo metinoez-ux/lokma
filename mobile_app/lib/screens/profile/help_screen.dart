@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -20,6 +22,8 @@ class HelpScreen extends StatelessWidget {
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         backgroundColor: scaffoldBg,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: textPrimary),
@@ -122,7 +126,7 @@ class HelpScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: lokmaRed.withOpacity(0.1),
+                      color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Row(
@@ -143,7 +147,54 @@ class HelpScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
+
+          // Social Media Section
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  'Folgen Sie uns',
+                  style: TextStyle(color: textSubtle, fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildSocialIcon(FontAwesomeIcons.instagram, const Color(0xFFE1306C), 'https://instagram.com/lokma_app'),
+                    const SizedBox(width: 15),
+                    _buildSocialIcon(FontAwesomeIcons.xTwitter, textPrimary, 'https://x.com/lokma_app'),
+                    const SizedBox(width: 15),
+                    _buildSocialIcon(FontAwesomeIcons.facebook, const Color(0xFF1877F2), 'https://www.facebook.com/lokmaapp'),
+                    const SizedBox(width: 15),
+                    _buildSocialIcon(FontAwesomeIcons.youtube, const Color(0xFFFF0000), 'https://youtube.com/@loka_app'),
+                    const SizedBox(width: 15),
+                    _buildSocialIcon(FontAwesomeIcons.whatsapp, const Color(0xFF25D366), 'https://wa.me/491784443475'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSocialIcon(IconData icon, Color color, String url) {
+    return GestureDetector(
+      onTap: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 24),
       ),
     );
   }

@@ -760,9 +760,32 @@
     "rate_experience": "Rate your experience",
     "feedback_placeholder": "Write your thoughts...",
     "thank_you": "Thank you!",
-    "rate_delivery": "Rate delivery",
-    "rate_food": "Rate food",
-    "rate_service": "Rate service"
+    "rate_delivery": "Rate the delivery",
+    "rate_food": "Rate the food",
+    "rate_service": "Rate the service",
+    "title": "Feedback",
+    "already_rated_this_month": "Already Rated This Month",
+    "once_a_month_msg": "You can provide feedback once a month.\nYou can rate us again next month!",
+    "your_opinions_valuable": "Your Opinions Are Valuable",
+    "last_order_business": "Your last order: {}",
+    "rate_our_services": "Rate our services",
+    "processed_anonymously": "Your feedback is processed anonymously.",
+    "product_portfolio": "Product Variety",
+    "product_portfolio_sub": "Product portfolio and choices",
+    "app_usability": "App Usability",
+    "app_usability_sub": "Ease of use of the app",
+    "delivery_speed": "Delivery Speed",
+    "delivery_speed_sub": "Time taken for the order to reach you",
+    "overall_experience": "Overall Experience",
+    "overall_experience_sub": "Total satisfaction",
+    "courier_evaluation": "Courier Evaluation",
+    "food_quality": "Food Quality",
+    "food_quality_sub": "Did your order arrive warm/fresh?",
+    "courier_service": "Courier Service",
+    "courier_service_sub": "The courier was friendly and professional",
+    "note_to_add": "Note to Add",
+    "note_placeholder": "You can write your thoughts here... (Optional)",
+    "send": "Send"
   },
   "group_order": {
     "start_group_order": "Start Group Order",
@@ -1692,7 +1715,13 @@
     "faq_what_is_lokma_answer": "LOKMA is a platform where you can order online from local butchers, restaurants and markets. We deliver fresh meat, home-cooked meals and market products to your door.",
     "delete_address": "Delete Address",
     "street_city_required": "Street and city are required",
-    "favorilerim": "My Favorites"
+    "favorilerim": "My Favorites",
+    "guest_title": "Daha fazla avantaj için giriş yapın",
+    "guest_benefit_1": "Teklifler ve indirimler alın",
+    "guest_benefit_2": "Kaydedilen bilgilerle daha hızlı sipariş verin",
+    "guest_benefit_3": "Kolayca yeniden sipariş verin ve takip edin",
+    "have_questions": "Sorularınız mı var?",
+    "we_are_here": "Sizin için buradayız"
   },
   "reservation": {
     "title": "Reservation",
@@ -2011,6 +2040,30 @@
     },
     "staff": {
       "authorized_person": "Authorized Person"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "LOKMA'ya Hoşgeldiniz",
+      "subtitle": "LOKMA'yı kullanarak, Genel Şartlar ve Koşullarımızı kabul etmiş olursunuz. Verilerinizi nasıl işlediğimizi Gizlilik Politikamızdan öğrenebilirsiniz."
+    },
+    "cookies": {
+      "title": "Çerez Ayarları",
+      "subtitle": "Sana en iyi deneyimi sunmak, uygulamayı geliştirmek ve içerikleri kişiselleştirmek için çerez (cookie) ve benzeri teknolojiler kullanıyoruz.",
+      "accept_all": "Tümünü Kabul Et",
+      "accept_required": "Sadece Gerekli Olanlar"
+    },
+    "notifications": {
+      "title": "Bildirimlere İzin Ver",
+      "subtitle": "Siparişinizin durumu hakkındaki güncellemeler, size özel fırsatlar, bildirimleri istediğiniz zaman uygulama ayarlarından yönetme imkanı.",
+      "allow": "Bildirimlere İzin Ver",
+      "later": "Belki Daha Sonra"
+    },
+    "location": {
+      "title": "Tam olarak neredesin?",
+      "subtitle": "Bölgende teslimat yapan partnerleri bulmamız için, sana teslimat sürelerini ve teslimat ücretlerini daha net gösterebilmemiz için, güncel adresini sipariş adımında doğrulamak için.",
+      "share": "Konumu Paylaş",
+      "manual": "Manuel Adres Ekle"
     }
   }
 }

@@ -13,9 +13,13 @@ class FeedbackFormScreen extends StatefulWidget {
 
 class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   static const Color lokmaRed = Color(0xFFEA184A);
-  static const Color blackPure = Color(0xFF000000);
-  static const Color surfaceCard = Color(0xFF181818);
-  static const Color borderSubtle = Color(0xFF262626);
+
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get scaffoldBg => isDark ? const Color(0xFF000000) : const Color(0xFFF5F5F5);
+  Color get surfaceBg => isDark ? const Color(0xFF181818) : Colors.white;
+  Color get borderColor => isDark ? const Color(0xFF333333) : Colors.grey.shade300;
+  Color get textPrimary => isDark ? Colors.white : Colors.black87;
+  Color get textSecondary => isDark ? Colors.grey[400]! : Colors.grey.shade700;
 
   // Ratings (1-5, 0 = not rated)
   int _productPortfolioRating = 0;
@@ -226,15 +230,16 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: blackPure,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: blackPure,
+        backgroundColor: scaffoldBg,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Geri Bildirim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        title: Text(tr('feedback.title'), style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: _hasSubmittedThisMonth
@@ -252,15 +257,15 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
           children: [
             Icon(Icons.check_circle, color: Colors.green[400], size: 80),
             const SizedBox(height: 24),
-            const Text(
-              'Bu Ay Zaten Değerlendirdiniz',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+            Text(
+              tr('feedback.already_rated_this_month'),
+              style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Her ay bir kez geri bildirim verebilirsiniz.\nGelecek ay tekrar değerlendirebilirsiniz!',
-              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+              tr('feedback.once_a_month_msg'),
+              style: TextStyle(color: textSecondary, fontSize: 15, fontWeight: FontWeight.w400),
               textAlign: TextAlign.center,
             ),
           ],
@@ -277,28 +282,28 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: surfaceCard,
+            color: surfaceBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderSubtle),
+            border: Border.all(color: borderColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '📝 Görüşleriniz Bizim İçin Değerli',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              Text(
+                tr('feedback.your_opinions_valuable'),
+                style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
                 _lastOrderBusinessName != null
-                    ? 'Son siparişiniz: $_lastOrderBusinessName'
-                    : 'Hizmetlerimizi değerlendirin',
-                style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                    ? tr('feedback.last_order_business').replaceFirst('{}', _lastOrderBusinessName!)
+                    : tr('feedback.rate_our_services'),
+                style: TextStyle(color: textSecondary, fontSize: 15, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
               Text(
-                'Geri bildiriminiz anonim olarak işlenir.',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                tr('feedback.processed_anonymously'),
+                style: TextStyle(color: textSecondary.withOpacity(0.8), fontSize: 14, fontStyle: FontStyle.italic, fontWeight: FontWeight.w400),
               ),
             ],
           ),
@@ -308,29 +313,29 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
 
         // Rating categories
         _buildRatingCategory(
-          '🛒 Ürün Çeşitliliği',
-          'Ürün portföyü ve seçenekler',
+          tr('feedback.product_portfolio'),
+          tr('feedback.product_portfolio_sub'),
           _productPortfolioRating,
           (rating) => setState(() => _productPortfolioRating = rating),
         ),
 
         _buildRatingCategory(
-          '📱 Uygulama Kullanımı',
-          'App\'in kullanım kolaylığı',
+          tr('feedback.app_usability'),
+          tr('feedback.app_usability_sub'),
           _appUsabilityRating,
           (rating) => setState(() => _appUsabilityRating = rating),
         ),
 
         _buildRatingCategory(
-          '🚚 Teslimat Hızı',
-          'Siparişin size ulaşma süresi',
+          tr('feedback.delivery_speed'),
+          tr('feedback.delivery_speed_sub'),
           _deliverySpeedRating,
           (rating) => setState(() => _deliverySpeedRating = rating),
         ),
 
         _buildRatingCategory(
-          '⭐ Genel Deneyim',
-          'Toplam memnuniyet',
+          tr('feedback.overall_experience'),
+          tr('feedback.overall_experience_sub'),
           _overallExperienceRating,
           (rating) => setState(() => _overallExperienceRating = rating),
         ),
@@ -344,24 +349,24 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
             children: [
               const Icon(Icons.delivery_dining, color: Colors.amber, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                'Kurye Değerlendirmesi',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              Text(
+                tr('feedback.courier_evaluation'),
+                style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ],
           ),
         ),
 
         _buildRatingCategory(
-          '🍲 Ürün Kalitesi',
-          'Siparişiniz sıcak/taze geldi mi?',
+          tr('feedback.food_quality'),
+          tr('feedback.food_quality_sub'),
           _foodFreshnessRating,
           (rating) => setState(() => _foodFreshnessRating = rating),
         ),
 
         _buildRatingCategory(
-          '😊 Kurye Hizmeti',
-          'Kurye güler yüzlü ve profesyoneldi',
+          tr('feedback.courier_service'),
+          tr('feedback.courier_service_sub'),
           _courierProfessionalismRating,
           (rating) => setState(() => _courierProfessionalismRating = rating),
         ),
@@ -369,34 +374,34 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
         const SizedBox(height: 24),
 
         // Note field
-        const Text(
-          'Eklemek İstediğiniz Not',
-          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+        Text(
+          tr('feedback.note_to_add'),
+          style: TextStyle(color: textPrimary, fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: _noteController,
           maxLines: 4,
           maxLength: 500,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: textPrimary),
           decoration: InputDecoration(
-            hintText: 'Görüşlerinizi buraya yazabilirsiniz... (Opsiyonel)',
-            hintStyle: TextStyle(color: Colors.grey[600]),
+            hintText: tr('feedback.note_placeholder'),
+            hintStyle: TextStyle(color: textSecondary, fontWeight: FontWeight.w400),
             filled: true,
-            fillColor: surfaceCard,
+            fillColor: surfaceBg,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: borderSubtle),
+              borderSide: BorderSide(color: borderColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: borderSubtle),
+              borderSide: BorderSide(color: borderColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: lokmaRed),
             ),
-            counterStyle: TextStyle(color: Colors.grey[600]),
+            counterStyle: TextStyle(color: textSecondary),
           ),
         ),
 
@@ -419,15 +424,15 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                       height: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text(
-                      'Gönder',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  : Text(
+                      tr('feedback.send'),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                     ),
             ),
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 40),
       ],
     );
   }
@@ -437,16 +442,16 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: surfaceCard,
+        color: surfaceBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderSubtle),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+          Text(title, style: TextStyle(color: textPrimary, fontSize: 17, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+          Text(subtitle, style: TextStyle(color: textSecondary, fontSize: 15, fontWeight: FontWeight.w500)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -463,7 +468,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                   padding: const EdgeInsets.all(8),
                   child: Icon(
                     isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
-                    color: isSelected ? Colors.amber : Colors.grey[600],
+                    color: isSelected ? Colors.amber : (isDark ? Colors.grey[600] : Colors.grey[400]),
                     size: 36,
                   ),
                 ),
