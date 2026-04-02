@@ -123,7 +123,7 @@ export default function LandingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-[#0f172a] flex items-center justify-center">
         <div className="animate-pulse">
           <Image src="/lokma_logo_red_web.png" alt="LOKMA" width={160} height={40} className="object-contain" />
         </div>
@@ -132,7 +132,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#ea184a]/30">
+    <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#ea184a]/30">
       <PublicHeader themeAware={true} />
 
       {/* Hero Section — Full-width background image with gradient overlay */}
@@ -199,7 +199,7 @@ export default function LandingPage() {
       </section>
 
       {/* Feature Cards — Lexware style (light background) */}
-      <section className="bg-white dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
+      <section className="bg-white dark:bg-[#0f172a] py-20 px-4 md:px-8">
         <div className="max-w-[1200px] mx-auto">
           <div className="mb-14">
             <p className="text-[#F51736] font-bold text-sm tracking-wider uppercase mb-3 flex items-center gap-2">
@@ -274,7 +274,7 @@ export default function LandingPage() {
       </section>
 
       {/* Partner CTA — Lexware-style clean banner */}
-      <section className="bg-gray-50 dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
+      <section className="bg-gray-50 dark:bg-[#0f172a] py-20 px-4 md:px-8">
         <div className="max-w-[1200px] mx-auto relative bg-gradient-to-br from-[#F51736] to-[#c9183d] rounded-3xl p-10 md:p-16 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 flex-1">
@@ -294,7 +294,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="bg-white dark:bg-[#0a0a0f] py-20 px-4 md:px-8">
+      <section className="bg-white dark:bg-[#0f172a] py-20 px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-12 text-gray-900 dark:text-white">{t('faqTitle')}</h2>
           <div className="space-y-4">

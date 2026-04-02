@@ -274,7 +274,7 @@ export default function SupportPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="min-h-screen bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif]">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">

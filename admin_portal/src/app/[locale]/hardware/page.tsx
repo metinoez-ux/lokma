@@ -13,7 +13,7 @@ export default function HardwarePage() {
     const t = (key: string) => (tx[key] as string) || key;
     const tArr = (key: string) => (tx[key] as string[]) || [];
     return (
-        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             {/* ═══════════════════════════════════════ */}
@@ -29,8 +29,8 @@ export default function HardwarePage() {
                         className="object-cover opacity-40"
                         priority
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f] via-transparent to-[#0a0a0f]" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/80 via-transparent to-[#0a0a0f]/80" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-transparent to-[#0f172a]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a]/80 via-transparent to-[#0f172a]/80" />
                 </div>
 
                 <div className="relative z-10 max-w-5xl mx-auto text-center px-4 py-20">
@@ -194,7 +194,7 @@ export default function HardwarePage() {
             {/* ═══════════════════════════════════════ */}
             {/* POS KASA SİSTEMİ                        */}
             {/* ═══════════════════════════════════════ */}
-            <section id="pos" className="py-24 px-4 md:px-20 bg-gradient-to-b from-[#0a0a0f] via-[#0f0a15] to-[#0a0a0f] relative">
+            <section id="pos" className="py-24 px-4 md:px-20 bg-gradient-to-b from-[#0f172a] via-[#0f0a15] to-[#0f172a] relative">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <span className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-amber-500/20">
@@ -361,7 +361,7 @@ export default function HardwarePage() {
             {/* ═══════════════════════════════════════ */}
             {/* ESL ELEKTRONİK RAF ETİKETLERİ           */}
             {/* ═══════════════════════════════════════ */}
-            <section id="esl" className="py-24 px-4 md:px-20 bg-gradient-to-b from-[#0a0a0f] via-[#0a100f] to-[#0a0a0f] relative">
+            <section id="esl" className="py-24 px-4 md:px-20 bg-gradient-to-b from-[#0f172a] via-[#0a100f] to-[#0f172a] relative">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <span className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-emerald-500/20">
@@ -479,7 +479,7 @@ export default function HardwarePage() {
             {/* ═══════════════════════════════════════ */}
             {/* TAM ENTEGRASYON DETAYLARI                */}
             {/* ═══════════════════════════════════════ */}
-            <section className="py-24 px-4 md:px-20 bg-gradient-to-b from-[#0a0a0f] via-[#100a0f] to-[#0a0a0f] relative">
+            <section className="py-24 px-4 md:px-20 bg-gradient-to-b from-[#0f172a] via-[#100a0f] to-[#0f172a] relative">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">

@@ -135,7 +135,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const currentLangData = languages.find(l => l.code === currentLang) || languages[0];
 
     const headerBg = themeAware
-        ? (scrolled ? 'bg-white dark:bg-[#0a0a0f]/80 backdrop-blur-xl border-gray-200 dark:border-white/10 shadow-sm' : 'bg-white dark:bg-[#0a0a0f]/80 border-transparent')
+        ? (scrolled ? 'bg-white dark:bg-[#0f172a]/80 backdrop-blur-xl border-gray-200 dark:border-white/10 shadow-sm' : 'bg-white dark:bg-[#0f172a]/80 border-transparent')
         : (scrolled ? 'bg-white backdrop-blur-xl border-gray-200 shadow-sm' : 'bg-white border-transparent');
     const textColor = themeAware ? 'text-gray-900 dark:text-white' : 'text-gray-900';
     const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white' : 'bg-white border-gray-200 text-gray-900';

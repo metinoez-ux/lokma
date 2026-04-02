@@ -126,7 +126,7 @@ export default function PartnerApplyPage() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto p-8">
                     <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span className="material-symbols-outlined text-green-500 text-4xl">check_circle</span>
@@ -143,7 +143,7 @@ export default function PartnerApplyPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">

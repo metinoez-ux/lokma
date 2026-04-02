@@ -114,7 +114,7 @@ export default function CookiesPage() {
     };
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40 flex-1">

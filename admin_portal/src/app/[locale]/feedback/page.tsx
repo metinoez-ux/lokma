@@ -150,7 +150,7 @@ function FeedbackContent() {
 
     if (sent) {
         return (
-            <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+            <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
                 <PublicHeader themeAware={true} />
                 <div className="flex-1 flex items-center justify-center p-4 pt-32">
                     <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
@@ -183,7 +183,7 @@ function FeedbackContent() {
     ];
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
 
             <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40 flex-1">
@@ -243,7 +243,7 @@ function FeedbackContent() {
 export default function FeedbackPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-white dark:bg-[#0a0a0f] flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-[#0f172a] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ea184a]" />
             </div>
         }>

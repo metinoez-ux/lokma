@@ -23,12 +23,12 @@ export default function PartnerPage() {
     ];
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] pt-24 overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] pt-24 overflow-x-hidden">
             <PublicHeader themeAware={true} />
             {/* Hero Section */}
             <section className="relative py-20 px-4 md:px-20 lg:px-40 overflow-hidden min-h-[60vh] flex items-center justify-center">
                 <div className="absolute inset-0 z-0 opacity-20">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white dark:from-[#0a0a0f] dark:via-transparent dark:to-[#0a0a0f] z-10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white dark:from-[#0f172a] dark:via-transparent dark:to-[#0f172a] z-10"></div>
                     <div className="w-full h-full bg-[#ea184a]/20 blur-[100px] transform scale-150 rounded-full"></div>
                 </div>
 
@@ -59,7 +59,7 @@ export default function PartnerPage() {
                     <h2 className="text-4xl md:text-5xl font-black mb-16 tracking-tight">{t('benefitsTitle')}</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {benefits.map((b, i) => (
-                            <div key={i} className="bg-white dark:bg-[#0a0a0f] p-8 rounded-[2rem] border border-gray-200 dark:border-white/10 hover:border-[#ea184a]/50 transition-colors text-center flex flex-col items-center group hover:-translate-y-2 duration-300 shadow-2xl shadow-black">
+                            <div key={i} className="bg-white dark:bg-[#0f172a] p-8 rounded-[2rem] border border-gray-200 dark:border-white/10 hover:border-[#ea184a]/50 transition-colors text-center flex flex-col items-center group hover:-translate-y-2 duration-300 shadow-2xl shadow-black">
                                 <div className="w-16 h-16 bg-[#ea184a]/10 text-[#ea184a] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                     <span className="material-symbols-outlined text-3xl">{b.icon}</span>
                                 </div>
@@ -72,7 +72,7 @@ export default function PartnerPage() {
             </section>
 
             {/* How It Works Layer */}
-            <section className="py-24 px-4 md:px-20 lg:px-40 bg-white dark:bg-[#0a0a0f]">
+            <section className="py-24 px-4 md:px-20 lg:px-40 bg-white dark:bg-[#0f172a]">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4">{t('howItWorksTitle')}</h2>
@@ -86,7 +86,7 @@ export default function PartnerPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
                             {steps.map((step, i) => (
                                 <div key={i} className="text-center group">
-                                    <div className="w-24 h-24 bg-white dark:bg-[#0a0a0f] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#ea184a] transition-colors rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-black">
+                                    <div className="w-24 h-24 bg-white dark:bg-[#0f172a] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#ea184a] transition-colors rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-black">
                                         <span className="text-4xl font-black text-gray-900 dark:text-white group-hover:text-[#ea184a] transition-colors">{step.num}</span>
                                     </div>
                                     <h3 className="text-2xl font-bold mb-3">{step.title}</h3>

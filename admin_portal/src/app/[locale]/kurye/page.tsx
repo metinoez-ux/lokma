@@ -31,14 +31,14 @@ export default function KuryePage() {
     ];
 
     return (
-        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0a0a0f] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] pt-24 overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] pt-24 overflow-x-hidden">
             <PublicHeader themeAware={true} />
             {/* Header handled by root layout, just spacing needed */}
 
             {/* Hero Section */}
             <section className="relative py-20 px-4 md:px-20 lg:px-40 overflow-hidden min-h-[60vh] flex items-center justify-center">
                 <div className="absolute inset-0 z-0 opacity-20">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white dark:from-[#0a0a0f] dark:via-transparent dark:to-[#0a0a0f] z-10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white dark:from-[#0f172a] dark:via-transparent dark:to-[#0f172a] z-10"></div>
                     <div className="w-full h-full bg-emerald-500/20 blur-[100px] transform scale-150 rounded-full"></div>
                 </div>
 
@@ -68,7 +68,7 @@ export default function KuryePage() {
                     <h2 className="text-4xl md:text-5xl font-black mb-16 tracking-tight">{t('benefitsTitle')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {benefits.map((b, i) => (
-                            <div key={i} className="bg-white dark:bg-[#0a0a0f] p-10 rounded-[2.5rem] border border-gray-200 dark:border-white/10 hover:border-emerald-500/50 transition-colors text-left flex flex-col group hover:-translate-y-2 duration-300 shadow-2xl shadow-black">
+                            <div key={i} className="bg-white dark:bg-[#0f172a] p-10 rounded-[2.5rem] border border-gray-200 dark:border-white/10 hover:border-emerald-500/50 transition-colors text-left flex flex-col group hover:-translate-y-2 duration-300 shadow-2xl shadow-black">
                                 <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
                                     <span className="material-symbols-outlined text-4xl">{b.icon}</span>
                                 </div>
@@ -81,7 +81,7 @@ export default function KuryePage() {
             </section>
 
             {/* Requirements & Steps */}
-            <section className="py-24 px-4 md:px-20 lg:px-40 bg-white dark:bg-[#0a0a0f]">
+            <section className="py-24 px-4 md:px-20 lg:px-40 bg-white dark:bg-[#0f172a]">
                 <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
 
                     {/* Requirements */}
@@ -113,7 +113,7 @@ export default function KuryePage() {
                         <div className="space-y-10 relative before:absolute before:inset-0 before:ml-7 before:-translate-x-px before:w-1 before:bg-white/10 before:z-0">
                             {steps.map((step, i) => (
                                 <div key={i} className="relative z-10 flex items-start gap-8 group">
-                                    <div className="w-14 h-14 shrink-0 bg-white dark:bg-[#0a0a0f] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#ea184a] transition-colors rounded-full flex items-center justify-center font-black text-2xl text-gray-900 dark:text-white group-hover:text-[#ea184a]">
+                                    <div className="w-14 h-14 shrink-0 bg-white dark:bg-[#0f172a] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#ea184a] transition-colors rounded-full flex items-center justify-center font-black text-2xl text-gray-900 dark:text-white group-hover:text-[#ea184a]">
                                         {step.num}
                                     </div>
                                     <div className="pt-2">
