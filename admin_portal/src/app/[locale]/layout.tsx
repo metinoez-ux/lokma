@@ -5,39 +5,39 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
 const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+ variable: "--font-inter",
+ subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "LOKMA | Entdecke deine Nachbarschaft",
-  description: "Der digitale Marktplatz, der lokale Unternehmen und Kunden zusammenbringt. Metzger, Supermarkt, Blumenladen, Restaurant und mehr auf einer Plattform.",
-  keywords: "Essensbestellung, lokale Geschaefte, frische Produkte, Kurier, Restaurant, lokma, lokma app, lokma shop",
-  openGraph: {
-    title: "LOKMA | Entdecke deine Nachbarschaft",
-    description: "Der digitale Marktplatz, der lokale Unternehmen und Kunden zusammenbringt.",
-    url: "https://lokma.shop",
-    siteName: "LOKMA",
-    images: [
-      {
-        url: "https://lokma.shop/lokma_logo_wide.png",
-        width: 1200,
-        height: 630,
-        alt: "LOKMA Logo",
-      },
-    ],
-    locale: "de_DE",
-    type: "website",
-  },
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: '48x48' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    ],
-    shortcut: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
+ title: "LOKMA | Entdecke deine Nachbarschaft",
+ description: "Der digitale Marktplatz, der lokale Unternehmen und Kunden zusammenbringt. Metzger, Supermarkt, Blumenladen, Restaurant und mehr auf einer Plattform.",
+ keywords: "Essensbestellung, lokale Geschaefte, frische Produkte, Kurier, Restaurant, lokma, lokma app, lokma shop",
+ openGraph: {
+ title: "LOKMA | Entdecke deine Nachbarschaft",
+ description: "Der digitale Marktplatz, der lokale Unternehmen und Kunden zusammenbringt.",
+ url: "https://lokma.shop",
+ siteName: "LOKMA",
+ images: [
+ {
+ url: "https://lokma.shop/lokma_logo_wide.png",
+ width: 1200,
+ height: 630,
+ alt: "LOKMA Logo",
+ },
+ ],
+ locale: "de_DE",
+ type: "website",
+ },
+ icons: {
+ icon: [
+ { url: '/favicon.ico', sizes: '48x48' },
+ { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+ { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+ ],
+ shortcut: '/favicon.ico',
+ apple: '/apple-touch-icon.png',
+ },
 };
 
 import Script from 'next/script';
@@ -46,52 +46,52 @@ import CookieBanner from '@/components/ui/CookieBanner';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export default async function RootLayout({
-  children,
-  params,
+ children,
+ params,
 }: Readonly<{
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
+ children: React.ReactNode;
+ params: Promise<{ locale: string }>;
 }>) {
-  const { locale } = await params;
-  const messages = await getMessages();
+ const { locale } = await params;
+ const messages = await getMessages();
 
-  return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1e293b" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body
-        className={`${inter.variable} antialiased`}
-      >
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-          strategy="beforeInteractive"
-        />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: '#1f2937',
-              color: '#fff',
-              border: '1px solid #374151'
-            }
-          }}
-        />
-        <NextIntlClientProvider messages={messages}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            {children}
-            <CookieBanner />
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
-  );
+ return (
+ <html lang={locale} suppressHydrationWarning>
+ <head>
+ <link rel="manifest" href="/manifest.json" />
+ <meta name="theme-color" content="#1e293b" />
+ <meta name="apple-mobile-web-app-capable" content="yes" />
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+ <meta name="mobile-web-app-capable" content="yes" />
+ <link rel="preconnect" href="https://fonts.googleapis.com" />
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+ <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+ <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+ </head>
+ <body
+ className={`${inter.variable} antialiased`}
+ >
+ <Script
+ src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+ strategy="beforeInteractive"
+ />
+ <Toaster
+ position="top-right"
+ toastOptions={{
+ style: {
+ background: '#1f2937',
+ color: '#fff',
+ border: '1px solid #374151'
+ }
+ }}
+ />
+ <NextIntlClientProvider messages={messages}>
+ <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+ {children}
+ <CookieBanner />
+ </ThemeProvider>
+ </NextIntlClientProvider>
+ </body>
+ </html>
+ );
 }

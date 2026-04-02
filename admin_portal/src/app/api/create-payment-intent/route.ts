@@ -24,247 +24,247 @@ const VAT_RATE = 19; // 19% German VAT (Umsatzsteuer)
  * Calculate complete fee breakdown
  */
 function calculateFeeBreakdown(amountCents: number, commissionRate: number, tipAmountCents: number = 0) {
-    // === TIP SEPARATION (§3 Nr. 51 EStG — Tips are tax-free in Germany) ===
-    // Commission is calculated on the ORDER amount only, excluding tip.
-    // Tip stays in LOKMA platform account for driver payouts.
-    const orderAmountCents = amountCents - tipAmountCents;
+ // === TIP SEPARATION (§3 Nr. 51 EStG — Tips are tax-free in Germany) ===
+ // Commission is calculated on the ORDER amount only, excluding tip.
+ // Tip stays in LOKMA platform account for driver payouts.
+ const orderAmountCents = amountCents - tipAmountCents;
 
-    // 1. Stripe processing fee (charged by Stripe from TOTAL including tip)
-    const stripeFee = Math.round((amountCents * STRIPE_FEE_PERCENT / 100) + STRIPE_FEE_FIXED_CENTS);
+ // 1. Stripe processing fee (charged by Stripe from TOTAL including tip)
+ const stripeFee = Math.round((amountCents * STRIPE_FEE_PERCENT / 100) + STRIPE_FEE_FIXED_CENTS);
 
-    // 2. Net after Stripe fee
-    const netAfterStripe = amountCents - stripeFee;
+ // 2. Net after Stripe fee
+ const netAfterStripe = amountCents - stripeFee;
 
-    // 3. Platform commission (from ORDER amount only — NOT from tip)
-    const commissionGross = Math.round(orderAmountCents * (commissionRate / 100));
+ // 3. Platform commission (from ORDER amount only — NOT from tip)
+ const commissionGross = Math.round(orderAmountCents * (commissionRate / 100));
 
-    // 4. VAT on commission (19%)
-    // Netto = Brutto / 1.19
-    const commissionNet = Math.round(commissionGross / 1.19);
-    const commissionVat = commissionGross - commissionNet;
+ // 4. VAT on commission (19%)
+ // Netto = Brutto / 1.19
+ const commissionNet = Math.round(commissionGross / 1.19);
+ const commissionVat = commissionGross - commissionNet;
 
-    // 5. Amount to transfer to merchant
-    // Merchant receives: orderAmount - commission (tip is NOT transferred to merchant)
-    const merchantTransfer = orderAmountCents - commissionGross;
+ // 5. Amount to transfer to merchant
+ // Merchant receives: orderAmount - commission (tip is NOT transferred to merchant)
+ const merchantTransfer = orderAmountCents - commissionGross;
 
-    // 6. Platform revenue after Stripe fee
-    // Platform keeps: commission + tip (tip pooled for driver payout)
-    const platformNetRevenue = commissionGross - stripeFee;
+ // 6. Platform revenue after Stripe fee
+ // Platform keeps: commission + tip (tip pooled for driver payout)
+ const platformNetRevenue = commissionGross - stripeFee;
 
-    return {
-        customerPaid: amountCents,
-        orderAmount: orderAmountCents,
-        tipAmount: tipAmountCents,
-        stripeFee,
-        netAfterStripe,
-        commissionGross,
-        commissionNet,
-        commissionVat,
-        merchantTransfer,
-        tipPooled: tipAmountCents, // Tip stays in platform for driver payout
-        platformNetRevenue,
-        // Rates used
-        stripeFeePercent: STRIPE_FEE_PERCENT,
-        stripeFeeFixed: STRIPE_FEE_FIXED_CENTS,
-        vatRate: VAT_RATE,
-        commissionRate,
-    };
+ return {
+ customerPaid: amountCents,
+ orderAmount: orderAmountCents,
+ tipAmount: tipAmountCents,
+ stripeFee,
+ netAfterStripe,
+ commissionGross,
+ commissionNet,
+ commissionVat,
+ merchantTransfer,
+ tipPooled: tipAmountCents, // Tip stays in platform for driver payout
+ platformNetRevenue,
+ // Rates used
+ stripeFeePercent: STRIPE_FEE_PERCENT,
+ stripeFeeFixed: STRIPE_FEE_FIXED_CENTS,
+ vatRate: VAT_RATE,
+ commissionRate,
+ };
 }
 
 export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const {
-            amount,           // Total amount in EUR (e.g., 100.00) — includes tip
-            businessId,       // Merchant business ID
-            orderId,          // Order ID for tracking
-            customerEmail,    // Customer email for receipt
-            tipAmount = 0,    // Tip amount in EUR (e.g., 2.50) — tax-free, pooled for driver
-        } = body;
+ try {
+ const body = await request.json();
+ const {
+ amount, // Total amount in EUR (e.g., 100.00) — includes tip
+ businessId, // Merchant business ID
+ orderId, // Order ID for tracking
+ customerEmail, // Customer email for receipt
+ tipAmount = 0, // Tip amount in EUR (e.g., 2.50) — tax-free, pooled for driver
+ } = body;
 
-        if (!amount || !businessId) {
-            return NextResponse.json(
-                { error: 'amount and businessId are required' },
-                { status: 400 }
-            );
-        }
+ if (!amount || !businessId) {
+ return NextResponse.json(
+ { error: 'amount and businessId are required' },
+ { status: 400 }
+ );
+ }
 
-        const businessDoc = await getDoc(doc(db, 'businesses', businessId));
-        if (!businessDoc.exists()) {
-            return NextResponse.json(
-                { error: 'Business not found' },
-                { status: 404 }
-            );
-        }
+ const businessDoc = await getDoc(doc(db, 'businesses', businessId));
+ if (!businessDoc.exists()) {
+ return NextResponse.json(
+ { error: 'Business not found' },
+ { status: 404 }
+ );
+ }
 
-        const businessData = businessDoc.data();
-        const connectedAccountId = businessData.stripeAccountId;
-        const commissionRate = businessData.commissionRate || 5;
-        const amountCents = Math.round(amount * 100);
-        const tipCents = Math.round((tipAmount || 0) * 100);
+ const businessData = businessDoc.data();
+ const connectedAccountId = businessData.stripeAccountId;
+ const commissionRate = businessData.commissionRate || 5;
+ const amountCents = Math.round(amount * 100);
+ const tipCents = Math.round((tipAmount || 0) * 100);
 
-        // Calculate complete fee breakdown (tip excluded from commission)
-        const fees = calculateFeeBreakdown(amountCents, commissionRate, tipCents);
+ // Calculate complete fee breakdown (tip excluded from commission)
+ const fees = calculateFeeBreakdown(amountCents, commissionRate, tipCents);
 
-        console.log(`[Payment] Fee Breakdown for €${amount} (tip: €${tipAmount || 0}):`);
-        console.log(`  - Order Amount: €${(fees.orderAmount / 100).toFixed(2)}`);
-        console.log(`  - Tip Amount: €${(fees.tipAmount / 100).toFixed(2)}`);
-        console.log(`  - Stripe Fee: €${(fees.stripeFee / 100).toFixed(2)}`);
-        console.log(`  - Commission (gross): €${(fees.commissionGross / 100).toFixed(2)}`);
-        console.log(`  - Commission VAT (19%): €${(fees.commissionVat / 100).toFixed(2)}`);
-        console.log(`  - Commission (net): €${(fees.commissionNet / 100).toFixed(2)}`);
-        console.log(`  - Merchant Transfer: €${(fees.merchantTransfer / 100).toFixed(2)}`);
-        console.log(`  - Tip Pooled (for driver): €${(fees.tipPooled / 100).toFixed(2)}`);
-        console.log(`  - Platform Net Revenue: €${(fees.platformNetRevenue / 100).toFixed(2)}`);
+ console.log(`[Payment] Fee Breakdown for €${amount} (tip: €${tipAmount || 0}):`);
+ console.log(` - Order Amount: €${(fees.orderAmount / 100).toFixed(2)}`);
+ console.log(` - Tip Amount: €${(fees.tipAmount / 100).toFixed(2)}`);
+ console.log(` - Stripe Fee: €${(fees.stripeFee / 100).toFixed(2)}`);
+ console.log(` - Commission (gross): €${(fees.commissionGross / 100).toFixed(2)}`);
+ console.log(` - Commission VAT (19%): €${(fees.commissionVat / 100).toFixed(2)}`);
+ console.log(` - Commission (net): €${(fees.commissionNet / 100).toFixed(2)}`);
+ console.log(` - Merchant Transfer: €${(fees.merchantTransfer / 100).toFixed(2)}`);
+ console.log(` - Tip Pooled (for driver): €${(fees.tipPooled / 100).toFixed(2)}`);
+ console.log(` - Platform Net Revenue: €${(fees.platformNetRevenue / 100).toFixed(2)}`);
 
-        // Build metadata with all fee details (for accounting)
-        const feeMetadata = {
-            orderId: orderId || '',
-            businessId,
-            businessName: businessData.companyName || businessData.brand || '',
-            // All amounts in cents for precision
-            customerPaidCents: fees.customerPaid.toString(),
-            orderAmountCents: fees.orderAmount.toString(),
-            tipAmountCents: fees.tipAmount.toString(),
-            stripeFeeCents: fees.stripeFee.toString(),
-            commissionGrossCents: fees.commissionGross.toString(),
-            commissionNetCents: fees.commissionNet.toString(),
-            commissionVatCents: fees.commissionVat.toString(),
-            merchantTransferCents: fees.merchantTransfer.toString(),
-            tipPooledCents: fees.tipPooled.toString(),
-            platformNetRevenueCents: fees.platformNetRevenue.toString(),
-            // Rates
-            commissionRatePercent: commissionRate.toString(),
-            vatRatePercent: VAT_RATE.toString(),
-            stripeFeePercent: STRIPE_FEE_PERCENT.toString(),
-        };
+ // Build metadata with all fee details (for accounting)
+ const feeMetadata = {
+ orderId: orderId || '',
+ businessId,
+ businessName: businessData.companyName || businessData.brand || '',
+ // All amounts in cents for precision
+ customerPaidCents: fees.customerPaid.toString(),
+ orderAmountCents: fees.orderAmount.toString(),
+ tipAmountCents: fees.tipAmount.toString(),
+ stripeFeeCents: fees.stripeFee.toString(),
+ commissionGrossCents: fees.commissionGross.toString(),
+ commissionNetCents: fees.commissionNet.toString(),
+ commissionVatCents: fees.commissionVat.toString(),
+ merchantTransferCents: fees.merchantTransfer.toString(),
+ tipPooledCents: fees.tipPooled.toString(),
+ platformNetRevenueCents: fees.platformNetRevenue.toString(),
+ // Rates
+ commissionRatePercent: commissionRate.toString(),
+ vatRatePercent: VAT_RATE.toString(),
+ stripeFeePercent: STRIPE_FEE_PERCENT.toString(),
+ };
 
-        if (!connectedAccountId) {
-            // Business doesn't have Stripe Connect - platform-only payment
-            console.log(`[Payment] Business ${businessId} has no Stripe account - using platform payment`);
+ if (!connectedAccountId) {
+ // Business doesn't have Stripe Connect - platform-only payment
+ console.log(`[Payment] Business ${businessId} has no Stripe account - using platform payment`);
 
-            const paymentIntent = await stripe.paymentIntents.create({
-                amount: amountCents,
-                currency: 'eur',
-                automatic_payment_methods: { enabled: true },
-                metadata: {
-                    ...feeMetadata,
-                    paymentType: 'platform_only',
-                },
-                receipt_email: customerEmail,
-            });
+ const paymentIntent = await stripe.paymentIntents.create({
+ amount: amountCents,
+ currency: 'eur',
+ automatic_payment_methods: { enabled: true },
+ metadata: {
+ ...feeMetadata,
+ paymentType: 'platform_only',
+ },
+ receipt_email: customerEmail,
+ });
 
-            return NextResponse.json({
-                success: true,
-                paymentIntentId: paymentIntent.id,
-                clientSecret: paymentIntent.client_secret,
-                publishableKey: STRIPE_PUBLISHABLE_KEY,
-                paymentType: 'platform_only',
-                // Return fee breakdown for order record
-                feeBreakdown: {
-                    customerPaid: fees.customerPaid / 100,
-                    orderAmount: fees.orderAmount / 100,
-                    tipAmount: fees.tipAmount / 100,
-                    stripeFee: fees.stripeFee / 100,
-                    commissionGross: fees.commissionGross / 100,
-                    commissionNet: fees.commissionNet / 100,
-                    commissionVat: fees.commissionVat / 100,
-                    merchantTransfer: fees.merchantTransfer / 100,
-                    tipPooled: fees.tipPooled / 100,
-                    platformNetRevenue: fees.platformNetRevenue / 100,
-                    commissionRate,
-                    vatRate: VAT_RATE,
-                },
-            });
-        }
+ return NextResponse.json({
+ success: true,
+ paymentIntentId: paymentIntent.id,
+ clientSecret: paymentIntent.client_secret,
+ publishableKey: STRIPE_PUBLISHABLE_KEY,
+ paymentType: 'platform_only',
+ // Return fee breakdown for order record
+ feeBreakdown: {
+ customerPaid: fees.customerPaid / 100,
+ orderAmount: fees.orderAmount / 100,
+ tipAmount: fees.tipAmount / 100,
+ stripeFee: fees.stripeFee / 100,
+ commissionGross: fees.commissionGross / 100,
+ commissionNet: fees.commissionNet / 100,
+ commissionVat: fees.commissionVat / 100,
+ merchantTransfer: fees.merchantTransfer / 100,
+ tipPooled: fees.tipPooled / 100,
+ platformNetRevenue: fees.platformNetRevenue / 100,
+ commissionRate,
+ vatRate: VAT_RATE,
+ },
+ });
+ }
 
-        // Business has Stripe Connect - use destination charge
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amountCents,
-            currency: 'eur',
-            automatic_payment_methods: { enabled: true },
-            transfer_data: {
-                destination: connectedAccountId,
-                amount: fees.merchantTransfer,
-            },
-            metadata: {
-                ...feeMetadata,
-                paymentType: 'destination_charge',
-                connectedAccountId,
-            },
-            receipt_email: customerEmail,
-        });
+ // Business has Stripe Connect - use destination charge
+ const paymentIntent = await stripe.paymentIntents.create({
+ amount: amountCents,
+ currency: 'eur',
+ automatic_payment_methods: { enabled: true },
+ transfer_data: {
+ destination: connectedAccountId,
+ amount: fees.merchantTransfer,
+ },
+ metadata: {
+ ...feeMetadata,
+ paymentType: 'destination_charge',
+ connectedAccountId,
+ },
+ receipt_email: customerEmail,
+ });
 
-        // ===== LOKMA MUHASEBE KAYDI =====
-        // Save to platform_transactions for LOKMA bookkeeping
-        try {
-            await addDoc(collection(db, 'platform_transactions'), {
-                // Transaction identifiers
-                paymentIntentId: paymentIntent.id,
-                orderId: orderId || null,
-                type: 'customer_payment',
-                createdAt: new Date().toISOString(),
+ // ===== LOKMA MUHASEBE KAYDI =====
+ // Save to platform_transactions for LOKMA bookkeeping
+ try {
+ await addDoc(collection(db, 'platform_transactions'), {
+ // Transaction identifiers
+ paymentIntentId: paymentIntent.id,
+ orderId: orderId || null,
+ type: 'customer_payment',
+ createdAt: new Date().toISOString(),
 
-                // Business info
-                businessId,
-                businessName: businessData.companyName || businessData.brand || '',
-                connectedAccountId,
+ // Business info
+ businessId,
+ businessName: businessData.companyName || businessData.brand || '',
+ connectedAccountId,
 
-                // Amounts (in EUR for readability)
-                customerPaid: fees.customerPaid / 100,
-                orderAmount: fees.orderAmount / 100,
-                tipAmount: fees.tipAmount / 100,
-                stripeFee: fees.stripeFee / 100,
-                commissionGross: fees.commissionGross / 100,
-                commissionNet: fees.commissionNet / 100,
-                commissionVat: fees.commissionVat / 100,
-                merchantTransfer: fees.merchantTransfer / 100,
-                tipPooled: fees.tipPooled / 100,
-                platformNetRevenue: fees.platformNetRevenue / 100,
+ // Amounts (in EUR for readability)
+ customerPaid: fees.customerPaid / 100,
+ orderAmount: fees.orderAmount / 100,
+ tipAmount: fees.tipAmount / 100,
+ stripeFee: fees.stripeFee / 100,
+ commissionGross: fees.commissionGross / 100,
+ commissionNet: fees.commissionNet / 100,
+ commissionVat: fees.commissionVat / 100,
+ merchantTransfer: fees.merchantTransfer / 100,
+ tipPooled: fees.tipPooled / 100,
+ platformNetRevenue: fees.platformNetRevenue / 100,
 
-                // Rates used
-                commissionRate,
-                vatRate: VAT_RATE,
-                stripeFeePercent: STRIPE_FEE_PERCENT,
+ // Rates used
+ commissionRate,
+ vatRate: VAT_RATE,
+ stripeFeePercent: STRIPE_FEE_PERCENT,
 
-                // Status
-                status: 'pending', // Will be updated to 'completed' via webhook
-            });
-            console.log('[LOKMA Accounting] Transaction recorded');
-        } catch (accountingError) {
-            console.error('[LOKMA Accounting] Failed to record transaction:', accountingError);
-            // Don't fail the payment if accounting record fails
-        }
+ // Status
+ status: 'pending', // Will be updated to 'completed' via webhook
+ });
+ console.log('[LOKMA Accounting] Transaction recorded');
+ } catch (accountingError) {
+ console.error('[LOKMA Accounting] Failed to record transaction:', accountingError);
+ // Don't fail the payment if accounting record fails
+ }
 
-        return NextResponse.json({
-            success: true,
-            paymentIntentId: paymentIntent.id,
-            clientSecret: paymentIntent.client_secret,
-            publishableKey: STRIPE_PUBLISHABLE_KEY,
-            paymentType: 'destination_charge',
-            connectedAccountId,
-            // Return complete fee breakdown for order record
-            feeBreakdown: {
-                customerPaid: fees.customerPaid / 100,
-                orderAmount: fees.orderAmount / 100,
-                tipAmount: fees.tipAmount / 100,
-                stripeFee: fees.stripeFee / 100,
-                commissionGross: fees.commissionGross / 100,
-                commissionNet: fees.commissionNet / 100,
-                commissionVat: fees.commissionVat / 100,
-                merchantTransfer: fees.merchantTransfer / 100,
-                tipPooled: fees.tipPooled / 100,
-                platformNetRevenue: fees.platformNetRevenue / 100,
-                commissionRate,
-                vatRate: VAT_RATE,
-            },
-        });
+ return NextResponse.json({
+ success: true,
+ paymentIntentId: paymentIntent.id,
+ clientSecret: paymentIntent.client_secret,
+ publishableKey: STRIPE_PUBLISHABLE_KEY,
+ paymentType: 'destination_charge',
+ connectedAccountId,
+ // Return complete fee breakdown for order record
+ feeBreakdown: {
+ customerPaid: fees.customerPaid / 100,
+ orderAmount: fees.orderAmount / 100,
+ tipAmount: fees.tipAmount / 100,
+ stripeFee: fees.stripeFee / 100,
+ commissionGross: fees.commissionGross / 100,
+ commissionNet: fees.commissionNet / 100,
+ commissionVat: fees.commissionVat / 100,
+ merchantTransfer: fees.merchantTransfer / 100,
+ tipPooled: fees.tipPooled / 100,
+ platformNetRevenue: fees.platformNetRevenue / 100,
+ commissionRate,
+ vatRate: VAT_RATE,
+ },
+ });
 
-    } catch (error: any) {
-        console.error('[Payment Intent] Error:', error);
-        return NextResponse.json(
-            { error: error.message || 'Payment creation failed' },
-            { status: 500 }
-        );
-    }
+ } catch (error: any) {
+ console.error('[Payment Intent] Error:', error);
+ return NextResponse.json(
+ { error: error.message || 'Payment creation failed' },
+ { status: 500 }
+ );
+ }
 }

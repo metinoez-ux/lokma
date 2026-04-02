@@ -12,10 +12,10 @@ import { use } from 'react';
  * Note: Kermes products use a special context with kermesId parameter.
  */
 export default function KermesProductsRedirect({
-    params
+ params
 }: {
-    params: Promise<{ id: string }>
+ params: Promise<{ id: string }>
 }) {
-    const { id } = use(params);
-    redirect(`/admin/products?kermesId=${id}`);
+ const { id } = use(params);
+ redirect(`/admin/products?kermesId=${id}`);
 }

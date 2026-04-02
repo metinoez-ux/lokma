@@ -12,67 +12,67 @@ let auth: Auth;
 let storage: Storage;
 
 function initializeFirebaseAdmin() {
-    if (getApps().length === 0) {
-        // Using service account from environment variable
-        // Try ADMIN_SERVICE_ACCOUNT first (for Firebase Functions - FIREBASE_ prefix is reserved)
-        // Fall back to FIREBASE_SERVICE_ACCOUNT_KEY for local development
-        const serviceAccount = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+ if (getApps().length === 0) {
+ // Using service account from environment variable
+ // Try ADMIN_SERVICE_ACCOUNT first (for Firebase Functions - FIREBASE_ prefix is reserved)
+ // Fall back to FIREBASE_SERVICE_ACCOUNT_KEY for local development
+ const serviceAccount = process.env.ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
-        try {
-            if (serviceAccount) {
-                const parsedServiceAccount = JSON.parse(serviceAccount);
-                adminApp = initializeApp({
-                    credential: cert(parsedServiceAccount),
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-                });
-            } else {
-                // Fall back to application default credentials for local dev or GCP environments
-                const { applicationDefault } = require('firebase-admin/app');
-                adminApp = initializeApp({
-                    credential: applicationDefault(),
-                    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-                    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-                });
-            }
-        } catch (error) {
-            console.error('[firebase-admin] Failed to initialize (expected if variables are missing during build):', error);
-            return;
-        }
-    } else {
-        adminApp = getApps()[0];
-    }
+ try {
+ if (serviceAccount) {
+ const parsedServiceAccount = JSON.parse(serviceAccount);
+ adminApp = initializeApp({
+ credential: cert(parsedServiceAccount),
+ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+ storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+ });
+ } else {
+ // Fall back to application default credentials for local dev or GCP environments
+ const { applicationDefault } = require('firebase-admin/app');
+ adminApp = initializeApp({
+ credential: applicationDefault(),
+ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+ storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+ });
+ }
+ } catch (error) {
+ console.error('[firebase-admin] Failed to initialize (expected if variables are missing during build):', error);
+ return;
+ }
+ } else {
+ adminApp = getApps()[0];
+ }
 
-    if (adminApp) {
-        messaging = getMessaging(adminApp);
-        db = getFirestore(adminApp);
-        auth = getAuth(adminApp);
-        storage = getStorage(adminApp);
-    }
-    return { adminApp, messaging, db, auth, storage };
+ if (adminApp) {
+ messaging = getMessaging(adminApp);
+ db = getFirestore(adminApp);
+ auth = getAuth(adminApp);
+ storage = getStorage(adminApp);
+ }
+ return { adminApp, messaging, db, auth, storage };
 }
 
 export function getFirebaseMessaging(): Messaging {
-    if (!messaging) {
-        initializeFirebaseAdmin();
-    }
-    return messaging;
+ if (!messaging) {
+ initializeFirebaseAdmin();
+ }
+ return messaging;
 }
 
 export function getFirebaseAdmin(): { auth: Auth; db: Firestore; storage: Storage } {
-    if (!db || !auth || !storage) {
-        initializeFirebaseAdmin();
-    }
-    return { auth, db, storage };
+ if (!db || !auth || !storage) {
+ initializeFirebaseAdmin();
+ }
+ return { auth, db, storage };
 }
 
 // Available notification topics
 export const NOTIFICATION_TOPICS = {
-    ALL_USERS: 'all_users',
-    PRAYER_REMINDERS: 'prayer_reminders',
-    KANDIL_NOTIFICATIONS: 'kandil_notifications',
-    NEWS: 'news',
-    PROMOTIONS: 'promotions',
+ ALL_USERS: 'all_users',
+ PRAYER_REMINDERS: 'prayer_reminders',
+ KANDIL_NOTIFICATIONS: 'kandil_notifications',
+ NEWS: 'news',
+ PROMOTIONS: 'promotions',
 } as const;
 
 export type NotificationTopic = typeof NOTIFICATION_TOPICS[keyof typeof NOTIFICATION_TOPICS];

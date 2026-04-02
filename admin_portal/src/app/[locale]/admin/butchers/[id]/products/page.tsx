@@ -10,10 +10,10 @@ import { use } from 'react';
  * This redirect ensures backward compatibility while maintaining the unified pattern.
  */
 export default function ButcherProductsRedirect({ 
-    params 
+ params 
 }: { 
-    params: Promise<{ id: string }> 
+ params: Promise<{ id: string }> 
 }) {
-    const { id } = use(params);
-    redirect(`/admin/products?businessId=${id}`);
+ const { id } = use(params);
+ redirect(`/admin/products?businessId=${id}`);
 }

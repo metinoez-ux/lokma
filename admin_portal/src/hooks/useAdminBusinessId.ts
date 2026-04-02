@@ -11,16 +11,16 @@ import { useAdmin } from '@/components/providers/AdminProvider';
  * Priority: businessId > butcherId > restaurantId > marketId > kermesId
  */
 export function useAdminBusinessId(): string | null {
-  const { admin } = useAdmin();
-  
-  if (!admin) return null;
-  
-  return (
-    admin.businessId ||
-    admin.butcherId ||
-    admin.restaurantId ||
-    admin.marketId ||
-    admin.kermesId ||
-    null
-  );
+ const { admin } = useAdmin();
+ 
+ if (!admin) return null;
+ 
+ return (
+ admin.businessId ||
+ admin.butcherId ||
+ admin.restaurantId ||
+ admin.marketId ||
+ admin.kermesId ||
+ null
+ );
 }
