@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:io' show Platform;
 import '../../providers/auth_provider.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class SimpleAuthScreen extends ConsumerStatefulWidget {
   final bool initRegister;
   const SimpleAuthScreen({super.key, this.initRegister = false});
@@ -37,26 +37,28 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     final auth = ref.read(authProvider.notifier);
     
     if (_isEmailMode) {
-      if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      if (email.isEmpty || password.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Lütfen tüm alanları doldurun'), backgroundColor: Colors.red),
         );
         return;
       }
       if (_isRegister) {
-        auth.registerWithEmail(_emailController.text.trim(), _passwordController.text);
+        auth.registerWithEmail(email, password);
       } else {
-        auth.loginWithEmail(_emailController.text.trim(), _passwordController.text);
+        auth.loginWithEmail(email, password);
       }
     } else {
       // SMS mode handling - route to main login screen with phone mode
-      // For simplicity in this clean view, we redirect to the full auth screen phone mode
-      context.push('/login');
+      context.push('/phone-login');
     }
   }
 
@@ -79,10 +81,41 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
 
     if (authState.error != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authState.error!), backgroundColor: Colors.red),
-        );
+        // Clear error from state immediately to avoid re-triggering
+        final error = authState.error;
         ref.read(authProvider.notifier).clearError();
+        
+        if (error == 'EMAIL_ALREADY_IN_USE' || error == 'GOOGLE_ALREADY_EXISTS') {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              title: const Text('Hesap Zaten Var'),
+              content: const Text(
+                'Kullandığınız hesap sistemde zaten kayıtlı. '
+                'Lütfen "Giriş Yap" sekmesini kullanarak devam edin.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _isRegister = false;
+                    });
+                  },
+                  child: Text(
+                    'Giriş Ekranına Dön',
+                    style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
+                  ),
+                )
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error!), backgroundColor: Colors.red),
+          );
+        }
       });
     }
 
@@ -213,7 +246,7 @@ class _SimpleAuthScreenState extends ConsumerState<SimpleAuthScreen> {
                       text: 'Mit Google fortfahren', // Google ile devam et
                       isDark: isDark,
                       textColor: textColor,
-                      onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
+                      onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(isRegister: _isRegister),
                     ),
                     if (Platform.isIOS) ...[
                       const SizedBox(height: 16),

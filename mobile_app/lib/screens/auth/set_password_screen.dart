@@ -4,13 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
-
-// Assuming you have easy_localization installed, otherwise replace 'tr('...')' with simple strings for now or import your localizations.
-// If easy_localization is used in the app, it usually is:
-import 'package:easy_localization/easy_localization.dart';
+import '../../providers/theme_provider.dart';
 
 class SetPasswordScreen extends ConsumerStatefulWidget {
-  const SetPasswordScreen({Key? key}) : super(key: key);
+  const SetPasswordScreen({super.key});
 
   @override
   ConsumerState<SetPasswordScreen> createState() => _SetPasswordScreenState();
@@ -23,6 +20,12 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
   bool _obscurePassword = true;
 
   final Color lokmaRed = const Color(0xFFFF0033);
+
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _textColor => _isDark ? Colors.white : Colors.black87;
+  Color get _borderColor => _isDark ? Colors.grey.shade800 : Colors.grey.shade300;
+  Color get _cardColor => _isDark ? const Color(0xFF2A2A2A) : Colors.white;
+  Color get _bgColor => _isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFAFAFA);
 
   @override
   void dispose() {
@@ -37,7 +40,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
 
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Şifre en az 6 karakter olmalıdır'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Şifre en az 6 karakter olmalıdır'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -55,17 +58,13 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Kullanıcı oturumu bulunamadı');
 
-      // Check if user has phone number
       if (user.phoneNumber == null || user.phoneNumber!.isEmpty) {
         throw Exception('Kullanıcının telefon numarası bulunmuyor');
       }
 
-      // Generate pseudo-email based on phone string
       final phoneString = user.phoneNumber!.replaceAll('+', '');
       final pseudoEmail = '$phoneString@lokma.shop';
 
-      // Link email+password credential to existing phone-auth user
-      // This allows future login via pseudo-email + password
       try {
         final credential = EmailAuthProvider.credential(
           email: pseudoEmail,
@@ -74,7 +73,6 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
         await user.linkWithCredential(credential);
       } catch (e) {
         debugPrint('linkWithCredential error: $e');
-        // If already linked, try updating the password directly
         try {
           await user.updatePassword(password);
         } catch (e2) {
@@ -82,7 +80,6 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
         }
       }
 
-      // Now save to firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'email': pseudoEmail,
       }, SetOptions(merge: true));
@@ -105,95 +102,226 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
     }
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData prefixIcon,
+    bool isPassword = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _bgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _borderColor, width: 1.5),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword && _obscurePassword,
+        style: TextStyle(
+          color: _textColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: TextStyle(
+            color: _textColor.withOpacity(0.5),
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+          ),
+          prefixIcon: Icon(prefixIcon, color: _textColor.withOpacity(0.5), size: 22),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: _textColor.withOpacity(0.5),
+                    size: 22,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      backgroundColor: lokmaRed,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 40),
-              const Icon(Icons.lock_person_rounded, size: 80, color: Colors.white),
-              const SizedBox(height: 24),
-              const Text(
-                'Lütfen Bir Şifre Belirleyin',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Gelecekte SMS kodu beklemeden giriş yapabilmeniz için lütfen güvenli bir şifre belirleyin.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 16),
-              ),
-              const SizedBox(height: 40),
-              
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Yeni Şifre',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _confirmController,
-                obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Şifrenizi Tekrar Girin',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  prefixIcon: const Icon(Icons.lock_reset, color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                ),
-              ),
-              const SizedBox(height: 40),
-              
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                  : GestureDetector(
-                      onTap: _handleSavePassword,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-                          ]
-                        ),
-                        child: Text(
-                          'Şifremi Kaydet',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: lokmaRed, fontSize: 18, fontWeight: FontWeight.bold),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: _isDark
+                  ? [const Color(0xFF1E1E1E), const Color(0xFF121212)]
+                  : [const Color(0xFFFAFAFA), const Color(0xFFEEEEEE)],
+            ),
+          ),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: screenHeight),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Theme Toggle (Quick Access)
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          icon: Icon(
+                            _isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                            color: _textColor.withOpacity(0.5),
+                          ),
+                          onPressed: () {
+                            final current = ref.read(themePreferenceProvider);
+                            final next = current == ThemePreference.dark
+                                ? ThemePreference.light
+                                : ThemePreference.dark;
+                            ref.read(themePreferenceProvider.notifier).setPreference(next);
+                          },
                         ),
                       ),
-                    ),
-                    
-              const SizedBox(height: 24),
-              TextButton(
-                onPressed: () => context.go('/'),
-                child: const Text('Şimdilik Atla', style: TextStyle(color: Colors.white70, fontSize: 16)),
-              )
-            ],
+                      const SizedBox(height: 20),
+
+                      // Animated Lock Icon + Title
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: lokmaRed.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.lock_person_rounded, size: 64, color: lokmaRed),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Lütfen Bir Şifre Belirleyin',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _textColor,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Gelecekte SMS kodu beklemeden giriş yapabilmeniz için lütfen güvenli bir şifre belirleyin.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: _textColor.withOpacity(0.6), fontSize: 16),
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Form Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                        decoration: BoxDecoration(
+                          color: _cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _isDark
+                                  ? Colors.black.withOpacity(0.3)
+                                  : Colors.black.withOpacity(0.04),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: _borderColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildTextField(
+                              controller: _passwordController,
+                              labelText: 'Yeni Şifre',
+                              prefixIcon: Icons.lock_outline,
+                              isPassword: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _confirmController,
+                              labelText: 'Şifrenizi Tekrar Girin',
+                              prefixIcon: Icons.lock_reset,
+                              isPassword: true,
+                            ),
+                            const SizedBox(height: 32),
+
+                            if (_isLoading)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: CircularProgressIndicator(color: lokmaRed),
+                              )
+                            else
+                              GestureDetector(
+                                onTap: _handleSavePassword,
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 18),
+                                  decoration: BoxDecoration(
+                                    color: lokmaRed,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: lokmaRed.withOpacity(0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Text(
+                                    'Şifremi Kaydet',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Skip Button
+                      TextButton(
+                        onPressed: () => context.go('/'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'Şimdilik Atla',
+                          style: TextStyle(
+                            color: _textColor.withOpacity(0.5),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
