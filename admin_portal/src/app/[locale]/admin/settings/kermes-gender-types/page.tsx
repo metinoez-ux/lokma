@@ -11,6 +11,7 @@ export interface GenderTypeConfig {
   label: string;     // Gosterilen ad, orn: "Kadin Bolumu"
   icon: string;      // Tek karakter rozet, orn: "K"
   color: string;     // Tailwind class grubu, orn: "bg-pink-500/20 text-pink-400 border-pink-500/40"
+  allowedStaffGender: 'female' | 'male' | 'all'; // Bu bolumde hangi cinsiyet personel hizmet verebilir
   isDefault?: boolean; // Bu tip silinemez
 }
 
@@ -18,9 +19,9 @@ const FIRESTORE_DOC = 'kermes_config';
 const FIRESTORE_FIELD = 'gender_types';
 
 const DEFAULT_TYPES: GenderTypeConfig[] = [
-  { key: 'mixed', label: 'Karisik / Aile', icon: 'A', color: 'bg-green-500/20 text-green-400 border-green-500/40', isDefault: true },
-  { key: 'women_only', label: 'Kadin Bolumu', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', isDefault: true },
-  { key: 'men_only', label: 'Erkek Bolumu', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', isDefault: true },
+  { key: 'mixed', label: 'Karisik / Aile', icon: 'A', color: 'bg-green-500/20 text-green-400 border-green-500/40', allowedStaffGender: 'all', isDefault: true },
+  { key: 'women_only', label: 'Kadin Bolumu', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', allowedStaffGender: 'female', isDefault: true },
+  { key: 'men_only', label: 'Erkek Bolumu', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', allowedStaffGender: 'male', isDefault: true },
 ];
 
 const COLOR_PRESETS = [
@@ -45,6 +46,7 @@ export default function KermesGenderTypesPage() {
   const [newLabel, setNewLabel] = useState('');
   const [newIcon, setNewIcon] = useState('');
   const [newColor, setNewColor] = useState(COLOR_PRESETS[3]);
+  const [newStaffGender, setNewStaffGender] = useState<'female' | 'male' | 'all'>('all');
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -94,10 +96,10 @@ export default function KermesGenderTypesPage() {
       showToast('Bu anahtar zaten mevcut', false);
       return;
     }
-    const next = [...types, { key: k, label: newLabel.trim(), icon: newIcon.trim().charAt(0).toUpperCase(), color: newColor }];
+    const next = [...types, { key: k, label: newLabel.trim(), icon: newIcon.trim().charAt(0).toUpperCase(), color: newColor, allowedStaffGender: newStaffGender }];
     setTypes(next);
     save(next);
-    setNewKey(''); setNewLabel(''); setNewIcon('');
+    setNewKey(''); setNewLabel(''); setNewIcon(''); setNewStaffGender('all');
   };
 
   const handleDelete = (key: string) => {
@@ -115,6 +117,12 @@ export default function KermesGenderTypesPage() {
 
   const handleColorEdit = (key: string, color: string) => {
     const next = types.map(t => t.key === key ? { ...t, color } : t);
+    setTypes(next);
+    save(next);
+  };
+
+  const handleStaffGenderEdit = (key: string, allowedStaffGender: 'female' | 'male' | 'all') => {
+    const next = types.map(t => t.key === key ? { ...t, allowedStaffGender } : t);
     setTypes(next);
     save(next);
   };
@@ -190,6 +198,18 @@ export default function KermesGenderTypesPage() {
                   )}
                 </div>
 
+                {/* Personel cinsiyet yetkisi */}
+                <select
+                  title={`${t.label} - hizmet verebilecek personel cinsiyeti`}
+                  value={t.allowedStaffGender || 'all'}
+                  onChange={(e) => handleStaffGenderEdit(t.key, e.target.value as 'female' | 'male' | 'all')}
+                  className="px-2 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                >
+                  <option value="all">Tum Personel</option>
+                  <option value="female">Sadece Kadin</option>
+                  <option value="male">Sadece Erkek</option>
+                </select>
+
                 {/* Renk secici */}
                 <div className="flex gap-1">
                   {COLOR_PRESETS.map((preset) => (
@@ -209,7 +229,7 @@ export default function KermesGenderTypesPage() {
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-25 disabled:cursor-not-allowed transition"
                   title={t.isDefault ? 'Varsayilan tipler silinemez' : 'Sil'}
                 >
-                  ✕
+                  X
                 </button>
               </div>
             ))}
@@ -262,6 +282,20 @@ export default function KermesGenderTypesPage() {
                   />
                 ))}
               </div>
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Personel Cinsiyeti</label>
+              <select
+                title="Yeni tip - hizmet verecek personel cinsiyeti"
+                value={newStaffGender}
+                onChange={(e) => setNewStaffGender(e.target.value as 'female' | 'male' | 'all')}
+                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg text-sm border border-gray-600 focus:border-amber-500 focus:outline-none"
+              >
+                <option value="all">Tum Personel</option>
+                <option value="female">Sadece Kadin</option>
+                <option value="male">Sadece Erkek</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">Bu bolumde hangi cinsiyet personel hizmet verebilir?</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

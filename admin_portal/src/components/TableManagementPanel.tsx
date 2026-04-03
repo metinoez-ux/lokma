@@ -25,14 +25,15 @@ interface GenderTypeConfig {
  label: string;
  icon: string;
  color: string;
+ allowedStaffGender?: 'female' | 'male' | 'all';
  isDefault?: boolean;
 }
 
 // Fallback - Super Admin Firestore'dan yuklenmezse kullanilir
 const FALLBACK_GENDER_TYPES: GenderTypeConfig[] = [
- { key: 'mixed', label: 'Karisik / Aile', icon: 'A', color: 'bg-green-500/20 text-green-400 border-green-500/40', isDefault: true },
- { key: 'women_only', label: 'Kadin Bolumu', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', isDefault: true },
- { key: 'men_only', label: 'Erkek Bolumu', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', isDefault: true },
+ { key: 'mixed', label: 'Karisik / Aile', icon: 'A', color: 'bg-green-500/20 text-green-400 border-green-500/40', allowedStaffGender: 'all', isDefault: true },
+ { key: 'women_only', label: 'Kadin Bolumu', icon: 'K', color: 'bg-pink-500/20 text-pink-400 border-pink-500/40', allowedStaffGender: 'female', isDefault: true },
+ { key: 'men_only', label: 'Erkek Bolumu', icon: 'E', color: 'bg-blue-500/20 text-blue-400 border-blue-500/40', allowedStaffGender: 'male', isDefault: true },
 ];
 
 const getGenderDisplay = (key: string, types: GenderTypeConfig[]) => {
@@ -73,8 +74,7 @@ export default function TableManagementPanel({
  const [selectedTableLabels, setSelectedTableLabels] = useState<string[]>([]);
  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
  const [showSectionInput, setShowSectionInput] = useState(false);
- const [newSectionName, setNewSectionName] = useState("");
- const [newSectionGender, setNewSectionGender] = useState<string>('mixed');
+ const [selectedSectionType, setSelectedSectionType] = useState<string>('');
  const [genderTypes, setGenderTypes] = useState<GenderTypeConfig[]>(FALLBACK_GENDER_TYPES);
  const [showQuickSetup, setShowQuickSetup] = useState(false);
  const [quickSetupCount, setQuickSetupCount] = useState("");
@@ -97,7 +97,6 @@ export default function TableManagementPanel({
  // Global gender tipleri
  if (configDoc.exists() && configDoc.data()?.gender_types) {
   setGenderTypes(configDoc.data()!.gender_types as GenderTypeConfig[]);
-  setNewSectionGender(configDoc.data()!.gender_types[0]?.key || 'mixed');
  } else {
   setGenderTypes(FALLBACK_GENDER_TYPES);
  }
@@ -241,66 +240,49 @@ export default function TableManagementPanel({
   </button>
   ) : (
   <div className="flex items-center gap-2">
-  <input
-  type="text"
-  autoFocus
-  value={newSectionName}
-  onChange={(e) => setNewSectionName(e.target.value)}
-  onKeyDown={(e) => {
-  if (e.key === "Enter" && newSectionName.trim()) {
-   if (tableSections.includes(newSectionName.trim())) {
-   showToast(t("buBolumZatenMevcut"), "error");
-   return;
-   }
-   const newSections = [...tableSections, newSectionName.trim()];
-   const newDefs = [...sectionDefs, { name: newSectionName.trim(), genderRestriction: newSectionGender }];
-   setSectionDefs(newDefs);
-   updateAndSave(undefined, undefined, undefined, newSections, newDefs);
-   setNewSectionName("");
-   setNewSectionGender(genderTypes[0]?.key || 'mixed');
-   setShowSectionInput(false);
-  } else if (e.key === "Escape") {
-  setNewSectionName("");
-  setShowSectionInput(false);
-  }
-  }}
-  placeholder={t("yeniBolumAdiOr1Kat") || "Bolum adi (Orn: VIP)"}
-  className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 w-48"
-  />
   <select
-  title="Bolum Cinsiyet Tipi"
-  value={newSectionGender}
-  onChange={(e) => setNewSectionGender(e.target.value)}
-  className="px-2 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-amber-500"
+   title="Bolum tipi sec"
+   value={selectedSectionType}
+   onChange={(e) => setSelectedSectionType(e.target.value)}
+   className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-amber-500"
   >
-  {genderTypes.map((gt) => (
-   <option key={gt.key} value={gt.key}>{gt.icon} {gt.label}</option>
-  ))}
+   <option value="">-- Bolum Tipi Secin --</option>
+   {genderTypes
+    .filter(gt => !tableSections.some(s => {
+     const def = sectionDefs.find(d => d.name === s);
+     return def?.genderRestriction === gt.key;
+    }))
+    .map((gt) => (
+     <option key={gt.key} value={gt.key}>{gt.icon} {gt.label}</option>
+    ))}
   </select>
   <button
-  onClick={() => {
-  if (!newSectionName.trim()) return;
-  if (tableSections.includes(newSectionName.trim())) {
-  showToast(t("buBolumZatenMevcut"), "error");
-  return;
-  }
-  const newSections = [...tableSections, newSectionName.trim()];
-  const newDefs = [...sectionDefs, { name: newSectionName.trim(), genderRestriction: newSectionGender }];
-  setSectionDefs(newDefs);
-  updateAndSave(undefined, undefined, undefined, newSections, newDefs);
-  setNewSectionName("");
-  setNewSectionGender(genderTypes[0]?.key || 'mixed');
-  setShowSectionInput(false);
-  }}
-  className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 text-white rounded-lg transition"
+   onClick={() => {
+   if (!selectedSectionType) return;
+   const gt = genderTypes.find(g => g.key === selectedSectionType);
+   if (!gt) return;
+   const sectionName = gt.label;
+   if (tableSections.includes(sectionName)) {
+    showToast(t("buBolumZatenMevcut"), "error");
+    return;
+   }
+   const newSections = [...tableSections, sectionName];
+   const newDefs = [...sectionDefs, { name: sectionName, genderRestriction: gt.key }];
+   setSectionDefs(newDefs);
+   updateAndSave(undefined, undefined, undefined, newSections, newDefs);
+   setSelectedSectionType('');
+   setShowSectionInput(false);
+   }}
+   disabled={!selectedSectionType}
+   className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white rounded-lg transition"
   >
-  Ekle
+   Ekle
   </button>
   <button
-  onClick={() => { setNewSectionName(""); setShowSectionInput(false); }}
-  className="px-2 py-1.5 text-sm text-gray-400 hover:text-white transition"
+   onClick={() => { setSelectedSectionType(''); setShowSectionInput(false); }}
+   className="px-2 py-1.5 text-sm text-gray-400 hover:text-white transition"
   >
-  Iptal
+   Iptal
   </button>
   </div>
   )}
