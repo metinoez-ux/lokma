@@ -372,6 +372,14 @@ export default function AdminHeader() {
  <span className="text-xs text-muted-foreground">
  {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { weekday: 'short' })}
  </span>
+  {process.env.NEXT_PUBLIC_BUILD_TIME && (
+    <>
+      <span className="text-muted-foreground/80 text-xs">|</span>
+      <span className="text-xs font-semibold text-rose-500/80">
+      v.{process.env.NEXT_PUBLIC_BUILD_TIME}
+      </span>
+    </>
+  )}
  {/* Printer status compact */}
  <Link
  href="/admin/settings"
@@ -978,6 +986,14 @@ export default function AdminHeader() {
  <span className="text-xs text-muted-foreground">
  {currentTime.toLocaleDateString(localeToBcp47[currentLocale] || 'de-DE', { weekday: 'short' })}
  </span>
+  {process.env.NEXT_PUBLIC_BUILD_TIME && (
+    <>
+      <span className="text-muted-foreground/80 text-xs">|</span>
+      <span className="text-xs font-semibold text-rose-500/80">
+      v.{process.env.NEXT_PUBLIC_BUILD_TIME}
+      </span>
+    </>
+  )}
  {/* Printer status compact */}
  <Link
  href="/admin/settings"

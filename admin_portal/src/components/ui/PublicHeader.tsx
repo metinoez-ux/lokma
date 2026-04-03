@@ -32,11 +32,16 @@ const languages = [
  { code: 'nl', name: 'Nederlands', nativeName: 'Nederlands', flag: '🇳🇱' },
 ];
 
+const localeToBcp47: Record<string, string> = {
+ de: 'de-DE', en: 'en-US', tr: 'tr-TR', es: 'es-ES', fr: 'fr-FR', it: 'it-IT', nl: 'nl-NL',
+};
+
 export default function PublicHeader({ themeAware = false }: { themeAware?: boolean }) {
  const [langMenuOpen, setLangMenuOpen] = useState(false);
  const [countryMenuOpen, setCountryMenuOpen] = useState(false);
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
  const [scrolled, setScrolled] = useState(false);
+ const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
  useEffect(() => {
  const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -45,6 +50,11 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  return () => window.removeEventListener('scroll', handleScroll);
  }, []);
 
+ useEffect(() => {
+ setCurrentTime(new Date());
+ const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+ return () => clearInterval(timer);
+ }, []);
 
  // Refs for dropdown menus
  const countryRef = useRef<HTMLDivElement>(null);
@@ -135,11 +145,11 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  const currentLangData = languages.find(l => l.code === currentLang) || languages[0];
 
  const headerBg = themeAware
- ? (scrolled ? 'bg-background dark:bg-[#0f172a]/80 backdrop-blur-xl border-border/50 shadow-sm' : 'bg-background dark:bg-[#0f172a]/80 border-transparent')
- : (scrolled ? 'bg-background backdrop-blur-xl border-border/50 shadow-sm' : 'bg-background border-transparent');
+ ? (scrolled ? 'bg-white dark:bg-[#0f172a]/80 backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white dark:bg-[#0f172a]/80 border-transparent')
+ : (scrolled ? 'bg-white backdrop-blur-xl border-border/50 shadow-sm' : 'bg-white border-transparent');
  const textColor = themeAware ? 'text-foreground ' : 'text-foreground';
- const menuBg = themeAware ? 'bg-background dark:bg-[#1a1a1a] border-border/50 text-foreground ' : 'bg-background border-border/50 text-foreground';
- const itemHover = themeAware ? 'hover:bg-muted dark:hover:bg-background/10' : 'hover:bg-muted';
+ const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-border/50 text-foreground ' : 'bg-white border-border/50 text-foreground';
+ const itemHover = themeAware ? 'hover:bg-muted dark:hover:bg-white/10' : 'hover:bg-muted';
  const mutedText = themeAware ? 'text-muted-foreground/80 /50' : 'text-muted-foreground/80';
 
  if (isLoading) {
@@ -171,6 +181,31 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  </nav>
 
  <div className="flex items-center gap-3">
+ {/* Date / Time Stamp (like Admin Panel) */}
+ {currentTime && (
+   <div className="hidden lg:flex items-center gap-2 mr-2">
+   <span className="text-sm font-light tabular-nums tracking-wider text-foreground">
+     {currentTime.toLocaleTimeString(localeToBcp47[currentLang] || 'de-DE', { hour: '2-digit', minute: '2-digit' })}
+   </span>
+   <span className="text-muted-foreground/60 text-xs">|</span>
+   <span className="text-xs text-muted-foreground font-medium">
+     {currentTime.toLocaleDateString(localeToBcp47[currentLang] || 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+   </span>
+   <span className="text-muted-foreground/60 text-xs">|</span>
+   <span className="text-xs text-muted-foreground font-medium">
+     {currentTime.toLocaleDateString(localeToBcp47[currentLang] || 'de-DE', { weekday: 'short' })}
+   </span>
+   {process.env.NEXT_PUBLIC_BUILD_TIME && (
+     <>
+     <span className="text-muted-foreground/60 text-xs">|</span>
+     <span className="text-[11px] font-semibold text-rose-500/80">
+       v.{process.env.NEXT_PUBLIC_BUILD_TIME}
+     </span>
+     </>
+   )}
+   </div>
+ )}
+
  {/* Unified Region & Language Selector */}
  <div className="relative" ref={countryRef}>
  <button
@@ -239,7 +274,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
  </div>
 
  {/* Footer */}
- <div className={`px-3 py-2 border-t ${themeAware ? 'border-border/50 bg-muted/30 dark:bg-background/5' : 'border-border/30 bg-muted/30'}`}>
+ <div className={`px-3 py-2 border-t ${themeAware ? 'border-border/50 bg-muted/30 dark:bg-white/5' : 'border-border/30 bg-muted/30'}`}>
  <p className={`text-xs ${mutedText} text-center`}>
  {currentCountryData.flag} {currentCountryData.name} • {currentLangData.name}
  </p>

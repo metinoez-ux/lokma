@@ -293,7 +293,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  onClick={() => setRoleFilter(role)}
  className={`px-3 py-1 rounded-full text-sm ${roleFilter === role
  ? 'bg-purple-600 text-white'
- : 'bg-muted/50 text-foreground/90 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'
+ : 'bg-muted/50 text-foreground/90 hover:bg-muted dark:hover:bg-muted/80'
  }`}
  >
  {role === 'all' ? t('tumu') : ROLE_LABELS[role]}
@@ -311,7 +311,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  {/* Admins Table */}
  <div className="bg-card rounded-lg overflow-hidden">
  <table className="min-w-full divide-y divide-border">
- <thead className="bg-gray-700">
+ <thead className="bg-muted">
  <tr>
  <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('admin')}</th>
  <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase">{t('rol')}</th>
@@ -329,7 +329,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  </tr>
  ) : (
  filteredAdmins.map(admin => (
- <tr key={admin.id} className={`hover:bg-gray-700/50 ${!admin.isActive ? 'opacity-50' : ''}`}>
+ <tr key={admin.id} className={`hover:bg-muted/50 ${!admin.isActive ? 'opacity-50' : ''}`}>
  <td className="px-6 py-4">
  <div className="font-medium">{admin.name}</div>
  <div className="text-sm text-muted-foreground">{admin.email}</div>
@@ -347,7 +347,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  onClick={() => toggleAdminStatus(admin)}
  className={`px-2 py-1 rounded-full text-xs font-medium ${admin.isActive
  ? 'bg-green-900/50 text-green-800 dark:text-green-400'
- : 'bg-gray-700 text-muted-foreground'
+ : 'bg-muted text-muted-foreground'
  }`}
  >
  {admin.isActive ? t('aktif') : t('pasif')}
@@ -393,7 +393,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  type="text"
  value={formData.name}
  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
- className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
+ className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-purple-500"
  placeholder={t('ahmet_yilmaz')}
  />
  </div>
@@ -405,7 +405,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  type="email"
  value={formData.email}
  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
- className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
+ className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-purple-500"
  placeholder="admin@kasap.com"
  />
  </div>
@@ -416,7 +416,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  <select
  value={formData.role}
  onChange={(e) => setFormData({ ...formData, role: e.target.value as Admin['role'], assignedTo: '' })}
- className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
+ className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-purple-500"
  >
  <option value="butcher_admin">🥩 {t('metzger_admin')}</option>
  <option value="restaurant_admin">{t('restoran_admin')}</option>
@@ -431,7 +431,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  <select
  value={formData.assignedTo}
  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
- className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
+ className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground focus:ring-2 focus:ring-purple-500"
  >
  <option value="">{t('seciniz')}</option>
  {getBusinessesForRole(formData.role).map(business => (
@@ -448,7 +448,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  <label className="block text-sm text-muted-foreground mb-2">{t('yetkiler')}</label>
  <div className="flex flex-wrap gap-2">
  {['orders', 'products', 'customers', 'reports'].map(perm => (
- <label key={perm} className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-lg cursor-pointer">
+ <label key={perm} className="flex items-center gap-2 bg-muted px-3 py-1 rounded-lg cursor-pointer">
  <input
  type="checkbox"
  checked={formData.permissions.includes(perm)}
@@ -471,7 +471,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
  <div className="flex gap-3 mt-6">
  <button
  onClick={() => { setShowAddModal(false); setEditingAdmin(null); }}
- className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+ className="flex-1 px-4 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80"
  >
  {t('iptal')}
  </button>

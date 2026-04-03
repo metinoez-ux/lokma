@@ -123,7 +123,7 @@ export default function LandingPage() {
 
  if (isLoading) {
  return (
- <div className="min-h-screen bg-background dark:bg-[#0f172a] flex items-center justify-center">
+ <div className="min-h-screen bg-white dark:bg-[#0f172a] flex items-center justify-center">
  <div className="animate-pulse">
  <Image src="/lokma_logo_red_web.png" alt="LOKMA" width={160} height={40} className="object-contain" />
  </div>
@@ -132,7 +132,7 @@ export default function LandingPage() {
  }
 
  return (
- <div className="relative flex min-h-screen flex-col bg-background dark:bg-[#0f172a] text-foreground font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#ea184a]/30">
+ <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#0f172a] text-foreground font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden selection:bg-[#ea184a]/30">
  <PublicHeader themeAware={true} />
 
  {/* Hero Section — Full-width background image with gradient overlay */}
@@ -174,11 +174,11 @@ export default function LandingPage() {
  </p>
 
  <div className="flex flex-col sm:flex-row gap-3 mb-10">
- <Link href="/login" className="inline-flex items-center justify-center gap-2 bg-background text-[#F51736] px-8 py-4 rounded-xl font-bold text-lg hover:bg-muted transition-all shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
+ <Link href="/login" className="inline-flex items-center justify-center gap-2 bg-white text-[#F51736] px-8 py-4 rounded-xl font-bold text-lg hover:bg-muted transition-all shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
  {t('exploreBtn')}
  <span className="material-symbols-outlined text-xl">arrow_forward</span>
  </Link>
- <Link href="/vendor" className="inline-flex items-center justify-center gap-2 bg-background/15 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-background/25 transition-all">
+ <Link href="/vendor" className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/25 transition-all">
  {t('splitPartnerTitle')}
  </Link>
  </div>
@@ -199,7 +199,7 @@ export default function LandingPage() {
  </section>
 
  {/* Feature Cards — Lexware style (light background) */}
- <section className="bg-background dark:bg-[#0f172a] py-20 px-4 md:px-8">
+ <section className="bg-white dark:bg-[#0f172a] py-20 px-4 md:px-8">
  <div className="max-w-[1200px] mx-auto">
  <div className="mb-14">
  <p className="text-[#F51736] font-bold text-sm tracking-wider uppercase mb-3 flex items-center gap-2">
@@ -219,7 +219,7 @@ export default function LandingPage() {
 
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
  {/* Card 1 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-background dark:bg-background/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">bolt</span>
  </div>
@@ -228,7 +228,7 @@ export default function LandingPage() {
  </div>
 
  {/* Card 2 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-background dark:bg-background/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">handshake</span>
  </div>
@@ -237,7 +237,7 @@ export default function LandingPage() {
  </div>
 
  {/* Card 3 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-background dark:bg-background/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">storefront</span>
  </div>
@@ -246,7 +246,7 @@ export default function LandingPage() {
  </div>
 
  {/* Card 4 */}
- <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-background dark:bg-background/[0.03]">
+ <div className="group p-6 rounded-2xl border border-border/50 hover:border-[#F51736]/30 hover:shadow-lg hover:shadow-[#F51736]/5 transition-all duration-300 bg-white dark:bg-white/[0.03]">
  <div className="w-14 h-14 bg-[#F51736]/10 text-[#F51736] flex items-center justify-center rounded-2xl mb-5 group-hover:bg-[#F51736] group-hover:text-white transition-colors duration-300">
  <span className="material-symbols-outlined text-[28px]">eco</span>
  </div>
@@ -276,16 +276,16 @@ export default function LandingPage() {
  {/* Partner CTA — Lexware-style clean banner */}
  <section className="bg-muted/30 dark:bg-[#0f172a] py-20 px-4 md:px-8">
  <div className="max-w-[1200px] mx-auto relative bg-gradient-to-br from-[#F51736] to-[#c9183d] rounded-3xl p-10 md:p-16 overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10">
- <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-background/10 rounded-full blur-3xl pointer-events-none"></div>
+ <div className="absolute -top-20 -right-20 w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
  <div className="relative z-10 flex-1">
- <div className="inline-flex items-center gap-2 bg-background/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+ <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-sm font-medium mb-4">
  {t('b2bPartnerBadge')}
  </div>
  <h3 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">{t('splitPartnerTitle')}</h3>
  <p className="text-white/85 text-lg max-w-md leading-relaxed">{t('splitPartnerDesc')}</p>
  </div>
  <div className="relative z-10 flex-shrink-0">
- <Link href="/vendor" className="inline-flex items-center gap-2 bg-background text-[#F51736] px-8 py-4 rounded-xl font-bold text-lg hover:bg-muted transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+ <Link href="/vendor" className="inline-flex items-center gap-2 bg-white text-[#F51736] px-8 py-4 rounded-xl font-bold text-lg hover:bg-muted transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]">
  {t('splitPartnerBtn')}
  <span className="material-symbols-outlined">arrow_forward</span>
  </Link>
@@ -294,7 +294,7 @@ export default function LandingPage() {
  </section>
 
  {/* FAQ Section */}
- <section className="bg-background dark:bg-[#0f172a] py-20 px-4 md:px-8">
+ <section className="bg-white dark:bg-[#0f172a] py-20 px-4 md:px-8">
  <div className="max-w-[1000px] mx-auto">
  <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center mb-12 text-foreground ">{t('faqTitle')}</h2>
  <div className="space-y-4">
