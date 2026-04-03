@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { execSync } from "child_process";
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -16,7 +17,16 @@ const nextConfig: NextConfig = {
   env: {
     // Inject at build time for server-side use
     FIREBASE_SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
-    NEXT_PUBLIC_BUILD_TIME: new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}).format(new Date()),
+    NEXT_PUBLIC_BUILD_TIME: (() => {
+      try {
+        // Son git commit tarih/saatini al (Europe/Berlin)
+        const raw = execSync('git log -1 --format=%cd --date=format:"%d.%m.%Y %H:%M"', { cwd: __dirname }).toString().trim();
+        return raw;
+      } catch {
+        // Git yoksa server baslama saatini goster
+        return new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date());
+      }
+    })(),
   },
   images: {
     remotePatterns: [
