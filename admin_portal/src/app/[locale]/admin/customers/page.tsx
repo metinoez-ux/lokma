@@ -139,11 +139,11 @@ export default function CustomersPage() {
  </thead>
  <tbody>
  {filteredUsers.map((user, idx) => {
- const createdDate = user.createdAt?.toDate?.()
- ? user.createdAt.toDate().toLocaleDateString('de-DE')
- : user.createdAt?.seconds
- ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('de-DE')
- : '—';
+  const createdDate = user.createdAt?.toDate?.()
+  ? user.createdAt.toDate().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  : user.createdAt?.seconds
+  ? new Date(user.createdAt.seconds * 1000).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  : '—';
  return (
  <tr key={user.id} className="border-b border-border/50 hover:bg-gray-700/30 transition-colors">
  <td className="px-4 py-3 text-muted-foreground/80">{idx + 1}</td>

@@ -21,7 +21,7 @@ import '../../providers/auth_provider.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
+import '../../core/constants/build_info.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -192,6 +192,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           firstName = displayName.split(' ').first;
         }
 
+        String? finalPhotoUrl;
+        if (userData?['photoURL'] != null && userData!['photoURL'].toString().isNotEmpty) {
+          finalPhotoUrl = userData['photoURL'];
+        } else if (user.photoURL != null && user.photoURL!.isNotEmpty) {
+          // Fallback to Google Sign-In photo
+          finalPhotoUrl = user.photoURL;
+        }
+
         return SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 120),
           child: Column(
@@ -232,9 +240,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     child: ClipOval(
                                       child: _isUploadingPhoto
                                           ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-                                          : (userData?['photoURL'] != null && userData!['photoURL'].toString().isNotEmpty)
+                                          : finalPhotoUrl != null
                                               ? Image.network(
-                                                  userData['photoURL'],
+                                                  finalPhotoUrl,
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (context, error, stackTrace) => Icon(
                                                     Icons.person,
@@ -290,6 +298,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     color: Theme.of(context).colorScheme.onSurface,
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  BuildInfo.buildTime,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],

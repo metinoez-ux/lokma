@@ -9,6 +9,9 @@ import '../screens/marketplace/restoran/restoran_screen.dart';
 import '../screens/marketplace/kahve/kahve_shop_screen.dart';
 import '../screens/marketplace/kermes/kermes_screen.dart';
 import '../screens/kermes/kermes_list_screen.dart';
+import '../screens/kermes/kermes_menu_screen.dart';
+import '../screens/kermes/kermes_menu_wrapper.dart';
+import '../models/kermes_model.dart';
 import '../screens/marketplace/catering/catering_screen.dart';
 import '../screens/orders/orders_screen.dart';
 import '../screens/profile/profile_screen.dart';
@@ -34,275 +37,302 @@ import '../screens/customer/group_link_join_screen.dart';
 import '../screens/customer/group_table_order_screen.dart';
 import '../widgets/main_scaffold.dart';
 
-
 class AppRouter {
   // Global navigator key for FCM notification deep linking
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static late final GoRouter router;
 
   static void initializeRouter(bool hasSeenOnboarding) {
     router = GoRouter(
       navigatorKey: navigatorKey,
-      initialLocation: '/splash',  // Always show quick animated brand splash first
-    // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
-    redirect: (context, state) {
-      final location = state.uri.toString();
-      // Firebase Auth reCAPTCHA callback URLs should be ignored by router
-      if (location.contains('firebaseauth') || location.contains('__/auth/')) {
-        return '/login';  // Redirect to login page to enter verification code
-      }
-      return null;  // No redirect for normal routes
-    },
-    routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/onboarding',
-        builder: (context, state) => OnboardingScreen(
-          onComplete: () => GoRouter.of(context).go('/restoran'),
+      initialLocation:
+          '/splash', // Always show quick animated brand splash first
+      // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
+      redirect: (context, state) {
+        final location = state.uri.toString();
+        // Firebase Auth reCAPTCHA callback URLs should be ignored by router
+        if (location.contains('firebaseauth') ||
+            location.contains('__/auth/')) {
+          return '/login'; // Redirect to login page to enter verification code
+        }
+        return null; // No redirect for normal routes
+      },
+      routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => const SplashScreen(),
         ),
-      ),
-      ShellRoute(
-        builder: (context, state, child) => MainScaffold(child: child),
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => const RestoranScreen(),  // Home is now Yemek
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => OnboardingScreen(
+            onComplete: () => GoRouter.of(context).go('/restoran'),
           ),
-          GoRoute(
-            path: '/kasap',
-            builder: (context, state) => KasapScreen(),
-          ),
-          GoRoute(
-            path: '/market',
-            builder: (context, state) => MarketScreen(),
-          ),
-          GoRoute(
-            path: '/restoran',
-            builder: (context, state) => const RestoranScreen(),
-          ),
-          GoRoute(
-            path: '/kahve',
-            builder: (context, state) => const KahveShopScreen(),
-          ),
-          GoRoute(
-            path: '/kermes',
-            builder: (context, state) => const KermesScreen(),
-          ),
-          // Kermesler - Full featured kermes list (from MIRA)
-          GoRoute(
-            path: '/kermesler',
-            builder: (context, state) => const KermesListScreen(),
-          ),
-          // Kermes Detail - navigates to kermes list (detail is shown via modal)
-          GoRoute(
-            path: '/kermesler/:id',
-            builder: (context, state) {
-              // KermesListScreen no longer accepts initialKermesId
-              // The detail view is opened via bottom sheet from the list
-              return const KermesListScreen();
-            },
-          ),
-          GoRoute(
-            path: '/catering',
-            builder: (context, state) => const CateringScreen(),
-          ),
-          GoRoute(
-            path: '/orders',
-            builder: (context, state) {
-              final orderId = state.uri.queryParameters['orderId'];
-              return OrdersScreen(highlightOrderId: orderId);
-            },
-          ),
-          GoRoute(
-            path: '/cart',
-            builder: (context, state) {
-              final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
-              return CartScreen(initialTab: tab);
-            },
-          ),
-          GoRoute(
-            path: '/profile',
-            builder: (context, state) => const ProfileScreen(),
-          ),
-          GoRoute(
-            path: '/search',
-            builder: (context, state) {
-              final segment = state.uri.queryParameters['segment'] ?? 'yemek';
-              return SmartSearchScreen(segment: segment);
-            },
-          ),
-        ],
-      ),
-      // Set Password setup route for Phone-Auth users
-      GoRoute(
-        path: '/set-password',
-        builder: (context, state) => const SetPasswordScreen(),
-      ),
-      // DETAIL PAGES: Outside ShellRoute = No bottom nav bar (like Lieferando)
-      // PRIMARY ROUTE: Turkish naming for user-facing URLs
-      GoRoute(
-        path: '/kasap/:id',
-        builder: (context, state) {
-          final businessId = state.pathParameters['id']!;
-          final modeStr = state.uri.queryParameters['mode'] ?? 'teslimat';
-          final deliveryMode = modeStr == 'masa' ? 2 : (modeStr == 'gelal' ? 1 : 0);
-          final tableNumber = state.uri.queryParameters['table'];
-          final addMore = state.uri.queryParameters['addMore'] == 'true';
-          final closedAck = state.uri.queryParameters['closedAck'] == 'true' || addMore;
-          final groupSessionId = state.uri.queryParameters['groupSessionId'];
-          final businessName = state.uri.queryParameters['businessName'] ?? '';
-          final isReservationIntent = state.uri.queryParameters['isReservationIntent'] == 'true';
-          final reservationTabId = state.uri.queryParameters['reservationTabId'];
-          
-          // Group mode: Navigate to GroupTableOrderScreen with tabs (Menu/Ben/Masa)
-          if (groupSessionId != null && groupSessionId.isNotEmpty) {
-            return GroupTableOrderScreen(
+        ),
+        ShellRoute(
+          builder: (context, state, child) => MainScaffold(child: child),
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) =>
+                  const RestoranScreen(), // Home is now Yemek
+            ),
+            GoRoute(
+              path: '/kasap',
+              builder: (context, state) => KasapScreen(),
+            ),
+            GoRoute(
+              path: '/market',
+              builder: (context, state) => MarketScreen(),
+            ),
+            GoRoute(
+              path: '/restoran',
+              builder: (context, state) => const RestoranScreen(),
+            ),
+            GoRoute(
+              path: '/kahve',
+              builder: (context, state) => const KahveShopScreen(),
+            ),
+            GoRoute(
+              path: '/kermes',
+              builder: (context, state) => const KermesScreen(),
+            ),
+            // Kermesler - Full featured kermes list (from MIRA)
+            GoRoute(
+              path: '/kermesler',
+              builder: (context, state) => const KermesListScreen(),
+            ),
+            // Kermes Menu - navigates to kermes menu directly
+            GoRoute(
+              path: '/kermesler/:id',
+              builder: (context, state) {
+                final kermesId = state.pathParameters['id']!;
+                final tableNumber = state.uri.queryParameters['table'];
+                final deliveryMode = tableNumber != null ? 2 : 0;
+                final event = state.extra;
+
+                if (event != null && event is KermesEvent) {
+                  return KermesMenuScreen(
+                    event: event,
+                    initialDeliveryMode: deliveryMode,
+                    initialTableId: tableNumber,
+                  );
+                }
+
+                return KermesMenuWrapper(
+                  kermesId: kermesId,
+                  initialDeliveryMode: deliveryMode,
+                  initialTableId: tableNumber,
+                );
+              },
+            ),
+            GoRoute(
+              path: '/catering',
+              builder: (context, state) => const CateringScreen(),
+            ),
+            GoRoute(
+              path: '/orders',
+              builder: (context, state) {
+                final orderId = state.uri.queryParameters['orderId'];
+                return OrdersScreen(highlightOrderId: orderId);
+              },
+            ),
+            GoRoute(
+              path: '/cart',
+              builder: (context, state) {
+                final tab =
+                    int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+                return CartScreen(initialTab: tab);
+              },
+            ),
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+            GoRoute(
+              path: '/search',
+              builder: (context, state) {
+                final segment = state.uri.queryParameters['segment'] ?? 'yemek';
+                return SmartSearchScreen(segment: segment);
+              },
+            ),
+          ],
+        ),
+        // Set Password setup route for Phone-Auth users
+        GoRoute(
+          path: '/set-password',
+          builder: (context, state) => const SetPasswordScreen(),
+        ),
+        // DETAIL PAGES: Outside ShellRoute = No bottom nav bar (like Lieferando)
+        // PRIMARY ROUTE: Turkish naming for user-facing URLs
+        GoRoute(
+          path: '/kasap/:id',
+          builder: (context, state) {
+            final businessId = state.pathParameters['id']!;
+            final modeStr = state.uri.queryParameters['mode'] ?? 'teslimat';
+            final deliveryMode =
+                modeStr == 'masa' ? 2 : (modeStr == 'gelal' ? 1 : 0);
+            final tableNumber = state.uri.queryParameters['table'];
+            final addMore = state.uri.queryParameters['addMore'] == 'true';
+            final closedAck =
+                state.uri.queryParameters['closedAck'] == 'true' || addMore;
+            final groupSessionId = state.uri.queryParameters['groupSessionId'];
+            final businessName =
+                state.uri.queryParameters['businessName'] ?? '';
+            final isReservationIntent =
+                state.uri.queryParameters['isReservationIntent'] == 'true';
+            final reservationTabId =
+                state.uri.queryParameters['reservationTabId'];
+
+            // Group mode: Navigate to GroupTableOrderScreen with tabs (Menu/Ben/Masa)
+            if (groupSessionId != null && groupSessionId.isNotEmpty) {
+              return GroupTableOrderScreen(
+                businessId: businessId,
+                businessName: businessName,
+                tableNumber: tableNumber ?? '1',
+                sessionId: groupSessionId,
+              );
+            }
+
+            return BusinessDetailScreen(
+              businessId: businessId,
+              initialDeliveryMode: deliveryMode,
+              initialTableNumber: tableNumber,
+              closedAcknowledged: closedAck,
+              groupSessionId: groupSessionId,
+              isReservationIntent: isReservationIntent,
+              reservationTabId: reservationTabId,
+            );
+          },
+        ),
+        // DINE-IN DEEP LINK: QR code → app opens → correct business + table
+        GoRoute(
+          path: '/dinein/:businessId/table/:tableNum',
+          redirect: (context, state) {
+            final id = state.pathParameters['businessId']!;
+            final table = state.pathParameters['tableNum']!;
+            return '/kasap/$id?mode=masa&table=$table';
+          },
+        ),
+        // BACKWARD COMPATIBILITY ALIASES: Redirect to primary Turkish route
+        GoRoute(
+          path: '/butcher/:id',
+          redirect: (context, state) {
+            final id = state.pathParameters['id']!;
+            final query =
+                state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
+            return '/kasap/$id$query';
+          },
+        ),
+        GoRoute(
+          path: '/business/:id',
+          redirect: (context, state) {
+            final id = state.pathParameters['id']!;
+            final query =
+                state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
+            return '/kasap/$id$query';
+          },
+        ),
+        // GROUP ORDER Deep Link: Join via shared link
+        GoRoute(
+          path: '/group/:sessionId',
+          builder: (context, state) {
+            final sessionId = state.pathParameters['sessionId']!;
+            return GroupLinkJoinScreen(sessionId: sessionId);
+          },
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) {
+            final isRegister = state.uri.queryParameters['register'] == 'true';
+            return SimpleAuthScreen(initRegister: isRegister);
+          },
+        ),
+        GoRoute(
+          path: '/phone-login',
+          builder: (context, state) {
+            final isRegister = state.uri.queryParameters['register'] == 'true';
+            return LoginScreen(initRegister: isRegister, initPhone: true);
+          },
+        ),
+        GoRoute(
+          path: '/favorites',
+          builder: (context, state) => const FavoritesScreen(),
+        ),
+        GoRoute(
+          path: '/my-info',
+          builder: (context, state) => const MyInfoScreen(),
+        ),
+        GoRoute(
+          path: '/payment-methods',
+          builder: (context, state) => const PaymentMethodsScreen(),
+        ),
+        GoRoute(
+          path: '/notification-settings',
+          builder: (context, state) => const NotificationSettingsScreen(),
+        ),
+        GoRoute(
+          path: '/notification-history',
+          builder: (context, state) {
+            final orderId = state.uri.queryParameters['orderId'];
+            final openChat = state.uri.queryParameters['openChat'] == 'true';
+            return NotificationHistoryScreen(
+              openOrderId: orderId,
+              openChat: openChat,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/feedback',
+          builder: (context, state) => const FeedbackFormScreen(),
+        ),
+        GoRoute(
+          path: '/help',
+          builder: (context, state) => const HelpScreen(),
+        ),
+        // Driver Deliveries - For couriers assigned to multiple businesses
+        GoRoute(
+          path: '/driver-deliveries',
+          builder: (context, state) => const DriverDeliveryScreen(),
+        ),
+        // My Reservations - User's table reservations
+        GoRoute(
+          path: '/my-reservations',
+          builder: (context, state) => const MyReservationsScreen(),
+        ),
+        // Staff Reservation Management
+        GoRoute(
+          path: '/staff-reservations',
+          builder: (context, state) => const StaffReservationsScreen(),
+        ),
+        // Unified Staff Hub
+        GoRoute(
+          path: '/staff-hub',
+          builder: (context, state) => const StaffHubScreen(),
+        ),
+        // Waiter Order Screen
+        GoRoute(
+          path: '/waiter-order',
+          builder: (context, state) {
+            final businessId = state.uri.queryParameters['businessId'];
+            final businessName = state.uri.queryParameters['businessName'];
+            final tableNumStr = state.uri.queryParameters['tableNumber'];
+            final tableNumber =
+                tableNumStr != null ? int.tryParse(tableNumStr) : null;
+            return WaiterOrderScreen(
               businessId: businessId,
               businessName: businessName,
-              tableNumber: tableNumber ?? '1',
-              sessionId: groupSessionId,
+              tableNumber: tableNumber,
             );
-          }
-          
-          return BusinessDetailScreen(
-            businessId: businessId,
-            initialDeliveryMode: deliveryMode,
-            initialTableNumber: tableNumber,
-            closedAcknowledged: closedAck,
-            groupSessionId: groupSessionId,
-            isReservationIntent: isReservationIntent,
-            reservationTabId: reservationTabId,
-          );
-        },
-      ),
-      // DINE-IN DEEP LINK: QR code → app opens → correct business + table
-      GoRoute(
-        path: '/dinein/:businessId/table/:tableNum',
-        redirect: (context, state) {
-          final id = state.pathParameters['businessId']!;
-          final table = state.pathParameters['tableNum']!;
-          return '/kasap/$id?mode=masa&table=$table';
-        },
-      ),
-      // BACKWARD COMPATIBILITY ALIASES: Redirect to primary Turkish route
-      GoRoute(
-        path: '/butcher/:id',
-        redirect: (context, state) {
-          final id = state.pathParameters['id']!;
-          final query = state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
-          return '/kasap/$id$query';
-        },
-      ),
-      GoRoute(
-        path: '/business/:id',
-        redirect: (context, state) {
-          final id = state.pathParameters['id']!;
-          final query = state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
-          return '/kasap/$id$query';
-        },
-      ),
-      // GROUP ORDER Deep Link: Join via shared link
-      GoRoute(
-        path: '/group/:sessionId',
-        builder: (context, state) {
-          final sessionId = state.pathParameters['sessionId']!;
-          return GroupLinkJoinScreen(sessionId: sessionId);
-        },
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) {
-          final isRegister = state.uri.queryParameters['register'] == 'true';
-          return SimpleAuthScreen(initRegister: isRegister);
-        },
-      ),
-      GoRoute(
-        path: '/phone-login',
-        builder: (context, state) {
-          final isRegister = state.uri.queryParameters['register'] == 'true';
-          return LoginScreen(initRegister: isRegister, initPhone: true);
-        },
-      ),
-      GoRoute(
-        path: '/favorites',
-        builder: (context, state) => const FavoritesScreen(),
-      ),
-      GoRoute(
-        path: '/my-info',
-        builder: (context, state) => const MyInfoScreen(),
-      ),
-      GoRoute(
-        path: '/payment-methods',
-        builder: (context, state) => const PaymentMethodsScreen(),
-      ),
-      GoRoute(
-        path: '/notification-settings',
-        builder: (context, state) => const NotificationSettingsScreen(),
-      ),
-      GoRoute(
-        path: '/notification-history',
-        builder: (context, state) {
-          final orderId = state.uri.queryParameters['orderId'];
-          final openChat = state.uri.queryParameters['openChat'] == 'true';
-          return NotificationHistoryScreen(
-            openOrderId: orderId,
-            openChat: openChat,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/feedback',
-        builder: (context, state) => const FeedbackFormScreen(),
-      ),
-      GoRoute(
-        path: '/help',
-        builder: (context, state) => const HelpScreen(),
-      ),
-      // Driver Deliveries - For couriers assigned to multiple businesses
-      GoRoute(
-        path: '/driver-deliveries',
-        builder: (context, state) => const DriverDeliveryScreen(),
-      ),
-      // My Reservations - User's table reservations
-      GoRoute(
-        path: '/my-reservations',
-        builder: (context, state) => const MyReservationsScreen(),
-      ),
-      // Staff Reservation Management
-      GoRoute(
-        path: '/staff-reservations',
-        builder: (context, state) => const StaffReservationsScreen(),
-      ),
-      // Unified Staff Hub
-      GoRoute(
-        path: '/staff-hub',
-        builder: (context, state) => const StaffHubScreen(),
-      ),
-      // Waiter Order Screen
-      GoRoute(
-        path: '/waiter-order',
-        builder: (context, state) {
-          final businessId = state.uri.queryParameters['businessId'];
-          final businessName = state.uri.queryParameters['businessName'];
-          final tableNumStr = state.uri.queryParameters['tableNumber'];
-          final tableNumber = tableNumStr != null ? int.tryParse(tableNumStr) : null;
-          return WaiterOrderScreen(
-            businessId: businessId,
-            businessName: businessName,
-            tableNumber: tableNumber,
-          );
-        },
-      ),
-      // Customer Table Order View
-      GoRoute(
-        path: '/table-order',
-        builder: (context, state) => const TableOrderViewScreen(),
-      ),
-    ],
-  );
+          },
+        ),
+        // Customer Table Order View
+        GoRoute(
+          path: '/table-order',
+          builder: (context, state) => const TableOrderViewScreen(),
+        ),
+      ],
+    );
   }
 }

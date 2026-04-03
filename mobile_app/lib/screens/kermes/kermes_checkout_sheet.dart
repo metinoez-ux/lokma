@@ -18,8 +18,15 @@ import '../../utils/currency_utils.dart';
 /// Unified Checkout Sheet - Tüm sipariş akışı tek bir tam ekran bottom sheet'te
 class KermesCheckoutSheet extends ConsumerStatefulWidget {
   final KermesEvent event;
+  final String? initialTableNumber;
+  final int? initialDeliveryMode;
   
-  const KermesCheckoutSheet({super.key, required this.event});
+  const KermesCheckoutSheet({
+    super.key, 
+    required this.event,
+    this.initialTableNumber,
+    this.initialDeliveryMode,
+  });
   
   @override
   ConsumerState<KermesCheckoutSheet> createState() => _KermesCheckoutSheetState();
@@ -37,7 +44,17 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.event.hasTakeaway) {
+    if (widget.initialDeliveryMode != null) {
+      if (widget.initialDeliveryMode == 0) {
+        _deliveryType = DeliveryType.kurye;
+      } else if (widget.initialDeliveryMode == 1) {
+        _deliveryType = DeliveryType.gelAl;
+      } else if (widget.initialDeliveryMode == 2) {
+        _deliveryType = DeliveryType.masada;
+      } else {
+        _deliveryType = DeliveryType.gelAl;
+      }
+    } else if (widget.event.hasTakeaway) {
       _deliveryType = DeliveryType.gelAl;
     } else if (widget.event.hasDineIn) {
       _deliveryType = DeliveryType.masada;
@@ -45,6 +62,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
       _deliveryType = DeliveryType.kurye;
     } else {
       _deliveryType = DeliveryType.gelAl;
+    }
+    
+    if (widget.initialTableNumber != null) {
+      _tableController.text = widget.initialTableNumber!;
     }
   }
   
@@ -2079,12 +2100,21 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
 }
 
 /// Helper function to show the checkout sheet
-void showKermesCheckoutSheet(BuildContext context, KermesEvent event) {
+void showKermesCheckoutSheet(
+  BuildContext context, 
+  KermesEvent event, {
+  String? initialTableNumber,
+  int? initialDeliveryMode,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useRootNavigator: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => KermesCheckoutSheet(event: event),
+    builder: (context) => KermesCheckoutSheet(
+      event: event,
+      initialTableNumber: initialTableNumber,
+      initialDeliveryMode: initialDeliveryMode,
+    ),
   );
 }

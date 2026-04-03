@@ -24,12 +24,14 @@ class KermesMenuScreen extends ConsumerStatefulWidget {
   final KermesEvent event;
   final int initialDeliveryMode;
   final Position? currentPosition;
+  final String? initialTableId;
 
   const KermesMenuScreen({
     super.key,
     required this.event,
     this.initialDeliveryMode = 0,
     this.currentPosition,
+    this.initialTableId,
   });
 
   @override
@@ -1102,7 +1104,12 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         borderRadius: BorderRadius.circular(28),
         onTap: () {
           HapticFeedback.selectionClick();
-          showKermesCheckoutSheet(context, widget.event);
+          showKermesCheckoutSheet(
+            context, 
+            widget.event,
+            initialTableNumber: widget.initialTableId,
+            initialDeliveryMode: _deliveryModeIndex,
+          );
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

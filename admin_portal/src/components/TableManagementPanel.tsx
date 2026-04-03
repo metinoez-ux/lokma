@@ -181,7 +181,7 @@ export default function TableManagementPanel({
   }
   const newSections = [...tableSections, name.trim()];
   updateAndSave(undefined, undefined, undefined, newSections);
-  if (!selectedBulkSection) setSelectedBulkSection(name.trim());
+  // Do NOT auto-select the newly created section - tables should start unassigned
   }}
   className="px-3 py-1.5 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition shadow-sm flex items-center gap-1"
   >

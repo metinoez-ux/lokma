@@ -275,7 +275,7 @@ export default function SuperAdminsPage() {
  <div className="text-xs text-red-500 mt-0.5">Davet Gönderildi (Kayıt Bekleniyor)</div>
  {inv.createdAt && (
  <div className="text-xs text-muted-foreground/80 mt-1">
- {inv.createdAt.toLocaleDateString('tr-TR')}
+ {inv.createdAt.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
  </div>
  )}
  </div>
