@@ -184,6 +184,8 @@ class KermesMenuItem {
   final bool isAvailable;  // Stok durumu: true=mevcut, false=tukendi
   final List<OptionGroup> optionGroups; // Multi-step menu secenekleri (yan urun, icecek vb.)
 
+  final String? prepZone;  // e.g., 'K_ZONE', 'E_ZONE' - Hangi mutfakta/bölgede hazırlandığını belirtir.
+
   /// Bu urun multi-step combo menu mu? (ornegin: Tavuk Sis Menu = ana urun + yan urun + icecek secimi)
   bool get isComboMenu => optionGroups.isNotEmpty;
 
@@ -205,6 +207,7 @@ class KermesMenuItem {
     this.hasPfand = false,
     this.isAvailable = true,
     this.optionGroups = const [],
+    this.prepZone,
   });
   
   /// Tüm resimleri getir (imageUrls varsa onu, yoksa imageUrl'i)
@@ -243,6 +246,7 @@ class KermesMenuItem {
       hasPfand: json['hasPfand'] ?? false,
       isAvailable: json['isAvailable'] ?? true,
       optionGroups: _parseOptionGroups(json['optionGroups']),
+      prepZone: json['prepZone'] as String?,
     );
   }
 

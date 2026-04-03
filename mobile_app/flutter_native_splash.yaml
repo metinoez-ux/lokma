@@ -1,0 +1,13 @@
+flutter_native_splash:
+  color: "#ffffff"
+  image: "assets/images/lokma_logo_black.png"
+  
+  color_dark: "#000000"
+  image_dark: "assets/images/lokma_logo_white.png"
+
+  android_12:
+    color: "#ffffff"
+    image: "assets/images/lokma_logo_black.png"
+    
+    color_dark: "#000000"
+    image_dark: "assets/images/lokma_logo_white.png"

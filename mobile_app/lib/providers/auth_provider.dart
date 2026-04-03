@@ -94,8 +94,12 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> signInWithGoogle() async {
     state = AuthState(user: state.user, isLoading: true);
     try {
-      await _authService.signInWithGoogle();
-      // State updated via listener
+      final result = await _authService.signInWithGoogle();
+      if (result == null) {
+        // User canceled the sign-in flow
+        state = AuthState(user: state.user, isLoading: false);
+      }
+      // State updated via listener otherwise
     } catch (e) {
       state = AuthState(user: state.user, isLoading: false, error: e.toString());
     }

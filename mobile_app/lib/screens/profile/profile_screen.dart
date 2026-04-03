@@ -17,6 +17,7 @@ import '../../services/referral_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/login_screen.dart';
+import '../../providers/auth_provider.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     // Force rebuild on language change
     context.locale;
-    final user = _auth.currentUser;
+    final authState = ref.watch(authProvider);
+    final user = authState.user ?? _auth.currentUser;
 
     return SafeArea(
       bottom: false,
@@ -697,10 +699,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+            color: isDark ? const Color(0xFF3A3A3D) : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: isDark
-                ? null
+                ? Border.all(color: Colors.white.withOpacity(0.08), width: 1)
                 : Border.all(
                     color: Colors.grey.shade300,
                     width: 1,

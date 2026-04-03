@@ -878,6 +878,7 @@ export interface KermesItem {
  imageUrl?: string;
  isAvailable: boolean;
  stock?: number;
+ prepZone?: string; // e.g. 'K_ZONE' (Kadınlar), 'E_ZONE' (Erkekler) vs.
 }
 
 export interface KeremsDonation {

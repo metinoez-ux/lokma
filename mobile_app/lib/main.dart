@@ -152,6 +152,7 @@ class LokmaApp extends ConsumerWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
+        primaryColor: const Color(0xFFEA184A), // Added to fix simple auth screen
         scaffoldBackgroundColor: Colors.white, // Pure white background for modern aesthetic
         colorScheme: ColorScheme.light(
           primary: const Color(0xFFEA184A), // LOKMA Brand Color
@@ -184,6 +185,7 @@ class LokmaApp extends ConsumerWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
+        primaryColor: const Color(0xFFEA184A), // Added to fix simple auth screen
         scaffoldBackgroundColor: const Color(0xFF1C1B18),
         colorScheme: ColorScheme.dark(
           primary: const Color(0xFFEA184A), // LOKMA Brand Color
