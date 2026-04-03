@@ -48,9 +48,16 @@ export default function DatenschutzPage() {
  Die Betreiber dieser Seiten nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.
  </p>
 
- <div className="mt-12 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-200/80 text-sm">
- Hinweis: Platzhalter-Text DSGVO/KVKK. Bitte durch den von einem Anwalt freigegebenen vollständigen Text ersetzen, einschließlich Abschnitte für Cookies, Zahlungsanbieter (Stripe), und Firebase Auth/Analytics.
- </div>
+ <h2 className="text-2xl font-bold text-foreground mt-10 mb-4 border-b border-border/50 pb-2">4. Datenerfassung auf unserer Website</h2>
+ <h3 className="text-xl font-bold text-foreground mt-6 mb-2">Cookies</h3>
+ <p className="mb-4">
+ Unsere Internetseiten verwenden so genannte „Cookies“. Cookies sind kleine Textdateien und richten auf Ihrem Endgerät keinen Schaden an. Sie werden entweder vorübergehend für die Dauer einer Sitzung (Session-Cookies) oder dauerhaft (permanente Cookies) auf Ihrem Endgerät gespeichert.
+ </p>
+
+ <h3 className="text-xl font-bold text-foreground mt-6 mb-2">Google & Firebase Services</h3>
+ <p className="mb-4">
+ Wir nutzen auf unserer Website Dienste von Google Cloud und Firebase (z.B. Firebase Authentication). Durch die Nutzung dieser Dienste können Daten (wie IP-Adresse, Zeitraum des Besuchs) an Server von Google in den USA übertragen werden. Die Nutzung von Firebase erfolgt im Interesse einer sicheren, schnellen und effizienten Bereitstellung unserer Dienste.
+ </p>
  </div>
  </div>
  <PublicFooter themeAware={true} /></div>
