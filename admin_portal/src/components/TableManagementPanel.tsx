@@ -43,6 +43,10 @@ export default function TableManagementPanel({
  const [selectedBulkSection, setSelectedBulkSection] = useState<string>("");
  const [selectedTableLabels, setSelectedTableLabels] = useState<string[]>([]);
  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+ const [showSectionInput, setShowSectionInput] = useState(false);
+ const [newSectionName, setNewSectionName] = useState("");
+ const [showQuickSetup, setShowQuickSetup] = useState(false);
+ const [quickSetupCount, setQuickSetupCount] = useState("");
 
  const showToast = (msg: string, type: "success" | "error") => {
  setToast({ msg, type });
@@ -171,22 +175,62 @@ export default function TableManagementPanel({
   <h3 className="text-base font-semibold text-white">{t("bolumler") || "Bölümler"}</h3>
   <p className="text-xs text-gray-400 mt-1">Önce masaların yer alacağı bölümleri oluşturun (Örn: Aile Bölümü, Bahçe, vs.)</p>
   </div>
+  {!showSectionInput ? (
   <button
-  onClick={() => {
-  const name = prompt(t("yeniBolumAdiOr1Kat") || "Yeni bölüm adı (Örn: VIP Bölümü)");
-  if (!name?.trim()) return;
-  if (tableSections.includes(name.trim())) {
+  onClick={() => setShowSectionInput(true)}
+  className="px-3 py-1.5 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition shadow-sm flex items-center gap-1"
+  >
+  <span className="font-bold text-lg leading-none">+</span> {t("bolumEkle") || "Bolum Ekle"}
+  </button>
+  ) : (
+  <div className="flex items-center gap-2">
+  <input
+  type="text"
+  autoFocus
+  value={newSectionName}
+  onChange={(e) => setNewSectionName(e.target.value)}
+  onKeyDown={(e) => {
+  if (e.key === "Enter" && newSectionName.trim()) {
+  if (tableSections.includes(newSectionName.trim())) {
   showToast(t("buBolumZatenMevcut"), "error");
   return;
   }
-  const newSections = [...tableSections, name.trim()];
+  const newSections = [...tableSections, newSectionName.trim()];
   updateAndSave(undefined, undefined, undefined, newSections);
-  // Do NOT auto-select the newly created section - tables should start unassigned
+  setNewSectionName("");
+  setShowSectionInput(false);
+  } else if (e.key === "Escape") {
+  setNewSectionName("");
+  setShowSectionInput(false);
+  }
   }}
-  className="px-3 py-1.5 text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition shadow-sm flex items-center gap-1"
+  placeholder={t("yeniBolumAdiOr1Kat") || "Bolum adi (Orn: VIP)"}
+  className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 w-48"
+  />
+  <button
+  onClick={() => {
+  if (!newSectionName.trim()) return;
+  if (tableSections.includes(newSectionName.trim())) {
+  showToast(t("buBolumZatenMevcut"), "error");
+  return;
+  }
+  const newSections = [...tableSections, newSectionName.trim()];
+  updateAndSave(undefined, undefined, undefined, newSections);
+  setNewSectionName("");
+  setShowSectionInput(false);
+  }}
+  className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 text-white rounded-lg transition"
   >
-  <span className="font-bold text-lg leading-none">+</span> {t("bolumEkle") || "Bölüm Ekle"}
+  Ekle
   </button>
+  <button
+  onClick={() => { setNewSectionName(""); setShowSectionInput(false); }}
+  className="px-2 py-1.5 text-sm text-gray-400 hover:text-white transition"
+  >
+  Iptal
+  </button>
+  </div>
+  )}
   </div>
   <div className="flex flex-wrap gap-2 mt-4">
   {tableSections.length === 0 && (
@@ -495,25 +539,71 @@ export default function TableManagementPanel({
  <p className="text-gray-400 text-sm mt-2 mb-6 max-w-md mx-auto">
    İşletmenizdeki masa planını oluşturmak için başlangıçta kaç masanız olduğunu girerek hızlıca sistemi kurabilirsiniz. Daha sonra bu masaları bölümlere ayırabilir veya yenilerini ekleyebilirsiniz.
  </p>
- <button
-   onClick={() => {
-     const res = prompt("Kaç adet masa oluşturmak istiyorsunuz?");
-     if (!res) return;
-     const count = parseInt(res, 10);
-     if (isNaN(count) || count <= 0) return;
-     const newTables = Array.from({ length: count }, (_, i) => ({
-       label: String(i + 1),
-       section: "",
-       sortOrder: i,
-     }));
-     updateAndSave(newTables, count);
-     setMaxReservationTables(count);
-     showToast(`${count} adet masa başarıyla oluşturuldu!`, "success");
-   }}
-   className="px-8 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all text-lg flex items-center justify-center gap-2"
- >
-   <span className="text-2xl leading-none mb-1">+</span> Hızlı Masa Kurulumu Baştlat
- </button>
+  {!showQuickSetup ? (
+  <button
+    onClick={() => setShowQuickSetup(true)}
+    className="px-8 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all text-lg flex items-center justify-center gap-2"
+  >
+    <span className="text-2xl leading-none mb-1">+</span> Hizli Masa Kurulumu Baslat
+  </button>
+  ) : (
+  <div className="flex items-center gap-3 mt-2">
+  <input
+    type="number"
+    autoFocus
+    min="1"
+    max="200"
+    value={quickSetupCount}
+    onChange={(e) => setQuickSetupCount(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && quickSetupCount) {
+        const count = parseInt(quickSetupCount, 10);
+        if (isNaN(count) || count <= 0) return;
+        const newTables = Array.from({ length: count }, (_, i) => ({
+          label: String(i + 1),
+          section: "",
+          sortOrder: i,
+        }));
+        updateAndSave(newTables, count);
+        setMaxReservationTables(count);
+        showToast(`${count} adet masa basariyla olusturuldu!`, "success");
+        setQuickSetupCount("");
+        setShowQuickSetup(false);
+      } else if (e.key === "Escape") {
+        setQuickSetupCount("");
+        setShowQuickSetup(false);
+      }
+    }}
+    placeholder="Masa sayisi"
+    className="px-4 py-2.5 text-base bg-gray-700 border border-gray-500 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 w-32 text-center"
+  />
+  <button
+    onClick={() => {
+      const count = parseInt(quickSetupCount, 10);
+      if (isNaN(count) || count <= 0) return;
+      const newTables = Array.from({ length: count }, (_, i) => ({
+        label: String(i + 1),
+        section: "",
+        sortOrder: i,
+      }));
+      updateAndSave(newTables, count);
+      setMaxReservationTables(count);
+      showToast(`${count} adet masa basariyla olusturuldu!`, "success");
+      setQuickSetupCount("");
+      setShowQuickSetup(false);
+    }}
+    className="px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition text-base"
+  >
+    Olustur
+  </button>
+  <button
+    onClick={() => { setQuickSetupCount(""); setShowQuickSetup(false); }}
+    className="px-3 py-2.5 text-gray-400 hover:text-white transition text-base"
+  >
+    Iptal
+  </button>
+  </div>
+  )}
  </div>
  )}
  </div>

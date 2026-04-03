@@ -1088,8 +1088,8 @@ export default function KermesDetailPage() {
  secondaryName: editProduct.secondaryName || null,
  description: editProduct.description || null,
  detailedDescription: editProduct.detailedDescription || null,
- allergens: editProduct.allergens || [],
- ingredients: editProduct.ingredients || [],
+ allergens: Array.isArray(editProduct.allergens) ? editProduct.allergens : [],
+ ingredients: Array.isArray(editProduct.ingredients) ? editProduct.ingredients : [],
  imageUrls: editProduct.imageUrls || [],
  prepZone: editProduct.prepZone || [],
  updatedAt: new Date(),
@@ -2582,8 +2582,8 @@ export default function KermesDetailPage() {
  secondaryName: product.secondaryName || '',
  description: product.description || '',
  detailedDescription: product.detailedDescription || '',
- allergens: product.allergens || [],
- ingredients: product.ingredients || [],
+ allergens: Array.isArray(product.allergens) ? product.allergens : [],
+ ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
  imageUrls: product.imageUrls || [],
  newAllergen: '',
  newIngredient: '',
@@ -2918,10 +2918,10 @@ export default function KermesDetailPage() {
  <div className="bg-amber-900/20 rounded-xl p-4 border border-amber-800/30">
  <label className="text-amber-800 dark:text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
  <div className="flex flex-wrap gap-2 mb-2">
- {(editProduct.allergens || []).map((allergen, idx) => (
+ {(Array.isArray(editProduct.allergens) ? editProduct.allergens : []).map((allergen, idx) => (
  <span key={idx} className="px-3 py-1 bg-amber-600/30 text-amber-300 rounded-full text-xs flex items-center gap-1">
  {allergen}
- <button onClick={() => setEditProduct({ ...editProduct, allergens: (editProduct.allergens || []).filter((_, i) => i !== idx) })}
+ <button onClick={() => setEditProduct({ ...editProduct, allergens: (Array.isArray(editProduct.allergens) ? editProduct.allergens : []).filter((_, i) => i !== idx) })}
  className="w-4 h-4 rounded-full bg-amber-700 hover:bg-amber-600 flex items-center justify-center">×</button>
  </span>
  ))}
@@ -2931,8 +2931,8 @@ export default function KermesDetailPage() {
  value={editProduct.newAllergen}
  onChange={(e) => {
  const val = e.target.value;
- if (val && !(editProduct.allergens || []).includes(val)) {
- setEditProduct({ ...editProduct, allergens: [...(editProduct.allergens || []), val], newAllergen: '' });
+ if (val && !(Array.isArray(editProduct.allergens) ? editProduct.allergens : []).includes(val)) {
+ setEditProduct({ ...editProduct, allergens: [...(Array.isArray(editProduct.allergens) ? editProduct.allergens : []), val], newAllergen: '' });
  }
  }}
  className="flex-1 px-2 py-1 bg-background text-foreground rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500 transition-shadow text-xs">
@@ -2955,8 +2955,8 @@ export default function KermesDetailPage() {
  onKeyDown={(e) => {
  if (e.key === 'Enter' && editProduct.newAllergen?.trim()) {
  e.preventDefault();
- if (!(editProduct.allergens || []).includes(editProduct.newAllergen.trim())) {
- setEditProduct({ ...editProduct, allergens: [...(editProduct.allergens || []), editProduct.newAllergen.trim()], newAllergen: '' });
+ if (!(Array.isArray(editProduct.allergens) ? editProduct.allergens : []).includes(editProduct.newAllergen.trim())) {
+ setEditProduct({ ...editProduct, allergens: [...(Array.isArray(editProduct.allergens) ? editProduct.allergens : []), editProduct.newAllergen.trim()], newAllergen: '' });
  }
  }
  }}
@@ -2969,10 +2969,10 @@ export default function KermesDetailPage() {
  <div className="bg-muted/50 dark:bg-muted/10 border border-border rounded-xl p-4">
  <label className="text-foreground text-sm font-medium block mb-2">{t('i_cerikler_zutaten')}</label>
  <div className="flex flex-wrap gap-2 mb-2">
- {(editProduct.ingredients || []).map((ingredient, idx) => (
+ {(Array.isArray(editProduct.ingredients) ? editProduct.ingredients : []).map((ingredient, idx) => (
  <span key={idx} className="px-3 py-1 bg-gray-600 text-gray-200 rounded-full text-xs flex items-center gap-1">
  {ingredient}
- <button onClick={() => setEditProduct({ ...editProduct, ingredients: (editProduct.ingredients || []).filter((_, i) => i !== idx) })}
+ <button onClick={() => setEditProduct({ ...editProduct, ingredients: (Array.isArray(editProduct.ingredients) ? editProduct.ingredients : []).filter((_, i) => i !== idx) })}
  className="w-4 h-4 rounded-full bg-gray-500 hover:bg-gray-400 flex items-center justify-center">×</button>
  </span>
  ))}
@@ -2983,8 +2983,8 @@ export default function KermesDetailPage() {
  onKeyDown={(e) => {
  if (e.key === 'Enter' && editProduct.newIngredient?.trim()) {
  e.preventDefault();
- if (!(editProduct.ingredients || []).includes(editProduct.newIngredient.trim())) {
- setEditProduct({ ...editProduct, ingredients: [...(editProduct.ingredients || []), editProduct.newIngredient.trim()], newIngredient: '' });
+ if (!(Array.isArray(editProduct.ingredients) ? editProduct.ingredients : []).includes(editProduct.newIngredient.trim())) {
+ setEditProduct({ ...editProduct, ingredients: [...(Array.isArray(editProduct.ingredients) ? editProduct.ingredients : []), editProduct.newIngredient.trim()], newIngredient: '' });
  }
  }
  }}
@@ -2993,8 +2993,8 @@ export default function KermesDetailPage() {
  <button
  type="button"
  onClick={() => {
- if (editProduct.newIngredient?.trim() && !(editProduct.ingredients || []).includes(editProduct.newIngredient.trim())) {
- setEditProduct({ ...editProduct, ingredients: [...(editProduct.ingredients || []), editProduct.newIngredient.trim()], newIngredient: '' });
+ if (editProduct.newIngredient?.trim() && !(Array.isArray(editProduct.ingredients) ? editProduct.ingredients : []).includes(editProduct.newIngredient.trim())) {
+ setEditProduct({ ...editProduct, ingredients: [...(Array.isArray(editProduct.ingredients) ? editProduct.ingredients : []), editProduct.newIngredient.trim()], newIngredient: '' });
  }
  }}
  className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-xs">{t('ekle')}</button>
