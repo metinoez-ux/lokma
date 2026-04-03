@@ -19,6 +19,7 @@ class StaffCapabilities {
   final bool hasTablesRole;
   final bool hasFinanceRole;
   final bool isBusinessAdmin;
+  final List<String> kermesAllowedSections;
 
   StaffCapabilities({
     this.isLoading = true,
@@ -36,6 +37,7 @@ class StaffCapabilities {
     this.hasCourierRole = false,
     this.hasTablesRole = false,
     this.hasFinanceRole = false,
+    this.kermesAllowedSections = const [],
   });
 
   StaffCapabilities copyWith({
@@ -54,6 +56,7 @@ class StaffCapabilities {
     bool? hasCourierRole,
     bool? hasTablesRole,
     bool? hasFinanceRole,
+    List<String>? kermesAllowedSections,
   }) {
     return StaffCapabilities(
       isLoading: isLoading ?? this.isLoading,
@@ -71,6 +74,7 @@ class StaffCapabilities {
       hasCourierRole: hasCourierRole ?? this.hasCourierRole,
       hasTablesRole: hasTablesRole ?? this.hasTablesRole,
       hasFinanceRole: hasFinanceRole ?? this.hasFinanceRole,
+      kermesAllowedSections: kermesAllowedSections ?? this.kermesAllowedSections,
     );
   }
 }
@@ -194,6 +198,7 @@ class StaffCapabilitiesNotifier extends Notifier<StaffCapabilities> {
         hasCourierRole: isDriver, // simplified mapped role
         hasTablesRole: hasTables, // simplified mapped role
         hasFinanceRole: true, // everyone on staff hub gets wallet access currently
+        kermesAllowedSections: List<String>.from(data['kermesAllowedSections'] ?? []),
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);

@@ -18,6 +18,7 @@ class StaffRoleService {
   String? _staffName;
   String? _role;
   DateTime? _lastCashSettlement;
+  List<String> _kermesAllowedSections = [];
 
   // Overrides for dual-role capability (e.g. Kasap + Kermes volunteer)
   String? _overrideBusinessId;
@@ -31,6 +32,7 @@ class StaffRoleService {
   String? get staffName => _staffName;
   String? get role => _role;
   DateTime? get lastCashSettlement => _lastCashSettlement;
+  List<String> get kermesAllowedSections => _kermesAllowedSections;
 
   void setOverrideWorkplace(String id, String name, String type) {
     _overrideBusinessId = id;
@@ -65,6 +67,7 @@ class StaffRoleService {
         _staffName = data['name'] ?? data['displayName'] ?? 'Personel';
         _role = data['role'] ?? 'admin';
         _lastCashSettlement = (data['lastCashSettlement'] as Timestamp?)?.toDate();
+        _kermesAllowedSections = List<String>.from(data['kermesAllowedSections'] ?? []);
         
         // Register FCM token for delivery notifications
         await _registerFcmToken(user.uid);
@@ -107,6 +110,7 @@ class StaffRoleService {
     _staffName = null;
     _role = null;
     _lastCashSettlement = null;
+    _kermesAllowedSections = [];
     clearOverride();
   }
 

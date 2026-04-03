@@ -15,6 +15,29 @@ interface TableDef {
  sortOrder: number;
 }
 
+interface SectionDef {
+ name: string;
+ genderRestriction: 'women_only' | 'men_only' | 'mixed';
+}
+
+const GENDER_LABELS: Record<string, string> = {
+ women_only: 'Kadin Bolumu',
+ men_only: 'Erkek Bolumu',
+ mixed: 'Karisik / Aile',
+};
+
+const GENDER_ICONS: Record<string, string> = {
+ women_only: 'K',
+ men_only: 'E',
+ mixed: 'A',
+};
+
+const GENDER_COLORS: Record<string, string> = {
+ women_only: 'bg-pink-500/20 text-pink-400 border-pink-500/40',
+ men_only: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+ mixed: 'bg-green-500/20 text-green-400 border-green-500/40',
+};
+
 interface TableManagementPanelProps {
  businessId: string;
  businessName: string;
@@ -40,11 +63,13 @@ export default function TableManagementPanel({
  const [maxReservationTables, setMaxReservationTables] = useState(0);
  const [tableCapacity, setTableCapacity] = useState(0);
  const [tableSections, setTableSections] = useState<string[]>([]);
+ const [sectionDefs, setSectionDefs] = useState<SectionDef[]>([]);
  const [selectedBulkSection, setSelectedBulkSection] = useState<string>("");
  const [selectedTableLabels, setSelectedTableLabels] = useState<string[]>([]);
  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
  const [showSectionInput, setShowSectionInput] = useState(false);
  const [newSectionName, setNewSectionName] = useState("");
+ const [newSectionGender, setNewSectionGender] = useState<'women_only' | 'men_only' | 'mixed'>('mixed');
  const [showQuickSetup, setShowQuickSetup] = useState(false);
  const [quickSetupCount, setQuickSetupCount] = useState("");
 
@@ -63,7 +88,16 @@ export default function TableManagementPanel({
  setTables(d.tables || []);
  setMaxReservationTables(d.maxReservationTables || 0);
  setTableCapacity(d.tableCapacity || 0);
- setTableSections(d.tableSections || []);
+ // V2 migration: eger tableSectionsV2 varsa onu kullan, yoksa eski tableSections'tan migrate et
+ const v2 = d.tableSectionsV2 as SectionDef[] | undefined;
+ if (v2 && v2.length > 0) {
+  setSectionDefs(v2);
+  setTableSections(v2.map((s: SectionDef) => s.name));
+ } else {
+  const legacy = (d.tableSections || []) as string[];
+  setTableSections(legacy);
+  setSectionDefs(legacy.map((name: string) => ({ name, genderRestriction: 'mixed' as const })));
+ }
  }
  } catch (e) {
  console.error("Error loading table data:", e);
@@ -90,6 +124,7 @@ export default function TableManagementPanel({
  maxReservationTables: newMax,
  tableCapacity: newCapacity,
  tableSections: newSections,
+ tableSectionsV2: sectionDefs,
  });
  showToast(t("kaydedildi"), "success");
  } catch (e) {
@@ -191,14 +226,17 @@ export default function TableManagementPanel({
   onChange={(e) => setNewSectionName(e.target.value)}
   onKeyDown={(e) => {
   if (e.key === "Enter" && newSectionName.trim()) {
-  if (tableSections.includes(newSectionName.trim())) {
-  showToast(t("buBolumZatenMevcut"), "error");
-  return;
-  }
-  const newSections = [...tableSections, newSectionName.trim()];
-  updateAndSave(undefined, undefined, undefined, newSections);
-  setNewSectionName("");
-  setShowSectionInput(false);
+   if (tableSections.includes(newSectionName.trim())) {
+   showToast(t("buBolumZatenMevcut"), "error");
+   return;
+   }
+   const newSections = [...tableSections, newSectionName.trim()];
+   const newDefs = [...sectionDefs, { name: newSectionName.trim(), genderRestriction: newSectionGender }];
+   setSectionDefs(newDefs);
+   updateAndSave(undefined, undefined, undefined, newSections);
+   setNewSectionName("");
+   setNewSectionGender('mixed');
+   setShowSectionInput(false);
   } else if (e.key === "Escape") {
   setNewSectionName("");
   setShowSectionInput(false);
@@ -207,6 +245,16 @@ export default function TableManagementPanel({
   placeholder={t("yeniBolumAdiOr1Kat") || "Bolum adi (Orn: VIP)"}
   className="px-3 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 w-48"
   />
+  <select
+  title="Bolum Tipi"
+  value={newSectionGender}
+  onChange={(e) => setNewSectionGender(e.target.value as 'women_only' | 'men_only' | 'mixed')}
+  className="px-2 py-1.5 text-sm bg-gray-700 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-amber-500"
+  >
+  <option value="mixed">Karisik / Aile</option>
+  <option value="women_only">Kadin Bolumu</option>
+  <option value="men_only">Erkek Bolumu</option>
+  </select>
   <button
   onClick={() => {
   if (!newSectionName.trim()) return;
@@ -215,8 +263,11 @@ export default function TableManagementPanel({
   return;
   }
   const newSections = [...tableSections, newSectionName.trim()];
+  const newDefs = [...sectionDefs, { name: newSectionName.trim(), genderRestriction: newSectionGender }];
+  setSectionDefs(newDefs);
   updateAndSave(undefined, undefined, undefined, newSections);
   setNewSectionName("");
+  setNewSectionGender('mixed');
   setShowSectionInput(false);
   }}
   className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-500 text-white rounded-lg transition"
@@ -237,31 +288,38 @@ export default function TableManagementPanel({
   <span className="text-sm font-medium text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 w-full mb-2">
   ℹ️ Masalarınızı oluşturup sonradan çoklu seçim ile (checkbox) onlara bölümler atayabilirsiniz.
   </span>
-  )}
-  {tableSections.map((section, idx) => (
-  <div key={idx} className="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-1.5 text-sm shadow-sm border border-gray-600">
-  <span className="text-white font-medium">{section}</span>
-  <span className="text-gray-400 text-xs ml-1 font-normal">
-  ({tables.filter((t) => t.section === section).length} {t("masa")})
-  </span>
-  <button
-  onClick={() => {
-  if (tables.some(t => t.section === section)) {
-      showToast("Hata: Bu bölümde masalar bulunuyor! Lütfen önce bu masaları silin veya bölümünü değiştirin.", "error");
-      return;
-  }
-  const newSections = tableSections.filter((_, i) => i !== idx);
-  updateAndSave(undefined, undefined, undefined, newSections);
-  if (selectedBulkSection === section) setSelectedBulkSection(newSections[0] || "");
-  }}
-  className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition text-xs font-bold"
-  title={t("bolumuSil")}
-  >
-  ✕
-  </button>
-  </div>
-  ))}
-  </div>
+   )}
+   {tableSections.map((section, idx) => {
+   const def = sectionDefs.find(d => d.name === section);
+   const gr = def?.genderRestriction || 'mixed';
+   return (
+   <div key={idx} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm shadow-sm border ${GENDER_COLORS[gr] || 'bg-gray-700 border-gray-600'}`}>
+   <span className="font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center bg-black/20">{GENDER_ICONS[gr]}</span>
+   <span className="text-white font-medium">{section}</span>
+   <span className="text-gray-300 text-xs ml-0.5 font-normal">
+   ({tables.filter((t) => t.section === section).length} {t("masa")})
+   </span>
+   <button
+   onClick={() => {
+   if (tables.some(t => t.section === section)) {
+       showToast("Hata: Bu bölümde masalar bulunuyor! Lütfen önce bu masaları silin veya bölümünü değiştirin.", "error");
+       return;
+   }
+   const newSections = tableSections.filter((_, i) => i !== idx);
+   const newDefs = sectionDefs.filter(d => d.name !== section);
+   setSectionDefs(newDefs);
+   updateAndSave(undefined, undefined, undefined, newSections);
+   if (selectedBulkSection === section) setSelectedBulkSection(newSections[0] || "");
+   }}
+   className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition text-xs font-bold"
+   title={t("bolumuSil")}
+   >
+   ✕
+   </button>
+   </div>
+   );
+   })}
+   </div>
   </div>
 
   {/* Quick setup row */}

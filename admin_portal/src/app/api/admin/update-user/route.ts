@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
  assignedBusinessNames,
  assignedKermesEvents,
  assignedKermesNames,
- assignments
+ assignments,
+ kermesAllowedSections
  } = source;
 
  const updatedBy = body.adminEmail || source.updatedBy || 'system';
@@ -144,6 +145,7 @@ export async function POST(request: NextRequest) {
  isAdmin: isAdmin !== undefined ? isAdmin : false,
  adminType: isAdmin ? (adminType !== undefined ? adminType : null) : null,
  assignments: assignments !== undefined ? assignments : [],
+ kermesAllowedSections: kermesAllowedSections !== undefined ? kermesAllowedSections : [],
  isActive: isActive !== false, // default true
  updatedAt,
  updatedBy: updatedBy || 'system'
@@ -222,6 +224,10 @@ export async function POST(request: NextRequest) {
  adminUpdateData.assignments = assignments;
  }
 
+ if (kermesAllowedSections !== undefined) {
+ adminUpdateData.kermesAllowedSections = kermesAllowedSections;
+ }
+
  if (adminDoc.exists) {
  // Check if the admin was previously inactive or had a different type
  const prevData = adminDoc.data();
@@ -255,6 +261,7 @@ export async function POST(request: NextRequest) {
  if (assignedBusinesses !== undefined) driverUpdateData.assignedBusinesses = assignedBusinesses;
  if (assignedKermesEvents !== undefined) driverUpdateData.assignedKermesEvents = assignedKermesEvents;
  if (assignments !== undefined) driverUpdateData.assignments = assignments;
+ if (kermesAllowedSections !== undefined) driverUpdateData.kermesAllowedSections = kermesAllowedSections;
  
  if (adminDoc.exists) {
  await adminRef.update(driverUpdateData);

@@ -136,6 +136,7 @@ class KermesOrder {
   // POS/KDS ek alanlari
   final String? createdByStaffId;   // Siparisi alan garson/kasiyer
   final String? createdByStaffName; // Garson adi
+  final String? tableSection;      // Masanin ait oldugu bolum (Kadin Bolumu, Erkek Bolumu vb.)
 
   KermesOrder({
     required this.id,
@@ -160,6 +161,7 @@ class KermesOrder {
     this.courierId,
     this.createdByStaffId,
     this.createdByStaffName,
+    this.tableSection,
   });
 
   /// Siparisin tum itemlari hazir mi?
@@ -209,6 +211,7 @@ class KermesOrder {
       'courierId': courierId,
       if (createdByStaffId != null) 'createdByStaffId': createdByStaffId,
       if (createdByStaffName != null) 'createdByStaffName': createdByStaffName,
+      if (tableSection != null) 'tableSection': tableSection,
     };
   }
 
@@ -249,6 +252,7 @@ class KermesOrder {
       courierId: map['courierId'],
       createdByStaffId: map['createdByStaffId'] as String?,
       createdByStaffName: map['createdByStaffName'] as String?,
+      tableSection: map['tableSection'] as String?,
     );
   }
 
@@ -325,6 +329,7 @@ class KermesOrder {
     String? courierId,
     String? createdByStaffId,
     String? createdByStaffName,
+    String? tableSection,
   }) {
     return KermesOrder(
       id: id ?? this.id,
@@ -349,6 +354,7 @@ class KermesOrder {
       courierId: courierId ?? this.courierId,
       createdByStaffId: createdByStaffId ?? this.createdByStaffId,
       createdByStaffName: createdByStaffName ?? this.createdByStaffName,
+      tableSection: tableSection ?? this.tableSection,
     );
   }
 }

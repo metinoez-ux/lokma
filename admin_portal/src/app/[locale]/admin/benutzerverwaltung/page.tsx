@@ -113,6 +113,8 @@ export default function BenutzerverwaltungPage() {
  const [addBusinessSearch, setAddBusinessSearch] = useState('');
  const [showAddBusinessDropdown, setShowAddBusinessDropdown] = useState(false);
  const [editAssignments, setEditAssignments] = useState<Assignment[]>([]);
+ const [editKermesAllowedSections, setEditKermesAllowedSections] = useState<string[]>([]);
+ const [availableKermesSections, setAvailableKermesSections] = useState<{name: string, genderRestriction?: string}[]>([]);
 
  // Permission check
  const isSuperAdmin = admin?.adminType === 'super';
@@ -367,6 +369,33 @@ export default function BenutzerverwaltungPage() {
  setEditSector(data.sector || data.businessType || '');
  setEditBusinessId(data.businessId || data.butcherId || '');
  setEditAssignments(data.assignments || []);
+ setEditKermesAllowedSections(data.kermesAllowedSections || []);
+
+ // Kermes bolumleri cek (kermesId varsa)
+ const kermesAssignment = (data.assignments || []).find((a: any) => a.type === 'kermes');
+ const kId = data.kermesId || data.assignedKermesEvents?.[0] || kermesAssignment?.id;
+ if (kId) {
+   try {
+     const kermesDoc = await getDoc(doc(db, 'kermes_events', kId));
+     if (kermesDoc.exists()) {
+       const kData = kermesDoc.data();
+       const sections = kData.tableSectionsV2 || [];
+       const legacySections = kData.tableSections || [];
+       if (sections.length > 0) {
+         setAvailableKermesSections(sections.map((s: any) => ({ name: s.name || s, genderRestriction: s.genderRestriction })));
+       } else if (legacySections.length > 0) {
+         setAvailableKermesSections(legacySections.map((s: string) => ({ name: s, genderRestriction: 'mixed' })));
+       } else {
+         setAvailableKermesSections([]);
+       }
+     }
+   } catch (e) {
+     console.error('Kermes bolum fetch hatasi', e);
+     setAvailableKermesSections([]);
+   }
+ } else {
+   setAvailableKermesSections([]);
+ }
  } else {
  setIsDriver(user.roles.includes('driver'));
  setDriverType('platform');
@@ -375,6 +404,8 @@ export default function BenutzerverwaltungPage() {
  setEditSector('');
  setEditBusinessId('');
  setEditAssignments([]);
+ setEditKermesAllowedSections([]);
+ setAvailableKermesSections([]);
  }
  } catch (e) {
  console.error("Error fetching user details", e);
@@ -578,6 +609,7 @@ export default function BenutzerverwaltungPage() {
  assignedKermesNames: isDriver ? assignedKermesNames : [],
  adminEmail: admin?.email,
  assignments: editAssignments,
+ kermesAllowedSections: editKermesAllowedSections,
  };
 
  if (editBusinessId) {
@@ -1022,7 +1054,45 @@ export default function BenutzerverwaltungPage() {
  </div>
  )}
 
- <hr className="border-border" />
+  {/* Kermes Masa Bolum Yetkilendirme */}
+  {availableKermesSections.length > 0 && (
+  <>
+  <hr className="border-border" />
+  <div className="space-y-3">
+  <h3 className="text-sm uppercase tracking-wider font-bold text-muted-foreground">Kermes Masa Bolum Yetkilendirmesi</h3>
+  <p className="text-xs text-muted-foreground leading-relaxed">
+  Bu personelin hangi masa bolumlerinden gelen siparisleri gorup servis edebilecegini belirler. Hicbir bolum secilmezse tum bolumleri gorur (admin yetki).
+  </p>
+  <div className="space-y-2">
+  {availableKermesSections.map(section => {
+    const isChecked = editKermesAllowedSections.includes(section.name);
+    const genderLabel = section.genderRestriction === 'women_only' ? 'K' : section.genderRestriction === 'men_only' ? 'E' : 'A';
+    const genderColor = section.genderRestriction === 'women_only' ? 'text-pink-600' : section.genderRestriction === 'men_only' ? 'text-blue-600' : 'text-green-600';
+    return (
+    <label key={section.name} className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/30 cursor-pointer transition">
+    <input
+      type="checkbox"
+      className="w-4 h-4 text-pink-600 rounded border-border focus:ring-pink-500"
+      checked={isChecked}
+      onChange={(e) => {
+        if (e.target.checked) setEditKermesAllowedSections(prev => [...prev, section.name]);
+        else setEditKermesAllowedSections(prev => prev.filter(s => s !== section.name));
+      }}
+    />
+    <span className="text-sm font-medium text-foreground">{section.name}</span>
+    <span className={`text-xs font-bold ${genderColor}`}>[{genderLabel}]</span>
+    </label>
+    );
+  })}
+  </div>
+  {editKermesAllowedSections.length === 0 && (
+    <p className="text-xs text-amber-600 dark:text-amber-500">Hicbir bolum secilmedi - personel admin yetki ile tum bolumleri gorecek.</p>
+  )}
+  </div>
+  </>
+  )}
+
+  <hr className="border-border" />
 
  {/* Driver Privileges Toggle Block */}
  <div>

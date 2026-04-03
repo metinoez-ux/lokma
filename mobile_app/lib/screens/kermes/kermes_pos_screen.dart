@@ -15,12 +15,14 @@ class KermesPOSScreen extends ConsumerStatefulWidget {
   final KermesEvent event;
   final String? staffId;
   final String? staffName;
+  final List<String> allowedSections; // Personelin izinli oldugu masa bolumleri
 
   const KermesPOSScreen({
     super.key,
     required this.event,
     this.staffId,
     this.staffName,
+    this.allowedSections = const [],
   });
 
   @override
@@ -36,6 +38,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
 
   // Masa ve teslimat
   final _tableController = TextEditingController();
+  String? _selectedTableSection; // Secili masa bolumu
   DeliveryType _deliveryType = DeliveryType.gelAl;
   PaymentMethodType _paymentMethod = PaymentMethodType.cash;
 
@@ -201,6 +204,7 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
         createdAt: DateTime.now(),
         createdByStaffId: widget.staffId,
         createdByStaffName: widget.staffName,
+        tableSection: _selectedTableSection,
       );
 
       await orderService.createOrder(order);
@@ -757,7 +761,13 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                 label: 'Masa',
                 icon: Icons.table_restaurant_outlined,
                 isSelected: _deliveryType == DeliveryType.masada,
-                onTap: () => setState(() => _deliveryType = DeliveryType.masada),
+                onTap: () => setState(() {
+                  _deliveryType = DeliveryType.masada;
+                  // Eger sadece 1 izinli bolum varsa otomatik sec
+                  if (widget.allowedSections.length == 1) {
+                    _selectedTableSection = widget.allowedSections.first;
+                  }
+                }),
                 isDark: isDark,
               ),
             ],
@@ -798,6 +808,43 @@ class _KermesPOSScreenState extends ConsumerState<KermesPOSScreen> {
                     borderSide: const BorderSide(color: lokmaPink),
                   ),
                 ),
+              ),
+            ),
+          ],
+          // Masa bolum secimi (allowedSections varsa goster)
+          if (_deliveryType == DeliveryType.masada && widget.allowedSections.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: widget.allowedSections.map((section) {
+                  final isSelected = _selectedTableSection == section;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedTableSection = section),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? lokmaPink : (isDark ? Colors.white10 : Colors.grey.shade200),
+                          borderRadius: BorderRadius.circular(18),
+                          border: isSelected ? null : Border.all(
+                            color: isDark ? Colors.white24 : Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Text(
+                          section,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
           ],

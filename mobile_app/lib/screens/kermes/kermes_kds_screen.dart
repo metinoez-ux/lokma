@@ -13,6 +13,7 @@ class KermesKDSScreen extends ConsumerStatefulWidget {
   final String kermesName;
   final String zone; // Bu KDS ekraninin zone'u (ornegin "Kadin Mutfagi")
   final List<String> allZones; // Tum zone listesi (tab degistirmek icin)
+  final List<String> allowedSections; // Personelin izinli oldugu masa bolumleri (bos = herkese ac)
 
   const KermesKDSScreen({
     super.key,
@@ -20,6 +21,7 @@ class KermesKDSScreen extends ConsumerStatefulWidget {
     required this.kermesName,
     required this.zone,
     this.allZones = const [],
+    this.allowedSections = const [],
   });
 
   @override
@@ -174,7 +176,17 @@ class _KermesKDSScreenState extends ConsumerState<KermesKDSScreen> {
             );
           }
 
-          final orders = snapshot.data ?? [];
+          final allOrders = snapshot.data ?? [];
+
+          // Personel bolum filtresi: allowedSections bossa herkese ac (admin)
+          // GelAl siparisler (tableSection null) herkese gosterilir
+          final orders = widget.allowedSections.isEmpty
+              ? allOrders
+              : allOrders.where((o) =>
+                  o.tableSection == null ||
+                  o.tableSection!.isEmpty ||
+                  widget.allowedSections.contains(o.tableSection)
+                ).toList();
 
           // Yeni siparis geldiyse haptic + ses (ID-bazli karsilastirma)
           final currentIds = orders.map((o) => o.id).toSet();
